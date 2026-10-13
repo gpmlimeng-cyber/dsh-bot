@@ -319,6 +319,7 @@ const ZH = {
   'DS Bot settings': 'DS Bot 设置',
   'Settings pages': '设置页面',
   'All settings': '全部设置',
+  Common: '常用',
   Team: '团队',
   'Connections & automation': '连接与自动化',
   'Models, providers, and the rest of DeepSeek Harness': '模型、服务商和 DeepSeek Harness 的其他设置',

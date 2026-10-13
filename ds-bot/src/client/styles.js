@@ -553,7 +553,7 @@ body[data-ds-dark-theme] .bt-scrim{background:rgba(0,0,0,.5)}
 @keyframes bt-dialog-sink{to{opacity:0;transform:translateY(6px) scale(.975);filter:blur(3px)}}
 @media (prefers-reduced-motion:reduce){.bt-settings{transition:none}.bt-settings,.bt-scrim,.bt-settings-page>*{animation:bt-fade .12s ease-out!important}}
 .bt-settings-nav{position:relative;width:198px;flex:none;padding:16px 8px;border-right:.5px solid var(--bt-line);display:flex;flex-direction:column;gap:2px;background:var(--bt-sidebar);box-sizing:border-box}
-.bt-settings-item{position:relative;z-index:1;display:flex;align-items:center;gap:8px;padding:6px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:20px;cursor:pointer;text-align:left;transition:background-color .12s ease,color .12s ease}
+.bt-settings-item{position:relative;z-index:1;display:flex;align-items:center;gap:8px;padding:6px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:20px;cursor:pointer;text-align:left;width:100%;box-sizing:border-box;transition:background-color .12s ease,color .12s ease}
 .bt-settings-item:hover{color:var(--bt-ink);background:var(--bt-hover)}
 .bt-settings-item[aria-current=page]{background:var(--bt-active);color:var(--bt-ink)}
 .bt-settings-nav>.bt-thumb{left:8px;right:8px;border-radius:8px;background:var(--bt-active)}
@@ -1122,6 +1122,11 @@ html[data-bt-mobile] .bt-settings-group-head{display:block;margin:0 0 8px;paddin
 html[data-bt-mobile] .bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card);overflow:hidden}
 html[data-bt-mobile] .bt-settings-main{width:100%;height:auto;flex:1;min-height:0}
 html[data-bt-mobile] .bt-settings-item{min-height:52px;padding:0 12px;border-radius:0;font-size:15px;line-height:22px;gap:12px}
+/* The name takes the room the chevron does not: it ellipsises, and the chevron lands on
+   the card's inner edge rather than behind the text. The row carries its own width
+   because this is a <button> in a block card — without it the button shrinks to its
+   content, and margin-left:auto on the chevron has no free space to spend. */
+html[data-bt-mobile] .bt-settings-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-bt-mobile] .bt-settings-group-card>.bt-settings-item+.bt-settings-item{border-top:.5px solid var(--bt-line)}
 html[data-bt-mobile] .bt-settings-item>svg{flex:none;width:24px;height:24px}
 html[data-bt-mobile] .bt-set-go{display:flex;margin-left:auto;color:var(--bt-ink-3)}

@@ -30,7 +30,9 @@ const PAGE_TEXT = Object.fromEntries(SETTINGS_PAGES)
 // is the same rows with those shells flattened away (display:contents), so one structure
 // serves both and the rows never drift apart.
 const SETTINGS_GROUPS = [
-  ['General', ['general', 'usage']],
+  // "Common", not "General": the first row inside this card is the General page, and a
+  // heading and a row of the same name read as a mistake.
+  ['Common', ['general', 'usage']],
   ['Team', ['bots', 'groups']],
   ['Connections & automation', ['connectors', 'schedules', 'secrets']],
   ['Other', ['feedback', 'about']],
@@ -206,14 +208,16 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
     h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('DS Bot settings'), 'data-wide': shown === 'usage' ? '' : undefined, 'data-screen': mobile ? screen : undefined },
       // Phone only: back, the title centred on the dialog rather than on the space left
       // between the two side buttons, and the close. A wider button on one side cannot
-      // pull the title off centre because it is out of their flow.
+      // pull the title off centre because it is out of their flow. The close is drawn
+      // one level in only: on the list the left button already leaves Settings, and two
+      // buttons doing the same thing in one bar read as two different actions.
       h('div', { className: 'bt-settings-top' },
         h('button', {
           type: 'button', className: 'bt-icon-btn', 'aria-label': backLabel, title: backLabel,
           onClick: () => { if (screen === 'list') close(); else stepBack() },
         }, h(ChevronLeftIcon)),
         h('h2', null, screen === 'list' ? t('All settings') : pageTitle),
-        h('button', { type: 'button', className: 'bt-icon-btn', 'aria-label': t('Close settings'), title: t('Close settings'), onClick: close }, h(CloseIcon))),
+        screen === 'list' ? null : h('button', { type: 'button', className: 'bt-icon-btn', 'aria-label': t('Close settings'), title: t('Close settings'), onClick: close }, h(CloseIcon))),
       // A div with role="navigation" rather than a <nav>: the Android responsive skin
       // tags the first [role=dialog][aria-modal] holding a direct nav child as the
       // upstream settings panel (data-dsh-settings-dialog) and reflows its nav into a
@@ -226,13 +230,13 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
             keys.map(key => h('button', {
               key, type: 'button', className: 'bt-settings-item', 'aria-current': shown === key ? 'page' : undefined,
               onClick: () => { setScreen('page'); actions.openSettings(key) },
-            }, h(PAGE_ICONS[key]), t(PAGE_TEXT[key]), h('span', { className: 'bt-set-go', 'aria-hidden': true }, h(ChevronRightIcon)))),
+            }, h(PAGE_ICONS[key]), h('span', { className: 'bt-settings-name' }, t(PAGE_TEXT[key])), h('span', { className: 'bt-set-go', 'aria-hidden': true }, h(ChevronRightIcon)))),
             // Harness settings is the last row of the last card: on the wide dialog it
             // keeps the margin that holds it at the foot of the column.
             index === SETTINGS_GROUPS.length - 1 ? h('button', {
               type: 'button', className: 'bt-settings-item bt-settings-shell', title: t('Models, providers, and the rest of DeepSeek Harness'),
               onClick: () => { close(); openHarnessSettings() },
-            }, h(SlidersIcon), t('Harness settings'), h('span', { className: 'bt-set-go', 'aria-hidden': true }, h(ChevronRightIcon))) : null)))),
+            }, h(SlidersIcon), h('span', { className: 'bt-settings-name' }, t('Harness settings')), h('span', { className: 'bt-set-go', 'aria-hidden': true }, h(ChevronRightIcon))) : null)))),
       h('div', { className: 'bt-settings-main' },
         h('div', { className: 'bt-settings-head' },
           // The arrow goes up one level: a Bot's form back to the Bot list, a page back

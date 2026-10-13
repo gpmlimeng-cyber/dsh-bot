@@ -380,6 +380,7 @@ var ZH = {
   "DS Bot settings": "DS Bot 设置",
   "Settings pages": "设置页面",
   "All settings": "全部设置",
+  Common: "常用",
   Team: "团队",
   "Connections & automation": "连接与自动化",
   "Models, providers, and the rest of DeepSeek Harness": "模型、服务商和 DeepSeek Harness 的其他设置",
@@ -2434,7 +2435,7 @@ body[data-ds-dark-theme] .bt-scrim{background:rgba(0,0,0,.5)}
 @keyframes bt-dialog-sink{to{opacity:0;transform:translateY(6px) scale(.975);filter:blur(3px)}}
 @media (prefers-reduced-motion:reduce){.bt-settings{transition:none}.bt-settings,.bt-scrim,.bt-settings-page>*{animation:bt-fade .12s ease-out!important}}
 .bt-settings-nav{position:relative;width:198px;flex:none;padding:16px 8px;border-right:.5px solid var(--bt-line);display:flex;flex-direction:column;gap:2px;background:var(--bt-sidebar);box-sizing:border-box}
-.bt-settings-item{position:relative;z-index:1;display:flex;align-items:center;gap:8px;padding:6px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:20px;cursor:pointer;text-align:left;transition:background-color .12s ease,color .12s ease}
+.bt-settings-item{position:relative;z-index:1;display:flex;align-items:center;gap:8px;padding:6px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:20px;cursor:pointer;text-align:left;width:100%;box-sizing:border-box;transition:background-color .12s ease,color .12s ease}
 .bt-settings-item:hover{color:var(--bt-ink);background:var(--bt-hover)}
 .bt-settings-item[aria-current=page]{background:var(--bt-active);color:var(--bt-ink)}
 .bt-settings-nav>.bt-thumb{left:8px;right:8px;border-radius:8px;background:var(--bt-active)}
@@ -3002,6 +3003,11 @@ html[data-bt-mobile] .bt-settings-group-head{display:block;margin:0 0 8px;paddin
 html[data-bt-mobile] .bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card);overflow:hidden}
 html[data-bt-mobile] .bt-settings-main{width:100%;height:auto;flex:1;min-height:0}
 html[data-bt-mobile] .bt-settings-item{min-height:52px;padding:0 12px;border-radius:0;font-size:15px;line-height:22px;gap:12px}
+/* The name takes the room the chevron does not: it ellipsises, and the chevron lands on
+   the card's inner edge rather than behind the text. The row carries its own width
+   because this is a <button> in a block card — without it the button shrinks to its
+   content, and margin-left:auto on the chevron has no free space to spend. */
+html[data-bt-mobile] .bt-settings-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-bt-mobile] .bt-settings-group-card>.bt-settings-item+.bt-settings-item{border-top:.5px solid var(--bt-line)}
 html[data-bt-mobile] .bt-settings-item>svg{flex:none;width:24px;height:24px}
 html[data-bt-mobile] .bt-set-go{display:flex;margin-left:auto;color:var(--bt-ink-3)}
@@ -12394,7 +12400,9 @@ var SETTINGS_PAGES = [["general", "General"], ["bots", "Bots"], ["groups", "Grou
 var PAGE_ICONS = { ...SETTINGS_ICONS, connectors: ConnectorIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon };
 var PAGE_TEXT = Object.fromEntries(SETTINGS_PAGES);
 var SETTINGS_GROUPS = [
-  ["General", ["general", "usage"]],
+  // "Common", not "General": the first row inside this card is the General page, and a
+  // heading and a row of the same name read as a mistake.
+  ["Common", ["general", "usage"]],
   ["Team", ["bots", "groups"]],
   ["Connections & automation", ["connectors", "schedules", "secrets"]],
   ["Other", ["feedback", "about"]]
@@ -12636,7 +12644,9 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
       { className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("DS Bot settings"), "data-wide": shown === "usage" ? "" : void 0, "data-screen": mobile ? screen : void 0 },
       // Phone only: back, the title centred on the dialog rather than on the space left
       // between the two side buttons, and the close. A wider button on one side cannot
-      // pull the title off centre because it is out of their flow.
+      // pull the title off centre because it is out of their flow. The close is drawn
+      // one level in only: on the list the left button already leaves Settings, and two
+      // buttons doing the same thing in one bar read as two different actions.
       (0, import_react32.createElement)(
         "div",
         { className: "bt-settings-top" },
@@ -12651,7 +12661,7 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
           }
         }, (0, import_react32.createElement)(ChevronLeftIcon)),
         (0, import_react32.createElement)("h2", null, screen === "list" ? t("All settings") : pageTitle),
-        (0, import_react32.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": t("Close settings"), title: t("Close settings"), onClick: close }, (0, import_react32.createElement)(CloseIcon))
+        screen === "list" ? null : (0, import_react32.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": t("Close settings"), title: t("Close settings"), onClick: close }, (0, import_react32.createElement)(CloseIcon))
       ),
       // A div with role="navigation" rather than a <nav>: the Android responsive skin
       // tags the first [role=dialog][aria-modal] holding a direct nav child as the
@@ -12677,7 +12687,7 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
                 setScreen("page");
                 actions.openSettings(key);
               }
-            }, (0, import_react32.createElement)(PAGE_ICONS[key]), t(PAGE_TEXT[key]), (0, import_react32.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react32.createElement)(ChevronRightIcon)))),
+            }, (0, import_react32.createElement)(PAGE_ICONS[key]), (0, import_react32.createElement)("span", { className: "bt-settings-name" }, t(PAGE_TEXT[key])), (0, import_react32.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react32.createElement)(ChevronRightIcon)))),
             // Harness settings is the last row of the last card: on the wide dialog it
             // keeps the margin that holds it at the foot of the column.
             index === SETTINGS_GROUPS.length - 1 ? (0, import_react32.createElement)("button", {
@@ -12688,7 +12698,7 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
                 close();
                 openHarnessSettings();
               }
-            }, (0, import_react32.createElement)(SlidersIcon), t("Harness settings"), (0, import_react32.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react32.createElement)(ChevronRightIcon))) : null
+            }, (0, import_react32.createElement)(SlidersIcon), (0, import_react32.createElement)("span", { className: "bt-settings-name" }, t("Harness settings")), (0, import_react32.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react32.createElement)(ChevronRightIcon))) : null
           )
         ))
       ),
