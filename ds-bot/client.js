@@ -2829,6 +2829,17 @@ html[data-bt-mobile] [data-dsh-mobile-topbar]{display:none!important}
    started at 90px). Give the column back the status-bar inset only, and never let the
    measured --bt-top-inset feed back in here — that loop is what kept it at 90px. */
 html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))!important}
+/* One definition, every consumer: the shell's own --dsh-frame-chrome-top is set only under
+   html[data-windows-titlebar] (and the darwin frame), never on Android, so every fixed
+   layer that reads it — ours and the shell's own masks alike — fell through to 0 and
+   started under the status bar. That is the single cause behind the details panel's clipped
+   top row, and it is why patching the top of each panel by hand was the wrong fix. Pin it
+   here to the inset the rest of the skin already measures; --bt-top-inset is written by
+   mobile.js and is absent for the first frames, hence the layer's own variable behind it.
+   The Android layer is unaffected: it reads neither this nor --dsh-frame-overlay-top.
+   This must stay off the --bt-top-inset chain's inputs: mobile.js measures --bt-top-inset
+   from --dsh-mobile-top-inset, and a definition on html cannot feed back into it. */
+html[data-bt-mobile]{--dsh-frame-chrome-top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)))}
 /* The bar floats above every panel this skin opens, not just the conversation: the New…
    picker, the settings page, the palette and the memory dialog are all fixed layers of
    their own (pane 45, menu/settings 60, memory 61, palette 70) that start at the top of
@@ -2872,14 +2883,14 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-lef
 .bt-mobile-acts .bt-mobile-act:hover{background:var(--bt-hover)}
 .bt-mobile-nav:active,.bt-mobile-act:active,.bt-panel-back:active{transform:scale(.96)}
 /* The details panel is a right-hand column on a desktop, but a phone has no room for one
-   beside the conversation: it takes the whole screen instead, from the same top inset the
-   bar and the drawer use. 96 puts it over the floating bar (95) — with the panel up there
-   is nothing of the bar left to click anyway, it carries its own back button — and it stays
-   under the toasts (1000). --dsh-frame-chrome-top is deliberately not in the chain: Android
-   never defines it, which is why the panel used to start under the status bar and clip its
-   own top row. The width is forced because a panel dragged wide on a desktop would keep its
+   beside the conversation: it takes the whole screen instead. Its top is not set here — the
+   base rule reads --dsh-frame-chrome-top, which the rule above now defines for the whole
+   phone layout, so the panel follows it without a line of its own. 96 puts it over the
+   floating bar (95) — with the panel up there is nothing of the bar left to click anyway,
+   it carries its own back button — and it stays under the toasts (1000). The width is
+   forced because a panel dragged wide on a desktop would keep its
    inline width through a rotation. */
-html[data-bt-mobile] .bt-panel{top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;bottom:0;width:100%!important;z-index:96;border-left:0}
+html[data-bt-mobile] .bt-panel{left:0;right:0;bottom:0;width:100%!important;z-index:96;border-left:0}
 /* Full screen means the conversation is covered, not narrowed: the panel no longer writes
    its width into the chat column, so nothing on the left is squeezed off the screen. */
 html[data-bt-mobile] [class*="_centerCol"]{margin-right:0!important}
@@ -6143,6 +6154,7 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
   const menuTarget = bot ? { kind: "bot", id: sessionId } : room2 ? { kind: "room", id: sessionId } : agent === void 0 ? null : { kind: "agent-session", id: sessionId, agentId: agent.id };
   const openMore = (event) => {
     if (menuTarget === null) return;
+    actions.closeMobileNav();
     const box = event.currentTarget.getBoundingClientRect();
     actions.openMenu({ ...menuTarget, x: Math.round(box.right - 8), y: Math.round(box.bottom + 6) });
   };

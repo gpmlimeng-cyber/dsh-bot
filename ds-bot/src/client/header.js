@@ -175,6 +175,11 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
       : agent === undefined ? null : { kind: 'agent-session', id: sessionId, agentId: agent.id }
   const openMore = (event) => {
     if (menuTarget === null) return
+    // The bar sits above the drawer's scrim (95 over 78), so this button is the one control
+    // reachable with the drawer up that would otherwise leave it open behind the menu. A tap
+    // on the bar is a tap outside the drawer like any other, so it collapses it first — the
+    // New… button next to it already goes through openNewChat, which does the same.
+    actions.closeMobileNav()
     const box = event.currentTarget.getBoundingClientRect()
     // Anchored to the button's bottom-right; ContextMenu clamps it back into the viewport,
     // so a phone-width dropdown stays fully on screen.
