@@ -26,15 +26,21 @@ const publish = (matches) => {
   for (const listener of listeners) listener(matches === true)
 }
 
-// The shell publishes its top inset (the device's status bar, ~46px here) as
-// --dsh-frame-chrome-top, but only on frame elements it owns: a panel portalled to
-// <body> cannot read it and falls back to 0, which is how the floating bar ended up
-// under the status bar. Measure where the transcript itself starts instead and publish
-// that as our own variable — the shell's variable is never written to.
+// The top inset (the device's status bar, ~46px here) has exactly one honest source on
+// Android: the adaptation layer publishes it on :root as --dsh-mobile-top-inset, from
+// env(safe-area-inset-top) and the shell bridge. The shell's own --dsh-frame-chrome-top is
+// never defined here at all (it exists only under html[data-platform=darwin] and
+// [data-windows-titlebar]), which is why reading it always fell back to 0 and put the bar
+// under the status bar. Read the layer's variable first; measure the transcript only when
+// that variable is absent (e.g. the layer is not mounted). Never write either variable.
 const publishInset = () => {
   if (typeof document === 'undefined') return
+  const published = getComputedStyle(document.documentElement).getPropertyValue('--dsh-mobile-top-inset').trim()
+  const fromLayer = Number.parseFloat(published)
   const scroller = document.querySelector('[data-conversation-scroll]')
-  const top = scroller === null ? 0 : Math.round(scroller.getBoundingClientRect().top)
+  const top = Number.isFinite(fromLayer) && fromLayer > 0
+    ? Math.round(fromLayer)
+    : scroller === null ? 0 : Math.round(scroller.getBoundingClientRect().top)
   if (top > 0) document.documentElement.style.setProperty('--bt-top-inset', `${top}px`)
 }
 

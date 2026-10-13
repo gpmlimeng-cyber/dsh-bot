@@ -104,12 +104,16 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
       const cls = headers[0] === undefined ? 'none' : String(headers[0].className).replace(/_?[a-z0-9]{5,}_?/gi, '').slice(0, 14) || 'anon'
       const scroller = document.querySelector('[data-conversation-scroll]')?.getBoundingClientRect()
       const shellVar = getComputedStyle(document.documentElement).getPropertyValue('--dsh-frame-chrome-top').trim() || 'unset'
+      const layerVar = getComputedStyle(document.documentElement).getPropertyValue('--dsh-mobile-top-inset').trim() || 'unset'
+      const bar = getComputedStyle(document.documentElement).getPropertyValue('--bt-top-inset').trim() || 'unset'
       const scrim = document.querySelector('.bt-mobile-scrim') !== null
       setProbe(`nav${document.querySelectorAll('.bt-mobile-nav').length}bar${document.querySelectorAll('.bt-mobile-bar').length}`
         + `mk${document.querySelectorAll('.bt-head-mark').length}scr${scrim ? 1 : 0}`
         + ` self=${rect === undefined ? 'na' : `${Math.round(rect.left)},${Math.round(rect.top)}`}`
         + ` hdr${headers.length}:${cls}${head === undefined ? '' : `@${Math.round(head.top)}`}`
-        + ` sc=${scroller === undefined ? 'na' : Math.round(scroller.top)} var=${shellVar}`)
+        + ` sc=${scroller === undefined ? 'na' : Math.round(scroller.top)}`
+        + ` topbar${document.querySelectorAll('[data-dsh-mobile-topbar]').length}`
+        + ` var=${shellVar} lay=${layerVar} bt=${bar}`)
     }, 1500)
     return () => clearTimeout(timer)
   }, [mobile])
