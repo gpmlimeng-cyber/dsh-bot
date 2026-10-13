@@ -1075,6 +1075,17 @@ html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar::after{display:none}
+/* Every full-screen layer this skin draws brings its own top: the panes (New..., the
+   exchange, voice and the details panel), the memory dialog and the palette close
+   themselves, and the settings screen has its own close button and back arrow. Over any
+   of them the bar is both useless and in the way -- its hamburger, the pill and the right
+   pair land on the layer's first row, which is why the rule above used to keep those
+   capsules opaque there. Hiding the bar is the right answer, not a solid bar.
+   The drawer is deliberately absent: the hamburger in the bar is what opens and closes it. */
+html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
+html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar,
+html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar,
+html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar{display:none}
 /* On a phone the settings dialog is the screen rather than a card floating on it. A 198px
    page column beside a page needs a width a phone has not got -- at 425px it left the page
    179px, which is what made the whole thing read as broken. The two columns become two
