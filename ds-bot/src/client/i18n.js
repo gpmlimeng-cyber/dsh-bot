@@ -376,6 +376,7 @@ const ZH = {
   'Message from': '收到消息：',
   'Stopped by': '叫停者：',
   '{count} messages with': '{count} 条消息，来自',
+  '{count} messages': '{count} 条消息',
   'Routine started': '例行任务开始',
   Update: '更新',
   'Thinking about it': '想一想',

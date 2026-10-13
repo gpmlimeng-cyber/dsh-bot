@@ -98,6 +98,7 @@ export function apply(ctx) {
   // has rendered; time separators compare one turn's end with the next turn's start.
   const turnClock = createSource({})
   let activityKey = '{}'
+  let countsKey = '{}'
   // Per Bot, its latest memory change, and `seen`: when this window first saw it, or 0
   // for a change made before the window opened, which is no news.
   const memoryNews = createSource({})
@@ -140,6 +141,14 @@ export function apply(ctx) {
     // Connector states change without a new revision, so they come with every answer.
     if (value.connectors !== undefined && current.ready && JSON.stringify(value.connectors) !== JSON.stringify(current.connectors ?? [])) {
       roster.set({ ...current, connectors: value.connectors })
+    }
+    // Message counts move as messages arrive, also without a new revision. They stay
+    // out of `stamps`: the sidebar's sort keys read that, and a new number there would
+    // re-sort the list.
+    const nextCounts = JSON.stringify(value.counts ?? {})
+    if (nextCounts !== countsKey) {
+      countsKey = nextCounts
+      roster.set({ ...roster.getSnapshot(), counts: value.counts ?? {} })
     }
     if (value.unchanged || (value.revision === current.revision && value.modelsKey === current.modelsKey)) return
     // On a browser with no visit record yet, everything already there counts as seen.

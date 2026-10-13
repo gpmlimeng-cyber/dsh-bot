@@ -118,6 +118,7 @@ export function install(rt) {
         insert: db.prepare('INSERT INTO lines (text, session, seq, time, who) VALUES (?, ?, ?, ?, ?)'),
         before: db.prepare('SELECT text, session, seq, time, who FROM lines WHERE session = ? AND seq < ? ORDER BY seq DESC LIMIT ?'),
         from: db.prepare('SELECT text, session, seq, time, who FROM lines WHERE session = ? AND seq >= ? ORDER BY seq LIMIT ?'),
+        counts: db.prepare('SELECT session, count(*) AS c FROM lines GROUP BY session'),
       }
     } catch (error) {
       db.close()
@@ -279,6 +280,27 @@ export function install(rt) {
   // The parts of a Bot's own chat, for the model: when each ran.
   const partIndex = parts => parts.map(part => `part ${part.number} (${rt.clock(part.startedAt)} – ${part.endedAt === undefined ? 'now' : rt.clock(part.endedAt)})`).join(', ')
 
+  // Indexed message lines per Session, for the sidebar's message count. The index is
+  // lazy and partial (a part is indexed once something reads it, and a Bot's answers
+  // are kept only where a read needed them), so a Session that is missing here shows
+  // no number rather than a wrong one. An unusable index is not an error: {}
+  async function chatCounts() {
+    let index
+    try {
+      index = await openIndex()
+    } catch (error) {
+      rt.warn('ds-bot: chat counts failed: %s', error)
+      return {}
+    }
+    if (index === null) return {}
+    try {
+      return Object.fromEntries(index.counts.all().map(row => [row.session, row.c]))
+    } catch (error) {
+      rt.warn('ds-bot: chat counts failed: %s', error)
+      return {}
+    }
+  }
+
   async function ownChatBrief(member) {
     let lines = []
     try { lines = await latestOwnChat(member.id, { limit: OWN_CHAT_BRIEF }) } catch (error) { rt.warn('ds-bot: brief for %s failed: %s', member.name, error) }
@@ -289,5 +311,5 @@ export function install(rt) {
     ].join('\n')
   }
 
-  Object.assign(rt, { eventsBackwards, searchOwnChat, latestOwnChat, aroundOwnChat, partIndex, ownChatBrief })
+  Object.assign(rt, { eventsBackwards, searchOwnChat, latestOwnChat, aroundOwnChat, partIndex, ownChatBrief, chatCounts })
 }

@@ -134,6 +134,9 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-row-title{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-tag{flex:none;max-width:96px;font-size:12px;line-height:16px;font-weight:400;padding:1px 6px;border-radius:4px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bt-row-meta{display:flex;align-items:center;gap:6px;flex:none;margin-left:auto;padding-left:6px;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+.bt-row-time{flex:none}
+.bt-row-count{flex:none;padding:0 5px;border-radius:999px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);font-variant-numeric:tabular-nums}
 .bt-unread{width:8px;height:8px;border-radius:50%;background:#1084fe;flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
 .bt-rail{align-items:center;padding:0 0 8px}
 .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px}
@@ -792,6 +795,11 @@ export const CONVERSATION_CSS = `
 .bt-event-whole>span:first-child{margin-right:2px}
 /* One button cannot wrap like separate parts, so a long name is cut to fit the chat. */
 .bt-event-whole>.bt-event-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* One plain line of what was said, after the name; the whole line still opens it. */
+.bt-event-whole>.bt-event-preview{flex:1 1 auto;min-width:0;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400}
+/* A message's own time at the bubble's bottom right, always shown. */
+.bt-bubble-time{display:block;margin-top:2px;text-align:right;font-size:11px;line-height:14px;color:var(--bt-ink-3);font-variant-numeric:tabular-nums}
+.bt-ubody>.bt-bubble-time{color:inherit;opacity:.62}
 .bt-time-sep{display:flex;justify-content:center;align-items:center;height:28px;margin:14px 0 8px;font-size:12px;line-height:16px;color:var(--bt-ink-2);white-space:nowrap}
 [class*="_scroll"]>[class*="_column"]::before{content:var(--bt-first-sep,none);display:block;flex:none;height:28px;margin:17px 0 12px;font-size:12px;line-height:28px;text-align:center;color:var(--bt-ink-2);white-space:nowrap}
 .bt-activity{display:flex;align-items:center;gap:10px;margin:8px 0 4px 2px;font-size:14px;color:var(--bt-ink-2)}

@@ -68,12 +68,14 @@ export function install(rt) {
   // What changes without a new revision, sent with every state answer. `memoryNews`:
   // per Bot, its latest memory change; `memoryReviews`: memory reviews waiting or
   // running; `work`: per Bot, the turn it runs and its tool, and the approvals waiting.
-  const live = () => ({
+  // `counts`: indexed message lines per Session, for the sidebar's message count.
+  const live = async () => ({
     activity: rt.activityView(),
     work: { bots: rt.workView(), approvals: rt.approvalsView() },
     memoryNews: rt.memoryNews(),
     memoryReviews: rt.memoryReviews(),
     connectors: rt.connectorsView(),
+    counts: await rt.chatCounts(),
   })
   // What a host that only reads the team may still answer.
   // Updates change the dsh profile, not the team, so a reading host may run them too.
@@ -109,8 +111,8 @@ export function install(rt) {
           if (readOnly === undefined) await rt.bootstrap()
           await rt.catalog()
           await rt.loadSecrets()
-          if (body.since === state.revision && (body.models === undefined || body.models === modelsKey())) return ok({ revision: state.revision, unchanged: true, ...live() })
-          return ok({ ...view(), ...live() })
+          if (body.since === state.revision && (body.models === undefined || body.models === modelsKey())) return ok({ revision: state.revision, unchanged: true, ...await live() })
+          return ok({ ...view(), ...await live() })
         case 'models':
           await rt.catalog({ fresh: true })
           return ok({ modelsKey: modelsKey() })

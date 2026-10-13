@@ -92,7 +92,8 @@ export function UserMessageCell({ node, sessionId, useRoster, actions, renderMes
       attachments.length > 0 ? h(Attachments, { attachments, renderMessageImages }) : null,
       text !== '' || rest.length > 0 ? h('div', { className: 'bt-ubody', title: clock(data.time) },
         h(UserText, { text, bots: mentionableBots(roster, sessionId), referenceLabels, skillNames: data.skillNames ?? [], references, actions }),
-        rest.map((block, index) => (ui.JsonBlock ? h(ui.JsonBlock, { key: index, label: t('Content'), payload: block }) : null))) : null,
+        rest.map((block, index) => (ui.JsonBlock ? h(ui.JsonBlock, { key: index, label: t('Content'), payload: block }) : null)),
+        clock(data.time) !== undefined ? h('span', { className: 'bt-bubble-time' }, clock(data.time)) : null) : null,
       referenceLabels.length > 0 ? h('div', { className: 'bt-urefs' }, t('Referenced {labels}', { labels: referenceLabels.join(t(', ')) })) : null),
     text === '' ? null : h('div', { className: 'bt-utools' }, h(CopyButton, { text })))
 }

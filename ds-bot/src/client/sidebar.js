@@ -23,10 +23,35 @@ function useMarkedUnread(id, active, marked, actions) {
 
 const PinMark = () => h('span', { className: 'bt-pin', 'aria-hidden': true }, h(PinMarkIcon))
 
+// A row's message count: the indexed lines of a Session and its earlier parts. The
+// index is lazy and partial, so a Session it does not know yet contributes nothing,
+// and a row with nothing indexed shows no number at all rather than a zero.
+function countOf(roster, sessionIds) {
+  const counts = roster.counts
+  if (counts === undefined) return undefined
+  let total = 0
+  let indexed = false
+  for (const id of sessionIds) {
+    const value = counts[id]
+    if (typeof value === 'number') { total += value; indexed = true }
+  }
+  return indexed ? total : undefined
+}
+
+// The stamp and count line under a row's title.
+function RowMeta({ at, count }) {
+  const time = at > 0 ? relativeShort(at) : ''
+  if (time === '' && count === undefined) return null
+  return h('span', { className: 'bt-row-meta' },
+    time !== '' ? h('span', { className: 'bt-row-time' }, time) : null,
+    count !== undefined ? h('span', { className: 'bt-row-count', title: t('{count} messages', { count }) }, String(count)) : null)
+}
+
 function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, wide, marked }) {
   const id = bot.id
   const part = currentPart(bot)
   const preview = useSessions(list => previewOf(list, part, roster.exchangeTurns[part]))
+  const at = useSessions(list => list.byId[part]?.updatedAt ?? 0)
   const running = useSessionStatus(map => map.get(part)?.running === true)
   const active = useSessionRetainInfo(part, info => (info?.retainedBy?.mainView ?? 0) > 0)
   const unread = useSessionStatus(map => map.get(part)?.completionUnread === true || map.get(part)?.pendingInteraction !== undefined) || (marked && !active)
@@ -59,7 +84,8 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   h(BotAvatar, { bot, size: 36, state, main }),
   pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
-    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null),
+    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null,
+      h(RowMeta, { at, count: countOf(roster, [part, ...(bot.parts ?? [])]) })),
     preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
   wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
 }
@@ -68,6 +94,7 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
   const id = room.id
   const fallback = useSessions(list => previewOf(list, id))
   const preview = room.preview?.replace(/\s+/g, ' ').trim() || fallback
+  const at = useSessions(list => list.byId[id]?.updatedAt ?? 0)
   const active = useSessionRetainInfo(id, info => (info?.retainedBy?.mainView ?? 0) > 0)
   const unread = useSessionStatus(map => map.get(id)?.completionUnread === true) || (marked && !active)
   useMarkedUnread(id, active, marked, actions)
@@ -81,7 +108,10 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
   h(RoomAvatar, { room, roster, size: 36 }),
   pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
-    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null),
+    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null,
+      // A group's messages live in each member's own hidden Session, so the indexed
+      // lines would count the same conversation once per member. No number, then.
+      h(RowMeta, { at, count: undefined })),
     preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
   wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
 }

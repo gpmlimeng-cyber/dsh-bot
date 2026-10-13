@@ -18,7 +18,7 @@ const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied')
 
 // `lead` (a sender avatar in group chats) sits beside the last bubble, in the same
 // row, so it lines up with the bubble whether or not reactions hang below it.
-export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead }) {
+export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, time }) {
   const onClick = (event) => {
     const target = mentionTarget(event)
     if (target === null) return
@@ -37,7 +37,9 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, 
         h('div', { className: 'bt-msg-line' },
           lead && last ? lead : null,
           h('div', { className: 'bt-bubble' },
-            h(MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact' })),
+            h(MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact' }),
+            // The bubble's own time, always visible: only a settled message has one.
+            last && !live && Number.isFinite(time) ? h('span', { className: 'bt-bubble-time' }, clockLabel(time)) : null),
           live ? null : h(MessageTools, { text, name: roster.byId[selfId]?.name ?? t('Bot'), sessionId, react: key ? emoji => actions.toggleReaction(msgKey, index, emoji) : undefined, actions })),
         picked.length ? h('div', { className: 'bt-reacts' }, picked.map(emoji => h('button', {
           key: emoji, type: 'button', className: 'bt-react', 'aria-label': t('Remove reaction {emoji}', { emoji }), onClick: () => actions.toggleReaction(msgKey, index, emoji),
@@ -106,11 +108,14 @@ function ThinkingRow({ text }) {
     h('div', { className: 'bt-think-text' }, text))
 }
 
-export function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnSteps, useTurnContext, actions }) {
+export function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnClock, useTurnSteps, useTurnContext, actions }) {
   const roster = useRoster(value => value)
   const data = node.data
   const steps = useTurnSteps(String(data.turn))
   const contexts = useTurnContext(String(data.turn))
+  // The turn's own clock: what a bubble stamps itself with. Read before the early
+  // returns below, as hooks must be.
+  const time = useTurnClock(state => state[sessionId]?.[data.turn]?.end ?? state[sessionId]?.[data.turn]?.first)
   const hidden = Boolean(roster.roomsById[sessionId]) || isHiddenTurn(roster, sessionId, data.turn)
   const texts = groupPart === 'reasoning' ? [] : data.blocks.filter(block => block.kind === 'text' && block.text.trim() !== '').map(block => block.text)
   const running = data.status === 'running'
@@ -132,19 +137,24 @@ export function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, us
         key: relay.seq,
         prefix: source.role === 'stopped' ? t('Stopped by') : source.role === 'reply' ? t('Reply from') : t('Message from'),
         bots: [sender],
+        preview: stripHeader(contentText(relay.content)),
         onOpen: () => { if (sender.id) actions.openExchange(selfId, sender.id) },
         whole: true,
       })
     }),
     reasoning ? h(ThinkingRow, { text: reasoning }) : null,
-    texts.length ? h(Bubbles, { texts, roster, selfId, actions, streaming: running, sessionId, msgKey: `${sessionId}:${data.turn}:${node.key ?? data.seq ?? ''}`, useUi }) : null)
+    texts.length ? h(Bubbles, { texts, roster, selfId, actions, streaming: running, sessionId, msgKey: `${sessionId}:${data.turn}:${node.key ?? data.seq ?? ''}`, useUi, time }) : null)
 }
 
-function EventLine({ prefix, bots, joiner = t('and'), onOpen, whole = false }) {
+function EventLine({ prefix, bots, joiner = t('and'), onOpen, whole = false, preview }) {
   if (whole && bots.length === 1) {
+    // One line of what was said, as plain text: the exchange dialog has the whole
+    // message, and a marker that renders Markdown would outsized the line it sits in.
+    const line = typeof preview === 'string' ? preview.replace(/\s+/g, ' ').trim() : ''
     return h('div', { className: 'bt-event' },
       h('button', { type: 'button', className: 'bt-event-whole', title: bots[0].name, onClick: () => onOpen?.(bots[0]) },
-        h('span', null, prefix), h(BotMark, { bot: bots[0], size: 16 }), h('span', { className: 'bt-event-name' }, bots[0].name)))
+        h('span', null, prefix), h(BotMark, { bot: bots[0], size: 16 }), h('span', { className: 'bt-event-name' }, bots[0].name),
+        line !== '' ? h('span', { className: 'bt-event-preview' }, line) : null))
   }
   const parts = []
   parts.push(h('span', { key: 'p' }, prefix))
@@ -351,6 +361,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
       return h(EventLine, {
         prefix: source.role === 'stopped' ? t('Stopped by') : count > 1 ? t('{count} messages with', { count }) : t('Message from'),
         bots,
+        preview: stripHeader(contentText(data.content)),
         onOpen: bot => actions.openExchange(selfId, bot.id),
         whole: true,
       })

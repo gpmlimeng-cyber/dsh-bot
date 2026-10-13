@@ -432,6 +432,7 @@ var ZH = {
   "Message from": "收到消息：",
   "Stopped by": "叫停者：",
   "{count} messages with": "{count} 条消息，来自",
+  "{count} messages": "{count} 条消息",
   "Routine started": "例行任务开始",
   Update: "更新",
   "Thinking about it": "想一想",
@@ -1205,7 +1206,7 @@ function createSource(initial) {
     }
   };
 }
-var EMPTY_ROSTER = { revision: -1, mainBotId: null, mainBotIds: [], bots: [], rooms: [], agents: [], exchangeTurns: {}, questions: {}, secrets: [], secretRequests: {}, models: [], defaultModel: null, modelsKey: null, prefs: {}, byId: {}, roomsById: {}, agentsById: {}, agentOf: {}, ready: false };
+var EMPTY_ROSTER = { revision: -1, mainBotId: null, mainBotIds: [], bots: [], rooms: [], agents: [], exchangeTurns: {}, questions: {}, secrets: [], secretRequests: {}, models: [], defaultModel: null, modelsKey: null, prefs: {}, counts: {}, byId: {}, roomsById: {}, agentsById: {}, agentOf: {}, ready: false };
 var isMainOf = (roster, id) => id !== void 0 && (roster.mainBotIds ?? []).includes(id);
 function indexRoster(value) {
   const byId = {};
@@ -1887,6 +1888,9 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-row-title{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-tag{flex:none;max-width:96px;font-size:12px;line-height:16px;font-weight:400;padding:1px 6px;border-radius:4px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bt-row-meta{display:flex;align-items:center;gap:6px;flex:none;margin-left:auto;padding-left:6px;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+.bt-row-time{flex:none}
+.bt-row-count{flex:none;padding:0 5px;border-radius:999px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);font-variant-numeric:tabular-nums}
 .bt-unread{width:8px;height:8px;border-radius:50%;background:#1084fe;flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
 .bt-rail{align-items:center;padding:0 0 8px}
 .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px}
@@ -2544,6 +2548,11 @@ var CONVERSATION_CSS = `
 .bt-event-whole>span:first-child{margin-right:2px}
 /* One button cannot wrap like separate parts, so a long name is cut to fit the chat. */
 .bt-event-whole>.bt-event-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* One plain line of what was said, after the name; the whole line still opens it. */
+.bt-event-whole>.bt-event-preview{flex:1 1 auto;min-width:0;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400}
+/* A message's own time at the bubble's bottom right, always shown. */
+.bt-bubble-time{display:block;margin-top:2px;text-align:right;font-size:11px;line-height:14px;color:var(--bt-ink-3);font-variant-numeric:tabular-nums}
+.bt-ubody>.bt-bubble-time{color:inherit;opacity:.62}
 .bt-time-sep{display:flex;justify-content:center;align-items:center;height:28px;margin:14px 0 8px;font-size:12px;line-height:16px;color:var(--bt-ink-2);white-space:nowrap}
 [class*="_scroll"]>[class*="_column"]::before{content:var(--bt-first-sep,none);display:block;flex:none;height:28px;margin:17px 0 12px;font-size:12px;line-height:28px;text-align:center;color:var(--bt-ink-2);white-space:nowrap}
 .bt-activity{display:flex;align-items:center;gap:10px;margin:8px 0 4px 2px;font-size:14px;color:var(--bt-ink-2)}
@@ -3691,7 +3700,7 @@ var import_react6 = require("react");
 var import_react_dom = require("react-dom");
 var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
 var mdLabels = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
-function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead }) {
+function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, time }) {
   const onClick = (event) => {
     const target = mentionTarget(event);
     if (target === null) return;
@@ -3718,7 +3727,9 @@ function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId,
           (0, import_react6.createElement)(
             "div",
             { className: "bt-bubble" },
-            (0, import_react6.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: "compact" })
+            (0, import_react6.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: "compact" }),
+            // The bubble's own time, always visible: only a settled message has one.
+            last && !live && Number.isFinite(time) ? (0, import_react6.createElement)("span", { className: "bt-bubble-time" }, clockLabel(time)) : null
           ),
           live ? null : (0, import_react6.createElement)(MessageTools, { text, name: roster.byId[selfId]?.name ?? t("Bot"), sessionId, react: key ? (emoji) => actions.toggleReaction(msgKey, index, emoji) : void 0, actions })
         ),
@@ -3819,11 +3830,12 @@ function ThinkingRow({ text }) {
     (0, import_react6.createElement)("div", { className: "bt-think-text" }, text)
   );
 }
-function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnSteps, useTurnContext, actions }) {
+function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnClock, useTurnSteps, useTurnContext, actions }) {
   const roster = useRoster((value) => value);
   const data = node.data;
   const steps = useTurnSteps(String(data.turn));
   const contexts = useTurnContext(String(data.turn));
+  const time = useTurnClock((state) => state[sessionId]?.[data.turn]?.end ?? state[sessionId]?.[data.turn]?.first);
   const hidden = Boolean(roster.roomsById[sessionId]) || isHiddenTurn(roster, sessionId, data.turn);
   const texts2 = groupPart === "reasoning" ? [] : data.blocks.filter((block) => block.kind === "text" && block.text.trim() !== "").map((block) => block.text);
   const running = data.status === "running";
@@ -3843,6 +3855,7 @@ function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnSt
         key: relay.seq,
         prefix: source.role === "stopped" ? t("Stopped by") : source.role === "reply" ? t("Reply from") : t("Message from"),
         bots: [sender],
+        preview: stripHeader(contentText(relay.content)),
         onOpen: () => {
           if (sender.id) actions.openExchange(selfId, sender.id);
         },
@@ -3850,11 +3863,12 @@ function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnSt
       });
     }),
     reasoning ? (0, import_react6.createElement)(ThinkingRow, { text: reasoning }) : null,
-    texts2.length ? (0, import_react6.createElement)(Bubbles, { texts: texts2, roster, selfId, actions, streaming: running, sessionId, msgKey: `${sessionId}:${data.turn}:${node.key ?? data.seq ?? ""}`, useUi }) : null
+    texts2.length ? (0, import_react6.createElement)(Bubbles, { texts: texts2, roster, selfId, actions, streaming: running, sessionId, msgKey: `${sessionId}:${data.turn}:${node.key ?? data.seq ?? ""}`, useUi, time }) : null
   );
 }
-function EventLine({ prefix, bots, joiner = t("and"), onOpen, whole = false }) {
+function EventLine({ prefix, bots, joiner = t("and"), onOpen, whole = false, preview }) {
   if (whole && bots.length === 1) {
+    const line = typeof preview === "string" ? preview.replace(/\s+/g, " ").trim() : "";
     return (0, import_react6.createElement)(
       "div",
       { className: "bt-event" },
@@ -3863,7 +3877,8 @@ function EventLine({ prefix, bots, joiner = t("and"), onOpen, whole = false }) {
         { type: "button", className: "bt-event-whole", title: bots[0].name, onClick: () => onOpen?.(bots[0]) },
         (0, import_react6.createElement)("span", null, prefix),
         (0, import_react6.createElement)(BotMark, { bot: bots[0], size: 16 }),
-        (0, import_react6.createElement)("span", { className: "bt-event-name" }, bots[0].name)
+        (0, import_react6.createElement)("span", { className: "bt-event-name" }, bots[0].name),
+        line !== "" ? (0, import_react6.createElement)("span", { className: "bt-event-preview" }, line) : null
       )
     );
   }
@@ -4075,6 +4090,7 @@ function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnClock, us
       return (0, import_react6.createElement)(EventLine, {
         prefix: source.role === "stopped" ? t("Stopped by") : count > 1 ? t("{count} messages with", { count }) : t("Message from"),
         bots,
+        preview: stripHeader(contentText(data.content)),
         onOpen: (bot) => actions.openExchange(selfId, bot.id),
         whole: true
       });
@@ -4604,10 +4620,35 @@ function useMarkedUnread(id, active, marked, actions) {
   }, [active, marked]);
 }
 var PinMark = () => (0, import_react8.createElement)("span", { className: "bt-pin", "aria-hidden": true }, (0, import_react8.createElement)(PinMarkIcon));
+function countOf(roster, sessionIds) {
+  const counts2 = roster.counts;
+  if (counts2 === void 0) return void 0;
+  let total = 0;
+  let indexed = false;
+  for (const id of sessionIds) {
+    const value = counts2[id];
+    if (typeof value === "number") {
+      total += value;
+      indexed = true;
+    }
+  }
+  return indexed ? total : void 0;
+}
+function RowMeta({ at, count }) {
+  const time = at > 0 ? relativeShort(at) : "";
+  if (time === "" && count === void 0) return null;
+  return (0, import_react8.createElement)(
+    "span",
+    { className: "bt-row-meta" },
+    time !== "" ? (0, import_react8.createElement)("span", { className: "bt-row-time" }, time) : null,
+    count !== void 0 ? (0, import_react8.createElement)("span", { className: "bt-row-count", title: t("{count} messages", { count }) }, String(count)) : null
+  );
+}
 function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, wide, marked }) {
   const id = bot.id;
   const part = currentPart(bot);
   const preview = useSessions((list) => previewOf(list, part, roster.exchangeTurns[part]));
+  const at = useSessions((list) => list.byId[part]?.updatedAt ?? 0);
   const running = useSessionStatus((map) => map.get(part)?.running === true);
   const active = useSessionRetainInfo(part, (info) => (info?.retainedBy?.mainView ?? 0) > 0);
   const unread = useSessionStatus((map) => map.get(part)?.completionUnread === true || map.get(part)?.pendingInteraction !== void 0) || marked && !active;
@@ -4659,7 +4700,13 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
     wide ? (0, import_react8.createElement)(
       "span",
       { className: "bt-row-body" },
-      (0, import_react8.createElement)("span", { className: "bt-row-name" }, (0, import_react8.createElement)("span", { className: "bt-row-title" }, bot.name), pinned ? (0, import_react8.createElement)(PinMark) : null),
+      (0, import_react8.createElement)(
+        "span",
+        { className: "bt-row-name" },
+        (0, import_react8.createElement)("span", { className: "bt-row-title" }, bot.name),
+        pinned ? (0, import_react8.createElement)(PinMark) : null,
+        (0, import_react8.createElement)(RowMeta, { at, count: countOf(roster, [part, ...bot.parts ?? []]) })
+      ),
       preview ? (0, import_react8.createElement)("span", { className: "bt-row-preview" }, preview) : null
     ) : null,
     wide && unread && !active ? (0, import_react8.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
@@ -4669,6 +4716,7 @@ function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, 
   const id = room2.id;
   const fallback = useSessions((list) => previewOf(list, id));
   const preview = room2.preview?.replace(/\s+/g, " ").trim() || fallback;
+  const at = useSessions((list) => list.byId[id]?.updatedAt ?? 0);
   const active = useSessionRetainInfo(id, (info) => (info?.retainedBy?.mainView ?? 0) > 0);
   const unread = useSessionStatus((map) => map.get(id)?.completionUnread === true) || marked && !active;
   useMarkedUnread(id, active, marked, actions);
@@ -4693,7 +4741,15 @@ function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, 
     wide ? (0, import_react8.createElement)(
       "span",
       { className: "bt-row-body" },
-      (0, import_react8.createElement)("span", { className: "bt-row-name" }, (0, import_react8.createElement)("span", { className: "bt-row-title" }, room2.name), pinned ? (0, import_react8.createElement)(PinMark) : null),
+      (0, import_react8.createElement)(
+        "span",
+        { className: "bt-row-name" },
+        (0, import_react8.createElement)("span", { className: "bt-row-title" }, room2.name),
+        pinned ? (0, import_react8.createElement)(PinMark) : null,
+        // A group's messages live in each member's own hidden Session, so the indexed
+        // lines would count the same conversation once per member. No number, then.
+        (0, import_react8.createElement)(RowMeta, { at, count: void 0 })
+      ),
       preview ? (0, import_react8.createElement)("span", { className: "bt-row-preview" }, preview) : null
     ) : null,
     wide && unread && !active ? (0, import_react8.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
@@ -12523,7 +12579,8 @@ function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageIma
         "div",
         { className: "bt-ubody", title: clock3(data.time) },
         (0, import_react32.createElement)(UserText, { text, bots: mentionableBots(roster, sessionId), referenceLabels, skillNames: data.skillNames ?? [], references, actions }),
-        rest.map((block, index) => ui.JsonBlock ? (0, import_react32.createElement)(ui.JsonBlock, { key: index, label: t("Content"), payload: block }) : null)
+        rest.map((block, index) => ui.JsonBlock ? (0, import_react32.createElement)(ui.JsonBlock, { key: index, label: t("Content"), payload: block }) : null),
+        clock3(data.time) !== void 0 ? (0, import_react32.createElement)("span", { className: "bt-bubble-time" }, clock3(data.time)) : null
       ) : null,
       referenceLabels.length > 0 ? (0, import_react32.createElement)("div", { className: "bt-urefs" }, t("Referenced {labels}", { labels: referenceLabels.join(t(", ")) })) : null
     ),
@@ -12615,6 +12672,7 @@ function apply(ctx) {
   const live = createSource({});
   const turnClock = createSource({});
   let activityKey = "{}";
+  let countsKey = "{}";
   const memoryNews = createSource({});
   let memoryNewsKey;
   const noteMemoryNews = (next) => {
@@ -12668,6 +12726,11 @@ function apply(ctx) {
     const current = roster.getSnapshot();
     if (value.connectors !== void 0 && current.ready && JSON.stringify(value.connectors) !== JSON.stringify(current.connectors ?? [])) {
       roster.set({ ...current, connectors: value.connectors });
+    }
+    const nextCounts = JSON.stringify(value.counts ?? {});
+    if (nextCounts !== countsKey) {
+      countsKey = nextCounts;
+      roster.set({ ...roster.getSnapshot(), counts: value.counts ?? {} });
     }
     if (value.unchanged || value.revision === current.revision && value.modelsKey === current.modelsKey) return;
     if (Object.keys(seenAt).length === 0) leaveVisits([...value.bots, ...value.rooms].map((entry) => entry.id));
