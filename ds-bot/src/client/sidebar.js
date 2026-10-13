@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { FishLogo } from '@deepseek-ai/dsh-client-ui-primitives'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
-import { PlusIcon, SearchIcon, GaugeIcon, PlugIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, PeopleIcon } from './icons.js'
+import { PlusIcon, SearchIcon, GaugeIcon, PlugIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon } from './icons.js'
 import { MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
@@ -74,17 +74,17 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
       // the rail has no room for them, so this branch is the wide column only.
       h('div', { className: 'bt-tile-bubbles' },
         h('button', {
-          type: 'button', className: 'bt-bubble-btn', 'data-place': 'left', 'data-i': '1',
+          type: 'button', className: 'bt-bubble-btn', 'data-place': 'top', 'data-i': '1',
           'aria-label': t('New chat'), title: t('New chat'), onClick: () => actions.openNewChat('new'),
-        }, h(PlusIcon)),
+        }, h('span', { className: 'bt-bubble-text' }, t('New chat'))),
         h('button', {
-          type: 'button', className: 'bt-bubble-btn', 'data-place': 'right', 'data-i': '2',
-          'aria-label': t('Create Bot'), title: t('Create Bot'), onClick: () => actions.openNewChat('create'),
-        }, h(PlusIcon)),
+          type: 'button', className: 'bt-bubble-btn', 'data-place': 'mid', 'data-i': '2',
+          'aria-label': t('New Bot'), title: t('New Bot'), onClick: () => actions.openNewChat('create'),
+        }, h('span', { className: 'bt-bubble-text' }, t('New Bot'))),
         h('button', {
-          type: 'button', className: 'bt-bubble-btn', 'data-place': 'below', 'data-i': '3',
-          'aria-label': t('Create group chat'), title: t('Create group chat'), onClick: () => actions.openNewChat('group'),
-        }, h(PeopleIcon))),
+          type: 'button', className: 'bt-bubble-btn', 'data-place': 'bot', 'data-i': '3',
+          'aria-label': t('New group'), title: t('New group'), onClick: () => actions.openNewChat('group'),
+        }, h('span', { className: 'bt-bubble-text' }, t('New group')))),
       h('button', {
       type: 'button', className: 'bt-tile', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
       'data-bot-id': id, title: preview || bot.name, onClick: () => actions.openSession(id), onContextMenu,

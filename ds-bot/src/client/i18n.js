@@ -12,6 +12,7 @@ const ZH = {
   'Unread activity': '有未读',
   Search: '搜索',
   'New chat': '新对话',
+  'New group': '新群聊',
   'New…': '新建',
   'Animation': '动画',
   'Bot animation': 'Bot 动画',
@@ -179,6 +180,20 @@ const ZH = {
   'Conversation details': '对话详情',
   'Panel tabs': '面板标签页',
   'Close panel': '关闭面板',
+
+  // File previews
+  Files: '文件',
+  'File path': '文件路径',
+  'Open a file in the workspace': '打开工作区里的文件',
+  'A file path is required': '请填写文件路径',
+  'Preview {name}': '预览 {name}',
+  'This file has no preview': '这个文件无法预览',
+  'Text and Markdown files, and images, are previewed here. Everything else shows its details only.': '这里预览文本、Markdown 和图片，其他文件只显示基本信息。',
+  'No preview': '无预览',
+  '{name} · {size}': '{name} · {size}',
+  'Changed {when}': '修改于 {when}',
+  'Only the first {size} are shown.': '只显示前 {size}。',
+  'The file is empty.': '这个文件是空的。',
 
   // Bot settings
   'Choose a PNG, JPEG, WebP, or GIF image': '请选择 PNG、JPEG、WebP 或 GIF 图片',

@@ -49,6 +49,7 @@ var ZH = {
   "Unread activity": "有未读",
   Search: "搜索",
   "New chat": "新对话",
+  "New group": "新群聊",
   "New…": "新建",
   "Animation": "动画",
   "Bot animation": "Bot 动画",
@@ -212,6 +213,19 @@ var ZH = {
   "Conversation details": "对话详情",
   "Panel tabs": "面板标签页",
   "Close panel": "关闭面板",
+  // File previews
+  Files: "文件",
+  "File path": "文件路径",
+  "Open a file in the workspace": "打开工作区里的文件",
+  "A file path is required": "请填写文件路径",
+  "Preview {name}": "预览 {name}",
+  "This file has no preview": "这个文件无法预览",
+  "Text and Markdown files, and images, are previewed here. Everything else shows its details only.": "这里预览文本、Markdown 和图片，其他文件只显示基本信息。",
+  "No preview": "无预览",
+  "{name} · {size}": "{name} · {size}",
+  "Changed {when}": "修改于 {when}",
+  "Only the first {size} are shown.": "只显示前 {size}。",
+  "The file is empty.": "这个文件是空的。",
   // Bot settings
   "Choose a PNG, JPEG, WebP, or GIF image": "请选择 PNG、JPEG、WebP 或 GIF 图片",
   "Choose an image smaller than 25 MB": "请选择小于 25 MB 的图片",
@@ -1168,8 +1182,8 @@ function bodyOf(def, paint, flat = false) {
     return "";
   }
 }
-var eyeMarkup = ([cx, cy, w, h32, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h32 / 2}" width="${w}" height="${h32}" rx="${w / 2}"/></g>`;
-var happyEyeMarkup = ([cx, cy, w, h32, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h32 * 0.14}Q0 ${-h32 * 0.42} ${w * 0.62} ${h32 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
+var eyeMarkup = ([cx, cy, w, h33, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h33 / 2}" width="${w}" height="${h33}" rx="${w / 2}"/></g>`;
+var happyEyeMarkup = ([cx, cy, w, h33, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h33 * 0.14}Q0 ${-h33 * 0.42} ${w * 0.62} ${h33 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
 var maskBox = (size) => `maskUnits="userSpaceOnUse" x="${-size}" y="${-size}" width="${size * 3}" height="${size * 3}"`;
 var holes = (def, eyes) => `<rect x="${-def.size}" y="${-def.size}" width="${def.size * 3}" height="${def.size * 3}" fill="#fff"/>${eyes}`;
 var MASK_ID = "%MASK%";
@@ -1698,12 +1712,12 @@ function liveSprings(apply2) {
     const dt = Math.min(0.5, Math.max(1e-3, (now - last) / 1e3));
     last = now;
     const steps = Math.ceil(dt * 240);
-    const h32 = dt / steps;
+    const h33 = dt / steps;
     let moving = false;
     for (const value of values.values()) {
       for (let index = 0; index < steps; index += 1) {
-        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h32;
-        value.x += value.v * h32;
+        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h33;
+        value.x += value.v * h33;
       }
       if (Math.abs(value.x - value.to) < 0.05 && Math.abs(value.v) < 1) {
         value.x = value.to;
@@ -1977,32 +1991,48 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-round:hover{background:var(--bt-hover)}
 .bt-round:active{transform:scale(.94)}
 .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
-.bt-tile-wrap{position:relative;display:flex;flex-direction:column;align-items:center;padding:30px 0 40px}
+.bt-tile-wrap{position:relative;display:flex;flex-direction:column;align-items:flex-start;padding:30px 0 40px}
 /* Shortcuts float around the main Bot's tile, each a chat bubble whose tail points back
    at it. They sit in the padding this column already reserves, so the tile does not move. */
-.bt-tile-bubbles{position:absolute;inset:0;pointer-events:none}
-.bt-bubble-btn{position:absolute;pointer-events:auto;display:grid;place-items:center;width:30px;height:30px;
-  border-radius:10px;background:var(--bt-card);border:1px solid var(--bt-line);color:var(--bt-ink-2);cursor:pointer;
-  box-shadow:0 3px 10px -3px rgba(0,0,0,.16);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},color .12s ease,background-color .12s ease;
+/* Shortcuts stack in the column's own right half, one line each, all tails on the left
+   edge pointing back at the tile. The cap keeps the longest label inside the sidebar. */
+.bt-tile-bubbles{position:absolute;left:104px;top:30px;bottom:40px;width:150px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+/* Speech bubbles around the main Bot: short lines of text, not icons, so the Bot reads as
+   asking for something. Each is a capsule with a tail pointing back at the tile, and the
+   three differ in size so the group does not look like a toolbar. */
+.bt-bubble-btn{pointer-events:auto;display:inline-flex;align-items:center;align-self:flex-start;
+  max-width:150px;padding:4px 10px;border-radius:12px;background:var(--bt-card);border:1px solid var(--bt-line);color:var(--bt-ink-2);
+  font-family:inherit;font-size:11px;line-height:16px;cursor:pointer;
+  box-shadow:0 6px 16px -6px rgba(0,0,0,.22);
+  transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},color .12s ease,background-color .12s ease;
   animation:bt-bubble-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards}
-.bt-bubble-btn[data-place=left]{left:6px;top:6px}
-.bt-bubble-btn[data-place=right]{right:6px;top:6px}
-.bt-bubble-btn[data-place=below]{left:50%;bottom:4px;transform:translateX(-50%)}
+/* A 1px light edge along the top reads as raised, the way a fresh line does. */
+.bt-bubble-btn::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}
+body[data-ds-dark-theme] .bt-bubble-btn::before{box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+/* Text only: the icon carried no meaning the words did not already carry, and it cost
+   about 19px of the column's width. */
+.bt-bubble-text{color:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The tails converge on the avatar's centre. The upper bubble's tail leaves its lower-left
+   corner and the lower bubble's its upper-left, so both point at the same spot below and
+   above the middle line. */
 .bt-bubble-btn[data-i="1"]{animation-delay:60ms}
 .bt-bubble-btn[data-i="2"]{animation-delay:120ms}
 .bt-bubble-btn[data-i="3"]{animation-delay:180ms}
 .bt-bubble-btn:hover{color:var(--bt-ink);background:var(--bt-hover)}
-.bt-bubble-btn[data-place=left]:hover{transform:translate(-2px,-2px)}
-.bt-bubble-btn[data-place=right]:hover{transform:translate(2px,-2px)}
-.bt-bubble-btn[data-place=below]:hover{transform:translateX(-50%) translateY(2px)}
-.bt-bubble-btn[data-place=left]:after,.bt-bubble-btn[data-place=right]:after{content:"";position:absolute;top:50%;width:0;height:0;border:5px solid transparent;translate:0 -50%}
-.bt-bubble-btn[data-place=left]:after{right:-9px;border-left-color:var(--bt-card)}
-.bt-bubble-btn[data-place=right]:after{left:-9px;border-right-color:var(--bt-card)}
-.bt-bubble-btn[data-place=below]:after{content:"";position:absolute;bottom:-5px;left:50%;translate:-50% 0;width:0;height:0;border:5px solid transparent;border-bottom:0;border-top-color:var(--bt-card)}
+.bt-bubble-btn:hover{transform:translate(-2px,0)}
+/* All three tails sit on the left edge, aiming back at the tile's centre: the first
+   bubble's tail at its lower-left, the middle one's at its left centre, the last one's
+   at its upper-left. */
+.bt-bubble-btn::after{content:"";position:absolute;left:-5px;width:0;height:0;border:5px solid transparent;border-right-color:var(--bt-card);border-left:0}
+.bt-bubble-btn[data-i="1"]::after{bottom:6px}
+.bt-bubble-btn[data-i="2"]::after{top:50%;margin-top:-5px}
+.bt-bubble-btn[data-i="3"]::after{top:6px}
 @keyframes bt-bubble-in{from{opacity:0;scale:.7}}
 body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s ease,background-color .12s ease}
 @media (prefers-reduced-motion:reduce){.bt-bubble-btn{animation:none;transition:none}}
-.bt-tile{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;max-width:220px;padding:6px 8px 4px;border-radius:12px;border:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:inherit;transition:background-color .12s ease}
+@media (prefers-reduced-motion:reduce){.bt-bubble-btn{animation:none;transition:none}}
+.bt-tile{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;max-width:104px;padding:6px 8px 4px;border-radius:12px;border:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:inherit;transition:background-color .12s ease}
 .bt-tile:hover{background:var(--bt-hover)}
 .bt-tile[aria-current=page]{background:var(--bt-active)}
 .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2036,7 +2066,7 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
 .bt-connect svg{flex:none;width:15px;height:15px}
 .bt-connect-wrap{position:relative;display:flex;flex:1 1 auto;min-width:0}
 .bt-connect-warn{flex:none;width:16px;height:16px;border-radius:50%;background:#E5484D;color:#fff;font-size:11px;line-height:16px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
-.bt-connect-tip{position:fixed;box-sizing:border-box;width:max-content;max-width:260px;padding:8px 12px;border-radius:10px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 8px 24px -4px rgba(0,0,0,.14);color:var(--bt-ink);font-size:12px;line-height:17px;white-space:normal;text-align:center;z-index:70;transform-origin:bottom left;animation:bt-tip-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
+.bt-connect-tip{position:fixed;box-sizing:border-box;width:max-content;max-width:260px;padding:8px 12px;border-radius:10px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 8px 24px -4px rgba(0,0,0,.14);color:var(--bt-ink);font-size:12px;line-height:17px;white-space:normal;text-align:center;z-index:70;transform-origin:bottom left;animation:bt-tip-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing}}
 @keyframes bt-tip-in{from{opacity:0;transform:scale(.96);filter:blur(4px)}}
 @media (prefers-reduced-motion:reduce){.bt-connect-tip{animation:none}}
 
@@ -2057,8 +2087,8 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
 .bt-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 @media (prefers-reduced-motion:reduce){.bt-pill-mem,.bt-pill-mem-in{transition:none!important}.bt-pill-mem-in{filter:none;transform:none}.bt-pill[data-memory=updated] .bt-pill-mem-ico{animation:none}}
 .bt-swap{color:var(--bt-ink-3);font-size:12px}
-.bt-pill-go{flex:none;display:inline-flex;align-items:center;justify-content:flex-end;width:0;margin-left:-8px;overflow:hidden;opacity:0;filter:blur(6px);transform:translateX(-6px);color:var(--bt-ink-2);transition:width ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},margin-left ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},opacity .18s ease,filter .18s ease}
-.bt-pill-go svg{flex:none;transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
+.bt-pill-go{flex:none;display:inline-flex;align-items:center;justify-content:flex-end;width:0;margin-left:-8px;overflow:hidden;opacity:0;filter:blur(6px);transform:translateX(-6px);color:var(--bt-ink-2);transition:width $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},margin-left $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},transform $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},opacity .18s ease,filter .18s ease}
+.bt-pill-go svg{flex:none;transition:transform $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing}}
 .bt-pill:hover .bt-pill-go,.bt-pill:focus-visible .bt-pill-go,.bt-pill[aria-expanded=true] .bt-pill-go{width:18px;margin-left:0;opacity:1;filter:none;transform:none}
 .bt-pill[aria-expanded=true] .bt-pill-go svg{transform:rotate(180deg)}
 .bt-pill[data-memory=updated]:is(:hover,:focus-visible,[aria-expanded=true]) .bt-pill-go{width:0;margin-left:-8px;opacity:0;filter:blur(6px);transform:translateX(-6px)}
@@ -2085,7 +2115,7 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, "scale")}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 
-.bt-q{margin:0 auto 8px;width:100%;max-width:var(--dsh-chat-content-width,748px);display:flex;flex-direction:column;gap:12px;--bt-q-edge:color-mix(in srgb,var(--bt-ink) 10%,transparent);--bt-q-rule:color-mix(in srgb,var(--bt-ink) 8%,transparent);--bt-q-rule-2:color-mix(in srgb,var(--bt-ink) 5%,transparent);background:var(--bt-card);box-shadow:0 1px 3px rgba(20,20,20,.04),inset 0 0 0 1px var(--bt-q-edge);border-radius:16px;padding:14px 16px;box-sizing:border-box;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;animation:bt-q-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .2s ease-out backwards}
+.bt-q{margin:0 auto 8px;width:100%;max-width:var(--dsh-chat-content-width,748px);display:flex;flex-direction:column;gap:12px;--bt-q-edge:color-mix(in srgb,var(--bt-ink) 10%,transparent);--bt-q-rule:color-mix(in srgb,var(--bt-ink) 8%,transparent);--bt-q-rule-2:color-mix(in srgb,var(--bt-ink) 5%,transparent);background:var(--bt-card);box-shadow:0 1px 3px rgba(20,20,20,.04),inset 0 0 0 1px var(--bt-q-edge);border-radius:16px;padding:14px 16px;box-sizing:border-box;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;animation:bt-q-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing} backwards,bt-veil-in .2s ease-out backwards}
 body[data-ds-dark-theme] .bt-q{--bt-q-edge:rgba(255,255,255,.16);--bt-q-rule:rgba(255,255,255,.12);--bt-q-rule-2:rgba(255,255,255,.08)}
 @keyframes bt-q-in{from{transform:translateY(10px) scale(.97)}}
 .bt-q-settled{animation:none}
@@ -2187,7 +2217,7 @@ button.bt-q-opt:active{background:var(--bt-active)}
 .bt-create-gap{width:28px}
 .bt-create-title{font-size:14px;line-height:20px;font-weight:500}
 .bt-create-body{flex:1;overflow-y:auto;padding:28px 16px 32px;display:flex;justify-content:center}
-.bt-create-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:18px;animation:bt-q-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} both,bt-veil-in .22s ease-out both}
+.bt-create-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:18px;animation:bt-q-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing} both,bt-veil-in .22s ease-out both}
 .bt-create-preview{display:flex;flex-direction:column;align-items:center;gap:10px}
 .bt-create-pop{display:inline-flex;animation:bt-create-pop ${SPRING_POP.duration}ms ${SPRING_POP.easing} both}
 @keyframes bt-create-pop{from{transform:scale(.72);opacity:.4}}
@@ -2207,7 +2237,7 @@ button.bt-q-opt:active{background:var(--bt-active)}
 .bt-dialog .bt-head{height:62px}
 .bt-dialog-log{flex:1;overflow-y:auto;padding:8px 16px 20px;width:100%;max-width:var(--dsh-chat-content-width,748px);margin:0 auto;box-sizing:border-box}
 .bt-dialog-foot{display:flex;justify-content:center;padding:10px 10px 16px}
-.bt-exchange{animation:bt-sheet-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} both,bt-veil-in .24s ease-out both}
+.bt-exchange{animation:bt-sheet-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing} both,bt-veil-in .24s ease-out both}
 .bt-exchange[data-leaving]{animation:bt-sheet-out .22s cubic-bezier(.4,0,1,1) forwards;pointer-events:none}
 @keyframes bt-sheet-in{from{transform:translateY(24px)}}
 @keyframes bt-sheet-out{to{opacity:0;transform:translateY(16px);filter:blur(4px)}}
@@ -2224,11 +2254,11 @@ button.bt-q-opt:active{background:var(--bt-active)}
 .bt-soft:hover{background:var(--bt-active)}
 .bt-time{display:block;text-align:center;font-size:12px;line-height:16px;color:var(--bt-ink-2);padding:6px 0}
 
-.bt-panel{position:fixed;top:var(--dsh-frame-chrome-top,0px);right:0;bottom:0;width:var(--bt-panel-w,320px);pointer-events:auto;z-index:40;background:var(--bt-main);border-left:.5px solid var(--bt-line-2);display:flex;flex-direction:column;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;box-sizing:border-box;animation:bt-pane-in .3s cubic-bezier(.2,0,0,1);transition:width ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
+.bt-panel{position:fixed;top:var(--dsh-frame-chrome-top,0px);right:0;bottom:0;width:var(--bt-panel-w,320px);pointer-events:auto;z-index:40;background:var(--bt-main);border-left:.5px solid var(--bt-line-2);display:flex;flex-direction:column;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;box-sizing:border-box;animation:bt-pane-in .3s cubic-bezier(.2,0,0,1);transition:width $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing}}
 .bt-panel[data-leaving]{transform:translateX(100%);transition:transform .3s cubic-bezier(.2,0,0,1);pointer-events:none}
 .bt-panel[data-instant]{transition:none}
 @keyframes bt-pane-in{from{transform:translateX(100%)}}
-[class*="_centerCol"]{transition:margin-right ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
+[class*="_centerCol"]{transition:margin-right $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing}}
 .bt-panel-grip{position:absolute;left:-5px;top:0;bottom:0;width:8px;cursor:col-resize;z-index:3;touch-action:none}
 .bt-panel-grip:hover,.bt-panel[data-dragging] .bt-panel-grip{background:linear-gradient(to right,transparent 4px,var(--bt-line-2) 4px,var(--bt-line-2) 6px,transparent 6px)}
 .bt-drag-shield{position:fixed;inset:0;z-index:45;cursor:col-resize}
@@ -2331,7 +2361,7 @@ button.bt-q-opt:active{background:var(--bt-active)}
 .bt-settings-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:60;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 .bt-scrim{position:absolute;inset:0;background:rgba(0,0,0,.32);animation:bt-fade .22s ease-out}
 body[data-ds-dark-theme] .bt-scrim{background:rgba(0,0,0,.5)}
-.bt-settings{--bt-set-w:min(800px,calc(100vw - 48px));--bt-set-h:min(620px,calc(100vh - 2*max(32px,var(--dsh-frame-overlay-top,32px))));position:relative;width:var(--bt-set-w);height:var(--bt-set-h);background:var(--bt-main);border-radius:16px;border:.5px solid var(--bt-line-2);box-shadow:0 24px 80px rgba(0,0,0,.24);display:flex;overflow:hidden;color:var(--bt-ink);transition:${spring(SPRING_SHAPE, "width", "height")};animation:bt-dialog-rise ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
+.bt-settings{--bt-set-w:min(800px,calc(100vw - 48px));--bt-set-h:min(620px,calc(100vh - 2*max(32px,var(--dsh-frame-overlay-top,32px))));position:relative;width:var(--bt-set-w);height:var(--bt-set-h);background:var(--bt-main);border-radius:16px;border:.5px solid var(--bt-line-2);box-shadow:0 24px 80px rgba(0,0,0,.24);display:flex;overflow:hidden;color:var(--bt-ink);transition:${spring(SPRING_SHAPE, "width", "height")};animation:bt-dialog-rise $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
 .bt-settings[data-wide]{--bt-set-w:min(1100px,calc(100vw - 48px));--bt-set-h:min(780px,calc(100vh - 2*max(32px,var(--dsh-frame-overlay-top,32px))))}
 :is(.bt-settings-layer,.bt-mem-layer)[data-leaving]{pointer-events:none}
 :is(.bt-settings-layer,.bt-mem-layer)[data-leaving] .bt-scrim{opacity:0;transition:opacity .16s ease-in}
@@ -2357,7 +2387,7 @@ body[data-ds-dark-theme] .bt-scrim{background:rgba(0,0,0,.5)}
 .bt-settings-head>.bt-icon-btn{animation:bt-back-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out}
 @keyframes bt-back-in{from{translate:6px 0;scale:.8}}
 .bt-settings-scroll{flex:1;overflow-y:auto;padding:12px 20px 24px;display:flex;flex-direction:column;gap:20px;scrollbar-width:thin}
-.bt-settings-page>:not(.bt-us){animation:bt-page-up ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .22s ease-out backwards}
+.bt-settings-page>:not(.bt-us){animation:bt-page-up $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing} backwards,bt-veil-in .22s ease-out backwards}
 .bt-settings-page[data-move=in]>:not(.bt-us){animation-name:bt-page-in,bt-veil-in}
 .bt-settings-page[data-move=out]>:not(.bt-us){animation-name:bt-page-out,bt-veil-in}
 .bt-settings-page>:nth-child(2){animation-delay:30ms}
@@ -2397,7 +2427,7 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 .bt-connector[data-state=ready] .bt-connector-status{color:var(--bt-ink-2)}
 .bt-connector[data-state=error] .bt-connector-status{color:#e02135;white-space:normal}
 .bt-connector-actions{flex:none;display:flex;gap:6px}
-.bt-connector-form{display:flex;flex-direction:column;gap:8px;padding-left:48px;animation:bt-q-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
+.bt-connector-form{display:flex;flex-direction:column;gap:8px;padding-left:48px;animation:bt-q-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
 .bt-connector-form-row{display:flex;align-items:center;gap:6px}
 .bt-connector-link{flex:1;font-size:12px;color:var(--bt-ink-2)}
 .bt-connector-error{padding-left:48px;font-size:12px;line-height:16px;color:#e02135}
@@ -2488,7 +2518,7 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
 .bt-menu-hint{flex:none;color:var(--bt-ink-3);font-size:12px;font-variant-numeric:tabular-nums}
 .bt-palette-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:70;pointer-events:auto;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 .bt-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.46);animation:bt-fade .22s ease-out}
-.bt-palette{position:absolute;top:50%;left:50%;width:min(560px,92vw);transform:translate(-50%,-50%);display:flex;flex-direction:column;border-radius:12px;background:var(--bt-main);border:1px solid var(--bt-line-2);box-shadow:0 24px 48px -12px rgba(0,0,0,.25);overflow:hidden;color:var(--bt-ink);animation:bt-palette-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
+.bt-palette{position:absolute;top:50%;left:50%;width:min(560px,92vw);transform:translate(-50%,-50%);display:flex;flex-direction:column;border-radius:12px;background:var(--bt-main);border:1px solid var(--bt-line-2);box-shadow:0 24px 48px -12px rgba(0,0,0,.25);overflow:hidden;color:var(--bt-ink);animation:bt-palette-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
 .bt-palette-layer[data-leaving]{pointer-events:none}
 .bt-palette-layer[data-leaving] .bt-backdrop{opacity:0;transition:opacity .16s ease-in}
 .bt-palette-layer[data-leaving] .bt-palette{animation:bt-dialog-sink .16s cubic-bezier(.4,0,1,1) forwards}
@@ -2592,7 +2622,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 .bt-mem-row-go{display:inline-flex;align-items:center;gap:2px;color:var(--bt-ink-3);font-size:12px}
 .bt-mem-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:61;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 .bt-mem-scrim{animation:bt-fade .2s ease-out}
-.bt-mem{position:relative;width:min(680px,calc(100vw - 48px));height:min(760px,calc(100vh - 2*max(32px,var(--dsh-frame-overlay-top,32px))));background:var(--bt-main);border-radius:20px;border:.5px solid var(--bt-line-2);box-shadow:0 24px 80px rgba(0,0,0,.24);display:flex;flex-direction:column;overflow:hidden;color:var(--bt-ink);animation:bt-dialog-rise ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
+.bt-mem{position:relative;width:min(680px,calc(100vw - 48px));height:min(760px,calc(100vh - 2*max(32px,var(--dsh-frame-overlay-top,32px))));background:var(--bt-main);border-radius:20px;border:.5px solid var(--bt-line-2);box-shadow:0 24px 80px rgba(0,0,0,.24);display:flex;flex-direction:column;overflow:hidden;color:var(--bt-ink);animation:bt-dialog-rise $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
 .bt-mem-head{position:relative;display:flex;align-items:center;gap:8px;height:60px;flex:none;padding:0 14px 0 24px;border-bottom:.5px solid var(--bt-line);box-sizing:border-box}
 .bt-mem-head .bt-icon-btn{width:32px;height:32px;flex:none}
 .bt-mem-head [aria-haspopup] svg{width:18px;height:18px;stroke-width:2.6}
@@ -2629,7 +2659,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 .bt-mem-empty-text{font-size:13px;line-height:20px;color:var(--bt-ink-2)}
 .bt-mem-failed{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--bt-hover);font-size:13px;line-height:18px;color:var(--bt-ink-2)}
 .bt-mem-failed>span{flex:1;min-width:0;overflow-wrap:anywhere}
-.bt-mem-entries{display:flex;flex-direction:column;gap:28px;animation:bt-page-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},bt-veil-in .22s ease-out}
+.bt-mem-entries{display:flex;flex-direction:column;gap:28px;animation:bt-page-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},bt-veil-in .22s ease-out}
 .bt-mem-section-head{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
 .bt-mem-section-head h3{margin:0;font-size:15px;line-height:22px;font-weight:600}
 .bt-mem-section-head span{font-size:12px;line-height:16px;color:var(--bt-ink-3)}
@@ -2648,7 +2678,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 @media (hover:none){.bt-mem-remove{opacity:1}}
 .bt-mem-none{font-size:13px;line-height:18px;color:var(--bt-ink-3);padding:8px 4px}
 .bt-mem-foot{flex:none;padding:8px 20px 20px;display:flex;flex-direction:column;gap:10px}
-.bt-mem-reply{border-radius:16px;background:var(--bt-hover);padding:8px 8px 12px 16px;display:flex;flex-direction:column;gap:6px;max-height:36vh;overflow-y:auto;scrollbar-width:thin;transform-origin:50% 100%;animation:bt-pop-lift ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
+.bt-mem-reply{border-radius:16px;background:var(--bt-hover);padding:8px 8px 12px 16px;display:flex;flex-direction:column;gap:6px;max-height:36vh;overflow-y:auto;scrollbar-width:thin;transform-origin:50% 100%;animation:bt-pop-lift $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
 .bt-mem-reply-head{display:flex;align-items:center;gap:8px;min-height:24px}
 .bt-mem-reply-asked{flex:1;min-width:0;font-size:12px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-mem-reply .bt-icon-btn{width:24px;height:24px;flex:none}
@@ -2679,8 +2709,8 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 .bt-tag-admin{display:inline-flex;align-items:center;gap:4px}
 .bt-create-inline{padding:18px 16px;border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card)}
 .bt-create-inline .bt-create-card{max-width:none}
-.bt-panel-view>[data-move=in]{animation:bt-page-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .2s ease-out backwards}
-.bt-panel-view>[data-move=out]{animation:bt-page-out ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .2s ease-out backwards}
+.bt-panel-view>[data-move=in]{animation:bt-page-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing} backwards,bt-veil-in .2s ease-out backwards}
+.bt-panel-view>[data-move=out]{animation:bt-page-out $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing} backwards,bt-veil-in .2s ease-out backwards}
 .bt-panel-view>:is([data-move=in],[data-move=out]):nth-child(2){animation-delay:25ms}
 .bt-panel-view>:is([data-move=in],[data-move=out]):nth-child(n+3){animation-delay:50ms}
 .bt-panel-view>.bt-drawer-body[data-move=tab]{animation:bt-veil-in .2s ease-out}
@@ -2723,7 +2753,9 @@ var CONVERSATION_CSS = `
 header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;right:0;z-index:8;display:flex!important;padding:10px 0 0!important;background:transparent!important;pointer-events:none;justify-content:center}
 header[class*="_header"]:has(.bt-head)::before{content:"";position:absolute;inset:0 0 auto;height:60px;background:linear-gradient(to bottom,var(--bt-main),color-mix(in srgb,var(--bt-main) 0%,transparent));pointer-events:none;z-index:-1}
 header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolute;left:12px;top:10px;pointer-events:auto}
-header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+/* The pill centres itself in the same measure the transcript runs in: the shell's own
+   --dsh-chat-content-width, read only, never redefined (see the note below). */
+header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
 /* The content column keeps the shell's own measure, including the width the user dragged:
    the shell defines --dsh-chat-content-width on its own body and sizes its width handle
    from it, so overriding it here collapsed that handle. Only the bubble cap is ours. */
@@ -2759,7 +2791,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 .bt-shimmer{color:transparent;background:linear-gradient(90deg,var(--bt-shimmer-base) 0%,var(--bt-shimmer-base) 25%,var(--bt-ink) 60%,var(--bt-shimmer-base) 75%,var(--bt-shimmer-base) 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;animation:bt-shimmer 2.2s steps(60) infinite;--bt-shimmer-base:color-mix(in srgb,var(--bt-ink) 40%,transparent)}
 @keyframes bt-shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
 /* New rows slide up; a reply that replaces the activity row grows out of its corner. */
-[data-bt-enter="new"]{animation:bt-row-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
+[data-bt-enter="new"]{animation:bt-row-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing}}
 [data-bt-enter="after-collapse"]{transform-origin:0 100%;animation:bt-row-after .24s cubic-bezier(.23,1,.32,1) .38s backwards}
 @keyframes bt-row-in{from{transform:translateY(12px)}to{transform:none}}
 @keyframes bt-row-after{0%{opacity:0;transform:translateY(12px) scale(.94)}55%{opacity:1}100%{opacity:1;transform:none}}
@@ -2811,6 +2843,11 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 /* The shell's statistics pills move to the details panel, so the composer keeps no
    stats row. The slot id is "stats"; this attribute is the fallback that hides it. */
 [data-composer-stats]{display:none!important}
+/* The whole dock row below the composer holds the shell's stats and its ContextMeter
+   (measured: InputBar root's direct child "_dock", 26px tall under a 45px card, text
+   "2%"). The :has anchor keeps ds-bot's own docks (members/model/question/secret,
+   which render above the composer through the conversation.input.dock slot) intact. */
+[class*="_root"]:has(> [data-composer-card])>[class*="_dock"]{display:none!important}
 .bt-mic,.bt-voice{flex:none;width:28px;height:28px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, "scale")}}
 .bt-mic{background:color-mix(in srgb,var(--bt-ink) 5%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink-2)}
 .bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
@@ -4836,30 +4873,30 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
         (0, import_react8.createElement)("button", {
           type: "button",
           className: "bt-bubble-btn",
-          "data-place": "left",
+          "data-place": "top",
           "data-i": "1",
           "aria-label": t("New chat"),
           title: t("New chat"),
           onClick: () => actions.openNewChat("new")
-        }, (0, import_react8.createElement)(PlusIcon)),
+        }, (0, import_react8.createElement)("span", { className: "bt-bubble-text" }, t("New chat"))),
         (0, import_react8.createElement)("button", {
           type: "button",
           className: "bt-bubble-btn",
-          "data-place": "right",
+          "data-place": "mid",
           "data-i": "2",
-          "aria-label": t("Create Bot"),
-          title: t("Create Bot"),
+          "aria-label": t("New Bot"),
+          title: t("New Bot"),
           onClick: () => actions.openNewChat("create")
-        }, (0, import_react8.createElement)(PlusIcon)),
+        }, (0, import_react8.createElement)("span", { className: "bt-bubble-text" }, t("New Bot"))),
         (0, import_react8.createElement)("button", {
           type: "button",
           className: "bt-bubble-btn",
-          "data-place": "below",
+          "data-place": "bot",
           "data-i": "3",
-          "aria-label": t("Create group chat"),
-          title: t("Create group chat"),
+          "aria-label": t("New group"),
+          title: t("New group"),
           onClick: () => actions.openNewChat("group")
-        }, (0, import_react8.createElement)(PeopleIcon))
+        }, (0, import_react8.createElement)("span", { className: "bt-bubble-text" }, t("New group")))
       ),
       (0, import_react8.createElement)(
         "button",
@@ -9073,7 +9110,7 @@ function useTween(value) {
   }, [value]);
   return shown;
 }
-var glyphBox = (size, icon2) => (0, import_react22.createElement)("span", { className: "bt-us-glyph", style: { width: size, height: size } }, (0, import_react22.createElement)(icon2));
+var glyphBox = (size, icon3) => (0, import_react22.createElement)("span", { className: "bt-us-glyph", style: { width: size, height: size } }, (0, import_react22.createElement)(icon3));
 function ModelGlyph({ name, paint, size }) {
   return (0, import_react22.createElement)("span", {
     className: "bt-us-model",
@@ -9128,7 +9165,7 @@ ${names}`, { box: boxRef });
     "div",
     { ref: glide.box, className: "bt-us-tabs", role: "group", "aria-label": label },
     (0, import_react22.createElement)("span", { ref: glide.thumb, className: "bt-thumb", "aria-hidden": true }),
-    options.map(([id, text, icon2]) => (0, import_react22.createElement)("button", { key: id, type: "button", "aria-pressed": value === id, onClick: () => onChange(id) }, icon2 ? (0, import_react22.createElement)(icon2) : null, text))
+    options.map(([id, text, icon3]) => (0, import_react22.createElement)("button", { key: id, type: "button", "aria-pressed": value === id, onClick: () => onChange(id) }, icon3 ? (0, import_react22.createElement)(icon3) : null, text))
   );
 }
 function Stats({ range, total, previous }) {
@@ -11301,8 +11338,187 @@ function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, a
   ];
 }
 
-// src/client/browser-pane.js
+// src/client/file-preview.js
 var import_react30 = require("react");
+var import_dsh_client_ui_primitives6 = require("@deepseek-ai/dsh-client-ui-primitives");
+var sizeText = (bytes) => {
+  if (!Number.isFinite(bytes)) return "";
+  const units = ["B", "KB", "MB", "GB"];
+  let value = Math.max(0, bytes);
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${unit === 0 ? Math.round(value) : value.toFixed(value < 10 ? 1 : 0)} ${units[unit]}`;
+};
+var whenText2 = (ms2) => new Date(ms2).toLocaleString(void 0, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+var icon = (paths) => function FileIcon() {
+  return (0, import_react30.createElement)(
+    "svg",
+    { width: 16, height: 16, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
+    paths.map((d, index) => (0, import_react30.createElement)("path", { key: index, d }))
+  );
+};
+var FileGlyph = icon(["M11.5 3.5H6a1.5 1.5 0 0 0-1.5 1.5v10A1.5 1.5 0 0 0 6 16.5h8a1.5 1.5 0 0 0 1.5-1.5V7.5z", "M11.5 3.5v4h4"]);
+var OpenIcon = icon(["M10 3.5v9", "M6.5 9.5L10 13l3.5-3.5"]);
+var mdLabels2 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
+function CodeLine({ number, text }) {
+  return (0, import_react30.createElement)(
+    "span",
+    { className: "bt-fp-line" },
+    (0, import_react30.createElement)("span", { className: "bt-fp-num", "aria-hidden": true }, number),
+    (0, import_react30.createElement)("span", { className: "bt-fp-code" }, text === "" ? "​" : text)
+  );
+}
+function CutNote({ file }) {
+  return (0, import_react30.createElement)("div", { className: "bt-fp-cut" }, t("Only the first {size} are shown.", { size: sizeText(file.size) }));
+}
+function TextView({ file }) {
+  return (0, import_react30.createElement)(
+    "div",
+    { className: "bt-fp-body bt-fp-text", "aria-label": file.name },
+    (file.text ?? "").split("\n").map((line, index) => (0, import_react30.createElement)(CodeLine, { key: index, number: index + 1, text: line })),
+    file.truncated ? (0, import_react30.createElement)(CutNote, { file }) : null
+  );
+}
+function MarkdownView({ file }) {
+  return (0, import_react30.createElement)(
+    "div",
+    { className: "bt-fp-body bt-fp-markdown", "aria-label": file.name },
+    (0, import_react30.createElement)(import_dsh_client_ui_primitives6.MarkdownText, { text: file.text ?? "", labels: mdLabels2() }),
+    file.truncated ? (0, import_react30.createElement)(CutNote, { file }) : null
+  );
+}
+function ImageView({ file }) {
+  const [failed, setFailed] = (0, import_react30.useState)(false);
+  if (failed) return (0, import_react30.createElement)("div", { className: "bt-fp-body bt-fp-empty" }, (0, import_react30.createElement)("div", { className: "bt-fp-empty-title" }, t("This file has no preview")));
+  return (0, import_react30.createElement)("div", { className: "bt-fp-body bt-fp-image" }, (0, import_react30.createElement)("img", { src: `data:${file.mime ?? "application/octet-stream"};base64,${file.base64 ?? ""}`, alt: file.name, onError: () => setFailed(true) }));
+}
+function FileView({ file }) {
+  if (file.kind === "markdown") return (0, import_react30.createElement)(MarkdownView, { file });
+  if (file.kind === "image") return (0, import_react30.createElement)(ImageView, { file });
+  if (file.kind === "text") return (0, import_react30.createElement)(TextView, { file });
+  return (0, import_react30.createElement)(
+    "div",
+    { className: "bt-fp-body bt-fp-empty" },
+    (0, import_react30.createElement)(FileGlyph),
+    (0, import_react30.createElement)("div", { className: "bt-fp-empty-title" }, t("This file has no preview")),
+    (0, import_react30.createElement)("div", { className: "bt-fp-empty-text" }, t("Text and Markdown files, and images, are previewed here. Everything else shows its details only.")),
+    (0, import_react30.createElement)(
+      "div",
+      { className: "bt-fp-meta" },
+      (0, import_react30.createElement)("span", null, file.name),
+      (0, import_react30.createElement)("span", null, sizeText(file.size)),
+      (0, import_react30.createElement)("span", null, t("Changed {when}", { when: whenText2(file.mtime) }))
+    )
+  );
+}
+function FilePreview({ actions }) {
+  const [draft, setDraft] = (0, import_react30.useState)("");
+  const [path, setPath] = (0, import_react30.useState)(null);
+  const [file, setFile] = (0, import_react30.useState)(null);
+  const [error, setError] = (0, import_react30.useState)("");
+  const [loading, setLoading] = (0, import_react30.useState)(false);
+  const ask = (0, import_react30.useRef)(0);
+  const open = (0, import_react30.useCallback)(async (next) => {
+    const at = ++ask.current;
+    setLoading(true);
+    setError("");
+    try {
+      const answer = await actions.panelFile(next);
+      if (ask.current !== at) return;
+      if (!answer.ok) {
+        setFile(null);
+        setError(answer.error);
+        return;
+      }
+      setFile(answer);
+      setPath(next);
+    } catch (failure) {
+      if (ask.current !== at) return;
+      setFile(null);
+      setError(failure?.message ?? String(failure));
+    } finally {
+      if (ask.current === at) setLoading(false);
+    }
+  }, [actions]);
+  (0, import_react30.useEffect)(() => {
+    if (draft.trim() !== "") return;
+    setPath(null);
+    setFile(null);
+    setError("");
+  }, [draft]);
+  const submit = (event) => {
+    event.preventDefault();
+    const next = draft.trim();
+    if (next === "") {
+      setError(t("A file path is required"));
+      return;
+    }
+    void open(next);
+  };
+  const empty = !loading && !file && !error;
+  return (0, import_react30.createElement)(
+    "div",
+    { className: "bt-panel-view bt-fp", "aria-label": t("Files") },
+    (0, import_react30.createElement)(
+      "form",
+      { className: "bt-fp-bar", onSubmit: submit },
+      (0, import_react30.createElement)("input", {
+        type: "text",
+        value: draft,
+        spellCheck: false,
+        autoComplete: "off",
+        "aria-label": t("File path"),
+        placeholder: t("Open a file in the workspace"),
+        onChange: (event) => setDraft(event.target.value)
+      }),
+      (0, import_react30.createElement)("button", { type: "submit", className: "bt-fp-open", disabled: loading, title: t("Open a file in the workspace") }, (0, import_react30.createElement)(OpenIcon))
+    ),
+    error ? (0, import_react30.createElement)("div", { className: "bt-fp-error", role: "alert" }, error) : null,
+    loading && !file ? (0, import_react30.createElement)("div", { className: "bt-fp-body bt-fp-empty" }, (0, import_react30.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…"))) : null,
+    file ? (0, import_react30.createElement)(FileView, { file }) : null,
+    empty ? (0, import_react30.createElement)(
+      "div",
+      { className: "bt-fp-body bt-fp-empty" },
+      (0, import_react30.createElement)(FileGlyph),
+      (0, import_react30.createElement)("div", { className: "bt-fp-empty-title" }, t("No preview")),
+      (0, import_react30.createElement)("div", { className: "bt-fp-empty-text" }, t("Text and Markdown files, and images, are previewed here. Everything else shows its details only."))
+    ) : null,
+    path && !loading && !error && file ? (0, import_react30.createElement)("div", { className: "bt-fp-foot" }, t("Preview {name}", { name: path })) : null
+  );
+}
+var FILE_PREVIEW_CSS = `
+.bt-fp{--bt-fp-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.bt-fp-bar{display:flex;align-items:center;gap:6px;height:44px;flex:none;padding:0 10px 0 12px;border-bottom:.5px solid var(--bt-line)}
+.bt-fp-bar input{flex:1;min-width:0;height:30px;margin:0;padding:0 10px;border:0;border-radius:8px;outline:none;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12.5px;font-family:var(--bt-fp-mono)}
+.bt-fp-bar input::placeholder{color:var(--bt-ink-3)}
+.bt-fp-bar input:focus{background:var(--bt-main);box-shadow:0 0 0 1px var(--bt-line-2)}
+.bt-fp-open{flex:none;width:30px;height:30px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-fp-open:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-fp-open:disabled{opacity:.4;cursor:default;background:none}
+.bt-fp-open svg{width:15px;height:15px}
+.bt-fp-body{flex:1;min-height:0;overflow:auto;padding:10px 12px 14px}
+.bt-fp-error{padding:8px 12px;color:#e02135;font-size:12px;line-height:16px;flex:none}
+.bt-fp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--bt-ink-3);text-align:center;padding:24px}
+.bt-fp-empty svg{width:22px;height:22px}
+.bt-fp-empty-title{font-size:13px;line-height:18px;font-weight:500;color:var(--bt-ink-2)}
+.bt-fp-empty-text{max-width:260px;font-size:12px;line-height:17px;overflow-wrap:anywhere}
+.bt-fp-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin-top:4px;font-size:11.5px;line-height:15px;color:var(--bt-ink-3)}
+.bt-fp-markdown [class*="_markdown"]{color:inherit}
+.bt-fp-text{font-family:var(--bt-fp-mono);font-size:12.5px;line-height:19px;color:var(--bt-ink)}
+.bt-fp-line{display:flex;gap:8px}
+.bt-fp-num{flex:none;width:26px;text-align:right;color:var(--bt-ink-3);font-variant-numeric:tabular-nums;user-select:none;-webkit-user-select:none}
+.bt-fp-code{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+.bt-fp-cut{margin-top:10px;padding:6px 8px;border-radius:8px;background:var(--bt-hover);color:var(--bt-ink-3);font-size:11.5px;line-height:15px}
+.bt-fp-image{display:flex;align-items:flex-start;justify-content:center;padding:14px}
+.bt-fp-image img{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain}
+.bt-fp-foot{flex:none;padding:6px 12px 8px;border-top:.5px solid var(--bt-line);font-size:11.5px;line-height:15px;color:var(--bt-ink-3);font-family:var(--bt-fp-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+`;
+
+// src/client/browser-pane.js
+var import_react31 = require("react");
 var import_react_dom8 = require("react-dom");
 var PANEL_LINGER_MS = 300;
 var WIDTH_KEY = STORAGE.browserWidth;
@@ -11316,25 +11532,26 @@ var EMPTY_PAGE = { url: "", title: "", favicon: null, loading: false, canGoBack:
 var EMPTY_TABS2 = { ids: [], active: null };
 var SPRING_LEAD2 = springEasing(576, 39.4);
 var SPRING_TRAIL2 = springEasing(144, 19.7);
-var icon = (paths) => function BrowserIcon() {
-  return (0, import_react30.createElement)(
+var icon2 = (paths) => function BrowserIcon() {
+  return (0, import_react31.createElement)(
     "svg",
     { width: 16, height: 16, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
-    paths.map((d, index) => (0, import_react30.createElement)("path", { key: index, d }))
+    paths.map((d, index) => (0, import_react31.createElement)("path", { key: index, d }))
   );
 };
-var GlobeIcon = icon(["M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z", "M3 10h14", "M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z"]);
-var BackIcon = icon(["M12.5 4.5L7 10l5.5 5.5"]);
-var ForwardIcon = icon(["M7.5 4.5L13 10l-5.5 5.5"]);
-var ReloadIcon = icon(["M15.5 10a5.5 5.5 0 1 1-1.6-3.9", "M15.5 3.5v3.5H12"]);
-var StopIcon = icon(["M5.5 5.5l9 9M14.5 5.5l-9 9"]);
-var CloseIcon2 = icon(["M5.5 5.5l9 9M14.5 5.5l-9 9"]);
-var PlusTabIcon = icon(["M10 5v10M5 10h10"]);
-var LockIcon2 = icon(["M6.5 9V7a3.5 3.5 0 0 1 7 0v2", "M5.5 9h9v7h-9z"]);
+var GlobeIcon = icon2(["M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z", "M3 10h14", "M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z"]);
+var BackIcon = icon2(["M12.5 4.5L7 10l5.5 5.5"]);
+var ForwardIcon = icon2(["M7.5 4.5L13 10l-5.5 5.5"]);
+var ReloadIcon = icon2(["M15.5 10a5.5 5.5 0 1 1-1.6-3.9", "M15.5 3.5v3.5H12"]);
+var StopIcon = icon2(["M5.5 5.5l9 9M14.5 5.5l-9 9"]);
+var CloseIcon2 = icon2(["M5.5 5.5l9 9M14.5 5.5l-9 9"]);
+var PlusTabIcon = icon2(["M10 5v10M5 10h10"]);
+var LockIcon2 = icon2(["M6.5 9V7a3.5 3.5 0 0 1 7 0v2", "M5.5 9h9v7h-9z"]);
+var FolderIcon = icon2(["M3.5 6.5A1.5 1.5 0 0 1 5 5h3.6l1.4 1.5H15a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 15 15.5H5A1.5 1.5 0 0 1 3.5 14z"]);
 function Favicon({ src, className }) {
-  const [failed, setFailed] = (0, import_react30.useState)(null);
-  if (!src || failed === src) return (0, import_react30.createElement)("span", { className: `${className} bt-ptab-globe` }, (0, import_react30.createElement)(GlobeIcon));
-  return (0, import_react30.createElement)("img", { className, src, alt: "", "aria-hidden": true, onError: () => setFailed(src) });
+  const [failed, setFailed] = (0, import_react31.useState)(null);
+  if (!src || failed === src) return (0, import_react31.createElement)("span", { className: `${className} bt-ptab-globe` }, (0, import_react31.createElement)(GlobeIcon));
+  return (0, import_react31.createElement)("img", { className, src, alt: "", "aria-hidden": true, onError: () => setFailed(src) });
 }
 var savedWidth = () => {
   try {
@@ -11344,7 +11561,7 @@ var savedWidth = () => {
     return null;
   }
 };
-var widthRange = (view, viewport) => view === "browser" ? [MIN_WIDTH, viewport - MIN_CHAT] : [DETAILS_WIDTH, Math.min(DETAILS_MAX, viewport - MIN_CHAT)];
+var widthRange = (view, viewport) => view === "details" ? [DETAILS_WIDTH, Math.min(DETAILS_MAX, viewport - MIN_CHAT)] : [MIN_WIDTH, viewport - MIN_CHAT];
 var fitWidth = (width, [low, high]) => Math.round(Math.max(low, Math.min(width, high)));
 var room = { rule: null, selector: "" };
 var roomRule = () => {
@@ -11393,15 +11610,15 @@ var reducedMotion2 = () => typeof matchMedia === "function" && matchMedia("(pref
 var tabLabel = (page) => page.title || shortAddress(page.url) || t("New tab");
 function PanelStrip({ bot, subject, view, ids, active, reading, onView, actions, useBrowserPages }) {
   const pages = useBrowserPages((map) => map);
-  const wrap = (0, import_react30.useRef)(null);
-  const ind = (0, import_react30.useRef)(null);
-  const spot = (0, import_react30.useRef)(null);
-  const under = (0, import_react30.useRef)(null);
-  (0, import_react30.useLayoutEffect)(() => {
+  const wrap = (0, import_react31.useRef)(null);
+  const ind = (0, import_react31.useRef)(null);
+  const spot = (0, import_react31.useRef)(null);
+  const under = (0, import_react31.useRef)(null);
+  (0, import_react31.useLayoutEffect)(() => {
     const box = wrap.current;
     const capsule = ind.current;
     if (!box || !capsule) return void 0;
-    const node = view === "details" ? box.querySelector(".bt-ptab-bot") : box.querySelector(`[data-tab="${active}"]`);
+    const node = view === "details" ? box.querySelector(".bt-ptab-bot") : view === "files" ? box.querySelector(".bt-ptab-files") : box.querySelector(`[data-tab="${active}"]`);
     under.current = node;
     if (!node) {
       capsule.style.opacity = "0";
@@ -11426,7 +11643,7 @@ function PanelStrip({ bot, subject, view, ids, active, reading, onView, actions,
       trail.cancel();
     };
   });
-  (0, import_react30.useEffect)(() => {
+  (0, import_react31.useEffect)(() => {
     const box = wrap.current;
     if (!box) return void 0;
     const observer = new ResizeObserver(() => {
@@ -11440,13 +11657,13 @@ function PanelStrip({ bot, subject, view, ids, active, reading, onView, actions,
     observer.observe(box);
     return () => observer.disconnect();
   }, []);
-  return (0, import_react30.createElement)(
+  return (0, import_react31.createElement)(
     "div",
     { className: "bt-ptabs", role: "tablist", "aria-label": t("Panel tabs") },
-    (0, import_react30.createElement)(
+    (0, import_react31.createElement)(
       "div",
       { className: "bt-ptabs-in", ref: wrap },
-      (0, import_react30.createElement)(
+      (0, import_react31.createElement)(
         "button",
         {
           type: "button",
@@ -11456,13 +11673,13 @@ function PanelStrip({ bot, subject, view, ids, active, reading, onView, actions,
           title: bot.name,
           onClick: () => onView("details")
         },
-        (0, import_react30.createElement)(BotMark, { bot, size: 20, state: reading ? "searching" : "idle" }),
-        view === "details" ? (0, import_react30.createElement)("span", { className: "bt-ptab-name" }, bot.name) : null
+        (0, import_react31.createElement)(BotMark, { bot, size: 20, state: reading ? "searching" : "idle" }),
+        view === "details" ? (0, import_react31.createElement)("span", { className: "bt-ptab-name" }, bot.name) : null
       ),
       ids.map((tabId) => {
         const page = pages[tabId] ?? EMPTY_PAGE;
         const on = view === "browser" && tabId === active;
-        return (0, import_react30.createElement)(
+        return (0, import_react31.createElement)(
           "button",
           {
             key: tabId,
@@ -11483,9 +11700,9 @@ function PanelStrip({ bot, subject, view, ids, active, reading, onView, actions,
               }
             }
           },
-          (0, import_react30.createElement)(Favicon, { src: page.favicon, className: "bt-ptab-fav" }),
-          (0, import_react30.createElement)("span", { className: "bt-ptab-title" }, tabLabel(page)),
-          (0, import_react30.createElement)("span", {
+          (0, import_react31.createElement)(Favicon, { src: page.favicon, className: "bt-ptab-fav" }),
+          (0, import_react31.createElement)("span", { className: "bt-ptab-title" }, tabLabel(page)),
+          (0, import_react31.createElement)("span", {
             className: "bt-ptab-x",
             role: "button",
             "aria-label": t("Close tab"),
@@ -11497,20 +11714,29 @@ function PanelStrip({ bot, subject, view, ids, active, reading, onView, actions,
           }, "×")
         );
       }),
-      (0, import_react30.createElement)("span", { ref: ind, className: "bt-ptab-ind", "aria-hidden": true })
+      (0, import_react31.createElement)("span", { ref: ind, className: "bt-ptab-ind", "aria-hidden": true })
     ),
     // New tab and Close stay outside the scrolling tabs, so a narrow panel keeps both.
-    (0, import_react30.createElement)("button", { type: "button", className: "bt-ptab-new", "aria-label": t("New tab"), title: t("New tab"), onClick: () => actions.browserNewTab(subject) }, (0, import_react30.createElement)(PlusTabIcon)),
-    (0, import_react30.createElement)("button", { type: "button", className: "bt-icon-btn bt-ptab-close", "aria-label": t("Close panel"), title: t("Close panel"), onClick: () => actions.closePanel() }, (0, import_react30.createElement)(CloseIcon2))
+    (0, import_react31.createElement)("button", { type: "button", className: "bt-ptab-new", "aria-label": t("New tab"), title: t("New tab"), onClick: () => actions.browserNewTab(subject) }, (0, import_react31.createElement)(PlusTabIcon)),
+    // The Files tab: the panel's own view, no browser needed.
+    (0, import_react31.createElement)("button", {
+      type: "button",
+      role: "tab",
+      "aria-selected": view === "files",
+      className: "bt-ptab bt-ptab-files",
+      title: t("Files"),
+      onClick: () => onView("files")
+    }, (0, import_react31.createElement)(FolderIcon), view === "files" ? (0, import_react31.createElement)("span", { className: "bt-ptab-name" }, t("Files")) : null),
+    (0, import_react31.createElement)("button", { type: "button", className: "bt-icon-btn bt-ptab-close", "aria-label": t("Close panel"), title: t("Close panel"), onClick: () => actions.closePanel() }, (0, import_react31.createElement)(CloseIcon2))
   );
 }
 function BrowserView({ bot, tabId, leaving, landed, actions, useBrowserPages }) {
   const page = useBrowserPages((pages) => pages[tabId ?? ""]) ?? EMPTY_PAGE;
-  const frame = (0, import_react30.useRef)(null);
-  const input = (0, import_react30.useRef)(null);
-  const [draft, setDraft] = (0, import_react30.useState)(null);
+  const frame = (0, import_react31.useRef)(null);
+  const input = (0, import_react31.useRef)(null);
+  const [draft, setDraft] = (0, import_react31.useState)(null);
   const showGuest = landed && !leaving && Boolean(page.url) && !page.error;
-  (0, import_react30.useLayoutEffect)(() => {
+  (0, import_react31.useLayoutEffect)(() => {
     const element = frame.current;
     if (!element || leaving || !tabId) {
       void actions.browserShow(null);
@@ -11536,7 +11762,7 @@ function BrowserView({ bot, tabId, leaving, landed, actions, useBrowserPages }) 
       window.removeEventListener("resize", schedule);
     };
   }, [tabId, showGuest, leaving]);
-  (0, import_react30.useEffect)(() => {
+  (0, import_react31.useEffect)(() => {
     setDraft(null);
     if (landed && !page.url) input.current?.focus();
   }, [tabId, landed]);
@@ -11552,27 +11778,27 @@ function BrowserView({ bot, tabId, leaving, landed, actions, useBrowserPages }) 
   };
   const editing = draft !== null;
   const secure = /^https:/i.test(page.url);
-  return (0, import_react30.createElement)(
+  return (0, import_react31.createElement)(
     "div",
     { className: "bt-panel-view bt-panel-browser", "aria-label": t("{name}'s browser", { name: bot.name }) },
-    (0, import_react30.createElement)(
+    (0, import_react31.createElement)(
       "div",
       { className: "bt-browser-bar" },
-      (0, import_react30.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": t("Back"), title: t("Back"), disabled: !page.canGoBack, onClick: () => actions.browserCommand(tabId, "back") }, (0, import_react30.createElement)(BackIcon)),
-      (0, import_react30.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": t("Forward"), title: t("Forward"), disabled: !page.canGoForward, onClick: () => actions.browserCommand(tabId, "forward") }, (0, import_react30.createElement)(ForwardIcon)),
-      (0, import_react30.createElement)("button", {
+      (0, import_react31.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": t("Back"), title: t("Back"), disabled: !page.canGoBack, onClick: () => actions.browserCommand(tabId, "back") }, (0, import_react31.createElement)(BackIcon)),
+      (0, import_react31.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": t("Forward"), title: t("Forward"), disabled: !page.canGoForward, onClick: () => actions.browserCommand(tabId, "forward") }, (0, import_react31.createElement)(ForwardIcon)),
+      (0, import_react31.createElement)("button", {
         type: "button",
         className: "bt-icon-btn",
         disabled: !page.url,
         "aria-label": page.loading ? t("Stop") : t("Reload"),
         title: page.loading ? t("Stop") : t("Reload"),
         onClick: () => actions.browserCommand(tabId, page.loading ? "stop" : "reload")
-      }, (0, import_react30.createElement)(page.loading ? StopIcon : ReloadIcon)),
-      (0, import_react30.createElement)(
+      }, (0, import_react31.createElement)(page.loading ? StopIcon : ReloadIcon)),
+      (0, import_react31.createElement)(
         "form",
         { className: "bt-browser-address", onSubmit: go, "data-editing": editing || void 0 },
-        (0, import_react30.createElement)("span", { className: "bt-browser-scheme", "aria-hidden": true }, (0, import_react30.createElement)(secure && !editing ? LockIcon2 : GlobeIcon)),
-        (0, import_react30.createElement)("input", {
+        (0, import_react31.createElement)("span", { className: "bt-browser-scheme", "aria-hidden": true }, (0, import_react31.createElement)(secure && !editing ? LockIcon2 : GlobeIcon)),
+        (0, import_react31.createElement)("input", {
           ref: input,
           type: "text",
           spellCheck: false,
@@ -11596,25 +11822,25 @@ function BrowserView({ bot, tabId, leaving, landed, actions, useBrowserPages }) 
           }
         })
       ),
-      page.loading ? (0, import_react30.createElement)("span", { className: "bt-browser-progress", "aria-hidden": true }) : null
+      page.loading ? (0, import_react31.createElement)("span", { className: "bt-browser-progress", "aria-hidden": true }) : null
     ),
-    (0, import_react30.createElement)(
+    (0, import_react31.createElement)(
       "div",
       { ref: frame, className: "bt-browser-frame", "data-guest": showGuest || void 0 },
-      page.error ? (0, import_react30.createElement)(
+      page.error ? (0, import_react31.createElement)(
         "div",
         { className: "bt-browser-empty" },
-        (0, import_react30.createElement)("div", { className: "bt-browser-empty-title" }, t("This page didn’t load")),
-        (0, import_react30.createElement)("div", { className: "bt-browser-empty-text" }, t(page.error)),
-        page.url ? (0, import_react30.createElement)("button", { type: "button", className: "bt-browser-retry", onClick: () => {
+        (0, import_react31.createElement)("div", { className: "bt-browser-empty-title" }, t("This page didn’t load")),
+        (0, import_react31.createElement)("div", { className: "bt-browser-empty-text" }, t(page.error)),
+        page.url ? (0, import_react31.createElement)("button", { type: "button", className: "bt-browser-retry", onClick: () => {
           void actions.browserNavigate(tabId, page.url);
         } }, t("Try again")) : null
-      ) : !page.url ? (0, import_react30.createElement)(
+      ) : !page.url ? (0, import_react31.createElement)(
         "div",
         { className: "bt-browser-empty" },
-        (0, import_react30.createElement)(BotMark, { bot, size: 48, state: "idle", live: true }),
-        (0, import_react30.createElement)("div", { className: "bt-browser-empty-title" }, t("{name}'s browser", { name: bot.name })),
-        (0, import_react30.createElement)("div", { className: "bt-browser-empty-text" }, t("Open a page here and {name} can read it with you. Logins and cookies stay with {name}; other Bots never see them.", { name: bot.name }))
+        (0, import_react31.createElement)(BotMark, { bot, size: 48, state: "idle", live: true }),
+        (0, import_react31.createElement)("div", { className: "bt-browser-empty-title" }, t("{name}'s browser", { name: bot.name })),
+        (0, import_react31.createElement)("div", { className: "bt-browser-empty-text" }, t("Open a page here and {name} can read it with you. Logins and cookies stay with {name}; other Bots never see them.", { name: bot.name }))
       ) : null
     )
   );
@@ -11622,45 +11848,45 @@ function BrowserView({ bot, tabId, leaving, landed, actions, useBrowserPages }) 
 function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages }) {
   const bot = roster.byId[pane.id];
   const canBrowse = Boolean(bot && roster.browser === true && actions.browserShow);
-  const view = pane.view === "browser" && canBrowse ? "browser" : "details";
+  const view = pane.view === "browser" && canBrowse ? "browser" : pane.view === "files" ? "files" : "details";
   const tabState = useBrowserTabs((map) => bot ? map[bot.id] ?? EMPTY_TABS2 : EMPTY_TABS2);
   const active = tabState.active;
   const page = useBrowserPages((pages) => (active ? pages[active] : null) ?? EMPTY_PAGE);
-  const root = (0, import_react30.useRef)(null);
-  const fly = (0, import_react30.useRef)(null);
-  const [landed, setLanded] = (0, import_react30.useState)(false);
-  const [settling, setSettling] = (0, import_react30.useState)(false);
-  const [width, setWidth] = (0, import_react30.useState)(savedWidth);
-  const [viewport, setViewport] = (0, import_react30.useState)(() => window.innerWidth);
-  const [dragging, setDragging] = (0, import_react30.useState)(false);
-  const [resizing, setResizing] = (0, import_react30.useState)(false);
+  const root = (0, import_react31.useRef)(null);
+  const fly = (0, import_react31.useRef)(null);
+  const [landed, setLanded] = (0, import_react31.useState)(false);
+  const [settling, setSettling] = (0, import_react31.useState)(false);
+  const [width, setWidth] = (0, import_react31.useState)(savedWidth);
+  const [viewport, setViewport] = (0, import_react31.useState)(() => window.innerWidth);
+  const [dragging, setDragging] = (0, import_react31.useState)(false);
+  const [resizing, setResizing] = (0, import_react31.useState)(false);
   const instant = dragging || resizing;
-  const [reading, setReading] = (0, import_react30.useState)(false);
-  const panelWidth = fitWidth(width ?? (view === "browser" ? DEFAULT_WIDTH : DETAILS_WIDTH), widthRange(view, viewport));
-  (0, import_react30.useLayoutEffect)(() => {
-    if (view === "browser" && width === null) setWidth(DEFAULT_WIDTH);
+  const [reading, setReading] = (0, import_react31.useState)(false);
+  const panelWidth = fitWidth(width ?? (view === "details" ? DETAILS_WIDTH : DEFAULT_WIDTH), widthRange(view, viewport));
+  (0, import_react31.useLayoutEffect)(() => {
+    if (view !== "details" && width === null) setWidth(DEFAULT_WIDTH);
   }, [view, width]);
-  (0, import_react30.useLayoutEffect)(() => {
+  (0, import_react31.useLayoutEffect)(() => {
     chatRoom.hold(instant);
   }, [instant]);
-  const [last, setLast] = (0, import_react30.useState)({ view, width: panelWidth });
+  const [last, setLast] = (0, import_react31.useState)({ view, width: panelWidth });
   if (last.view !== view || last.width !== panelWidth) {
     setLast({ view, width: panelWidth });
     if (last.view !== view) setSettling(last.width !== panelWidth && !instant);
   }
-  const shownView = (0, import_react30.useRef)(view);
-  (0, import_react30.useLayoutEffect)(() => {
+  const shownView = (0, import_react31.useRef)(view);
+  (0, import_react31.useLayoutEffect)(() => {
     const switched = settling && shownView.current !== view;
     shownView.current = view;
     if (switched) chatRoom.hold(true);
     chatRoom.set(leaving ? null : panelWidth);
     if (switched) chatRoom.hold(false);
   }, [view, panelWidth, leaving]);
-  (0, import_react30.useEffect)(() => () => {
+  (0, import_react31.useEffect)(() => () => {
     chatRoom.set(null);
     chatRoom.hold(false);
   }, []);
-  (0, import_react30.useEffect)(() => {
+  (0, import_react31.useEffect)(() => {
     let timer;
     const onResize = () => {
       setResizing(true);
@@ -11674,28 +11900,28 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
       window.removeEventListener("resize", onResize);
     };
   }, []);
-  (0, import_react30.useEffect)(() => {
+  (0, import_react31.useEffect)(() => {
     if (!settling) return void 0;
     const timer = setTimeout(() => setSettling(false), SPRING_SHAPE.duration + 40);
     return () => clearTimeout(timer);
   }, [settling, view]);
-  (0, import_react30.useEffect)(() => {
+  (0, import_react31.useEffect)(() => {
     const timer = setTimeout(() => setLanded(true), 360);
     return () => clearTimeout(timer);
   }, []);
-  (0, import_react30.useEffect)(() => {
+  (0, import_react31.useEffect)(() => {
     if (canBrowse) actions.browserEnsure(bot.id);
   }, [bot?.id, canBrowse]);
-  (0, import_react30.useEffect)(() => {
+  (0, import_react31.useEffect)(() => {
     if (view === "browser" && (active === null || !tabState.ids.includes(active))) actions.setPanelView("details");
   }, [view, active, tabState.ids.length]);
-  (0, import_react30.useEffect)(() => {
+  (0, import_react31.useEffect)(() => {
     if (view !== "browser" || leaving) void actions.browserShow?.(null);
   }, [view, leaving]);
-  (0, import_react30.useEffect)(() => () => {
+  (0, import_react31.useEffect)(() => () => {
     void actions.browserShow?.(null);
   }, []);
-  (0, import_react30.useEffect)(() => {
+  (0, import_react31.useEffect)(() => {
     if (!page.readAt || Date.now() - page.readAt > READ_FLASH_MS) return void 0;
     setReading(true);
     const timer = setTimeout(() => setReading(false), READ_FLASH_MS);
@@ -11732,11 +11958,11 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
       return actions[name](...args);
     };
   }
-  (0, import_react30.useLayoutEffect)(() => {
+  (0, import_react31.useLayoutEffect)(() => {
     const move = fly.current;
     if (!move) return;
     fly.current = null;
-    const target = view === "browser" ? root.current?.querySelector(".bt-ptab-bot .bt-mark") : root.current?.querySelector(".bt-drawer-id .bt-mark");
+    const target = view === "details" ? root.current?.querySelector(".bt-drawer-id .bt-mark") : root.current?.querySelector(".bt-ptab-bot .bt-mark");
     if (!target || move.from.width === 0) return;
     const growing = root.current.getAnimations({ subtree: true }).filter((animation) => animation.animationName === "bt-strip-in");
     const at = growing.map((animation) => animation.currentTime);
@@ -11815,13 +12041,14 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
     for (const name of ends) grip.addEventListener(name, onEnd);
   };
   const hasStrip = canBrowse && tabState.ids.length > 0;
-  return (0, import_react30.createElement)(
+  const showStrip = hasStrip || view === "files";
+  return (0, import_react31.createElement)(
     "aside",
     {
       ref: root,
       className: "bt-panel",
       "data-view": view,
-      "aria-label": view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details"),
+      "aria-label": view === "files" ? t("Files") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details"),
       "data-leaving": leaving || void 0,
       "aria-hidden": leaving || void 0,
       "data-settling": settling || void 0,
@@ -11832,15 +12059,15 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
         if (event.target === event.currentTarget) setLanded(true);
       }
     },
-    leaving ? null : (0, import_react30.createElement)("div", { className: "bt-panel-grip", role: "separator", "aria-orientation": "vertical", "aria-label": t("Resize panel"), onPointerDown: startResize }),
+    leaving ? null : (0, import_react31.createElement)("div", { className: "bt-panel-grip", role: "separator", "aria-orientation": "vertical", "aria-label": t("Resize panel"), onPointerDown: startResize }),
     // Over the whole window while dragging: the cursor stays a resize cursor and the
     // pages underneath (the chat, the guest) see no pointer.
-    dragging ? (0, import_react_dom8.createPortal)((0, import_react30.createElement)("div", { className: "bt-drag-shield", "aria-hidden": true }), document.body) : null,
-    hasStrip ? (0, import_react30.createElement)(PanelStrip, { bot, subject: pane.id, view, ids: tabState.ids, active, reading, onView: switchView, actions: panelActions, useBrowserPages }) : null,
-    view === "browser" && bot ? (0, import_react30.createElement)(BrowserView, { key: `browser:${active}`, bot, tabId: active, leaving, landed: landed && !settling, actions, useBrowserPages }) : (0, import_react30.createElement)(
+    dragging ? (0, import_react_dom8.createPortal)((0, import_react31.createElement)("div", { className: "bt-drag-shield", "aria-hidden": true }), document.body) : null,
+    showStrip ? (0, import_react31.createElement)(PanelStrip, { bot, subject: pane.id, view, ids: tabState.ids, active, reading, onView: switchView, actions: panelActions, useBrowserPages }) : null,
+    view === "browser" && bot ? (0, import_react31.createElement)(BrowserView, { key: `browser:${active}`, bot, tabId: active, leaving, landed: landed && !settling, actions, useBrowserPages }) : view === "files" ? (0, import_react31.createElement)(FilePreview, { key: "files", actions: panelActions }) : (0, import_react31.createElement)(
       "div",
       { key: `details:${pane.id}:${pane.renaming ? "rename" : ""}:${pane.tab ?? ""}`, className: "bt-panel-view" },
-      (0, import_react30.createElement)(DetailsDrawer, {
+      (0, import_react31.createElement)(DetailsDrawer, {
         sessionId: pane.id,
         startRenaming: pane.renaming,
         startTab: pane.tab,
@@ -11882,6 +12109,8 @@ var BROWSER_CSS = `
 .bt-ptab-new{position:relative;z-index:1;flex:none;width:28px;height:32px;border:0;border-radius:9px;background:none;color:var(--bt-ink-3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-ptab-new:hover{color:var(--bt-ink)}
 .bt-ptab-new svg{width:15px;height:15px}
+.bt-ptab-files{position:relative;z-index:1;flex:none;padding:0 7px;gap:5px}
+.bt-ptab-files svg{width:15px;height:15px;flex:none}
 .bt-ptab-ind{position:absolute;top:4px;bottom:4px;border-radius:9px;background:var(--bt-hover);opacity:0;pointer-events:none;z-index:0;transition:opacity .15s ease}
 .bt-ptab-close{flex:none;margin-left:2px}
 .bt-panel-ghost{position:absolute;top:44px;right:0;bottom:0;overflow:hidden;pointer-events:none;z-index:2}
@@ -11937,7 +12166,7 @@ var BROWSER_CSS = `
 `;
 
 // src/client/overlays.js
-var import_react31 = require("react");
+var import_react32 = require("react");
 var import_react_dom9 = require("react-dom");
 var DIALOG_EXIT_MS = 160;
 var MENU_EXIT_MS3 = 120;
@@ -11946,15 +12175,15 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
   const ui2 = useUi((value) => value);
   useRegistry((value) => value);
   const current = useSessions((list) => Object.values(list.byId).find((session) => (session?.retainedBy?.mainView ?? 0) > 0)?.id ?? null);
-  const previous = (0, import_react31.useRef)(current);
-  (0, import_react31.useEffect)(() => {
+  const previous = (0, import_react32.useRef)(current);
+  (0, import_react32.useEffect)(() => {
     if (previous.current === current) return;
     previous.current = current;
     if (current) actions.followPanel?.(current);
   }, [current]);
   const open = ui2.details ? { id: ui2.details, view: ui2.view ?? "details", renaming: ui2.renaming, tab: ui2.tab } : null;
-  const [kept, setKept] = (0, import_react31.useState)(open);
-  (0, import_react31.useEffect)(() => {
+  const [kept, setKept] = (0, import_react32.useState)(open);
+  (0, import_react32.useEffect)(() => {
     if (open) {
       setKept(open);
       return void 0;
@@ -11966,17 +12195,17 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
   const [settings, settingsLeaving] = useLinger(ui2.settings, DIALOG_EXIT_MS);
   const [memory, memoryLeaving] = useLinger(ui2.memory && roster.byId[ui2.memory] ? ui2.memory : null, DIALOG_EXIT_MS);
   const [menu, menuLeaving] = useLinger(ui2.menu, MENU_EXIT_MS3);
-  return (0, import_react31.createElement)(
-    import_react31.Fragment,
+  return (0, import_react32.createElement)(
+    import_react32.Fragment,
     null,
-    pane ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(BotPanel, { pane, leaving: open === null, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages }), document.body) : null,
-    ui2.newChat ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(NewChat, { key: ui2.newChat, mode: ui2.newChat, roster, actions }), document.body) : null,
-    ui2.palette ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(CommandPalette, { key: ui2.palette.token, start: ui2.palette.query, token: ui2.palette.token, roster, actions, useSessions }), document.body) : null,
-    ui2.exchange ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(ExchangeDialog, { pair: ui2.exchange, roster, actions }), document.body) : null,
-    ui2.voice ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(VoiceMode, { key: ui2.voice, sessionId: ui2.voice, roster, actions, useSessions, useSessionStatus }), document.body) : null,
-    menu ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(ContextMenu, { key: `${menu.kind ?? ""}:${menu.id}:${menu.x}:${menu.y}`, menu, roster, actions, leaving: menuLeaving }), document.body) : null,
-    settings ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(SettingsDialog, { page: settings.page, id: settings.id, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
-    memory && roster.byId[memory] ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(MemoryDialog, { key: memory, bot: roster.byId[memory], actions, leaving: memoryLeaving }), document.body) : null
+    pane ? (0, import_react_dom9.createPortal)((0, import_react32.createElement)(BotPanel, { pane, leaving: open === null, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages }), document.body) : null,
+    ui2.newChat ? (0, import_react_dom9.createPortal)((0, import_react32.createElement)(NewChat, { key: ui2.newChat, mode: ui2.newChat, roster, actions }), document.body) : null,
+    ui2.palette ? (0, import_react_dom9.createPortal)((0, import_react32.createElement)(CommandPalette, { key: ui2.palette.token, start: ui2.palette.query, token: ui2.palette.token, roster, actions, useSessions }), document.body) : null,
+    ui2.exchange ? (0, import_react_dom9.createPortal)((0, import_react32.createElement)(ExchangeDialog, { pair: ui2.exchange, roster, actions }), document.body) : null,
+    ui2.voice ? (0, import_react_dom9.createPortal)((0, import_react32.createElement)(VoiceMode, { key: ui2.voice, sessionId: ui2.voice, roster, actions, useSessions, useSessionStatus }), document.body) : null,
+    menu ? (0, import_react_dom9.createPortal)((0, import_react32.createElement)(ContextMenu, { key: `${menu.kind ?? ""}:${menu.id}:${menu.x}:${menu.y}`, menu, roster, actions, leaving: menuLeaving }), document.body) : null,
+    settings ? (0, import_react_dom9.createPortal)((0, import_react32.createElement)(SettingsDialog, { page: settings.page, id: settings.id, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
+    memory && roster.byId[memory] ? (0, import_react_dom9.createPortal)((0, import_react32.createElement)(MemoryDialog, { key: memory, bot: roster.byId[memory], actions, leaving: memoryLeaving }), document.body) : null
   );
 }
 
@@ -12807,7 +13036,7 @@ function writeMode(mode, storage = globalThis.localStorage) {
 }
 
 // src/client/user-message.js
-var import_react32 = require("react");
+var import_react33 = require("react");
 var ui = __toESM(require("@deepseek-ai/dsh-client-ui-primitives"), 1);
 var canDrawUserMessages = () => typeof ui.projectUserText === "function";
 function contentParts(content) {
@@ -12839,38 +13068,38 @@ function userTextParts(text, bots, referenceLabels = []) {
   return parts;
 }
 function UserText({ text, bots, referenceLabels, skillNames, references, actions }) {
-  return userTextParts(text, bots, referenceLabels).map((part, index) => part.bot ? (0, import_react32.createElement)(
+  return userTextParts(text, bots, referenceLabels).map((part, index) => part.bot ? (0, import_react33.createElement)(
     "button",
     { key: index, type: "button", className: "bt-umention", title: `@${part.bot.name}`, onClick: () => actions.openSession(part.bot.id) },
-    (0, import_react32.createElement)(BotMark, { bot: part.bot, size: 16 }),
+    (0, import_react33.createElement)(BotMark, { bot: part.bot, size: 16 }),
     part.label
-  ) : (0, import_react32.createElement)(import_react32.Fragment, { key: index }, ui.projectUserText(part.text, referenceLabels, skillNames, "skill", references)));
+  ) : (0, import_react33.createElement)(import_react33.Fragment, { key: index }, ui.projectUserText(part.text, referenceLabels, skillNames, "skill", references)));
 }
 function Attachments({ attachments, renderMessageImages }) {
   const compact2 = attachments.length > 1;
-  return (0, import_react32.createElement)("div", { className: "bt-uattach" }, attachments.map((block, index) => {
+  return (0, import_react33.createElement)("div", { className: "bt-uattach" }, attachments.map((block, index) => {
     if (block.type === "image") {
-      return renderMessageImages ? (0, import_react32.createElement)(import_react32.Fragment, { key: index }, renderMessageImages({ images: [{ attachment: block.attachment }], align: "end", compact: compact2 })) : null;
+      return renderMessageImages ? (0, import_react33.createElement)(import_react33.Fragment, { key: index }, renderMessageImages({ images: [{ attachment: block.attachment }], align: "end", compact: compact2 })) : null;
     }
     const file = block.attachment;
     const meta = [ui.fileExtension?.(file.name)?.toUpperCase().slice(0, 8), ui.fileSizeText?.(file.bytes)].filter(Boolean).join(" · ");
-    return (0, import_react32.createElement)(
+    return (0, import_react33.createElement)(
       "span",
       { key: index, className: "bt-ufile", title: file.name },
-      ui.FileTypeIcon ? (0, import_react32.createElement)(ui.FileTypeIcon, { path: file.name, className: "bt-ufile-icon" }) : null,
-      (0, import_react32.createElement)("span", { className: "bt-ufile-text" }, (0, import_react32.createElement)("span", { className: "bt-ufile-name" }, file.name), meta ? (0, import_react32.createElement)("span", { className: "bt-ufile-meta" }, meta) : null)
+      ui.FileTypeIcon ? (0, import_react33.createElement)(ui.FileTypeIcon, { path: file.name, className: "bt-ufile-icon" }) : null,
+      (0, import_react33.createElement)("span", { className: "bt-ufile-text" }, (0, import_react33.createElement)("span", { className: "bt-ufile-name" }, file.name), meta ? (0, import_react33.createElement)("span", { className: "bt-ufile-meta" }, meta) : null)
     );
   }));
 }
 function CopyButton({ text }) {
-  const [copied, setCopied] = (0, import_react32.useState)(false);
+  const [copied, setCopied] = (0, import_react33.useState)(false);
   const copy2 = () => {
     void navigator.clipboard?.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1e3);
     });
   };
-  return (0, import_react32.createElement)("button", { type: "button", className: "bt-tool", "aria-label": copied ? t("Copied") : t("Copy"), title: copied ? t("Copied") : t("Copy"), onClick: copy2 }, copied ? (0, import_react32.createElement)(CheckIcon) : (0, import_react32.createElement)(CopyIcon));
+  return (0, import_react33.createElement)("button", { type: "button", className: "bt-tool", "aria-label": copied ? t("Copied") : t("Copy"), title: copied ? t("Copied") : t("Copy"), onClick: copy2 }, copied ? (0, import_react33.createElement)(CheckIcon) : (0, import_react33.createElement)(CopyIcon));
 }
 var clock3 = (time) => typeof time === "number" ? new Date(time).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }) : void 0;
 function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageImages, openFile, openSkill }) {
@@ -12880,22 +13109,22 @@ function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageIma
   const referenceLabels = data.referenceLabels ?? [];
   const references = openFile && openSkill ? { openFile, openSkill } : void 0;
   const steering = node.kind === "steering";
-  return (0, import_react32.createElement)(
+  return (0, import_react33.createElement)(
     "div",
     { className: "bt-umsg", "data-steering": steering || void 0 },
-    (0, import_react32.createElement)(
+    (0, import_react33.createElement)(
       "div",
       { className: "bt-ustack" },
-      attachments.length > 0 ? (0, import_react32.createElement)(Attachments, { attachments, renderMessageImages }) : null,
-      text !== "" || rest.length > 0 ? (0, import_react32.createElement)(
+      attachments.length > 0 ? (0, import_react33.createElement)(Attachments, { attachments, renderMessageImages }) : null,
+      text !== "" || rest.length > 0 ? (0, import_react33.createElement)(
         "div",
         { className: "bt-ubody", title: clock3(data.time) },
-        (0, import_react32.createElement)(UserText, { text, bots: mentionableBots(roster, sessionId), referenceLabels, skillNames: data.skillNames ?? [], references, actions }),
-        rest.map((block, index) => ui.JsonBlock ? (0, import_react32.createElement)(ui.JsonBlock, { key: index, label: t("Content"), payload: block }) : null)
+        (0, import_react33.createElement)(UserText, { text, bots: mentionableBots(roster, sessionId), referenceLabels, skillNames: data.skillNames ?? [], references, actions }),
+        rest.map((block, index) => ui.JsonBlock ? (0, import_react33.createElement)(ui.JsonBlock, { key: index, label: t("Content"), payload: block }) : null)
       ) : null,
-      referenceLabels.length > 0 ? (0, import_react32.createElement)("div", { className: "bt-urefs" }, t("Referenced {labels}", { labels: referenceLabels.join(t(", ")) })) : null
+      referenceLabels.length > 0 ? (0, import_react33.createElement)("div", { className: "bt-urefs" }, t("Referenced {labels}", { labels: referenceLabels.join(t(", ")) })) : null
     ),
-    text === "" ? null : (0, import_react32.createElement)("div", { className: "bt-utools" }, (0, import_react32.createElement)(CopyButton, { text }))
+    text === "" ? null : (0, import_react33.createElement)("div", { className: "bt-utools" }, (0, import_react33.createElement)(CopyButton, { text }))
   );
 }
 var USER_MESSAGE_CSS = `
@@ -13158,6 +13387,15 @@ function apply(ctx) {
   ctx.effect(() => () => {
     markupCache.clear();
   }, "ds-bot: character markup");
+  ctx.effect(() => {
+    const sync = () => {
+      const snapshot = roster.getSnapshot();
+      if (!snapshot.ready) return;
+      ui2.set((state) => state.details !== null && state.view === "files" && snapshot.byId[state.details] === void 0 && snapshot.roomsById[state.details] === void 0 ? { ...state, view: "details" } : state);
+    };
+    sync();
+    return roster.subscribe(sync);
+  }, "ds-bot: file previews");
   const installMentions = () => {
     const style = installStyles("", "mentions");
     let last = "";
@@ -13528,6 +13766,9 @@ function apply(ctx) {
     diagnostics: (payload) => call("diagnostics", payload),
     diagnosticsLog: () => call("diagnostics-log"),
     diagnosticsClear: () => call("diagnostics-clear"),
+    // One workspace file for the panel's Files tab; the host answers with the file
+    // or the reason it could not be read.
+    panelFile: (path) => call("panel-file", { path }),
     // A failed action away from any form (a menu, the palette) shows as a toast.
     reportError: (error, where = "action") => {
       noteClientError(where, error);
@@ -13571,7 +13812,7 @@ function apply(ctx) {
     });
   }
   actions.setPanelView = (view) => {
-    if (view !== "details" && view !== "browser") return;
+    if (view !== "details" && view !== "browser" && view !== "files") return;
     ui2.set((state) => state.details && state.view !== view ? { ...state, view } : state);
   };
   actions.closePanel = () => {
@@ -13705,6 +13946,7 @@ function apply(ctx) {
     installCompiledStyles(MEMBER_CSS, "members"),
     installCompiledStyles(USER_MESSAGE_CSS, "user-messages"),
     browsers ? installCompiledStyles(BROWSER_CSS, "browser") : null,
+    installCompiledStyles(FILE_PREVIEW_CSS, "file-preview"),
     installTheme(),
     shadow("sidebar.workspaces", { priority: -10, inject: face }, TeamSidebar),
     shadow("sidebar.brand.mark", { priority: -10 }, BrandMark),

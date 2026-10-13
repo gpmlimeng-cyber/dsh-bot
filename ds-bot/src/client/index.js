@@ -17,6 +17,7 @@ import { AssistantCell, TriggerCell, TurnProcessCell, Nothing, TurnTailCell, Too
 import { Overlays } from './overlays.js'
 import { createBotBrowsers, serveBrowserReads } from './bot-browsers.js'
 import { BROWSER_CSS } from './browser-pane.js'
+import { FILE_PREVIEW_CSS } from './file-preview.js'
 import { holdFlatTranscript } from './flat-transcript.js'
 import { SECRET_CSS, SecretDock } from './secret-card.js'
 import { MODEL_CSS, ModelChoiceDock, DeepSeekSignIn } from './model-menu.js'
@@ -238,8 +239,7 @@ export function apply(ctx) {
         void browsers.retain(snapshot.bots.map(bot => bot.id))
         // A panel open on the browser view without a browsable subject falls back
         // to the details view.
-        ui.set(state => (state.details && state.view === 'browser' && (!on || !snapshot.byId[state.details]) ? { ...state, view: 'details' } : state))
-      }
+        ui.set(state => (state.details && state.view === 'browser' && (!on || !snapshot.byId[state.details]) ? { ...state, view: 'details' } : state))      }
       sync()
       const offRoster = roster.subscribe(sync)
       return () => { offRoster(); stopReads?.(); browsers.dispose() }
@@ -247,6 +247,18 @@ export function apply(ctx) {
   }
 
   ctx.effect(() => () => { markupCache.clear() }, 'ds-bot: character markup')
+
+  // The Files tab holds no Bot state of its own, but it names a subject: when that
+  // subject is gone the panel falls back to the details view, as the browser does.
+  ctx.effect(() => {
+    const sync = () => {
+      const snapshot = roster.getSnapshot()
+      if (!snapshot.ready) return
+      ui.set(state => (state.details !== null && state.view === 'files' && snapshot.byId[state.details] === undefined && snapshot.roomsById[state.details] === undefined ? { ...state, view: 'details' } : state))
+    }
+    sync()
+    return roster.subscribe(sync)
+  }, 'ds-bot: file previews')
 
   // Mentions wear each Bot's color and character silhouette (or its photo). A message
   // DSH still draws itself, while it waits to be sent or to join a running turn, shows
@@ -577,6 +589,9 @@ export function apply(ctx) {
     diagnostics: payload => call('diagnostics', payload),
     diagnosticsLog: () => call('diagnostics-log'),
     diagnosticsClear: () => call('diagnostics-clear'),
+    // One workspace file for the panel's Files tab; the host answers with the file
+    // or the reason it could not be read.
+    panelFile: path => call('panel-file', { path }),
     // A failed action away from any form (a menu, the palette) shows as a toast.
     reportError: (error, where = 'action') => {
       noteClientError(where, error)
@@ -621,7 +636,7 @@ export function apply(ctx) {
     })
   }
   actions.setPanelView = (view) => {
-    if (view !== 'details' && view !== 'browser') return
+    if (view !== 'details' && view !== 'browser' && view !== 'files') return
     ui.set(state => (state.details && state.view !== view ? { ...state, view } : state))
   }
   actions.closePanel = () => { ui.set(state => (state.details ? { ...state, details: null, view: 'details', renaming: false, tab: null } : state)) }
@@ -767,6 +782,7 @@ export function apply(ctx) {
     installCompiledStyles(MEMBER_CSS, 'members'),
     installCompiledStyles(USER_MESSAGE_CSS, 'user-messages'),
     browsers ? installCompiledStyles(BROWSER_CSS, 'browser') : null,
+    installCompiledStyles(FILE_PREVIEW_CSS, 'file-preview'),
     installTheme(),
     shadow('sidebar.workspaces', { priority: -10, inject: face }, TeamSidebar),
     shadow('sidebar.brand.mark', { priority: -10 }, BrandMark),

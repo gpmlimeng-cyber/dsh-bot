@@ -9,6 +9,7 @@ import { BotMark } from './mark.js'
 import { STORAGE } from './storage.js'
 import { SPRING_SHAPE, springEasing } from './motion.js'
 import { DetailsDrawer } from './details-drawer.js'
+import { FilePreview } from './file-preview.js'
 import { t } from './i18n.js'
 
 export const PANEL_LINGER_MS = 300
@@ -43,6 +44,7 @@ const StopIcon = icon(['M5.5 5.5l9 9M14.5 5.5l-9 9'])
 const CloseIcon = icon(['M5.5 5.5l9 9M14.5 5.5l-9 9'])
 const PlusTabIcon = icon(['M10 5v10M5 10h10'])
 const LockIcon = icon(['M6.5 9V7a3.5 3.5 0 0 1 7 0v2', 'M5.5 9h9v7h-9z'])
+const FolderIcon = icon(['M3.5 6.5A1.5 1.5 0 0 1 5 5h3.6l1.4 1.5H15a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 15 15.5H5A1.5 1.5 0 0 1 3.5 14z'])
 
 /** A page's favicon, or the globe while there is none or it fails to load. */
 export function Favicon({ src, className }) {
@@ -59,9 +61,9 @@ const savedWidth = () => {
     return Number.isFinite(value) && value >= DETAILS_WIDTH ? value : null
   } catch { return null }
 }
-const widthRange = (view, viewport) => (view === 'browser'
-  ? [MIN_WIDTH, viewport - MIN_CHAT]
-  : [DETAILS_WIDTH, Math.min(DETAILS_MAX, viewport - MIN_CHAT)])
+const widthRange = (view, viewport) => (view === 'details'
+  ? [DETAILS_WIDTH, Math.min(DETAILS_MAX, viewport - MIN_CHAT)]
+  : [MIN_WIDTH, viewport - MIN_CHAT])
 const fitWidth = (width, [low, high]) => Math.round(Math.max(low, Math.min(width, high)))
 
 // The conversation column's right margin lives in one rule of our own, matched on the
@@ -113,7 +115,7 @@ const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(pre
 const tabLabel = page => page.title || shortAddress(page.url) || t('New tab')
 
 // The strip across the panel's top: the Bot's own tab first (the details view,
-// collapsed), then one tab per browser page, then new-tab and close.
+// collapsed), then one tab per browser page, then new-tab, the Files tab and close.
 function PanelStrip({ bot, subject, view, ids, active, reading, onView, actions, useBrowserPages }) {
   const pages = useBrowserPages(map => map)
   const wrap = useRef(null)
@@ -125,7 +127,9 @@ function PanelStrip({ bot, subject, view, ids, active, reading, onView, actions,
     const box = wrap.current
     const capsule = ind.current
     if (!box || !capsule) return undefined
-    const node = view === 'details' ? box.querySelector('.bt-ptab-bot') : box.querySelector(`[data-tab="${active}"]`)
+    const node = view === 'details' ? box.querySelector('.bt-ptab-bot')
+      : view === 'files' ? box.querySelector('.bt-ptab-files')
+        : box.querySelector(`[data-tab="${active}"]`)
     under.current = node
     if (!node) { capsule.style.opacity = '0'; spot.current = null; return undefined }
     // The Bot tab is pinned at the strip's start; showing it scrolls the pages back
@@ -187,6 +191,11 @@ function PanelStrip({ bot, subject, view, ids, active, reading, onView, actions,
       h('span', { ref: ind, className: 'bt-ptab-ind', 'aria-hidden': true })),
     // New tab and Close stay outside the scrolling tabs, so a narrow panel keeps both.
     h('button', { type: 'button', className: 'bt-ptab-new', 'aria-label': t('New tab'), title: t('New tab'), onClick: () => actions.browserNewTab(subject) }, h(PlusTabIcon)),
+    // The Files tab: the panel's own view, no browser needed.
+    h('button', {
+      type: 'button', role: 'tab', 'aria-selected': view === 'files', className: 'bt-ptab bt-ptab-files',
+      title: t('Files'), onClick: () => onView('files'),
+    }, h(FolderIcon), view === 'files' ? h('span', { className: 'bt-ptab-name' }, t('Files')) : null),
     h('button', { type: 'button', className: 'bt-icon-btn bt-ptab-close', 'aria-label': t('Close panel'), title: t('Close panel'), onClick: () => actions.closePanel() }, h(CloseIcon)))
 }
 
@@ -285,7 +294,7 @@ function BrowserView({ bot, tabId, leaving, landed, actions, useBrowserPages }) 
 export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages }) {
   const bot = roster.byId[pane.id]
   const canBrowse = Boolean(bot && roster.browser === true && actions.browserShow)
-  const view = pane.view === 'browser' && canBrowse ? 'browser' : 'details'
+  const view = pane.view === 'browser' && canBrowse ? 'browser' : pane.view === 'files' ? 'files' : 'details'
   const tabState = useBrowserTabs(map => (bot ? (map[bot.id] ?? EMPTY_TABS) : EMPTY_TABS))
   const active = tabState.active
   const page = useBrowserPages(pages => (active ? pages[active] : null) ?? EMPTY_PAGE)
@@ -301,9 +310,10 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   const instant = dragging || resizing
   const [reading, setReading] = useState(false)
 
-  const panelWidth = fitWidth(width ?? (view === 'browser' ? DEFAULT_WIDTH : DETAILS_WIDTH), widthRange(view, viewport))
-  // Once the browser has shown, the Bot page keeps its width (up to DETAILS_MAX).
-  useLayoutEffect(() => { if (view === 'browser' && width === null) setWidth(DEFAULT_WIDTH) }, [view, width])
+  const panelWidth = fitWidth(width ?? (view === 'details' ? DETAILS_WIDTH : DEFAULT_WIDTH), widthRange(view, viewport))
+  // Once the browser or the Files tab has shown, the Bot page keeps its width (up to
+  // DETAILS_MAX).
+  useLayoutEffect(() => { if (view !== 'details' && width === null) setWidth(DEFAULT_WIDTH) }, [view, width])
   useLayoutEffect(() => { chatRoom.hold(instant) }, [instant])
   // A view switch that changes the width holds the guest back and pins both views to
   // the final width until the panel edge has settled. It is set while rendering, so the
@@ -352,7 +362,7 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   useEffect(() => {
     if (view === 'browser' && (active === null || !tabState.ids.includes(active))) actions.setPanelView('details')
   }, [view, active, tabState.ids.length])
-  // The guest leaves the screen while the details view is up, and on close.
+  // The guest leaves the screen while another view is up, and on close.
   useEffect(() => {
     if (view !== 'browser' || leaving) void actions.browserShow?.(null)
   }, [view, leaving])
@@ -401,9 +411,9 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
     const move = fly.current
     if (!move) return
     fly.current = null
-    const target = view === 'browser'
-      ? root.current?.querySelector('.bt-ptab-bot .bt-mark')
-      : root.current?.querySelector('.bt-drawer-id .bt-mark')
+    const target = view === 'details'
+      ? root.current?.querySelector('.bt-drawer-id .bt-mark')
+      : root.current?.querySelector('.bt-ptab-bot .bt-mark')
     if (!target || move.from.width === 0) return
     // A strip that has just appeared still grows from zero height; the target is
     // measured where it stands once the strip is full height.
@@ -470,8 +480,12 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   }
 
   const hasStrip = canBrowse && tabState.ids.length > 0
+  // The Files tab needs no browser, so the strip shows even without one. Its own
+  // view is chosen by `view === 'files'`, which the panel falls back from only when
+  // the subject disappears.
+  const showStrip = hasStrip || view === 'files'
   return h('aside', {
-    ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details'),
+    ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': view === 'files' ? t('Files') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details'),
     'data-leaving': leaving || undefined, 'aria-hidden': leaving || undefined, 'data-settling': settling || undefined,
     'data-instant': instant || undefined, 'data-dragging': dragging || undefined, style: { '--bt-panel-w': `${panelWidth}px` },
     onAnimationEnd: (event) => { if (event.target === event.currentTarget) setLanded(true) },
@@ -480,14 +494,16 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
     // Over the whole window while dragging: the cursor stays a resize cursor and the
     // pages underneath (the chat, the guest) see no pointer.
     dragging ? createPortal(h('div', { className: 'bt-drag-shield', 'aria-hidden': true }), document.body) : null,
-    hasStrip ? h(PanelStrip, { bot, subject: pane.id, view, ids: tabState.ids, active, reading, onView: switchView, actions: panelActions, useBrowserPages }) : null,
+    showStrip ? h(PanelStrip, { bot, subject: pane.id, view, ids: tabState.ids, active, reading, onView: switchView, actions: panelActions, useBrowserPages }) : null,
     view === 'browser' && bot
       ? h(BrowserView, { key: `browser:${active}`, bot, tabId: active, leaving, landed: landed && !settling, actions, useBrowserPages })
-      : h('div', { key: `details:${pane.id}:${pane.renaming ? 'rename' : ''}:${pane.tab ?? ''}`, className: 'bt-panel-view' },
-          h(DetailsDrawer, {
-            sessionId: pane.id, startRenaming: pane.renaming, startTab: pane.tab, hasStrip,
-            roster, actions: panelActions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages,
-          })))
+      : view === 'files'
+        ? h(FilePreview, { key: 'files', actions: panelActions })
+        : h('div', { key: `details:${pane.id}:${pane.renaming ? 'rename' : ''}:${pane.tab ?? ''}`, className: 'bt-panel-view' },
+            h(DetailsDrawer, {
+              sessionId: pane.id, startRenaming: pane.renaming, startTab: pane.tab, hasStrip,
+              roster, actions: panelActions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages,
+            })))
 }
 
 export const BROWSER_CSS = `
@@ -515,6 +531,8 @@ export const BROWSER_CSS = `
 .bt-ptab-new{position:relative;z-index:1;flex:none;width:28px;height:32px;border:0;border-radius:9px;background:none;color:var(--bt-ink-3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-ptab-new:hover{color:var(--bt-ink)}
 .bt-ptab-new svg{width:15px;height:15px}
+.bt-ptab-files{position:relative;z-index:1;flex:none;padding:0 7px;gap:5px}
+.bt-ptab-files svg{width:15px;height:15px;flex:none}
 .bt-ptab-ind{position:absolute;top:4px;bottom:4px;border-radius:9px;background:var(--bt-hover);opacity:0;pointer-events:none;z-index:0;transition:opacity .15s ease}
 .bt-ptab-close{flex:none;margin-left:2px}
 .bt-panel-ghost{position:absolute;top:44px;right:0;bottom:0;overflow:hidden;pointer-events:none;z-index:2}
