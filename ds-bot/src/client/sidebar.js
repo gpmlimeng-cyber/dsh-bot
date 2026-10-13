@@ -295,7 +295,11 @@ export function TeamSidebar(props) {
   }
   return h(Fragment, null,
     createPortal(h('button', { type: 'button', className: 'bt-mobile-scrim', 'data-open': mobileOpen || undefined, 'aria-label': t('Close navigation'), tabIndex: mobileOpen ? 0 : -1, onClick: actions.closeMobileNav }), document.body),
-    h('div', { className: listWide ? 'bt-side' : 'bt-side bt-rail', 'data-mobile-open': mobileOpen || undefined, onKeyDown: typeToSearch },
+    // `bt-rail` stays keyed on the shell's own width, not on the drawer state: the
+    // fixed off-canvas positioning below 768px lives on `.bt-side.bt-rail`, so the
+    // class must keep the rail form while the drawer is open (only the row content
+    // follows `listWide`).
+    h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', 'data-mobile-open': mobileOpen || undefined, onKeyDown: typeToSearch },
     listWide ? h('div', { className: 'bt-side-top' },
       h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),

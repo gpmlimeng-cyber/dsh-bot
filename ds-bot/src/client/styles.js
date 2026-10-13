@@ -909,15 +909,25 @@ export const CONVERSATION_CSS = `
 header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;right:0;z-index:8;display:flex!important;padding:10px 0 0!important;background:transparent!important;pointer-events:none;justify-content:center}
 header[class*="_header"]:has(.bt-head)::before{content:"";position:absolute;inset:0 0 auto;height:60px;background:linear-gradient(to bottom,var(--bt-main),color-mix(in srgb,var(--bt-main) 0%,transparent));pointer-events:none;z-index:-1}
 header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolute;left:12px;top:10px;pointer-events:auto}
-/* Below 768px the header row's own chrome (its gradient veil and the shell's
-   leading controls) goes away: the pill keeps floating on the transcript and the
-   hamburger in its own row takes the corner. The header stays mounted — display:none
-   would take the pill and the hamburger with it. */
+/* Below 768px the shell's header row itself goes away — not just its gradient and
+   leading controls — so only the floating pill and the hamburger are left on the
+   transcript. visibility (not display) is what makes that possible: the row stays
+   mounted and laid out, because the pill and the hamburger live inside it, and a
+   descendant can turn itself back on. */
 @media (max-width:768px){
+  header[class*="_header"]:has(.bt-head){visibility:hidden}
+  header[class*="_header"]:has(.bt-head) .bt-head{visibility:visible}
   header[class*="_header"]:has(.bt-head)::before{display:none}
   header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{display:none}
+  /* The header is an overlay here, so nothing may be pushed below it. The shell only
+     defines this variable for the macOS/Windows titlebar, so on this platform it is
+     already the 0px fallback; pinning it makes that explicit instead of incidental,
+     and the media query restores the shell's own value from 769px up. */
+  html{--dsh-frame-chrome-top:0px!important}
   .bt-head{padding-left:52px}
-  .bt-mobile-nav{position:absolute;left:12px;top:0;z-index:9;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);cursor:pointer}
+  /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
+     under the floating pill, and the property inherits into this button. */
+  .bt-mobile-nav{position:absolute;left:12px;top:0;z-index:9;pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);cursor:pointer}
   .bt-mobile-nav:active{transform:scale(.96)}
 }
 @media (min-width:769px){
