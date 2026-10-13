@@ -188,7 +188,11 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
   return h('div', { className: 'bt-settings-layer', 'data-leaving': leaving || undefined },
     h('div', { className: 'bt-scrim', onMouseDown: close }),
     h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('DS Bot settings'), 'data-wide': shown === 'usage' ? '' : undefined, 'data-screen': mobile ? screen : undefined },
-      h('nav', { ref: nav.box, className: 'bt-settings-nav', 'aria-label': t('Settings pages') },
+      // A div with role="navigation" rather than a <nav>: the Android responsive skin
+      // tags the first [role=dialog][aria-modal] holding a direct nav child as the
+      // upstream settings panel (data-dsh-settings-dialog) and reflows its nav into a
+      // horizontal tab strip. The accessible role is unchanged.
+      h('div', { ref: nav.box, role: 'navigation', className: 'bt-settings-nav', 'aria-label': t('Settings pages') },
         h('span', { ref: nav.thumb, className: 'bt-thumb', 'aria-hidden': true }),
         SETTINGS_PAGES.map(([key, text]) => h('button', {
           key, type: 'button', className: 'bt-settings-item', 'aria-current': shown === key ? 'page' : undefined,

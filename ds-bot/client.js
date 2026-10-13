@@ -12582,9 +12582,13 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
     (0, import_react32.createElement)(
       "div",
       { className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("DS Bot settings"), "data-wide": shown === "usage" ? "" : void 0, "data-screen": mobile ? screen : void 0 },
+      // A div with role="navigation" rather than a <nav>: the Android responsive skin
+      // tags the first [role=dialog][aria-modal] holding a direct nav child as the
+      // upstream settings panel (data-dsh-settings-dialog) and reflows its nav into a
+      // horizontal tab strip. The accessible role is unchanged.
       (0, import_react32.createElement)(
-        "nav",
-        { ref: nav.box, className: "bt-settings-nav", "aria-label": t("Settings pages") },
+        "div",
+        { ref: nav.box, role: "navigation", className: "bt-settings-nav", "aria-label": t("Settings pages") },
         (0, import_react32.createElement)("span", { ref: nav.thumb, className: "bt-thumb", "aria-hidden": true }),
         SETTINGS_PAGES.map(([key, text]) => (0, import_react32.createElement)("button", {
           key,
