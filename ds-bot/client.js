@@ -379,6 +379,7 @@ var ZH = {
   "Back to group chats": "返回群聊列表",
   "DS Bot settings": "DS Bot 设置",
   "Settings pages": "设置页面",
+  "All settings": "全部设置",
   "Models, providers, and the rest of DeepSeek Harness": "模型、服务商和 DeepSeek Harness 的其他设置",
   "Harness settings": "Harness 设置",
   "Back to Bots": "返回 Bot 列表",
@@ -2437,6 +2438,9 @@ body[data-ds-dark-theme] .bt-scrim{background:rgba(0,0,0,.5)}
 .bt-settings-nav>.bt-thumb{left:8px;right:8px;border-radius:8px;background:var(--bt-active)}
 .bt-settings-nav[data-glide] .bt-settings-item[aria-current=page]{background:transparent}
 .bt-settings-shell{margin-top:auto}
+/* The row's arrow belongs to the phone's one-screen list; the wide dialog's 198px column
+   has no room for it and its rows already read as a list. */
+.bt-set-go{display:none}
 /* Usage while another page is open: out of the flow at Usage's own width, so it keeps
    its layout, and not rendered. */
 .bt-settings-usage[data-off]{position:absolute;top:0;left:198px;width:calc(min(1100px,calc(100vw - 48px)) - 198px);height:100%;box-sizing:border-box;content-visibility:hidden;pointer-events:none}
@@ -2949,6 +2953,24 @@ html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar::after{display:none}
+/* On a phone the settings dialog is the screen rather than a card floating on it. A 198px
+   page column beside a page needs a width a phone has not got -- at 425px it left the page
+   179px, which is what made the whole thing read as broken. The two columns become two
+   screens instead: the list, then the page it opens, under an arrow that goes back up. */
+html[data-bt-mobile] .bt-settings{width:100%;height:100%;border-radius:0;border:0;box-shadow:none}
+html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
+html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
+/* The list starts below the close button, which floats over the top-right corner. */
+html[data-bt-mobile] .bt-settings-nav{width:100%;flex:1;border-right:0;padding:56px 12px max(16px,env(safe-area-inset-bottom))}
+html[data-bt-mobile] .bt-settings-main{width:100%;height:100%}
+html[data-bt-mobile] .bt-settings-item{min-height:52px;padding:0 12px;border-radius:12px;font-size:15px;line-height:22px;gap:12px}
+html[data-bt-mobile] .bt-settings-item>svg{flex:none;width:24px;height:24px}
+html[data-bt-mobile] .bt-set-go{display:flex;margin-left:auto;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-set-go svg{width:16px;height:16px}
+html[data-bt-mobile] .bt-settings-scroll{padding:12px 12px max(24px,env(safe-area-inset-bottom))}
+/* A settings row is a label and whatever changes it, side by side; on a phone the row has
+   the width for that now, so it only needs the height a finger wants. */
+html[data-bt-mobile] .bt-set-row{padding:12px;min-height:52px}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
    under the floating pill, and the property inherits into these buttons. Size lives here,
@@ -12541,6 +12563,8 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
   const usageFocus = shown === "usage" && id ? id : null;
   const label = t(SETTINGS_PAGES.find(([key]) => key === shown)[1]);
   const back = bot ? t("Back to Bots") : room2 ? t("Back to group chats") : usageFocus ? t("All usage") : null;
+  const mobile = useMobile();
+  const [screen, setScreen] = (0, import_react32.useState)(shown !== "general" || (id ?? null) !== null ? "page" : "list");
   const nav = useGlide(shown, { axis: "y" });
   const pageKey = `${shown}:${bot?.id ?? room2?.id ?? ""}`;
   const depth = bot || room2 ? 1 : 0;
@@ -12557,7 +12581,7 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
     (0, import_react32.createElement)("div", { className: "bt-scrim", onMouseDown: close }),
     (0, import_react32.createElement)(
       "div",
-      { className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("DS Bot settings"), "data-wide": shown === "usage" ? "" : void 0 },
+      { className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("DS Bot settings"), "data-wide": shown === "usage" ? "" : void 0, "data-screen": mobile ? screen : void 0 },
       (0, import_react32.createElement)(
         "nav",
         { ref: nav.box, className: "bt-settings-nav", "aria-label": t("Settings pages") },
@@ -12567,8 +12591,11 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
           type: "button",
           className: "bt-settings-item",
           "aria-current": shown === key ? "page" : void 0,
-          onClick: () => actions.openSettings(key)
-        }, (0, import_react32.createElement)(PAGE_ICONS[key]), t(text))),
+          onClick: () => {
+            setScreen("page");
+            actions.openSettings(key);
+          }
+        }, (0, import_react32.createElement)(PAGE_ICONS[key]), t(text), (0, import_react32.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react32.createElement)(ChevronRightIcon)))),
         (0, import_react32.createElement)("button", {
           type: "button",
           className: "bt-settings-item bt-settings-shell",
@@ -12577,7 +12604,7 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
             close();
             openHarnessSettings();
           }
-        }, (0, import_react32.createElement)(SlidersIcon), t("Harness settings"))
+        }, (0, import_react32.createElement)(SlidersIcon), t("Harness settings"), (0, import_react32.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react32.createElement)(ChevronRightIcon)))
       ),
       (0, import_react32.createElement)(
         "div",
@@ -12585,7 +12612,19 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
         (0, import_react32.createElement)(
           "div",
           { className: "bt-settings-head" },
-          back ? (0, import_react32.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": back, title: back, onClick: () => actions.openSettings(shown) }, (0, import_react32.createElement)(ChevronLeftIcon)) : null,
+          // The arrow goes up one level: a Bot's form back to the Bot list, a page back
+          // to the page list. On a phone it is always there; on the wide dialog it only
+          // appears where there is a level above.
+          back === null && !mobile ? null : (0, import_react32.createElement)("button", {
+            type: "button",
+            className: "bt-icon-btn",
+            "aria-label": back ?? t("All settings"),
+            title: back ?? t("All settings"),
+            onClick: () => {
+              if (back === null) setScreen("list");
+              else actions.openSettings(shown);
+            }
+          }, (0, import_react32.createElement)(ChevronLeftIcon)),
           (0, import_react32.createElement)("h2", { key: bot?.id ?? room2?.id ?? shown }, bot?.name ?? room2?.name ?? label)
         ),
         shown === "usage" ? null : (0, import_react32.createElement)(

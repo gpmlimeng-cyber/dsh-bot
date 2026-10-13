@@ -5,6 +5,7 @@ import { allThemes } from './themes.js'
 import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, InfoIcon, PlusIcon, SlidersIcon, SETTINGS_ICONS } from './icons.js'
 import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
 import { openHarnessSettings } from './sidebar.js'
+import { useMobile } from './mobile.js'
 import { useEscape } from './overlay-hooks.js'
 import { BotSettingsForm } from './bot-settings.js'
 import { Segmented, useGlide } from './motion.js'
@@ -162,6 +163,12 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
   const usageFocus = shown === 'usage' && id ? id : null
   const label = t(SETTINGS_PAGES.find(([key]) => key === shown)[1])
   const back = bot ? t('Back to Bots') : room ? t('Back to group chats') : usageFocus ? t('All usage') : null
+  const mobile = useMobile()
+  // A phone shows one screen at a time: the list of pages, or one page under a back
+  // arrow. Opened straight onto a page -- a Bot's settings from its row, a schedule from
+  // the plus menu -- it starts there; opened from the account launcher, which asks for
+  // General and nothing more, it starts on the list.
+  const [screen, setScreen] = useState(shown !== 'general' || (id ?? null) !== null ? 'page' : 'list')
   const nav = useGlide(shown, { axis: 'y' })
   // A page enters from the right when it is one level in, from the left when it comes
   // back out, and from below beside it. Usage keeps its own entrance and its data
@@ -180,19 +187,26 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
   const errorLine = error ? h('div', { className: 'bt-error', role: 'alert', style: { padding: 0 } }, error) : null
   return h('div', { className: 'bt-settings-layer', 'data-leaving': leaving || undefined },
     h('div', { className: 'bt-scrim', onMouseDown: close }),
-    h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('DS Bot settings'), 'data-wide': shown === 'usage' ? '' : undefined },
+    h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('DS Bot settings'), 'data-wide': shown === 'usage' ? '' : undefined, 'data-screen': mobile ? screen : undefined },
       h('nav', { ref: nav.box, className: 'bt-settings-nav', 'aria-label': t('Settings pages') },
         h('span', { ref: nav.thumb, className: 'bt-thumb', 'aria-hidden': true }),
         SETTINGS_PAGES.map(([key, text]) => h('button', {
-          key, type: 'button', className: 'bt-settings-item', 'aria-current': shown === key ? 'page' : undefined, onClick: () => actions.openSettings(key),
-        }, h(PAGE_ICONS[key]), t(text))),
+          key, type: 'button', className: 'bt-settings-item', 'aria-current': shown === key ? 'page' : undefined,
+          onClick: () => { setScreen('page'); actions.openSettings(key) },
+        }, h(PAGE_ICONS[key]), t(text), h('span', { className: 'bt-set-go', 'aria-hidden': true }, h(ChevronRightIcon)))),
         h('button', {
           type: 'button', className: 'bt-settings-item bt-settings-shell', title: t('Models, providers, and the rest of DeepSeek Harness'),
           onClick: () => { close(); openHarnessSettings() },
-        }, h(SlidersIcon), t('Harness settings'))),
+        }, h(SlidersIcon), t('Harness settings'), h('span', { className: 'bt-set-go', 'aria-hidden': true }, h(ChevronRightIcon)))),
       h('div', { className: 'bt-settings-main' },
         h('div', { className: 'bt-settings-head' },
-          back ? h('button', { type: 'button', className: 'bt-icon-btn', 'aria-label': back, title: back, onClick: () => actions.openSettings(shown) }, h(ChevronLeftIcon)) : null,
+          // The arrow goes up one level: a Bot's form back to the Bot list, a page back
+          // to the page list. On a phone it is always there; on the wide dialog it only
+          // appears where there is a level above.
+          back === null && !mobile ? null : h('button', {
+            type: 'button', className: 'bt-icon-btn', 'aria-label': back ?? t('All settings'), title: back ?? t('All settings'),
+            onClick: () => { if (back === null) setScreen('list'); else actions.openSettings(shown) },
+          }, h(ChevronLeftIcon)),
           h('h2', { key: bot?.id ?? room?.id ?? shown }, bot?.name ?? room?.name ?? label)),
         shown === 'usage' ? null : h('div', { key: pageKey, className: 'bt-settings-scroll bt-settings-page', 'data-move': last.current.move },
           errorLine,
