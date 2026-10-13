@@ -318,7 +318,19 @@ export function TeamSidebar(props) {
   // off-canvas positioning below the shell's narrow line lives on `.bt-side.bt-rail`,
   // so the class must keep the rail form while the drawer is open (only the row
   // content follows `listWide`).
-  const drawer = h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', 'data-mobile-open': mobileOpen || undefined, 'aria-label': mobile && drawerProbe !== '' ? drawerProbe : undefined, onKeyDown: typeToSearch },
+  //
+  // The bottom row is the shell's own sidebar footer — the account/settings launcher and
+  // Connect plugins — which the shell renders in a separate area of the sidebar column
+  // (`sidebar.footer.action`), not in the section this component owns. On a phone that
+  // column is off-canvas, so the footer did not travel with the drawer and the list ended
+  // in empty space: that is the "bottom is missing" report. The same two components the
+  // wide sidebar uses are rendered below instead, so neither copy can drift; only the
+  // drawer gets this one (the wide column keeps the shell's). It sits under the list,
+  // which is `flex:1`, so it stays at the bottom whatever the roster's length.
+  const drawerFoot = mobile ? h('div', { className: 'bt-side-foot' },
+    h(AccountLauncher, { seat: false, actions }),
+    h(ConnectPlugins, { wide: true, actions })) : null
+  const drawer = h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', role: wide ? undefined : 'region', 'data-mobile-open': mobileOpen || undefined, 'aria-label': mobile && drawerProbe !== '' ? drawerProbe : undefined, onKeyDown: typeToSearch },
     listWide ? h('div', { className: 'bt-side-top' },
       h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
@@ -333,7 +345,8 @@ export function TeamSidebar(props) {
         ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
         : entry.kind === 'room'
           ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
-          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))))
+          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))),
+    drawerFoot)
   return h(Fragment, null,
     createPortal(h('button', { type: 'button', className: 'bt-mobile-scrim', 'data-open': mobileOpen || undefined, 'aria-label': t('Close navigation'), tabIndex: mobileOpen ? 0 : -1, onClick: actions.closeMobileNav }), document.body),
     // The drawer cannot live inside the shell's sidebar column: below the shell's

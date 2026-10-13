@@ -206,7 +206,11 @@ html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
 html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
 html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%}
-.bt-side-foot{display:flex;padding-top:8px}
+.bt-side-foot{display:flex;align-items:center;gap:8px;flex:none;padding-top:8px}
+/* The drawer's bottom row: the account/settings launcher on the left, Connect plugins
+   taking the rest, the order the shell's own footer area uses. The connect button is a
+   full-width row under that area's rules; here it takes what the launcher leaves. */
+.bt-side-foot .bt-connect-foot{width:auto;flex:1 1 auto;min-width:0}
 .bt-connect{flex:1;height:36px;border-radius:999px;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background-color .12s ease}
 .bt-connect:hover{background:var(--bt-hover)}
 .bt-connect svg{flex:none;width:15px;height:15px}
