@@ -2891,10 +2891,14 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    That band necessarily runs behind the controls, and a solid fill there would composite
    with their own fill into near-total coverage — which is what the phone saw when it
    reported no translucency at all. The compensation is the controls' own fill: it is pulled
-   down to 60%, thin enough that the band's head (the only part that overlaps them) still
-   leaves some of the message showing. To trade the other way — fade clear of the controls,
-   frost at full strength — move this rule to top:100%; height:32px and put the fill back
-   to 72%.
+   down to 45% with a 14px blur, thin enough that the band's head (the only part that
+   overlaps them) still leaves the message showing. The band's head is still solid, so the
+   upper part of a control stays heavier than its lower edge; the next knob, if that reads as
+   a seam rather than a gradient, is the band's own head colour — start it at
+   color-mix(in srgb, var(--bt-main) 88%, transparent) instead of var(--bt-main), leaving
+   height, direction and position untouched. To trade the other way — fade clear of the
+   controls, frost at full strength — move this rule to top:100%; height:32px and put the
+   fill back to 72%.
    It keeps z-index -1 so it paints under the controls rather than over them; it is a child
    of the bar, so the bar's own stacking context (95) still holds it above the conversation.
    The transcript already reserves 60px at the top of its scroll box for the floating pill
@@ -2906,7 +2910,7 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    the settings page, the memory dialog and the palette.
    If the blur costs frames on this WebView, the fallback is to raise --bt-frost-fill to 92%
    and leave --bt-frost-blur at none — same two properties, no rule to hunt for. */
-html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 60%,transparent);--bt-frost-blur:blur(12px)}
+html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 45%,transparent);--bt-frost-blur:blur(14px)}
 html[data-bt-mobile] .bt-pill,
 html[data-bt-mobile] .bt-mobile-nav,
 html[data-bt-mobile] .bt-mobile-acts{background:var(--bt-frost-fill,var(--bt-main));-webkit-backdrop-filter:var(--bt-frost-blur,none);backdrop-filter:var(--bt-frost-blur,none)}
