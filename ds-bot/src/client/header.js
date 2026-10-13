@@ -92,6 +92,27 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
   const memoryNotice = notice && changed !== null && roster.memory !== false
   const mobile = useMobile()
   const mobileNavOpen = useUi(value => value.mobileNav === true)
+  // TEMPORARY diagnostic: the only readable channel right now is the accessibility
+  // tree, so the counts the device crew cannot dump go into the button's own label.
+  const [probe, setProbe] = useState('')
+  useEffect(() => {
+    if (!mobile) return undefined
+    const timer = setTimeout(() => {
+      const rect = document.querySelector('.bt-mobile-bar .bt-mobile-nav')?.getBoundingClientRect()
+      const headers = [...document.querySelectorAll('header')].filter((el) => el.getBoundingClientRect().width > 0)
+      const head = headers[0]?.getBoundingClientRect()
+      const cls = headers[0] === undefined ? 'none' : String(headers[0].className).replace(/_?[a-z0-9]{5,}_?/gi, '').slice(0, 14) || 'anon'
+      const scroller = document.querySelector('[data-conversation-scroll]')?.getBoundingClientRect()
+      const shellVar = getComputedStyle(document.documentElement).getPropertyValue('--dsh-frame-chrome-top').trim() || 'unset'
+      const scrim = document.querySelector('.bt-mobile-scrim') !== null
+      setProbe(`nav${document.querySelectorAll('.bt-mobile-nav').length}bar${document.querySelectorAll('.bt-mobile-bar').length}`
+        + `mk${document.querySelectorAll('.bt-head-mark').length}scr${scrim ? 1 : 0}`
+        + ` self=${rect === undefined ? 'na' : `${Math.round(rect.left)},${Math.round(rect.top)}`}`
+        + ` hdr${headers.length}:${cls}${head === undefined ? '' : `@${Math.round(head.top)}`}`
+        + ` sc=${scroller === undefined ? 'na' : Math.round(scroller.top)} var=${shellVar}`)
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [mobile])
   const head = h('div', { className: 'bt-head' },
     h('button', {
       type: 'button', className: 'bt-pill', 'aria-expanded': detailsOpen, 'data-memory': memoryNotice ? 'updated' : undefined,
@@ -115,7 +136,8 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h('span', { className: 'bt-head-mark', 'aria-hidden': true }),
     createPortal(h('div', { className: 'bt-mobile-bar' },
       h('button', {
-        type: 'button', className: 'bt-mobile-nav', 'aria-expanded': mobileNavOpen, 'aria-label': t('Open navigation'),
+        type: 'button', className: 'bt-mobile-nav', 'aria-expanded': mobileNavOpen,
+        'aria-label': probe === '' ? t('Open navigation') : `${t('Open navigation')} ${probe}`,
         onClick: () => actions.toggleMobileNav(),
       }, h(MenuIcon)),
       head), document.body))

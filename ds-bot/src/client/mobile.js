@@ -26,11 +26,31 @@ const publish = (matches) => {
   for (const listener of listeners) listener(matches === true)
 }
 
+// The shell publishes its top inset (the device's status bar, ~46px here) as
+// --dsh-frame-chrome-top, but only on frame elements it owns: a panel portalled to
+// <body> cannot read it and falls back to 0, which is how the floating bar ended up
+// under the status bar. Measure where the transcript itself starts instead and publish
+// that as our own variable — the shell's variable is never written to.
+const publishInset = () => {
+  if (typeof document === 'undefined') return
+  const scroller = document.querySelector('[data-conversation-scroll]')
+  const top = scroller === null ? 0 : Math.round(scroller.getBoundingClientRect().top)
+  if (top > 0) document.documentElement.style.setProperty('--bt-top-inset', `${top}px`)
+}
+
 /** Start watching the breakpoint. Called from apply() so the flag is set before the first paint. */
 export function watchMobile() {
   const mql = media()
   publish(mql?.matches === true)
   mql?.addEventListener?.('change', (event) => publish(event.matches === true))
+  // The transcript is mounted after this plugin applies, so measure on the next frames
+  // rather than once, and again whenever the window changes shape.
+  const tick = () => { if (mql?.matches === true) publishInset() }
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(tick)
+    for (const delay of [300, 1200, 3000]) setTimeout(tick, delay)
+    if (typeof window !== 'undefined') window.addEventListener('resize', tick)
+  }
   return mql?.matches === true
 }
 

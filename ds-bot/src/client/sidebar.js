@@ -288,6 +288,23 @@ export function TeamSidebar(props) {
   useListGlide(listRef, listWide, order.map(entry => entry.item.id).join(','))
   useLandOnMainBot(roster, useSessions, actions)
   const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide: listWide }
+  // TEMPORARY diagnostic: the device crew can only read the accessibility tree, so the
+  // drawer reports its own box and what it managed to render inside.
+  const [drawerProbe, setDrawerProbe] = useState('')
+  useEffect(() => {
+    if (!mobile) return undefined
+    const timer = setTimeout(() => {
+      const side = document.querySelector('.bt-side')
+      const box = side?.getBoundingClientRect()
+      const list = document.querySelector('.bt-side .bt-list')?.getBoundingClientRect()
+      setDrawerProbe(`side=${box === undefined ? 'none' : `${Math.round(box.left)},${Math.round(box.top)},${Math.round(box.width)}x${Math.round(box.height)}`}`
+        + ` list=${list === undefined ? 'none' : Math.round(list.height)}`
+        + ` rows=${document.querySelectorAll('.bt-side .bt-row').length}`
+        + ` ready=${roster.ready ? 1 : 0} order=${order.length}`
+        + ` open=${mobileOpen ? 1 : 0} wide=${wide ? 1 : 0}`)
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [mobile, mobileOpen, order.length, roster.ready])
   // Typing while the sidebar has focus starts a search.
   const typeToSearch = (event) => {
     if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
@@ -299,7 +316,7 @@ export function TeamSidebar(props) {
   // off-canvas positioning below the shell's narrow line lives on `.bt-side.bt-rail`,
   // so the class must keep the rail form while the drawer is open (only the row
   // content follows `listWide`).
-  const drawer = h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', 'data-mobile-open': mobileOpen || undefined, onKeyDown: typeToSearch },
+  const drawer = h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', 'data-mobile-open': mobileOpen || undefined, 'aria-label': mobile && drawerProbe !== '' ? drawerProbe : undefined, onKeyDown: typeToSearch },
     listWide ? h('div', { className: 'bt-side-top' },
       h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),

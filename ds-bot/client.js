@@ -2072,9 +2072,9 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
    (see mobile.js), so no column of the shell can clip them, and the html flag is the
    same breakpoint the JS uses: stylesheet and React tree can never disagree. */
 .bt-mobile-scrim{display:none}
-html[data-bt-mobile] .bt-mobile-scrim{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
+html[data-bt-mobile] .bt-mobile-scrim{position:fixed;inset:var(--bt-top-inset,var(--dsh-frame-chrome-top,0px)) 0 0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
 html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;pointer-events:auto}
-html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--dsh-frame-chrome-top,0px);bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
+html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-frame-chrome-top,0px));bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
 html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
 html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%}
@@ -2791,9 +2791,10 @@ header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolu
 .bt-head-mark{display:none}
 html[data-bt-mobile] header[class*="_header"]:has(.bt-head-mark){display:none!important}
 /* The body-level bar the pill and its hamburger float in below that line. It starts
-   where the shell's own top chrome ends, the same inset every floating panel of this
-   skin uses — that is where the hosting device's status bar lives. */
-.bt-mobile-bar{position:fixed;top:var(--dsh-frame-chrome-top,0px);left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
+   where the transcript itself starts — the shell publishes its top inset only on the
+   frame it owns, so mobile.js measures that line and publishes it as --bt-top-inset,
+   with the shell's own variable as the fallback. */
+.bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-frame-chrome-top,0px));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto;padding-left:52px}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
    under the floating pill, and the property inherits into this button. */
@@ -4955,10 +4956,24 @@ var publish = (matches) => {
   }
   for (const listener of listeners) listener(matches === true);
 };
+var publishInset = () => {
+  if (typeof document === "undefined") return;
+  const scroller = document.querySelector("[data-conversation-scroll]");
+  const top = scroller === null ? 0 : Math.round(scroller.getBoundingClientRect().top);
+  if (top > 0) document.documentElement.style.setProperty("--bt-top-inset", `${top}px`);
+};
 function watchMobile() {
   const mql = media();
   publish(mql?.matches === true);
   mql?.addEventListener?.("change", (event) => publish(event.matches === true));
+  const tick = () => {
+    if (mql?.matches === true) publishInset();
+  };
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(tick);
+    for (const delay of [300, 1200, 3e3]) setTimeout(tick, delay);
+    if (typeof window !== "undefined") window.addEventListener("resize", tick);
+  }
   return mql?.matches === true;
 }
 function useMobile() {
@@ -5351,6 +5366,17 @@ function TeamSidebar(props) {
   useListGlide(listRef, listWide, order.map((entry) => entry.item.id).join(","));
   useLandOnMainBot(roster, useSessions, actions);
   const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide: listWide };
+  const [drawerProbe, setDrawerProbe] = (0, import_react10.useState)("");
+  (0, import_react10.useEffect)(() => {
+    if (!mobile) return void 0;
+    const timer = setTimeout(() => {
+      const side = document.querySelector(".bt-side");
+      const box = side?.getBoundingClientRect();
+      const list = document.querySelector(".bt-side .bt-list")?.getBoundingClientRect();
+      setDrawerProbe(`side=${box === void 0 ? "none" : `${Math.round(box.left)},${Math.round(box.top)},${Math.round(box.width)}x${Math.round(box.height)}`} list=${list === void 0 ? "none" : Math.round(list.height)} rows=${document.querySelectorAll(".bt-side .bt-row").length} ready=${roster.ready ? 1 : 0} order=${order.length} open=${mobileOpen ? 1 : 0} wide=${wide ? 1 : 0}`);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [mobile, mobileOpen, order.length, roster.ready]);
   const typeToSearch = (event) => {
     if (event.defaultPrevented || event.key.length !== 1 || event.key === " " || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return;
     if (event.target instanceof Element && event.target.closest("input,textarea,[contenteditable]")) return;
@@ -5359,7 +5385,7 @@ function TeamSidebar(props) {
   };
   const drawer = (0, import_react10.createElement)(
     "div",
-    { className: wide ? "bt-side" : "bt-side bt-rail", "data-mobile-open": mobileOpen || void 0, onKeyDown: typeToSearch },
+    { className: wide ? "bt-side" : "bt-side bt-rail", "data-mobile-open": mobileOpen || void 0, "aria-label": mobile && drawerProbe !== "" ? drawerProbe : void 0, onKeyDown: typeToSearch },
     listWide ? (0, import_react10.createElement)(
       "div",
       { className: "bt-side-top" },
@@ -5889,6 +5915,21 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
   const memoryNotice = notice && changed !== null && roster.memory !== false;
   const mobile = useMobile();
   const mobileNavOpen = useUi((value) => value.mobileNav === true);
+  const [probe, setProbe] = (0, import_react11.useState)("");
+  (0, import_react11.useEffect)(() => {
+    if (!mobile) return void 0;
+    const timer = setTimeout(() => {
+      const rect = document.querySelector(".bt-mobile-bar .bt-mobile-nav")?.getBoundingClientRect();
+      const headers = [...document.querySelectorAll("header")].filter((el) => el.getBoundingClientRect().width > 0);
+      const head2 = headers[0]?.getBoundingClientRect();
+      const cls = headers[0] === void 0 ? "none" : String(headers[0].className).replace(/_?[a-z0-9]{5,}_?/gi, "").slice(0, 14) || "anon";
+      const scroller = document.querySelector("[data-conversation-scroll]")?.getBoundingClientRect();
+      const shellVar = getComputedStyle(document.documentElement).getPropertyValue("--dsh-frame-chrome-top").trim() || "unset";
+      const scrim = document.querySelector(".bt-mobile-scrim") !== null;
+      setProbe(`nav${document.querySelectorAll(".bt-mobile-nav").length}bar${document.querySelectorAll(".bt-mobile-bar").length}mk${document.querySelectorAll(".bt-head-mark").length}scr${scrim ? 1 : 0} self=${rect === void 0 ? "na" : `${Math.round(rect.left)},${Math.round(rect.top)}`} hdr${headers.length}:${cls}${head2 === void 0 ? "" : `@${Math.round(head2.top)}`} sc=${scroller === void 0 ? "na" : Math.round(scroller.top)} var=${shellVar}`);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [mobile]);
   const head = (0, import_react11.createElement)(
     "div",
     { className: "bt-head" },
@@ -5923,7 +5964,7 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
         type: "button",
         className: "bt-mobile-nav",
         "aria-expanded": mobileNavOpen,
-        "aria-label": t("Open navigation"),
+        "aria-label": probe === "" ? t("Open navigation") : `${t("Open navigation")} ${probe}`,
         onClick: () => actions.toggleMobileNav()
       }, (0, import_react11.createElement)(MenuIcon)),
       head

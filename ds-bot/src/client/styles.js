@@ -194,9 +194,9 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
    (see mobile.js), so no column of the shell can clip them, and the html flag is the
    same breakpoint the JS uses: stylesheet and React tree can never disagree. */
 .bt-mobile-scrim{display:none}
-html[data-bt-mobile] .bt-mobile-scrim{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
+html[data-bt-mobile] .bt-mobile-scrim{position:fixed;inset:var(--bt-top-inset,var(--dsh-frame-chrome-top,0px)) 0 0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
 html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;pointer-events:auto}
-html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--dsh-frame-chrome-top,0px);bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
+html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-frame-chrome-top,0px));bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
 html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
 html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%}
@@ -914,9 +914,10 @@ header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolu
 .bt-head-mark{display:none}
 html[data-bt-mobile] header[class*="_header"]:has(.bt-head-mark){display:none!important}
 /* The body-level bar the pill and its hamburger float in below that line. It starts
-   where the shell's own top chrome ends, the same inset every floating panel of this
-   skin uses — that is where the hosting device's status bar lives. */
-.bt-mobile-bar{position:fixed;top:var(--dsh-frame-chrome-top,0px);left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
+   where the transcript itself starts — the shell publishes its top inset only on the
+   frame it owns, so mobile.js measures that line and publishes it as --bt-top-inset,
+   with the shell's own variable as the fallback. */
+.bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-frame-chrome-top,0px));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto;padding-left:52px}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
    under the floating pill, and the property inherits into this button. */
