@@ -2087,7 +2087,7 @@ html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;po
    last one fell out of view. Height comes from top/bottom — never height:100vh, which would
    overshoot the screen by exactly the inset. The list already scrolls (styles.js:122,
    overflow-y:auto + min-height:0), so a long roster scrolls inside the drawer. */
-html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden;touch-action:pan-y}
+html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));bottom:0;left:0;width:var(--bt-drawer-w,min(86vw,320px));box-sizing:border-box;align-items:stretch;gap:0;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden;touch-action:pan-y}
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
 /* The menus a row or the account launcher opens are portalled to body, so they compete
    with the drawer instead of living inside it: at the shared 60 they painted behind the
@@ -2863,7 +2863,29 @@ html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh
    This must stay off the --bt-top-inset chain's inputs: mobile.js measures --bt-top-inset
    from --dsh-mobile-top-inset, and a definition on html cannot feed back into it. */
 html[data-bt-mobile]{--dsh-frame-chrome-top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)))}
-/* The bar floats above every panel this skin opens, not just the conversation: the New…
+/* The mobile skin has three sizes, on the Compact/Medium/Expanded lines the platforms
+   publish (Xiaomi and HarmonyOS both use 600 and 840). The defaults below are the compact
+   phone the skin has always drawn, so nothing changes where no band matches; a band only
+   re-points these variables, and every rule that needs one reads it here. The shell's own
+   1024 line stays the one switch between desktop and mobile, so 841-1023 is still ours. */
+html[data-bt-mobile]{
+  --bt-drawer-w:min(86vw,320px);
+  --bt-set-max:100%;
+  --bt-set-row-h:52px;
+  --bt-set-cols:1;
+}
+html[data-bt-mobile][data-bt-size=medium]{
+  --bt-drawer-w:min(68vw,400px);
+  --bt-set-max:720px;
+  --bt-set-row-h:56px;
+}
+html[data-bt-mobile][data-bt-size=expanded]{
+  --bt-drawer-w:min(520px,50vw);
+  --bt-set-max:880px;
+  --bt-set-row-h:56px;
+  --bt-set-cols:2;
+  --bt-detail-w:480px;
+}/* The bar floats above every panel this skin opens, not just the conversation: the New…
    picker, the settings page, the palette and the memory dialog are all fixed layers of
    their own (pane 45, menu/settings 60, memory 61, palette 70) that start at the top of
    the screen, and at z-index 30 the bar was simply painted over by them — that is the
@@ -2996,13 +3018,13 @@ html[data-bt-mobile] .bt-settings-top h2{position:absolute;left:0;right:0;top:50
 html[data-bt-mobile] .bt-settings-head,
 html[data-bt-mobile] .bt-settings-close{display:none}
 /* The list is cards now, and it scrolls: rows plus headings no longer fit a phone. */
-html[data-bt-mobile] .bt-settings-nav{width:100%;flex:1;overflow-y:auto;border-right:0;padding:8px 12px max(16px,env(safe-area-inset-bottom))}
+html[data-bt-mobile] .bt-settings-nav{width:100%;flex:1;overflow-y:auto;border-right:0;padding:8px max(12px,calc((100% - var(--bt-set-max,100%))/2)) max(16px,env(safe-area-inset-bottom))}
 html[data-bt-mobile] .bt-settings-group{display:block}
 html[data-bt-mobile] .bt-settings-group+.bt-settings-group{margin-top:16px}
 html[data-bt-mobile] .bt-settings-group-head{display:block;margin:0 0 8px;padding:0 12px 0 13px;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-3)}
 html[data-bt-mobile] .bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card);overflow:hidden}
 html[data-bt-mobile] .bt-settings-main{width:100%;height:auto;flex:1;min-height:0}
-html[data-bt-mobile] .bt-settings-item{min-height:52px;padding:0 12px;border-radius:0;font-size:15px;line-height:22px;gap:12px}
+html[data-bt-mobile] .bt-settings-item{min-height:var(--bt-set-row-h,52px);padding:0 12px;border-radius:0;font-size:15px;line-height:22px;gap:12px}
 /* The name takes the room the chevron does not: it ellipsises, and the chevron lands on
    the card's inner edge rather than behind the text. The row carries its own width
    because this is a <button> in a block card — without it the button shrinks to its
@@ -3016,6 +3038,27 @@ html[data-bt-mobile] .bt-settings-scroll{padding:12px 12px max(24px,env(safe-are
 /* A settings row is a label and whatever changes it, side by side; on a phone the row has
    the width for that now, so it only needs the height a finger wants. */
 html[data-bt-mobile] .bt-set-row{padding:12px;min-height:52px}
+/* Medium and expanded are the same skin with room, and nothing here can reach the
+   desktop: every rule needs data-bt-mobile, and mobile.js writes data-bt-size only while
+   that flag is on. Above 1024px this file is exactly what it was. */
+/* Medium: the panel is still the only thing on screen, but on a half-folded screen a
+   full-bleed sheet wastes the width it has — it floats centred at 70vw instead. */
+html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:15vw;right:15vw;width:70vw!important;border-left:.5px solid var(--bt-line-2);border-radius:16px 16px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3)}
+/* Expanded: there is room for the conversation and the panel at once, so the panel is a
+   right-hand column again and the column keeps its 480px instead of being covered. */
+html[data-bt-mobile][data-bt-size=expanded] .bt-panel{left:auto;right:0;width:var(--bt-detail-w)!important;border-left:.5px solid var(--bt-line-2)}
+html[data-bt-mobile][data-bt-size=expanded] [class*="_centerCol"]{margin-right:var(--bt-detail-w)!important}
+/* The floating bar is hidden over a panel because the panel sits under it. Beside the
+   panel there is nothing to hide from: it stays, over the conversation and clear of the
+   column, which is how the session stays switchable while the details are open. */
+html[data-bt-mobile][data-bt-size=expanded] body:has(.bt-panel) .bt-mobile-bar{display:flex;right:var(--bt-detail-w)}
+/* Two columns of group cards, one 16px gutter, each row as tall as its taller card. The
+   glide thumb measures one list and would cut across both columns, so the grid drops it
+   and the current row paints itself again. */
+html[data-bt-mobile][data-bt-size=expanded] .bt-settings-nav{display:grid;grid-template-columns:repeat(var(--bt-set-cols,1),minmax(0,1fr));column-gap:16px;row-gap:16px;align-content:start;align-items:start}
+html[data-bt-mobile][data-bt-size=expanded] .bt-settings-group{margin-top:0}
+html[data-bt-mobile][data-bt-size=expanded] .bt-settings-nav>.bt-thumb{display:none}
+html[data-bt-mobile][data-bt-size=expanded] .bt-settings-nav[data-glide] .bt-settings-item[aria-current=page]{background:var(--bt-active);color:var(--bt-ink)}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
    under the floating pill, and the property inherits into these buttons. Size lives here,
@@ -5220,19 +5263,39 @@ function showsDshRow(dsh, app) {
 // src/client/mobile.js
 var import_react9 = require("react");
 var MOBILE_QUERY = "(max-width:1023px)";
+var SIZE_MEDIUM_QUERY = "(min-width:600px)";
+var SIZE_EXPANDED_QUERY = "(min-width:841px)";
 var query;
 var listeners = /* @__PURE__ */ new Set();
+var sizes;
 var media = () => {
   if (query === void 0) {
     query = typeof window === "undefined" || typeof window.matchMedia !== "function" ? null : window.matchMedia(MOBILE_QUERY);
   }
   return query;
 };
+var sizeMedia = () => {
+  if (sizes === void 0) {
+    sizes = typeof window === "undefined" || typeof window.matchMedia !== "function" ? null : { medium: window.matchMedia(SIZE_MEDIUM_QUERY), expanded: window.matchMedia(SIZE_EXPANDED_QUERY) };
+  }
+  return sizes;
+};
+var readSize = () => {
+  const mql = sizeMedia();
+  if (!mql) return "compact";
+  return mql.expanded.matches ? "expanded" : mql.medium.matches ? "medium" : "compact";
+};
+var publishSize = () => {
+  if (typeof document === "undefined") return;
+  if (document.documentElement.dataset.btMobile === "1") document.documentElement.dataset.btSize = readSize();
+  else delete document.documentElement.dataset.btSize;
+};
 var publish = (matches) => {
   if (typeof document !== "undefined") {
     if (matches) document.documentElement.dataset.btMobile = "1";
     else delete document.documentElement.dataset.btMobile;
   }
+  publishSize();
   for (const listener of listeners) listener(matches === true);
 };
 var largestPx = (value) => {
@@ -5254,6 +5317,9 @@ function watchMobile() {
   const mql = media();
   publish(mql?.matches === true);
   mql?.addEventListener?.("change", (event) => publish(event.matches === true));
+  const bands = sizeMedia();
+  bands?.medium.addEventListener?.("change", () => publishSize());
+  bands?.expanded.addEventListener?.("change", () => publishSize());
   const tick = () => {
     if (mql?.matches === true) publishInset();
   };
