@@ -204,6 +204,11 @@ html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;po
    overflow-y:auto + min-height:0), so a long roster scrolls inside the drawer. */
 html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden;touch-action:pan-y}
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
+/* The menus a row or the account launcher opens are portalled to body, so they compete
+   with the drawer instead of living inside it: at the shared 60 they painted behind the
+   drawer's own panel, and a tap read as nothing happening. Lifted only while the drawer
+   is open, and only one step above it, so every menu opened anywhere else keeps its seat. */
+html[data-bt-mobile] body:has(.bt-side.bt-rail[data-mobile-open]) .bt-menu{z-index:80}
 html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
 /* pan-y on the drawer leaves the vertical drag to the list's own scrolling and keeps the
    horizontal one for the close gesture; contain stops a flick at the end of the list from
