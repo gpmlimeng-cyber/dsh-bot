@@ -189,18 +189,17 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
 .bt-rail .bt-tile-wrap{padding:0}
 .bt-rail .bt-tile-bubbles{display:none}
 .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px}
-/* Below 768px the shell's rail collapses: the sidebar becomes a modal drawer opened
-   by the floating hamburger in the conversation header, over a tap-to-close scrim.
-   The hamburger and the hidden shell header follow in the conversation block below. */
+/* Below the shell's own narrow line the rail becomes a modal drawer, opened by the
+   floating hamburger and closed by a tap on the scrim. Both are portalled to <body>
+   (see mobile.js), so no column of the shell can clip them, and the html flag is the
+   same breakpoint the JS uses: stylesheet and React tree can never disagree. */
 .bt-mobile-scrim{display:none}
-@media (max-width:768px){
-  .bt-mobile-scrim{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
-  .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;pointer-events:auto}
-  .bt-side.bt-rail{position:fixed;z-index:79;inset:var(--dsh-frame-chrome-top,0px) auto 0 0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
-  .bt-side.bt-rail[data-mobile-open]{transform:none}
-  .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
-  .bt-side.bt-rail .bt-list{width:100%}
-}
+html[data-bt-mobile] .bt-mobile-scrim{position:fixed;inset:0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
+html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;pointer-events:auto}
+html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:0;bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
+html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
+html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
+html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%}
 .bt-side-foot{display:flex;padding-top:8px}
 .bt-connect{flex:1;height:36px;border-radius:999px;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background-color .12s ease}
 .bt-connect:hover{background:var(--bt-hover)}
@@ -909,30 +908,23 @@ export const CONVERSATION_CSS = `
 header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;right:0;z-index:8;display:flex!important;padding:10px 0 0!important;background:transparent!important;pointer-events:none;justify-content:center}
 header[class*="_header"]:has(.bt-head)::before{content:"";position:absolute;inset:0 0 auto;height:60px;background:linear-gradient(to bottom,var(--bt-main),color-mix(in srgb,var(--bt-main) 0%,transparent));pointer-events:none;z-index:-1}
 header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolute;left:12px;top:10px;pointer-events:auto}
-/* Below 768px the shell's header row itself goes away — not just its gradient and
-   leading controls — so only the floating pill and the hamburger are left on the
-   transcript. visibility (not display) is what makes that possible: the row stays
-   mounted and laid out, because the pill and the hamburger live inside it, and a
-   descendant can turn itself back on. */
-@media (max-width:768px){
-  header[class*="_header"]:has(.bt-head){visibility:hidden}
-  header[class*="_header"]:has(.bt-head) .bt-head{visibility:visible}
-  header[class*="_header"]:has(.bt-head)::before{display:none}
-  header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{display:none}
-  /* The header is an overlay here, so nothing may be pushed below it. The shell only
-     defines this variable for the macOS/Windows titlebar, so on this platform it is
-     already the 0px fallback; pinning it makes that explicit instead of incidental,
-     and the media query restores the shell's own value from 769px up. */
-  html{--dsh-frame-chrome-top:0px!important}
-  .bt-head{padding-left:52px}
-  /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
-     under the floating pill, and the property inherits into this button. */
-  .bt-mobile-nav{position:absolute;left:12px;top:0;z-index:9;pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);cursor:pointer}
-  .bt-mobile-nav:active{transform:scale(.96)}
-}
-@media (min-width:769px){
-  .bt-mobile-nav{display:none}
-}
+/* Below the shell's own narrow line the header row leaves the screen for good: the
+   pill now floats from <body> (mobile.js), so display:none takes nothing of ours with
+   it. The mark left behind in the slot is what identifies the row to hide. */
+.bt-head-mark{display:none}
+html[data-bt-mobile] header[class*="_header"]:has(.bt-head-mark){display:none!important}
+/* The body-level bar the pill and its hamburger float in below that line. */
+.bt-mobile-bar{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
+.bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto;padding-left:52px}
+/* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
+   under the floating pill, and the property inherits into this button. */
+.bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31;pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);cursor:pointer}
+.bt-mobile-nav:active{transform:scale(.96)}
+/* The header is an overlay there, so nothing may be pushed below it either. The shell
+   defines this variable only for the macOS/Windows titlebar, so on this platform it is
+   already the 0px fallback; pinning it makes that explicit instead of incidental, and
+   removing the flag restores the shell's own value. */
+html[data-bt-mobile]{--dsh-frame-chrome-top:0px!important}
 /* The pill centres itself in the same measure the transcript runs in: the shell's own
    --dsh-chat-content-width, read only, never redefined (see the note below). */
 header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}

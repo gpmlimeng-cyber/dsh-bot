@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
 import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon } from './icons.js'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
+import { useMobile } from './mobile.js'
 import { ActivityIndicator } from './activity-row.js'
 import { clockLabel, openingTurn, unseenSince } from './cells.js'
 import { t } from './i18n.js'
@@ -89,13 +90,9 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     return () => { delete document.body.dataset.btRoom }
   }, [Boolean(room)])
   const memoryNotice = notice && changed !== null && roster.memory !== false
-  return h('div', { className: 'bt-head' },
-    // The mobile drawer's opener: only the CSS below 768px makes it visible, so the
-    // desktop header keeps its centred pill alone.
-    h('button', {
-      type: 'button', className: 'bt-mobile-nav', 'aria-label': t('Open navigation'),
-      onClick: () => actions.toggleMobileNav(),
-    }, h(MenuIcon)),
+  const mobile = useMobile()
+  const mobileNavOpen = useUi(value => value.mobileNav === true)
+  const head = h('div', { className: 'bt-head' },
     h('button', {
       type: 'button', className: 'bt-pill', 'aria-expanded': detailsOpen, 'data-memory': memoryNotice ? 'updated' : undefined,
       'aria-label': memoryNotice ? t('Memory updated. Open {name}\'s memory', { name: roster.byId[changed]?.name ?? name }) : t('View conversation details'),
@@ -109,6 +106,19 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, actions }))
+  if (!mobile) return head
+  // Below the shell's own narrow line the pill leaves the shell's header altogether:
+  // the header is display:none there (so no title row is left on screen) and the pill
+  // floats from <body>, where no column, overflow or stacking context can swallow it.
+  // The mark stays behind in the header so its CSS can still find the row to hide.
+  return h(Fragment, null,
+    h('span', { className: 'bt-head-mark', 'aria-hidden': true }),
+    createPortal(h('div', { className: 'bt-mobile-bar' },
+      h('button', {
+        type: 'button', className: 'bt-mobile-nav', 'aria-expanded': mobileNavOpen, 'aria-label': t('Open navigation'),
+        onClick: () => actions.toggleMobileNav(),
+      }, h(MenuIcon)),
+      head), document.body))
 }
 
 // New-message pills. "N new messages ↓" takes Back to bottom's place when
@@ -131,7 +141,10 @@ function useTranscriptView() {
       }
       if (!scroller) { setView(null); return }
       const box = scroller.getBoundingClientRect()
-      const headerBottom = document.querySelector('header[class*="_header"]')?.getBoundingClientRect().bottom ?? box.top + 50
+      // Below the shell's narrow line the header is display:none (an empty rect), and
+      // the floating bar is what covers the transcript instead.
+      const headerRect = document.querySelector('header[class*="_header"], .bt-mobile-bar')?.getBoundingClientRect()
+      const headerBottom = headerRect !== undefined && headerRect.height > 0 ? headerRect.bottom : box.top + 50
       const sep = scroller.querySelector('.bt-new-sep')
       let divider = null
       if (sep) {

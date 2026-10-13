@@ -33,10 +33,14 @@ import { ErrorToast, FEEDBACK_CSS } from './feedback.js'
 import { ABOUT_CSS } from './about.js'
 import { MEMBER_CSS, MemberDock } from './member-status.js'
 import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-message.js'
+import { watchMobile } from './mobile.js'
 
 export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout', 'configForms']
 
 export function apply(ctx) {
+  // The mobile layout flag (<html data-bt-mobile>) has to exist before the first paint,
+  // so it is armed here rather than inside a component effect.
+  ctx.effect(() => { watchMobile() }, 'ds-bot: mobile layout flag')
   ctx.effect(() => installLocale(ctx.get('locale')), 'ds-bot: interface copy')
   const roster = createSource(EMPTY_ROSTER)
   migrateStorage()

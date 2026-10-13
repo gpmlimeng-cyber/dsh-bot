@@ -10,6 +10,7 @@ import { reducedMotion } from './activity-row.js'
 import { springEasing, SPRING_SHAPE } from './motion.js'
 import { hostText, t } from './i18n.js'
 import { showsDshRow } from './dsh-offer.js'
+import { useMobile } from './mobile.js'
 
 // -------------------------------------------------------------------------
 // Sidebar
@@ -262,9 +263,10 @@ export function TeamSidebar(props) {
   const listRef = useRef(null)
   const roster = useRoster(value => value)
   const markedUnread = useUi(value => value.unread)
-  // The mobile drawer: below 768px the shell's rail collapses, so opening the drawer
-  // renders the same wide list the desktop sidebar shows, over a scrim.
+  // The mobile drawer: below the shell's narrow line the rail collapses, so opening the
+  // drawer renders the same wide list the desktop sidebar shows, over a scrim.
   const mobileOpen = useUi(value => value.mobileNav === true)
+  const mobile = useMobile()
   props.useRegistry(value => value)
   const updated = useSessions(list => {
     const stamps = {}
@@ -293,13 +295,11 @@ export function TeamSidebar(props) {
     event.preventDefault()
     actions.openPalette(event.key)
   }
-  return h(Fragment, null,
-    createPortal(h('button', { type: 'button', className: 'bt-mobile-scrim', 'data-open': mobileOpen || undefined, 'aria-label': t('Close navigation'), tabIndex: mobileOpen ? 0 : -1, onClick: actions.closeMobileNav }), document.body),
-    // `bt-rail` stays keyed on the shell's own width, not on the drawer state: the
-    // fixed off-canvas positioning below 768px lives on `.bt-side.bt-rail`, so the
-    // class must keep the rail form while the drawer is open (only the row content
-    // follows `listWide`).
-    h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', 'data-mobile-open': mobileOpen || undefined, onKeyDown: typeToSearch },
+  // `bt-rail` stays keyed on the shell's own width, not on the drawer state: the
+  // off-canvas positioning below the shell's narrow line lives on `.bt-side.bt-rail`,
+  // so the class must keep the rail form while the drawer is open (only the row
+  // content follows `listWide`).
+  const drawer = h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', 'data-mobile-open': mobileOpen || undefined, onKeyDown: typeToSearch },
     listWide ? h('div', { className: 'bt-side-top' },
       h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
@@ -314,7 +314,14 @@ export function TeamSidebar(props) {
         ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
         : entry.kind === 'room'
           ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
-          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true }))))))
+          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))))
+  return h(Fragment, null,
+    createPortal(h('button', { type: 'button', className: 'bt-mobile-scrim', 'data-open': mobileOpen || undefined, 'aria-label': t('Close navigation'), tabIndex: mobileOpen ? 0 : -1, onClick: actions.closeMobileNav }), document.body),
+    // The drawer cannot live inside the shell's sidebar column: below the shell's
+    // narrow line that column is the 56px rail, and a fixed panel inside it is still
+    // clipped by whatever containing block or overflow the column brings. Portalled to
+    // <body> it is clipped by nothing — the same move the scrim beside it already makes.
+    mobile ? createPortal(drawer, document.body) : drawer)
 }
 
 // The update button at the sidebar's top right: a cloud while a newer DS Bot —
