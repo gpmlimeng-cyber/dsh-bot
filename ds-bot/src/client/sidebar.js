@@ -48,7 +48,7 @@ function RowMeta({ at, count }) {
     count !== undefined ? h('span', { className: 'bt-row-count', title: t('{count} messages', { count }) }, String(count)) : null)
 }
 
-function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, wide, marked }) {
+function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, wide, drawer, marked }) {
   const id = bot.id
   const part = currentPart(bot)
   const preview = useSessions(list => previewOf(list, part, roster.exchangeTurns[part]))
@@ -69,7 +69,11 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   }
   const pinned = bot.pinned === true && !tile
   const label = [bot.name, main ? t('Main Bot') : '', pinned ? t('Pinned') : '', running ? t('Working') : '', alert ? t('Waiting for your answer') : '', unread ? t('Unread activity') : ''].filter(Boolean).join(', ')
-  if (tile && wide) {
+  // The wide column seats the Main Bot in its own tile, with the shortcuts that float
+  // around it. The phone drawer renders that same wide list, so the tile followed it and
+  // a 60px centred tile sat among 36px rows; the drawer wants the ordinary row, and the
+  // Main Bot badge the avatar already carries is the whole of the difference that stays.
+  if (tile && wide && !drawer) {
     return h('div', { className: 'bt-tile-wrap' },
       // The shortcuts float around the tile in the space its column already reserves;
       // the rail has no room for them, so this branch is the wide column only.
@@ -287,7 +291,7 @@ export function TeamSidebar(props) {
   const listWide = wide || mobileOpen
   useListGlide(listRef, listWide, order.map(entry => entry.item.id).join(','))
   useLandOnMainBot(roster, useSessions, actions)
-  const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide: listWide }
+  const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide: listWide, drawer: mobileOpen }
   const [search, setSearch] = useState('')
   // The field is a handoff, not a second search implementation: the command palette owns the
   // searching, and opening it closes the drawer (openPalette clears mobileNav), so text kept

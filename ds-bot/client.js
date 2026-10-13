@@ -5225,7 +5225,7 @@ function RowMeta({ at, count }) {
     count !== void 0 ? (0, import_react10.createElement)("span", { className: "bt-row-count", title: t("{count} messages", { count }) }, String(count)) : null
   );
 }
-function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, wide, marked }) {
+function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, wide, drawer, marked }) {
   const id = bot.id;
   const part = currentPart(bot);
   const preview = useSessions((list) => previewOf(list, part, roster.exchangeTurns[part]));
@@ -5246,7 +5246,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   };
   const pinned = bot.pinned === true && !tile;
   const label = [bot.name, main ? t("Main Bot") : "", pinned ? t("Pinned") : "", running ? t("Working") : "", alert ? t("Waiting for your answer") : "", unread ? t("Unread activity") : ""].filter(Boolean).join(", ");
-  if (tile && wide) {
+  if (tile && wide && !drawer) {
     return (0, import_react10.createElement)(
       "div",
       { className: "bt-tile-wrap" },
@@ -5566,7 +5566,7 @@ function TeamSidebar(props) {
   const listWide = wide || mobileOpen;
   useListGlide(listRef, listWide, order.map((entry) => entry.item.id).join(","));
   useLandOnMainBot(roster, useSessions, actions);
-  const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide: listWide };
+  const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide: listWide, drawer: mobileOpen };
   const [search, setSearch] = (0, import_react10.useState)("");
   (0, import_react10.useEffect)(() => {
     if (!mobileOpen) setSearch("");
