@@ -1,6 +1,6 @@
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { isMainOf } from './sources.js'
-import { HEADER, currentPart, stripHeader, usageOf } from './text.js'
+import { HEADER, currentPart, stripHeader, usageOf, sessionStatsOf, contextPressureOf } from './text.js'
 import { PlusIcon, ShareIcon, CloseIcon, ChevronLeftIcon, GearIcon } from './icons.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { GlobeIcon, Favicon } from './browser-pane.js'
@@ -112,7 +112,7 @@ function About({ text, title = 'About' }) {
 
 // A group's overview: what members read, who is in it, and who answers. Changes are
 // made in its settings.
-function GroupOverview({ room, roster, actions, usage, useWork, openSettings }) {
+function GroupOverview({ room, roster, actions, usage, stats, pressure, useWork, openSettings }) {
   const members = room.members.map(id => roster.byId[id]).filter(Boolean)
   const { entries, now } = useMemberWork(room, useWork)
   return [
@@ -133,8 +133,12 @@ function GroupOverview({ room, roster, actions, usage, useWork, openSettings }) 
       }))),
     h('div', { key: 'mode' }, h('div', { className: 'bt-section-title' }, t('Who answers')),
       h('div', { className: 'bt-kv' }, h('span', null, t(ROOM_MODES.find(([id]) => id === shownMode(room, roster))?.[1] ?? 'Everyone')))),
-    usage ? h('div', { key: 'usage' }, h('div', { className: 'bt-section-title' }, t('Usage')),
+    stats ? h('div', { key: 'stats' }, h('div', { className: 'bt-section-title' }, t('Conversation')),
+      h('div', { className: 'bt-kv' }, h('span', null, room.name), h('span', null, stats))) : null,
+    usage ? h('div', { key: 'usage' }, h('div', { className: 'bt-section-title' }, t('Token usage')),
       h('div', { className: 'bt-kv' }, h('span', null, room.name), h('span', null, usage))) : null,
+    pressure ? h('div', { key: 'pressure' }, h('div', { className: 'bt-section-title' }, t('Context')),
+      h('div', { className: 'bt-kv' }, h('span', null, room.name), h('span', null, pressure))) : null,
   ]
 }
 
@@ -165,6 +169,8 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
   const doing = useActivity(map => map[bot?.id ?? sessionId])
   const transcript = useSessions(list => transcriptOf(list, part, bot?.name ?? room?.name ?? t('Bot'), roster.exchangeTurns[part]))
   const usage = useSessions(list => usageOf(list, [part, ...(bot?.parts ?? room?.parts ?? [])]))
+  const stats = useSessions(list => sessionStatsOf(list, [part, ...(bot?.parts ?? room?.parts ?? [])]))
+  const pressure = useSessions(list => contextPressureOf(list, [part, ...(bot?.parts ?? room?.parts ?? [])]))
   const run = promise => Promise.resolve(promise)
     .then(() => { setError(''); return true })
     .catch(failure => { setError(failure?.message ?? String(failure)); return false })
@@ -226,7 +232,7 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
       tabs.map(key => h('button', { key, type: 'button', role: 'tab', className: 'bt-tab', 'aria-selected': tab === key, onClick: () => setTab(key) }, t(TAB_LABELS[key])))),
     h('div', { key: `body:${tab}`, className: 'bt-drawer-body', 'data-move': move },
       errorLine,
-      room && tab === 'details' ? h(GroupOverview, { room, roster, actions, usage, useWork, openSettings: () => setView('settings') }) : null,
+      room && tab === 'details' ? h(GroupOverview, { room, roster, actions, usage, stats, pressure, useWork, openSettings: () => setView('settings') }) : null,
       bot && tab === 'details' ? [
         h('div', { key: 'model', className: 'bt-drawer-model' },
           h('div', { className: 'bt-section-title' }, t('Model')),
@@ -237,8 +243,12 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
           ? h(About, { key: 'about', text: bot.instructions })
           : h('button', { key: 'about', type: 'button', className: 'bt-more', onClick: () => setView('settings') }, t('Add instructions in Bot settings')),
         roster.memory === false ? null : h(MemoryRow, { key: 'memory', bot, actions }),
-        usage ? h('div', { key: 'usage' }, h('div', { className: 'bt-section-title' }, t('Usage')),
+        stats ? h('div', { key: 'stats' }, h('div', { className: 'bt-section-title' }, t('Conversation')),
+          h('div', { className: 'bt-kv' }, h('span', null, bot.name), h('span', null, stats))) : null,
+        usage ? h('div', { key: 'usage' }, h('div', { className: 'bt-section-title' }, t('Token usage')),
           h('div', { className: 'bt-kv' }, h('span', null, bot.name), h('span', null, usage))) : null,
+        pressure ? h('div', { key: 'pressure' }, h('div', { className: 'bt-section-title' }, t('Context')),
+          h('div', { className: 'bt-kv' }, h('span', null, bot.name), h('span', null, pressure))) : null,
         h(ScheduleSummary, { key: 'routines', bot, actions }),
       ] : null,
       bot && tab === 'browser' ? h(BrowserCards, { bot, sessionId, roster, actions, useBrowserTabs, useBrowserPages }) : null)]

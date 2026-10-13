@@ -21,11 +21,21 @@ export function useEscape(onClose) {
 }
 
 // New chat and Bot exchanges show in place of the conversation, right of the sidebar.
+// The shell resizes that column (collapsing the sidebar, or dragging its edge), so a
+// single measurement on mount goes stale and leaves the pane short of the column.
 export function usePaneLeft() {
   const [paneLeft, setPaneLeft] = useState(280)
   useLayoutEffect(() => {
     const column = document.querySelector('[class*="_footArea"]')?.parentElement
-    if (column) setPaneLeft(Math.round(column.getBoundingClientRect().right))
+    if (!column) return undefined
+    const measure = () => setPaneLeft(current => {
+      const next = Math.round(column.getBoundingClientRect().right)
+      return next === current ? current : next
+    })
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(column)
+    return () => observer.disconnect()
   }, [])
   return paneLeft
 }

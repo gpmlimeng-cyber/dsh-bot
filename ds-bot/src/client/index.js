@@ -807,6 +807,9 @@ export function apply(ctx) {
     // The composer carries no model picker or run statistics; a Bot's model lives
     // in its details panel.
     shadow('conversation.input.model', { priority: -10 }, Nothing),
+    // The shell's own statistics live in the composer dock under the id "stats"; the
+    // details panel carries the same numbers instead.
+    shadow('conversation.composer.dock', { id: 'stats', order: 0, priority: -10 }, Nothing),
     shadow('conversation.composer.dock', { id: 'activity', order: 0, priority: -10 }, Nothing),
     shadow('conversation.composer.dock', { id: 'usage', order: 1, priority: -10 }, Nothing),
     shadow('conversation.input.left', { id: 'bot-plus', order: -100, inject: face }, ComposerPlus),

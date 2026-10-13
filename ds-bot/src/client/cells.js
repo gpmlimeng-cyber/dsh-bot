@@ -18,7 +18,7 @@ const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied')
 
 // `lead` (a sender avatar in group chats) sits beside the last bubble, in the same
 // row, so it lines up with the bubble whether or not reactions hang below it.
-export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, time }) {
+export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead }) {
   const onClick = (event) => {
     const target = mentionTarget(event)
     if (target === null) return
@@ -37,9 +37,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, 
         h('div', { className: 'bt-msg-line' },
           lead && last ? lead : null,
           h('div', { className: 'bt-bubble' },
-            h(MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact' }),
-            // The bubble's own time, always visible: only a settled message has one.
-            last && !live && Number.isFinite(time) ? h('span', { className: 'bt-bubble-time' }, clockLabel(time)) : null),
+            h(MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact' })),
           live ? null : h(MessageTools, { text, name: roster.byId[selfId]?.name ?? t('Bot'), sessionId, react: key ? emoji => actions.toggleReaction(msgKey, index, emoji) : undefined, actions })),
         picked.length ? h('div', { className: 'bt-reacts' }, picked.map(emoji => h('button', {
           key: emoji, type: 'button', className: 'bt-react', 'aria-label': t('Remove reaction {emoji}', { emoji }), onClick: () => actions.toggleReaction(msgKey, index, emoji),
@@ -108,14 +106,11 @@ function ThinkingRow({ text }) {
     h('div', { className: 'bt-think-text' }, text))
 }
 
-export function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnClock, useTurnSteps, useTurnContext, actions }) {
+export function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnSteps, useTurnContext, actions }) {
   const roster = useRoster(value => value)
   const data = node.data
   const steps = useTurnSteps(String(data.turn))
   const contexts = useTurnContext(String(data.turn))
-  // The turn's own clock: what a bubble stamps itself with. Read before the early
-  // returns below, as hooks must be.
-  const time = useTurnClock(state => state[sessionId]?.[data.turn]?.end ?? state[sessionId]?.[data.turn]?.first)
   const hidden = Boolean(roster.roomsById[sessionId]) || isHiddenTurn(roster, sessionId, data.turn)
   const texts = groupPart === 'reasoning' ? [] : data.blocks.filter(block => block.kind === 'text' && block.text.trim() !== '').map(block => block.text)
   const running = data.status === 'running'
@@ -143,7 +138,7 @@ export function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, us
       })
     }),
     reasoning ? h(ThinkingRow, { text: reasoning }) : null,
-    texts.length ? h(Bubbles, { texts, roster, selfId, actions, streaming: running, sessionId, msgKey: `${sessionId}:${data.turn}:${node.key ?? data.seq ?? ''}`, useUi, time }) : null)
+    texts.length ? h(Bubbles, { texts, roster, selfId, actions, streaming: running, sessionId, msgKey: `${sessionId}:${data.turn}:${node.key ?? data.seq ?? ''}`, useUi }) : null)
 }
 
 function EventLine({ prefix, bots, joiner = t('and'), onOpen, whole = false, preview }) {
@@ -405,7 +400,8 @@ export function TurnProcessCell({ node, sessionId, turnProcess, useRoster, useUi
 export function Nothing() { return null }
 
 // The time separator: "Today 1:12 AM", "Yesterday 9:03 PM", "Thu, Sep 3 4:20 PM".
-const SEPARATOR_GAP_MS = 30 * 60 * 1000
+// A separator appears after this much silence, as in lorca (separatorGap, 15 minutes).
+const SEPARATOR_GAP_MS = 15 * 60 * 1000
 export function clockLabel(time, now = Date.now()) {
   const date = new Date(time)
   const midnight = value => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime()

@@ -224,3 +224,39 @@ export function usageOf(list, ids) {
   const hit = input > 0 ? Math.round((cacheRead / input) * 100) : 0
   return t('{tokens} tok · Cache hit {hit}%', { tokens: formatTokens(input + output), hit })
 }
+
+// Whole-conversation counts and decode speed, from the sessionStats projection. Empty
+// until the projection unit is composed.
+export function sessionStatsOf(list, ids) {
+  let turns = 0
+  let steps = 0
+  let decodeMs = 0
+  let decodeTokens = 0
+  for (const id of ids) {
+    const stats = list.projectionsBySession?.[id]?.values?.sessionStats
+    if (!stats) continue
+    turns += stats.turns ?? 0
+    steps += stats.steps ?? 0
+    decodeMs += stats.decodeMs ?? 0
+    decodeTokens += stats.decodeTokens ?? 0
+  }
+  if (turns === 0 && steps === 0) return ''
+  const speed = decodeMs > 0 ? (decodeTokens / (decodeMs / 1000)).toFixed(1) : undefined
+  return t('{turns} turns · {steps} steps', { turns, steps }) + (speed === undefined ? '' : t(' · {speed} tok/s', { speed }))
+}
+
+// Context occupancy as the shell's own meter computes it: used over the route's window.
+export function contextPressureOf(list, ids) {
+  let used = 0
+  let window = 0
+  for (const id of ids) {
+    const pressure = list.projectionsBySession?.[id]?.values?.contextPressure
+    if (!pressure) continue
+    const tokens = pressure.projectedTokens ?? pressure.pressureTokens
+    if (tokens !== undefined) used = Math.max(used, tokens)
+    if (pressure.contextWindow !== undefined) window = Math.max(window, pressure.contextWindow)
+  }
+  if (used === 0 || window === 0) return ''
+  const percent = Math.min(100, Math.round(used / window * 100))
+  return t('{percent}% of {window}', { percent, window: formatTokens(window) })
+}

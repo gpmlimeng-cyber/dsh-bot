@@ -167,6 +167,12 @@ var ZH = {
   "{name} leads this group: it can call members with @Name, change the group, and post here.": "{name} 主持这个群：可以用 @名字 点名成员、修改群设置、在群里发言。",
   "No admin yet. An admin can call members with @Name, change the group, and post here.": "还没有管理员。管理员可以用 @名字 点名成员、修改群设置、在群里发言。",
   "Who answers": "谁来回答",
+  Conversation: "会话统计",
+  "Token usage": "Token 用量",
+  Context: "上下文占用",
+  "{turns} turns · {steps} steps": "{turns} 回合 · {steps} 步骤",
+  " · {speed} tok/s": " · {speed} tok/s",
+  "{percent}% of {window}": "{window} 的 {percent}%",
   "Choose an admin first": "先选一个管理员",
   "@mentions always pick who answers.": "@提及总是指定由谁回答。",
   Notice: "群公告",
@@ -1560,6 +1566,37 @@ function usageOf(list, ids) {
   const hit = input > 0 ? Math.round(cacheRead / input * 100) : 0;
   return t("{tokens} tok · Cache hit {hit}%", { tokens: formatTokens(input + output), hit });
 }
+function sessionStatsOf(list, ids) {
+  let turns = 0;
+  let steps = 0;
+  let decodeMs = 0;
+  let decodeTokens = 0;
+  for (const id of ids) {
+    const stats = list.projectionsBySession?.[id]?.values?.sessionStats;
+    if (!stats) continue;
+    turns += stats.turns ?? 0;
+    steps += stats.steps ?? 0;
+    decodeMs += stats.decodeMs ?? 0;
+    decodeTokens += stats.decodeTokens ?? 0;
+  }
+  if (turns === 0 && steps === 0) return "";
+  const speed = decodeMs > 0 ? (decodeTokens / (decodeMs / 1e3)).toFixed(1) : void 0;
+  return t("{turns} turns · {steps} steps", { turns, steps }) + (speed === void 0 ? "" : t(" · {speed} tok/s", { speed }));
+}
+function contextPressureOf(list, ids) {
+  let used = 0;
+  let window2 = 0;
+  for (const id of ids) {
+    const pressure = list.projectionsBySession?.[id]?.values?.contextPressure;
+    if (!pressure) continue;
+    const tokens = pressure.projectedTokens ?? pressure.pressureTokens;
+    if (tokens !== void 0) used = Math.max(used, tokens);
+    if (pressure.contextWindow !== void 0) window2 = Math.max(window2, pressure.contextWindow);
+  }
+  if (used === 0 || window2 === 0) return "";
+  const percent2 = Math.min(100, Math.round(used / window2 * 100));
+  return t("{percent}% of {window}", { percent: percent2, window: formatTokens(window2) });
+}
 
 // src/client/motion.js
 var import_react = require("react");
@@ -1929,7 +1966,7 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 @media (prefers-reduced-motion:reduce){.bt-pill,.bt-pill-go,.bt-pill-go svg{transition:none!important}.bt-pill-go{filter:none}.bt-pill:active{transform:none}}
 
 .bt-astack{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0}
-.bt-bubble{max-width:min(80%,560px,calc(100% - 82px));background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 8px);box-sizing:border-box;overflow-wrap:anywhere}
+.bt-bubble{max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702));background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 8px);box-sizing:border-box;overflow-wrap:anywhere}
 .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:6px}
 .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:6px}
 .bt-bubble [class*="_markdown"]>*+*{margin-top:10px}
@@ -2285,13 +2322,17 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 @keyframes bt-fade{from{opacity:0}to{opacity:1}}
 @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
 @media (prefers-reduced-motion:reduce){.bt-voice-pane,.bt-voice-caption,.bt-voice-ring{animation:none!important}}
-.bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(80%,560px,calc(100% - 82px))}
+/* The same cap the user's own bubbles use (--bt-bubble-max), so both sides take the same
+   share of a wide column. The hover toolbar is absolutely positioned beside the bubble,
+   so nothing here reserves room for it. */
+.bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702))}
 /* The bubble's row: reactions hang below it, so the hover toolbar (and a group
    sender's avatar) line up with the bubble alone. */
 .bt-msg-line{position:relative;display:flex;align-items:flex-end;gap:8px;max-width:100%}
 .bt-msg-line>.bt-bubble{max-width:none;min-width:0}
-/* The same bubble width as beside an avatar column: 80% of (100% - 30px), plus the 30px. */
-.bt-astack[data-lead]>.bt-msg{max-width:min(calc(80% + 6px),590px,calc(100% - 52px))}
+/* The same cap as an unled row: the 22px avatar and its 8px gutter already indent the
+   bubble through .bt-msg-line's margin, so the right edge lands in the same place. */
+.bt-astack[data-lead]>.bt-msg{max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702))}
 .bt-tools{position:absolute;top:50%;left:100%;margin-left:6px;transform:translateY(-50%);display:flex;gap:2px;opacity:0;visibility:hidden;transition:opacity .12s ease,visibility .12s}
 .bt-tools::after{content:"";position:absolute;top:-8px;bottom:-8px;right:100%;width:128px;z-index:-1}
 .bt-msg:hover>.bt-msg-line>.bt-tools,.bt-msg:focus-within>.bt-msg-line>.bt-tools,.bt-tools[data-open]{opacity:1;visibility:visible}
@@ -2534,7 +2575,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 @media (prefers-reduced-motion:reduce){.bt-thumb{transition:none}.bt-panel-view>[data-move],.bt-drawer-name-input,.bt-veil,.bt-pop-in,.bt-token,.bt-drop,.bt-newchat,.bt-option-hint,.bt-connector-form,.bt-settings-head>*{animation:none}}
 `;
 var CONVERSATION_CSS = `
-.bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:min(560px,78%)}
+.bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702))}
 .bt-think summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px}
 .bt-think summary::-webkit-details-marker{display:none}
 .bt-think-text{white-space:pre-wrap;margin-top:6px;padding-left:10px;border-left:2px solid var(--bt-line-2)}
@@ -2550,9 +2591,6 @@ var CONVERSATION_CSS = `
 .bt-event-whole>.bt-event-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* One plain line of what was said, after the name; the whole line still opens it. */
 .bt-event-whole>.bt-event-preview{flex:1 1 auto;min-width:0;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400}
-/* A message's own time at the bubble's bottom right, always shown. */
-.bt-bubble-time{display:block;margin-top:2px;text-align:right;font-size:11px;line-height:14px;color:var(--bt-ink-3);font-variant-numeric:tabular-nums}
-.bt-ubody>.bt-bubble-time{color:inherit;opacity:.62}
 .bt-time-sep{display:flex;justify-content:center;align-items:center;height:28px;margin:14px 0 8px;font-size:12px;line-height:16px;color:var(--bt-ink-2);white-space:nowrap}
 [class*="_scroll"]>[class*="_column"]::before{content:var(--bt-first-sep,none);display:block;flex:none;height:28px;margin:17px 0 12px;font-size:12px;line-height:28px;text-align:center;color:var(--bt-ink-2);white-space:nowrap}
 .bt-activity{display:flex;align-items:center;gap:10px;margin:8px 0 4px 2px;font-size:14px;color:var(--bt-ink-2)}
@@ -2569,7 +2607,7 @@ header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;
 header[class*="_header"]:has(.bt-head)::before{content:"";position:absolute;inset:0 0 auto;height:60px;background:linear-gradient(to bottom,var(--bt-main),color-mix(in srgb,var(--bt-main) 0%,transparent));pointer-events:none;z-index:-1}
 header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolute;left:12px;top:10px;pointer-events:auto}
 header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
-[class*="_body"]:has(> [class*="_scrollBody"]){--dsh-chat-content-width:min(960px,100%)}
+[class*="_body"]:has(> [class*="_scrollBody"]){--dsh-chat-content-width:min(1200px,100%);--bt-bubble-max:min(calc(var(--dsh-chat-content-width,748px) * .702),82%)}
 /* Every team Session belongs to a Bot or a group, so a blank one is an empty chat, not
    the shell's new-session hero: no headline, no workspace or mode picker, and the
    composer stays docked at the bottom. */
@@ -2577,8 +2615,8 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 [data-content-phase=hero] [class*="_composerHero"]{align-self:stretch!important;width:auto!important;padding-bottom:0!important}
 [data-content-phase=hero] [class*="_composerHero"]>[class$="_root"],[data-content-phase=hero] [class*="_heroWorkspaceRow"]{display:none!important}
 [data-content-phase=hero] [class*="_composerHero"] [class*="_input"]{min-height:0!important}
-/* The right sides give back the scrollbar gutter so both edges sit 16px from the column. */
-[class*="_scroll"]:has(> [class*="_column"]){padding:60px 11px 16px 16px!important}
+/* Both edges sit 16px from the column, so the content hugs the window on wide screens. */
+[class*="_scroll"]:has(> [class*="_column"]){padding:60px 16px 16px 16px!important}
 /* The shell's running status only hosts the activity row (.bt-typing). */
 [data-chat-running]{display:block!important;width:100%;min-height:0!important;margin:0!important;padding:0!important}
 [data-chat-running]>span:not([role=status]){display:none!important}
@@ -2618,8 +2656,10 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 [data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:var(--bt-main)!important;border:.5px solid var(--bt-line-2)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
 [data-composer-card]:hover,[data-composer-card]:focus-within{border-color:color-mix(in srgb,var(--bt-ink) 30%,transparent)!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
-[class*="_root"]:has(> [data-composer-card]){padding:0 11px 13px 16px!important}
-[class*="_root"]:has(> [data-composer-card])>[data-composer-card]{max-width:min(992px,100%)!important}
+/* The composer takes the same measure as the conversation column, so both edges line up:
+   the same 16px padding on each side and the same width cap. */
+[class*="_root"]:has(> [data-composer-card]){padding:0 16px 16px 16px!important}
+[class*="_root"]:has(> [data-composer-card])>[data-composer-card]{max-width:var(--dsh-chat-content-width,1200px)!important;margin-inline:auto}
 [data-composer-card]>[class*="_row"]{display:contents!important}
 [data-composer-card] [class*="_tools"]{order:1;flex:none;align-self:flex-end;margin:0}
 [data-composer-card]>[data-input-scroll]{order:2;flex:1 1 0;min-width:0;padding:0 8px!important;margin:0!important}
@@ -2648,7 +2688,9 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 @keyframes bt-icon-swap{from{opacity:0;transform:scale(.5) rotate(-30deg)}}
 [data-composer-card] button[class*="_primary"] svg{width:14px;height:14px}
 [data-composer-card] button[class*="_primary"]:disabled{display:none!important}
-[data-composer-dock]{display:none!important}
+/* The shell's statistics pills move to the details panel, so the composer keeps no
+   stats row. The slot id is "stats"; this attribute is the fallback that hides it. */
+[data-composer-stats]{display:none!important}
 .bt-mic,.bt-voice{flex:none;width:28px;height:28px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, "scale")}}
 .bt-mic{background:color-mix(in srgb,var(--bt-ink) 5%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink-2)}
 .bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
@@ -2712,7 +2754,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-earlier-top{display:flex;justify-content:center;align-items:center;height:34px;flex:none}
 .bt-earlier-top .bt-soft{height:28px;font-size:12px;padding:0 12px}
 .bt-urow{display:flex;justify-content:flex-end}
-.bt-ububble{max-width:min(560px,78%);background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:14px;line-height:20px;box-sizing:border-box;overflow-wrap:anywhere}
+.bt-ububble{max-width:var(--bt-bubble-max,min(calc(var(--dsh-chat-content-width,748px) * .702),82%));background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:14px;line-height:20px;box-sizing:border-box;overflow-wrap:anywhere}
 .bt-ububble [class*="_markdown"],.bt-ububble a{color:inherit!important}
 .bt-ububble p{margin:0;line-height:22px}
 .bt-uimages{display:block;font-size:12px;opacity:.7}
@@ -3700,7 +3742,7 @@ var import_react6 = require("react");
 var import_react_dom = require("react-dom");
 var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
 var mdLabels = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
-function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, time }) {
+function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead }) {
   const onClick = (event) => {
     const target = mentionTarget(event);
     if (target === null) return;
@@ -3727,9 +3769,7 @@ function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId,
           (0, import_react6.createElement)(
             "div",
             { className: "bt-bubble" },
-            (0, import_react6.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: "compact" }),
-            // The bubble's own time, always visible: only a settled message has one.
-            last && !live && Number.isFinite(time) ? (0, import_react6.createElement)("span", { className: "bt-bubble-time" }, clockLabel(time)) : null
+            (0, import_react6.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: "compact" })
           ),
           live ? null : (0, import_react6.createElement)(MessageTools, { text, name: roster.byId[selfId]?.name ?? t("Bot"), sessionId, react: key ? (emoji) => actions.toggleReaction(msgKey, index, emoji) : void 0, actions })
         ),
@@ -3830,12 +3870,11 @@ function ThinkingRow({ text }) {
     (0, import_react6.createElement)("div", { className: "bt-think-text" }, text)
   );
 }
-function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnClock, useTurnSteps, useTurnContext, actions }) {
+function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnSteps, useTurnContext, actions }) {
   const roster = useRoster((value) => value);
   const data = node.data;
   const steps = useTurnSteps(String(data.turn));
   const contexts = useTurnContext(String(data.turn));
-  const time = useTurnClock((state) => state[sessionId]?.[data.turn]?.end ?? state[sessionId]?.[data.turn]?.first);
   const hidden = Boolean(roster.roomsById[sessionId]) || isHiddenTurn(roster, sessionId, data.turn);
   const texts2 = groupPart === "reasoning" ? [] : data.blocks.filter((block) => block.kind === "text" && block.text.trim() !== "").map((block) => block.text);
   const running = data.status === "running";
@@ -3863,7 +3902,7 @@ function AssistantCell({ node, groupPart, sessionId, useRoster, useUi, useTurnCl
       });
     }),
     reasoning ? (0, import_react6.createElement)(ThinkingRow, { text: reasoning }) : null,
-    texts2.length ? (0, import_react6.createElement)(Bubbles, { texts: texts2, roster, selfId, actions, streaming: running, sessionId, msgKey: `${sessionId}:${data.turn}:${node.key ?? data.seq ?? ""}`, useUi, time }) : null
+    texts2.length ? (0, import_react6.createElement)(Bubbles, { texts: texts2, roster, selfId, actions, streaming: running, sessionId, msgKey: `${sessionId}:${data.turn}:${node.key ?? data.seq ?? ""}`, useUi }) : null
   );
 }
 function EventLine({ prefix, bots, joiner = t("and"), onOpen, whole = false, preview }) {
@@ -4127,7 +4166,7 @@ function TurnProcessCell({ node, sessionId, turnProcess, useRoster, useUi, useTu
 function Nothing() {
   return null;
 }
-var SEPARATOR_GAP_MS = 30 * 60 * 1e3;
+var SEPARATOR_GAP_MS = 15 * 60 * 1e3;
 function clockLabel(time, now = Date.now()) {
   const date = new Date(time);
   const midnight = (value) => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
@@ -6046,7 +6085,15 @@ function usePaneLeft() {
   const [paneLeft, setPaneLeft] = (0, import_react11.useState)(280);
   (0, import_react11.useLayoutEffect)(() => {
     const column = document.querySelector('[class*="_footArea"]')?.parentElement;
-    if (column) setPaneLeft(Math.round(column.getBoundingClientRect().right));
+    if (!column) return void 0;
+    const measure = () => setPaneLeft((current) => {
+      const next = Math.round(column.getBoundingClientRect().right);
+      return next === current ? current : next;
+    });
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(column);
+    return () => observer.disconnect();
   }, []);
   return paneLeft;
 }
@@ -10805,7 +10852,7 @@ function About({ text, title = "About" }) {
     long ? (0, import_react29.createElement)("button", { type: "button", className: "bt-more", onClick: () => setOpen((value) => !value) }, open ? t("Show less") : t("Show more")) : null
   );
 }
-function GroupOverview({ room: room2, roster, actions, usage, useWork, openSettings }) {
+function GroupOverview({ room: room2, roster, actions, usage, stats, pressure, useWork, openSettings }) {
   const members = room2.members.map((id) => roster.byId[id]).filter(Boolean);
   const { entries: entries2, now } = useMemberWork(room2, useWork);
   return [
@@ -10840,11 +10887,23 @@ function GroupOverview({ room: room2, roster, actions, usage, useWork, openSetti
       (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Who answers")),
       (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, t(ROOM_MODES.find(([id]) => id === shownMode(room2, roster))?.[1] ?? "Everyone")))
     ),
+    stats ? (0, import_react29.createElement)(
+      "div",
+      { key: "stats" },
+      (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Conversation")),
+      (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, room2.name), (0, import_react29.createElement)("span", null, stats))
+    ) : null,
     usage ? (0, import_react29.createElement)(
       "div",
       { key: "usage" },
-      (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Usage")),
+      (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Token usage")),
       (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, room2.name), (0, import_react29.createElement)("span", null, usage))
+    ) : null,
+    pressure ? (0, import_react29.createElement)(
+      "div",
+      { key: "pressure" },
+      (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Context")),
+      (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, room2.name), (0, import_react29.createElement)("span", null, pressure))
     ) : null
   ];
 }
@@ -10872,6 +10931,8 @@ function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, a
   const doing = useActivity((map) => map[bot?.id ?? sessionId]);
   const transcript = useSessions((list) => transcriptOf(list, part, bot?.name ?? room2?.name ?? t("Bot"), roster.exchangeTurns[part]));
   const usage = useSessions((list) => usageOf(list, [part, ...bot?.parts ?? room2?.parts ?? []]));
+  const stats = useSessions((list) => sessionStatsOf(list, [part, ...bot?.parts ?? room2?.parts ?? []]));
+  const pressure = useSessions((list) => contextPressureOf(list, [part, ...bot?.parts ?? room2?.parts ?? []]));
   const run = (promise) => Promise.resolve(promise).then(() => {
     setError("");
     return true;
@@ -10964,7 +11025,7 @@ function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, a
       "div",
       { key: `body:${tab}`, className: "bt-drawer-body", "data-move": move },
       errorLine,
-      room2 && tab === "details" ? (0, import_react29.createElement)(GroupOverview, { room: room2, roster, actions, usage, useWork, openSettings: () => setView("settings") }) : null,
+      room2 && tab === "details" ? (0, import_react29.createElement)(GroupOverview, { room: room2, roster, actions, usage, stats, pressure, useWork, openSettings: () => setView("settings") }) : null,
       bot && tab === "details" ? [
         (0, import_react29.createElement)(
           "div",
@@ -10976,11 +11037,23 @@ function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, a
         (0, import_react29.createElement)(PermissionRow, { key: "permission", bot, roster, actions, run }),
         bot.instructions ? (0, import_react29.createElement)(About, { key: "about", text: bot.instructions }) : (0, import_react29.createElement)("button", { key: "about", type: "button", className: "bt-more", onClick: () => setView("settings") }, t("Add instructions in Bot settings")),
         roster.memory === false ? null : (0, import_react29.createElement)(MemoryRow, { key: "memory", bot, actions }),
+        stats ? (0, import_react29.createElement)(
+          "div",
+          { key: "stats" },
+          (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Conversation")),
+          (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, bot.name), (0, import_react29.createElement)("span", null, stats))
+        ) : null,
         usage ? (0, import_react29.createElement)(
           "div",
           { key: "usage" },
-          (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Usage")),
+          (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Token usage")),
           (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, bot.name), (0, import_react29.createElement)("span", null, usage))
+        ) : null,
+        pressure ? (0, import_react29.createElement)(
+          "div",
+          { key: "pressure" },
+          (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Context")),
+          (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, bot.name), (0, import_react29.createElement)("span", null, pressure))
         ) : null,
         (0, import_react29.createElement)(ScheduleSummary, { key: "routines", bot, actions })
       ] : null,
@@ -12579,8 +12652,7 @@ function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageIma
         "div",
         { className: "bt-ubody", title: clock3(data.time) },
         (0, import_react32.createElement)(UserText, { text, bots: mentionableBots(roster, sessionId), referenceLabels, skillNames: data.skillNames ?? [], references, actions }),
-        rest.map((block, index) => ui.JsonBlock ? (0, import_react32.createElement)(ui.JsonBlock, { key: index, label: t("Content"), payload: block }) : null),
-        clock3(data.time) !== void 0 ? (0, import_react32.createElement)("span", { className: "bt-bubble-time" }, clock3(data.time)) : null
+        rest.map((block, index) => ui.JsonBlock ? (0, import_react32.createElement)(ui.JsonBlock, { key: index, label: t("Content"), payload: block }) : null)
       ) : null,
       referenceLabels.length > 0 ? (0, import_react32.createElement)("div", { className: "bt-urefs" }, t("Referenced {labels}", { labels: referenceLabels.join(t(", ")) })) : null
     ),
@@ -12589,7 +12661,7 @@ function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageIma
 }
 var USER_MESSAGE_CSS = `
 .bt-umsg{display:flex;flex-direction:row-reverse;align-items:center;justify-content:flex-start;gap:4px}
-.bt-ustack{min-width:0;max-width:min(calc(var(--dsh-chat-content-width,748px) * .702),82%);display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.bt-ustack{min-width:0;max-width:var(--bt-bubble-max,min(calc(var(--dsh-chat-content-width,748px) * .702),82%));display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 .bt-ubody{max-width:100%;box-sizing:border-box;background:var(--dsw-specific-bubble,var(--bt-user));color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 8px);white-space:pre-wrap;word-break:break-word}
 .bt-ubody a{color:inherit}
 .bt-umention{display:inline-flex;align-items:center;gap:3px;vertical-align:-3px;max-width:100%;padding:0 1px;border:0;background:none;color:inherit;font:inherit;font-weight:600;line-height:inherit;cursor:pointer;border-radius:6px;white-space:nowrap}
@@ -13434,6 +13506,9 @@ function apply(ctx) {
     // The composer carries no model picker or run statistics; a Bot's model lives
     // in its details panel.
     shadow("conversation.input.model", { priority: -10 }, Nothing),
+    // The shell's own statistics live in the composer dock under the id "stats"; the
+    // details panel carries the same numbers instead.
+    shadow("conversation.composer.dock", { id: "stats", order: 0, priority: -10 }, Nothing),
     shadow("conversation.composer.dock", { id: "activity", order: 0, priority: -10 }, Nothing),
     shadow("conversation.composer.dock", { id: "usage", order: 1, priority: -10 }, Nothing),
     shadow("conversation.input.left", { id: "bot-plus", order: -100, inject: face }, ComposerPlus),
