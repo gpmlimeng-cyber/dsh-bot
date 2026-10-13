@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon, PlusIcon, DotsBoldIcon } from './icons.js'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon, PlusIcon, DotsBoldIcon, ChevronLeftIcon } from './icons.js'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { useMobile } from './mobile.js'
 import { ActivityIndicator } from './activity-row.js'
@@ -186,7 +186,10 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
   // The mark stays behind in the header so its CSS can still find the row to hide.
   return h(Fragment, null,
     h('span', { className: 'bt-head-mark', 'aria-hidden': true }),
-    createPortal(h('div', { className: 'bt-mobile-bar' },
+    // While the drawer is up the bar is the one control left on top of it, so it reports
+    // that state to the stylesheet (the pill steps aside there) and the button draws the
+    // collapse affordance instead of the hamburger.
+    createPortal(h('div', { className: 'bt-mobile-bar', 'data-nav-open': mobileNavOpen || undefined },
       h('button', {
         type: 'button', className: 'bt-mobile-nav', 'aria-expanded': mobileNavOpen,
         // The label follows the state, like the scrim's: an unchanged "Open navigation"
@@ -194,7 +197,7 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
         // device crew's own verification ambiguous.
         'aria-label': `${mobileNavOpen ? t('Close navigation') : t('Open navigation')}${probe === '' ? '' : ` ${probe}`}`,
         onClick: () => actions.toggleMobileNav(),
-      }, h(MenuIcon)),
+      }, mobileNavOpen ? h(ChevronLeftIcon) : h(MenuIcon)),
       head,
       h('div', { className: 'bt-mobile-acts' },
         h('button', {

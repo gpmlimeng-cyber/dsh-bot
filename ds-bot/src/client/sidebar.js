@@ -314,6 +314,31 @@ export function TeamSidebar(props) {
     event.preventDefault()
     actions.openPalette(event.key)
   }
+  // Touch handling for the drawer. One drag is read once and then handed to either the
+  // list (vertical: it scrolls) or the close gesture (leftward past the threshold, and
+  // never unless the drag is more horizontal than vertical). A drag that starts moving
+  // vertically can no longer close anything — that is the reported "a swipe closed the
+  // drawer" and the rule this forbids. Nothing here listens to scroll, so no amount of
+  // scrolling dismisses the drawer.
+  const SWIPE_CLOSE_PX = 48
+  const drag = useRef(null)
+  const onTouchStart = (event) => {
+    const touch = event.touches[0]
+    drag.current = touch ? { x: touch.clientX, y: touch.clientY, settled: false } : null
+  }
+  const onTouchMove = (event) => {
+    const start = drag.current
+    const touch = event.touches[0]
+    if (start === null || start.settled || touch === undefined) return
+    const dx = touch.clientX - start.x
+    const dy = touch.clientY - start.y
+    if (Math.abs(dy) >= Math.abs(dx)) { drag.current = null; return }
+    if (dx <= -SWIPE_CLOSE_PX) {
+      start.settled = true
+      actions.closeMobileNav()
+    }
+  }
+  const onTouchEnd = () => { drag.current = null }
   // `bt-rail` stays keyed on the shell's own width, not on the drawer state: the
   // off-canvas positioning below the shell's narrow line lives on `.bt-side.bt-rail`,
   // so the class must keep the rail form while the drawer is open (only the row
@@ -330,7 +355,12 @@ export function TeamSidebar(props) {
   const drawerFoot = mobile ? h('div', { className: 'bt-side-foot' },
     h(AccountLauncher, { seat: false, actions }),
     h(ConnectPlugins, { wide: true, actions })) : null
-  const drawer = h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', role: wide ? undefined : 'region', 'data-mobile-open': mobileOpen || undefined, 'aria-label': mobile && drawerProbe !== '' ? drawerProbe : undefined, onKeyDown: typeToSearch },
+  const drawer = h('div', {
+    className: wide ? 'bt-side' : 'bt-side bt-rail', role: wide ? undefined : 'region',
+    'data-mobile-open': mobileOpen || undefined, 'aria-label': mobile && drawerProbe !== '' ? drawerProbe : undefined, onKeyDown: typeToSearch,
+    onTouchStart: mobile ? onTouchStart : undefined, onTouchMove: mobile ? onTouchMove : undefined,
+    onTouchEnd: mobile ? onTouchEnd : undefined, onTouchCancel: mobile ? onTouchEnd : undefined,
+  },
     listWide ? h('div', { className: 'bt-side-top' },
       h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),

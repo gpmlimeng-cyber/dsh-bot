@@ -202,10 +202,13 @@ html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;po
    last one fell out of view. Height comes from top/bottom — never height:100vh, which would
    overshoot the screen by exactly the inset. The list already scrolls (styles.js:122,
    overflow-y:auto + min-height:0), so a long roster scrolls inside the drawer. */
-html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
+html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden;touch-action:pan-y}
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
 html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
-html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%}
+/* pan-y on the drawer leaves the vertical drag to the list's own scrolling and keeps the
+   horizontal one for the close gesture; contain stops a flick at the end of the list from
+   chaining into whatever is behind the drawer. */
+html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:contain}
 .bt-side-foot{display:flex;align-items:center;gap:8px;flex:none;padding-top:8px}
 /* The drawer's bottom row: the account/settings launcher on the left, Connect plugins
    taking the rest, the order the shell's own footer area uses. The connect button is a
@@ -947,13 +950,31 @@ html[data-bt-mobile] [data-dsh-mobile-topbar]{display:none!important}
    started at 90px). Give the column back the status-bar inset only, and never let the
    measured --bt-top-inset feed back in here — that loop is what kept it at 90px. */
 html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))!important}
-.bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
+/* The bar floats above every panel this skin opens, not just the conversation: the New…
+   picker, the settings page, the palette and the memory dialog are all fixed layers of
+   their own (pane 45, menu/settings 60, memory 61, palette 70) that start at the top of
+   the screen, and at z-index 30 the bar was simply painted over by them — that is the
+   "no bar on the New page" report. The drawer and its scrim (79 and 78) are below it on
+   purpose: with the drawer up, the bar's hamburger is the visible way to collapse it,
+   which is why the two rules below take the pill out of the way and make room for that
+   button in the drawer's own top row. */
+.bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
+/* With the drawer open the pill would sit on the drawer's own search/new row — same y,
+   and the pill's centred box reaches ~136px past the drawer's left edge. The drawer is
+   already where a chat is picked, so while it is up the bar carries only its collapse
+   button; opacity keeps the row's layout (and so the button's position) unchanged, and
+   visibility is what actually takes the pill out of hit testing — the pill sets
+   pointer-events:auto itself, so a pointer-events:none parent would not stop it from
+   swallowing taps aimed at the drawer underneath. */
+html[data-bt-mobile] .bt-mobile-bar[data-nav-open] .bt-head{opacity:0;visibility:hidden;pointer-events:none}
+/* Room for that button: the drawer's brand would otherwise sit under it. */
+html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-left:52px}
 /* Three tracks, one of them centred. The bar keeps symmetric side padding so the pill's
    midpoint is the screen's midpoint no matter how wide the two side buttons are, and the
    padding is where the clearance lives: 104px covers the wider side (the right frame is
    12 + 89 = 101), so nothing can overlap on a 425px screen, and the pill's own
    70% cap plus the name's ellipsis keeps long titles inside the middle track. */
-.bt-mobile-bar{--bt-mobile-clear:104px;position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px var(--bt-mobile-clear) 0;pointer-events:none}
+.bt-mobile-bar{--bt-mobile-clear:104px;position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px var(--bt-mobile-clear) 0;pointer-events:none}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
    under the floating pill, and the property inherits into these buttons. Size lives here,
