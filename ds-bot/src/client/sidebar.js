@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { FishLogo } from '@deepseek-ai/dsh-client-ui-primitives'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
-import { PlusIcon, SearchIcon, GaugeIcon, PlugIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon } from './icons.js'
+import { PlusIcon, SearchIcon, GaugeIcon, PlugIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, PeopleIcon } from './icons.js'
 import { MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
@@ -69,13 +69,30 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   const pinned = bot.pinned === true && !tile
   const label = [bot.name, main ? t('Main Bot') : '', pinned ? t('Pinned') : '', running ? t('Working') : '', alert ? t('Waiting for your answer') : '', unread ? t('Unread activity') : ''].filter(Boolean).join(', ')
   if (tile && wide) {
-    return h('div', { className: 'bt-tile-wrap' }, h('button', {
+    return h('div', { className: 'bt-tile-wrap' },
+      // The shortcuts float around the tile in the space its column already reserves;
+      // the rail has no room for them, so this branch is the wide column only.
+      h('div', { className: 'bt-tile-bubbles' },
+        h('button', {
+          type: 'button', className: 'bt-bubble-btn', 'data-place': 'left', 'data-i': '1',
+          'aria-label': t('New chat'), title: t('New chat'), onClick: () => actions.openNewChat('new'),
+        }, h(PlusIcon)),
+        h('button', {
+          type: 'button', className: 'bt-bubble-btn', 'data-place': 'right', 'data-i': '2',
+          'aria-label': t('Create Bot'), title: t('Create Bot'), onClick: () => actions.openNewChat('create'),
+        }, h(PlusIcon)),
+        h('button', {
+          type: 'button', className: 'bt-bubble-btn', 'data-place': 'below', 'data-i': '3',
+          'aria-label': t('Create group chat'), title: t('Create group chat'), onClick: () => actions.openNewChat('group'),
+        }, h(PeopleIcon))),
+      h('button', {
       type: 'button', className: 'bt-tile', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
       'data-bot-id': id, title: preview || bot.name, onClick: () => actions.openSession(id), onContextMenu,
     },
     h(BotAvatar, { bot, size: 60, state, main: true }),
-    h('span', { className: 'bt-tile-name' }, bot.name),
-    bot.role ? h('span', { className: 'bt-chip' }, bot.role) : null))
+    h('span', { className: 'bt-tile-line' },
+      h('span', { className: 'bt-tile-name' }, bot.name),
+      bot.role ? h('span', { className: 'bt-chip' }, bot.role) : null)))
   }
   return h('button', {
     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,

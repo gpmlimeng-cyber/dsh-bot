@@ -167,6 +167,18 @@ var ZH = {
   "{name} leads this group: it can call members with @Name, change the group, and post here.": "{name} 主持这个群：可以用 @名字 点名成员、修改群设置、在群里发言。",
   "No admin yet. An admin can call members with @Name, change the group, and post here.": "还没有管理员。管理员可以用 @名字 点名成员、修改群设置、在群里发言。",
   "Who answers": "谁来回答",
+  Turns: "回合",
+  Steps: "步骤",
+  "Model time": "模型耗时",
+  "Tool time": "工具耗时",
+  "First token": "首字延迟",
+  "Decode speed": "解码速度",
+  "Cache read": "缓存读取",
+  "Cache write": "缓存写入",
+  Total: "合计",
+  Used: "已用",
+  Window: "窗口",
+  Occupancy: "占用率",
   Conversation: "会话统计",
   "Token usage": "Token 用量",
   Context: "上下文占用",
@@ -1407,22 +1419,22 @@ function mentionTarget(event) {
   const anchor = event.target instanceof Element ? event.target.closest(`a[href^="${MENTION_ORIGIN}"]`) : null;
   return anchor ? anchor.getAttribute("href").slice(MENTION_ORIGIN.length) : null;
 }
-function clock(ms) {
-  return new Date(ms).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" });
+function clock(ms2) {
+  return new Date(ms2).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" });
 }
-function dayLabel(ms) {
-  const date = new Date(ms);
+function dayLabel(ms2) {
+  const date = new Date(ms2);
   const today = /* @__PURE__ */ new Date();
   const sameDay = date.toDateString() === today.toDateString();
-  return sameDay ? t("Today {time}", { time: clock(ms) }) : `${date.toLocaleDateString(dateLocale(), { weekday: "short", month: "short", day: "numeric" })} ${clock(ms)}`;
+  return sameDay ? t("Today {time}", { time: clock(ms2) }) : `${date.toLocaleDateString(dateLocale(), { weekday: "short", month: "short", day: "numeric" })} ${clock(ms2)}`;
 }
-function relativeShort(ms) {
-  const diff = Math.max(0, Date.now() - ms);
+function relativeShort(ms2) {
+  const diff = Math.max(0, Date.now() - ms2);
   if (diff < 6e4) return t("just now");
   if (diff < 36e5) return t("{n} min", { n: Math.floor(diff / 6e4) });
   if (diff < 864e5) return t("{n} h", { n: Math.floor(diff / 36e5) });
   if (diff < 30 * 864e5) return t("{n} d", { n: Math.floor(diff / 864e5) });
-  return new Date(ms).toLocaleDateString(dateLocale(), { month: "short", day: "numeric" });
+  return new Date(ms2).toLocaleDateString(dateLocale(), { month: "short", day: "numeric" });
 }
 var contentText = (content) => (content ?? []).filter((block) => block?.type === "text").map((block) => block.text).join("\n");
 var HEADER = /^\[(Message from|Reply from|Group chat|Group post from|Bot team setup|Handoff · part|Secret card)[^\]]*\]\n?/;
@@ -1596,6 +1608,60 @@ function contextPressureOf(list, ids) {
   if (used === 0 || window2 === 0) return "";
   const percent2 = Math.min(100, Math.round(used / window2 * 100));
   return t("{percent}% of {window}", { percent: percent2, window: formatTokens(window2) });
+}
+function statsDetailOf(list, ids) {
+  let turns = 0;
+  let steps = 0;
+  let llmMs = 0;
+  let toolMs = 0;
+  let ttftMs = 0;
+  let ttftSteps = 0;
+  let decodeMs = 0;
+  let decodeTokens = 0;
+  for (const id of ids) {
+    const s = list.projectionsBySession?.[id]?.values?.sessionStats;
+    if (!s) continue;
+    turns += s.turns ?? 0;
+    steps += s.steps ?? 0;
+    llmMs += s.llmMs ?? 0;
+    toolMs += s.toolMs ?? 0;
+    ttftMs += s.ttftMs ?? 0;
+    ttftSteps += s.ttftSteps ?? 0;
+    decodeMs += s.decodeMs ?? 0;
+    decodeTokens += s.decodeTokens ?? 0;
+  }
+  if (turns === 0 && steps === 0) return null;
+  return { turns, steps, llmMs, toolMs, ttftMs, ttftSteps, decodeMs, decodeTokens, speed: decodeMs > 0 ? decodeTokens / (decodeMs / 1e3) : null };
+}
+function usageDetailOf(list, ids) {
+  let uncached = 0;
+  let cacheRead = 0;
+  let cacheWrite = 0;
+  let output = 0;
+  for (const id of ids) {
+    const usage = list.projectionsBySession?.[id]?.values?.tokenUsage;
+    if (!usage) continue;
+    uncached += usage.uncachedInputTokens ?? 0;
+    cacheRead += usage.cacheReadTokens ?? 0;
+    cacheWrite += usage.cacheWriteTokens ?? 0;
+    output += usage.outputTokens ?? 0;
+  }
+  const input = uncached + cacheRead + cacheWrite;
+  if (input + output === 0) return null;
+  return { input, uncached, cacheRead, cacheWrite, output, total: input + output, hit: input > 0 ? Math.round(cacheRead / input * 100) : 0 };
+}
+function contextDetailOf(list, ids) {
+  let used = 0;
+  let window2 = 0;
+  for (const id of ids) {
+    const pressure = list.projectionsBySession?.[id]?.values?.contextPressure;
+    if (!pressure) continue;
+    const tokens = pressure.projectedTokens ?? pressure.pressureTokens;
+    if (tokens !== void 0) used = Math.max(used, tokens);
+    if (pressure.contextWindow !== void 0) window2 = Math.max(window2, pressure.contextWindow);
+  }
+  if (used === 0 || window2 === 0) return null;
+  return { used, window: window2, percent: Math.min(100, Math.round(used / window2 * 100)) };
 }
 
 // src/client/motion.js
@@ -1789,14 +1855,14 @@ function useMorph(box, key) {
     };
   });
 }
-function useLinger(value, ms) {
+function useLinger(value, ms2) {
   const [kept, setKept] = (0, import_react.useState)(value);
   (0, import_react.useEffect)(() => {
     if (value) {
       setKept(value);
       return void 0;
     }
-    const timer = setTimeout(() => setKept(value), reducedMotion() ? 0 : ms);
+    const timer = setTimeout(() => setKept(value), reducedMotion() ? 0 : ms2);
     return () => clearTimeout(timer);
   }, [value]);
   return [value || kept, !value && Boolean(kept)];
@@ -1912,10 +1978,16 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-round:active{transform:scale(.94)}
 .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
 .bt-tile-wrap{display:flex;justify-content:center;padding:20px 0 15px}
-.bt-tile{display:flex;flex-direction:column;align-items:center;gap:4px;width:95px;padding:6px 8px 4px;border-radius:12px;border:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:inherit;transition:background-color .12s ease}
+.bt-tile{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;max-width:220px;padding:6px 8px 4px;border-radius:12px;border:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:inherit;transition:background-color .12s ease}
 .bt-tile:hover{background:var(--bt-hover)}
 .bt-tile[aria-current=page]{background:var(--bt-active)}
 .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The name and the role chip share one row under the avatar. The name yields first:
+   the chip keeps its intrinsic width so "Chief of Staff" stays readable, and the tile
+   is wide enough for the pair (measured 32px + 80px) inside its 280px column. */
+.bt-tile-line{display:flex;align-items:center;justify-content:center;gap:6px;max-width:100%;min-width:0}
+.bt-tile-line>.bt-tile-name{min-width:0;flex:0 1 auto}
+.bt-tile-line>.bt-chip{flex:0 0 auto;max-width:none}
 .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
 .bt-row{display:flex;align-items:center;gap:8px;min-height:54px;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--bt-ink);text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-family:inherit;transition:background-color .12s ease}
 .bt-row:hover{background:var(--bt-hover)}
@@ -1966,7 +2038,7 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 @media (prefers-reduced-motion:reduce){.bt-pill,.bt-pill-go,.bt-pill-go svg{transition:none!important}.bt-pill-go{filter:none}.bt-pill:active{transform:none}}
 
 .bt-astack{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0}
-.bt-bubble{max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702));background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 8px);box-sizing:border-box;overflow-wrap:anywhere}
+.bt-bubble{max-width:var(--bt-bubble-max);background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 8px);box-sizing:border-box;overflow-wrap:anywhere}
 .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:6px}
 .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:6px}
 .bt-bubble [class*="_markdown"]>*+*{margin-top:10px}
@@ -2158,6 +2230,23 @@ button.bt-q-opt:active{background:var(--bt-active)}
 .bt-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .bt-kv{display:flex;justify-content:space-between;gap:8px;font-size:12px;line-height:20px;color:var(--bt-ink-2)}
 .bt-kv span:last-child{color:var(--bt-ink);font-variant-numeric:tabular-nums}
+/* The three conversation figures: one heading, then a row per figure whose value opens a
+   detail popover. */
+.bt-stat-block{display:flex;flex-direction:column;gap:2px}
+.bt-stat-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
+.bt-stat-label{font-size:12px;line-height:20px;color:var(--bt-ink-2)}
+.bt-stat-value{display:flex;justify-content:flex-end;min-width:0}
+.bt-stat-pill{font:inherit;font-size:12px;line-height:18px;color:var(--bt-ink);font-variant-numeric:tabular-nums;
+  padding:1px 6px;border-radius:8px;border:1px solid transparent;background:transparent;cursor:pointer;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bt-stat-pill:hover{background:var(--bt-hover)}
+.bt-stat-pill[data-open]{background:var(--bt-active);border-color:var(--bt-line)}
+.bt-stat-pop{z-index:80;min-width:200px;max-width:280px;padding:10px 12px;border-radius:12px;
+  background:var(--bt-main);border:1px solid var(--bt-line-2);box-shadow:0 12px 32px -8px rgba(0,0,0,.2);
+  color:var(--bt-ink);font-family:inherit;animation:bt-pop-in .14s ease-out}
+.bt-stat-pop-title{font-size:11px;line-height:16px;color:var(--bt-ink-2);margin-bottom:6px}
+.bt-stat-pop-row{display:flex;justify-content:space-between;gap:16px;font-size:12px;line-height:20px}
+.bt-stat-pop-row span:last-child{font-variant-numeric:tabular-nums}
 .bt-danger{color:#e02135}
 
 /* Bot settings: fields, the avatar editor popover, and the details-pane sub-view. */
@@ -2293,7 +2382,8 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 [class*="_footArea"]>[class*="_footerActions"]{flex:1 1 auto;min-width:0}
 [class*="_footArea"]>[class*="_settingsArea"]{flex:none;width:auto!important}
 [class*="_footArea"] button[aria-label="Settings"]{width:auto!important;padding:0!important;background:none!important;border-radius:50%!important;height:auto!important}
-[class*="_widthHandle"]{display:none!important}
+/* The shell's width handle stays: it sizes the conversation column from the user's
+   drag and persists the choice, which this plugin reads through the column width. */
 
 .bt-voice-pane{flex-direction:column;align-items:center;justify-content:center;animation:bt-fade .2s ease-out}
 .bt-voice-stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;max-width:560px;text-align:center}
@@ -2325,14 +2415,14 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 /* The same cap the user's own bubbles use (--bt-bubble-max), so both sides take the same
    share of a wide column. The hover toolbar is absolutely positioned beside the bubble,
    so nothing here reserves room for it. */
-.bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702))}
+.bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:var(--bt-bubble-max)}
 /* The bubble's row: reactions hang below it, so the hover toolbar (and a group
    sender's avatar) line up with the bubble alone. */
 .bt-msg-line{position:relative;display:flex;align-items:flex-end;gap:8px;max-width:100%}
 .bt-msg-line>.bt-bubble{max-width:none;min-width:0}
 /* The same cap as an unled row: the 22px avatar and its 8px gutter already indent the
    bubble through .bt-msg-line's margin, so the right edge lands in the same place. */
-.bt-astack[data-lead]>.bt-msg{max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702))}
+.bt-astack[data-lead]>.bt-msg{max-width:var(--bt-bubble-max)}
 .bt-tools{position:absolute;top:50%;left:100%;margin-left:6px;transform:translateY(-50%);display:flex;gap:2px;opacity:0;visibility:hidden;transition:opacity .12s ease,visibility .12s}
 .bt-tools::after{content:"";position:absolute;top:-8px;bottom:-8px;right:100%;width:128px;z-index:-1}
 .bt-msg:hover>.bt-msg-line>.bt-tools,.bt-msg:focus-within>.bt-msg-line>.bt-tools,.bt-tools[data-open]{opacity:1;visibility:visible}
@@ -2575,7 +2665,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 @media (prefers-reduced-motion:reduce){.bt-thumb{transition:none}.bt-panel-view>[data-move],.bt-drawer-name-input,.bt-veil,.bt-pop-in,.bt-token,.bt-drop,.bt-newchat,.bt-option-hint,.bt-connector-form,.bt-settings-head>*{animation:none}}
 `;
 var CONVERSATION_CSS = `
-.bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702))}
+.bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:var(--bt-bubble-max)}
 .bt-think summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px}
 .bt-think summary::-webkit-details-marker{display:none}
 .bt-think-text{white-space:pre-wrap;margin-top:6px;padding-left:10px;border-left:2px solid var(--bt-line-2)}
@@ -2607,7 +2697,10 @@ header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;
 header[class*="_header"]:has(.bt-head)::before{content:"";position:absolute;inset:0 0 auto;height:60px;background:linear-gradient(to bottom,var(--bt-main),color-mix(in srgb,var(--bt-main) 0%,transparent));pointer-events:none;z-index:-1}
 header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolute;left:12px;top:10px;pointer-events:auto}
 header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
-[class*="_body"]:has(> [class*="_scrollBody"]){--dsh-chat-content-width:min(1200px,100%);--bt-bubble-max:min(calc(var(--dsh-chat-content-width,748px) * .702),82%)}
+/* The content column keeps the shell's own measure, including the width the user dragged:
+   the shell defines --dsh-chat-content-width on its own body and sizes its width handle
+   from it, so overriding it here collapsed that handle. Only the bubble cap is ours. */
+[class*="_body"]:has(> [class*="_scrollBody"]){--bt-bubble-max:min(calc(var(--dsh-chat-content-width,748px) * .702),82%)}
 /* Every team Session belongs to a Bot or a group, so a blank one is an empty chat, not
    the shell's new-session hero: no headline, no workspace or mode picker, and the
    composer stays docked at the bottom. */
@@ -2754,7 +2847,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-earlier-top{display:flex;justify-content:center;align-items:center;height:34px;flex:none}
 .bt-earlier-top .bt-soft{height:28px;font-size:12px;padding:0 12px}
 .bt-urow{display:flex;justify-content:flex-end}
-.bt-ububble{max-width:var(--bt-bubble-max,min(calc(var(--dsh-chat-content-width,748px) * .702),82%));background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:14px;line-height:20px;box-sizing:border-box;overflow-wrap:anywhere}
+.bt-ububble{max-width:var(--bt-bubble-max);background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:14px;line-height:20px;box-sizing:border-box;overflow-wrap:anywhere}
 .bt-ububble [class*="_markdown"],.bt-ububble a{color:inherit!important}
 .bt-ububble p{margin:0;line-height:22px}
 .bt-uimages{display:block;font-size:12px;opacity:.7}
@@ -4471,8 +4564,8 @@ var import_react7 = require("react");
 var import_react_dom2 = require("react-dom");
 var PHRASE_HOLD_MS = 800;
 var drawPhrase = (pool) => t(pool[Math.min(pool.length - 1, Math.floor(Math.random() * pool.length))]);
-function elapsedLabel(ms) {
-  const minutes = Math.floor(ms / 6e4);
+function elapsedLabel(ms2) {
+  const minutes = Math.floor(ms2 / 6e4);
   if (minutes < 60) return `${Math.max(1, minutes)}m`;
   const hours = Math.floor(minutes / 60);
   return minutes % 60 === 0 ? `${hours}h` : `${hours}h ${minutes % 60}m`;
@@ -4705,22 +4798,63 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   const pinned = bot.pinned === true && !tile;
   const label = [bot.name, main ? t("Main Bot") : "", pinned ? t("Pinned") : "", running ? t("Working") : "", alert ? t("Waiting for your answer") : "", unread ? t("Unread activity") : ""].filter(Boolean).join(", ");
   if (tile && wide) {
-    return (0, import_react8.createElement)("div", { className: "bt-tile-wrap" }, (0, import_react8.createElement)(
-      "button",
-      {
-        type: "button",
-        className: "bt-tile",
-        "aria-label": label,
-        "aria-current": active ? "page" : void 0,
-        "data-bot-id": id,
-        title: preview || bot.name,
-        onClick: () => actions.openSession(id),
-        onContextMenu
-      },
-      (0, import_react8.createElement)(BotAvatar, { bot, size: 60, state, main: true }),
-      (0, import_react8.createElement)("span", { className: "bt-tile-name" }, bot.name),
-      bot.role ? (0, import_react8.createElement)("span", { className: "bt-chip" }, bot.role) : null
-    ));
+    return (0, import_react8.createElement)(
+      "div",
+      { className: "bt-tile-wrap" },
+      // The shortcuts float around the tile in the space its column already reserves;
+      // the rail has no room for them, so this branch is the wide column only.
+      (0, import_react8.createElement)(
+        "div",
+        { className: "bt-tile-bubbles" },
+        (0, import_react8.createElement)("button", {
+          type: "button",
+          className: "bt-bubble-btn",
+          "data-place": "left",
+          "data-i": "1",
+          "aria-label": t("New chat"),
+          title: t("New chat"),
+          onClick: () => actions.openNewChat("new")
+        }, (0, import_react8.createElement)(PlusIcon)),
+        (0, import_react8.createElement)("button", {
+          type: "button",
+          className: "bt-bubble-btn",
+          "data-place": "right",
+          "data-i": "2",
+          "aria-label": t("Create Bot"),
+          title: t("Create Bot"),
+          onClick: () => actions.openNewChat("create")
+        }, (0, import_react8.createElement)(PlusIcon)),
+        (0, import_react8.createElement)("button", {
+          type: "button",
+          className: "bt-bubble-btn",
+          "data-place": "below",
+          "data-i": "3",
+          "aria-label": t("Create group chat"),
+          title: t("Create group chat"),
+          onClick: () => actions.openNewChat("group")
+        }, (0, import_react8.createElement)(PeopleIcon))
+      ),
+      (0, import_react8.createElement)(
+        "button",
+        {
+          type: "button",
+          className: "bt-tile",
+          "aria-label": label,
+          "aria-current": active ? "page" : void 0,
+          "data-bot-id": id,
+          title: preview || bot.name,
+          onClick: () => actions.openSession(id),
+          onContextMenu
+        },
+        (0, import_react8.createElement)(BotAvatar, { bot, size: 60, state, main: true }),
+        (0, import_react8.createElement)(
+          "span",
+          { className: "bt-tile-line" },
+          (0, import_react8.createElement)("span", { className: "bt-tile-name" }, bot.name),
+          bot.role ? (0, import_react8.createElement)("span", { className: "bt-chip" }, bot.role) : null
+        )
+      )
+    );
   }
   return (0, import_react8.createElement)(
     "button",
@@ -6649,10 +6783,10 @@ function useSchedules(actions) {
 }
 var localZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 var clock2 = (time) => String(time ?? "").slice(0, 5);
-var when2 = (ms, options) => new Intl.DateTimeFormat(dateLocale(), options).format(ms);
-function dayAndTime(ms) {
-  const sameYear = new Date(ms).getFullYear() === (/* @__PURE__ */ new Date()).getFullYear();
-  return when2(ms, { ...sameYear ? {} : { year: "numeric" }, month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+var when2 = (ms2, options) => new Intl.DateTimeFormat(dateLocale(), options).format(ms2);
+function dayAndTime(ms2) {
+  const sameYear = new Date(ms2).getFullYear() === (/* @__PURE__ */ new Date()).getFullYear();
+  return when2(ms2, { ...sameYear ? {} : { year: "numeric" }, month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 function weekdayNames(days) {
   const names = days.map((day) => when2(Date.UTC(2024, 0, day), { weekday: "short", timeZone: "UTC" }));
@@ -8728,9 +8862,9 @@ var RANGES = [
   { id: "12m", unit: "month", count: 12, stride: 1 }
 ];
 var hourMs = (key) => Date.UTC(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, Number(key.slice(8, 10)), Number(key.slice(11, 13)) || 0);
-var dayKey = (ms) => new Date(ms).toISOString().slice(0, 10);
-var hourKey = (ms) => new Date(ms).toISOString().slice(0, 13).replace("T", " ");
-var mondayOf = (ms) => ms - (new Date(ms).getUTCDay() + 6) % 7 * DAY_MS;
+var dayKey = (ms2) => new Date(ms2).toISOString().slice(0, 10);
+var hourKey = (ms2) => new Date(ms2).toISOString().slice(0, 13).replace("T", " ");
+var mondayOf = (ms2) => ms2 - (new Date(ms2).getUTCDay() + 6) % 7 * DAY_MS;
 function spanRange(from, to) {
   if (to < from) [from, to] = [to, from];
   const days = Math.round((hourMs(to) - hourMs(from)) / DAY_MS) + 1;
@@ -8863,8 +8997,8 @@ var soften = (paint, strength = 1) => {
 var full = (count) => new Intl.NumberFormat(dateLocale()).format(Math.round(count));
 var hitRate = (sum) => percent(sum.cacheRead, sum.input + sum.cacheRead);
 var dates = (options) => new Intl.DateTimeFormat(dateLocale(), { timeZone: "UTC", ...options });
-var hourText = (ms) => `${String(new Date(ms).getUTCHours()).padStart(2, "0")}:00`;
-var yearOf = (ms) => new Date(ms).getUTCFullYear();
+var hourText = (ms2) => `${String(new Date(ms2).getUTCHours()).padStart(2, "0")}:00`;
+var yearOf = (ms2) => new Date(ms2).getUTCFullYear();
 function spanText(from, to) {
   const start = hourMs(from);
   const end = hourMs(to);
@@ -9145,8 +9279,8 @@ function Profile({ face, share, range }) {
     )
   );
 }
-var monthOf = (ms) => Date.UTC(yearOf(ms), new Date(ms).getUTCMonth(), 1);
-var addMonths = (ms, count) => Date.UTC(yearOf(ms), new Date(ms).getUTCMonth() + count, 1);
+var monthOf = (ms2) => Date.UTC(yearOf(ms2), new Date(ms2).getUTCMonth(), 1);
+var addMonths = (ms2, count) => Date.UTC(yearOf(ms2), new Date(ms2).getUTCMonth() + count, 1);
 function SpanPicker({ span, today, oldest, active, near, onPick, onClose }) {
   const box = (0, import_react22.useRef)(null);
   const todayMs = hourMs(today);
@@ -9186,16 +9320,16 @@ function SpanPicker({ span, today, oldest, active, near, onPick, onClose }) {
     const lead = (new Date(start).getUTCDay() + 6) % 7;
     const cells = Array.from({ length: lead }, (_, at) => (0, import_react22.createElement)("span", { key: `b${at}` }));
     for (let day = 1; day <= length; day += 1) {
-      const ms = start + (day - 1) * DAY_MS;
-      const key = dayKey(ms);
+      const ms2 = start + (day - 1) * DAY_MS;
+      const key = dayKey(ms2);
       const weekday = (lead + day - 1) % 7;
       const flag = (on) => on ? "" : void 0;
       cells.push((0, import_react22.createElement)("button", {
         key,
         type: "button",
         className: "bt-us-day",
-        disabled: ms > todayMs,
-        "aria-label": dates({ year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(ms),
+        disabled: ms2 > todayMs,
+        "aria-label": dates({ year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(ms2),
         "aria-pressed": key === low || key === high,
         "data-in": flag(low !== null && key >= low && key <= high),
         "data-start": flag(key === low),
@@ -9265,17 +9399,17 @@ function Heat({ view, keep, paint, index }) {
       months.push((0, import_react22.createElement)("span", { key: week, style: { gridColumn: week + 1 } }, dates({ month: "short" }).format(monday)));
     }
     for (let day = 0; day < 7; day += 1) {
-      const ms = monday + day * DAY_MS;
-      const value = daily.get(dayKey(ms)) ?? 0;
+      const ms2 = monday + day * DAY_MS;
+      const value = daily.get(dayKey(ms2)) ?? 0;
       const level = value > 0 ? Math.max(1, Math.ceil(4 * Math.sqrt(value / most))) : 0;
       cells.push((0, import_react22.createElement)("span", {
-        key: ms,
+        key: ms2,
         className: "bt-us-cell",
         style: { "--w": week },
-        "data-on": hover?.ms === ms ? "" : void 0,
-        "data-future": ms > today ? "" : void 0,
-        "data-today": ms === today ? "" : void 0,
-        onMouseEnter: ms > today ? void 0 : () => setHover({ ms, week, day })
+        "data-on": hover?.ms === ms2 ? "" : void 0,
+        "data-future": ms2 > today ? "" : void 0,
+        "data-today": ms2 === today ? "" : void 0,
+        onMouseEnter: ms2 > today ? void 0 : () => setHover({ ms: ms2, week, day })
       }, level > 0 ? (0, import_react22.createElement)("i", { style: { background: soften(paint, levels[level - 1]) } }) : null));
     }
   }
@@ -10725,6 +10859,8 @@ body[data-ds-dark-theme] .bt-mw-ask{color:#f0b84a}
 
 // src/client/details-drawer.js
 var import_react29 = require("react");
+var import_react_dom7 = require("react-dom");
+var import_dsh_client_ui_primitives5 = require("@deepseek-ai/dsh-client-ui-primitives");
 function transcriptOf(list, id, name, hiddenTurns = []) {
   const outline = list.projectionsBySession?.[id]?.values?.turnOutline ?? list.byId[id]?.projectionValues?.turnOutline;
   if (!Array.isArray(outline)) return "";
@@ -10852,7 +10988,99 @@ function About({ text, title = "About" }) {
     long ? (0, import_react29.createElement)("button", { type: "button", className: "bt-more", onClick: () => setOpen((value) => !value) }, open ? t("Show less") : t("Show more")) : null
   );
 }
-function GroupOverview({ room: room2, roster, actions, usage, stats, pressure, useWork, openSettings }) {
+function StatPopover({ anchorRef, open, onClose, title, rows }) {
+  const panelRef = (0, import_react29.useRef)(null);
+  const pos = (0, import_dsh_client_ui_primitives5.useAnchoredPosition)({ open, anchorRef, panelRef, side: "top", align: "end", gap: 8, margin: 12 });
+  (0, import_dsh_client_ui_primitives5.useDismissOnOutsidePointer)(anchorRef, open, (value) => {
+    if (!value) onClose();
+  }, panelRef);
+  useEscape(open ? onClose : () => {
+  });
+  if (!open) return null;
+  const style = { ...pos ?? { visibility: "hidden", left: 0, top: 0 }, position: "fixed" };
+  return (0, import_react_dom7.createPortal)(
+    (0, import_react29.createElement)(
+      "div",
+      { ref: panelRef, className: "bt-stat-pop", role: "dialog", "aria-label": title, style },
+      (0, import_react29.createElement)("div", { className: "bt-stat-pop-title" }, title),
+      rows.filter(Boolean).map((row, index) => (0, import_react29.createElement)(
+        "div",
+        { key: index, className: "bt-stat-pop-row" },
+        (0, import_react29.createElement)("span", null, row[0]),
+        (0, import_react29.createElement)("span", null, row[1])
+      ))
+    ),
+    document.body
+  );
+}
+function StatsBlock({ title, stats, usage, pressure, statsRows, usageRows, contextRows }) {
+  const [open, setOpen] = (0, import_react29.useState)(null);
+  const anchorRef = (0, import_react29.useRef)(null);
+  const row = (key, label, value, rows, popTitle) => {
+    if (!value) return null;
+    const isOpen = open === key;
+    return (0, import_react29.createElement)(
+      "div",
+      { key, className: "bt-stat-row" },
+      (0, import_react29.createElement)("span", { className: "bt-stat-label" }, label),
+      (0, import_react29.createElement)(
+        "span",
+        { className: "bt-stat-value" },
+        (0, import_react29.createElement)("button", {
+          type: "button",
+          className: "bt-stat-pill",
+          "data-open": isOpen || void 0,
+          "aria-expanded": isOpen,
+          ref: anchorRef,
+          onClick: () => setOpen(isOpen ? null : key)
+        }, value)
+      ),
+      // The popover hangs from whichever row is open, so one anchor serves all three.
+      isOpen && rows ? (0, import_react29.createElement)(StatPopover, { anchorRef, open: true, onClose: () => setOpen(null), title: popTitle, rows }) : null
+    );
+  };
+  if (!stats && !usage && !pressure) return null;
+  return (0, import_react29.createElement)(
+    "div",
+    { className: "bt-stat-block" },
+    (0, import_react29.createElement)("div", { className: "bt-section-title" }, title),
+    row("stats", t("Conversation"), stats, statsRows, t("Conversation")),
+    row("usage", t("Token usage"), usage, usageRows, t("Token usage")),
+    row("context", t("Context"), pressure, contextRows, t("Context"))
+  );
+}
+var ms = (value) => value >= 1e3 ? `${(value / 1e3).toFixed(1)}s` : `${Math.round(value)}ms`;
+function statsPopRows(detail) {
+  if (!detail) return null;
+  return [
+    [t("Turns"), String(detail.turns)],
+    [t("Steps"), String(detail.steps)],
+    [t("Model time"), ms(detail.llmMs)],
+    [t("Tool time"), ms(detail.toolMs)],
+    [t("First token"), detail.ttftSteps > 0 ? `${ms(detail.ttftMs)} · ${detail.ttftSteps}` : "—"],
+    [t("Decode speed"), detail.speed === null ? "—" : `${detail.speed.toFixed(1)} tok/s`]
+  ];
+}
+function usagePopRows(detail) {
+  if (!detail) return null;
+  return [
+    [t("Input"), `${formatTokens(detail.input)} tok`],
+    [t("Cache read"), `${formatTokens(detail.cacheRead)} tok`],
+    [t("Cache write"), `${formatTokens(detail.cacheWrite)} tok`],
+    [t("Output"), `${formatTokens(detail.output)} tok`],
+    [t("Total"), `${formatTokens(detail.total)} tok`],
+    [t("Cache hit rate"), `${detail.hit}%`]
+  ];
+}
+function contextPopRows(detail) {
+  if (!detail) return null;
+  return [
+    [t("Used"), `${formatTokens(detail.used)} tok`],
+    [t("Window"), `${formatTokens(detail.window)} tok`],
+    [t("Occupancy"), `${detail.percent}%`]
+  ];
+}
+function GroupOverview({ room: room2, roster, actions, usage, stats, pressure, statsDetail, usageDetail, contextDetail, useWork, openSettings }) {
   const members = room2.members.map((id) => roster.byId[id]).filter(Boolean);
   const { entries: entries2, now } = useMemberWork(room2, useWork);
   return [
@@ -10887,24 +11115,16 @@ function GroupOverview({ room: room2, roster, actions, usage, stats, pressure, u
       (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Who answers")),
       (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, t(ROOM_MODES.find(([id]) => id === shownMode(room2, roster))?.[1] ?? "Everyone")))
     ),
-    stats ? (0, import_react29.createElement)(
-      "div",
-      { key: "stats" },
-      (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Conversation")),
-      (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, room2.name), (0, import_react29.createElement)("span", null, stats))
-    ) : null,
-    usage ? (0, import_react29.createElement)(
-      "div",
-      { key: "usage" },
-      (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Token usage")),
-      (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, room2.name), (0, import_react29.createElement)("span", null, usage))
-    ) : null,
-    pressure ? (0, import_react29.createElement)(
-      "div",
-      { key: "pressure" },
-      (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Context")),
-      (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, room2.name), (0, import_react29.createElement)("span", null, pressure))
-    ) : null
+    (0, import_react29.createElement)(StatsBlock, {
+      key: "stats-block",
+      title: room2.name,
+      stats,
+      usage,
+      pressure,
+      statsRows: statsPopRows(statsDetail),
+      usageRows: usagePopRows(usageDetail),
+      contextRows: contextPopRows(contextDetail)
+    })
   ];
 }
 function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages }) {
@@ -10933,6 +11153,9 @@ function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, a
   const usage = useSessions((list) => usageOf(list, [part, ...bot?.parts ?? room2?.parts ?? []]));
   const stats = useSessions((list) => sessionStatsOf(list, [part, ...bot?.parts ?? room2?.parts ?? []]));
   const pressure = useSessions((list) => contextPressureOf(list, [part, ...bot?.parts ?? room2?.parts ?? []]));
+  const statsDetail = useSessions((list) => statsDetailOf(list, [part, ...bot?.parts ?? room2?.parts ?? []]));
+  const usageDetail = useSessions((list) => usageDetailOf(list, [part, ...bot?.parts ?? room2?.parts ?? []]));
+  const contextDetail = useSessions((list) => contextDetailOf(list, [part, ...bot?.parts ?? room2?.parts ?? []]));
   const run = (promise) => Promise.resolve(promise).then(() => {
     setError("");
     return true;
@@ -11025,7 +11248,7 @@ function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, a
       "div",
       { key: `body:${tab}`, className: "bt-drawer-body", "data-move": move },
       errorLine,
-      room2 && tab === "details" ? (0, import_react29.createElement)(GroupOverview, { room: room2, roster, actions, usage, stats, pressure, useWork, openSettings: () => setView("settings") }) : null,
+      room2 && tab === "details" ? (0, import_react29.createElement)(GroupOverview, { room: room2, roster, actions, usage, stats, pressure, statsDetail, usageDetail, contextDetail, useWork, openSettings: () => setView("settings") }) : null,
       bot && tab === "details" ? [
         (0, import_react29.createElement)(
           "div",
@@ -11037,24 +11260,16 @@ function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, a
         (0, import_react29.createElement)(PermissionRow, { key: "permission", bot, roster, actions, run }),
         bot.instructions ? (0, import_react29.createElement)(About, { key: "about", text: bot.instructions }) : (0, import_react29.createElement)("button", { key: "about", type: "button", className: "bt-more", onClick: () => setView("settings") }, t("Add instructions in Bot settings")),
         roster.memory === false ? null : (0, import_react29.createElement)(MemoryRow, { key: "memory", bot, actions }),
-        stats ? (0, import_react29.createElement)(
-          "div",
-          { key: "stats" },
-          (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Conversation")),
-          (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, bot.name), (0, import_react29.createElement)("span", null, stats))
-        ) : null,
-        usage ? (0, import_react29.createElement)(
-          "div",
-          { key: "usage" },
-          (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Token usage")),
-          (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, bot.name), (0, import_react29.createElement)("span", null, usage))
-        ) : null,
-        pressure ? (0, import_react29.createElement)(
-          "div",
-          { key: "pressure" },
-          (0, import_react29.createElement)("div", { className: "bt-section-title" }, t("Context")),
-          (0, import_react29.createElement)("div", { className: "bt-kv" }, (0, import_react29.createElement)("span", null, bot.name), (0, import_react29.createElement)("span", null, pressure))
-        ) : null,
+        (0, import_react29.createElement)(StatsBlock, {
+          key: "stats-block",
+          title: bot.name,
+          stats,
+          usage,
+          pressure,
+          statsRows: statsPopRows(statsDetail),
+          usageRows: usagePopRows(usageDetail),
+          contextRows: contextPopRows(contextDetail)
+        }),
         (0, import_react29.createElement)(ScheduleSummary, { key: "routines", bot, actions })
       ] : null,
       bot && tab === "browser" ? (0, import_react29.createElement)(BrowserCards, { bot, sessionId, roster, actions, useBrowserTabs, useBrowserPages }) : null
@@ -11064,7 +11279,7 @@ function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, a
 
 // src/client/browser-pane.js
 var import_react30 = require("react");
-var import_react_dom7 = require("react-dom");
+var import_react_dom8 = require("react-dom");
 var PANEL_LINGER_MS = 300;
 var WIDTH_KEY = STORAGE.browserWidth;
 var DEFAULT_WIDTH = 520;
@@ -11596,7 +11811,7 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
     leaving ? null : (0, import_react30.createElement)("div", { className: "bt-panel-grip", role: "separator", "aria-orientation": "vertical", "aria-label": t("Resize panel"), onPointerDown: startResize }),
     // Over the whole window while dragging: the cursor stays a resize cursor and the
     // pages underneath (the chat, the guest) see no pointer.
-    dragging ? (0, import_react_dom7.createPortal)((0, import_react30.createElement)("div", { className: "bt-drag-shield", "aria-hidden": true }), document.body) : null,
+    dragging ? (0, import_react_dom8.createPortal)((0, import_react30.createElement)("div", { className: "bt-drag-shield", "aria-hidden": true }), document.body) : null,
     hasStrip ? (0, import_react30.createElement)(PanelStrip, { bot, subject: pane.id, view, ids: tabState.ids, active, reading, onView: switchView, actions: panelActions, useBrowserPages }) : null,
     view === "browser" && bot ? (0, import_react30.createElement)(BrowserView, { key: `browser:${active}`, bot, tabId: active, leaving, landed: landed && !settling, actions, useBrowserPages }) : (0, import_react30.createElement)(
       "div",
@@ -11699,7 +11914,7 @@ var BROWSER_CSS = `
 
 // src/client/overlays.js
 var import_react31 = require("react");
-var import_react_dom8 = require("react-dom");
+var import_react_dom9 = require("react-dom");
 var DIALOG_EXIT_MS = 160;
 var MENU_EXIT_MS3 = 120;
 function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity, useWork, useRegistry, useBrowserPages, useBrowserTabs, useUpdate, actions }) {
@@ -11730,14 +11945,14 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
   return (0, import_react31.createElement)(
     import_react31.Fragment,
     null,
-    pane ? (0, import_react_dom8.createPortal)((0, import_react31.createElement)(BotPanel, { pane, leaving: open === null, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages }), document.body) : null,
-    ui2.newChat ? (0, import_react_dom8.createPortal)((0, import_react31.createElement)(NewChat, { key: ui2.newChat, mode: ui2.newChat, roster, actions }), document.body) : null,
-    ui2.palette ? (0, import_react_dom8.createPortal)((0, import_react31.createElement)(CommandPalette, { key: ui2.palette.token, start: ui2.palette.query, token: ui2.palette.token, roster, actions, useSessions }), document.body) : null,
-    ui2.exchange ? (0, import_react_dom8.createPortal)((0, import_react31.createElement)(ExchangeDialog, { pair: ui2.exchange, roster, actions }), document.body) : null,
-    ui2.voice ? (0, import_react_dom8.createPortal)((0, import_react31.createElement)(VoiceMode, { key: ui2.voice, sessionId: ui2.voice, roster, actions, useSessions, useSessionStatus }), document.body) : null,
-    menu ? (0, import_react_dom8.createPortal)((0, import_react31.createElement)(ContextMenu, { key: `${menu.kind ?? ""}:${menu.id}:${menu.x}:${menu.y}`, menu, roster, actions, leaving: menuLeaving }), document.body) : null,
-    settings ? (0, import_react_dom8.createPortal)((0, import_react31.createElement)(SettingsDialog, { page: settings.page, id: settings.id, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
-    memory && roster.byId[memory] ? (0, import_react_dom8.createPortal)((0, import_react31.createElement)(MemoryDialog, { key: memory, bot: roster.byId[memory], actions, leaving: memoryLeaving }), document.body) : null
+    pane ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(BotPanel, { pane, leaving: open === null, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages }), document.body) : null,
+    ui2.newChat ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(NewChat, { key: ui2.newChat, mode: ui2.newChat, roster, actions }), document.body) : null,
+    ui2.palette ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(CommandPalette, { key: ui2.palette.token, start: ui2.palette.query, token: ui2.palette.token, roster, actions, useSessions }), document.body) : null,
+    ui2.exchange ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(ExchangeDialog, { pair: ui2.exchange, roster, actions }), document.body) : null,
+    ui2.voice ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(VoiceMode, { key: ui2.voice, sessionId: ui2.voice, roster, actions, useSessions, useSessionStatus }), document.body) : null,
+    menu ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(ContextMenu, { key: `${menu.kind ?? ""}:${menu.id}:${menu.x}:${menu.y}`, menu, roster, actions, leaving: menuLeaving }), document.body) : null,
+    settings ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(SettingsDialog, { page: settings.page, id: settings.id, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
+    memory && roster.byId[memory] ? (0, import_react_dom9.createPortal)((0, import_react31.createElement)(MemoryDialog, { key: memory, bot: roster.byId[memory], actions, leaving: memoryLeaving }), document.body) : null
   );
 }
 
@@ -12480,7 +12695,7 @@ function createBotBrowsers({ bridge, createSource: createSource2, storage = glob
     }
   };
 }
-var sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+var sleep = (ms2) => new Promise((resolve) => setTimeout(resolve, ms2));
 function serveBrowserReads({ browsers, post, clientId = globalThis.crypto.randomUUID(), retryMs = 1e3 }) {
   let stopped = false;
   let poll;
@@ -12661,7 +12876,7 @@ function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageIma
 }
 var USER_MESSAGE_CSS = `
 .bt-umsg{display:flex;flex-direction:row-reverse;align-items:center;justify-content:flex-start;gap:4px}
-.bt-ustack{min-width:0;max-width:var(--bt-bubble-max,min(calc(var(--dsh-chat-content-width,748px) * .702),82%));display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.bt-ustack{min-width:0;max-width:var(--bt-bubble-max);display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 .bt-ubody{max-width:100%;box-sizing:border-box;background:var(--dsw-specific-bubble,var(--bt-user));color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 8px);white-space:pre-wrap;word-break:break-word}
 .bt-ubody a{color:inherit}
 .bt-umention{display:inline-flex;align-items:center;gap:3px;vertical-align:-3px;max-width:100%;padding:0 1px;border:0;background:none;color:inherit;font:inherit;font-weight:600;line-height:inherit;cursor:pointer;border-radius:6px;white-space:nowrap}

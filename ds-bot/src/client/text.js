@@ -260,3 +260,64 @@ export function contextPressureOf(list, ids) {
   const percent = Math.min(100, Math.round(used / window * 100))
   return t('{percent}% of {window}', { percent, window: formatTokens(window) })
 }
+
+// The same three figures as raw numbers, for the detail popovers: the summary line keeps
+// one string, the popover prints these fields on its own rows.
+export function statsDetailOf(list, ids) {
+  let turns = 0
+  let steps = 0
+  let llmMs = 0
+  let toolMs = 0
+  let ttftMs = 0
+  let ttftSteps = 0
+  let decodeMs = 0
+  let decodeTokens = 0
+  for (const id of ids) {
+    const s = list.projectionsBySession?.[id]?.values?.sessionStats
+    if (!s) continue
+    turns += s.turns ?? 0
+    steps += s.steps ?? 0
+    llmMs += s.llmMs ?? 0
+    toolMs += s.toolMs ?? 0
+    ttftMs += s.ttftMs ?? 0
+    ttftSteps += s.ttftSteps ?? 0
+    decodeMs += s.decodeMs ?? 0
+    decodeTokens += s.decodeTokens ?? 0
+  }
+  if (turns === 0 && steps === 0) return null
+  return { turns, steps, llmMs, toolMs, ttftMs, ttftSteps, decodeMs, decodeTokens, speed: decodeMs > 0 ? decodeTokens / (decodeMs / 1000) : null }
+}
+
+export function usageDetailOf(list, ids) {
+  let uncached = 0
+  let cacheRead = 0
+  let cacheWrite = 0
+  let output = 0
+  for (const id of ids) {
+    const usage = list.projectionsBySession?.[id]?.values?.tokenUsage
+    if (!usage) continue
+    uncached += usage.uncachedInputTokens ?? 0
+    cacheRead += usage.cacheReadTokens ?? 0
+    cacheWrite += usage.cacheWriteTokens ?? 0
+    output += usage.outputTokens ?? 0
+  }
+  const input = uncached + cacheRead + cacheWrite
+  if (input + output === 0) return null
+  return { input, uncached, cacheRead, cacheWrite, output, total: input + output, hit: input > 0 ? Math.round((cacheRead / input) * 100) : 0 }
+}
+
+export function contextDetailOf(list, ids) {
+  let used = 0
+  let window = 0
+  for (const id of ids) {
+    const pressure = list.projectionsBySession?.[id]?.values?.contextPressure
+    if (!pressure) continue
+    const tokens = pressure.projectedTokens ?? pressure.pressureTokens
+    if (tokens !== undefined) used = Math.max(used, tokens)
+    if (pressure.contextWindow !== undefined) window = Math.max(window, pressure.contextWindow)
+  }
+  if (used === 0 || window === 0) return null
+  return { used, window, percent: Math.min(100, Math.round(used / window * 100)) }
+}
+
+export { formatTokens }

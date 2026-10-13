@@ -11,6 +11,9 @@ import { ModelMenu, modelOf } from './model-menu.js'
 import { MemoryRow } from './memory-panel.js'
 import { ScheduleSummary } from './schedules.js'
 import { Segmented, useGlide, useMorph } from './motion.js'
+import { createPortal } from 'react-dom'
+import { useAnchoredPosition, useDismissOnOutsidePointer } from '@deepseek-ai/dsh-client-ui-primitives'
+import { statsDetailOf, usageDetailOf, contextDetailOf, formatTokens } from './text.js'
 import { MemberWork, useMemberWork } from './member-status.js'
 import { t } from './i18n.js'
 
@@ -110,9 +113,86 @@ function About({ text, title = 'About' }) {
     long ? h('button', { type: 'button', className: 'bt-more', onClick: () => setOpen(value => !value) }, open ? t('Show less') : t('Show more')) : null)
 }
 
-// A group's overview: what members read, who is in it, and who answers. Changes are
+// One trigger-anchored popover, placed like the shell's own: above the row, dismissed by
+// an outside pointer or Escape.
+function StatPopover({ anchorRef, open, onClose, title, rows }) {
+  const panelRef = useRef(null)
+  const pos = useAnchoredPosition({ open, anchorRef, panelRef, side: 'top', align: 'end', gap: 8, margin: 12 })
+  useDismissOnOutsidePointer(anchorRef, open, value => { if (!value) onClose() }, panelRef)
+  useEscape(open ? onClose : () => {})
+  if (!open) return null
+  const style = { ...(pos ?? { visibility: 'hidden', left: 0, top: 0 }), position: 'fixed' }
+  return createPortal(
+    h('div', { ref: panelRef, className: 'bt-stat-pop', role: 'dialog', 'aria-label': title, style },
+      h('div', { className: 'bt-stat-pop-title' }, title),
+      rows.filter(Boolean).map((row, index) => h('div', { key: index, className: 'bt-stat-pop-row' },
+        h('span', null, row[0]), h('span', null, row[1])))),
+    document.body)
+}
+
+// The three conversation figures under one heading: how much was said, what it cost, and
+// how much of the context window it uses. Each row opens the shell's detail popover.
+function StatsBlock({ title, stats, usage, pressure, statsRows, usageRows, contextRows }) {
+  const [open, setOpen] = useState(null)
+  const anchorRef = useRef(null)
+  const row = (key, label, value, rows, popTitle) => {
+    if (!value) return null
+    const isOpen = open === key
+    return h('div', { key, className: 'bt-stat-row' },
+      h('span', { className: 'bt-stat-label' }, label),
+      h('span', { className: 'bt-stat-value' },
+        h('button', {
+          type: 'button', className: 'bt-stat-pill', 'data-open': isOpen || undefined,
+          'aria-expanded': isOpen, ref: anchorRef,
+          onClick: () => setOpen(isOpen ? null : key),
+        }, value)),
+      // The popover hangs from whichever row is open, so one anchor serves all three.
+      isOpen && rows ? h(StatPopover, { anchorRef, open: true, onClose: () => setOpen(null), title: popTitle, rows }) : null)
+  }
+  if (!stats && !usage && !pressure) return null
+  return h('div', { className: 'bt-stat-block' },
+    h('div', { className: 'bt-section-title' }, title),
+    row('stats', t('Conversation'), stats, statsRows, t('Conversation')),
+    row('usage', t('Token usage'), usage, usageRows, t('Token usage')),
+    row('context', t('Context'), pressure, contextRows, t('Context')))
+}
+
+const ms = value => value >= 1000 ? `${(value / 1000).toFixed(1)}s` : `${Math.round(value)}ms`
+
+function statsPopRows(detail) {
+  if (!detail) return null
+  return [
+    [t('Turns'), String(detail.turns)],
+    [t('Steps'), String(detail.steps)],
+    [t('Model time'), ms(detail.llmMs)],
+    [t('Tool time'), ms(detail.toolMs)],
+    [t('First token'), detail.ttftSteps > 0 ? `${ms(detail.ttftMs)} · ${detail.ttftSteps}` : '—'],
+    [t('Decode speed'), detail.speed === null ? '—' : `${detail.speed.toFixed(1)} tok/s`],
+  ]
+}
+
+function usagePopRows(detail) {
+  if (!detail) return null
+  return [
+    [t('Input'), `${formatTokens(detail.input)} tok`],
+    [t('Cache read'), `${formatTokens(detail.cacheRead)} tok`],
+    [t('Cache write'), `${formatTokens(detail.cacheWrite)} tok`],
+    [t('Output'), `${formatTokens(detail.output)} tok`],
+    [t('Total'), `${formatTokens(detail.total)} tok`],
+    [t('Cache hit rate'), `${detail.hit}%`],
+  ]
+}
+
+function contextPopRows(detail) {
+  if (!detail) return null
+  return [
+    [t('Used'), `${formatTokens(detail.used)} tok`],
+    [t('Window'), `${formatTokens(detail.window)} tok`],
+    [t('Occupancy'), `${detail.percent}%`],
+  ]
+}
 // made in its settings.
-function GroupOverview({ room, roster, actions, usage, stats, pressure, useWork, openSettings }) {
+function GroupOverview({ room, roster, actions, usage, stats, pressure, statsDetail, usageDetail, contextDetail, useWork, openSettings }) {
   const members = room.members.map(id => roster.byId[id]).filter(Boolean)
   const { entries, now } = useMemberWork(room, useWork)
   return [
@@ -133,12 +213,8 @@ function GroupOverview({ room, roster, actions, usage, stats, pressure, useWork,
       }))),
     h('div', { key: 'mode' }, h('div', { className: 'bt-section-title' }, t('Who answers')),
       h('div', { className: 'bt-kv' }, h('span', null, t(ROOM_MODES.find(([id]) => id === shownMode(room, roster))?.[1] ?? 'Everyone')))),
-    stats ? h('div', { key: 'stats' }, h('div', { className: 'bt-section-title' }, t('Conversation')),
-      h('div', { className: 'bt-kv' }, h('span', null, room.name), h('span', null, stats))) : null,
-    usage ? h('div', { key: 'usage' }, h('div', { className: 'bt-section-title' }, t('Token usage')),
-      h('div', { className: 'bt-kv' }, h('span', null, room.name), h('span', null, usage))) : null,
-    pressure ? h('div', { key: 'pressure' }, h('div', { className: 'bt-section-title' }, t('Context')),
-      h('div', { className: 'bt-kv' }, h('span', null, room.name), h('span', null, pressure))) : null,
+    h(StatsBlock, { key: 'stats-block', title: room.name, stats, usage, pressure,
+      statsRows: statsPopRows(statsDetail), usageRows: usagePopRows(usageDetail), contextRows: contextPopRows(contextDetail) }),
   ]
 }
 
@@ -171,6 +247,9 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
   const usage = useSessions(list => usageOf(list, [part, ...(bot?.parts ?? room?.parts ?? [])]))
   const stats = useSessions(list => sessionStatsOf(list, [part, ...(bot?.parts ?? room?.parts ?? [])]))
   const pressure = useSessions(list => contextPressureOf(list, [part, ...(bot?.parts ?? room?.parts ?? [])]))
+  const statsDetail = useSessions(list => statsDetailOf(list, [part, ...(bot?.parts ?? room?.parts ?? [])]))
+  const usageDetail = useSessions(list => usageDetailOf(list, [part, ...(bot?.parts ?? room?.parts ?? [])]))
+  const contextDetail = useSessions(list => contextDetailOf(list, [part, ...(bot?.parts ?? room?.parts ?? [])]))
   const run = promise => Promise.resolve(promise)
     .then(() => { setError(''); return true })
     .catch(failure => { setError(failure?.message ?? String(failure)); return false })
@@ -232,7 +311,7 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
       tabs.map(key => h('button', { key, type: 'button', role: 'tab', className: 'bt-tab', 'aria-selected': tab === key, onClick: () => setTab(key) }, t(TAB_LABELS[key])))),
     h('div', { key: `body:${tab}`, className: 'bt-drawer-body', 'data-move': move },
       errorLine,
-      room && tab === 'details' ? h(GroupOverview, { room, roster, actions, usage, stats, pressure, useWork, openSettings: () => setView('settings') }) : null,
+      room && tab === 'details' ? h(GroupOverview, { room, roster, actions, usage, stats, pressure, statsDetail, usageDetail, contextDetail, useWork, openSettings: () => setView('settings') }) : null,
       bot && tab === 'details' ? [
         h('div', { key: 'model', className: 'bt-drawer-model' },
           h('div', { className: 'bt-section-title' }, t('Model')),
@@ -243,12 +322,8 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
           ? h(About, { key: 'about', text: bot.instructions })
           : h('button', { key: 'about', type: 'button', className: 'bt-more', onClick: () => setView('settings') }, t('Add instructions in Bot settings')),
         roster.memory === false ? null : h(MemoryRow, { key: 'memory', bot, actions }),
-        stats ? h('div', { key: 'stats' }, h('div', { className: 'bt-section-title' }, t('Conversation')),
-          h('div', { className: 'bt-kv' }, h('span', null, bot.name), h('span', null, stats))) : null,
-        usage ? h('div', { key: 'usage' }, h('div', { className: 'bt-section-title' }, t('Token usage')),
-          h('div', { className: 'bt-kv' }, h('span', null, bot.name), h('span', null, usage))) : null,
-        pressure ? h('div', { key: 'pressure' }, h('div', { className: 'bt-section-title' }, t('Context')),
-          h('div', { className: 'bt-kv' }, h('span', null, bot.name), h('span', null, pressure))) : null,
+        h(StatsBlock, { key: 'stats-block', title: bot.name, stats, usage, pressure,
+          statsRows: statsPopRows(statsDetail), usageRows: usagePopRows(usageDetail), contextRows: contextPopRows(contextDetail) }),
         h(ScheduleSummary, { key: 'routines', bot, actions }),
       ] : null,
       bot && tab === 'browser' ? h(BrowserCards, { bot, sessionId, roster, actions, useBrowserTabs, useBrowserPages }) : null)]

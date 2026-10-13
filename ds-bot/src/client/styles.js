@@ -120,11 +120,41 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-round:hover{background:var(--bt-hover)}
 .bt-round:active{transform:scale(.94)}
 .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
-.bt-tile-wrap{display:flex;justify-content:center;padding:20px 0 15px}
-.bt-tile{display:flex;flex-direction:column;align-items:center;gap:4px;width:95px;padding:6px 8px 4px;border-radius:12px;border:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:inherit;transition:background-color .12s ease}
+.bt-tile-wrap{position:relative;display:flex;flex-direction:column;align-items:center;padding:30px 0 40px}
+/* Shortcuts float around the main Bot's tile, each a chat bubble whose tail points back
+   at it. They sit in the padding this column already reserves, so the tile does not move. */
+.bt-tile-bubbles{position:absolute;inset:0;pointer-events:none}
+.bt-bubble-btn{position:absolute;pointer-events:auto;display:grid;place-items:center;width:30px;height:30px;
+  border-radius:10px;background:var(--bt-card);border:1px solid var(--bt-line);color:var(--bt-ink-2);cursor:pointer;
+  box-shadow:0 3px 10px -3px rgba(0,0,0,.16);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},color .12s ease,background-color .12s ease;
+  animation:bt-bubble-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards}
+.bt-bubble-btn[data-place=left]{left:6px;top:6px}
+.bt-bubble-btn[data-place=right]{right:6px;top:6px}
+.bt-bubble-btn[data-place=below]{left:50%;bottom:4px;transform:translateX(-50%)}
+.bt-bubble-btn[data-i="1"]{animation-delay:60ms}
+.bt-bubble-btn[data-i="2"]{animation-delay:120ms}
+.bt-bubble-btn[data-i="3"]{animation-delay:180ms}
+.bt-bubble-btn:hover{color:var(--bt-ink);background:var(--bt-hover)}
+.bt-bubble-btn[data-place=left]:hover{transform:translate(-2px,-2px)}
+.bt-bubble-btn[data-place=right]:hover{transform:translate(2px,-2px)}
+.bt-bubble-btn[data-place=below]:hover{transform:translateX(-50%) translateY(2px)}
+.bt-bubble-btn[data-place=left]:after,.bt-bubble-btn[data-place=right]:after{content:"";position:absolute;top:50%;width:0;height:0;border:5px solid transparent;translate:0 -50%}
+.bt-bubble-btn[data-place=left]:after{right:-9px;border-left-color:var(--bt-card)}
+.bt-bubble-btn[data-place=right]:after{left:-9px;border-right-color:var(--bt-card)}
+.bt-bubble-btn[data-place=below]:after{content:"";position:absolute;bottom:-5px;left:50%;translate:-50% 0;width:0;height:0;border:5px solid transparent;border-bottom:0;border-top-color:var(--bt-card)}
+@keyframes bt-bubble-in{from{opacity:0;scale:.7}}
+body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s ease,background-color .12s ease}
+@media (prefers-reduced-motion:reduce){.bt-bubble-btn{animation:none;transition:none}}
+.bt-tile{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;max-width:220px;padding:6px 8px 4px;border-radius:12px;border:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:inherit;transition:background-color .12s ease}
 .bt-tile:hover{background:var(--bt-hover)}
 .bt-tile[aria-current=page]{background:var(--bt-active)}
 .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The name and the role chip share one row under the avatar. The name yields first:
+   the chip keeps its intrinsic width so "Chief of Staff" stays readable, and the tile
+   is wide enough for the pair (measured 32px + 80px) inside its 280px column. */
+.bt-tile-line{display:flex;align-items:center;justify-content:center;gap:6px;max-width:100%;min-width:0}
+.bt-tile-line>.bt-tile-name{min-width:0;flex:0 1 auto}
+.bt-tile-line>.bt-chip{flex:0 0 auto;max-width:none}
 .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
 .bt-row{display:flex;align-items:center;gap:8px;min-height:54px;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--bt-ink);text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-family:inherit;transition:background-color .12s ease}
 .bt-row:hover{background:var(--bt-hover)}
@@ -175,7 +205,7 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 @media (prefers-reduced-motion:reduce){.bt-pill,.bt-pill-go,.bt-pill-go svg{transition:none!important}.bt-pill-go{filter:none}.bt-pill:active{transform:none}}
 
 .bt-astack{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0}
-.bt-bubble{max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702));background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 8px);box-sizing:border-box;overflow-wrap:anywhere}
+.bt-bubble{max-width:var(--bt-bubble-max);background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 8px);box-sizing:border-box;overflow-wrap:anywhere}
 .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:6px}
 .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:6px}
 .bt-bubble [class*="_markdown"]>*+*{margin-top:10px}
@@ -367,6 +397,23 @@ button.bt-q-opt:active{background:var(--bt-active)}
 .bt-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .bt-kv{display:flex;justify-content:space-between;gap:8px;font-size:12px;line-height:20px;color:var(--bt-ink-2)}
 .bt-kv span:last-child{color:var(--bt-ink);font-variant-numeric:tabular-nums}
+/* The three conversation figures: one heading, then a row per figure whose value opens a
+   detail popover. */
+.bt-stat-block{display:flex;flex-direction:column;gap:2px}
+.bt-stat-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
+.bt-stat-label{font-size:12px;line-height:20px;color:var(--bt-ink-2)}
+.bt-stat-value{display:flex;justify-content:flex-end;min-width:0}
+.bt-stat-pill{font:inherit;font-size:12px;line-height:18px;color:var(--bt-ink);font-variant-numeric:tabular-nums;
+  padding:1px 6px;border-radius:8px;border:1px solid transparent;background:transparent;cursor:pointer;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bt-stat-pill:hover{background:var(--bt-hover)}
+.bt-stat-pill[data-open]{background:var(--bt-active);border-color:var(--bt-line)}
+.bt-stat-pop{z-index:80;min-width:200px;max-width:280px;padding:10px 12px;border-radius:12px;
+  background:var(--bt-main);border:1px solid var(--bt-line-2);box-shadow:0 12px 32px -8px rgba(0,0,0,.2);
+  color:var(--bt-ink);font-family:inherit;animation:bt-pop-in .14s ease-out}
+.bt-stat-pop-title{font-size:11px;line-height:16px;color:var(--bt-ink-2);margin-bottom:6px}
+.bt-stat-pop-row{display:flex;justify-content:space-between;gap:16px;font-size:12px;line-height:20px}
+.bt-stat-pop-row span:last-child{font-variant-numeric:tabular-nums}
 .bt-danger{color:#e02135}
 
 /* Bot settings: fields, the avatar editor popover, and the details-pane sub-view. */
@@ -502,7 +549,8 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 [class*="_footArea"]>[class*="_footerActions"]{flex:1 1 auto;min-width:0}
 [class*="_footArea"]>[class*="_settingsArea"]{flex:none;width:auto!important}
 [class*="_footArea"] button[aria-label="Settings"]{width:auto!important;padding:0!important;background:none!important;border-radius:50%!important;height:auto!important}
-[class*="_widthHandle"]{display:none!important}
+/* The shell's width handle stays: it sizes the conversation column from the user's
+   drag and persists the choice, which this plugin reads through the column width. */
 
 .bt-voice-pane{flex-direction:column;align-items:center;justify-content:center;animation:bt-fade .2s ease-out}
 .bt-voice-stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;max-width:560px;text-align:center}
@@ -534,14 +582,14 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 /* The same cap the user's own bubbles use (--bt-bubble-max), so both sides take the same
    share of a wide column. The hover toolbar is absolutely positioned beside the bubble,
    so nothing here reserves room for it. */
-.bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702))}
+.bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:var(--bt-bubble-max)}
 /* The bubble's row: reactions hang below it, so the hover toolbar (and a group
    sender's avatar) line up with the bubble alone. */
 .bt-msg-line{position:relative;display:flex;align-items:flex-end;gap:8px;max-width:100%}
 .bt-msg-line>.bt-bubble{max-width:none;min-width:0}
 /* The same cap as an unled row: the 22px avatar and its 8px gutter already indent the
    bubble through .bt-msg-line's margin, so the right edge lands in the same place. */
-.bt-astack[data-lead]>.bt-msg{max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702))}
+.bt-astack[data-lead]>.bt-msg{max-width:var(--bt-bubble-max)}
 .bt-tools{position:absolute;top:50%;left:100%;margin-left:6px;transform:translateY(-50%);display:flex;gap:2px;opacity:0;visibility:hidden;transition:opacity .12s ease,visibility .12s}
 .bt-tools::after{content:"";position:absolute;top:-8px;bottom:-8px;right:100%;width:128px;z-index:-1}
 .bt-msg:hover>.bt-msg-line>.bt-tools,.bt-msg:focus-within>.bt-msg-line>.bt-tools,.bt-tools[data-open]{opacity:1;visibility:visible}
@@ -785,7 +833,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 `
 
 export const CONVERSATION_CSS = `
-.bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:var(--bt-bubble-max,calc(var(--dsh-chat-content-width,748px) * .702))}
+.bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:var(--bt-bubble-max)}
 .bt-think summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:6px}
 .bt-think summary::-webkit-details-marker{display:none}
 .bt-think-text{white-space:pre-wrap;margin-top:6px;padding-left:10px;border-left:2px solid var(--bt-line-2)}
@@ -817,7 +865,10 @@ header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;
 header[class*="_header"]:has(.bt-head)::before{content:"";position:absolute;inset:0 0 auto;height:60px;background:linear-gradient(to bottom,var(--bt-main),color-mix(in srgb,var(--bt-main) 0%,transparent));pointer-events:none;z-index:-1}
 header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolute;left:12px;top:10px;pointer-events:auto}
 header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
-[class*="_body"]:has(> [class*="_scrollBody"]){--dsh-chat-content-width:min(1200px,100%);--bt-bubble-max:min(calc(var(--dsh-chat-content-width,748px) * .702),82%)}
+/* The content column keeps the shell's own measure, including the width the user dragged:
+   the shell defines --dsh-chat-content-width on its own body and sizes its width handle
+   from it, so overriding it here collapsed that handle. Only the bubble cap is ours. */
+[class*="_body"]:has(> [class*="_scrollBody"]){--bt-bubble-max:min(calc(var(--dsh-chat-content-width,748px) * .702),82%)}
 /* Every team Session belongs to a Bot or a group, so a blank one is an empty chat, not
    the shell's new-session hero: no headline, no workspace or mode picker, and the
    composer stays docked at the bottom. */
@@ -964,7 +1015,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-earlier-top{display:flex;justify-content:center;align-items:center;height:34px;flex:none}
 .bt-earlier-top .bt-soft{height:28px;font-size:12px;padding:0 12px}
 .bt-urow{display:flex;justify-content:flex-end}
-.bt-ububble{max-width:var(--bt-bubble-max,min(calc(var(--dsh-chat-content-width,748px) * .702),82%));background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:14px;line-height:20px;box-sizing:border-box;overflow-wrap:anywhere}
+.bt-ububble{max-width:var(--bt-bubble-max);background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:14px;line-height:20px;box-sizing:border-box;overflow-wrap:anywhere}
 .bt-ububble [class*="_markdown"],.bt-ububble a{color:inherit!important}
 .bt-ububble p{margin:0;line-height:22px}
 .bt-uimages{display:block;font-size:12px;opacity:.7}
