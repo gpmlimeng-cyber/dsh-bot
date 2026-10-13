@@ -2816,7 +2816,12 @@ html[data-bt-mobile] [data-dsh-mobile-topbar]{display:none!important}
    measured --bt-top-inset feed back in here — that loop is what kept it at 90px. */
 html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))!important}
 .bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
-.bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto;padding-left:52px}
+/* The pill centres on the screen, not on what is left of it: the hamburger is out of flow
+   (position:absolute, below), so nothing here may reserve room for it. The old
+   padding-left:52px did exactly that and pulled the pill half of it (26px) to the right.
+   It cannot collide with the hamburger either: the pill is capped at 70% width, so its left
+   edge sits at 15% of the viewport (64px on this 425px screen) against the button's 52px. */
+.bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
    under the floating pill, and the property inherits into this button. */
 .bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31;pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);cursor:pointer}
@@ -5959,7 +5964,8 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
       const layerVar = getComputedStyle(document.documentElement).getPropertyValue("--dsh-mobile-top-inset").trim() || "unset";
       const bar = getComputedStyle(document.documentElement).getPropertyValue("--bt-top-inset").trim() || "unset";
       const scrim = document.querySelector(".bt-mobile-scrim") !== null;
-      setProbe(`nav${document.querySelectorAll(".bt-mobile-nav").length}bar${document.querySelectorAll(".bt-mobile-bar").length}mk${document.querySelectorAll(".bt-head-mark").length}scr${scrim ? 1 : 0} self=${rect === void 0 ? "na" : `${Math.round(rect.left)},${Math.round(rect.top)}`} hdr${headers.length}:${cls}${head2 === void 0 ? "" : `@${Math.round(head2.top)}`} sc=${scroller === void 0 ? "na" : Math.round(scroller.top)} topbar${document.querySelectorAll("[data-dsh-mobile-topbar]").length} var=${shellVar} lay=${layerVar} bt=${bar}`);
+      const pill = document.querySelector(".bt-mobile-bar .bt-pill")?.getBoundingClientRect();
+      setProbe(`nav${document.querySelectorAll(".bt-mobile-nav").length}bar${document.querySelectorAll(".bt-mobile-bar").length}mk${document.querySelectorAll(".bt-head-mark").length}scr${scrim ? 1 : 0} self=${rect === void 0 ? "na" : `${Math.round(rect.left)},${Math.round(rect.top)}`} hdr${headers.length}:${cls}${head2 === void 0 ? "" : `@${Math.round(head2.top)}`} sc=${scroller === void 0 ? "na" : Math.round(scroller.top)} pillc=${pill === void 0 ? "na" : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)} topbar${document.querySelectorAll("[data-dsh-mobile-topbar]").length} var=${shellVar} lay=${layerVar} bt=${bar}`);
     }, 1500);
     return () => clearTimeout(timer);
   }, [mobile]);
