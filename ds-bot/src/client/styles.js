@@ -939,16 +939,21 @@ html[data-bt-mobile] [data-dsh-mobile-topbar]{display:none!important}
    measured --bt-top-inset feed back in here — that loop is what kept it at 90px. */
 html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))!important}
 .bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
-/* The pill centres on the screen, not on what is left of it: the hamburger is out of flow
-   (position:absolute, below), so nothing here may reserve room for it. The old
-   padding-left:52px did exactly that and pulled the pill half of it (26px) to the right.
-   It cannot collide with the hamburger either: the pill is capped at 70% width, so its left
-   edge sits at 15% of the viewport (64px on this 425px screen) against the button's 52px. */
+/* Three tracks, one of them centred. The bar keeps symmetric side padding so the pill's
+   midpoint is the screen's midpoint no matter how wide the two side buttons are, and the
+   padding is where the clearance lives: 104px covers the wider side (the right group is
+   12 + 40 + 8 + 40 = 100), so nothing can overlap on a 425px screen, and the pill's own
+   70% cap plus the name's ellipsis keeps long titles inside the middle track. */
+.bt-mobile-bar{--bt-mobile-clear:104px;position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px var(--bt-mobile-clear) 0;pointer-events:none}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
-   under the floating pill, and the property inherits into this button. */
-.bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31;pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);cursor:pointer}
-.bt-mobile-nav:active{transform:scale(.96)}
+   under the floating pill, and the property inherits into these buttons. */
+.bt-mobile-nav,.bt-mobile-act{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);cursor:pointer}
+/* The hamburger sits on the screen's left edge, the group on its right; both are out of
+   flow, so neither can push the pill off centre. */
+.bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31}
+.bt-mobile-acts{position:absolute;right:12px;top:10px;z-index:31;display:flex;align-items:center;gap:8px}
+.bt-mobile-nav:active,.bt-mobile-act:active{transform:scale(.96)}
 /* The shell's own top inset is left exactly as the shell set it: on this device it
    carries the status bar (measured ~46px), and zeroing it put the bar above the
    screen's usable area instead of clearing it. */

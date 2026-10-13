@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon } from './icons.js'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon, PlusIcon, DotsIcon } from './icons.js'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { useMobile } from './mobile.js'
 import { ActivityIndicator } from './activity-row.js'
@@ -92,6 +92,9 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
   const memoryNotice = notice && changed !== null && roster.memory !== false
   const mobile = useMobile()
   const mobileNavOpen = useUi(value => value.mobileNav === true)
+  // The menu the "more" button opens lives in the shared overlay state, so the button's
+  // aria-expanded can follow it no matter who opened or closed it.
+  const moreOpen = useUi(value => value.menu !== null)
   // TEMPORARY diagnostic: the only readable channel right now is the accessibility
   // tree, so the counts the device crew cannot dump go into the button's own label.
   const [probe, setProbe] = useState('')
@@ -134,6 +137,21 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, actions }))
   if (!mobile) return head
+  // The right-hand group mirrors the hamburger: a new chat, then the subject's own menu.
+  // The menu is the very one the sidebar rows open (actions.openMenu), so it reuses the
+  // existing actions instead of adding a second set; a subject we cannot name (a Session
+  // that belongs to no Bot, group or Agent we know) simply gets no menu button.
+  const agent = (roster.agents ?? []).find(entry => entry.sessions?.includes(sessionId))
+  const menuTarget = bot ? { kind: 'bot', id: sessionId }
+    : room ? { kind: 'room', id: sessionId }
+      : agent === undefined ? null : { kind: 'agent-session', id: sessionId, agentId: agent.id }
+  const openMore = (event) => {
+    if (menuTarget === null) return
+    const box = event.currentTarget.getBoundingClientRect()
+    // Anchored to the button's bottom-right; ContextMenu clamps it back into the viewport,
+    // so a phone-width dropdown stays fully on screen.
+    actions.openMenu({ ...menuTarget, x: Math.round(box.right - 8), y: Math.round(box.bottom + 6) })
+  }
   // Below the shell's own narrow line the pill leaves the shell's header altogether:
   // the header is display:none there (so no title row is left on screen) and the pill
   // floats from <body>, where no column, overflow or stacking context can swallow it.
@@ -149,7 +167,16 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
         'aria-label': `${mobileNavOpen ? t('Close navigation') : t('Open navigation')}${probe === '' ? '' : ` ${probe}`}`,
         onClick: () => actions.toggleMobileNav(),
       }, h(MenuIcon)),
-      head), document.body))
+      head,
+      h('div', { className: 'bt-mobile-acts' },
+        h('button', {
+          type: 'button', className: 'bt-mobile-act',
+          'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new'),
+        }, h(PlusIcon)),
+        menuTarget === null ? null : h('button', {
+          type: 'button', className: 'bt-mobile-act', 'aria-haspopup': 'menu',
+          'aria-expanded': moreOpen, 'aria-label': t('More'), title: t('More'), onClick: openMore,
+        }, h(DotsIcon)))), document.body))
 }
 
 // New-message pills. "N new messages ↓" takes Back to bottom's place when
