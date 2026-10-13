@@ -2889,6 +2889,17 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-c
 [data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:var(--bt-main)!important;border:.5px solid var(--bt-line-2)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
 [data-composer-card]:hover,[data-composer-card]:focus-within{border-color:color-mix(in srgb,var(--bt-ink) 30%,transparent)!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
+/* Below the shell's narrow line the composer reads as a capsule: 999px is clamped by CSS to
+   half the card's height, so a one-line composer ends in two real semicircles whatever its
+   height happens to be (the flat 22px above only looks round while the card is 44px tall).
+   The same three markers the rule above uses put the tighter 18px back as soon as the card
+   grows — attachments, a second line, a <br> with content after it — because a several-line
+   card inside a full capsule would push its own text into the corner arcs. Desktop (>=1024px)
+   is untouched: both rules are gated on the mobile flag. */
+html[data-bt-mobile] [data-composer-card]{border-radius:999px!important}
+html[data-bt-mobile] [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),
+html[data-bt-mobile] [data-composer-card]:has([data-composer-input] br + *),
+html[data-bt-mobile] [data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
 /* The composer takes the same measure as the conversation column, so both edges line up:
    the same 16px padding on each side and the same width cap. */
 [class*="_root"]:has(> [data-composer-card]){padding:0 16px 16px 16px!important}
@@ -5971,7 +5982,10 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
       const bar = getComputedStyle(document.documentElement).getPropertyValue("--bt-top-inset").trim() || "unset";
       const scrim = document.querySelector(".bt-mobile-scrim") !== null;
       const pill = document.querySelector(".bt-mobile-bar .bt-pill")?.getBoundingClientRect();
-      setProbe(`nav${document.querySelectorAll(".bt-mobile-nav").length}bar${document.querySelectorAll(".bt-mobile-bar").length}mk${document.querySelectorAll(".bt-head-mark").length}scr${scrim ? 1 : 0} self=${rect === void 0 ? "na" : `${Math.round(rect.left)},${Math.round(rect.top)}`} hdr${headers.length}:${cls}${head2 === void 0 ? "" : `@${Math.round(head2.top)}`} sc=${scroller === void 0 ? "na" : Math.round(scroller.top)} pillc=${pill === void 0 ? "na" : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)} topbar${document.querySelectorAll("[data-dsh-mobile-topbar]").length} var=${shellVar} lay=${layerVar} bt=${bar}`);
+      const card = document.querySelector("[data-composer-card]");
+      const cardBox = card?.getBoundingClientRect();
+      const cardRadius = card === void 0 || card === null ? "na" : getComputedStyle(card).borderTopLeftRadius;
+      setProbe(`nav${document.querySelectorAll(".bt-mobile-nav").length}bar${document.querySelectorAll(".bt-mobile-bar").length}mk${document.querySelectorAll(".bt-head-mark").length}scr${scrim ? 1 : 0} self=${rect === void 0 ? "na" : `${Math.round(rect.left)},${Math.round(rect.top)}`} hdr${headers.length}:${cls}${head2 === void 0 ? "" : `@${Math.round(head2.top)}`} sc=${scroller === void 0 ? "na" : Math.round(scroller.top)} pillc=${pill === void 0 ? "na" : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)} comp=${cardRadius}/${cardBox === void 0 ? "na" : Math.round(cardBox.height)} topbar${document.querySelectorAll("[data-dsh-mobile-topbar]").length} var=${shellVar} lay=${layerVar} bt=${bar}`);
     }, 1500);
     return () => clearTimeout(timer);
   }, [mobile]);
