@@ -241,6 +241,20 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* Rows without the avatar start where the bubble beside it starts: 22px avatar + 8px gap. */
 .bt-astack[data-lead]>.bt-msg:not(:last-child)>.bt-msg-line,.bt-astack[data-lead] .bt-reacts{margin-left:30px}
 .bt-group-name{font-size:12px;line-height:16px;font-weight:500;margin-left:42px}
+/* Deliverable cards under a group reply: one row per presented file. */
+.bt-dcards{display:flex;flex-direction:column;gap:6px;margin-left:42px}
+.bt-dcard{display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 8px 6px 10px;border-radius:10px;background:var(--bt-card);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;flex-wrap:wrap}
+.bt-dcard-ico{flex:none;display:inline-flex;color:var(--bt-ink-2)}
+.bt-dcard-copy{flex:1;min-width:120px;display:flex;flex-direction:column;gap:1px}
+.bt-dcard-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;word-break:break-all}
+.bt-dcard-desc{font-size:12px;line-height:16px;color:var(--bt-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-dcard-hint{flex:1 0 100%;font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
+.bt-dcard-acts{flex:none;display:inline-flex;gap:6px}
+.bt-dcard-btn{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:background-color .12s ease,color .12s ease}
+.bt-dcard-btn:hover{background:var(--bt-active)}
+.bt-dcard-btn:disabled{opacity:.5;cursor:default}
+.bt-dcard-btn svg{width:13px;height:13px}
+.bt-dcard[data-state=fallback] .bt-dcard-btn:first-child{display:none}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 

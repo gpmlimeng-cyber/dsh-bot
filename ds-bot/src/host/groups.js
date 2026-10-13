@@ -191,9 +191,14 @@ export function install(rt) {
     }
     const reply = await done
     // A turn that ended leaves nothing for a stop to cancel.
-    if (typeof reply === 'string' || reply?.failure !== undefined) started.splice(started.indexOf(turn), 1)
-    if (reply === null || typeof reply === 'object') return reply
-    return stripOwnName(member.name, String(reply ?? '').trim())
+    if (typeof reply === 'string' || reply?.text !== undefined || reply?.failure !== undefined) started.splice(started.indexOf(turn), 1)
+    if (reply === null || reply === undefined) return reply
+    // Control objects (a failure, an approval wait, a missed timeout) pass through
+    // untouched; a finished turn carries its text plus any `present` files from the
+    // same turn, and the text keeps the plain-string shape every prompt expects.
+    if (reply.failure !== undefined || reply.approval !== undefined || reply.missed !== undefined) return reply
+    if (typeof reply === 'string') return { text: stripOwnName(member.name, String(reply ?? '').trim()) }
+    return { text: stripOwnName(member.name, String(reply.text ?? '').trim()), ...(reply.deliverables ? { deliverables: reply.deliverables } : {}) }
   }
 
   // A member that reaches its context limit mid-turn goes on in a fresh Session, so a
@@ -312,21 +317,21 @@ export function install(rt) {
         round.replies.push({ kind: 'approval', botId: member.id, name: member.name, color: member.color, time: Date.now() })
         continue
       }
-      if (reply === null || reply?.missed || isPass(reply)) {
-        slot.status = typeof reply === 'string' ? 'passed' : 'missed'
+      if (reply === null || reply?.missed || isPass(reply.text)) {
+        slot.status = reply === null || reply?.missed ? 'missed' : 'passed'
         round.passed.push(member.name)
         if (reply?.missed) round.replies.push({ kind: 'missed', botId: member.id, name: member.name, color: member.color, time: Date.now() })
         continue
       }
       slot.status = 'posted'
-      appendRoom(room, { who: member.name, botId: member.id, text: reply })
-      round.replies.push({ botId: member.id, name: member.name, color: member.color, text: reply, time: Date.now() })
+      appendRoom(room, { who: member.name, botId: member.id, text: reply.text })
+      round.replies.push({ botId: member.id, name: member.name, color: member.color, text: reply.text, ...(reply.deliverables ? { deliverables: reply.deliverables } : {}), time: Date.now() })
       void rt.save().catch(() => {})
       // Only the admin's "@all" calls everyone, so a member cannot set off a storm.
       const leads = rt.isAdminOf(room, member.id)
       const everyone = room.members.map(rt.botOf).filter(Boolean)
       const others = everyone.filter(other => other.id !== member.id)
-      const { all, found: named } = mentionsIn(reply, everyone)
+      const { all, found: named } = mentionsIn(reply.text, everyone)
       const found = named.filter(other => other.id !== member.id)
       const callees = leads && all ? [...found, ...others.filter(other => !found.includes(other))] : found
       callMembers(round, turns, index, callees, `${member.name} mentioned you`, leads ? ROOM_ADMIN_TURNS_EACH : ROOM_TURNS_EACH)

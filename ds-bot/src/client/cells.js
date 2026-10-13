@@ -7,6 +7,7 @@ import { SmileIcon, ReplyIcon, DotsIcon, CheckIcon, DownloadIcon, CopyIcon, Memo
 import { colorOf, toolState, BotMark, RoomAvatar } from './mark.js'
 import { AnsweredCell, SettledQuestion, PendingQuestion } from './questions.js'
 import { SecretToolCell } from './secret-card.js'
+import { DeliverableCards } from './deliverables.js'
 import { dateLocale, t } from './i18n.js'
 import { failureLabel } from './diagnostics.js'
 import { turnReasoning } from './turn-reasoning.js'
@@ -162,13 +163,14 @@ function EventLine({ prefix, bots, joiner = t('and'), onOpen, whole = false, pre
 }
 
 // One Bot message inside a group chat: avatar, name (with its group role), bubble.
-function GroupMessage({ bot, text, room, roster, actions, msgKey, useUi }) {
+function GroupMessage({ bot, text, room, roster, actions, msgKey, useUi, deliverables }) {
   const lead = h('button', { type: 'button', className: 'bt-lead', 'aria-label': t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
     h(BotMark, { bot, size: 22 }))
   return h('div', { className: 'bt-group-msg' },
     h('span', { className: 'bt-group-name', style: { color: inkText(colorOf(bot)) } }, bot.name,
       room?.admin === bot.id ? h('span', { className: 'bt-group-role' }, t('Admin')) : null),
-    h(Bubbles, { texts: [text], roster, selfId: bot.id, actions, sessionId: room?.id, msgKey, useUi, lead }))
+    h(Bubbles, { texts: [text], roster, selfId: bot.id, actions, sessionId: room?.id, msgKey, useUi, lead }),
+    h(DeliverableCards, { deliverables }))
 }
 
 // A centered event line that names a group chat and opens it.
@@ -576,7 +578,7 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
           h('button', { type: 'button', className: 'bt-event-whole', onClick: () => actions.showDetails(sessionId) },
             h(BotMark, { bot, size: 16 }), h('span', { className: 'bt-event-name' }, t('{name} paused for your approval', { name: bot.name }))))
       }
-      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, text: reply.text, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi })
+      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, text: reply.text, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, deliverables: reply.deliverables })
     }),
     pending.map((id) => {
       const bot = roster.byId[id]

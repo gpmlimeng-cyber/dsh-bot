@@ -34,9 +34,9 @@ export function attachReference(queued, source, text) {
 export function install(rt) {
   const { ctx, state } = rt
 
-  /** @type {Map<string, {turn?:number, pending?:any, info?:any, texts:string[], opened?:boolean, joined?:{info:any, from:number}[]}>} */
+  /** @type {Map<string, {turn?:number, pending?:any, info?:any, texts:string[], deliverables?:{sessionId:string, seq:number, files:{path:string, description?:string}[]}[], opened?:boolean, joined?:{info:any, from:number}[]}>} */
   const live = new Map()
-  /** @type {Map<string, {sessionId:string, resolve:(text:string|null)=>void, fail:(failure:any)=>void, touch:()=>void, approval:()=>void}>} member turn waiters keyed by exchange id */
+  /** @type {Map<string, {sessionId:string, resolve:(reply:{text:string, deliverables?:any[]}|null)=>void, fail:(failure:any)=>void, touch:()=>void, approval:()=>void}>} member turn waiters keyed by exchange id */
   const roomWaiters = new Map()
   /** @type {Map<string, {roomId:string, replies:any[], members:string[], speaking:string|null}>} */
   const roomProgress = new Map()
@@ -210,6 +210,7 @@ export function install(rt) {
         entry.turn = event.data.turn
         entry.since = event.time ?? Date.now()
         entry.texts = []
+        entry.deliverables = []
         entry.info = undefined
         // A turn turned away before its first step may end without a turn/end.
         entry.switched = false
@@ -299,16 +300,27 @@ export function install(rt) {
         if (text !== '') entry.texts.push(text)
         break
       }
+      case 'deliverables/presented': {
+        // A `present` in this turn: keep the coordinates the client needs to open the
+        // files (DSH resolves them back through its own /api/present.open route).
+        if (entry.turn === undefined) break
+        const data = event.data
+        if (!Array.isArray(data?.files)) break
+        entry.deliverables = [...(entry.deliverables ?? []), { sessionId: id, seq: event.seq, files: data.files }]
+        break
+      }
       case 'turn/end': {
         setActivity(id, undefined)
         const info = entry.info
         const joined = entry.joined ?? []
         const texts = entry.texts
+        const deliverables = entry.deliverables ?? []
         // A turn stopped for a switch goes on in the next part, which answers instead.
         const switched = entry.switched === true
         entry.turn = undefined
         entry.info = undefined
         entry.texts = []
+        entry.deliverables = []
         entry.switched = false
         entry.joined = []
         entry.since = undefined
@@ -352,7 +364,7 @@ export function install(rt) {
           const stopped = stoppedRoomTurns.delete(info.exchangeId)
           if (waiter !== undefined) {
             if (failure !== undefined) waiter.fail(failure)
-            else waiter.resolve(reason?.kind === 'aborted' ? null : texts.join('\n\n').trim())
+            else waiter.resolve(reason?.kind === 'aborted' ? null : { text: texts.join('\n\n').trim(), ...(deliverables.length > 0 ? { deliverables } : {}) })
           } else if (!stopped && reason?.kind !== 'aborted') {
             // The round moved on without this member; how its turn ends still reaches the group.
             if (failure !== undefined) void rt.lateRoomFailure?.(id, info, failure)
