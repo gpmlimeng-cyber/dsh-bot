@@ -111,6 +111,27 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
       const bar = getComputedStyle(document.documentElement).getPropertyValue('--bt-top-inset').trim() || 'unset'
       const scrim = document.querySelector('.bt-mobile-scrim') !== null
       const pill = document.querySelector('.bt-mobile-bar .bt-pill')?.getBoundingClientRect()
+      // The pill and the bar's right frame are meant to read ONE skin declaration (see
+      // styles.js), and the accessibility tree is the only channel this crew can read:
+      // report equality compactly, and on a mismatch name each property with both values.
+      const skinOf = (el) => {
+        if (el === null) return null
+        const style = getComputedStyle(el)
+        return {
+          bw: style.borderTopWidth, bc: style.borderTopColor, br: style.borderTopLeftRadius,
+          bg: style.backgroundColor, h: style.height, sh: style.boxShadow,
+        }
+      }
+      const pillSkin = skinOf(document.querySelector('.bt-mobile-bar .bt-pill'))
+      const frameSkin = skinOf(document.querySelector('.bt-mobile-bar .bt-mobile-acts'))
+      let skin = 'na'
+      if (pillSkin !== null && frameSkin !== null) {
+        const keys = Object.keys(pillSkin)
+        const off = keys.filter(key => pillSkin[key] !== frameSkin[key])
+        skin = off.length === 0
+          ? `eq${keys.length}(${pillSkin.bw},${pillSkin.bc},${pillSkin.br},${pillSkin.bg},${pillSkin.h},shadow)`
+          : off.map(key => `${key}:pill=${pillSkin[key]}|frame=${frameSkin[key]}`).join(';')
+      }
       setProbe(`nav${document.querySelectorAll('.bt-mobile-nav').length}bar${document.querySelectorAll('.bt-mobile-bar').length}`
         + `mk${document.querySelectorAll('.bt-head-mark').length}scr${scrim ? 1 : 0}`
         + ` self=${rect === undefined ? 'na' : `${Math.round(rect.left)},${Math.round(rect.top)}`}`
@@ -118,6 +139,7 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
         + ` sc=${scroller === undefined ? 'na' : Math.round(scroller.top)}`
         + ` pillc=${pill === undefined ? 'na' : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)}`
         + ` topbar${document.querySelectorAll('[data-dsh-mobile-topbar]').length}`
+        + ` skin=${skin}`
         + ` var=${shellVar} lay=${layerVar} bt=${bar}`)
     }, 1500)
     return () => clearTimeout(timer)

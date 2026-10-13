@@ -217,7 +217,12 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%}
 @media (prefers-reduced-motion:reduce){.bt-connect-tip{animation:none}}
 
 .bt-head{position:relative;display:flex;justify-content:center;align-items:center;height:40px;flex:none;pointer-events:none}
-.bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
+/* One skin for every floating control in the chrome: the conversation pill and the phone
+   bar's two controls read this single declaration, so a value changed here cannot drift
+   between them. Keep the skin properties here and only here — the selectors below must
+   not repeat border, radius, fill or shadow, or the two would be free to disagree. */
+.bt-pill,.bt-mobile-nav,.bt-mobile-acts{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
+.bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
 .bt-pill:active{transform:scale(.965)}
 .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
@@ -941,25 +946,25 @@ html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh
 .bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
 /* Three tracks, one of them centred. The bar keeps symmetric side padding so the pill's
    midpoint is the screen's midpoint no matter how wide the two side buttons are, and the
-   padding is where the clearance lives: 104px covers the wider side (the right capsule is
-   12 + 82 = 94), so nothing can overlap on a 425px screen, and the pill's own
+   padding is where the clearance lives: 104px covers the wider side (the right frame is
+   12 + 89 = 101), so nothing can overlap on a 425px screen, and the pill's own
    70% cap plus the name's ellipsis keeps long titles inside the middle track. */
 .bt-mobile-bar{--bt-mobile-clear:104px;position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px var(--bt-mobile-clear) 0;pointer-events:none}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
-   under the floating pill, and the property inherits into these buttons. */
-.bt-mobile-nav,.bt-mobile-act{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);cursor:pointer}
+   under the floating pill, and the property inherits into these buttons. Size lives here,
+   the skin lives in the shared rule above; both controls are border-box 40px tall, the
+   same 40px the pill itself has. */
+.bt-mobile-nav,.bt-mobile-act{pointer-events:auto;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--bt-ink);cursor:pointer}
 /* The hamburger sits on the screen's left edge, the group on its right; both are out of
    flow, so neither can push the pill off centre. */
-.bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31}
-/* The right pair is one component, not two circles: the frame carries the border, the fill
-   and the shadow while the two buttons inside drop theirs, so the outline is continuous.
-   overflow:hidden clips each button's own hover fill inside the frame's arc; the hairline
-   between them is drawn inset so it never touches that arc. Outer size is then 82x42 —
-   the same height as the hamburger, and inside the 104px clearance above. */
-.bt-mobile-acts{position:absolute;right:12px;top:10px;z-index:31;display:flex;align-items:center;pointer-events:auto;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);overflow:hidden}
-.bt-mobile-acts .bt-mobile-act{border:0;border-radius:0;background:none;box-shadow:none}
-.bt-mobile-acts .bt-mobile-act+.bt-mobile-act{box-shadow:inset 1px 0 0 var(--bt-line-2)}
+.bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31;width:40px;height:40px}
+/* The right pair is one component: the frame carries the shared skin, the two 44px buttons
+   inside drop all of theirs, and nothing separates them — so the outline is continuous
+   around both halves. overflow:hidden clips a button's own hover fill inside the frame's
+   arc. 89x40 outer, its right edge 101px in, still inside the 104px clearance above. */
+.bt-mobile-acts{position:absolute;right:12px;top:10px;z-index:31;display:flex;align-items:stretch;pointer-events:auto;box-sizing:border-box;height:40px;overflow:hidden}
+.bt-mobile-acts .bt-mobile-act{width:44px;border:0;border-radius:0;background:none;box-shadow:none}
 .bt-mobile-acts .bt-mobile-act:hover{background:var(--bt-hover)}
 .bt-mobile-nav:active,.bt-mobile-act:active{transform:scale(.96)}
 /* The shell's own top inset is left exactly as the shell set it: on this device it
