@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon } from './icons.js'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon } from './icons.js'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { ActivityIndicator } from './activity-row.js'
 import { clockLabel, openingTurn, unseenSince } from './cells.js'
@@ -90,6 +90,12 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
   }, [Boolean(room)])
   const memoryNotice = notice && changed !== null && roster.memory !== false
   return h('div', { className: 'bt-head' },
+    // The mobile drawer's opener: only the CSS below 768px makes it visible, so the
+    // desktop header keeps its centred pill alone.
+    h('button', {
+      type: 'button', className: 'bt-mobile-nav', 'aria-label': t('Open navigation'),
+      onClick: () => actions.toggleMobileNav(),
+    }, h(MenuIcon)),
     h('button', {
       type: 'button', className: 'bt-pill', 'aria-expanded': detailsOpen, 'data-memory': memoryNotice ? 'updated' : undefined,
       'aria-label': memoryNotice ? t('Memory updated. Open {name}\'s memory', { name: roster.byId[changed]?.name ?? name }) : t('View conversation details'),

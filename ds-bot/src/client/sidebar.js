@@ -262,6 +262,9 @@ export function TeamSidebar(props) {
   const listRef = useRef(null)
   const roster = useRoster(value => value)
   const markedUnread = useUi(value => value.unread)
+  // The mobile drawer: below 768px the shell's rail collapses, so opening the drawer
+  // renders the same wide list the desktop sidebar shows, over a scrim.
+  const mobileOpen = useUi(value => value.mobileNav === true)
   props.useRegistry(value => value)
   const updated = useSessions(list => {
     const stamps = {}
@@ -279,9 +282,10 @@ export function TeamSidebar(props) {
     return entries.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at)
   }, [roster, updated])
   const main = roster.byId[roster.mainBotId]
-  useListGlide(listRef, wide, order.map(entry => entry.item.id).join(','))
+  const listWide = wide || mobileOpen
+  useListGlide(listRef, listWide, order.map(entry => entry.item.id).join(','))
   useLandOnMainBot(roster, useSessions, actions)
-  const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide }
+  const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide: listWide }
   // Typing while the sidebar has focus starts a search.
   const typeToSearch = (event) => {
     if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
@@ -289,8 +293,10 @@ export function TeamSidebar(props) {
     event.preventDefault()
     actions.openPalette(event.key)
   }
-  return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
-    wide ? h('div', { className: 'bt-side-top' },
+  return h(Fragment, null,
+    createPortal(h('button', { type: 'button', className: 'bt-mobile-scrim', 'data-open': mobileOpen || undefined, 'aria-label': t('Close navigation'), tabIndex: mobileOpen ? 0 : -1, onClick: actions.closeMobileNav }), document.body),
+    h('div', { className: listWide ? 'bt-side' : 'bt-side bt-rail', 'data-mobile-open': mobileOpen || undefined, onKeyDown: typeToSearch },
+    listWide ? h('div', { className: 'bt-side-top' },
       h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
       h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
@@ -304,7 +310,7 @@ export function TeamSidebar(props) {
         ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
         : entry.kind === 'room'
           ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
-          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))))
+          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true }))))))
 }
 
 // The update button at the sidebar's top right: a cloud while a newer DS Bot —
