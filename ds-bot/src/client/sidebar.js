@@ -291,10 +291,11 @@ export function TeamSidebar(props) {
   // TEMPORARY diagnostic: the device crew can only read the accessibility tree, so the
   // drawer reports its own box and what it managed to render inside.
   const [drawerProbe, setDrawerProbe] = useState('')
-  // The drawer's search reads the same channel: this one rides on the input, because a bare
-  // region's label is not exposed and an input always is. It reports the three controls the
-  // row is judged on — the floating collapse arrow, the field, and New — as x,y and w x h,
-  // so their heights and their top edges can be compared as numbers. TEMPORARY, like the rest.
+  // The drawer's three-control row is judged here: this rides on the New button, because the
+  // channel we have is the accessibility tree and a button's label is exposed there while an
+  // input's aria-label is not (measured on the device: the field's node came back with no
+  // description). It reports all three rects — the floating collapse arrow, the field, New —
+  // as x,y and w x h, so heights and top edges can be compared as numbers. TEMPORARY.
   const [searchProbe, setSearchProbe] = useState('')
   const [search, setSearch] = useState('')
   // The field is a handoff, not a second search implementation: the command palette owns the
@@ -317,6 +318,7 @@ export function TeamSidebar(props) {
       setSearchProbe(`dtop=nav(${rect('.bt-mobile-bar .bt-mobile-nav')})`
         + ` search(${rect('.bt-side .bt-side-search')})`
         + ` new(${rect('.bt-side .bt-side-top .bt-round:last-child')})`
+        + ` side(${rect('.bt-side.bt-rail')}) list(${rect('.bt-side .bt-list')})`
         + ` brand=${document.querySelectorAll('.bt-side .bt-brand').length}`)
     }, 400)
     return () => clearTimeout(timer)
@@ -402,12 +404,12 @@ export function TeamSidebar(props) {
             h('input', {
               type: 'text', enterKeyHint: 'search', autoComplete: 'off', spellCheck: false,
               placeholder: t('Search'), value: search,
-              'aria-label': `${t('Search')}${searchProbe === '' ? '' : ` ${searchProbe}`}`,
+              'aria-label': t('Search'),
               onChange: event => runSearch(event.target.value),
               onKeyDown: (event) => { if (event.key === 'Enter' && search.trim() !== '') actions.openPalette(search) },
             }))
         : h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
-      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)))
+      h('button', { type: 'button', className: 'bt-round', 'aria-label': `${t('New…')}${searchProbe === '' ? '' : ` ${searchProbe}`}`, title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)))
       : h(Fragment, null,
           h(UpdateButton, { useUpdate: props.useUpdate, actions }),
           h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon))),

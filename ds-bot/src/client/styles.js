@@ -1000,8 +1000,10 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    sits 10px below the bar's top, and the drawer's own 10px top padding already lands the row
    exactly there, so the row contributes none of its own. New is locked at 40x40: the field is
    free to shrink (min-width:0) and used to take its share out of the round button beside it,
-   which is what turned that button into an oval on the phone. */
-html[data-bt-mobile] .bt-side.bt-rail .bt-side-top{padding-top:0}
+   which is what turned that button into an oval on the phone. Its right padding goes too:
+   the drawer already insets its own contents by 12px, and the row added 5 more, which made
+   the gap between New and the drawer's edge read as 17px against the bar's 12. */
+html[data-bt-mobile] .bt-side.bt-rail .bt-side-top{padding-top:0;padding-right:0}
 html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width:40px;height:40px}
 .bt-side-search{box-sizing:border-box;flex:1 1 auto;min-width:0;height:40px;display:flex;align-items:center;gap:8px;padding:0 12px}
 .bt-side-search>svg{flex:none;width:16px;height:16px;color:var(--bt-ink-3)}
