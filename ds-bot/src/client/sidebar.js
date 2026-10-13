@@ -291,6 +291,31 @@ export function TeamSidebar(props) {
   // TEMPORARY diagnostic: the device crew can only read the accessibility tree, so the
   // drawer reports its own box and what it managed to render inside.
   const [drawerProbe, setDrawerProbe] = useState('')
+  // The drawer's search reads the same channel: this one rides on the input, because a bare
+  // region's label is not exposed and an input always is. It reports the row the new layout
+  // is judged on. TEMPORARY, like the rest.
+  const [searchProbe, setSearchProbe] = useState('')
+  const [search, setSearch] = useState('')
+  // The field is a handoff, not a second search implementation: the command palette owns the
+  // searching, and opening it closes the drawer (openPalette clears mobileNav), so text kept
+  // in this box would be typed into something already off screen. Clearing on close also
+  // keeps a stale query from greeting the next open.
+  useEffect(() => { if (!mobileOpen) setSearch('') }, [mobileOpen])
+  const runSearch = (value) => {
+    setSearch(value)
+    if (value.trim() !== '') actions.openPalette(value)
+  }
+  useEffect(() => {
+    if (!mobile || !mobileOpen) return undefined
+    const timer = setTimeout(() => {
+      const field = document.querySelector('.bt-side .bt-side-search')?.getBoundingClientRect()
+      const plus = document.querySelector('.bt-side .bt-side-top .bt-round:last-child')?.getBoundingClientRect()
+      setSearchProbe(`search=${field === undefined ? 'none' : `${Math.round(field.left)},${Math.round(field.top)} ${Math.round(field.width)}x${Math.round(field.height)}`}`
+        + ` new=${plus === undefined ? 'none' : `${Math.round(plus.left)}..${Math.round(plus.left + plus.width)}`}`
+        + ` brand=${document.querySelectorAll('.bt-side .bt-brand').length}`)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [mobile, mobileOpen])
   useEffect(() => {
     if (!mobile) return undefined
     const timer = setTimeout(() => {
@@ -362,9 +387,21 @@ export function TeamSidebar(props) {
     onTouchEnd: mobile ? onTouchEnd : undefined, onTouchCancel: mobile ? onTouchEnd : undefined,
   },
     listWide ? h('div', { className: 'bt-side-top' },
-      h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
+      mobile ? null : h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
-      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
+      // On a phone the icon button becomes the field itself (styles.js carries the row's
+      // shape): same single action, the search lives in the palette either way.
+      mobile
+        ? h('div', { className: 'bt-side-search' },
+            h(SearchIcon),
+            h('input', {
+              type: 'text', enterKeyHint: 'search', autoComplete: 'off', spellCheck: false,
+              placeholder: t('Search'), value: search,
+              'aria-label': `${t('Search')}${searchProbe === '' ? '' : ` ${searchProbe}`}`,
+              onChange: event => runSearch(event.target.value),
+              onKeyDown: (event) => { if (event.key === 'Enter' && search.trim() !== '') actions.openPalette(search) },
+            }))
+        : h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
       h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)))
       : h(Fragment, null,
           h(UpdateButton, { useUpdate: props.useUpdate, actions }),

@@ -226,10 +226,11 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
 .bt-head{position:relative;display:flex;justify-content:center;align-items:center;height:40px;flex:none;pointer-events:none}
 /* One skin for every floating control in the chrome: the conversation pill and the phone
    bar's two controls read this single declaration, so a value changed here cannot drift
-   between them; the panel's mobile back button is the same control again, so it reads it
-   too. Keep the skin properties here and only here — the selectors below must
-   not repeat border, radius, fill or shadow, or the two would be free to disagree. */
-.bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-panel-back{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
+   between them; the panel's mobile back button and the drawer's search field are the same
+   control again, so they read it too. Keep the skin properties here and only here — the
+   selectors below must not repeat border, radius, fill or shadow, or the two would be free
+   to disagree. */
+.bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-panel-back,.bt-side-search{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
 .bt-pill:active{transform:scale(.965)}
@@ -981,6 +982,18 @@ html[data-bt-mobile]{--dsh-frame-chrome-top:var(--bt-top-inset,var(--dsh-mobile-
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open] .bt-head{opacity:0;visibility:hidden;pointer-events:none}
 /* Room for that button: the drawer's brand would otherwise sit under it. */
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-left:52px}
+/* The drawer's top row on a phone: the brand goes, and the search button becomes a search
+   field filling everything between the collapse arrow (the bar floats over this row, hence
+   the 52px above) and the New button. The skin is the shared declaration — the field is
+   added to it rather than restating it. The field hands off to the command palette on the
+   first character: the palette owns the search (names, chats, message hits, keyboard nav)
+   and opening it closes the drawer, so text typed into this box would go to a control that
+   has already left the screen. */
+html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
+.bt-side-search{box-sizing:border-box;flex:1 1 auto;min-width:0;height:40px;display:flex;align-items:center;gap:8px;padding:0 12px}
+.bt-side-search>svg{flex:none;width:16px;height:16px;color:var(--bt-ink-3)}
+.bt-side-search input{flex:1 1 auto;min-width:0;border:0;background:none;outline:none;padding:0;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px}
+.bt-side-search input::placeholder{color:var(--bt-ink-3)}
 /* Three tracks, one of them centred. The bar keeps symmetric side padding so the pill's
    midpoint is the screen's midpoint no matter how wide the two side buttons are, and the
    padding is where the clearance lives: 104px covers the wider side (the right frame is
