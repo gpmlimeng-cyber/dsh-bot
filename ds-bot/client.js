@@ -5997,7 +5997,10 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
         type: "button",
         className: "bt-mobile-nav",
         "aria-expanded": mobileNavOpen,
-        "aria-label": probe === "" ? t("Open navigation") : `${t("Open navigation")} ${probe}`,
+        // The label follows the state, like the scrim's: an unchanged "Open navigation"
+        // while the drawer is up tells a screen reader the wrong thing, and made the
+        // device crew's own verification ambiguous.
+        "aria-label": `${mobileNavOpen ? t("Close navigation") : t("Open navigation")}${probe === "" ? "" : ` ${probe}`}`,
         onClick: () => actions.toggleMobileNav()
       }, (0, import_react11.createElement)(MenuIcon)),
       head
