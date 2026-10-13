@@ -296,9 +296,11 @@ export function TeamSidebar(props) {
     const timer = setTimeout(() => {
       const side = document.querySelector('.bt-side')
       const box = side?.getBoundingClientRect()
-      const list = document.querySelector('.bt-side .bt-list')?.getBoundingClientRect()
+      const el = document.querySelector('.bt-side .bt-list')
+      const list = el?.getBoundingClientRect()
       setDrawerProbe(`side=${box === undefined ? 'none' : `${Math.round(box.left)},${Math.round(box.top)},${Math.round(box.width)}x${Math.round(box.height)}`}`
         + ` list=${list === undefined ? 'none' : Math.round(list.height)}`
+        + ` scr=${el === undefined ? 'none' : `${el.scrollHeight}/${el.clientHeight}`}`
         + ` rows=${document.querySelectorAll('.bt-side .bt-row').length}`
         + ` ready=${roster.ready ? 1 : 0} order=${order.length}`
         + ` open=${mobileOpen ? 1 : 0} wide=${wide ? 1 : 0}`)

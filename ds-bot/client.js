@@ -2074,7 +2074,13 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
 .bt-mobile-scrim{display:none}
 html[data-bt-mobile] .bt-mobile-scrim{position:fixed;inset:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 0 0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
 html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;pointer-events:auto}
-html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
+/* The drawer is inset once, at its top edge: its top already starts below the status bar, so
+   the content keeps only a visual 10px gap. Padding it with env(safe-area-inset-top) again
+   stacked a second inset (46px on this device) on top: every row slid down one bar and the
+   last one fell out of view. Height comes from top/bottom — never height:100vh, which would
+   overshoot the screen by exactly the inset. The list already scrolls (styles.js:122,
+   overflow-y:auto + min-height:0), so a long roster scrolls inside the drawer. */
+html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
 html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
 html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%}
@@ -5396,8 +5402,9 @@ function TeamSidebar(props) {
     const timer = setTimeout(() => {
       const side = document.querySelector(".bt-side");
       const box = side?.getBoundingClientRect();
-      const list = document.querySelector(".bt-side .bt-list")?.getBoundingClientRect();
-      setDrawerProbe(`side=${box === void 0 ? "none" : `${Math.round(box.left)},${Math.round(box.top)},${Math.round(box.width)}x${Math.round(box.height)}`} list=${list === void 0 ? "none" : Math.round(list.height)} rows=${document.querySelectorAll(".bt-side .bt-row").length} ready=${roster.ready ? 1 : 0} order=${order.length} open=${mobileOpen ? 1 : 0} wide=${wide ? 1 : 0}`);
+      const el = document.querySelector(".bt-side .bt-list");
+      const list = el?.getBoundingClientRect();
+      setDrawerProbe(`side=${box === void 0 ? "none" : `${Math.round(box.left)},${Math.round(box.top)},${Math.round(box.width)}x${Math.round(box.height)}`} list=${list === void 0 ? "none" : Math.round(list.height)} scr=${el === void 0 ? "none" : `${el.scrollHeight}/${el.clientHeight}`} rows=${document.querySelectorAll(".bt-side .bt-row").length} ready=${roster.ready ? 1 : 0} order=${order.length} open=${mobileOpen ? 1 : 0} wide=${wide ? 1 : 0}`);
     }, 1500);
     return () => clearTimeout(timer);
   }, [mobile, mobileOpen, order.length, roster.ready]);
