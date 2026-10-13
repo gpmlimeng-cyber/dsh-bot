@@ -5583,6 +5583,19 @@ function TeamSidebar(props) {
     }, 400);
     return () => clearTimeout(timer);
   }, [mobile, mobileOpen]);
+  const [hit, setHit] = (0, import_react10.useState)("");
+  (0, import_react10.useEffect)(() => {
+    if (!mobile || !mobileOpen) return void 0;
+    const slug = (el) => `${el.tagName.toLowerCase()}${el.id === "" ? "" : `#${el.id}`}` + (el.getAttribute("class") ?? "").split(" ").filter(Boolean).slice(0, 2).map((name) => `.${name}`).join("");
+    const onDown = (event) => {
+      const x = Math.round(event.clientX);
+      const y = Math.round(event.clientY);
+      const stack = document.elementsFromPoint(x, y);
+      setHit(`hit=${x},${y} scrim=${stack.some((el) => el.classList.contains("bt-mobile-scrim")) ? 1 : 0} top=${stack[0] === void 0 ? "none" : slug(stack[0])} under=${stack.slice(1, 3).map(slug).join(">") || "none"}`);
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    return () => document.removeEventListener("pointerdown", onDown, true);
+  }, [mobile, mobileOpen]);
   (0, import_react10.useEffect)(() => {
     if (!mobile) return void 0;
     const timer = setTimeout(() => {
@@ -5668,7 +5681,7 @@ function TeamSidebar(props) {
           }
         })
       ) : (0, import_react10.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Search"), title: t("Search"), onClick: () => actions.openPalette() }, (0, import_react10.createElement)(SearchIcon)),
-      (0, import_react10.createElement)("button", { type: "button", className: "bt-round", "aria-label": `${t("New…")}${searchProbe === "" ? "" : ` ${searchProbe}`}`, title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react10.createElement)(PlusIcon))
+      (0, import_react10.createElement)("button", { type: "button", className: "bt-round", "aria-label": `${t("New…")}${searchProbe === "" ? "" : ` ${searchProbe}`}${hit === "" ? "" : ` ${hit}`}`, title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react10.createElement)(PlusIcon))
     ) : (0, import_react10.createElement)(
       import_react10.Fragment,
       null,

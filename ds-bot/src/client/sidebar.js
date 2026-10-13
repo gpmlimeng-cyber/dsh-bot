@@ -323,6 +323,27 @@ export function TeamSidebar(props) {
     }, 400)
     return () => clearTimeout(timer)
   }, [mobile, mobileOpen])
+  // TEMPORARY diagnostic, read once and then removed with the rest: the phone reported the
+  // drawer not collapsing on a tap in the conversation area. It listens in the capture phase
+  // on purpose — the failing case is exactly the one where the scrim's own click handler
+  // never runs, so a probe written from inside that handler would stay silent and settle
+  // nothing. It reports the point, whether the scrim is even in the stack there, and the
+  // three elements that are, outermost first, which names whatever is covering it.
+  const [hit, setHit] = useState('')
+  useEffect(() => {
+    if (!mobile || !mobileOpen) return undefined
+    const slug = (el) => `${el.tagName.toLowerCase()}${el.id === '' ? '' : `#${el.id}`}`
+      + (el.getAttribute('class') ?? '').split(' ').filter(Boolean).slice(0, 2).map(name => `.${name}`).join('')
+    const onDown = (event) => {
+      const x = Math.round(event.clientX); const y = Math.round(event.clientY)
+      const stack = document.elementsFromPoint(x, y)
+      setHit(`hit=${x},${y} scrim=${stack.some(el => el.classList.contains('bt-mobile-scrim')) ? 1 : 0}`
+        + ` top=${stack[0] === undefined ? 'none' : slug(stack[0])}`
+        + ` under=${stack.slice(1, 3).map(slug).join('>') || 'none'}`)
+    }
+    document.addEventListener('pointerdown', onDown, true)
+    return () => document.removeEventListener('pointerdown', onDown, true)
+  }, [mobile, mobileOpen])
   useEffect(() => {
     if (!mobile) return undefined
     const timer = setTimeout(() => {
@@ -409,7 +430,7 @@ export function TeamSidebar(props) {
               onKeyDown: (event) => { if (event.key === 'Enter' && search.trim() !== '') actions.openPalette(search) },
             }))
         : h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
-      h('button', { type: 'button', className: 'bt-round', 'aria-label': `${t('New…')}${searchProbe === '' ? '' : ` ${searchProbe}`}`, title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)))
+      h('button', { type: 'button', className: 'bt-round', 'aria-label': `${t('New…')}${searchProbe === '' ? '' : ` ${searchProbe}`}${hit === '' ? '' : ` ${hit}`}`, title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)))
       : h(Fragment, null,
           h(UpdateButton, { useUpdate: props.useUpdate, actions }),
           h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon))),
