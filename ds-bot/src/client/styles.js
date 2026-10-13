@@ -194,9 +194,9 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
    (see mobile.js), so no column of the shell can clip them, and the html flag is the
    same breakpoint the JS uses: stylesheet and React tree can never disagree. */
 .bt-mobile-scrim{display:none}
-html[data-bt-mobile] .bt-mobile-scrim{position:fixed;inset:0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
+html[data-bt-mobile] .bt-mobile-scrim{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
 html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;pointer-events:auto}
-html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:0;bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
+html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--dsh-frame-chrome-top,0px);bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
 html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
 html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%}
@@ -913,18 +913,18 @@ header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolu
    it. The mark left behind in the slot is what identifies the row to hide. */
 .bt-head-mark{display:none}
 html[data-bt-mobile] header[class*="_header"]:has(.bt-head-mark){display:none!important}
-/* The body-level bar the pill and its hamburger float in below that line. */
-.bt-mobile-bar{position:fixed;top:0;left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
+/* The body-level bar the pill and its hamburger float in below that line. It starts
+   where the shell's own top chrome ends, the same inset every floating panel of this
+   skin uses — that is where the hosting device's status bar lives. */
+.bt-mobile-bar{position:fixed;top:var(--dsh-frame-chrome-top,0px);left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto;padding-left:52px}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
    under the floating pill, and the property inherits into this button. */
 .bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31;pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);cursor:pointer}
 .bt-mobile-nav:active{transform:scale(.96)}
-/* The header is an overlay there, so nothing may be pushed below it either. The shell
-   defines this variable only for the macOS/Windows titlebar, so on this platform it is
-   already the 0px fallback; pinning it makes that explicit instead of incidental, and
-   removing the flag restores the shell's own value. */
-html[data-bt-mobile]{--dsh-frame-chrome-top:0px!important}
+/* The shell's own top inset is left exactly as the shell set it: on this device it
+   carries the status bar (measured ~46px), and zeroing it put the bar above the
+   screen's usable area instead of clearing it. */
 /* The pill centres itself in the same measure the transcript runs in: the shell's own
    --dsh-chat-content-width, read only, never redefined (see the note below). */
 header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
