@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom'
 import { BotMark } from './mark.js'
 import { STORAGE } from './storage.js'
 import { SPRING_SHAPE, springEasing } from './motion.js'
+import { useMobile } from './mobile.js'
 import { DetailsDrawer } from './details-drawer.js'
 import { FilePreview } from './file-preview.js'
 import { t } from './i18n.js'
@@ -309,6 +310,23 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   const [resizing, setResizing] = useState(false)
   const instant = dragging || resizing
   const [reading, setReading] = useState(false)
+  const mobile = useMobile()
+  // TEMPORARY diagnostic, the same channel the bar's own probe uses: the panel's geometry
+  // and the chat column's margin can only be read off the accessibility tree here, so they
+  // ride on the back button's label. Remove with the rest of the probes.
+  const [probe, setProbe] = useState('')
+  useEffect(() => {
+    if (!mobile || leaving) return undefined
+    const timer = setTimeout(() => {
+      const box = root.current?.getBoundingClientRect()
+      const button = root.current?.querySelector('.bt-panel-back')?.getBoundingClientRect()
+      const column = document.querySelector('[class*="_centerCol"]')
+      setProbe(`panel=${box === undefined ? 'na' : `${Math.round(box.left)},${Math.round(box.top)} ${Math.round(box.width)}x${Math.round(box.height)}`}`
+        + ` chat=${column === null ? 'na' : getComputedStyle(column).marginRight}`
+        + ` back=${button === undefined ? 'na' : `${Math.round(button.left)},${Math.round(button.top)} ${Math.round(button.width)}x${Math.round(button.height)}`}`)
+    }, 600)
+    return () => clearTimeout(timer)
+  }, [mobile, leaving, view])
 
   const panelWidth = fitWidth(width ?? (view === 'details' ? DETAILS_WIDTH : DEFAULT_WIDTH), widthRange(view, viewport))
   // Once the browser or the Files tab has shown, the Bot page keeps its width (up to
@@ -426,7 +444,7 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
     Object.assign(clone.style, {
       position: 'fixed', left: `${move.from.left}px`, top: `${move.from.top}px`,
       width: `${move.from.width}px`, height: `${move.from.height}px`, margin: '0',
-      transformOrigin: '0 0', zIndex: '80', pointerEvents: 'none', visibility: '',
+      transformOrigin: '0 0', zIndex: document.documentElement.dataset.btMobile ? '97' : '80', pointerEvents: 'none', visibility: '',
     })
     document.body.append(clone)
     target.style.visibility = 'hidden'
@@ -491,6 +509,14 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
     onAnimationEnd: (event) => { if (event.target === event.currentTarget) setLanded(true) },
   },
     leaving ? null : h('div', { className: 'bt-panel-grip', role: 'separator', 'aria-orientation': 'vertical', 'aria-label': t('Resize panel'), onPointerDown: startResize }),
+    // On a phone the panel has no column beside it to resize and no bar above it to go
+    // back to, so it carries its own back button, where the hamburger sits on every other
+    // screen and wearing its skin. Desktop keeps the strip's own close button.
+    mobile && !leaving ? h('button', {
+      type: 'button', className: 'bt-panel-back', title: t('Back to conversation'),
+      'aria-label': `${t('Back to conversation')}${probe === '' ? '' : ` ${probe}`}`,
+      onClick: () => actions.closePanel(),
+    }, h(BackIcon)) : null,
     // Over the whole window while dragging: the cursor stays a resize cursor and the
     // pages underneath (the chat, the guest) see no pointer.
     dragging ? createPortal(h('div', { className: 'bt-drag-shield', 'aria-hidden': true }), document.body) : null,

@@ -192,6 +192,7 @@ var ZH = {
   "Shared instructions every member reads before speaking…": "每位成员发言前都会读到的共同说明…",
   "Group notice": "群公告",
   "Back to details": "返回详情",
+  "Back to conversation": "返回会话",
   "Close details": "关闭详情",
   "Copied conversation": "已复制对话",
   "Share conversation": "分享对话",
@@ -2104,9 +2105,10 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
 .bt-head{position:relative;display:flex;justify-content:center;align-items:center;height:40px;flex:none;pointer-events:none}
 /* One skin for every floating control in the chrome: the conversation pill and the phone
    bar's two controls read this single declaration, so a value changed here cannot drift
-   between them. Keep the skin properties here and only here — the selectors below must
+   between them; the panel's mobile back button is the same control again, so it reads it
+   too. Keep the skin properties here and only here — the selectors below must
    not repeat border, radius, fill or shadow, or the two would be free to disagree. */
-.bt-pill,.bt-mobile-nav,.bt-mobile-acts{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
+.bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-panel-back{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
 .bt-pill:active{transform:scale(.965)}
@@ -2857,7 +2859,7 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-lef
    under the floating pill, and the property inherits into these buttons. Size lives here,
    the skin lives in the shared rule above; both controls are border-box 40px tall, the
    same 40px the pill itself has. */
-.bt-mobile-nav,.bt-mobile-act{pointer-events:auto;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--bt-ink);cursor:pointer}
+.bt-mobile-nav,.bt-mobile-act,.bt-panel-back{pointer-events:auto;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--bt-ink);cursor:pointer}
 /* The hamburger sits on the screen's left edge, the group on its right; both are out of
    flow, so neither can push the pill off centre. */
 .bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31;width:40px;height:40px}
@@ -2868,7 +2870,37 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-lef
 .bt-mobile-acts{position:absolute;right:12px;top:10px;z-index:31;display:flex;align-items:stretch;pointer-events:auto;box-sizing:border-box;height:40px;overflow:hidden}
 .bt-mobile-acts .bt-mobile-act{width:44px;border:0;border-radius:0;background:none;box-shadow:none}
 .bt-mobile-acts .bt-mobile-act:hover{background:var(--bt-hover)}
-.bt-mobile-nav:active,.bt-mobile-act:active{transform:scale(.96)}
+.bt-mobile-nav:active,.bt-mobile-act:active,.bt-panel-back:active{transform:scale(.96)}
+/* The details panel is a right-hand column on a desktop, but a phone has no room for one
+   beside the conversation: it takes the whole screen instead, from the same top inset the
+   bar and the drawer use. 96 puts it over the floating bar (95) — with the panel up there
+   is nothing of the bar left to click anyway, it carries its own back button — and it stays
+   under the toasts (1000). --dsh-frame-chrome-top is deliberately not in the chain: Android
+   never defines it, which is why the panel used to start under the status bar and clip its
+   own top row. The width is forced because a panel dragged wide on a desktop would keep its
+   inline width through a rotation. */
+html[data-bt-mobile] .bt-panel{top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;bottom:0;width:100%!important;z-index:96;border-left:0}
+/* Full screen means the conversation is covered, not narrowed: the panel no longer writes
+   its width into the chat column, so nothing on the left is squeezed off the screen. */
+html[data-bt-mobile] [class*="_centerCol"]{margin-right:0!important}
+/* The panel's own back button, top-left where the hamburger was, reading the same shared
+   skin as the pill, the hamburger and the right pair. */
+.bt-panel-back{position:absolute;left:12px;top:10px;z-index:4;width:40px;height:40px}
+.bt-panel-back svg{width:16px;height:16px}
+/* Room for it: whatever the panel puts in its first row starts below the button instead of
+   under it. The drawer's own top row is right-aligned, but the tab strip, the browser
+   toolbar and the settings head all begin at the left edge. */
+html[data-bt-mobile] .bt-panel .bt-drawer-top,
+html[data-bt-mobile] .bt-panel .bt-subhead,
+html[data-bt-mobile] .bt-panel .bt-ptabs,
+html[data-bt-mobile] .bt-panel .bt-browser-bar{padding-left:52px}
+/* The row that scrolls gets the gesture bar's height back, so the last line of a group's
+   member list clears it. A view pinned to the desktop panel width while it settles would
+   otherwise narrow itself back to 320px. */
+html[data-bt-mobile] .bt-panel .bt-drawer-body{padding:20px 16px max(16px,env(safe-area-inset-bottom))}
+html[data-bt-mobile] .bt-panel[data-settling]>.bt-ptabs,html[data-bt-mobile] .bt-panel[data-settling]>.bt-panel-view{width:100%}
+/* The resize grip belongs to the column layout that no longer exists here. */
+html[data-bt-mobile] .bt-panel-grip{display:none}
 /* The shell's own top inset is left exactly as the shell set it: on this device it
    carries the status bar (measured ~46px), and zeroing it put the bar above the
    screen's usable area instead of clearing it. */
@@ -12293,6 +12325,18 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
   const [resizing, setResizing] = (0, import_react33.useState)(false);
   const instant = dragging || resizing;
   const [reading, setReading] = (0, import_react33.useState)(false);
+  const mobile = useMobile();
+  const [probe, setProbe] = (0, import_react33.useState)("");
+  (0, import_react33.useEffect)(() => {
+    if (!mobile || leaving) return void 0;
+    const timer = setTimeout(() => {
+      const box = root.current?.getBoundingClientRect();
+      const button = root.current?.querySelector(".bt-panel-back")?.getBoundingClientRect();
+      const column = document.querySelector('[class*="_centerCol"]');
+      setProbe(`panel=${box === void 0 ? "na" : `${Math.round(box.left)},${Math.round(box.top)} ${Math.round(box.width)}x${Math.round(box.height)}`} chat=${column === null ? "na" : getComputedStyle(column).marginRight} back=${button === void 0 ? "na" : `${Math.round(button.left)},${Math.round(button.top)} ${Math.round(button.width)}x${Math.round(button.height)}`}`);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [mobile, leaving, view]);
   const panelWidth = fitWidth(width ?? (view === "details" ? DETAILS_WIDTH : DEFAULT_WIDTH), widthRange(view, viewport));
   (0, import_react33.useLayoutEffect)(() => {
     if (view !== "details" && width === null) setWidth(DEFAULT_WIDTH);
@@ -12411,7 +12455,7 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
       height: `${move.from.height}px`,
       margin: "0",
       transformOrigin: "0 0",
-      zIndex: "80",
+      zIndex: document.documentElement.dataset.btMobile ? "97" : "80",
       pointerEvents: "none",
       visibility: ""
     });
@@ -12491,6 +12535,16 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
       }
     },
     leaving ? null : (0, import_react33.createElement)("div", { className: "bt-panel-grip", role: "separator", "aria-orientation": "vertical", "aria-label": t("Resize panel"), onPointerDown: startResize }),
+    // On a phone the panel has no column beside it to resize and no bar above it to go
+    // back to, so it carries its own back button, where the hamburger sits on every other
+    // screen and wearing its skin. Desktop keeps the strip's own close button.
+    mobile && !leaving ? (0, import_react33.createElement)("button", {
+      type: "button",
+      className: "bt-panel-back",
+      title: t("Back to conversation"),
+      "aria-label": `${t("Back to conversation")}${probe === "" ? "" : ` ${probe}`}`,
+      onClick: () => actions.closePanel()
+    }, (0, import_react33.createElement)(BackIcon)) : null,
     // Over the whole window while dragging: the cursor stays a resize cursor and the
     // pages underneath (the chat, the guest) see no pointer.
     dragging ? (0, import_react_dom8.createPortal)((0, import_react33.createElement)("div", { className: "bt-drag-shield", "aria-hidden": true }), document.body) : null,
