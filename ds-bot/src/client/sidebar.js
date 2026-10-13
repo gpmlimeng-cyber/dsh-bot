@@ -39,13 +39,22 @@ function countOf(roster, sessionIds) {
   return indexed ? total : undefined
 }
 
-// The stamp and count line under a row's title.
-function RowMeta({ at, count }) {
+// The stamp on a row's title line.
+function RowMeta({ at }) {
   const time = at > 0 ? relativeShort(at) : ''
-  if (time === '' && count === undefined) return null
-  return h('span', { className: 'bt-row-meta' },
-    time !== '' ? h('span', { className: 'bt-row-time' }, time) : null,
-    count !== undefined ? h('span', { className: 'bt-row-count', title: t('{count} messages', { count }) }, String(count)) : null)
+  if (time === '') return null
+  return h('span', { className: 'bt-row-meta' }, h('span', { className: 'bt-row-time' }, time))
+}
+
+// A wide row's second line: the preview, and the message count at its end. The count
+// belongs down here beside what it counts rather than up beside the stamp, where it sat
+// against the name with nothing between them. With no count the line is just the
+// preview, and with neither there is no line at all -- nothing keeps a seat warm.
+function RowSub({ preview, count }) {
+  if (!preview && count === undefined) return null
+  return h('span', { className: 'bt-row-sub' },
+    preview ? h('span', { className: 'bt-row-preview' }, preview) : null,
+    count === undefined ? null : h('span', { className: 'bt-row-count', title: t('{count} messages', { count }) }, String(count)))
 }
 
 function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, wide, drawer, marked }) {
@@ -107,8 +116,8 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
     h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null,
-      h(RowMeta, { at, count: countOf(roster, [part, ...(bot.parts ?? [])]) })),
-    preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
+      h(RowMeta, { at })),
+    h(RowSub, { preview, count: countOf(roster, [part, ...(bot.parts ?? [])]) })) : null,
   wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
 }
 
@@ -131,10 +140,10 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
   pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
     h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null,
-      // A group's messages live in each member's own hidden Session, so the indexed
-      // lines would count the same conversation once per member. No number, then.
-      h(RowMeta, { at, count: undefined })),
-    preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
+      h(RowMeta, { at })),
+    // A group's messages live in each member's own hidden Session, so the indexed
+    // lines would count the same conversation once per member. No number, then.
+    h(RowSub, { preview })) : null,
   wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
 }
 
@@ -226,7 +235,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
     h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: 22 })),
     wide ? h('span', { className: 'bt-row-body' },
       h('span', { className: 'bt-row-name' }, 'DSH Agent'),
-      preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
+      h(RowSub, { preview })) : null,
     wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null),
     h('div', { className: 'bt-agent-sub', 'data-open': open || undefined },
       h('div', { className: 'bt-agent-sub-in' },

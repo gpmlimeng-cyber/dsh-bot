@@ -179,10 +179,13 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
 .bt-row-name{display:flex;align-items:center;gap:6px;min-width:0;font-size:14px;line-height:20px;font-weight:400}
 .bt-row-title{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-tag{flex:none;max-width:96px;font-size:12px;line-height:16px;font-weight:400;padding:1px 6px;border-radius:4px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* The row's second line: the preview takes what the count leaves, so a long preview is
+   cut short of the number instead of running under it. */
+.bt-row-sub{display:flex;align-items:center;gap:8px;min-width:0}
+.bt-row-preview{flex:1 1 auto;min-width:0;font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-row-meta{display:flex;align-items:center;gap:6px;flex:none;margin-left:auto;padding-left:6px;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
 .bt-row-time{flex:none}
-.bt-row-count{flex:none;padding:0 5px;border-radius:999px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);font-variant-numeric:tabular-nums}
+.bt-row-count{flex:none;margin-left:auto;padding:0 5px;border-radius:999px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);font-variant-numeric:tabular-nums}
 .bt-unread{width:8px;height:8px;border-radius:50%;background:#1084fe;flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
 .bt-rail{align-items:center;padding:0 0 8px}
 /* The rail has no room for the tile's floating shortcuts. */

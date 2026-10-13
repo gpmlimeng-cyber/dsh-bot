@@ -2057,10 +2057,13 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
 .bt-row-name{display:flex;align-items:center;gap:6px;min-width:0;font-size:14px;line-height:20px;font-weight:400}
 .bt-row-title{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-tag{flex:none;max-width:96px;font-size:12px;line-height:16px;font-weight:400;padding:1px 6px;border-radius:4px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* The row's second line: the preview takes what the count leaves, so a long preview is
+   cut short of the number instead of running under it. */
+.bt-row-sub{display:flex;align-items:center;gap:8px;min-width:0}
+.bt-row-preview{flex:1 1 auto;min-width:0;font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-row-meta{display:flex;align-items:center;gap:6px;flex:none;margin-left:auto;padding-left:6px;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
 .bt-row-time{flex:none}
-.bt-row-count{flex:none;padding:0 5px;border-radius:999px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);font-variant-numeric:tabular-nums}
+.bt-row-count{flex:none;margin-left:auto;padding:0 5px;border-radius:999px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);font-variant-numeric:tabular-nums}
 .bt-unread{width:8px;height:8px;border-radius:50%;background:#1084fe;flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
 .bt-rail{align-items:center;padding:0 0 8px}
 /* The rail has no room for the tile's floating shortcuts. */
@@ -5215,14 +5218,18 @@ function countOf(roster, sessionIds) {
   }
   return indexed ? total : void 0;
 }
-function RowMeta({ at, count }) {
+function RowMeta({ at }) {
   const time = at > 0 ? relativeShort(at) : "";
-  if (time === "" && count === void 0) return null;
+  if (time === "") return null;
+  return (0, import_react10.createElement)("span", { className: "bt-row-meta" }, (0, import_react10.createElement)("span", { className: "bt-row-time" }, time));
+}
+function RowSub({ preview, count }) {
+  if (!preview && count === void 0) return null;
   return (0, import_react10.createElement)(
     "span",
-    { className: "bt-row-meta" },
-    time !== "" ? (0, import_react10.createElement)("span", { className: "bt-row-time" }, time) : null,
-    count !== void 0 ? (0, import_react10.createElement)("span", { className: "bt-row-count", title: t("{count} messages", { count }) }, String(count)) : null
+    { className: "bt-row-sub" },
+    preview ? (0, import_react10.createElement)("span", { className: "bt-row-preview" }, preview) : null,
+    count === void 0 ? null : (0, import_react10.createElement)("span", { className: "bt-row-count", title: t("{count} messages", { count }) }, String(count))
   );
 }
 function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, wide, drawer, marked }) {
@@ -5327,9 +5334,9 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
         { className: "bt-row-name" },
         (0, import_react10.createElement)("span", { className: "bt-row-title" }, bot.name),
         pinned ? (0, import_react10.createElement)(PinMark) : null,
-        (0, import_react10.createElement)(RowMeta, { at, count: countOf(roster, [part, ...bot.parts ?? []]) })
+        (0, import_react10.createElement)(RowMeta, { at })
       ),
-      preview ? (0, import_react10.createElement)("span", { className: "bt-row-preview" }, preview) : null
+      (0, import_react10.createElement)(RowSub, { preview, count: countOf(roster, [part, ...bot.parts ?? []]) })
     ) : null,
     wide && unread && !active ? (0, import_react10.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
   );
@@ -5368,11 +5375,11 @@ function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, 
         { className: "bt-row-name" },
         (0, import_react10.createElement)("span", { className: "bt-row-title" }, room2.name),
         pinned ? (0, import_react10.createElement)(PinMark) : null,
-        // A group's messages live in each member's own hidden Session, so the indexed
-        // lines would count the same conversation once per member. No number, then.
-        (0, import_react10.createElement)(RowMeta, { at, count: void 0 })
+        (0, import_react10.createElement)(RowMeta, { at })
       ),
-      preview ? (0, import_react10.createElement)("span", { className: "bt-row-preview" }, preview) : null
+      // A group's messages live in each member's own hidden Session, so the indexed
+      // lines would count the same conversation once per member. No number, then.
+      (0, import_react10.createElement)(RowSub, { preview })
     ) : null,
     wide && unread && !active ? (0, import_react10.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
   );
@@ -5489,7 +5496,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
         "span",
         { className: "bt-row-body" },
         (0, import_react10.createElement)("span", { className: "bt-row-name" }, "DSH Agent"),
-        preview ? (0, import_react10.createElement)("span", { className: "bt-row-preview" }, preview) : null
+        (0, import_react10.createElement)(RowSub, { preview })
       ) : null,
       wide && unread && !active ? (0, import_react10.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
     ),
