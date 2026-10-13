@@ -1995,7 +1995,7 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-brand{display:inline-flex;align-items:center;gap:6px;margin-right:auto;padding:4px 8px 4px 4px;border:0;border-radius:8px;background:none;cursor:pointer;font-family:inherit;font-size:15px;line-height:20px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink);white-space:nowrap}
 .bt-brand-whale{display:inline-flex;color:var(--bt-accent)}
 .bt-round{width:36px;height:36px;border-radius:50%;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .12s ease,transform .12s ease}
-.bt-round:hover{background:var(--bt-hover)}
+.bt-round:hover,html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round:hover{background:var(--bt-hover)}
 .bt-round:active{transform:scale(.94)}
 .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
 .bt-tile-wrap{position:relative;display:flex;flex-direction:column;align-items:flex-start;padding:30px 0 40px}
@@ -2108,7 +2108,8 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
    control again, so they read it too. Keep the skin properties here and only here — the
    selectors below must not repeat border, radius, fill or shadow, or the two would be free
    to disagree. */
-.bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-side-search{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
+.bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-side-search,
+html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
 .bt-pill:active{transform:scale(.965)}
@@ -2855,8 +2856,12 @@ html[data-bt-mobile]{--dsh-frame-chrome-top:var(--bt-top-inset,var(--dsh-mobile-
    button; opacity keeps the row's layout (and so the button's position) unchanged, and
    visibility is what actually takes the pill out of hit testing — the pill sets
    pointer-events:auto itself, so a pointer-events:none parent would not stop it from
-   swallowing taps aimed at the drawer underneath. */
-html[data-bt-mobile] .bt-mobile-bar[data-nav-open] .bt-head{opacity:0;visibility:hidden;pointer-events:none}
+   swallowing taps aimed at the drawer underneath.
+   The right pair goes with it, for a different reason the phone showed: the drawer has its
+   own New button in the same top-right corner, and two plus signs on one screen invite the
+   wrong tap even though only one of them is the drawer's. */
+html[data-bt-mobile] .bt-mobile-bar[data-nav-open] .bt-head,
+html[data-bt-mobile] .bt-mobile-bar[data-nav-open] .bt-mobile-acts{opacity:0;visibility:hidden;pointer-events:none}
 /* Room for that button: the drawer's brand would otherwise sit under it. */
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-left:52px}
 /* The drawer's top row on a phone: the brand goes, and the search button becomes a search
@@ -2867,6 +2872,14 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-lef
    and opening it closes the drawer, so text typed into this box would go to a control that
    has already left the screen. */
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
+/* The three controls of that row read as one row only if they are one row: the 40px the pill
+   above the conversation has, with their tops on the same line — the bar's collapse arrow
+   sits 10px below the bar's top, and the drawer's own 10px top padding already lands the row
+   exactly there, so the row contributes none of its own. New is locked at 40x40: the field is
+   free to shrink (min-width:0) and used to take its share out of the round button beside it,
+   which is what turned that button into an oval on the phone. */
+html[data-bt-mobile] .bt-side.bt-rail .bt-side-top{padding-top:0}
+html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width:40px;height:40px}
 .bt-side-search{box-sizing:border-box;flex:1 1 auto;min-width:0;height:40px;display:flex;align-items:center;gap:8px;padding:0 12px}
 .bt-side-search>svg{flex:none;width:16px;height:16px;color:var(--bt-ink-3)}
 .bt-side-search input{flex:1 1 auto;min-width:0;border:0;background:none;outline:none;padding:0;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px}
@@ -5560,9 +5573,11 @@ function TeamSidebar(props) {
   (0, import_react10.useEffect)(() => {
     if (!mobile || !mobileOpen) return void 0;
     const timer = setTimeout(() => {
-      const field = document.querySelector(".bt-side .bt-side-search")?.getBoundingClientRect();
-      const plus = document.querySelector(".bt-side .bt-side-top .bt-round:last-child")?.getBoundingClientRect();
-      setSearchProbe(`search=${field === void 0 ? "none" : `${Math.round(field.left)},${Math.round(field.top)} ${Math.round(field.width)}x${Math.round(field.height)}`} new=${plus === void 0 ? "none" : `${Math.round(plus.left)}..${Math.round(plus.left + plus.width)}`} brand=${document.querySelectorAll(".bt-side .bt-brand").length}`);
+      const rect = (selector) => {
+        const box = document.querySelector(selector)?.getBoundingClientRect();
+        return box === void 0 ? "none" : `${Math.round(box.left)},${Math.round(box.top)} ${Math.round(box.width)}x${Math.round(box.height)}`;
+      };
+      setSearchProbe(`dtop=nav(${rect(".bt-mobile-bar .bt-mobile-nav")}) search(${rect(".bt-side .bt-side-search")}) new(${rect(".bt-side .bt-side-top .bt-round:last-child")}) brand=${document.querySelectorAll(".bt-side .bt-brand").length}`);
     }, 400);
     return () => clearTimeout(timer);
   }, [mobile, mobileOpen]);

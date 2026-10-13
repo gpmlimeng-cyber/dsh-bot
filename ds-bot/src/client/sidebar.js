@@ -292,8 +292,9 @@ export function TeamSidebar(props) {
   // drawer reports its own box and what it managed to render inside.
   const [drawerProbe, setDrawerProbe] = useState('')
   // The drawer's search reads the same channel: this one rides on the input, because a bare
-  // region's label is not exposed and an input always is. It reports the row the new layout
-  // is judged on. TEMPORARY, like the rest.
+  // region's label is not exposed and an input always is. It reports the three controls the
+  // row is judged on — the floating collapse arrow, the field, and New — as x,y and w x h,
+  // so their heights and their top edges can be compared as numbers. TEMPORARY, like the rest.
   const [searchProbe, setSearchProbe] = useState('')
   const [search, setSearch] = useState('')
   // The field is a handoff, not a second search implementation: the command palette owns the
@@ -308,10 +309,14 @@ export function TeamSidebar(props) {
   useEffect(() => {
     if (!mobile || !mobileOpen) return undefined
     const timer = setTimeout(() => {
-      const field = document.querySelector('.bt-side .bt-side-search')?.getBoundingClientRect()
-      const plus = document.querySelector('.bt-side .bt-side-top .bt-round:last-child')?.getBoundingClientRect()
-      setSearchProbe(`search=${field === undefined ? 'none' : `${Math.round(field.left)},${Math.round(field.top)} ${Math.round(field.width)}x${Math.round(field.height)}`}`
-        + ` new=${plus === undefined ? 'none' : `${Math.round(plus.left)}..${Math.round(plus.left + plus.width)}`}`
+      const rect = (selector) => {
+        const box = document.querySelector(selector)?.getBoundingClientRect()
+        return box === undefined ? 'none'
+          : `${Math.round(box.left)},${Math.round(box.top)} ${Math.round(box.width)}x${Math.round(box.height)}`
+      }
+      setSearchProbe(`dtop=nav(${rect('.bt-mobile-bar .bt-mobile-nav')})`
+        + ` search(${rect('.bt-side .bt-side-search')})`
+        + ` new(${rect('.bt-side .bt-side-top .bt-round:last-child')})`
         + ` brand=${document.querySelectorAll('.bt-side .bt-brand').length}`)
     }, 400)
     return () => clearTimeout(timer)
