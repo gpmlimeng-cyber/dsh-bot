@@ -2882,13 +2882,21 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    through them instead of being hidden by them. The bar itself stays a plain container —
    no fill, no filter — so what is behind the *gaps* between the controls is untouched; the
    frost belongs to the pill, the hamburger and the right frame, edit each.
-   The fade band starts at the controls' own lower edge and not at the bar's top edge. A band
-   anchored to the bar top (top:0; height:calc(100% + 32px)) put its 82% head straight behind
-   the three controls; that composites to roughly 97% coverage, which cancels the frost — the
-   one thing the frost exists for, and the reason the phone reported no translucency at all.
-   Below the row it has only the transcript under it, so what shows through a control is the
-   message itself. It is still a child of the bar, so the bar's own stacking context (95)
-   keeps the band above the conversation.
+   The fade band is the mirror of the one the exchange dialog already puts above its own
+   footer (.bt-exchange .bt-dialog-foot::before: 40px, solid var(--bt-main) at the edge it
+   hugs fading to nothing), so the top of the screen fades by the same 40px the bottom does,
+   and only its direction differs. Its top edge is the bar's own top, which is the status
+   bar's lower edge: a message is already invisible where it meets the status bar and comes
+   back as it travels down.
+   That band necessarily runs behind the controls, and a solid fill there would composite
+   with their own fill into near-total coverage — which is what the phone saw when it
+   reported no translucency at all. The compensation is the controls' own fill: it is pulled
+   down to 60%, thin enough that the band's head (the only part that overlaps them) still
+   leaves some of the message showing. To trade the other way — fade clear of the controls,
+   frost at full strength — move this rule to top:100%; height:32px and put the fill back
+   to 72%.
+   It keeps z-index -1 so it paints under the controls rather than over them; it is a child
+   of the bar, so the bar's own stacking context (95) still holds it above the conversation.
    The transcript already reserves 60px at the top of its scroll box for the floating pill
    row, which clears this 50px bar, so the first line is not covered on arrival.
    Two variables, set on the bar and inherited by its children, switch both the fill and the
@@ -2898,11 +2906,11 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    the settings page, the memory dialog and the palette.
    If the blur costs frames on this WebView, the fallback is to raise --bt-frost-fill to 92%
    and leave --bt-frost-blur at none — same two properties, no rule to hunt for. */
-html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 72%,transparent);--bt-frost-blur:blur(12px)}
+html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 60%,transparent);--bt-frost-blur:blur(12px)}
 html[data-bt-mobile] .bt-pill,
 html[data-bt-mobile] .bt-mobile-nav,
 html[data-bt-mobile] .bt-mobile-acts{background:var(--bt-frost-fill,var(--bt-main));-webkit-backdrop-filter:var(--bt-frost-blur,none);backdrop-filter:var(--bt-frost-blur,none)}
-html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:100%;height:32px;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 72%,transparent) 0%,transparent 100%)}
+html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main),transparent)}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open],
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar,
