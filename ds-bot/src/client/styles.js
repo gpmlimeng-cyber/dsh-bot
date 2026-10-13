@@ -169,6 +169,9 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
 .bt-row-count{flex:none;padding:0 5px;border-radius:999px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);font-variant-numeric:tabular-nums}
 .bt-unread{width:8px;height:8px;border-radius:50%;background:#1084fe;flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
 .bt-rail{align-items:center;padding:0 0 8px}
+/* The rail has no room for the tile's floating shortcuts. */
+.bt-rail .bt-tile-wrap{padding:0}
+.bt-rail .bt-tile-bubbles{display:none}
 .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px}
 .bt-side-foot{display:flex;padding-top:8px}
 .bt-connect{flex:1;height:36px;border-radius:999px;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background-color .12s ease}

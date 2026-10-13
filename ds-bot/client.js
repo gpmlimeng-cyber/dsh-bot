@@ -1977,7 +1977,31 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-round:hover{background:var(--bt-hover)}
 .bt-round:active{transform:scale(.94)}
 .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
-.bt-tile-wrap{display:flex;justify-content:center;padding:20px 0 15px}
+.bt-tile-wrap{position:relative;display:flex;flex-direction:column;align-items:center;padding:30px 0 40px}
+/* Shortcuts float around the main Bot's tile, each a chat bubble whose tail points back
+   at it. They sit in the padding this column already reserves, so the tile does not move. */
+.bt-tile-bubbles{position:absolute;inset:0;pointer-events:none}
+.bt-bubble-btn{position:absolute;pointer-events:auto;display:grid;place-items:center;width:30px;height:30px;
+  border-radius:10px;background:var(--bt-card);border:1px solid var(--bt-line);color:var(--bt-ink-2);cursor:pointer;
+  box-shadow:0 3px 10px -3px rgba(0,0,0,.16);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},color .12s ease,background-color .12s ease;
+  animation:bt-bubble-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards}
+.bt-bubble-btn[data-place=left]{left:6px;top:6px}
+.bt-bubble-btn[data-place=right]{right:6px;top:6px}
+.bt-bubble-btn[data-place=below]{left:50%;bottom:4px;transform:translateX(-50%)}
+.bt-bubble-btn[data-i="1"]{animation-delay:60ms}
+.bt-bubble-btn[data-i="2"]{animation-delay:120ms}
+.bt-bubble-btn[data-i="3"]{animation-delay:180ms}
+.bt-bubble-btn:hover{color:var(--bt-ink);background:var(--bt-hover)}
+.bt-bubble-btn[data-place=left]:hover{transform:translate(-2px,-2px)}
+.bt-bubble-btn[data-place=right]:hover{transform:translate(2px,-2px)}
+.bt-bubble-btn[data-place=below]:hover{transform:translateX(-50%) translateY(2px)}
+.bt-bubble-btn[data-place=left]:after,.bt-bubble-btn[data-place=right]:after{content:"";position:absolute;top:50%;width:0;height:0;border:5px solid transparent;translate:0 -50%}
+.bt-bubble-btn[data-place=left]:after{right:-9px;border-left-color:var(--bt-card)}
+.bt-bubble-btn[data-place=right]:after{left:-9px;border-right-color:var(--bt-card)}
+.bt-bubble-btn[data-place=below]:after{content:"";position:absolute;bottom:-5px;left:50%;translate:-50% 0;width:0;height:0;border:5px solid transparent;border-bottom:0;border-top-color:var(--bt-card)}
+@keyframes bt-bubble-in{from{opacity:0;scale:.7}}
+body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s ease,background-color .12s ease}
+@media (prefers-reduced-motion:reduce){.bt-bubble-btn{animation:none;transition:none}}
 .bt-tile{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;max-width:220px;padding:6px 8px 4px;border-radius:12px;border:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:inherit;transition:background-color .12s ease}
 .bt-tile:hover{background:var(--bt-hover)}
 .bt-tile[aria-current=page]{background:var(--bt-active)}
@@ -2002,6 +2026,9 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-row-count{flex:none;padding:0 5px;border-radius:999px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);font-variant-numeric:tabular-nums}
 .bt-unread{width:8px;height:8px;border-radius:50%;background:#1084fe;flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
 .bt-rail{align-items:center;padding:0 0 8px}
+/* The rail has no room for the tile's floating shortcuts. */
+.bt-rail .bt-tile-wrap{padding:0}
+.bt-rail .bt-tile-bubbles{display:none}
 .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px}
 .bt-side-foot{display:flex;padding-top:8px}
 .bt-connect{flex:1;height:36px;border-radius:999px;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background-color .12s ease}
@@ -5137,7 +5164,6 @@ function TeamSidebar(props) {
       (0, import_react8.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
       (0, import_react8.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react8.createElement)(PlusIcon))
     ),
-    wide && roster.readOnly ? (0, import_react8.createElement)("div", { className: "bt-hint bt-read-only", role: "status" }, hostText(roster.readOnly)) : null,
     (0, import_react8.createElement)(
       "div",
       { ref: listRef, className: "bt-list", role: "region", "aria-label": t("Bot list") },
@@ -5515,8 +5541,6 @@ var SIDEBAR_CSS = `
 .bt-pin{flex:none;display:inline-flex;color:var(--bt-ink-3)}
 .bt-rail .bt-row{position:relative}
 .bt-rail .bt-pin{position:absolute;top:3px;left:calc(50% + 12px)}
-.bt-side .bt-read-only{margin:4px 8px 6px;padding:8px 10px;border-radius:10px;background:var(--bt-hover);font-size:12px;line-height:1.45;text-align:left}
-[class*="_footArea"]:has(.bt-foot-account){display:flex!important;flex-direction:row!important;align-items:center;gap:6px}
 [class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"],[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"]>div{display:contents!important}
 .bt-foot-account{order:-1;flex:none;display:inline-flex}
 [class*="_footArea"]:has(.bt-foot-account) .bt-connect-foot{order:0;flex:1 1 auto;min-width:0;width:auto}
