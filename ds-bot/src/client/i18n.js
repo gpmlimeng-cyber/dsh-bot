@@ -159,7 +159,6 @@ const ZH = {
   'Shared instructions every member reads before speaking…': '每位成员发言前都会读到的共同说明…',
   'Group notice': '群公告',
   'Back to details': '返回详情',
-  'Back to conversation': '返回会话',
   'Close details': '关闭详情',
   'Copied conversation': '已复制对话',
   'Share conversation': '分享对话',

@@ -313,17 +313,20 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   const mobile = useMobile()
   // TEMPORARY diagnostic, the same channel the bar's own probe uses: the panel's geometry
   // and the chat column's margin can only be read off the accessibility tree here, so they
-  // ride on the back button's label. Remove with the rest of the probes.
+  // ride on the panel's own landmark label — a bare div's aria-label is ignored, an aside's
+  // is not — together with the position of the close button the panel already carries.
+  // Remove with the rest of the probes.
   const [probe, setProbe] = useState('')
   useEffect(() => {
     if (!mobile || leaving) return undefined
     const timer = setTimeout(() => {
       const box = root.current?.getBoundingClientRect()
-      const button = root.current?.querySelector('.bt-panel-back')?.getBoundingClientRect()
       const column = document.querySelector('[class*="_centerCol"]')
+      const closeLabel = `[aria-label="${t('Close details')}"],[aria-label="${t('Close panel')}"]`
+      const close = root.current?.querySelector(closeLabel)?.getBoundingClientRect()
       setProbe(`panel=${box === undefined ? 'na' : `${Math.round(box.left)},${Math.round(box.top)} ${Math.round(box.width)}x${Math.round(box.height)}`}`
         + ` chat=${column === null ? 'na' : getComputedStyle(column).marginRight}`
-        + ` back=${button === undefined ? 'na' : `${Math.round(button.left)},${Math.round(button.top)} ${Math.round(button.width)}x${Math.round(button.height)}`}`)
+        + ` close=${close === undefined ? 'na' : `${Math.round(close.left)},${Math.round(close.top)} ${Math.round(close.width)}x${Math.round(close.height)}`}`)
     }, 600)
     return () => clearTimeout(timer)
   }, [mobile, leaving, view])
@@ -503,20 +506,14 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   // the subject disappears.
   const showStrip = hasStrip || view === 'files'
   return h('aside', {
-    ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': view === 'files' ? t('Files') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details'),
+    ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}${probe === '' ? '' : ` ${probe}`}`,
     'data-leaving': leaving || undefined, 'aria-hidden': leaving || undefined, 'data-settling': settling || undefined,
     'data-instant': instant || undefined, 'data-dragging': dragging || undefined, style: { '--bt-panel-w': `${panelWidth}px` },
     onAnimationEnd: (event) => { if (event.target === event.currentTarget) setLanded(true) },
   },
     leaving ? null : h('div', { className: 'bt-panel-grip', role: 'separator', 'aria-orientation': 'vertical', 'aria-label': t('Resize panel'), onPointerDown: startResize }),
-    // On a phone the panel has no column beside it to resize and no bar above it to go
-    // back to, so it carries its own back button, where the hamburger sits on every other
-    // screen and wearing its skin. Desktop keeps the strip's own close button.
-    mobile && !leaving ? h('button', {
-      type: 'button', className: 'bt-panel-back', title: t('Back to conversation'),
-      'aria-label': `${t('Back to conversation')}${probe === '' ? '' : ` ${probe}`}`,
-      onClick: () => actions.closePanel(),
-    }, h(BackIcon)) : null,
+    // On a phone the panel is full screen and already carries a close button in the corner
+    // the desktop layout puts its own controls, so it adds none of its own.
     // Over the whole window while dragging: the cursor stays a resize cursor and the
     // pages underneath (the chat, the guest) see no pointer.
     dragging ? createPortal(h('div', { className: 'bt-drag-shield', 'aria-hidden': true }), document.body) : null,
