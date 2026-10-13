@@ -2878,25 +2878,32 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    12 + 89 = 101), so nothing can overlap on a 425px screen, and the pill's own
    70% cap plus the name's ellipsis keeps long titles inside the middle track. */
 .bt-mobile-bar{--bt-mobile-clear:104px;position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px var(--bt-mobile-clear) 0;pointer-events:none}
-/* Messages scroll under the bar and fade out instead of being cut off by it: the strip the
-   pill floats on is a translucent frosted fill, and the 32px band below it carries that
-   same fill down to nothing. Only the strip is translucent — the pill, the hamburger and
-   the right frame keep the opaque shared skin, so the controls stay legible over whatever
-   passes behind them. The fade starts at the strip's own 82% mix rather than at a solid
-   fill, which would restart at full opacity and draw a brighter seam along the bar's bottom
-   edge. The transcript already reserves 60px at the top of its scroll box for the floating
-   pill row, which clears this 50px bar, so the first line is never covered either.
-   The frost steps aside for every full-screen layer this skin opens, because there the bar
-   floats over a surface whose own first row sits in exactly this band and would be blurred
-   out: the drawer (its top row is the bar's y), the New… pane and the exchange/voice panes
-   (their To: row), the settings page, the memory dialog and the palette. */
-html[data-bt-mobile] .bt-mobile-bar{background:color-mix(in srgb,var(--bt-main) 82%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+/* The three floating controls at the top are frosted: a message scrolling up shows
+   through them instead of being hidden by them. The bar itself stays a plain container —
+   no fill, no filter — so what is behind the *gaps* between the controls is untouched; the
+   frost belongs to the pill, the hamburger and the right frame, edit each.
+   The 32px band under the bar carries the same 82% mix down to nothing, so a message
+   dissolves as it reaches the controls' lower edge; starting that gradient at a solid fill
+   would restart at full opacity along the bar's bottom edge and draw a seam there. The
+   transcript already reserves 60px at the top of its scroll box for the floating pill row,
+   which clears this 50px bar, so the first line is never covered either.
+   Two variables, set on the bar and inherited by its children, switch both the fill and the
+   filter off together for every full-screen layer this skin opens: there the bar floats
+   over a surface whose own first row sits in exactly this band and would be blurred out —
+   the drawer (its top row is the bar's y), the New…/exchange/voice panes (their To: row),
+   the settings page, the memory dialog and the palette.
+   If the blur costs frames on this WebView, the fallback is to raise --bt-frost-fill to 92%
+   and leave --bt-frost-blur at none — same two properties, no rule to hunt for. */
+html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 82%,transparent);--bt-frost-blur:blur(12px)}
+html[data-bt-mobile] .bt-pill,
+html[data-bt-mobile] .bt-mobile-nav,
+html[data-bt-mobile] .bt-mobile-acts{background:var(--bt-frost-fill,var(--bt-main));-webkit-backdrop-filter:var(--bt-frost-blur,none);backdrop-filter:var(--bt-frost-blur,none)}
 html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:100%;height:32px;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 82%,transparent) 0%,transparent 100%)}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open],
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar{background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar{--bt-frost-fill:var(--bt-main);--bt-frost-blur:none}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open]::after,
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar::after,
