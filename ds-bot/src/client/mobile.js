@@ -33,12 +33,25 @@ const publish = (matches) => {
 // [data-windows-titlebar]), which is why reading it always fell back to 0 and put the bar
 // under the status bar. Read the layer's variable first; measure the transcript only when
 // that variable is absent (e.g. the layer is not mounted). Never write either variable.
+//
+// A custom property computes to its raw token stream, so the layer's value arrives as
+// "max(46px, 46px)" — Number.parseFloat over that is NaN, which silently fell through to
+// the measurement below and published 90px (the layer's own reserved band) instead of the
+// 46px status bar. Take the largest length in the token list.
+const largestPx = (value) => {
+  let top = 0
+  for (const [, digits] of value.matchAll(/(\d*\.?\d+)px/g)) {
+    const px = Number.parseFloat(digits)
+    if (Number.isFinite(px) && px > top) top = px
+  }
+  return top
+}
+
 const publishInset = () => {
   if (typeof document === 'undefined') return
-  const published = getComputedStyle(document.documentElement).getPropertyValue('--dsh-mobile-top-inset').trim()
-  const fromLayer = Number.parseFloat(published)
+  const fromLayer = largestPx(getComputedStyle(document.documentElement).getPropertyValue('--dsh-mobile-top-inset'))
   const scroller = document.querySelector('[data-conversation-scroll]')
-  const top = Number.isFinite(fromLayer) && fromLayer > 0
+  const top = fromLayer > 0
     ? Math.round(fromLayer)
     : scroller === null ? 0 : Math.round(scroller.getBoundingClientRect().top)
   if (top > 0) document.documentElement.style.setProperty('--bt-top-inset', `${top}px`)

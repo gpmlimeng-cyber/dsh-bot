@@ -194,9 +194,9 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
    (see mobile.js), so no column of the shell can clip them, and the html flag is the
    same breakpoint the JS uses: stylesheet and React tree can never disagree. */
 .bt-mobile-scrim{display:none}
-html[data-bt-mobile] .bt-mobile-scrim{position:fixed;inset:var(--bt-top-inset,var(--dsh-mobile-top-inset,0px)) 0 0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
+html[data-bt-mobile] .bt-mobile-scrim{position:fixed;inset:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 0 0;z-index:78;border:0;padding:0;background:rgba(0,0,0,.4);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s}
 html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;pointer-events:auto}
-html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,0px));bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
+html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));bottom:0;left:0;width:min(86vw,320px);box-sizing:border-box;align-items:stretch;gap:0;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden}
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
 html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
 html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%}
@@ -913,10 +913,11 @@ header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolu
    it. The mark left behind in the slot is what identifies the row to hide. */
 .bt-head-mark{display:none}
 html[data-bt-mobile] header[class*="_header"]:has(.bt-head-mark){display:none!important}
-/* The body-level bar the pill and its hamburger float in below that line. It starts
-   where the transcript itself starts — the shell publishes its top inset only on the
-   frame it owns, so mobile.js measures that line and publishes it as --bt-top-inset,
-   with the shell's own variable as the fallback. */
+/* The body-level bar the pill and its hamburger float in. It starts at the status-bar
+   inset: the adaptation layer's --dsh-mobile-top-inset first, then env(safe-area-inset-top)
+   for the bands it does not cover, and whatever mobile.js measured only if both are absent.
+   The shell's own --dsh-frame-chrome-top is deliberately not in this chain: it is never
+   defined on Android, so reading it only ever produced 0. */
 /* The Android adaptation layer (@dsh-android/dsh-client-ui-responsive) draws its own phone
    chrome from the frame's overlay seat: a strip [data-dsh-mobile-topbar] whose height is
    44px + the status-bar inset, filled with the sidebar colour, and — from its own centerCol
@@ -926,8 +927,12 @@ html[data-bt-mobile] header[class*="_header"]:has(.bt-head-mark){display:none!im
    always toggled the shell's drawer and never ours. The skin floats its own bar and drawer,
    so the strip goes and the reserved space returns to the transcript. One line undoes it. */
 html[data-bt-mobile] [data-dsh-mobile-topbar]{display:none!important}
-html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--bt-top-inset,0px)!important}
-.bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,0px));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
+/* The 44px band is the layer's own centerCol padding: calc(topbar-height + top-inset).
+   Removing the strip alone leaves that band empty on screen (measured: transcript still
+   started at 90px). Give the column back the status-bar inset only, and never let the
+   measured --bt-top-inset feed back in here — that loop is what kept it at 90px. */
+html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))!important}
+.bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto;padding-left:52px}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
    under the floating pill, and the property inherits into this button. */
