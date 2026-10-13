@@ -137,6 +137,24 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
           ? `eq${keys.length}(${pillSkin.bw},${pillSkin.bc},${pillSkin.br},${pillSkin.bg},${pillSkin.h},shadow)`
           : off.map(key => `${key}:pill=${pillSkin[key]}|frame=${frameSkin[key]}`).join(';')
       }
+      // The frost is the one thing no screenshot can settle, so report what the pill really
+      // resolved to — its own background colour and the filter behind it — plus the element
+      // count of every layer that is meant to switch both off. A layer that stayed in the DOM
+      // while closed would pin the fill at var(--bt-main) and read as "not translucent" for
+      // good, which is exactly what the phone reported.
+      const pillEl = document.querySelector('.bt-mobile-bar .bt-pill')
+      const pillStyle = pillEl === null ? null : getComputedStyle(pillEl)
+      const offLayers = ['.bt-pane', '.bt-settings-layer', '.bt-mem-layer', '.bt-palette-layer']
+      const frost = pillStyle === null ? 'na'
+        : `${pillStyle.backgroundColor}|${pillStyle.backdropFilter || pillStyle.webkitBackdropFilter || 'none'}`
+          + `|off${offLayers.map(sel => document.querySelectorAll(sel).length).join('/')}`
+      // The band is a pseudo-element, so its geometry is only readable through the second
+      // argument of getComputedStyle; report it relative to the bar, whose own top is the
+      // absolute anchor — together they say where the fade actually starts on the screen.
+      const barEl = document.querySelector('.bt-mobile-bar')
+      const bandStyle = barEl === null ? null : getComputedStyle(barEl, '::after')
+      const band = `${barEl === null ? 'na' : Math.round(barEl.getBoundingClientRect().top)}`
+        + `+${bandStyle === null ? 'na' : `${Math.round(parseFloat(bandStyle.top) || 0)}/${Math.round(parseFloat(bandStyle.height) || 0)}`}`
       setProbe(`nav${document.querySelectorAll('.bt-mobile-nav').length}bar${document.querySelectorAll('.bt-mobile-bar').length}`
         + `mk${document.querySelectorAll('.bt-head-mark').length}scr${scrim ? 1 : 0}`
         + ` self=${rect === undefined ? 'na' : `${Math.round(rect.left)},${Math.round(rect.top)}`}`
@@ -146,7 +164,8 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
         + ` cardR=${cardRadius}/${cardHeight}`
         + ` topbar${document.querySelectorAll('[data-dsh-mobile-topbar]').length}`
         + ` skin=${skin}`
-        + ` var=${shellVar} lay=${layerVar} bt=${bar}`)
+        + ` var=${shellVar} lay=${layerVar} bt=${bar}`
+        + ` frost=${frost} band=${band}`)
     }, 1500)
     return () => clearTimeout(timer)
   }, [mobile])

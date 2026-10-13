@@ -2882,13 +2882,13 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    through them instead of being hidden by them. The bar itself stays a plain container —
    no fill, no filter — so what is behind the *gaps* between the controls is untouched; the
    frost belongs to the pill, the hamburger and the right frame, edit each.
-   The fade band starts where the phone's usable area starts — the bar's own top edge is the
-   status bar's bottom, so anchoring to it keeps every gradient pixel out of the status bar —
-   and runs the controls' row plus 32px past it, which is what a message actually has to
-   cross to leave the screen. It sits at z-index -1: it is a child of the bar, so it stays
-   above the conversation (the bar's own stacking context is at 95) while painting under the
-   three controls rather than over them. The colour is the controls' own 82% mix, so the
-   gradient carries their fill on down instead of restarting at a solid edge.
+   The fade band starts at the controls' own lower edge and not at the bar's top edge. A band
+   anchored to the bar top (top:0; height:calc(100% + 32px)) put its 82% head straight behind
+   the three controls; that composites to roughly 97% coverage, which cancels the frost — the
+   one thing the frost exists for, and the reason the phone reported no translucency at all.
+   Below the row it has only the transcript under it, so what shows through a control is the
+   message itself. It is still a child of the bar, so the bar's own stacking context (95)
+   keeps the band above the conversation.
    The transcript already reserves 60px at the top of its scroll box for the floating pill
    row, which clears this 50px bar, so the first line is not covered on arrival.
    Two variables, set on the bar and inherited by its children, switch both the fill and the
@@ -2898,11 +2898,11 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    the settings page, the memory dialog and the palette.
    If the blur costs frames on this WebView, the fallback is to raise --bt-frost-fill to 92%
    and leave --bt-frost-blur at none — same two properties, no rule to hunt for. */
-html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 82%,transparent);--bt-frost-blur:blur(12px)}
+html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 72%,transparent);--bt-frost-blur:blur(12px)}
 html[data-bt-mobile] .bt-pill,
 html[data-bt-mobile] .bt-mobile-nav,
 html[data-bt-mobile] .bt-mobile-acts{background:var(--bt-frost-fill,var(--bt-main));-webkit-backdrop-filter:var(--bt-frost-blur,none);backdrop-filter:var(--bt-frost-blur,none)}
-html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:calc(100% + 32px);z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 82%,transparent) 0%,transparent 100%)}
+html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:100%;height:32px;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 72%,transparent) 0%,transparent 100%)}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open],
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar,
@@ -6208,7 +6208,14 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
         const off = keys.filter((key) => pillSkin[key] !== frameSkin[key]);
         skin = off.length === 0 ? `eq${keys.length}(${pillSkin.bw},${pillSkin.bc},${pillSkin.br},${pillSkin.bg},${pillSkin.h},shadow)` : off.map((key) => `${key}:pill=${pillSkin[key]}|frame=${frameSkin[key]}`).join(";");
       }
-      setProbe(`nav${document.querySelectorAll(".bt-mobile-nav").length}bar${document.querySelectorAll(".bt-mobile-bar").length}mk${document.querySelectorAll(".bt-head-mark").length}scr${scrim ? 1 : 0} self=${rect === void 0 ? "na" : `${Math.round(rect.left)},${Math.round(rect.top)}`} hdr${headers.length}:${cls}${head2 === void 0 ? "" : `@${Math.round(head2.top)}`} sc=${scroller === void 0 ? "na" : Math.round(scroller.top)} pillc=${pill === void 0 ? "na" : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)} cardR=${cardRadius}/${cardHeight} topbar${document.querySelectorAll("[data-dsh-mobile-topbar]").length} skin=${skin} var=${shellVar} lay=${layerVar} bt=${bar}`);
+      const pillEl = document.querySelector(".bt-mobile-bar .bt-pill");
+      const pillStyle = pillEl === null ? null : getComputedStyle(pillEl);
+      const offLayers = [".bt-pane", ".bt-settings-layer", ".bt-mem-layer", ".bt-palette-layer"];
+      const frost = pillStyle === null ? "na" : `${pillStyle.backgroundColor}|${pillStyle.backdropFilter || pillStyle.webkitBackdropFilter || "none"}|off${offLayers.map((sel) => document.querySelectorAll(sel).length).join("/")}`;
+      const barEl = document.querySelector(".bt-mobile-bar");
+      const bandStyle = barEl === null ? null : getComputedStyle(barEl, "::after");
+      const band = `${barEl === null ? "na" : Math.round(barEl.getBoundingClientRect().top)}+${bandStyle === null ? "na" : `${Math.round(parseFloat(bandStyle.top) || 0)}/${Math.round(parseFloat(bandStyle.height) || 0)}`}`;
+      setProbe(`nav${document.querySelectorAll(".bt-mobile-nav").length}bar${document.querySelectorAll(".bt-mobile-bar").length}mk${document.querySelectorAll(".bt-head-mark").length}scr${scrim ? 1 : 0} self=${rect === void 0 ? "na" : `${Math.round(rect.left)},${Math.round(rect.top)}`} hdr${headers.length}:${cls}${head2 === void 0 ? "" : `@${Math.round(head2.top)}`} sc=${scroller === void 0 ? "na" : Math.round(scroller.top)} pillc=${pill === void 0 ? "na" : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)} cardR=${cardRadius}/${cardHeight} topbar${document.querySelectorAll("[data-dsh-mobile-topbar]").length} skin=${skin} var=${shellVar} lay=${layerVar} bt=${bar} frost=${frost} band=${band}`);
     }, 1500);
     return () => clearTimeout(timer);
   }, [mobile]);
