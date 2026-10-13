@@ -1187,6 +1187,14 @@ html[data-bt-mobile] [data-composer-card]>[data-slot="conversation.input.attachm
 /* That rail no longer changes the card's size, so the shape that used to follow the size
    change would now be a jump all by itself. */
 html[data-bt-mobile] [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *){border-radius:22px!important}
+/* The host's remove button is 18px, and on a phone that is the whole target: a thumb
+   does not land on it. The button keeps its pixels and an empty pseudo-element grows the
+   target to 32x32 around it. The inset is uneven on purpose -- 4px up and 4px right reach
+   the item's own edges, 10px left and 10px down make up the rest -- so the target stays
+   inside the 64px item and the rail gains nothing to scroll: a wider target would have
+   pushed the rail's own overflow arrows on for a single photo. The cost is the
+   thumbnail's top-right corner, which now removes the image instead of opening it. */
+html[data-bt-mobile] [data-slot="conversation.input.attachments"] [class*="_remove"]::after{content:"";position:absolute;inset:-4px -4px -10px -10px}
 [data-composer-card] [data-composer-input]{min-height:24px;padding:2px 0!important}
 [data-composer-card] [data-composer-placeholder]{left:0!important;top:2px!important}
 [data-composer-placeholder]{font-size:0!important;line-height:0!important}
