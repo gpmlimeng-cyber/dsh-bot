@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon, PlusIcon, DotsIcon } from './icons.js'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon, PlusIcon, DotsBoldIcon } from './icons.js'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { useMobile } from './mobile.js'
 import { ActivityIndicator } from './activity-row.js'
@@ -111,16 +111,12 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
       const bar = getComputedStyle(document.documentElement).getPropertyValue('--bt-top-inset').trim() || 'unset'
       const scrim = document.querySelector('.bt-mobile-scrim') !== null
       const pill = document.querySelector('.bt-mobile-bar .bt-pill')?.getBoundingClientRect()
-      const card = document.querySelector('[data-composer-card]')
-      const cardBox = card?.getBoundingClientRect()
-      const cardRadius = card === undefined || card === null ? 'na' : getComputedStyle(card).borderTopLeftRadius
       setProbe(`nav${document.querySelectorAll('.bt-mobile-nav').length}bar${document.querySelectorAll('.bt-mobile-bar').length}`
         + `mk${document.querySelectorAll('.bt-head-mark').length}scr${scrim ? 1 : 0}`
         + ` self=${rect === undefined ? 'na' : `${Math.round(rect.left)},${Math.round(rect.top)}`}`
         + ` hdr${headers.length}:${cls}${head === undefined ? '' : `@${Math.round(head.top)}`}`
         + ` sc=${scroller === undefined ? 'na' : Math.round(scroller.top)}`
         + ` pillc=${pill === undefined ? 'na' : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)}`
-        + ` comp=${cardRadius}/${cardBox === undefined ? 'na' : Math.round(cardBox.height)}`
         + ` topbar${document.querySelectorAll('[data-dsh-mobile-topbar]').length}`
         + ` var=${shellVar} lay=${layerVar} bt=${bar}`)
     }, 1500)
@@ -180,7 +176,7 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
         menuTarget === null ? null : h('button', {
           type: 'button', className: 'bt-mobile-act', 'aria-haspopup': 'menu',
           'aria-expanded': moreOpen, 'aria-label': t('More'), title: t('More'), onClick: openMore,
-        }, h(DotsIcon)))), document.body))
+        }, h(DotsBoldIcon, { size: 18 })))), document.body))
 }
 
 // New-message pills. "N new messages ↓" takes Back to bottom's place when

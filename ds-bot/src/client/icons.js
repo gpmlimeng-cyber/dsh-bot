@@ -57,6 +57,13 @@ export function CloudDownloadIcon({ done = false }) {
 export const SmileIcon = lineIcon(['M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z', 'M7.3 11.6a3.4 3.4 0 0 0 5.4 0', 'M7.75 8.25h.01M12.25 8.25h.01'])
 export const ReplyIcon = lineIcon(['M8 5L4 9l4 4', 'M4 9h7.5a4.5 4.5 0 0 1 4.5 4.5V15'])
 export const DotsIcon = lineIcon(['M5 10h.01M10 10h.01M15 10h.01'])
+// The phone bar's overflow glyph: three solid dots. The stroked DotsIcon above draws each
+// mark as a 1.5-unit round cap, which at its 15px size is a ~1.1px pinprick — invisible on
+// a phone — so the bar asks for its own, larger dots rather than restyling the shared icon.
+export function DotsBoldIcon({ size = 18 }) {
+  return h('svg', { width: size, height: size, viewBox: '0 0 20 20', fill: 'currentColor', 'aria-hidden': true },
+    [4.5, 10, 15.5].map(cx => h('circle', { key: cx, cx, cy: 10, r: 2 })))
+}
 export const CheckIcon = lineIcon(['M4.5 10.5l3.5 3.5 7.5-8'])
 export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 export const DownloadIcon = lineIcon(['M10 3.5v9', 'M6.5 9.5L10 13l3.5-3.5', 'M4 16h12'])

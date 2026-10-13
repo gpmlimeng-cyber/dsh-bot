@@ -941,8 +941,8 @@ html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh
 .bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
 /* Three tracks, one of them centred. The bar keeps symmetric side padding so the pill's
    midpoint is the screen's midpoint no matter how wide the two side buttons are, and the
-   padding is where the clearance lives: 104px covers the wider side (the right group is
-   12 + 40 + 8 + 40 = 100), so nothing can overlap on a 425px screen, and the pill's own
+   padding is where the clearance lives: 104px covers the wider side (the right capsule is
+   12 + 82 = 94), so nothing can overlap on a 425px screen, and the pill's own
    70% cap plus the name's ellipsis keeps long titles inside the middle track. */
 .bt-mobile-bar{--bt-mobile-clear:104px;position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:30;display:flex;justify-content:center;padding:10px var(--bt-mobile-clear) 0;pointer-events:none}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
@@ -952,7 +952,15 @@ html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh
 /* The hamburger sits on the screen's left edge, the group on its right; both are out of
    flow, so neither can push the pill off centre. */
 .bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31}
-.bt-mobile-acts{position:absolute;right:12px;top:10px;z-index:31;display:flex;align-items:center;gap:8px}
+/* The right pair is one component, not two circles: the frame carries the border, the fill
+   and the shadow while the two buttons inside drop theirs, so the outline is continuous.
+   overflow:hidden clips each button's own hover fill inside the frame's arc; the hairline
+   between them is drawn inset so it never touches that arc. Outer size is then 82x42 —
+   the same height as the hamburger, and inside the 104px clearance above. */
+.bt-mobile-acts{position:absolute;right:12px;top:10px;z-index:31;display:flex;align-items:center;pointer-events:auto;border:1px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);overflow:hidden}
+.bt-mobile-acts .bt-mobile-act{border:0;border-radius:0;background:none;box-shadow:none}
+.bt-mobile-acts .bt-mobile-act+.bt-mobile-act{box-shadow:inset 1px 0 0 var(--bt-line-2)}
+.bt-mobile-acts .bt-mobile-act:hover{background:var(--bt-hover)}
 .bt-mobile-nav:active,.bt-mobile-act:active{transform:scale(.96)}
 /* The shell's own top inset is left exactly as the shell set it: on this device it
    carries the status bar (measured ~46px), and zeroing it put the bar above the
@@ -1012,17 +1020,6 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-c
 [data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:var(--bt-main)!important;border:.5px solid var(--bt-line-2)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
 [data-composer-card]:hover,[data-composer-card]:focus-within{border-color:color-mix(in srgb,var(--bt-ink) 30%,transparent)!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
-/* Below the shell's narrow line the composer reads as a capsule: 999px is clamped by CSS to
-   half the card's height, so a one-line composer ends in two real semicircles whatever its
-   height happens to be (the flat 22px above only looks round while the card is 44px tall).
-   The same three markers the rule above uses put the tighter 18px back as soon as the card
-   grows — attachments, a second line, a <br> with content after it — because a several-line
-   card inside a full capsule would push its own text into the corner arcs. Desktop (>=1024px)
-   is untouched: both rules are gated on the mobile flag. */
-html[data-bt-mobile] [data-composer-card]{border-radius:999px!important}
-html[data-bt-mobile] [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),
-html[data-bt-mobile] [data-composer-card]:has([data-composer-input] br + *),
-html[data-bt-mobile] [data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
 /* The composer takes the same measure as the conversation column, so both edges line up:
    the same 16px padding on each side and the same width cap. */
 [class*="_root"]:has(> [data-composer-card]){padding:0 16px 16px 16px!important}
