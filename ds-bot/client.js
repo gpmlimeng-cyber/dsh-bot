@@ -380,6 +380,8 @@ var ZH = {
   "DS Bot settings": "DS Bot 设置",
   "Settings pages": "设置页面",
   "All settings": "全部设置",
+  Team: "团队",
+  "Connections & automation": "连接与自动化",
   "Models, providers, and the rest of DeepSeek Harness": "模型、服务商和 DeepSeek Harness 的其他设置",
   "Harness settings": "Harness 设置",
   "Back to Bots": "返回 Bot 列表",
@@ -2438,6 +2440,13 @@ body[data-ds-dark-theme] .bt-scrim{background:rgba(0,0,0,.5)}
 .bt-settings-nav>.bt-thumb{left:8px;right:8px;border-radius:8px;background:var(--bt-active)}
 .bt-settings-nav[data-glide] .bt-settings-item[aria-current=page]{background:transparent}
 .bt-settings-shell{margin-top:auto}
+/* The phone groups the page list into cards under headings; the wide dialog's 198px
+   column is the same rows with these two shells flattened away, so one structure draws
+   both and the rows can never drift apart. */
+.bt-settings-group,.bt-settings-group-card{display:contents}
+.bt-settings-group-head{display:none}
+/* The phone's own title bar, drawn outside the two screens it spans. */
+.bt-settings-top{display:none}
 /* The row's arrow belongs to the phone's one-screen list; the wide dialog's 198px column
    has no room for it and its rows already read as a list. */
 .bt-set-go{display:none}
@@ -2954,13 +2963,16 @@ html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar::after{display:none}
 /* Every full-screen layer this skin draws brings its own top: the panes (New..., the
-   exchange, voice and the details panel), the memory dialog and the palette close
-   themselves, and the settings screen has its own close button and back arrow. Over any
-   of them the bar is both useless and in the way -- its hamburger, the pill and the right
-   pair land on the layer's first row, which is why the rule above used to keep those
-   capsules opaque there. Hiding the bar is the right answer, not a solid bar.
+   exchange, voice and the browser, all .bt-pane), the details column (.bt-panel), the
+   memory dialog and the palette close themselves, and the settings screen has its own
+   title bar. Over any of them the bar is both useless and in the way -- its hamburger,
+   the pill and the right pair land on the layer's first row, which is why the rule above
+   used to keep those capsules opaque there. Hiding the bar is the right answer, not a
+   solid bar. The two pane classes are separate: .bt-pane is the pane the chat opens and
+   .bt-panel is the details column, and both are full screen here.
    The drawer is deliberately absent: the hamburger in the bar is what opens and closes it. */
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
+html[data-bt-mobile] body:has(.bt-panel) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar{display:none}
@@ -2968,13 +2980,29 @@ html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar{display:none}
    page column beside a page needs a width a phone has not got -- at 425px it left the page
    179px, which is what made the whole thing read as broken. The two columns become two
    screens instead: the list, then the page it opens, under an arrow that goes back up. */
-html[data-bt-mobile] .bt-settings{width:100%;height:100%;border-radius:0;border:0;box-shadow:none}
+html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;border-radius:0;border:0;box-shadow:none}
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
-/* The list starts below the close button, which floats over the top-right corner. */
-html[data-bt-mobile] .bt-settings-nav{width:100%;flex:1;border-right:0;padding:56px 12px max(16px,env(safe-area-inset-bottom))}
-html[data-bt-mobile] .bt-settings-main{width:100%;height:100%}
-html[data-bt-mobile] .bt-settings-item{min-height:52px;padding:0 12px;border-radius:12px;font-size:15px;line-height:22px;gap:12px}
+/* The title bar spans both screens, so it stays put when the list opens a page: back on
+   the left, the title centred on the dialog, the close on the right. Both side buttons are
+   40px with 44px of target; the title is out of their flow, so a wider button on one side
+   cannot pull it off centre, and it ellipsises rather than wrapping. */
+html[data-bt-mobile] .bt-settings-top{position:relative;flex:none;display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 12px;box-sizing:border-box}
+html[data-bt-mobile] .bt-settings-top>.bt-icon-btn{position:relative;flex:none;width:40px;height:40px;background:var(--bt-hover)}
+html[data-bt-mobile] .bt-settings-top>.bt-icon-btn::after{content:"";position:absolute;inset:-2px}
+html[data-bt-mobile] .bt-settings-top h2{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0 60px;text-align:center;font-size:16px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+/* That bar replaces the wide dialog's head and its floating close. */
+html[data-bt-mobile] .bt-settings-head,
+html[data-bt-mobile] .bt-settings-close{display:none}
+/* The list is cards now, and it scrolls: rows plus headings no longer fit a phone. */
+html[data-bt-mobile] .bt-settings-nav{width:100%;flex:1;overflow-y:auto;border-right:0;padding:8px 12px max(16px,env(safe-area-inset-bottom))}
+html[data-bt-mobile] .bt-settings-group{display:block}
+html[data-bt-mobile] .bt-settings-group+.bt-settings-group{margin-top:16px}
+html[data-bt-mobile] .bt-settings-group-head{display:block;margin:0 0 8px;padding:0 12px 0 13px;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card);overflow:hidden}
+html[data-bt-mobile] .bt-settings-main{width:100%;height:auto;flex:1;min-height:0}
+html[data-bt-mobile] .bt-settings-item{min-height:52px;padding:0 12px;border-radius:0;font-size:15px;line-height:22px;gap:12px}
+html[data-bt-mobile] .bt-settings-group-card>.bt-settings-item+.bt-settings-item{border-top:.5px solid var(--bt-line)}
 html[data-bt-mobile] .bt-settings-item>svg{flex:none;width:24px;height:24px}
 html[data-bt-mobile] .bt-set-go{display:flex;margin-left:auto;color:var(--bt-ink-3)}
 html[data-bt-mobile] .bt-set-go svg{width:16px;height:16px}
@@ -12364,6 +12392,13 @@ var import_react32 = require("react");
 var capitalize2 = (word) => word[0].toUpperCase() + word.slice(1);
 var SETTINGS_PAGES = [["general", "General"], ["bots", "Bots"], ["groups", "Group chats"], ["connectors", "Connectors"], ["schedules", "Scheduled tasks"], ["usage", "Usage"], ["secrets", "Secrets"], ["feedback", "Feedback"], ["about", "About DS Bot"]];
 var PAGE_ICONS = { ...SETTINGS_ICONS, connectors: ConnectorIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon };
+var PAGE_TEXT = Object.fromEntries(SETTINGS_PAGES);
+var SETTINGS_GROUPS = [
+  ["General", ["general", "usage"]],
+  ["Team", ["bots", "groups"]],
+  ["Connections & automation", ["connectors", "schedules", "secrets"]],
+  ["Other", ["feedback", "about"]]
+];
 function SetSection({ title, children }) {
   return (0, import_react32.createElement)("section", { className: "bt-set-section" }, (0, import_react32.createElement)("h3", null, title), (0, import_react32.createElement)("div", { className: "bt-set-card" }, children));
 }
@@ -12586,6 +12621,12 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
   const [usageOpened, setUsageOpened] = (0, import_react32.useState)(shown === "usage");
   if (shown === "usage" && !usageOpened) setUsageOpened(true);
   const errorLine = error ? (0, import_react32.createElement)("div", { className: "bt-error", role: "alert", style: { padding: 0 } }, error) : null;
+  const stepBack = () => {
+    if (back === null) setScreen("list");
+    else actions.openSettings(shown);
+  };
+  const pageTitle = bot?.name ?? room2?.name ?? label;
+  const backLabel = screen === "list" ? t("Close settings") : back ?? t("All settings");
   return (0, import_react32.createElement)(
     "div",
     { className: "bt-settings-layer", "data-leaving": leaving || void 0 },
@@ -12593,6 +12634,25 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
     (0, import_react32.createElement)(
       "div",
       { className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("DS Bot settings"), "data-wide": shown === "usage" ? "" : void 0, "data-screen": mobile ? screen : void 0 },
+      // Phone only: back, the title centred on the dialog rather than on the space left
+      // between the two side buttons, and the close. A wider button on one side cannot
+      // pull the title off centre because it is out of their flow.
+      (0, import_react32.createElement)(
+        "div",
+        { className: "bt-settings-top" },
+        (0, import_react32.createElement)("button", {
+          type: "button",
+          className: "bt-icon-btn",
+          "aria-label": backLabel,
+          title: backLabel,
+          onClick: () => {
+            if (screen === "list") close();
+            else stepBack();
+          }
+        }, (0, import_react32.createElement)(ChevronLeftIcon)),
+        (0, import_react32.createElement)("h2", null, screen === "list" ? t("All settings") : pageTitle),
+        (0, import_react32.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": t("Close settings"), title: t("Close settings"), onClick: close }, (0, import_react32.createElement)(CloseIcon))
+      ),
       // A div with role="navigation" rather than a <nav>: the Android responsive skin
       // tags the first [role=dialog][aria-modal] holding a direct nav child as the
       // upstream settings panel (data-dsh-settings-dialog) and reflows its nav into a
@@ -12601,25 +12661,36 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
         "div",
         { ref: nav.box, role: "navigation", className: "bt-settings-nav", "aria-label": t("Settings pages") },
         (0, import_react32.createElement)("span", { ref: nav.thumb, className: "bt-thumb", "aria-hidden": true }),
-        SETTINGS_PAGES.map(([key, text]) => (0, import_react32.createElement)("button", {
-          key,
-          type: "button",
-          className: "bt-settings-item",
-          "aria-current": shown === key ? "page" : void 0,
-          onClick: () => {
-            setScreen("page");
-            actions.openSettings(key);
-          }
-        }, (0, import_react32.createElement)(PAGE_ICONS[key]), t(text), (0, import_react32.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react32.createElement)(ChevronRightIcon)))),
-        (0, import_react32.createElement)("button", {
-          type: "button",
-          className: "bt-settings-item bt-settings-shell",
-          title: t("Models, providers, and the rest of DeepSeek Harness"),
-          onClick: () => {
-            close();
-            openHarnessSettings();
-          }
-        }, (0, import_react32.createElement)(SlidersIcon), t("Harness settings"), (0, import_react32.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react32.createElement)(ChevronRightIcon)))
+        SETTINGS_GROUPS.map(([group, keys], index) => (0, import_react32.createElement)(
+          "section",
+          { key: group, className: "bt-settings-group" },
+          (0, import_react32.createElement)("h3", { className: "bt-settings-group-head" }, t(group)),
+          (0, import_react32.createElement)(
+            "div",
+            { className: "bt-settings-group-card" },
+            keys.map((key) => (0, import_react32.createElement)("button", {
+              key,
+              type: "button",
+              className: "bt-settings-item",
+              "aria-current": shown === key ? "page" : void 0,
+              onClick: () => {
+                setScreen("page");
+                actions.openSettings(key);
+              }
+            }, (0, import_react32.createElement)(PAGE_ICONS[key]), t(PAGE_TEXT[key]), (0, import_react32.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react32.createElement)(ChevronRightIcon)))),
+            // Harness settings is the last row of the last card: on the wide dialog it
+            // keeps the margin that holds it at the foot of the column.
+            index === SETTINGS_GROUPS.length - 1 ? (0, import_react32.createElement)("button", {
+              type: "button",
+              className: "bt-settings-item bt-settings-shell",
+              title: t("Models, providers, and the rest of DeepSeek Harness"),
+              onClick: () => {
+                close();
+                openHarnessSettings();
+              }
+            }, (0, import_react32.createElement)(SlidersIcon), t("Harness settings"), (0, import_react32.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react32.createElement)(ChevronRightIcon))) : null
+          )
+        ))
       ),
       (0, import_react32.createElement)(
         "div",
@@ -12628,19 +12699,16 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
           "div",
           { className: "bt-settings-head" },
           // The arrow goes up one level: a Bot's form back to the Bot list, a page back
-          // to the page list. On a phone it is always there; on the wide dialog it only
-          // appears where there is a level above.
-          back === null && !mobile ? null : (0, import_react32.createElement)("button", {
+          // to the page list. On the wide dialog it only appears where there is a level
+          // above; the phone draws its own bar instead.
+          back === null ? null : (0, import_react32.createElement)("button", {
             type: "button",
             className: "bt-icon-btn",
-            "aria-label": back ?? t("All settings"),
-            title: back ?? t("All settings"),
-            onClick: () => {
-              if (back === null) setScreen("list");
-              else actions.openSettings(shown);
-            }
+            "aria-label": back,
+            title: back,
+            onClick: stepBack
           }, (0, import_react32.createElement)(ChevronLeftIcon)),
-          (0, import_react32.createElement)("h2", { key: bot?.id ?? room2?.id ?? shown }, bot?.name ?? room2?.name ?? label)
+          (0, import_react32.createElement)("h2", { key: bot?.id ?? room2?.id ?? shown }, pageTitle)
         ),
         shown === "usage" ? null : (0, import_react32.createElement)(
           "div",
