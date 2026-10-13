@@ -5991,6 +5991,9 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
       const bar = getComputedStyle(document.documentElement).getPropertyValue("--bt-top-inset").trim() || "unset";
       const scrim = document.querySelector(".bt-mobile-scrim") !== null;
       const pill = document.querySelector(".bt-mobile-bar .bt-pill")?.getBoundingClientRect();
+      const card = document.querySelector("[data-composer-card]");
+      const cardRadius = card === null ? "na" : getComputedStyle(card).borderTopLeftRadius;
+      const cardHeight = card === null ? "na" : Math.round(card.getBoundingClientRect().height);
       const skinOf = (el) => {
         if (el === null) return null;
         const style = getComputedStyle(el);
@@ -6011,7 +6014,7 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
         const off = keys.filter((key) => pillSkin[key] !== frameSkin[key]);
         skin = off.length === 0 ? `eq${keys.length}(${pillSkin.bw},${pillSkin.bc},${pillSkin.br},${pillSkin.bg},${pillSkin.h},shadow)` : off.map((key) => `${key}:pill=${pillSkin[key]}|frame=${frameSkin[key]}`).join(";");
       }
-      setProbe(`nav${document.querySelectorAll(".bt-mobile-nav").length}bar${document.querySelectorAll(".bt-mobile-bar").length}mk${document.querySelectorAll(".bt-head-mark").length}scr${scrim ? 1 : 0} self=${rect === void 0 ? "na" : `${Math.round(rect.left)},${Math.round(rect.top)}`} hdr${headers.length}:${cls}${head2 === void 0 ? "" : `@${Math.round(head2.top)}`} sc=${scroller === void 0 ? "na" : Math.round(scroller.top)} pillc=${pill === void 0 ? "na" : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)} topbar${document.querySelectorAll("[data-dsh-mobile-topbar]").length} skin=${skin} var=${shellVar} lay=${layerVar} bt=${bar}`);
+      setProbe(`nav${document.querySelectorAll(".bt-mobile-nav").length}bar${document.querySelectorAll(".bt-mobile-bar").length}mk${document.querySelectorAll(".bt-head-mark").length}scr${scrim ? 1 : 0} self=${rect === void 0 ? "na" : `${Math.round(rect.left)},${Math.round(rect.top)}`} hdr${headers.length}:${cls}${head2 === void 0 ? "" : `@${Math.round(head2.top)}`} sc=${scroller === void 0 ? "na" : Math.round(scroller.top)} pillc=${pill === void 0 ? "na" : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)} cardR=${cardRadius}/${cardHeight} topbar${document.querySelectorAll("[data-dsh-mobile-topbar]").length} skin=${skin} var=${shellVar} lay=${layerVar} bt=${bar}`);
     }, 1500);
     return () => clearTimeout(timer);
   }, [mobile]);

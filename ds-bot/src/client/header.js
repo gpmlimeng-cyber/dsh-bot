@@ -111,6 +111,11 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
       const bar = getComputedStyle(document.documentElement).getPropertyValue('--bt-top-inset').trim() || 'unset'
       const scrim = document.querySelector('.bt-mobile-scrim') !== null
       const pill = document.querySelector('.bt-mobile-bar .bt-pill')?.getBoundingClientRect()
+      // The composer is frozen at its flat 22px, and a screenshot cannot show a radius:
+      // report it as a number, without styling anything (the capsule rules are gone).
+      const card = document.querySelector('[data-composer-card]')
+      const cardRadius = card === null ? 'na' : getComputedStyle(card).borderTopLeftRadius
+      const cardHeight = card === null ? 'na' : Math.round(card.getBoundingClientRect().height)
       // The pill and the bar's right frame are meant to read ONE skin declaration (see
       // styles.js), and the accessibility tree is the only channel this crew can read:
       // report equality compactly, and on a mismatch name each property with both values.
@@ -138,6 +143,7 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
         + ` hdr${headers.length}:${cls}${head === undefined ? '' : `@${Math.round(head.top)}`}`
         + ` sc=${scroller === undefined ? 'na' : Math.round(scroller.top)}`
         + ` pillc=${pill === undefined ? 'na' : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)}`
+        + ` cardR=${cardRadius}/${cardHeight}`
         + ` topbar${document.querySelectorAll('[data-dsh-mobile-topbar]').length}`
         + ` skin=${skin}`
         + ` var=${shellVar} lay=${layerVar} bt=${bar}`)
