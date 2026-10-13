@@ -95,80 +95,6 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
   // The menu the "more" button opens lives in the shared overlay state, so the button's
   // aria-expanded can follow it no matter who opened or closed it.
   const moreOpen = useUi(value => value.menu !== null)
-  // TEMPORARY diagnostic: the only readable channel right now is the accessibility
-  // tree, so the counts the device crew cannot dump go into the button's own label.
-  const [probe, setProbe] = useState('')
-  useEffect(() => {
-    if (!mobile) return undefined
-    const timer = setTimeout(() => {
-      const rect = document.querySelector('.bt-mobile-bar .bt-mobile-nav')?.getBoundingClientRect()
-      const headers = [...document.querySelectorAll('header')].filter((el) => el.getBoundingClientRect().width > 0)
-      const head = headers[0]?.getBoundingClientRect()
-      const cls = headers[0] === undefined ? 'none' : String(headers[0].className).replace(/_?[a-z0-9]{5,}_?/gi, '').slice(0, 14) || 'anon'
-      const scroller = document.querySelector('[data-conversation-scroll]')?.getBoundingClientRect()
-      const shellVar = getComputedStyle(document.documentElement).getPropertyValue('--dsh-frame-chrome-top').trim() || 'unset'
-      const layerVar = getComputedStyle(document.documentElement).getPropertyValue('--dsh-mobile-top-inset').trim() || 'unset'
-      const bar = getComputedStyle(document.documentElement).getPropertyValue('--bt-top-inset').trim() || 'unset'
-      const scrim = document.querySelector('.bt-mobile-scrim') !== null
-      const pill = document.querySelector('.bt-mobile-bar .bt-pill')?.getBoundingClientRect()
-      // The composer is frozen at its flat 22px, and a screenshot cannot show a radius:
-      // report it as a number, without styling anything (the capsule rules are gone).
-      const card = document.querySelector('[data-composer-card]')
-      const cardRadius = card === null ? 'na' : getComputedStyle(card).borderTopLeftRadius
-      const cardHeight = card === null ? 'na' : Math.round(card.getBoundingClientRect().height)
-      // The pill and the bar's right frame are meant to read ONE skin declaration (see
-      // styles.js), and the accessibility tree is the only channel this crew can read:
-      // report equality compactly, and on a mismatch name each property with both values.
-      const skinOf = (el) => {
-        if (el === null) return null
-        const style = getComputedStyle(el)
-        return {
-          bw: style.borderTopWidth, bc: style.borderTopColor, br: style.borderTopLeftRadius,
-          bg: style.backgroundColor, h: style.height, sh: style.boxShadow,
-        }
-      }
-      const pillSkin = skinOf(document.querySelector('.bt-mobile-bar .bt-pill'))
-      const frameSkin = skinOf(document.querySelector('.bt-mobile-bar .bt-mobile-acts'))
-      let skin = 'na'
-      if (pillSkin !== null && frameSkin !== null) {
-        const keys = Object.keys(pillSkin)
-        const off = keys.filter(key => pillSkin[key] !== frameSkin[key])
-        skin = off.length === 0
-          ? `eq${keys.length}(${pillSkin.bw},${pillSkin.bc},${pillSkin.br},${pillSkin.bg},${pillSkin.h},shadow)`
-          : off.map(key => `${key}:pill=${pillSkin[key]}|frame=${frameSkin[key]}`).join(';')
-      }
-      // The frost is the one thing no screenshot can settle, so report what the pill really
-      // resolved to — its own background colour and the filter behind it — plus the element
-      // count of every layer that is meant to switch both off. A layer that stayed in the DOM
-      // while closed would pin the fill at var(--bt-main) and read as "not translucent" for
-      // good, which is exactly what the phone reported.
-      const pillEl = document.querySelector('.bt-mobile-bar .bt-pill')
-      const pillStyle = pillEl === null ? null : getComputedStyle(pillEl)
-      const offLayers = ['.bt-pane', '.bt-settings-layer', '.bt-mem-layer', '.bt-palette-layer']
-      const frost = pillStyle === null ? 'na'
-        : `${pillStyle.backgroundColor}|${pillStyle.backdropFilter || pillStyle.webkitBackdropFilter || 'none'}`
-          + `|off${offLayers.map(sel => document.querySelectorAll(sel).length).join('/')}`
-      // The band is a pseudo-element, so its geometry is only readable through the second
-      // argument of getComputedStyle; report it relative to the bar, whose own top is the
-      // absolute anchor — together they say where the fade actually starts on the screen.
-      const barEl = document.querySelector('.bt-mobile-bar')
-      const bandStyle = barEl === null ? null : getComputedStyle(barEl, '::after')
-      const band = `${barEl === null ? 'na' : Math.round(barEl.getBoundingClientRect().top)}`
-        + `+${bandStyle === null ? 'na' : `${Math.round(parseFloat(bandStyle.top) || 0)}/${Math.round(parseFloat(bandStyle.height) || 0)}`}`
-      setProbe(`nav${document.querySelectorAll('.bt-mobile-nav').length}bar${document.querySelectorAll('.bt-mobile-bar').length}`
-        + `mk${document.querySelectorAll('.bt-head-mark').length}scr${scrim ? 1 : 0}`
-        + ` self=${rect === undefined ? 'na' : `${Math.round(rect.left)},${Math.round(rect.top)}`}`
-        + ` hdr${headers.length}:${cls}${head === undefined ? '' : `@${Math.round(head.top)}`}`
-        + ` sc=${scroller === undefined ? 'na' : Math.round(scroller.top)}`
-        + ` pillc=${pill === undefined ? 'na' : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)}`
-        + ` cardR=${cardRadius}/${cardHeight}`
-        + ` topbar${document.querySelectorAll('[data-dsh-mobile-topbar]').length}`
-        + ` skin=${skin}`
-        + ` var=${shellVar} lay=${layerVar} bt=${bar}`
-        + ` frost=${frost} band=${band}`)
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [mobile])
   const head = h('div', { className: 'bt-head' },
     h('button', {
       type: 'button', className: 'bt-pill', 'aria-expanded': detailsOpen, 'data-memory': memoryNotice ? 'updated' : undefined,
@@ -219,7 +145,7 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
         // The label follows the state, like the scrim's: an unchanged "Open navigation"
         // while the drawer is up tells a screen reader the wrong thing, and made the
         // device crew's own verification ambiguous.
-        'aria-label': `${mobileNavOpen ? t('Close navigation') : t('Open navigation')}${probe === '' ? '' : ` ${probe}`}`,
+        'aria-label': mobileNavOpen ? t('Close navigation') : t('Open navigation'),
         onClick: () => actions.toggleMobileNav(),
       }, mobileNavOpen ? h(ChevronLeftIcon) : h(MenuIcon)),
       head,

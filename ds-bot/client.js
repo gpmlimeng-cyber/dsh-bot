@@ -5562,8 +5562,6 @@ function TeamSidebar(props) {
   useListGlide(listRef, listWide, order.map((entry) => entry.item.id).join(","));
   useLandOnMainBot(roster, useSessions, actions);
   const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide: listWide };
-  const [drawerProbe, setDrawerProbe] = (0, import_react10.useState)("");
-  const [searchProbe, setSearchProbe] = (0, import_react10.useState)("");
   const [search, setSearch] = (0, import_react10.useState)("");
   (0, import_react10.useEffect)(() => {
     if (!mobileOpen) setSearch("");
@@ -5572,41 +5570,6 @@ function TeamSidebar(props) {
     setSearch(value);
     if (value.trim() !== "") actions.openPalette(value);
   };
-  (0, import_react10.useEffect)(() => {
-    if (!mobile || !mobileOpen) return void 0;
-    const timer = setTimeout(() => {
-      const rect = (selector) => {
-        const box = document.querySelector(selector)?.getBoundingClientRect();
-        return box === void 0 ? "none" : `${Math.round(box.left)},${Math.round(box.top)} ${Math.round(box.width)}x${Math.round(box.height)}`;
-      };
-      setSearchProbe(`dtop=nav(${rect(".bt-mobile-bar .bt-mobile-nav")}) search(${rect(".bt-side .bt-side-search")}) new(${rect(".bt-side .bt-side-top .bt-round:last-child")}) side(${rect(".bt-side.bt-rail")}) list(${rect(".bt-side .bt-list")}) brand=${document.querySelectorAll(".bt-side .bt-brand").length}`);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [mobile, mobileOpen]);
-  const [hit, setHit] = (0, import_react10.useState)("");
-  (0, import_react10.useEffect)(() => {
-    if (!mobile || !mobileOpen) return void 0;
-    const slug = (el) => `${el.tagName.toLowerCase()}${el.id === "" ? "" : `#${el.id}`}` + (el.getAttribute("class") ?? "").split(" ").filter(Boolean).slice(0, 2).map((name) => `.${name}`).join("");
-    const onDown = (event) => {
-      const x = Math.round(event.clientX);
-      const y = Math.round(event.clientY);
-      const stack = document.elementsFromPoint(x, y);
-      setHit(`hit=${x},${y} scrim=${stack.some((el) => el.classList.contains("bt-mobile-scrim")) ? 1 : 0} top=${stack[0] === void 0 ? "none" : slug(stack[0])} under=${stack.slice(1, 3).map(slug).join(">") || "none"}`);
-    };
-    document.addEventListener("pointerdown", onDown, true);
-    return () => document.removeEventListener("pointerdown", onDown, true);
-  }, [mobile, mobileOpen]);
-  (0, import_react10.useEffect)(() => {
-    if (!mobile) return void 0;
-    const timer = setTimeout(() => {
-      const side = document.querySelector(".bt-side");
-      const box = side?.getBoundingClientRect();
-      const el = document.querySelector(".bt-side .bt-list");
-      const list = el?.getBoundingClientRect();
-      setDrawerProbe(`side=${box === void 0 ? "none" : `${Math.round(box.left)},${Math.round(box.top)},${Math.round(box.width)}x${Math.round(box.height)}`} list=${list === void 0 ? "none" : Math.round(list.height)} scr=${el === void 0 ? "none" : `${el.scrollHeight}/${el.clientHeight}`} rows=${document.querySelectorAll(".bt-side .bt-row").length} ready=${roster.ready ? 1 : 0} order=${order.length} open=${mobileOpen ? 1 : 0} wide=${wide ? 1 : 0}`);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [mobile, mobileOpen, order.length, roster.ready]);
   const typeToSearch = (event) => {
     if (event.defaultPrevented || event.key.length !== 1 || event.key === " " || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return;
     if (event.target instanceof Element && event.target.closest("input,textarea,[contenteditable]")) return;
@@ -5649,7 +5612,6 @@ function TeamSidebar(props) {
       className: wide ? "bt-side" : "bt-side bt-rail",
       role: wide ? void 0 : "region",
       "data-mobile-open": mobileOpen || void 0,
-      "aria-label": mobile && drawerProbe !== "" ? drawerProbe : void 0,
       onKeyDown: typeToSearch,
       onTouchStart: mobile ? onTouchStart : void 0,
       onTouchMove: mobile ? onTouchMove : void 0,
@@ -5681,7 +5643,7 @@ function TeamSidebar(props) {
           }
         })
       ) : (0, import_react10.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Search"), title: t("Search"), onClick: () => actions.openPalette() }, (0, import_react10.createElement)(SearchIcon)),
-      (0, import_react10.createElement)("button", { type: "button", className: "bt-round", "aria-label": `${t("New…")}${searchProbe === "" ? "" : ` ${searchProbe}`}${hit === "" ? "" : ` ${hit}`}`, title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react10.createElement)(PlusIcon))
+      (0, import_react10.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react10.createElement)(PlusIcon))
     ) : (0, import_react10.createElement)(
       import_react10.Fragment,
       null,
@@ -6206,54 +6168,6 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
   const mobile = useMobile();
   const mobileNavOpen = useUi((value) => value.mobileNav === true);
   const moreOpen = useUi((value) => value.menu !== null);
-  const [probe, setProbe] = (0, import_react11.useState)("");
-  (0, import_react11.useEffect)(() => {
-    if (!mobile) return void 0;
-    const timer = setTimeout(() => {
-      const rect = document.querySelector(".bt-mobile-bar .bt-mobile-nav")?.getBoundingClientRect();
-      const headers = [...document.querySelectorAll("header")].filter((el) => el.getBoundingClientRect().width > 0);
-      const head2 = headers[0]?.getBoundingClientRect();
-      const cls = headers[0] === void 0 ? "none" : String(headers[0].className).replace(/_?[a-z0-9]{5,}_?/gi, "").slice(0, 14) || "anon";
-      const scroller = document.querySelector("[data-conversation-scroll]")?.getBoundingClientRect();
-      const shellVar = getComputedStyle(document.documentElement).getPropertyValue("--dsh-frame-chrome-top").trim() || "unset";
-      const layerVar = getComputedStyle(document.documentElement).getPropertyValue("--dsh-mobile-top-inset").trim() || "unset";
-      const bar = getComputedStyle(document.documentElement).getPropertyValue("--bt-top-inset").trim() || "unset";
-      const scrim = document.querySelector(".bt-mobile-scrim") !== null;
-      const pill = document.querySelector(".bt-mobile-bar .bt-pill")?.getBoundingClientRect();
-      const card = document.querySelector("[data-composer-card]");
-      const cardRadius = card === null ? "na" : getComputedStyle(card).borderTopLeftRadius;
-      const cardHeight = card === null ? "na" : Math.round(card.getBoundingClientRect().height);
-      const skinOf = (el) => {
-        if (el === null) return null;
-        const style = getComputedStyle(el);
-        return {
-          bw: style.borderTopWidth,
-          bc: style.borderTopColor,
-          br: style.borderTopLeftRadius,
-          bg: style.backgroundColor,
-          h: style.height,
-          sh: style.boxShadow
-        };
-      };
-      const pillSkin = skinOf(document.querySelector(".bt-mobile-bar .bt-pill"));
-      const frameSkin = skinOf(document.querySelector(".bt-mobile-bar .bt-mobile-acts"));
-      let skin = "na";
-      if (pillSkin !== null && frameSkin !== null) {
-        const keys = Object.keys(pillSkin);
-        const off = keys.filter((key) => pillSkin[key] !== frameSkin[key]);
-        skin = off.length === 0 ? `eq${keys.length}(${pillSkin.bw},${pillSkin.bc},${pillSkin.br},${pillSkin.bg},${pillSkin.h},shadow)` : off.map((key) => `${key}:pill=${pillSkin[key]}|frame=${frameSkin[key]}`).join(";");
-      }
-      const pillEl = document.querySelector(".bt-mobile-bar .bt-pill");
-      const pillStyle = pillEl === null ? null : getComputedStyle(pillEl);
-      const offLayers = [".bt-pane", ".bt-settings-layer", ".bt-mem-layer", ".bt-palette-layer"];
-      const frost = pillStyle === null ? "na" : `${pillStyle.backgroundColor}|${pillStyle.backdropFilter || pillStyle.webkitBackdropFilter || "none"}|off${offLayers.map((sel) => document.querySelectorAll(sel).length).join("/")}`;
-      const barEl = document.querySelector(".bt-mobile-bar");
-      const bandStyle = barEl === null ? null : getComputedStyle(barEl, "::after");
-      const band = `${barEl === null ? "na" : Math.round(barEl.getBoundingClientRect().top)}+${bandStyle === null ? "na" : `${Math.round(parseFloat(bandStyle.top) || 0)}/${Math.round(parseFloat(bandStyle.height) || 0)}`}`;
-      setProbe(`nav${document.querySelectorAll(".bt-mobile-nav").length}bar${document.querySelectorAll(".bt-mobile-bar").length}mk${document.querySelectorAll(".bt-head-mark").length}scr${scrim ? 1 : 0} self=${rect === void 0 ? "na" : `${Math.round(rect.left)},${Math.round(rect.top)}`} hdr${headers.length}:${cls}${head2 === void 0 ? "" : `@${Math.round(head2.top)}`} sc=${scroller === void 0 ? "na" : Math.round(scroller.top)} pillc=${pill === void 0 ? "na" : Math.round(pill.left + pill.width / 2)}/${Math.round(window.innerWidth / 2)} cardR=${cardRadius}/${cardHeight} topbar${document.querySelectorAll("[data-dsh-mobile-topbar]").length} skin=${skin} var=${shellVar} lay=${layerVar} bt=${bar} frost=${frost} band=${band}`);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [mobile]);
   const head = (0, import_react11.createElement)(
     "div",
     { className: "bt-head" },
@@ -6302,7 +6216,7 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
         // The label follows the state, like the scrim's: an unchanged "Open navigation"
         // while the drawer is up tells a screen reader the wrong thing, and made the
         // device crew's own verification ambiguous.
-        "aria-label": `${mobileNavOpen ? t("Close navigation") : t("Open navigation")}${probe === "" ? "" : ` ${probe}`}`,
+        "aria-label": mobileNavOpen ? t("Close navigation") : t("Open navigation"),
         onClick: () => actions.toggleMobileNav()
       }, mobileNavOpen ? (0, import_react11.createElement)(ChevronLeftIcon) : (0, import_react11.createElement)(MenuIcon)),
       head,
@@ -12465,18 +12379,6 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
   const instant = dragging || resizing;
   const [reading, setReading] = (0, import_react33.useState)(false);
   const mobile = useMobile();
-  const [probe, setProbe] = (0, import_react33.useState)("");
-  (0, import_react33.useEffect)(() => {
-    if (!mobile || leaving) return void 0;
-    const timer = setTimeout(() => {
-      const box = root.current?.getBoundingClientRect();
-      const column = document.querySelector('[class*="_centerCol"]');
-      const closeLabel = `[aria-label="${t("Close details")}"],[aria-label="${t("Close panel")}"]`;
-      const close = root.current?.querySelector(closeLabel)?.getBoundingClientRect();
-      setProbe(`panel=${box === void 0 ? "na" : `${Math.round(box.left)},${Math.round(box.top)} ${Math.round(box.width)}x${Math.round(box.height)}`} chat=${column === null ? "na" : getComputedStyle(column).marginRight} close=${close === void 0 ? "na" : `${Math.round(close.left)},${Math.round(close.top)} ${Math.round(close.width)}x${Math.round(close.height)}`}`);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [mobile, leaving, view]);
   const panelWidth = fitWidth(width ?? (view === "details" ? DETAILS_WIDTH : DEFAULT_WIDTH), widthRange(view, viewport));
   (0, import_react33.useLayoutEffect)(() => {
     if (view !== "details" && width === null) setWidth(DEFAULT_WIDTH);
@@ -12663,7 +12565,7 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
       ref: root,
       className: "bt-panel",
       "data-view": view,
-      "aria-label": `${view === "files" ? t("Files") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details")}${probe === "" ? "" : ` ${probe}`}`,
+      "aria-label": `${view === "files" ? t("Files") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details")}`,
       "data-leaving": leaving || void 0,
       "aria-hidden": leaving || void 0,
       "data-settling": settling || void 0,

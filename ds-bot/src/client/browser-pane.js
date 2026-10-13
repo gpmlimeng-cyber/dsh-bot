@@ -311,25 +311,6 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   const instant = dragging || resizing
   const [reading, setReading] = useState(false)
   const mobile = useMobile()
-  // TEMPORARY diagnostic, the same channel the bar's own probe uses: the panel's geometry
-  // and the chat column's margin can only be read off the accessibility tree here, so they
-  // ride on the panel's own landmark label — a bare div's aria-label is ignored, an aside's
-  // is not — together with the position of the close button the panel already carries.
-  // Remove with the rest of the probes.
-  const [probe, setProbe] = useState('')
-  useEffect(() => {
-    if (!mobile || leaving) return undefined
-    const timer = setTimeout(() => {
-      const box = root.current?.getBoundingClientRect()
-      const column = document.querySelector('[class*="_centerCol"]')
-      const closeLabel = `[aria-label="${t('Close details')}"],[aria-label="${t('Close panel')}"]`
-      const close = root.current?.querySelector(closeLabel)?.getBoundingClientRect()
-      setProbe(`panel=${box === undefined ? 'na' : `${Math.round(box.left)},${Math.round(box.top)} ${Math.round(box.width)}x${Math.round(box.height)}`}`
-        + ` chat=${column === null ? 'na' : getComputedStyle(column).marginRight}`
-        + ` close=${close === undefined ? 'na' : `${Math.round(close.left)},${Math.round(close.top)} ${Math.round(close.width)}x${Math.round(close.height)}`}`)
-    }, 600)
-    return () => clearTimeout(timer)
-  }, [mobile, leaving, view])
 
   const panelWidth = fitWidth(width ?? (view === 'details' ? DETAILS_WIDTH : DEFAULT_WIDTH), widthRange(view, viewport))
   // Once the browser or the Files tab has shown, the Bot page keeps its width (up to
@@ -506,7 +487,7 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   // the subject disappears.
   const showStrip = hasStrip || view === 'files'
   return h('aside', {
-    ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}${probe === '' ? '' : ` ${probe}`}`,
+    ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}`,
     'data-leaving': leaving || undefined, 'aria-hidden': leaving || undefined, 'data-settling': settling || undefined,
     'data-instant': instant || undefined, 'data-dragging': dragging || undefined, style: { '--bt-panel-w': `${panelWidth}px` },
     onAnimationEnd: (event) => { if (event.target === event.currentTarget) setLanded(true) },

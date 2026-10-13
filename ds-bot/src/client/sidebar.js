@@ -288,15 +288,6 @@ export function TeamSidebar(props) {
   useListGlide(listRef, listWide, order.map(entry => entry.item.id).join(','))
   useLandOnMainBot(roster, useSessions, actions)
   const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide: listWide }
-  // TEMPORARY diagnostic: the device crew can only read the accessibility tree, so the
-  // drawer reports its own box and what it managed to render inside.
-  const [drawerProbe, setDrawerProbe] = useState('')
-  // The drawer's three-control row is judged here: this rides on the New button, because the
-  // channel we have is the accessibility tree and a button's label is exposed there while an
-  // input's aria-label is not (measured on the device: the field's node came back with no
-  // description). It reports all three rects — the floating collapse arrow, the field, New —
-  // as x,y and w x h, so heights and top edges can be compared as numbers. TEMPORARY.
-  const [searchProbe, setSearchProbe] = useState('')
   const [search, setSearch] = useState('')
   // The field is a handoff, not a second search implementation: the command palette owns the
   // searching, and opening it closes the drawer (openPalette clears mobileNav), so text kept
@@ -307,59 +298,6 @@ export function TeamSidebar(props) {
     setSearch(value)
     if (value.trim() !== '') actions.openPalette(value)
   }
-  useEffect(() => {
-    if (!mobile || !mobileOpen) return undefined
-    const timer = setTimeout(() => {
-      const rect = (selector) => {
-        const box = document.querySelector(selector)?.getBoundingClientRect()
-        return box === undefined ? 'none'
-          : `${Math.round(box.left)},${Math.round(box.top)} ${Math.round(box.width)}x${Math.round(box.height)}`
-      }
-      setSearchProbe(`dtop=nav(${rect('.bt-mobile-bar .bt-mobile-nav')})`
-        + ` search(${rect('.bt-side .bt-side-search')})`
-        + ` new(${rect('.bt-side .bt-side-top .bt-round:last-child')})`
-        + ` side(${rect('.bt-side.bt-rail')}) list(${rect('.bt-side .bt-list')})`
-        + ` brand=${document.querySelectorAll('.bt-side .bt-brand').length}`)
-    }, 400)
-    return () => clearTimeout(timer)
-  }, [mobile, mobileOpen])
-  // TEMPORARY diagnostic, read once and then removed with the rest: the phone reported the
-  // drawer not collapsing on a tap in the conversation area. It listens in the capture phase
-  // on purpose — the failing case is exactly the one where the scrim's own click handler
-  // never runs, so a probe written from inside that handler would stay silent and settle
-  // nothing. It reports the point, whether the scrim is even in the stack there, and the
-  // three elements that are, outermost first, which names whatever is covering it.
-  const [hit, setHit] = useState('')
-  useEffect(() => {
-    if (!mobile || !mobileOpen) return undefined
-    const slug = (el) => `${el.tagName.toLowerCase()}${el.id === '' ? '' : `#${el.id}`}`
-      + (el.getAttribute('class') ?? '').split(' ').filter(Boolean).slice(0, 2).map(name => `.${name}`).join('')
-    const onDown = (event) => {
-      const x = Math.round(event.clientX); const y = Math.round(event.clientY)
-      const stack = document.elementsFromPoint(x, y)
-      setHit(`hit=${x},${y} scrim=${stack.some(el => el.classList.contains('bt-mobile-scrim')) ? 1 : 0}`
-        + ` top=${stack[0] === undefined ? 'none' : slug(stack[0])}`
-        + ` under=${stack.slice(1, 3).map(slug).join('>') || 'none'}`)
-    }
-    document.addEventListener('pointerdown', onDown, true)
-    return () => document.removeEventListener('pointerdown', onDown, true)
-  }, [mobile, mobileOpen])
-  useEffect(() => {
-    if (!mobile) return undefined
-    const timer = setTimeout(() => {
-      const side = document.querySelector('.bt-side')
-      const box = side?.getBoundingClientRect()
-      const el = document.querySelector('.bt-side .bt-list')
-      const list = el?.getBoundingClientRect()
-      setDrawerProbe(`side=${box === undefined ? 'none' : `${Math.round(box.left)},${Math.round(box.top)},${Math.round(box.width)}x${Math.round(box.height)}`}`
-        + ` list=${list === undefined ? 'none' : Math.round(list.height)}`
-        + ` scr=${el === undefined ? 'none' : `${el.scrollHeight}/${el.clientHeight}`}`
-        + ` rows=${document.querySelectorAll('.bt-side .bt-row').length}`
-        + ` ready=${roster.ready ? 1 : 0} order=${order.length}`
-        + ` open=${mobileOpen ? 1 : 0} wide=${wide ? 1 : 0}`)
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [mobile, mobileOpen, order.length, roster.ready])
   // Typing while the sidebar has focus starts a search.
   const typeToSearch = (event) => {
     if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
@@ -410,7 +348,7 @@ export function TeamSidebar(props) {
     h(ConnectPlugins, { wide: true, actions })) : null
   const drawer = h('div', {
     className: wide ? 'bt-side' : 'bt-side bt-rail', role: wide ? undefined : 'region',
-    'data-mobile-open': mobileOpen || undefined, 'aria-label': mobile && drawerProbe !== '' ? drawerProbe : undefined, onKeyDown: typeToSearch,
+    'data-mobile-open': mobileOpen || undefined, onKeyDown: typeToSearch,
     onTouchStart: mobile ? onTouchStart : undefined, onTouchMove: mobile ? onTouchMove : undefined,
     onTouchEnd: mobile ? onTouchEnd : undefined, onTouchCancel: mobile ? onTouchEnd : undefined,
   },
@@ -430,7 +368,7 @@ export function TeamSidebar(props) {
               onKeyDown: (event) => { if (event.key === 'Enter' && search.trim() !== '') actions.openPalette(search) },
             }))
         : h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
-      h('button', { type: 'button', className: 'bt-round', 'aria-label': `${t('New…')}${searchProbe === '' ? '' : ` ${searchProbe}`}${hit === '' ? '' : ` ${hit}`}`, title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)))
+      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)))
       : h(Fragment, null,
           h(UpdateButton, { useUpdate: props.useUpdate, actions }),
           h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon))),
