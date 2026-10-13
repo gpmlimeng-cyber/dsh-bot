@@ -1005,22 +1005,24 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    no fill, no filter — so what is behind the *gaps* between the controls is untouched; the
    frost belongs to the pill, the hamburger and the right frame, edit each.
    The fade band is the mirror of the one the exchange dialog already puts above its own
-   footer (.bt-exchange .bt-dialog-foot::before: 40px, solid var(--bt-main) at the edge it
+   footer (.bt-exchange .bt-dialog-foot::before: 40px, opaque var(--bt-main) at the edge it
    hugs fading to nothing), so the top of the screen fades by the same 40px the bottom does,
    and only its direction differs. Its top edge is the bar's own top, which is the status
-   bar's lower edge: a message is already invisible where it meets the status bar and comes
-   back as it travels down.
-   That band necessarily runs behind the controls, and a solid fill there would composite
-   with their own fill into near-total coverage — which is what the phone saw when it
-   reported no translucency at all. The compensation is the controls' own fill: it is pulled
-   down to 45% with a 14px blur, thin enough that the band's head (the only part that
-   overlaps them) still leaves the message showing. The band's head is still solid, so the
-   upper part of a control stays heavier than its lower edge; the next knob, if that reads as
-   a seam rather than a gradient, is the band's own head colour — start it at
-   color-mix(in srgb, var(--bt-main) 88%, transparent) instead of var(--bt-main), leaving
-   height, direction and position untouched. To trade the other way — fade clear of the
-   controls, frost at full strength — move this rule to top:100%; height:32px and put the
-   fill back to 72%.
+   bar's lower edge, so a message reads as arriving from under the status bar. Its head is
+   the same colour mixed to 80% instead of opaque: that is the one shim this skin needs it to
+   give, because the band's head is also the only part of it that runs behind the controls —
+   at 100% it composited with their fill into near-total coverage, which is what the phone
+   saw when it reported no translucency at all. The cost is stated rather than hidden: 20% of
+   a bright message can ghost through the very first row at the status bar, and the band is
+   no longer an exact match for the footer's, only a perceptually even one.
+   The controls' own fill carries the rest: 30% with a 16px blur, so what is behind them
+   reads as a soft shape rather than as letters. That is thin enough that their labels are
+   carried by the blur, not by the fill: over the transcript's own dark backdrop the white
+   ink keeps a contrast ratio of roughly 13:1, but a full-bleed bright image behind a control
+   can flatten it to about 1.8:1. The remedy there is more blur or a text-shadow in the
+   control's own colour — not fill, which is what this whole thread was about removing.
+   To trade the other way — fade clear of the controls, frost at full strength — move this
+   rule to top:100%; height:32px and put the fill back to 72%.
    It keeps z-index -1 so it paints under the controls rather than over them; it is a child
    of the bar, so the bar's own stacking context (95) still holds it above the conversation.
    The transcript already reserves 60px at the top of its scroll box for the floating pill
@@ -1032,11 +1034,11 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    the settings page, the memory dialog and the palette.
    If the blur costs frames on this WebView, the fallback is to raise --bt-frost-fill to 92%
    and leave --bt-frost-blur at none — same two properties, no rule to hunt for. */
-html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 45%,transparent);--bt-frost-blur:blur(14px)}
+html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 30%,transparent);--bt-frost-blur:blur(16px)}
 html[data-bt-mobile] .bt-pill,
 html[data-bt-mobile] .bt-mobile-nav,
 html[data-bt-mobile] .bt-mobile-acts{background:var(--bt-frost-fill,var(--bt-main));-webkit-backdrop-filter:var(--bt-frost-blur,none);backdrop-filter:var(--bt-frost-blur,none)}
-html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main),transparent)}
+html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 80%,transparent),transparent)}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open],
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar,
