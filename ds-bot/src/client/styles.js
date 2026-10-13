@@ -1004,11 +1004,15 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
    through them instead of being hidden by them. The bar itself stays a plain container —
    no fill, no filter — so what is behind the *gaps* between the controls is untouched; the
    frost belongs to the pill, the hamburger and the right frame, edit each.
-   The 32px band under the bar carries the same 82% mix down to nothing, so a message
-   dissolves as it reaches the controls' lower edge; starting that gradient at a solid fill
-   would restart at full opacity along the bar's bottom edge and draw a seam there. The
-   transcript already reserves 60px at the top of its scroll box for the floating pill row,
-   which clears this 50px bar, so the first line is never covered either.
+   The fade band starts where the phone's usable area starts — the bar's own top edge is the
+   status bar's bottom, so anchoring to it keeps every gradient pixel out of the status bar —
+   and runs the controls' row plus 32px past it, which is what a message actually has to
+   cross to leave the screen. It sits at z-index -1: it is a child of the bar, so it stays
+   above the conversation (the bar's own stacking context is at 95) while painting under the
+   three controls rather than over them. The colour is the controls' own 82% mix, so the
+   gradient carries their fill on down instead of restarting at a solid edge.
+   The transcript already reserves 60px at the top of its scroll box for the floating pill
+   row, which clears this 50px bar, so the first line is not covered on arrival.
    Two variables, set on the bar and inherited by its children, switch both the fill and the
    filter off together for every full-screen layer this skin opens: there the bar floats
    over a surface whose own first row sits in exactly this band and would be blurred out —
@@ -1020,7 +1024,7 @@ html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-m
 html[data-bt-mobile] .bt-pill,
 html[data-bt-mobile] .bt-mobile-nav,
 html[data-bt-mobile] .bt-mobile-acts{background:var(--bt-frost-fill,var(--bt-main));-webkit-backdrop-filter:var(--bt-frost-blur,none);backdrop-filter:var(--bt-frost-blur,none)}
-html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:100%;height:32px;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 82%,transparent) 0%,transparent 100%)}
+html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:calc(100% + 32px);z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 82%,transparent) 0%,transparent 100%)}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open],
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar,
