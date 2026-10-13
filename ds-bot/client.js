@@ -3055,6 +3055,15 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-c
 [data-composer-card]>[data-input-scroll]{order:2;flex:1 1 0;min-width:0;padding:0 8px!important;margin:0!important}
 [data-composer-card] [class*="_trailing"]{order:3;flex:none;align-self:flex-end;margin:0}
 [data-composer-card]>[data-slot="conversation.input.attachments"]{order:0;flex-basis:100%}
+/* On a phone the preview rail leaves the card's own flow and hangs above it. Inside the
+   card it took its height out of the draft, which is what pushed the input down as soon
+   as a file was attached; absolutely positioned it costs the card nothing, so the card
+   measures the same with and without attachments. The card is already position:relative
+   and clips none of its own children, and the 8px clears its top edge. */
+html[data-bt-mobile] [data-composer-card]>[data-slot="conversation.input.attachments"]{position:absolute;left:0;right:0;bottom:calc(100% + 8px)}
+/* That rail no longer changes the card's size, so the shape that used to follow the size
+   change would now be a jump all by itself. */
+html[data-bt-mobile] [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *){border-radius:22px!important}
 [data-composer-card] [data-composer-input]{min-height:24px;padding:2px 0!important}
 [data-composer-card] [data-composer-placeholder]{left:0!important;top:2px!important}
 [data-composer-placeholder]{font-size:0!important;line-height:0!important}
