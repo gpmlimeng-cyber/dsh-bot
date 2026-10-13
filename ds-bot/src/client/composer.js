@@ -1,6 +1,7 @@
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChatsIcon, ClockIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
+import { ChatsIcon, ClockIcon, ConnectorIcon, MemoryIcon, MicIcon, PaperclipIcon, PeopleIcon, PlugIcon, PlusIcon, WaveIcon } from './icons.js'
+import { GlobeIcon } from './browser-pane.js'
 import { BotMark } from './mark.js'
 import { useLinger } from './motion.js'
 import { t } from './i18n.js'
@@ -101,11 +102,19 @@ export function menuIcons(roster) {
   }
 }
 
-// The composer's "+" in a Bot's chat or a group chat: add files, reference another
-// chat, or set a scheduled task for this chat. It stands in for the shell's command
-// menu, whose plan, permission, model and compact rows reach past what DS Bot keeps
-// for its Bots; "/" still opens that menu. Files go through the shell's own file
-// input beside it.
+// The composer's "+" in a Bot's chat or a group chat. It stands in for the shell's command
+// menu, whose plan, permission, model and compact rows reach past what DS Bot keeps for
+// its Bots; "/" still opens that menu. Files go through the shell's own file input beside
+// it.
+//
+// It is laid out in two groups, the way the account menu is: what comes into the chat
+// from this device, then what the chat can reach. The camera and the album belong in the
+// first group and are not there yet: both need a way to get a picked file into the draft,
+// and the shell exposes none -- an empty group of one is honest, a camera button that
+// cannot take a picture is not. The second group only offers what this chat actually has:
+// no reference row where the shell cannot pick a chat, no memory row for a group chat or
+// with memory switched off, and no browser row on a phone, where the desktop bridge that
+// draws it is not there at all.
 export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
   const roster = useRoster(value => value)
   const [open, setOpen] = useState(null)
@@ -122,26 +131,30 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
   }, [open])
   const target = roster.byId?.[sessionId]?.id ?? roster.roomsById?.[sessionId]?.id
   if (sessionId === undefined || target === undefined) return null
+  const bot = roster.byId?.[sessionId]
   const toggle = () => {
     if (open) { setOpen(null); return }
     const rect = button.current.getBoundingClientRect()
     setOpen({ left: rect.left, bottom: window.innerHeight - rect.top + 8 })
   }
-  const attach = () => {
-    setOpen(null)
-    button.current?.closest('[data-composer-card]')?.querySelector('input[type=file]')?.click()
-  }
-  const schedule = () => {
-    setOpen(null)
-    actions.openSettings('schedules', target)
-  }
+  const attach = () => button.current?.closest('[data-composer-card]')?.querySelector('input[type=file]')?.click()
+  const schedule = () => actions.openSettings('schedules', target)
   // The chats open in the shell's "@" menu at the caret, so the pick lands where the
   // user was typing.
-  const reference = () => {
-    setOpen(null)
-    actions.referenceChat(sessionId, inputActions?.captureInsertion?.())
-  }
+  const reference = () => actions.referenceChat(sessionId, inputActions?.captureInsertion?.())
   const canReference = typeof inputActions?.captureInsertion === 'function' && actions.canReferenceChat()
+  const groups = [
+    [[t('Add files'), PaperclipIcon, attach]],
+    [
+      canReference ? [t('Reference a chat'), ChatsIcon, reference, keepComposerFocus] : null,
+      [t('Scheduled task'), ClockIcon, schedule],
+      [t('Connectors'), ConnectorIcon, () => actions.openConnectors()],
+      [t('Connect plugins'), PlugIcon, () => actions.selectPanel('plugins')],
+      bot !== undefined && roster.memory !== false ? [t('Memory'), MemoryIcon, () => actions.openMemory(bot.id)] : null,
+      bot !== undefined && roster.browser === true && typeof actions.openBrowser === 'function'
+        ? [t('Open browser'), GlobeIcon, () => actions.openBrowser(sessionId)] : null,
+    ].filter(Boolean),
+  ]
   return h(Fragment, null,
     h('button', {
       ref: button, type: 'button', className: 'bt-plus', 'aria-label': t('Add'), title: t('Add'),
@@ -151,7 +164,13 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       ref: menu, className: 'bt-menu bt-menu-up bt-plus-menu', role: 'menu', 'aria-label': t('Add'),
       style: { left: shown.left, bottom: shown.bottom }, 'data-leaving': leaving || undefined,
     },
-    h('button', { type: 'button', role: 'menuitem', onClick: attach }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))),
-    canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
-    h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
+    groups.map((group, index) => h(Fragment, { key: index },
+      index > 0 ? h('div', { className: 'bt-menu-sep', role: 'separator' }) : null,
+      group.map(([label, Icon, run, keepFocus]) => h('button', {
+        key: label, type: 'button', role: 'menuitem',
+        // The reference row asks the shell for the caret while the composer still holds
+        // it, so that one row has to stop the press from moving focus.
+        onMouseDown: keepFocus || undefined,
+        onClick: () => { setOpen(null); run() },
+      }, h(Icon), h('span', { className: 'bt-menu-label' }, label)))))), document.body) : null)
 }
