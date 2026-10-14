@@ -955,6 +955,17 @@ html:not([data-bt-mobile]) .bt-pane{top:max(var(--dsh-frame-chrome-top,0px),var(
 html:not([data-bt-mobile]) .bt-settings-layer,
 html:not([data-bt-mobile]) .bt-palette-layer,
 html:not([data-bt-mobile]) .bt-mem-layer{inset:max(var(--dsh-frame-chrome-top,0px),var(--dsh-mobile-top-inset,0px)) 0 0}
+/* The band's one top line, shared by all three columns. The middle column's header is the
+   reference and it is not ours: the shell starts that row on the status bar's inset and its
+   controls 10px below it (measured: header y=51, the pill inside at y=61, 40 tall). So 10px
+   below its own top is what every other column's top row has to reach, and it is written
+   once here for all of them. The right column's top row is 36px buttons today; they take the
+   40 the other two columns' controls are, or the tops would line up with the middles 2px out
+   of step. */
+html[data-bt-pc]{--bt-top-line:10px}
+html[data-bt-pc] .bt-drawer-top{padding-top:var(--bt-top-line)}
+html[data-bt-pc] .bt-drawer-top .bt-round{width:40px;height:40px}
+html[data-bt-pc] .bt-ptabs{margin-top:var(--bt-top-line)}
 /* The PC band's sidebar column takes the phone drawer's top row — the hamburger, then the
    search field, then New — rather than the desktop row's brand and search button: the column
    is 280 there, and the three controls have to read as one line.
