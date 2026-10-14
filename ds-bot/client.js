@@ -3325,20 +3325,23 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-c
 [class*="_body"]:has(> [class*="_scrollBody"]){--bt-bubble-max:min(calc(var(--dsh-chat-content-width,748px) * .702),82%)}
 /* A Bot's bubble in a hand sits between two equal gaps: the 30px its avatar column takes on
    the left, and the same 30px left over on the right, so the pair reads as centred without
-   moving the avatar or where the text starts. Both layers that consume the cap subtract the
-   same 30px (the wrapper against the row, the bubble against the wrapper), which lands the
-   bubble's right edge exactly 30px inside the row -- the arithmetic the user asked for, and
-   the reason the value is expressed as a subtraction rather than a share. Only the Bot's own
-   row is touched: the user's side keeps the base cap. */
-html[data-bt-mobile][data-bt-size=compact] [class*="_body"]:has(> [class*="_scrollBody"]) .bt-astack{--bt-bubble-max:calc(100% - 30px)}
+   moving the avatar or where the text starts. The column takes 30px off the row's measure and
+   the bubble then fills what the avatar column leaves, which lands the bubble's right edge
+   exactly 30px inside the row -- the arithmetic the user asked for, and the reason the value is
+   expressed as a subtraction rather than a share. (Only the wrapper consumes the cap: the
+   bubble inside a line is deliberately uncapped, see the .bt-msg-line>.bt-bubble rule.) Only the
+   Bot's own row is touched, and only in a group, where an avatar column is what holds the left:
+   the user's side and a one-to-one chat keep the base cap. */
+html[data-bt-mobile][data-bt-size=compact] [class*="_body"]:has(> [class*="_scrollBody"]) .bt-astack[data-lead]{--bt-bubble-max:calc(100% - 30px)}
 /* On a hand the three tools sit under the bubble rather than beside it: there is no hover to
-   chase, and beside the bubble they eat the text's width. They stay absolutely positioned, so
-   a hidden toolbar still reserves no room; a group's avatar column is stepped over so they
-   line up with the bubble itself. The hover bridge that existed for the sideways placement
-   has nothing left to bridge. */
-html[data-bt-mobile] .bt-tools{top:100%;left:0;margin:6px 0 0;transform:none}
-html[data-bt-mobile] .bt-astack[data-lead] .bt-tools{left:30px}
-html[data-bt-mobile] .bt-tools::after{display:none}
+   chase, and beside the bubble they eat the text's width (at the widest cap they even reached
+   past the viewport and made the page scroll sideways). They stay absolutely positioned, so a
+   hidden toolbar still reserves no room, and they hang under the bubble's left corner; a
+   group's avatar column is stepped over so they line up with the bubble. The hover bridge that
+   existed for the sideways placement has nothing left to bridge. */
+html[data-bt-mobile][data-bt-size=compact] .bt-tools{top:100%;left:0;margin:6px 0 0;transform:none}
+html[data-bt-mobile][data-bt-size=compact] .bt-astack[data-lead] .bt-tools{left:30px}
+html[data-bt-mobile][data-bt-size=compact] .bt-tools::after{display:none}
 [data-turn-tail]>:not([data-slot="conversation.chat.turnTail"]){display:none!important}
 [class*="_flowItem"][data-chat-flow-kind="turn-tail"]:not(:has([data-slot="conversation.chat.turnTail"]:not(:empty))){display:none!important}
 /* Every team Session belongs to a Bot or a group, so a blank one is an empty chat, not
