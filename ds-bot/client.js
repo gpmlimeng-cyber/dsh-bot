@@ -5451,6 +5451,26 @@ function showsDshRow(dsh, app) {
   return dsh.kind === "app" && APP_OFFER.has(app?.phase) && sameVersion(app.version, dsh.verified);
 }
 
+// src/client/pc-layout.js
+var PC_QUERY = "(min-width:841px) and (max-width:1023px) and (orientation:landscape)";
+function pcSidebarStep(wasPc, isPc, collapsed, opened) {
+  if (isPc && wasPc !== true) return { call: "expand", opened: collapsed === true };
+  if (!isPc && wasPc === true) return { call: opened && !collapsed ? "collapse" : null, opened: false };
+  return { call: null, opened: isPc ? opened : false };
+}
+function shellCollapsed(doc, wide) {
+  const find = (selector) => doc && typeof doc.querySelector === "function" ? doc.querySelector(selector) : null;
+  if (find("[data-sidebar-collapsed]")) return true;
+  const column = find('[class*="_sidebarCol"]');
+  if (column) return (column.getBoundingClientRect?.().width ?? 0) < 100;
+  return !wide;
+}
+var PC_DETAILS_MAX = 300;
+var PC_DETAILS_RATIO = 0.34;
+function pcDetailsWidth(viewport) {
+  return Math.round(Math.min(PC_DETAILS_MAX, viewport * PC_DETAILS_RATIO));
+}
+
 // src/client/mobile.js
 var import_react9 = require("react");
 var MOBILE_QUERY = "(max-width:840px), (max-width:1023px) and (orientation:portrait)";
@@ -5459,12 +5479,20 @@ var SIZE_EXPANDED_QUERY = "(min-width:841px)";
 var query;
 var listeners = /* @__PURE__ */ new Set();
 var sizes;
+var pcQuery;
 var media = () => {
   if (query === void 0) {
     query = typeof window === "undefined" || typeof window.matchMedia !== "function" ? null : window.matchMedia(MOBILE_QUERY);
   }
   return query;
 };
+var pcMedia = () => {
+  if (pcQuery === void 0) {
+    pcQuery = typeof window === "undefined" || typeof window.matchMedia !== "function" ? null : window.matchMedia(PC_QUERY);
+  }
+  return pcQuery;
+};
+var isPcLayout = () => pcMedia()?.matches === true;
 var sizeMedia = () => {
   if (sizes === void 0) {
     sizes = typeof window === "undefined" || typeof window.matchMedia !== "function" ? null : { medium: window.matchMedia(SIZE_MEDIUM_QUERY), expanded: window.matchMedia(SIZE_EXPANDED_QUERY) };
@@ -5489,6 +5517,11 @@ var publish = (matches) => {
   publishSize();
   for (const listener of listeners) listener(matches === true);
 };
+var publishPc = () => {
+  if (typeof document === "undefined") return;
+  if (isPcLayout()) document.documentElement.dataset.btPc = "1";
+  else delete document.documentElement.dataset.btPc;
+};
 var largestPx = (value) => {
   let top = 0;
   for (const [, digits] of value.matchAll(/(\d*\.?\d+)px/g)) {
@@ -5508,6 +5541,9 @@ function watchMobile() {
   const mql = media();
   publish(mql?.matches === true);
   mql?.addEventListener?.("change", (event) => publish(event.matches === true));
+  const pc = pcMedia();
+  publishPc();
+  pc?.addEventListener?.("change", () => publishPc());
   const bands = sizeMedia();
   bands?.medium.addEventListener?.("change", () => publishSize());
   bands?.expanded.addEventListener?.("change", () => publishSize());
@@ -5533,6 +5569,18 @@ function useMobile() {
     };
   }, []);
   return mobile;
+}
+function usePcColumns() {
+  const [pc, setPc] = (0, import_react9.useState)(() => isPcLayout());
+  (0, import_react9.useEffect)(() => {
+    const mql = pcMedia();
+    if (!mql?.addEventListener) return void 0;
+    const on = (event) => setPc(event.matches === true);
+    mql.addEventListener("change", on);
+    setPc(mql.matches === true);
+    return () => mql.removeEventListener("change", on);
+  }, []);
+  return pc;
 }
 
 // src/client/sidebar.js
@@ -5872,6 +5920,14 @@ function TeamSidebar(props) {
   const markedUnread = useUi((value) => value.unread);
   const mobileOpen = useUi((value) => value.mobileNav === true);
   const mobile = useMobile();
+  const pc = usePcColumns();
+  const pcSidebar = (0, import_react10.useRef)({ band: null, opened: false });
+  (0, import_react10.useEffect)(() => {
+    const step = pcSidebarStep(pcSidebar.current.band, pc, shellCollapsed(document, wide), pcSidebar.current.opened);
+    pcSidebar.current = { band: pc, opened: step.opened };
+    if (step.call === "expand") props.expandSidebar?.();
+    if (step.call === "collapse") actions.collapseSidebar?.();
+  }, [pc]);
   props.useRegistry((value) => value);
   const updated = useSessions((list) => {
     const stamps = {};
@@ -7153,15 +7209,16 @@ function Favicon({ src, className }) {
   if (!src || failed === src) return (0, import_react14.createElement)("span", { className: `${className} bt-ptab-globe` }, (0, import_react14.createElement)(GlobeIcon));
   return (0, import_react14.createElement)("img", { className, src, alt: "", "aria-hidden": true, onError: () => setFailed(src) });
 }
-var savedWidth = () => {
+var savedWidth = (low) => {
   try {
     const value = Number(localStorage.getItem(WIDTH_KEY));
-    return Number.isFinite(value) && value >= DETAILS_WIDTH ? value : null;
+    return Number.isFinite(value) && value >= low ? value : null;
   } catch {
     return null;
   }
 };
-var widthRange = (view, viewport) => view === "details" ? [DETAILS_WIDTH, Math.min(DETAILS_MAX, viewport - MIN_CHAT)] : [MIN_WIDTH, viewport - MIN_CHAT];
+var detailsLow = (viewport, pc) => pc ? pcDetailsWidth(viewport) : DETAILS_WIDTH;
+var widthRange = (view, viewport, low) => view === "details" ? [low, Math.min(DETAILS_MAX, viewport - MIN_CHAT)] : [MIN_WIDTH, viewport - MIN_CHAT];
 var fitWidth = (width, [low, high]) => Math.round(Math.max(low, Math.min(width, high)));
 var room = { rule: null, selector: "" };
 var roomRule = () => {
@@ -7456,13 +7513,15 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
   const fly = (0, import_react14.useRef)(null);
   const [landed, setLanded] = (0, import_react14.useState)(false);
   const [settling, setSettling] = (0, import_react14.useState)(false);
-  const [width, setWidth] = (0, import_react14.useState)(savedWidth);
+  const pc = usePcColumns();
+  const [width, setWidth] = (0, import_react14.useState)(() => savedWidth(detailsLow(window.innerWidth, isPcLayout())));
   const [viewport, setViewport] = (0, import_react14.useState)(() => window.innerWidth);
   const [dragging, setDragging] = (0, import_react14.useState)(false);
   const [resizing, setResizing] = (0, import_react14.useState)(false);
   const instant = dragging || resizing;
   const [reading, setReading] = (0, import_react14.useState)(false);
-  const panelWidth = fitWidth(width ?? (view === "details" ? DETAILS_WIDTH : DEFAULT_WIDTH), widthRange(view, viewport));
+  const detailLow = detailsLow(viewport, pc);
+  const panelWidth = fitWidth(width ?? (view === "details" ? detailLow : DEFAULT_WIDTH), widthRange(view, viewport, detailLow));
   (0, import_react14.useLayoutEffect)(() => {
     if (view !== "details" && width === null) setWidth(DEFAULT_WIDTH);
   }, [view, width]);
@@ -7603,7 +7662,7 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
     const panel = root.current;
     const grip = event.currentTarget;
     grip.setPointerCapture?.(event.pointerId);
-    const range = widthRange(view, window.innerWidth);
+    const range = widthRange(view, window.innerWidth, detailsLow(window.innerWidth, pc));
     const from = { x: event.clientX, width: panelWidth };
     let next = panelWidth;
     setDragging(true);
@@ -15278,6 +15337,11 @@ function apply(ctx) {
     },
     selectPanel: (id) => {
       ctx.layout.selectPanel(id);
+    },
+    // The sidebar opens itself through the slot's own `expandSidebar`; the same service closes
+    // it, and that is the only handle on the closing direction (sidebar.js pairs the two).
+    collapseSidebar: () => {
+      ctx.layout.toggleSidebar();
     },
     openNewChat: (mode) => {
       ui2.set((state) => ({ ...state, newChat: mode, menu: null, palette: null, mobileNav: false }));

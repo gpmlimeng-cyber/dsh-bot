@@ -10,6 +10,8 @@ import { STORAGE } from './storage.js'
 import { SPRING_SHAPE, springEasing } from './motion.js'
 import { DetailsDrawer } from './details-drawer.js'
 import { FilePreview } from './file-preview.js'
+import { isPcLayout, usePcColumns } from './mobile.js'
+import { pcDetailsWidth } from './pc-layout.js'
 import { t } from './i18n.js'
 
 export const PANEL_LINGER_MS = 300
@@ -55,14 +57,18 @@ export function Favicon({ src, className }) {
 
 // null until the user sets a width: the Bot page then opens at DETAILS_WIDTH and the
 // browser at DEFAULT_WIDTH.
-const savedWidth = () => {
+const savedWidth = (low) => {
   try {
     const value = Number(localStorage.getItem(WIDTH_KEY))
-    return Number.isFinite(value) && value >= DETAILS_WIDTH ? value : null
+    return Number.isFinite(value) && value >= low ? value : null
   } catch { return null }
 }
-const widthRange = (view, viewport) => (view === 'details'
-  ? [DETAILS_WIDTH, Math.min(DETAILS_MAX, viewport - MIN_CHAT)]
+// The details view's floor is the band's own: 320 on a desktop window, and the PC band's
+// own min(300px, 34vw) on a folded screen, where the shell's sidebar column sits beside it
+// (pc-layout.js). Passing the desktop floor there would clamp the panel straight back up.
+const detailsLow = (viewport, pc) => (pc ? pcDetailsWidth(viewport) : DETAILS_WIDTH)
+const widthRange = (view, viewport, low) => (view === 'details'
+  ? [low, Math.min(DETAILS_MAX, viewport - MIN_CHAT)]
   : [MIN_WIDTH, viewport - MIN_CHAT])
 const fitWidth = (width, [low, high]) => Math.round(Math.max(low, Math.min(width, high)))
 
@@ -302,7 +308,8 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   const fly = useRef(null)
   const [landed, setLanded] = useState(false)
   const [settling, setSettling] = useState(false)
-  const [width, setWidth] = useState(savedWidth)
+  const pc = usePcColumns()
+  const [width, setWidth] = useState(() => savedWidth(detailsLow(window.innerWidth, isPcLayout())))
   const [viewport, setViewport] = useState(() => window.innerWidth)
   // While dragging or while the window resizes, width changes land at once.
   const [dragging, setDragging] = useState(false)
@@ -310,7 +317,8 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   const instant = dragging || resizing
   const [reading, setReading] = useState(false)
 
-  const panelWidth = fitWidth(width ?? (view === 'details' ? DETAILS_WIDTH : DEFAULT_WIDTH), widthRange(view, viewport))
+  const detailLow = detailsLow(viewport, pc)
+  const panelWidth = fitWidth(width ?? (view === 'details' ? detailLow : DEFAULT_WIDTH), widthRange(view, viewport, detailLow))
   // Once the browser or the Files tab has shown, the Bot page keeps its width (up to
   // DETAILS_MAX).
   useLayoutEffect(() => { if (view !== 'details' && width === null) setWidth(DEFAULT_WIDTH) }, [view, width])
@@ -446,7 +454,7 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
     const panel = root.current
     const grip = event.currentTarget
     grip.setPointerCapture?.(event.pointerId)
-    const range = widthRange(view, window.innerWidth)
+    const range = widthRange(view, window.innerWidth, detailsLow(window.innerWidth, pc))
     const from = { x: event.clientX, width: panelWidth }
     let next = panelWidth
     setDragging(true)

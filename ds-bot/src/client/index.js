@@ -446,6 +446,9 @@ export function apply(ctx) {
       ctx.uiWorkspace.openSession(target)
     },
     selectPanel: (id) => { ctx.layout.selectPanel(id) },
+    // The sidebar opens itself through the slot's own `expandSidebar`; the same service closes
+    // it, and that is the only handle on the closing direction (sidebar.js pairs the two).
+    collapseSidebar: () => { ctx.layout.toggleSidebar() },
     openNewChat: (mode) => { ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null, mobileNav: false })) },
     openPalette: (query = '') => { ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null, mobileNav: false })) },
     // The token keeps a late exit timer from closing a palette opened again since.

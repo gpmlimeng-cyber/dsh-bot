@@ -11,7 +11,8 @@ import { Shimmer, workPhrase } from './cells.js'
 import { springEasing, SPRING_SHAPE } from './motion.js'
 import { hostText, t } from './i18n.js'
 import { showsDshRow } from './dsh-offer.js'
-import { useMobile } from './mobile.js'
+import { useMobile, usePcColumns } from './mobile.js'
+import { pcSidebarStep, shellCollapsed } from './pc-layout.js'
 
 // -------------------------------------------------------------------------
 // Sidebar
@@ -288,6 +289,21 @@ export function TeamSidebar(props) {
   // drawer renders the same wide list the desktop sidebar shows, over a scrim.
   const mobileOpen = useUi(value => value.mobileNav === true)
   const mobile = useMobile()
+  // A foldable held sideways draws the desktop layout (mobile.js), and the desktop layout
+  // wants the shell's own sidebar column instead of the 56px rail the shell keeps below its
+  // 1024 line. The shell hands this slot the one safe way to open it — `expandSidebar`,
+  // which does nothing when the column is already up; closing what we opened is the layout
+  // service's own toggle. Only a band change acts (pcSidebarStep), so a hand that folds the
+  // column away inside the band keeps it folded, and the phone layout never inherits a
+  // column it did not ask for.
+  const pc = usePcColumns()
+  const pcSidebar = useRef({ band: null, opened: false })
+  useEffect(() => {
+    const step = pcSidebarStep(pcSidebar.current.band, pc, shellCollapsed(document, wide), pcSidebar.current.opened)
+    pcSidebar.current = { band: pc, opened: step.opened }
+    if (step.call === 'expand') props.expandSidebar?.()
+    if (step.call === 'collapse') actions.collapseSidebar?.()
+  }, [pc])
   props.useRegistry(value => value)
   const updated = useSessions(list => {
     const stamps = {}

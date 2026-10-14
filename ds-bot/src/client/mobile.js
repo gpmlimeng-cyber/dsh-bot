@@ -17,6 +17,7 @@
 // where there is no room beside the shell's rail. Up to 840 nothing changes: a phone,
 // however it is held, and a half-folded screen keep the mobile skin.
 import { useEffect, useState } from 'react'
+import { PC_QUERY } from './pc-layout.js'
 
 export const MOBILE_QUERY = '(max-width:840px), (max-width:1023px) and (orientation:portrait)'
 export const SIZE_MEDIUM_QUERY = '(min-width:600px)'
@@ -25,6 +26,7 @@ export const SIZE_EXPANDED_QUERY = '(min-width:841px)'
 let query
 const listeners = new Set()
 let sizes
+let pcQuery
 
 const media = () => {
   if (query === undefined) {
@@ -32,6 +34,22 @@ const media = () => {
   }
   return query
 }
+
+// The desktop window a foldable draws when it is held sideways (see pc-layout.js). It is
+// the exact complement of MOBILE_QUERY inside 1024px — every width is either <=840, or
+// 841-1023 portrait (mobile), or 841-1023 landscape (this), or >=1024 (desktop) — but it
+// is read on its own query all the same: a desktop window resized across 1024 in
+// landscape changes this band without changing the other, and a stale flag would then
+// keep the phone layout's rules on or off.
+const pcMedia = () => {
+  if (pcQuery === undefined) {
+    pcQuery = typeof window === 'undefined' || typeof window.matchMedia !== 'function' ? null : window.matchMedia(PC_QUERY)
+  }
+  return pcQuery
+}
+
+/** Whether the PC layout band is the one on screen right now. */
+export const isPcLayout = () => pcMedia()?.matches === true
 
 const sizeMedia = () => {
   if (sizes === undefined) {
@@ -70,6 +88,15 @@ const publish = (matches) => {
   for (const listener of listeners) listener(matches === true)
 }
 
+// Mirrored onto <html data-bt-pc>, the one flag every rule of the PC layout hangs on, so
+// the stylesheet and a real-device dump agree on which layout is on screen. Nothing is
+// published while the phone layout is up: the two are complements of each other.
+const publishPc = () => {
+  if (typeof document === 'undefined') return
+  if (isPcLayout()) document.documentElement.dataset.btPc = '1'
+  else delete document.documentElement.dataset.btPc
+}
+
 // The top inset (the device's status bar, ~46px here) has exactly one honest source on
 // Android: the adaptation layer publishes it on :root as --dsh-mobile-top-inset, from
 // env(safe-area-inset-top) and the shell bridge. The shell's own --dsh-frame-chrome-top is
@@ -106,6 +133,11 @@ export function watchMobile() {
   const mql = media()
   publish(mql?.matches === true)
   mql?.addEventListener?.('change', (event) => publish(event.matches === true))
+  // The PC band is published and watched on its own: it is the complement of the line
+  // above, but a window can cross into it without that line moving at all.
+  const pc = pcMedia()
+  publishPc()
+  pc?.addEventListener?.('change', () => publishPc())
   const bands = sizeMedia()
   bands?.medium.addEventListener?.('change', () => publishSize())
   bands?.expanded.addEventListener?.('change', () => publishSize())
@@ -131,4 +163,18 @@ export function useMobile() {
     return () => { listeners.delete(setMobile) }
   }, [])
   return mobile
+}
+
+/** Reactive view of the PC layout band, for the sidebar column and the panel's width. */
+export function usePcColumns() {
+  const [pc, setPc] = useState(() => isPcLayout())
+  useEffect(() => {
+    const mql = pcMedia()
+    if (!mql?.addEventListener) return undefined
+    const on = (event) => setPc(event.matches === true)
+    mql.addEventListener('change', on)
+    setPc(mql.matches === true)
+    return () => mql.removeEventListener('change', on)
+  }, [])
+  return pc
 }
