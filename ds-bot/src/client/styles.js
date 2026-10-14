@@ -261,11 +261,13 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 /* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
    is the touch target the card's own 60px tile can hold exactly (8px of padding above and
-   below), and the same size the preview page's controls take. */
+   below), and the same size the preview page's controls take. The glyph grows with it -- a
+   44px target around a 13px drawing still reads as a small button -- to the 20px the card's
+   own 40px type tile draws its icon at, so the tile and the three exits match. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
-.bt-dcard-btn svg{width:16px;height:16px}
+.bt-dcard-btn svg{width:20px;height:20px}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 

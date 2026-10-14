@@ -62,7 +62,10 @@ test('the card’s exits are three named icons, each a 44px target', () => {
   const source = card.join('\n')
   const btn = rule('.bt-dcard-btn{')
   assert.ok(btn.includes('width:44px') && btn.includes('height:44px'), 'a 44px touch target')
-  assert.ok(rule('.bt-dcard-btn svg{').includes('width:16px'), 'the glyph itself is 16px')
+  // The drawing grows with the target too, to the size the card's own type tile draws its
+  // icon at: a 44px target around a small glyph still reads as a small button.
+  assert.ok(rule('.bt-dcard-btn svg{').includes('width:20px'), 'and the glyph is drawn at 20px')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:40px'), 'the tile it matches stays 40px')
   assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the three never wrap into a second row the 60px tile would clip')
   for (const [act, shape] of [['preview', '}, h(EyeIcon))'], ['open', '}, h(ExternalIcon))'], ['copy', "}, state === 'copied' ? h(CheckIcon) : h(CopyIcon)))"]]) {
     assert.ok(source.includes(`'data-act': '${act}'`), `the ${act} exit is marked`)
