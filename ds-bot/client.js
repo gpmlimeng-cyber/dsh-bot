@@ -2924,22 +2924,33 @@ html[data-bt-pc] .bt-ptabs{margin-top:var(--bt-top-line)}
 /* The PC band's sidebar column takes the phone drawer's top row — the hamburger, then the
    search field, then New — rather than the desktop row's brand and search button: the column
    is 280 there, and the three controls have to read as one line.
-   The line is built from the column, not from the floating bar: the bar's own line is the
-   inset plus its 10px, while this row starts where the shell starts the column, and the
-   shell's offset above us (18px on the device) would put the two 8px apart. So the hamburger
-   is the list's first child here, out of flow (.bt-mobile-nav is absolute) with its top
-   pinned to the row's own top: where the column begins cannot separate them, and the column's
-   width — 280 open, 56 folded — cannot move it either, so both states report the same box.
-   The row keeps the phone's 52px clear for the button plus the 12px the phone's drawer
-   padding contributes and this column does not, and its own top padding goes: the row's top
-   is the point it has to share with the button. */
-html[data-bt-pc] .bt-side{position:relative}
-html[data-bt-pc] .bt-side>.bt-mobile-nav{top:0}
-html[data-bt-pc] .bt-side .bt-side-top{padding-top:0;padding-left:64px;padding-right:0}
-html[data-bt-pc] .bt-side .bt-side-top .bt-round{flex:0 0 40px;width:40px;height:40px}
-/* Folded, the row is gone and only the hamburger is left, on the same pixel as before; the
-   rail's own controls move below its box rather than under it. */
-html[data-bt-pc] .bt-side.bt-rail{padding-top:52px}
+   That line is not where the column begins. The shell draws its own sidebar root inside the
+   column and pads it (6px with the column up, 18px once it is the rail — both from its own
+   stylesheet, and both measured on the device: our root starts at y=57 open and y=69 folded
+   under the shell's 51px inset). So the list takes back the difference and the row rides on
+   it: 4px down when open, nothing when folded, where the row is not drawn at all.
+   The button needs both of the shell's paddings out of its way, and they differ by state
+   (6px top and 12px inline open, 18px and 10px folded) while the shell's region area above the
+   root clips anything dragged above its own top — pinned to the root, folded, the button would
+   have to sit 8px above it and would be cut. It hangs off the column instead, where one
+   address — 12 across, the line down — is right in both widths, and where neither the shell's
+   padding nor the column's width (280 open, 56 folded) can move it. The shell's sidebar column
+   is not a positioned ancestor today, so that is one declaration; the layout band's own right
+   column already is one, so this adds no layer the shell did not have. The open row then keeps
+   the phone's own 52px clear for the button, and its buttons take a position of their own: the
+   update button's failure dot is absolute against the nearest positioned ancestor, which with
+   the column anchored would be the column's own corner, not the button it belongs to. */
+html[data-bt-pc]{--bt-shell-pad-top:6px}
+html[data-bt-pc] [class*="_sidebarCol"]{position:relative}
+html[data-bt-pc] .bt-side{margin-top:calc(var(--bt-top-line) - var(--bt-shell-pad-top))}
+html[data-bt-pc] .bt-side>.bt-mobile-nav{left:12px;top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,0px)) + var(--bt-top-line))}
+html[data-bt-pc] .bt-side .bt-side-top{padding-top:0;padding-left:52px;padding-right:0}
+html[data-bt-pc] .bt-side .bt-side-top .bt-round{flex:0 0 40px;width:40px;height:40px;position:relative}
+/* Folded, the row is gone and only the hamburger is left, on the same pixel as before: the
+   root gives back the 4px it takes when open (the shell pads it 18 here, not 6), and the
+   rail's own first control keeps the phone's 52px below the line, measured from where the
+   row would have ended. */
+html[data-bt-pc] .bt-side.bt-rail{--bt-shell-pad-top:18px;margin-top:0;padding-top:calc(var(--bt-top-line) + 52px - var(--bt-shell-pad-top))}
 /* The mobile skin has three sizes, on the Compact/Medium/Expanded lines the platforms
    publish (Xiaomi and HarmonyOS both use 600 and 840). The defaults below are the compact
    phone the skin draws where no band matches; a band only re-points these variables, and
