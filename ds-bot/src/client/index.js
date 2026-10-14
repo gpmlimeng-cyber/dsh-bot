@@ -644,13 +644,19 @@ export function apply(ctx) {
   actions.canSignIn = () => Boolean(actions.signInEntry())
   // The global panels other plugins registered, for the account menu's second list:
   // the same mapping the shell's own panel column runs (id, order, resolved label),
-  // winners per cell in registration order.
+  // winners per cell in registration order. Panels our own menu already offers are
+  // not listed twice: `plugins` is the foot's Connect-plugins pill
+  // (sidebar.js, selectPanel('plugins')), `schedules` the menu's automation row —
+  // `ui-schedule` is not in the default bundle, so the second one only matters
+  // once an experimental bundle enables it.
+  const OWN_PANELS = ['plugins', 'schedules']
   actions.panelEntries = () => (ctx.slots.entriesOfSlot?.('sidebar.panellist') ?? [])
     .map(({ options }) => ({
       id: options.id,
       order: options.order ?? 0,
       label: typeof options.label === 'function' ? options.label() : options.label ?? options.id,
     }))
+    .filter(entry => !OWN_PANELS.includes(entry.id))
     .sort((one, two) => one.order - two.order)
   actions.signIn = () => ui.set(state => ({ ...state, signIn: (state.signIn ?? 0) + 1 }))
   actions.closeSignIn = () => ui.set(state => ({ ...state, signIn: null }))
