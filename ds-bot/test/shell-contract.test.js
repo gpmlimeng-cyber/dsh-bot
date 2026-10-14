@@ -57,12 +57,24 @@ test('the workspaces slot still hands over expandSidebar', { skip: sidebar ? fal
   assert.match(sidebar, /expandSidebar\s*:\s*\(\s*\)\s*=>\s*\{\s*if\s*\(\s*collapsed\s*\)\s*toggleSidebar\(\)/)
 })
 
-// Our band's rule is `[class*="_sidebarCol"]`; CSS modules hash the prefix, so the suffix is
-// the part the shell can be held to. Losing it would not break the line (the frame itself is
-// positioned, and it starts at y=0 too) but the button would be clipped by the sidebar column
-// again in the folded width, so a red test here is the early warning, not a crash.
-test('the layout still names the sidebar column that the band hangs the button off', { skip: layout ? false : absent }, () => {
+// Our band's rules address that column as `[class*="_sidebarCol"]`; CSS modules hash the
+// prefix, so the suffix is the part the shell can be held to. Two of the band's rules need it:
+// the one that stills the rail animation (a transform on the region area would capture the
+// fixed button for the length of a fold) and the one that hides the shell's chrome in the
+// folded column. Losing the name would not break the line, so this is an early warning rather
+// than a crash.
+test('the layout still names the sidebar column the band addresses', { skip: layout ? false : absent }, () => {
   assert.match(layout, /_sidebarCol\s*\{/)
+})
+
+// The folded band takes the column's track to zero by overriding the frame's grid, which is
+// only possible because the shell writes the tracks as an inline style, and it is only safe
+// because it can tell that the shell's own right column is already zero -- restating the
+// tracks means restating all three. Both of those facts, and the sidebar being the first
+// track, are what this pins.
+test('the frame still writes its tracks inline, sidebar first, and marks a zero right column', { skip: layout ? false : absent }, () => {
+  assert.match(layout, /gridTemplateColumns:\s*`\$\{cols\.sidebar\}px/)
+  assert.match(layout, /"data-rightbar-collapsed":\s*cols\.rightbar === 0/)
 })
 
 // The one number the band mirrors, read from the shell rather than restated: the shell pads

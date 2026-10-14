@@ -2925,38 +2925,44 @@ html[data-bt-pc] .bt-ptabs{margin-top:var(--bt-top-line)}
    search field, then New — rather than the desktop row's brand and search button: the column
    is 280 there, and the three controls have to read as one line.
    That line is not where the column begins. The shell draws its own sidebar root inside the
-   column and pads it (6px with the column up, 18px once it is the rail — both from its own
-   stylesheet, and both measured on the device: our root starts at y=57 open and y=69 folded
-   under the shell's 51px inset). So the list takes back the difference and the row rides on
-   it: 4px down when open, nothing when folded, where the row is not drawn at all.
-   The button needs both of the shell's paddings out of its way, and they differ by state
-   (6px top and 12px inline open, 18px and 10px folded) while the shell's region area above the
-   root clips anything dragged above its own top — pinned to the root, folded, the button would
-   have to sit 8px above it and would be cut. It hangs off the column instead, where one
-   address — 12 across, the line down — is right in both widths, and where neither the shell's
-   padding nor the column's width (280 open, 56 folded) can move it. The shell's sidebar column
-   is not a positioned ancestor today, so that is one declaration; the layout band's own right
-   column already is one, so this adds no layer the shell did not have. The open row then keeps
-   the phone's own 52px clear for the button, and its buttons take a position of their own: the
-   update button's failure dot is absolute against the nearest positioned ancestor, which with
-   the column anchored would be the column's own corner, not the button it belongs to. */
+   column and pads it 6px (18px once the column is the rail — both its own stylesheet, both
+   measured on the device: our root starts at y=57 open and y=69 folded under the shell's 51px
+   inset). So the list takes back the difference and the row rides on it: 4px down when open,
+   nothing when folded, where the row is not drawn at all.
+   The button is not placed from the root at all: it is fixed to the viewport, at 12 across and
+   the line down. The column cannot be its frame of reference in either of its widths — the
+   shell pads its root 12px inline open and 10px folded (so the same declaration would land at
+   two addresses), the region area between the two clips anything dragged above its own top,
+   and folded the column is taken to zero (below), which would cut the button away with it.
+   Fixed to the viewport, one address is right in both states, which is what the fold has to
+   show. The open row keeps the phone's own 52px clear for it, and its buttons take a position
+   of their own: the update button's failure dot is absolute against the nearest positioned
+   ancestor, which would otherwise be the column's own corner rather than the button's. */
 html[data-bt-pc]{--bt-shell-pad-top:6px}
-html[data-bt-pc] [class*="_sidebarCol"]{position:relative}
 html[data-bt-pc] .bt-side{margin-top:calc(var(--bt-top-line) - var(--bt-shell-pad-top))}
-html[data-bt-pc] .bt-side>.bt-mobile-nav{left:12px;top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,0px)) + var(--bt-top-line))}
+html[data-bt-pc] .bt-side>.bt-mobile-nav{position:fixed;left:12px;top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,0px)) + var(--bt-top-line))}
 html[data-bt-pc] .bt-side .bt-side-top{padding-top:0;padding-left:52px;padding-right:0}
 html[data-bt-pc] .bt-side .bt-side-top .bt-round{flex:0 0 40px;width:40px;height:40px;position:relative}
-/* Folded, the rail is emptied rather than narrowed: the column comes down to the one button,
-   on the pixel it keeps when the column is open. Both sides go -- what this skin puts inside
-   the root (the rail's two round buttons and the icon list) and the chrome the shell draws
-   around our slot (its logo row, its panel list and its foot area, which would otherwise leave
-   the account launcher and Connect under an empty rail).
-   The trigger is the shell's own data-sidebar-collapsed on the frame rather than our
-   bt-rail class: that class follows the wide flag, which stays true for the few hundred ms a
-   fold takes, so the row and the list would still be there while the column is already 56
-   wide. (Backticks stay out of these comments: this text is a template literal.)
-   The column itself keeps its 56: that width is the shell's, it is the anchor our button is
-   measured against, and the button (12 across) still clears it. */
+/* A fixed box is only anchored to the viewport while no ancestor is transformed, and the
+   shell's rail transition animates the region area with a 49px translate for 150ms. That
+   animation is the shell's cue that this area is arriving; the area holds this skin's own
+   list, and it is empty while the column is folded, so the band drops it rather than let it
+   carry the button sideways for the length of a fold. */
+html[data-bt-pc] [class*="_sidebarCol"] [class*="_regionArea"]{animation:none!important}
+/* Folded, the column goes to nothing: its 56px track, its row, its list, the chrome the shell
+   draws around our slot (its logo row, its panel list and its foot area, which is the account
+   launcher and Connect) — everything but the button, which no longer belongs to the column at
+   all. The tracks are the shell's inline style, so the override is !important, exactly the
+   shape the phone's own layout uses below 768px (it takes the sidebar out of flow as well;
+   here there is nothing left in it, so the track is enough).
+   All three tracks have to be restated, so this is written only for the case where the shell's
+   own right column is already zero: the shell's panel is not ours, and restating the third
+   track as 0 would squash it. Where that attribute is absent the fold falls back to the empty
+   56px rail rather than breaking anything.
+   The state is the shell's data-sidebar-collapsed on the frame rather than this skin's bt-rail
+   class: that class follows the wide flag, which stays true for the few hundred ms a fold
+   takes, so the row and the list would still be drawn over a column that is already gone. */
+html[data-bt-pc] [data-dsh-frame][data-sidebar-collapsed][data-rightbar-collapsed]{grid-template-columns:0 minmax(0,1fr) 0!important}
 html[data-bt-pc] [data-sidebar-collapsed] [class*="_sidebarCol"] :is([class*="_logoRow"],[class*="_panelList"],[class*="_footArea"]),
 html[data-bt-pc] [data-sidebar-collapsed] [class*="_sidebarCol"] .bt-side>*:not(.bt-mobile-nav){display:none!important}
 /* With the row gone, the open root's 4px is not re-applied: the shell pads the root 18px here,
