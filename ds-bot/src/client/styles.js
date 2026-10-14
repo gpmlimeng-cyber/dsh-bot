@@ -236,15 +236,27 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* Rows without the avatar start where the bubble beside it starts: 22px avatar + 8px gap. */
 .bt-astack[data-lead]>.bt-msg:not(:last-child)>.bt-msg-line,.bt-astack[data-lead] .bt-reacts{margin-left:30px}
 .bt-group-name{font-size:12px;line-height:16px;font-weight:500;margin-left:42px}
-/* Deliverable cards under a group reply: one row per presented file. */
-.bt-dcards{display:flex;flex-direction:column;gap:6px;margin-left:42px}
-.bt-dcard{display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 8px 6px 10px;border-radius:10px;background:var(--bt-card);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;flex-wrap:wrap}
-.bt-dcard-ico{flex:none;display:inline-flex;color:var(--bt-ink-2)}
-.bt-dcard-copy{flex:1;min-width:120px;display:flex;flex-direction:column;gap:1px}
-.bt-dcard-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;word-break:break-all}
-.bt-dcard-desc{font-size:12px;line-height:16px;color:var(--bt-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-dcard-hint{flex:1 0 100%;font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
-.bt-dcard-acts{flex:none;display:inline-flex;gap:6px}
+/* Deliverable cards under a group reply: one card per presented file, in DSH's own
+   shape — a 60px tile in a two-column grid that folds to one column once the card
+   column is narrow, a 40px type tile, the name over its metadata, and one hit
+   target covering the whole card. The fallback hint sits under the card, not in it,
+   so the tile keeps its height and a phone can still read the whole sentence. */
+.bt-dcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-left:42px;container-type:inline-size}
+.bt-dcard-wrap{min-width:0;display:flex;flex-direction:column;gap:6px}
+.bt-dcard{position:relative;box-sizing:border-box;display:flex;align-items:center;gap:10px;height:60px;padding:8px 10px;border-radius:10px;background:var(--bt-card);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;overflow:hidden;transition:background-color .12s ease}
+.bt-dcard:hover{background:var(--bt-hover)}
+.bt-dcard-hit{position:absolute;inset:0;z-index:1;width:100%;padding:0;border:0;border-radius:inherit;background:0 0;cursor:pointer}
+.bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);outline:none}
+.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;box-sizing:border-box;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;border:.5px solid var(--bt-line);background:var(--bt-card);color:var(--bt-accent);overflow:hidden}
+.bt-dcard-copy{position:relative;z-index:2;pointer-events:none;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.bt-dcard-name{font-size:13px;line-height:20px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-dcard-desc{font-size:10px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-dcard-peek{display:none;font-size:10px;line-height:16px;color:var(--bt-ink-2)}
+.bt-dcard:hover .bt-dcard-desc,.bt-dcard:focus-within .bt-dcard-desc{display:none}
+.bt-dcard:hover .bt-dcard-peek,.bt-dcard:focus-within .bt-dcard-peek{display:inline}
+.bt-dcard-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
+.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:inline-flex;gap:6px}
+@container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 .bt-dcard-btn{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}

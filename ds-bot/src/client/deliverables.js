@@ -1,10 +1,14 @@
-// Deliverable cards: a Bot's `present` files attached to a group reply. The host carries
-// each file's `{sessionId, seq, index}` coordinates from the `deliverables/presented`
-// event; DSH's own /api/present.open route resolves them back to the real file. Opening
-// needs the Host desktop (409 otherwise), so the card falls back to copying the path —
-// which is what a phone needs to reach a copy under its own DSH/deliverables folder.
+// Deliverable cards: a Bot's `present` files attached to a reply. The host carries each
+// file's path, description and `{sessionId, seq, index}` coordinates from the
+// `deliverables/presented` event; DSH's own /api/present.open route resolves the
+// coordinates back to the real file. Opening needs the Host desktop (409 otherwise), so
+// the card falls back to copying the path — which is what a phone needs to reach a copy
+// under its own DSH/deliverables folder. The shape follows DSH's own PresentedFileCard
+// (dsh-client-ui-deliverables lib/client.js): a 60px tile, a 40px type icon, the name
+// over its metadata, and one hit target covering the whole card.
 import { createElement as h, useState } from 'react'
-import { PaperclipIcon, CopyIcon, CheckIcon } from './icons.js'
+import { FileTypeIcon, fileExtension } from '@deepseek-ai/dsh-client-ui-primitives'
+import { CopyIcon, CheckIcon } from './icons.js'
 import { t } from './i18n.js'
 
 const basename = (path) => {
@@ -19,6 +23,18 @@ const PHONE_COPY_HINT = '/storage/emulated/0/DSH/deliverables/'
 const openUrl = (file) => {
   const query = new URLSearchParams({ sessionId: file.sessionId, seq: String(file.seq), index: String(file.index ?? 0) })
   return `api/present.open?${query}`
+}
+
+// What the card says under the name: DSH's own card shows the file's description when
+// it has one, else the upper-case extension, else the word for a file. A trailing
+// parenthetical is dropped first, since descriptions often end in one.
+const metaText = (file, name) => {
+  const trimmed = typeof file.description === 'string'
+    ? file.description.replace(/\s*(?:\([^()]*\)|（[^（）]*）)\s*$/u, '').trim()
+    : ''
+  if (trimmed !== '') return trimmed
+  const extension = fileExtension(name).toUpperCase()
+  return extension === '' ? t('File') : extension
 }
 
 function DeliverableCard({ file }) {
@@ -47,19 +63,25 @@ function DeliverableCard({ file }) {
       setState('failed')
     }
   }
-  return h('div', { className: 'bt-dcard', 'data-state': state === 'failed' ? 'fallback' : undefined },
-    h('span', { className: 'bt-dcard-ico', 'aria-hidden': true }, h(PaperclipIcon)),
-    h('span', { className: 'bt-dcard-copy' },
-      h('span', { className: 'bt-dcard-name' }, name),
-      file.description ? h('span', { className: 'bt-dcard-desc' }, file.description) : null),
+  return h('div', { className: 'bt-dcard-wrap' },
+    h('div', { className: 'bt-dcard', 'data-state': state === 'failed' ? 'fallback' : undefined },
+      // One hit target over the whole card, as DSH's own card has: the name and icon
+      // carry no pointer events of their own, so a tap anywhere but the two buttons
+      // opens (or, on a phone, falls back to the hint below).
+      h('button', { type: 'button', className: 'bt-dcard-hit', title: file.path, 'aria-label': `${t('Open')} ${name}`, onClick: open }),
+      h('span', { className: 'bt-dcard-ico', 'aria-hidden': true }, h(FileTypeIcon, { path: file.path, size: 20 })),
+      h('span', { className: 'bt-dcard-copy' },
+        h('span', { className: 'bt-dcard-name' }, name),
+        h('span', { className: 'bt-dcard-desc' }, metaText(file, name)),
+        h('span', { className: 'bt-dcard-peek', 'aria-hidden': true }, t('Open'))),
+      h('span', { className: 'bt-dcard-acts' },
+        h('button', { type: 'button', className: 'bt-dcard-btn', disabled: state === 'opening', onClick: open },
+          state === 'opening' ? t('Opening…') : t('Open')),
+        h('button', { type: 'button', className: 'bt-dcard-btn', onClick: copy, 'aria-label': t('Copy path'), title: t('Copy path') },
+          state === 'copied' ? h(CheckIcon) : h(CopyIcon), state === 'copied' ? t('Copied') : t('Path')))),
     state === 'failed'
       ? h('span', { className: 'bt-dcard-hint', role: 'status' }, t('Could not open it here. Copy the path and open the copy under {folder}', { folder: PHONE_COPY_HINT }))
-      : null,
-    h('span', { className: 'bt-dcard-acts' },
-      h('button', { type: 'button', className: 'bt-dcard-btn', disabled: state === 'opening', onClick: open },
-        state === 'opening' ? t('Opening…') : t('Open')),
-      h('button', { type: 'button', className: 'bt-dcard-btn', onClick: copy, 'aria-label': t('Copy path'), title: t('Copy path') },
-        state === 'copied' ? h(CheckIcon) : h(CopyIcon), state === 'copied' ? t('Copied') : t('Path'))))
+      : null)
 }
 
 // One card per delivered file, under the group reply that carried them.

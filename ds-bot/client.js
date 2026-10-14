@@ -534,6 +534,7 @@ var ZH = {
   "{name} looked up its own chat for “{text}”": "{name} 在自己的对话里查找「{text}」",
   "Copy path": "复制路径",
   Path: "路径",
+  File: "文件",
   "Opening…": "正在打开…",
   "Could not open it here. Copy the path and open the copy under {folder}": "这里打不开。复制路径，在手机文件管理的 {folder} 里打开副本",
   "Open navigation": "打开导航",
@@ -2192,15 +2193,27 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* Rows without the avatar start where the bubble beside it starts: 22px avatar + 8px gap. */
 .bt-astack[data-lead]>.bt-msg:not(:last-child)>.bt-msg-line,.bt-astack[data-lead] .bt-reacts{margin-left:30px}
 .bt-group-name{font-size:12px;line-height:16px;font-weight:500;margin-left:42px}
-/* Deliverable cards under a group reply: one row per presented file. */
-.bt-dcards{display:flex;flex-direction:column;gap:6px;margin-left:42px}
-.bt-dcard{display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 8px 6px 10px;border-radius:10px;background:var(--bt-card);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;flex-wrap:wrap}
-.bt-dcard-ico{flex:none;display:inline-flex;color:var(--bt-ink-2)}
-.bt-dcard-copy{flex:1;min-width:120px;display:flex;flex-direction:column;gap:1px}
-.bt-dcard-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;word-break:break-all}
-.bt-dcard-desc{font-size:12px;line-height:16px;color:var(--bt-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-dcard-hint{flex:1 0 100%;font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
-.bt-dcard-acts{flex:none;display:inline-flex;gap:6px}
+/* Deliverable cards under a group reply: one card per presented file, in DSH's own
+   shape — a 60px tile in a two-column grid that folds to one column once the card
+   column is narrow, a 40px type tile, the name over its metadata, and one hit
+   target covering the whole card. The fallback hint sits under the card, not in it,
+   so the tile keeps its height and a phone can still read the whole sentence. */
+.bt-dcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-left:42px;container-type:inline-size}
+.bt-dcard-wrap{min-width:0;display:flex;flex-direction:column;gap:6px}
+.bt-dcard{position:relative;box-sizing:border-box;display:flex;align-items:center;gap:10px;height:60px;padding:8px 10px;border-radius:10px;background:var(--bt-card);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;overflow:hidden;transition:background-color .12s ease}
+.bt-dcard:hover{background:var(--bt-hover)}
+.bt-dcard-hit{position:absolute;inset:0;z-index:1;width:100%;padding:0;border:0;border-radius:inherit;background:0 0;cursor:pointer}
+.bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);outline:none}
+.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;box-sizing:border-box;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;border:.5px solid var(--bt-line);background:var(--bt-card);color:var(--bt-accent);overflow:hidden}
+.bt-dcard-copy{position:relative;z-index:2;pointer-events:none;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.bt-dcard-name{font-size:13px;line-height:20px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-dcard-desc{font-size:10px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-dcard-peek{display:none;font-size:10px;line-height:16px;color:var(--bt-ink-2)}
+.bt-dcard:hover .bt-dcard-desc,.bt-dcard:focus-within .bt-dcard-desc{display:none}
+.bt-dcard:hover .bt-dcard-peek,.bt-dcard:focus-within .bt-dcard-peek{display:inline}
+.bt-dcard-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
+.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:inline-flex;gap:6px}
+@container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 .bt-dcard-btn{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
@@ -4521,6 +4534,7 @@ var SECRET_CSS = `
 
 // src/client/deliverables.js
 var import_react6 = require("react");
+var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
 var basename = (path) => {
   const at = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
   return at === -1 ? path : path.slice(at + 1);
@@ -4529,6 +4543,12 @@ var PHONE_COPY_HINT = "/storage/emulated/0/DSH/deliverables/";
 var openUrl = (file) => {
   const query2 = new URLSearchParams({ sessionId: file.sessionId, seq: String(file.seq), index: String(file.index ?? 0) });
   return `api/present.open?${query2}`;
+};
+var metaText = (file, name) => {
+  const trimmed2 = typeof file.description === "string" ? file.description.replace(/\s*(?:\([^()]*\)|（[^（）]*）)\s*$/u, "").trim() : "";
+  if (trimmed2 !== "") return trimmed2;
+  const extension = (0, import_dsh_client_ui_primitives.fileExtension)(name).toUpperCase();
+  return extension === "" ? t("File") : extension;
 };
 function DeliverableCard({ file }) {
   const [state, setState] = (0, import_react6.useState)("idle");
@@ -4555,30 +4575,39 @@ function DeliverableCard({ file }) {
   };
   return (0, import_react6.createElement)(
     "div",
-    { className: "bt-dcard", "data-state": state === "failed" ? "fallback" : void 0 },
-    (0, import_react6.createElement)("span", { className: "bt-dcard-ico", "aria-hidden": true }, (0, import_react6.createElement)(PaperclipIcon)),
+    { className: "bt-dcard-wrap" },
     (0, import_react6.createElement)(
-      "span",
-      { className: "bt-dcard-copy" },
-      (0, import_react6.createElement)("span", { className: "bt-dcard-name" }, name),
-      file.description ? (0, import_react6.createElement)("span", { className: "bt-dcard-desc" }, file.description) : null
-    ),
-    state === "failed" ? (0, import_react6.createElement)("span", { className: "bt-dcard-hint", role: "status" }, t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT })) : null,
-    (0, import_react6.createElement)(
-      "span",
-      { className: "bt-dcard-acts" },
+      "div",
+      { className: "bt-dcard", "data-state": state === "failed" ? "fallback" : void 0 },
+      // One hit target over the whole card, as DSH's own card has: the name and icon
+      // carry no pointer events of their own, so a tap anywhere but the two buttons
+      // opens (or, on a phone, falls back to the hint below).
+      (0, import_react6.createElement)("button", { type: "button", className: "bt-dcard-hit", title: file.path, "aria-label": `${t("Open")} ${name}`, onClick: open }),
+      (0, import_react6.createElement)("span", { className: "bt-dcard-ico", "aria-hidden": true }, (0, import_react6.createElement)(import_dsh_client_ui_primitives.FileTypeIcon, { path: file.path, size: 20 })),
       (0, import_react6.createElement)(
-        "button",
-        { type: "button", className: "bt-dcard-btn", disabled: state === "opening", onClick: open },
-        state === "opening" ? t("Opening…") : t("Open")
+        "span",
+        { className: "bt-dcard-copy" },
+        (0, import_react6.createElement)("span", { className: "bt-dcard-name" }, name),
+        (0, import_react6.createElement)("span", { className: "bt-dcard-desc" }, metaText(file, name)),
+        (0, import_react6.createElement)("span", { className: "bt-dcard-peek", "aria-hidden": true }, t("Open"))
       ),
       (0, import_react6.createElement)(
-        "button",
-        { type: "button", className: "bt-dcard-btn", onClick: copy2, "aria-label": t("Copy path"), title: t("Copy path") },
-        state === "copied" ? (0, import_react6.createElement)(CheckIcon) : (0, import_react6.createElement)(CopyIcon),
-        state === "copied" ? t("Copied") : t("Path")
+        "span",
+        { className: "bt-dcard-acts" },
+        (0, import_react6.createElement)(
+          "button",
+          { type: "button", className: "bt-dcard-btn", disabled: state === "opening", onClick: open },
+          state === "opening" ? t("Opening…") : t("Open")
+        ),
+        (0, import_react6.createElement)(
+          "button",
+          { type: "button", className: "bt-dcard-btn", onClick: copy2, "aria-label": t("Copy path"), title: t("Copy path") },
+          state === "copied" ? (0, import_react6.createElement)(CheckIcon) : (0, import_react6.createElement)(CopyIcon),
+          state === "copied" ? t("Copied") : t("Path")
+        )
       )
-    )
+    ),
+    state === "failed" ? (0, import_react6.createElement)("span", { className: "bt-dcard-hint", role: "status" }, t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT })) : null
   );
 }
 function DeliverableCards({ deliverables }) {
@@ -4606,7 +4635,7 @@ var stepReasoning = (step) => step.blocks.filter((block) => block.kind === "reas
 // src/client/cells.js
 var import_react7 = require("react");
 var import_react_dom = require("react-dom");
-var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives2 = require("@deepseek-ai/dsh-client-ui-primitives");
 var mdLabels = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
 function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions }) {
   const onClick = (event) => {
@@ -4635,7 +4664,7 @@ function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId,
           (0, import_react7.createElement)(
             "div",
             { className: "bt-bubble" },
-            (0, import_react7.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: "compact", fileMentions: mentions })
+            (0, import_react7.createElement)(import_dsh_client_ui_primitives2.MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: "compact", fileMentions: mentions })
           ),
           live ? null : (0, import_react7.createElement)(MessageTools, { text, name: roster.byId[selfId]?.name ?? t("Bot"), sessionId, react: key ? (emoji) => actions.toggleReaction(msgKey, index, emoji) : void 0, actions })
         ),
@@ -4927,7 +4956,7 @@ function EarlierParts({ sessionId, roster, actions }) {
           return (0, import_react7.createElement)("div", { key, className: "bt-urow" }, (0, import_react7.createElement)(
             "div",
             { className: "bt-ububble" },
-            row.text ? (0, import_react7.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: row.text, labels: mdLabels(), variant: "compact" }) : null,
+            row.text ? (0, import_react7.createElement)(import_dsh_client_ui_primitives2.MarkdownText, { text: row.text, labels: mdLabels(), variant: "compact" }) : null,
             row.images ? (0, import_react7.createElement)("span", { className: "bt-uimages" }, row.images === 1 ? t("1 image") : t("{count} images", { count: row.images })) : null
           ));
         case "answer":
@@ -5217,7 +5246,7 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
         return (0, import_react7.createElement)("div", { key: `user-${index}`, className: "bt-urow" }, (0, import_react7.createElement)(
           "div",
           { className: "bt-ububble" },
-          (0, import_react7.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: reply.text, labels: mdLabels(), variant: "compact" })
+          (0, import_react7.createElement)(import_dsh_client_ui_primitives2.MarkdownText, { text: reply.text, labels: mdLabels(), variant: "compact" })
         ));
       }
       if (reply.kind === "failed") {
@@ -6161,7 +6190,7 @@ function NewMessagePills({ sessionId, useSessions, useUi, useTurnClock }) {
 // src/client/sidebar.js
 var import_react12 = require("react");
 var import_react_dom5 = require("react-dom");
-var import_dsh_client_ui_primitives2 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives3 = require("@deepseek-ai/dsh-client-ui-primitives");
 function useMarkedUnread(id, active, marked, actions) {
   (0, import_react12.useEffect)(() => {
     if (active && marked) actions.clearUnread(id);
@@ -6433,7 +6462,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
           actions.openMenu({ kind: "agent", id: agent.id, x: event.clientX, y: event.clientY });
         }
       },
-      (0, import_react12.createElement)("span", { className: `bt-agent-ava${running ? " bt-run" : ""}` }, (0, import_react12.createElement)(import_dsh_client_ui_primitives2.FishLogo, { size: 22 })),
+      (0, import_react12.createElement)("span", { className: `bt-agent-ava${running ? " bt-run" : ""}` }, (0, import_react12.createElement)(import_dsh_client_ui_primitives3.FishLogo, { size: 22 })),
       wide ? (0, import_react12.createElement)(
         "span",
         { className: "bt-row-body" },
@@ -7129,7 +7158,7 @@ function migrateStorage(storage = globalThis.localStorage) {
 
 // src/client/file-preview.js
 var import_react13 = require("react");
-var import_dsh_client_ui_primitives3 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives4 = require("@deepseek-ai/dsh-client-ui-primitives");
 var sizeText = (bytes) => {
   if (!Number.isFinite(bytes)) return "";
   const units = ["B", "KB", "MB", "GB"];
@@ -7175,7 +7204,7 @@ function MarkdownView({ file }) {
   return (0, import_react13.createElement)(
     "div",
     { className: "bt-fp-body bt-fp-markdown", "aria-label": file.name },
-    (0, import_react13.createElement)(import_dsh_client_ui_primitives3.MarkdownText, { text: file.text ?? "", labels: mdLabels2() }),
+    (0, import_react13.createElement)(import_dsh_client_ui_primitives4.MarkdownText, { text: file.text ?? "", labels: mdLabels2() }),
     file.truncated ? (0, import_react13.createElement)(CutNote, { file }) : null
   );
 }
@@ -10276,7 +10305,7 @@ body[data-ds-dark-theme] .bt-mw-ask{color:#f0b84a}
 // src/client/details-drawer.js
 var import_react24 = require("react");
 var import_react_dom9 = require("react-dom");
-var import_dsh_client_ui_primitives4 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives5 = require("@deepseek-ai/dsh-client-ui-primitives");
 function transcriptOf(list, id, name, hiddenTurns = []) {
   const outline = list.projectionsBySession?.[id]?.values?.turnOutline ?? list.byId[id]?.projectionValues?.turnOutline;
   if (!Array.isArray(outline)) return "";
@@ -10406,8 +10435,8 @@ function About({ text, title = "About" }) {
 }
 function StatPopover({ anchorRef, open, onClose, title, rows }) {
   const panelRef = (0, import_react24.useRef)(null);
-  const pos = (0, import_dsh_client_ui_primitives4.useAnchoredPosition)({ open, anchorRef, panelRef, side: "top", align: "end", gap: 8, margin: 12 });
-  (0, import_dsh_client_ui_primitives4.useDismissOnOutsidePointer)(anchorRef, open, (value) => {
+  const pos = (0, import_dsh_client_ui_primitives5.useAnchoredPosition)({ open, anchorRef, panelRef, side: "top", align: "end", gap: 8, margin: 12 });
+  (0, import_dsh_client_ui_primitives5.useDismissOnOutsidePointer)(anchorRef, open, (value) => {
     if (!value) onClose();
   }, panelRef);
   useEscape(open ? onClose : () => {
@@ -11166,7 +11195,7 @@ function turnDetector({ loud = 0.12, quiet = 0.06, quietMs = 1200 } = {}) {
 
 // src/client/palette.js
 var import_react26 = require("react");
-var import_dsh_client_ui_primitives5 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives6 = require("@deepseek-ai/dsh-client-ui-primitives");
 var PALETTE_EXIT_MS = 160;
 function CommandPalette({ start, token, roster, actions, useSessions }) {
   const [query2, setQuery] = (0, import_react26.useState)(start ?? "");
@@ -11231,7 +11260,7 @@ function CommandPalette({ start, token, roster, actions, useSessions }) {
   if (people.length) sections.push([t("Bots"), people]);
   const agents = (roster.agents ?? []).filter(() => matchesName("DSH Agent")).map((agent) => ({
     key: agent.id,
-    avatar: (0, import_react26.createElement)("span", { className: "bt-palette-agent" }, (0, import_react26.createElement)(import_dsh_client_ui_primitives5.FishLogo, { size: 18 })),
+    avatar: (0, import_react26.createElement)("span", { className: "bt-palette-agent" }, (0, import_react26.createElement)(import_dsh_client_ui_primitives6.FishLogo, { size: 18 })),
     title: "DSH Agent",
     subtitle: t("Plain dsh session"),
     run: () => actions.openAgent(agent.id)
@@ -11527,7 +11556,7 @@ function CreateBot({ roster, actions, start, brief = "", onBack, canGoBack, onCr
 
 // src/client/new-chat.js
 var import_react28 = require("react");
-var import_dsh_client_ui_primitives6 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives7 = require("@deepseek-ai/dsh-client-ui-primitives");
 function NewChat({ mode, roster, actions }) {
   const [query2, setQuery] = (0, import_react28.useState)("");
   const [picked, setPicked] = (0, import_react28.useState)([]);
@@ -11631,7 +11660,7 @@ function NewChat({ mode, roster, actions }) {
       inputRef.current?.focus();
     } });
     if ((roster.agents ?? []).length === 0) {
-      options.push({ key: "agent", icon: (0, import_react28.createElement)(import_dsh_client_ui_primitives6.FishLogo, { size: 16 }), label: t("Add DSH Agent"), run: () => run(async () => {
+      options.push({ key: "agent", icon: (0, import_react28.createElement)(import_dsh_client_ui_primitives7.FishLogo, { size: 16 }), label: t("Add DSH Agent"), run: () => run(async () => {
         await actions.addAgent();
         close();
       }) });

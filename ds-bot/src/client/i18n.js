@@ -479,6 +479,7 @@ const ZH = {
   '{name} looked up its own chat for “{text}”': '{name} 在自己的对话里查找「{text}」',
   'Copy path': '复制路径',
   Path: '路径',
+  File: '文件',
   'Opening…': '正在打开…',
   'Could not open it here. Copy the path and open the copy under {folder}': '这里打不开。复制路径，在手机文件管理的 {folder} 里打开副本',
   'Open navigation': '打开导航',
