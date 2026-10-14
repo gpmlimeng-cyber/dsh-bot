@@ -765,7 +765,10 @@ export function apply(ctx) {
       // stealing focus. Never again: the tab bar's own close is invisible to us, so
       // there is no reliable "the user closed it" signal to honour.
       let opened = false
-      const off = ctx.sessions.list.subscribe(() => {
+      // subscribe fires only on changes, so a session that is already on the main
+      // view when we get here would never be seen — check the current snapshot too.
+      let off = () => {}
+      const check = () => {
         if (opened) return
         const sessionId = Object.values(ctx.sessions.list.getSnapshot().byId ?? {})
           .find(session => (session?.retainedBy?.mainView ?? 0) > 0)?.id
@@ -773,7 +776,9 @@ export function apply(ctx) {
         opened = true
         off()
         betterSidebar.openTab({ type: 'ds-bot:details', reveal: false }, sessionId)
-      })
+      }
+      off = ctx.sessions.list.subscribe(check)
+      check()
       return () => { off(); dispose() }
     }, 'ds-bot: better sidebar tab')
   }

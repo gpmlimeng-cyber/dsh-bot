@@ -15540,14 +15540,18 @@ function apply(ctx) {
         component: ({ scope }) => BetterDetailsTab({ sessionId: scope.sessionId, face: face() })
       });
       let opened = false;
-      const off = ctx.sessions.list.subscribe(() => {
+      let off = () => {
+      };
+      const check = () => {
         if (opened) return;
         const sessionId = Object.values(ctx.sessions.list.getSnapshot().byId ?? {}).find((session) => (session?.retainedBy?.mainView ?? 0) > 0)?.id;
         if (sessionId === void 0) return;
         opened = true;
         off();
         betterSidebar.openTab({ type: "ds-bot:details", reveal: false }, sessionId);
-      });
+      };
+      off = ctx.sessions.list.subscribe(check);
+      check();
       return () => {
         off();
         dispose();
