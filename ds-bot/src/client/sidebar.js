@@ -393,13 +393,18 @@ export function TeamSidebar(props) {
   // Which way the button offers, read off the shell rather than off `wide`: below its 1024
   // line `wide` is `!collapsed || !settled`, so it stays true for the few hundred ms a fold
   // takes, and the button would offer to close a column that is already closing.
+  // The hamburger sits in the column's own top-left corner as a child of the list itself
+  // (first child below), not in a bar of its own: `.bt-mobile-nav` is absolute, so the
+  // column's width cannot move it, and its top is the row's own top — the two are one line
+  // by construction. Anchored to the floating bar's line instead it would hang at the inset
+  // plus 10 while this row follows where the shell starts the column, and the shell's own
+  // offset above us (18px on the device) would separate them.
   const pcFolded = shellCollapsed(document, wide)
   const pcNav = pc
-    ? createPortal(h('div', { className: 'bt-pc-nav' },
-        h(NavToggle, {
-          open: !pcFolded,
-          onToggle: () => (pcFolded ? props.expandSidebar?.() : actions.collapseSidebar?.()),
-        })), document.body)
+    ? h(NavToggle, {
+        open: !pcFolded,
+        onToggle: () => (pcFolded ? props.expandSidebar?.() : actions.collapseSidebar?.()),
+      })
     : null
   const drawer = h('div', {
     className: wide ? 'bt-side' : 'bt-side bt-rail', role: wide ? undefined : 'region',
@@ -407,6 +412,7 @@ export function TeamSidebar(props) {
     onTouchStart: mobile ? onTouchStart : undefined, onTouchMove: mobile ? onTouchMove : undefined,
     onTouchEnd: mobile ? onTouchEnd : undefined, onTouchCancel: mobile ? onTouchEnd : undefined,
   },
+    pcNav,
     listWide ? h('div', { className: 'bt-side-top' },
       drawerChrome ? null : h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
@@ -442,7 +448,6 @@ export function TeamSidebar(props) {
     // narrow line that column is the 56px rail, and a fixed panel inside it is still
     // clipped by whatever containing block or overflow the column brings. Portalled to
     // <body> it is clipped by nothing — the same move the scrim beside it already makes.
-    pcNav,
     mobile ? createPortal(drawer, document.body) : drawer)
 }
 

@@ -2911,16 +2911,23 @@ html:not([data-bt-mobile]) .bt-settings-layer,
 html:not([data-bt-mobile]) .bt-palette-layer,
 html:not([data-bt-mobile]) .bt-mem-layer{inset:max(var(--dsh-frame-chrome-top,0px),var(--dsh-mobile-top-inset,0px)) 0 0}
 /* The PC band's sidebar column takes the phone drawer's top row — the hamburger, then the
-   search field, then New — rather than the desktop row's brand and search button: the
-   column is 280 there, and the band needs the corner for the hamburger it draws itself
-   (sidebar.js spills a .bt-pc-nav bar, so the button lands on the phone's own 12/10 no
-   matter which way the column is folded). Two numbers, both from the phone's rules above:
-   the row starts where the drawer's would (its own top padding removed; the column already
-   begins on the inset line the floating bar sits 10px below), and it keeps the same 52px
-   clear for the button. The rail too: with the row gone the hamburger would land on the
-   rail's first button, so the rail's own controls start under its box. */
-html[data-bt-pc] .bt-side .bt-side-top{padding-top:0;padding-left:52px;padding-right:0}
+   search field, then New — rather than the desktop row's brand and search button: the column
+   is 280 there, and the three controls have to read as one line.
+   The line is built from the column, not from the floating bar: the bar's own line is the
+   inset plus its 10px, while this row starts where the shell starts the column, and the
+   shell's offset above us (18px on the device) would put the two 8px apart. So the hamburger
+   is the list's first child here, out of flow (.bt-mobile-nav is absolute) with its top
+   pinned to the row's own top: where the column begins cannot separate them, and the column's
+   width — 280 open, 56 folded — cannot move it either, so both states report the same box.
+   The row keeps the phone's 52px clear for the button plus the 12px the phone's drawer
+   padding contributes and this column does not, and its own top padding goes: the row's top
+   is the point it has to share with the button. */
+html[data-bt-pc] .bt-side{position:relative}
+html[data-bt-pc] .bt-side>.bt-mobile-nav{top:0}
+html[data-bt-pc] .bt-side .bt-side-top{padding-top:0;padding-left:64px;padding-right:0}
 html[data-bt-pc] .bt-side .bt-side-top .bt-round{flex:0 0 40px;width:40px;height:40px}
+/* Folded, the row is gone and only the hamburger is left, on the same pixel as before; the
+   rail's own controls move below its box rather than under it. */
 html[data-bt-pc] .bt-side.bt-rail{padding-top:52px}
 /* The mobile skin has three sizes, on the Compact/Medium/Expanded lines the platforms
    publish (Xiaomi and HarmonyOS both use 600 and 840). The defaults below are the compact
@@ -2961,7 +2968,7 @@ html[data-bt-mobile][data-bt-size=expanded]{
    purpose: with the drawer up, the bar's hamburger is the visible way to collapse it,
    which is why the two rules below take the pill out of the way and make room for that
    button in the drawer's own top row. */
-.bt-mobile-bar,.bt-pc-nav{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
+.bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
 /* With the drawer open the pill would sit on the drawer's own search/new row — same y,
    and the pill's centred box reaches ~136px past the drawer's left edge. The drawer is
    already where a chat is picked, so while it is up the bar carries only its collapse
@@ -6460,14 +6467,10 @@ function TeamSidebar(props) {
   ) : null;
   const drawerChrome = mobile || pc;
   const pcFolded = shellCollapsed(document, wide);
-  const pcNav = pc ? (0, import_react_dom5.createPortal)((0, import_react12.createElement)(
-    "div",
-    { className: "bt-pc-nav" },
-    (0, import_react12.createElement)(NavToggle, {
-      open: !pcFolded,
-      onToggle: () => pcFolded ? props.expandSidebar?.() : actions.collapseSidebar?.()
-    })
-  ), document.body) : null;
+  const pcNav = pc ? (0, import_react12.createElement)(NavToggle, {
+    open: !pcFolded,
+    onToggle: () => pcFolded ? props.expandSidebar?.() : actions.collapseSidebar?.()
+  }) : null;
   const drawer = (0, import_react12.createElement)(
     "div",
     {
@@ -6480,6 +6483,7 @@ function TeamSidebar(props) {
       onTouchEnd: mobile ? onTouchEnd : void 0,
       onTouchCancel: mobile ? onTouchEnd : void 0
     },
+    pcNav,
     listWide ? (0, import_react12.createElement)(
       "div",
       { className: "bt-side-top" },
@@ -6529,7 +6533,6 @@ function TeamSidebar(props) {
     // narrow line that column is the 56px rail, and a fixed panel inside it is still
     // clipped by whatever containing block or overflow the column brings. Portalled to
     // <body> it is clipped by nothing — the same move the scrim beside it already makes.
-    pcNav,
     mobile ? (0, import_react_dom5.createPortal)(drawer, document.body) : drawer
   );
 }
