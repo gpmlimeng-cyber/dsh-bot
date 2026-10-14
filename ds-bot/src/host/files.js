@@ -31,7 +31,10 @@ const TEXT_SUFFIX = new Set([
 ])
 const IMAGE_SUFFIX = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico'])
 const MARKDOWN_SUFFIX = new Set(['md', 'mdx', 'markdown'])
-const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', bmp: 'image/bmp', ico: 'image/x-icon' }
+// Markup that is meant to be looked at, not read: a page the viewer renders in a
+// sandboxed frame, and vectors the platform draws as a picture.
+const HTML_SUFFIX = new Set(['html', 'htm'])
+const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', bmp: 'image/bmp', ico: 'image/x-icon', svg: 'image/svg+xml' }
 
 const suffixOf = name => {
   const at = basename(name).lastIndexOf('.')
@@ -51,6 +54,12 @@ export function fileKind(name, size, head) {
   const bytes = Buffer.isBuffer(head) ? head : Buffer.alloc(0)
   if (MARKDOWN_SUFFIX.has(suffix)) return binaryBytes(bytes) ? 'binary' : 'markdown'
   if (IMAGE_SUFFIX.has(suffix)) return size > IMAGE_MAX || !imageBytes(bytes) ? 'binary' : 'image'
+  // SVG is the one picture written as text, so its own suffix is believed when the
+  // bytes hold no NUL: the platform draws it from an <img>, where its scripts never run.
+  if (suffix === 'svg') return binaryBytes(bytes) ? 'binary' : 'image'
+  // A page is shown as a page, in a frame that may not run scripts or reach the network
+  // (the client's own policy); its source stays one toggle away.
+  if (HTML_SUFFIX.has(suffix)) return binaryBytes(bytes) ? 'binary' : 'html'
   if (TEXT_SUFFIX.has(suffix)) return binaryBytes(bytes) ? 'binary' : 'text'
   return 'binary'
 }
@@ -99,10 +108,13 @@ function inside(root, target) {
   return target.startsWith(`${root}${sep}`) ? target : null
 }
 
-const readSome = async (file, size) => {
+// At most `max` bytes of a file. A text file is read up to TEXT_MAX; a picture is read
+// whole, up to the IMAGE_MAX a picture may weigh -- reading one with the text limit cut
+// every picture over 120 KB in half, which showed as a broken image.
+const readSome = async (file, size, max = TEXT_MAX) => {
   const handle = await open(file, 'r')
   try {
-    const buffer = Buffer.allocUnsafe(Math.min(size, TEXT_MAX, IMAGE_MAX))
+    const buffer = Buffer.allocUnsafe(Math.min(size, max, IMAGE_MAX))
     const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0)
     return buffer.subarray(0, bytesRead)
   } finally {
@@ -167,7 +179,7 @@ export function install(rt) {
     if (kind === 'binary') return { ...base, kind }
     try {
       if (kind === 'image') {
-        const buffer = info.size <= head.length ? head : await readSome(real, info.size)
+        const buffer = info.size <= head.length ? head : await readSome(real, info.size, IMAGE_MAX)
         return { ...base, kind, base64: buffer.toString('base64'), mime: MIME[suffixOf(name)] ?? 'application/octet-stream' }
       }
       const buffer = info.size <= head.length ? head : await readSome(real, info.size)

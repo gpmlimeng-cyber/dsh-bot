@@ -536,11 +536,14 @@ var ZH = {
   Path: "路径",
   File: "文件",
   Preview: "预览",
-  "Hide preview": "收起预览",
   "Opening…": "正在打开…",
   "Could not open it here. Copy the path and open the copy under {folder}": "这里打不开。复制路径，在手机文件管理的 {folder} 里打开副本",
   "Could not open it here. The copy is at {path}": "这里打不开。副本在 {path}",
   "Open with another app": "用其它应用打开",
+  "Close preview": "关闭预览",
+  "Image preview": "图片预览",
+  "File preview": "文件预览",
+  Source: "源码",
   "Open navigation": "打开导航",
   "Close navigation": "关闭导航",
   "Team navigation": "团队导航",
@@ -2216,14 +2219,10 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard:hover .bt-dcard-desc,.bt-dcard:focus-within .bt-dcard-desc{display:none}
 .bt-dcard:hover .bt-dcard-peek,.bt-dcard:focus-within .bt-dcard-peek{display:inline}
 .bt-dcard-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
-/* What a tap on the card reads back: a picture whole, or the file's text read in place
-   by the panel's own viewer (file-preview.js), so Markdown arrives rendered. Both are
-   capped in height so one delivered file cannot push the conversation off the screen;
-   the text scrolls inside its own box. */
-.bt-dcard-view{border-radius:10px;background:var(--bt-card);box-shadow:inset 0 0 0 .5px var(--bt-line);overflow:hidden}
-.bt-dcard-view img{display:block;width:100%;max-height:260px;object-fit:contain;background:var(--bt-main)}
-.bt-dcard-view .bt-fp-body{flex:none;overflow:auto;max-height:260px;padding:10px 12px}
-.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:inline-flex;gap:6px}
+/* The two exits sit in one row inside the card, and the sentence that explains a refusal
+   is written by the card itself -- outside the tile -- since the tile clips at 60px. The
+   preview page renders the same acts row at its foot. */
+.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-end}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 .bt-dcard-btn{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active)}
@@ -4720,6 +4719,21 @@ var FILE_PREVIEW_CSS = `
 .bt-fp-image{display:flex;align-items:flex-start;justify-content:center;padding:14px}
 .bt-fp-image img{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain}
 .bt-fp-foot{flex:none;padding:6px 12px 8px;border-top:.5px solid var(--bt-line);font-size:11.5px;line-height:15px;color:var(--bt-ink-3);font-family:var(--bt-fp-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* A delivered file's own page in the panel (deliverables.js): a title bar, the file, and
+   the two exits at its foot. The panel carries the shape -- full screen on a phone, the
+   right column on a desktop -- so nothing here is sized per band. */
+.bt-preview-head{display:flex;align-items:center;gap:8px;height:44px;flex:none;padding:0 8px 0 6px;border-bottom:.5px solid var(--bt-line)}
+.bt-preview-close{flex:none;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-preview-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-preview-close svg{width:15px;height:15px}
+.bt-preview-name{flex:1;min-width:0;font-size:13px;line-height:18px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-preview-toggle{flex:none;height:26px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-2);font:inherit;font-size:12px;font-weight:500;cursor:pointer}
+.bt-preview-toggle:hover{background:var(--bt-active);color:var(--bt-ink)}
+.bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
+.bt-preview-body>.bt-fp-body{flex:1}
+.bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
+.bt-preview-acts{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-end;padding:8px 10px;border-top:.5px solid var(--bt-line)}
+.bt-preview-acts .bt-dcard-hint{flex:1 1 100%;text-align:left}
 `;
 
 // src/client/deliverables.js
@@ -4730,6 +4744,9 @@ var basename = (path) => {
   return at === -1 ? path : path.slice(at + 1);
 };
 var PHONE_COPY_HINT = "/storage/emulated/0/DSH/deliverables/";
+var PICTURE_NAME = /\.(?:png|jpe?g|gif|webp|avif|bmp|ico|svg)$/iu;
+var isPicture = (name) => PICTURE_NAME.test(name);
+var readable = (answer) => answer?.ok === true && (answer.kind === "html" || answer.kind === "image" || answer.kind === "text" || answer.kind === "markdown");
 var openUrl = (file) => {
   const query2 = new URLSearchParams({ sessionId: file.sessionId, seq: String(file.seq), index: String(file.index ?? 0) });
   return `api/present.open?${query2}`;
@@ -4740,80 +4757,79 @@ var metaText = (file, name) => {
   const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toUpperCase();
   return extension === "" ? t("File") : extension;
 };
-var readable = (answer) => answer?.ok === true && (answer.kind === "image" || answer.kind === "text" || answer.kind === "markdown");
-function DeliverableCard({ file, actions }) {
+var exitsSentence = (shared2) => shared2 !== null && shared2 !== void 0 ? t("Could not open it here. The copy is at {path}", { path: shared2 }) : t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT });
+function DeliverableActions({ file, actions, onFailed }) {
   const [state, setState] = (0, import_react7.useState)("idle");
-  const [read, setRead] = (0, import_react7.useState)(null);
-  const [shared2, setShared] = (0, import_react7.useState)(null);
-  const name = basename(file.path);
-  const preview = async () => {
-    if (state === "reading") return;
-    if (state === "shown") {
-      setRead(null);
-      setState("idle");
-      return;
-    }
-    setState("reading");
-    try {
-      const answer = await actions?.presentFile?.(file.path);
-      if (!readable(answer)) {
-        setRead(null);
-        setState("failed");
-        return;
-      }
-      setRead(answer);
-      setState("shown");
-    } catch {
-      setState("failed");
-    }
+  const failed = (next) => {
+    setState("failed");
+    onFailed?.({ shared: next });
   };
   const open = async () => {
     if (state === "opening") return;
     setState("opening");
+    onFailed?.(null);
     try {
       const chooser = globalThis.__dshOpenPath;
       if (typeof chooser === "function") {
         const copy3 = await actions?.shareFile?.(file.path);
-        setShared(copy3?.ok === true ? copy3.path : null);
-        if (copy3?.ok === true && chooser(copy3.path, "view") === true) {
+        const shared2 = copy3?.ok === true ? copy3.path : null;
+        if (shared2 !== null && chooser(shared2, "view") === true) {
           setState("idle");
           return;
         }
-        setState("failed");
+        failed(shared2);
         return;
       }
       const response = await fetch(openUrl(file), { method: "POST", credentials: "same-origin" });
-      if (response.ok || response.status === 409 || response.status === 422) setState(response.ok ? "idle" : "failed");
-      else setState("failed");
+      if (response.ok) setState("idle");
+      else failed(null);
     } catch {
-      setState("failed");
+      failed(null);
     }
   };
   const copy2 = async () => {
+    onFailed?.(null);
     try {
       await navigator.clipboard?.writeText(file.path);
       setState("copied");
       setTimeout(() => setState((current) => current === "copied" ? "idle" : current), 1600);
     } catch {
-      setState("failed");
+      failed(null);
     }
+  };
+  return (0, import_react7.createElement)(
+    import_react7.Fragment,
+    null,
+    (0, import_react7.createElement)(
+      "button",
+      { type: "button", className: "bt-dcard-btn", disabled: state === "opening", onClick: open },
+      state === "opening" ? t("Opening…") : t("Open with another app")
+    ),
+    (0, import_react7.createElement)(
+      "button",
+      { type: "button", className: "bt-dcard-btn", onClick: copy2, "aria-label": t("Copy path"), title: t("Copy path") },
+      state === "copied" ? (0, import_react7.createElement)(CheckIcon) : (0, import_react7.createElement)(CopyIcon),
+      state === "copied" ? t("Copied") : t("Path")
+    )
+  );
+}
+function DeliverableCard({ file, actions }) {
+  const name = basename(file.path);
+  const [failure, setFailure] = (0, import_react7.useState)(null);
+  const preview = () => {
+    if (isPicture(name)) actions?.previewImage?.(file);
+    else actions?.previewFile?.(file);
   };
   return (0, import_react7.createElement)(
     "div",
     { className: "bt-dcard-wrap" },
     (0, import_react7.createElement)(
       "div",
-      { className: "bt-dcard", "data-state": state === "failed" ? "fallback" : void 0 },
-      // One hit target over the whole card, as DSH's own card has: the name and icon
-      // carry no pointer events of their own, so a tap anywhere but the two buttons
-      // reads the file and shows it. It carries no `title` on purpose: the shell
-      // intercepts a click whose target's title looks like a path and sends that path to
-      // its own chooser, which would take this tap away from the preview (a delivered
-      // path is in the app's own storage, where no other app can follow it anyway).
+      { className: "bt-dcard" },
       (0, import_react7.createElement)("button", {
         type: "button",
         className: "bt-dcard-hit",
-        "aria-label": `${state === "shown" ? t("Hide preview") : t("Preview")} ${name}`,
+        "aria-label": `${t("Preview")} ${name}`,
         onClick: preview
       }),
       (0, import_react7.createElement)("span", { className: "bt-dcard-ico", "aria-hidden": true }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.FileTypeIcon, { path: file.path, size: 20 })),
@@ -4821,37 +4837,12 @@ function DeliverableCard({ file, actions }) {
         "span",
         { className: "bt-dcard-copy" },
         (0, import_react7.createElement)("span", { className: "bt-dcard-name" }, name),
-        (0, import_react7.createElement)("span", { className: "bt-dcard-desc" }, state === "reading" ? t("Opening…") : metaText(file, name)),
-        (0, import_react7.createElement)("span", { className: "bt-dcard-peek", "aria-hidden": true }, state === "shown" ? t("Hide preview") : t("Preview"))
+        (0, import_react7.createElement)("span", { className: "bt-dcard-desc" }, metaText(file, name)),
+        (0, import_react7.createElement)("span", { className: "bt-dcard-peek", "aria-hidden": true }, t("Preview"))
       ),
-      (0, import_react7.createElement)(
-        "span",
-        { className: "bt-dcard-acts" },
-        (0, import_react7.createElement)(
-          "button",
-          { type: "button", className: "bt-dcard-btn", disabled: state === "opening", onClick: open },
-          state === "opening" ? t("Opening…") : t("Open with another app")
-        ),
-        (0, import_react7.createElement)(
-          "button",
-          { type: "button", className: "bt-dcard-btn", onClick: copy2, "aria-label": t("Copy path"), title: t("Copy path") },
-          state === "copied" ? (0, import_react7.createElement)(CheckIcon) : (0, import_react7.createElement)(CopyIcon),
-          state === "copied" ? t("Copied") : t("Path")
-        )
-      )
+      (0, import_react7.createElement)("span", { className: "bt-dcard-acts" }, (0, import_react7.createElement)(DeliverableActions, { file, actions, onFailed: setFailure }))
     ),
-    state === "shown" && read !== null ? (0, import_react7.createElement)(
-      "div",
-      { className: "bt-dcard-view", "data-kind": read.kind },
-      // A picture is shown as itself; Markdown and text go through the panel's own
-      // renderer, so a delivered README looks the way it does in the Files tab.
-      read.kind === "image" ? (0, import_react7.createElement)("img", { src: `data:${read.mime ?? "application/octet-stream"};base64,${read.base64 ?? ""}`, alt: name }) : (0, import_react7.createElement)(FileView, { file: read })
-    ) : null,
-    state === "failed" ? (0, import_react7.createElement)(
-      "span",
-      { className: "bt-dcard-hint", role: "status" },
-      shared2 !== null ? t("Could not open it here. The copy is at {path}", { path: shared2 }) : t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT })
-    ) : null
+    failure ? (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
   );
 }
 function DeliverableCards({ deliverables, actions }) {
@@ -4864,6 +4855,98 @@ function DeliverableCards({ deliverables, actions }) {
   }))).filter((file) => typeof file.path === "string" && file.path !== "");
   if (files.length === 0) return null;
   return (0, import_react7.createElement)("div", { className: "bt-dcards" }, files.map((file) => (0, import_react7.createElement)(DeliverableCard, { key: `${file.sessionId}:${file.seq}:${file.index}`, file, actions })));
+}
+var FRAME_POLICY = "default-src 'none'; style-src 'unsafe-inline'; img-src data:";
+var frameDocument = (text) => `<!doctype html><meta http-equiv="Content-Security-Policy" content="${FRAME_POLICY}">${text}`;
+function DeliveredPreview({ file, actions, onClose }) {
+  const [read, setRead] = (0, import_react7.useState)(null);
+  const [state, setState] = (0, import_react7.useState)("reading");
+  const [source, setSource] = (0, import_react7.useState)(false);
+  const [failure, setFailure] = (0, import_react7.useState)(null);
+  const name = basename(file.path);
+  const ask = (0, import_react7.useRef)(actions);
+  ask.current = actions;
+  (0, import_react7.useEffect)(() => {
+    let live = true;
+    setRead(null);
+    setState("reading");
+    setSource(false);
+    void (async () => {
+      try {
+        const answer = await ask.current?.presentFile?.(file.path);
+        if (!live) return;
+        if (!readable(answer)) {
+          setState("failed");
+          return;
+        }
+        setRead(answer);
+        setState("shown");
+      } catch {
+        if (live) setState("failed");
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [file.path]);
+  const body = state === "reading" ? (0, import_react7.createElement)("div", { className: "bt-preview-body bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…"))) : state === "failed" ? (0, import_react7.createElement)(
+    "div",
+    { className: "bt-preview-body bt-fp-empty" },
+    (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("This file has no preview")),
+    (0, import_react7.createElement)("div", { className: "bt-fp-empty-text", role: "status" }, t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT }))
+  ) : read.kind === "html" && !source ? (0, import_react7.createElement)("iframe", { className: "bt-preview-frame", sandbox: "", srcDoc: frameDocument(read.text ?? ""), title: name }) : read.kind === "image" ? (0, import_react7.createElement)("div", { className: "bt-preview-body bt-fp-image" }, (0, import_react7.createElement)("img", { src: `data:${read.mime ?? "application/octet-stream"};base64,${read.base64 ?? ""}`, alt: name })) : (0, import_react7.createElement)("div", { className: "bt-preview-body" }, (0, import_react7.createElement)(FileView, { file: source ? { ...read, kind: "text" } : read }));
+  return (0, import_react7.createElement)(
+    import_react7.Fragment,
+    null,
+    (0, import_react7.createElement)(
+      "div",
+      { className: "bt-preview-head" },
+      (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-close", onClick: onClose, "aria-label": t("Close preview"), title: t("Close preview") }, (0, import_react7.createElement)(CloseIcon)),
+      (0, import_react7.createElement)("span", { className: "bt-preview-name" }, name),
+      state === "shown" && read.kind === "html" ? (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-toggle", onClick: () => setSource((current) => !current) }, source ? t("Preview") : t("Source")) : null
+    ),
+    body,
+    (0, import_react7.createElement)(
+      "div",
+      { className: "bt-preview-acts" },
+      (0, import_react7.createElement)(DeliverableActions, { file, actions, onFailed: setFailure }),
+      failure ? (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
+    )
+  );
+}
+function DeliveredLightbox({ file, actions, onClose, onUnreadable }) {
+  const [src, setSrc] = (0, import_react7.useState)(null);
+  const name = basename(file.path);
+  const ask = (0, import_react7.useRef)(actions);
+  ask.current = actions;
+  const fallback = (0, import_react7.useRef)(onUnreadable);
+  fallback.current = onUnreadable;
+  (0, import_react7.useEffect)(() => {
+    let live = true;
+    void (async () => {
+      try {
+        const answer = await ask.current?.presentFile?.(file.path);
+        if (!live) return;
+        if (answer?.ok === true && answer.kind === "image") {
+          setSrc(`data:${answer.mime ?? "application/octet-stream"};base64,${answer.base64 ?? ""}`);
+          return;
+        }
+        fallback.current?.();
+      } catch {
+        if (live) fallback.current?.();
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [file.path]);
+  if (src === null || typeof import_dsh_client_ui_primitives2.ImageLightbox !== "function") return null;
+  return (0, import_react7.createElement)(import_dsh_client_ui_primitives2.ImageLightbox, {
+    src,
+    alt: name,
+    labels: { dialog: t("Image preview"), close: t("Close preview") },
+    onClose
+  });
 }
 
 // src/client/turn-reasoning.js
@@ -7732,7 +7815,7 @@ function BrowserView({ bot, tabId, leaving, landed, actions, useBrowserPages }) 
 function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages }) {
   const bot = roster.byId[pane.id];
   const canBrowse = Boolean(bot && roster.browser === true && actions.browserShow);
-  const view = pane.view === "browser" && canBrowse ? "browser" : pane.view === "files" ? "files" : "details";
+  const view = pane.view === "preview" && pane.preview ? "preview" : pane.view === "browser" && canBrowse ? "browser" : pane.view === "files" ? "files" : "details";
   const tabState = useBrowserTabs((map) => bot ? map[bot.id] ?? EMPTY_TABS : EMPTY_TABS);
   const active = tabState.active;
   const page = useBrowserPages((pages) => (active ? pages[active] : null) ?? EMPTY_PAGE);
@@ -7927,14 +8010,14 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
     for (const name of ends) grip.addEventListener(name, onEnd);
   };
   const hasStrip = canBrowse && tabState.ids.length > 0;
-  const showStrip = hasStrip || view === "files";
+  const showStrip = view !== "preview" && (hasStrip || view === "files");
   return (0, import_react14.createElement)(
     "aside",
     {
       ref: root,
       className: "bt-panel",
       "data-view": view,
-      "aria-label": `${view === "files" ? t("Files") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details")}`,
+      "aria-label": `${view === "files" ? t("Files") : view === "preview" ? t("File preview") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details")}`,
       "data-leaving": leaving || void 0,
       "aria-hidden": leaving || void 0,
       "data-settling": settling || void 0,
@@ -7952,7 +8035,11 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
     // pages underneath (the chat, the guest) see no pointer.
     dragging ? (0, import_react_dom6.createPortal)((0, import_react14.createElement)("div", { className: "bt-drag-shield", "aria-hidden": true }), document.body) : null,
     showStrip ? (0, import_react14.createElement)(PanelStrip, { bot, subject: pane.id, view, ids: tabState.ids, active, reading, onView: switchView, actions: panelActions, useBrowserPages }) : null,
-    view === "browser" && bot ? (0, import_react14.createElement)(BrowserView, { key: `browser:${active}`, bot, tabId: active, leaving, landed: landed && !settling, actions, useBrowserPages }) : view === "files" ? (0, import_react14.createElement)(FilePreview, { key: "files", actions: panelActions }) : (0, import_react14.createElement)(
+    view === "browser" && bot ? (0, import_react14.createElement)(BrowserView, { key: `browser:${active}`, bot, tabId: active, leaving, landed: landed && !settling, actions, useBrowserPages }) : view === "preview" ? (0, import_react14.createElement)(
+      "div",
+      { key: `preview:${pane.preview?.path ?? ""}`, className: "bt-panel-view" },
+      (0, import_react14.createElement)(DeliveredPreview, { file: pane.preview, actions: panelActions, onClose: () => actions.closePreview?.() })
+    ) : view === "files" ? (0, import_react14.createElement)(FilePreview, { key: "files", actions: panelActions }) : (0, import_react14.createElement)(
       "div",
       { key: `details:${pane.id}:${pane.renaming ? "rename" : ""}:${pane.tab ?? ""}`, className: "bt-panel-view" },
       (0, import_react14.createElement)(DetailsDrawer, {
@@ -14114,7 +14201,7 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
     previous.current = current;
     if (current) actions.followPanel?.(current);
   }, [current]);
-  const open = ui2.details ? { id: ui2.details, view: ui2.view ?? "details", renaming: ui2.renaming, tab: ui2.tab } : null;
+  const open = ui2.details ? { id: ui2.details, view: ui2.view ?? "details", renaming: ui2.renaming, tab: ui2.tab, preview: ui2.preview } : ui2.preview ? { id: "", view: "preview", renaming: false, tab: null, preview: ui2.preview } : null;
   const [kept, setKept] = (0, import_react37.useState)(open);
   (0, import_react37.useEffect)(() => {
     if (open) {
@@ -14123,7 +14210,7 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
     }
     const timer = setTimeout(() => setKept(null), PANEL_LINGER_MS);
     return () => clearTimeout(timer);
-  }, [ui2.details, ui2.view, ui2.renaming, ui2.tab]);
+  }, [ui2.details, ui2.view, ui2.renaming, ui2.tab, ui2.preview]);
   const pane = open ?? kept;
   const [settings, settingsLeaving] = useLinger(ui2.settings, DIALOG_EXIT_MS);
   const [memory, memoryLeaving] = useLinger(ui2.memory && roster.byId[ui2.memory] ? ui2.memory : null, DIALOG_EXIT_MS);
@@ -14138,7 +14225,16 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
     ui2.voice ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(VoiceMode, { key: ui2.voice, sessionId: ui2.voice, roster, actions, useSessions, useSessionStatus }), document.body) : null,
     menu ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(ContextMenu, { key: `${menu.kind ?? ""}:${menu.id}:${menu.x}:${menu.y}`, menu, roster, actions, leaving: menuLeaving }), document.body) : null,
     settings ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(SettingsDialog, { page: settings.page, id: settings.id, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
-    memory && roster.byId[memory] ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(MemoryDialog, { key: memory, bot: roster.byId[memory], actions, leaving: memoryLeaving }), document.body) : null
+    memory && roster.byId[memory] ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(MemoryDialog, { key: memory, bot: roster.byId[memory], actions, leaving: memoryLeaving }), document.body) : null,
+    // A delivered picture reads its bytes first, then opens the platform's own image
+    // preview. A read that cannot show it as a picture hands over to the preview page,
+    // which keeps the card's two exits in reach.
+    ui2.lightbox ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(DeliveredLightbox, {
+      file: ui2.lightbox,
+      actions,
+      onClose: () => actions.closeLightbox(),
+      onUnreadable: () => actions.previewFile(ui2.lightbox)
+    }), document.body) : null
   );
 }
 
@@ -15158,7 +15254,7 @@ function apply(ctx) {
   } catch {
     seenAt = {};
   }
-  const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {} });
+  const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null });
   const surface = createSource({ mode: readMode(), plain: false });
   let agentSessionCache = /* @__PURE__ */ new Set();
   try {
@@ -15609,7 +15705,7 @@ function apply(ctx) {
       });
     },
     showDetails: (id, tab = null) => {
-      ui2.set((state) => ({ ...state, details: id, view: "details", renaming: false, tab }));
+      ui2.set((state) => ({ ...state, details: id, view: "details", renaming: false, tab, preview: null }));
     },
     // Opening the conversation would move focus to its composer and blur the name field.
     renameBot: (id) => {
@@ -15812,11 +15908,15 @@ function apply(ctx) {
   }
   actions.setPanelView = (view) => {
     if (view !== "details" && view !== "browser" && view !== "files") return;
-    ui2.set((state) => state.details && state.view !== view ? { ...state, view } : state);
+    ui2.set((state) => state.details && (state.view !== view || state.preview !== null) ? { ...state, view, preview: null } : state);
   };
   actions.closePanel = () => {
-    ui2.set((state) => state.details ? { ...state, details: null, view: "details", renaming: false, tab: null } : state);
+    ui2.set((state) => state.details ? { ...state, details: null, view: "details", renaming: false, tab: null, preview: null } : state);
   };
+  actions.previewFile = (file) => ui2.set((state) => ({ ...state, preview: file, lightbox: null, view: "preview" }));
+  actions.previewImage = (file) => ui2.set((state) => ({ ...state, lightbox: file, preview: null }));
+  actions.closePreview = () => ui2.set((state) => state.preview === null ? state : { ...state, preview: null, view: state.view === "preview" ? "details" : state.view });
+  actions.closeLightbox = () => ui2.set((state) => state.lightbox === null ? state : { ...state, lightbox: null });
   actions.signInEntry = () => ctx.slots.entries?.("settings.models.sign-in")?.[0] ?? null;
   actions.canSignIn = () => Boolean(actions.signInEntry());
   const OWN_PANELS = ["plugins", "schedules"];

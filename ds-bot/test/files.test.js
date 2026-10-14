@@ -180,6 +180,45 @@ test('fileKind trusts the bytes over the suffix', () => {
   assert.equal(fileKind('a.zip', 10, text), 'binary')
 })
 
+// A picture written as text, and a page meant to be looked at: SVG is drawn by the
+// platform as an image (an <img> never runs its scripts), HTML is rendered in a frame
+// the client sandboxes, and a NUL byte under either suffix is still a binary.
+test('svg is a picture and html is a page, decided by the bytes as ever', () => {
+  const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>')
+  const page = Buffer.from('<!doctype html><title>hi</title>')
+  const binary = Buffer.from([0x00, 0x01, 0x02, 0x03])
+  assert.equal(fileKind('logo.svg', svg.length, svg), 'image')
+  assert.equal(fileKind('logo.svg', 500, binary), 'binary')
+  assert.equal(fileKind('page.html', page.length, page), 'html')
+  assert.equal(fileKind('page.htm', page.length, page), 'html')
+  assert.equal(fileKind('page.html', 500, binary), 'binary')
+  // Everything else keeps the rule it had: a code file is text, not a page.
+  assert.equal(fileKind('page.js', page.length, page), 'text')
+  assert.equal(fileKind('page.xml', page.length, page), 'text')
+})
+
+test('an image over 120 KB is read whole, up to the image limit', async (t) => {
+  const { workspace, call, stop } = start()
+  t.after(stop)
+  // A PNG header, then filler: the bytes need only carry the signature, and the read
+  // used to stop at the text limit, which cut every picture past 120 KB in half.
+  const big = Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), Buffer.alloc(200_000, 7)])
+  writeFileSync(join(workspace, 'big.png'), big)
+  const answer = (await call('panel-file', { path: 'big.png' })).value
+  assert.equal(answer.kind, 'image')
+  assert.equal(Buffer.from(answer.base64, 'base64').length, big.length, 'the whole picture comes back')
+  // An SVG comes back as a picture too, with the mime that draws it.
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="4" height="4"/></svg>'
+  writeFileSync(join(workspace, 'logo.svg'), svg)
+  const vector = (await call('panel-file', { path: 'logo.svg' })).value
+  assert.deepEqual([vector.kind, vector.mime], ['image', 'image/svg+xml'])
+  assert.equal(Buffer.from(vector.base64, 'base64').toString('utf8'), svg)
+  // A page arrives as a page: its text, with the kind that says how to show it.
+  writeFileSync(join(workspace, 'page.html'), '<h1>Hello</h1>')
+  const page = (await call('panel-file', { path: 'page.html' })).value
+  assert.deepEqual([page.kind, page.text], ['html', '<h1>Hello</h1>'])
+})
+
 test('a delivered file is readable wherever it was put, and only it is', async (t) => {
   const { workspace, rt, call, stop } = start()
   t.after(stop)

@@ -7,6 +7,7 @@ import { VoiceMode } from './voice.js'
 import { SettingsDialog } from './settings.js'
 import { ContextMenu } from './context-menu.js'
 import { PANEL_LINGER_MS, BotPanel } from './browser-pane.js'
+import { DeliveredLightbox } from './deliverables.js'
 import { MemoryDialog } from './memory-panel.js'
 import { useLinger } from './motion.js'
 
@@ -27,13 +28,17 @@ export function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useA
     previous.current = current
     if (current) actions.followPanel?.(current)
   }, [current])
-  const open = ui.details ? { id: ui.details, view: ui.view ?? 'details', renaming: ui.renaming, tab: ui.tab } : null
+  // A preview stands on its own: it needs no conversation behind it, so the panel opens
+  // for it even when no subject is selected at all.
+  const open = ui.details
+    ? { id: ui.details, view: ui.view ?? 'details', renaming: ui.renaming, tab: ui.tab, preview: ui.preview }
+    : ui.preview ? { id: '', view: 'preview', renaming: false, tab: null, preview: ui.preview } : null
   const [kept, setKept] = useState(open)
   useEffect(() => {
     if (open) { setKept(open); return undefined }
     const timer = setTimeout(() => setKept(null), PANEL_LINGER_MS)
     return () => clearTimeout(timer)
-  }, [ui.details, ui.view, ui.renaming, ui.tab])
+  }, [ui.details, ui.view, ui.renaming, ui.tab, ui.preview])
   const pane = open ?? kept
   const [settings, settingsLeaving] = useLinger(ui.settings, DIALOG_EXIT_MS)
   const [memory, memoryLeaving] = useLinger(ui.memory && roster.byId[ui.memory] ? ui.memory : null, DIALOG_EXIT_MS)
@@ -46,5 +51,14 @@ export function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useA
     ui.voice ? createPortal(h(VoiceMode, { key: ui.voice, sessionId: ui.voice, roster, actions, useSessions, useSessionStatus }), document.body) : null,
     menu ? createPortal(h(ContextMenu, { key: `${menu.kind ?? ''}:${menu.id}:${menu.x}:${menu.y}`, menu, roster, actions, leaving: menuLeaving }), document.body) : null,
     settings ? createPortal(h(SettingsDialog, { page: settings.page, id: settings.id, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
-    memory && roster.byId[memory] ? createPortal(h(MemoryDialog, { key: memory, bot: roster.byId[memory], actions, leaving: memoryLeaving }), document.body) : null)
+    memory && roster.byId[memory] ? createPortal(h(MemoryDialog, { key: memory, bot: roster.byId[memory], actions, leaving: memoryLeaving }), document.body) : null,
+    // A delivered picture reads its bytes first, then opens the platform's own image
+    // preview. A read that cannot show it as a picture hands over to the preview page,
+    // which keeps the card's two exits in reach.
+    ui.lightbox ? createPortal(h(DeliveredLightbox, {
+      file: ui.lightbox,
+      actions,
+      onClose: () => actions.closeLightbox(),
+      onUnreadable: () => actions.previewFile(ui.lightbox),
+    }), document.body) : null)
 }

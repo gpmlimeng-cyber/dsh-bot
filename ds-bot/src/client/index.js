@@ -59,7 +59,7 @@ export function apply(ctx) {
   try { seenAt = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '{}') ?? {} } catch { seenAt = {} }
   // `details` is the panel's subject (a Session id); `view` picks details or the
   // subject Bot's browser inside it.
-  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {} })
+  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null })
   // Bot mode paints the whole team surface; Agent mode withdraws every slot and
   // style so the shell's own interface returns. `plain` stays false until a Bot-mode
   // view hosts a plain session, which drops only the conversation replacements.
@@ -480,7 +480,7 @@ export function apply(ctx) {
         return { ...state, details: id, view, renaming: false, tab: null }
       })
     },
-    showDetails: (id, tab = null) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: false, tab })) },
+    showDetails: (id, tab = null) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: false, tab, preview: null })) },
     // Opening the conversation would move focus to its composer and blur the name field.
     renameBot: (id) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: true, tab: null })) },
     // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
@@ -660,9 +660,18 @@ export function apply(ctx) {
   }
   actions.setPanelView = (view) => {
     if (view !== 'details' && view !== 'browser' && view !== 'files') return
-    ui.set(state => (state.details && state.view !== view ? { ...state, view } : state))
+    // A tab that is chosen replaces whatever the panel was showing, preview included.
+    ui.set(state => (state.details && (state.view !== view || state.preview !== null) ? { ...state, view, preview: null } : state))
   }
-  actions.closePanel = () => { ui.set(state => (state.details ? { ...state, details: null, view: 'details', renaming: false, tab: null } : state)) }
+  actions.closePanel = () => { ui.set(state => (state.details ? { ...state, details: null, view: 'details', renaming: false, tab: null, preview: null } : state)) }
+  // A delivered file opens where a file belongs, never inside the message it arrived in:
+  // a picture in the platform's own image preview, anything readable in the panel's own
+  // page. The preview lives in `ui`, not in the message cell, so a new message arriving
+  // in the conversation cannot close it.
+  actions.previewFile = (file) => ui.set(state => ({ ...state, preview: file, lightbox: null, view: 'preview' }))
+  actions.previewImage = (file) => ui.set(state => ({ ...state, lightbox: file, preview: null }))
+  actions.closePreview = () => ui.set(state => (state.preview === null ? state : { ...state, preview: null, view: state.view === 'preview' ? 'details' : state.view }))
+  actions.closeLightbox = () => ui.set(state => (state.lightbox === null ? state : { ...state, lightbox: null }))
   // Whether AccountLauncher holds the shell's settings seat; FooterAccount steps aside if so.
   actions.signInEntry = () => ctx.slots.entries?.('settings.models.sign-in')?.[0] ?? null
   actions.canSignIn = () => Boolean(actions.signInEntry())
