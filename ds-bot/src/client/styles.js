@@ -256,8 +256,14 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
    is written by the card itself -- outside the tile -- since the tile clips at 60px. The
    preview page renders the same acts row at its foot. Three controls go in one row and
    never wrap: the tile is a fixed 60px, so a second row would be clipped, and the name
-   column is the one that gives way instead. */
-.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:nowrap;align-items:center;gap:4px;justify-content:flex-end}
+   column is the one that gives way instead.
+
+   The row is a cluster at the card's right end, 2px apart, so the rounded hover fills read
+   as a single strip rather than three islands. That 2px is the space between the controls,
+   not between the drawings: each 44px control holds 25-31px of ink, so the glyphs stand
+   about 17px apart however little the boxes are separated -- any closer would mean the
+   44px targets overlapping each other. */
+.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:nowrap;align-items:center;gap:2px;justify-content:flex-end}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 /* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
    is the touch target the card's own 60px tile can hold exactly (8px of padding above and
