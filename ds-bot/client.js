@@ -5512,6 +5512,7 @@ function showsDshRow(dsh, app) {
 
 // src/client/pc-layout.js
 var PC_QUERY = "(min-width:841px) and (max-width:1023px) and (orientation:landscape)";
+var pcSidebarMemory = { band: null, opened: false };
 function pcSidebarStep(wasPc, isPc, collapsed, opened) {
   if (isPc && wasPc !== true) return { call: "expand", opened: collapsed === true };
   if (!isPc && wasPc === true) return { call: opened && !collapsed ? "collapse" : null, opened: false };
@@ -6432,10 +6433,10 @@ function TeamSidebar(props) {
   const mobileOpen = useUi((value) => value.mobileNav === true);
   const mobile = useMobile();
   const pc = usePcColumns();
-  const pcSidebar = (0, import_react12.useRef)({ band: null, opened: false });
   (0, import_react12.useEffect)(() => {
-    const step = pcSidebarStep(pcSidebar.current.band, pc, shellCollapsed(document, wide), pcSidebar.current.opened);
-    pcSidebar.current = { band: pc, opened: step.opened };
+    const step = pcSidebarStep(pcSidebarMemory.band, pc, shellCollapsed(document, wide), pcSidebarMemory.opened);
+    pcSidebarMemory.band = pc;
+    pcSidebarMemory.opened = step.opened;
     if (step.call === "expand") props.expandSidebar?.();
     if (step.call === "collapse") actions.collapseSidebar?.();
   }, [pc]);

@@ -9,6 +9,19 @@
 export const PC_QUERY = '(min-width:841px) and (max-width:1023px) and (orientation:landscape)'
 
 /**
+ * What the last band change left behind, and whether this plugin opened the column for that
+ * band. This is module state on purpose, and the reason is a bug the device crew saw: the
+ * shell draws its sidebar column from two trees -- the wide one, and the rail it switches to a
+ * couple of seconds after the column folds, once its own `settled` catches up -- so this
+ * component is unmounted and mounted again as part of that switch. Held in a `useRef`, the
+ * memory came back `null`, which reads as "entering the band", so the next render called
+ * `expandSidebar()`: the column folded by hand and then opened itself again two seconds later.
+ * Held here it outlives the remount, and the same band change makes no call at all. It dies
+ * with the page, which is the lifetime this wants: a reload is a fresh band to open.
+ */
+export const pcSidebarMemory = { band: null, opened: false }
+
+/**
  * What the sidebar does on one band change — and only on a band change.
  *
  * The shell collapses its sidebar below its own 1024 line, so the desktop layout needs it

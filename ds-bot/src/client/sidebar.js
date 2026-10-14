@@ -12,7 +12,7 @@ import { springEasing, SPRING_SHAPE } from './motion.js'
 import { hostText, t } from './i18n.js'
 import { showsDshRow } from './dsh-offer.js'
 import { useMobile, usePcColumns } from './mobile.js'
-import { pcSidebarStep, shellCollapsed } from './pc-layout.js'
+import { pcSidebarMemory, pcSidebarStep, shellCollapsed } from './pc-layout.js'
 import { NavToggle } from './header.js'
 
 // -------------------------------------------------------------------------
@@ -297,11 +297,15 @@ export function TeamSidebar(props) {
   // service's own toggle. Only a band change acts (pcSidebarStep), so a hand that folds the
   // column away inside the band keeps it folded, and the phone layout never inherits a
   // column it did not ask for.
+  //
+  // Where that memory lives is load-bearing (pc-layout.js, pcSidebarMemory): the shell swaps
+  // this column between two trees when it folds, which unmounts this component, and a ref
+  // would come back null and re-open the column the hand just folded.
   const pc = usePcColumns()
-  const pcSidebar = useRef({ band: null, opened: false })
   useEffect(() => {
-    const step = pcSidebarStep(pcSidebar.current.band, pc, shellCollapsed(document, wide), pcSidebar.current.opened)
-    pcSidebar.current = { band: pc, opened: step.opened }
+    const step = pcSidebarStep(pcSidebarMemory.band, pc, shellCollapsed(document, wide), pcSidebarMemory.opened)
+    pcSidebarMemory.band = pc
+    pcSidebarMemory.opened = step.opened
     if (step.call === 'expand') props.expandSidebar?.()
     if (step.call === 'collapse') actions.collapseSidebar?.()
   }, [pc])

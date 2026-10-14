@@ -17,6 +17,12 @@ test('a column the user already had open is not claimed', () => {
 })
 
 test('inside the band nothing acts, so a column the user folded stays folded', () => {
+  // The second case is also the remount case, and it is the one that failed on the device: the
+  // shell swaps the column between its wide tree and its rail tree once its own `settled`
+  // catches up, which unmounts the component this step runs in. Held in a ref, the band came
+  // back null and the next pass read as an entry and re-opened the column -- a fold that undid
+  // itself two seconds later. It is module state now (pc-layout.js, pcSidebarMemory), and this
+  // case is what that memory is asked.
   assert.deepEqual(pcSidebarStep(true, true, true, true), { call: null, opened: true })
   assert.deepEqual(pcSidebarStep(true, true, false, false), { call: null, opened: false })
 })
