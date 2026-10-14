@@ -3182,6 +3182,15 @@ html[data-bt-mobile] [class*="_centerCol"]{margin-right:0!important}
    member list clears it. A view pinned to the desktop panel width while it settles would
    otherwise narrow itself back to 320px. */
 html[data-bt-mobile] .bt-panel .bt-drawer-body{padding:20px 16px max(16px,env(safe-area-inset-bottom))}
+/* A phone reads the panel as a page, not as a window with a frozen top: the identity
+   block and the tab row travel with the content, and only the one row that carries the
+   close control — the drawer's own row, or the settings sub-heading with its back arrow —
+   stays put. One scroller, one scrollbar: the view scrolls, the body inside it no longer
+   does. The tab strip is a sibling of the view, so it is already out of the scroll flow. */
+html[data-bt-mobile] .bt-panel .bt-panel-view:has(> .bt-drawer-body){overflow-y:auto;overscroll-behavior:contain}
+html[data-bt-mobile] .bt-panel .bt-panel-view:has(> .bt-drawer-body)>.bt-drawer-body{flex:0 0 auto;overflow:visible}
+html[data-bt-mobile] .bt-panel .bt-panel-view:has(> .bt-drawer-body)>.bt-drawer-top,
+html[data-bt-mobile] .bt-panel .bt-panel-view:has(> .bt-drawer-body)>.bt-subhead{position:sticky;top:0;z-index:3;background:var(--bt-main)}
 html[data-bt-mobile] .bt-panel[data-settling]>.bt-ptabs,html[data-bt-mobile] .bt-panel[data-settling]>.bt-panel-view{width:100%}
 /* The resize grip belongs to the column layout that no longer exists here. */
 html[data-bt-mobile] .bt-panel-grip{display:none}
