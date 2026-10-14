@@ -51,9 +51,13 @@ test('a row opens its file the way its card does, and shows what it is', () => {
 test('an empty list and a list that cannot be read each say so, in the reader’s language', () => {
   assert.ok(list.includes("t('No deliverables yet')"), 'the empty state is written')
   assert.ok(list.includes("t('This list could not be read')"), 'and so is a failed read')
+  // The list is not backfilled, so a short one is the truth rather than a bug: it says so.
+  assert.ok(list.includes("h('div', { className: 'bt-prod-note' }, t('Only files delivered since this run started are listed.'))"), 'the list says it is not backfilled')
+  assert.ok(preview.includes('.bt-prod-note{'), 'and that line is styled with the panel’s own rules')
   assert.ok(list.includes("if (!Array.isArray(answer?.files)) { setState('failed'); return }"), 'a shape the host did not send is not listed')
   assert.ok(i18n.includes("'No deliverables yet': '还没有产物'"), 'the empty state is translated')
   assert.ok(i18n.includes("'This list could not be read': '这份列表读不出来'"), 'and the failure')
+  assert.ok(i18n.includes("'Only files delivered since this run started are listed.': '只显示本次启动以来交付过的文件。'"), 'and the note explains a short list in Chinese')
 })
 
 test('the panel is the one a preview opens in, title bar and all', () => {

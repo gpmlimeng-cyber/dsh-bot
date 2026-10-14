@@ -546,6 +546,7 @@ var ZH = {
   "All deliverables": "全部产物",
   "No deliverables yet": "还没有产物",
   "Files a Bot hands over are listed here.": "机器人交付的文件会列在这里。",
+  "Only files delivered since this run started are listed.": "只显示本次启动以来交付过的文件。",
   "This list could not be read": "这份列表读不出来",
   Source: "源码",
   "Open navigation": "打开导航",
@@ -4745,6 +4746,8 @@ var FILE_PREVIEW_CSS = `
 /* Everything the team delivered, listed in the same panel and opened from a row. */
 .bt-products{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:6px}
 .bt-products>.bt-fp-empty{flex:1}
+.bt-prod-note{flex:none;padding:4px 10px 8px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
+.bt-prod-rows{display:flex;flex-direction:column}
 .bt-prod-row{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:10px;background:none;color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer}
 .bt-prod-row:hover{background:var(--bt-hover)}
 .bt-prod-row:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--bt-accent)}
@@ -5015,33 +5018,40 @@ function DeliveredList({ actions, onClose }) {
     if (isPicture(basename(file.path))) actions?.previewImage?.(file);
     else actions?.previewFile?.(file);
   };
-  const body = state === "reading" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…")))) : state === "failed" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title", role: "status" }, t("This list could not be read")))) : files.length === 0 ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)(
+  const body = state === "reading" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…")))) : state === "failed" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title", role: "status" }, t("This list could not be read")))) : (0, import_react7.createElement)(
     "div",
-    { className: "bt-fp-empty" },
-    (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("No deliverables yet")),
-    (0, import_react7.createElement)("div", { className: "bt-fp-empty-text" }, t("Files a Bot hands over are listed here."))
-  )) : (0, import_react7.createElement)("div", { className: "bt-products", role: "list" }, files.map((file) => {
-    const name = basename(file.path);
-    const meta = [atText(file.at), folderOf(file.path)].filter((part) => part !== "").join(" · ");
-    return (0, import_react7.createElement)(
-      "button",
-      {
-        key: file.path,
-        type: "button",
-        role: "listitem",
-        className: "bt-prod-row",
-        "aria-label": `${t("Preview")} ${name}`,
-        onClick: () => open(file)
-      },
-      (0, import_react7.createElement)("span", { className: "bt-prod-ico", "aria-hidden": true }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.FileTypeIcon, { path: file.path, size: 18 })),
-      (0, import_react7.createElement)(
-        "span",
-        { className: "bt-prod-copy" },
-        (0, import_react7.createElement)("span", { className: "bt-prod-name" }, name),
-        meta === "" ? null : (0, import_react7.createElement)("span", { className: "bt-prod-meta" }, meta)
-      )
-    );
-  }));
+    { className: "bt-products" },
+    // The list is what this host saw delivered, and it is not backfilled: a short
+    // list is the truth rather than a bug, so it says so above itself.
+    (0, import_react7.createElement)("div", { className: "bt-prod-note" }, t("Only files delivered since this run started are listed.")),
+    files.length === 0 ? (0, import_react7.createElement)(
+      "div",
+      { className: "bt-fp-empty" },
+      (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("No deliverables yet")),
+      (0, import_react7.createElement)("div", { className: "bt-fp-empty-text" }, t("Files a Bot hands over are listed here."))
+    ) : (0, import_react7.createElement)("div", { className: "bt-prod-rows", role: "list" }, files.map((file) => {
+      const name = basename(file.path);
+      const meta = [atText(file.at), folderOf(file.path)].filter((part) => part !== "").join(" · ");
+      return (0, import_react7.createElement)(
+        "button",
+        {
+          key: file.path,
+          type: "button",
+          role: "listitem",
+          className: "bt-prod-row",
+          "aria-label": `${t("Preview")} ${name}`,
+          onClick: () => open(file)
+        },
+        (0, import_react7.createElement)("span", { className: "bt-prod-ico", "aria-hidden": true }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.FileTypeIcon, { path: file.path, size: 18 })),
+        (0, import_react7.createElement)(
+          "span",
+          { className: "bt-prod-copy" },
+          (0, import_react7.createElement)("span", { className: "bt-prod-name" }, name),
+          meta === "" ? null : (0, import_react7.createElement)("span", { className: "bt-prod-meta" }, meta)
+        )
+      );
+    }))
+  );
   return (0, import_react7.createElement)(
     import_react7.Fragment,
     null,

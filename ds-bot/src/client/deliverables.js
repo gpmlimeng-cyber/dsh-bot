@@ -338,22 +338,26 @@ export function DeliveredList({ actions, onClose }) {
     ? h('div', { className: 'bt-products' }, h('div', { className: 'bt-fp-empty' }, h('div', { className: 'bt-fp-empty-title' }, t('Loading…'))))
     : state === 'failed'
       ? h('div', { className: 'bt-products' }, h('div', { className: 'bt-fp-empty' }, h('div', { className: 'bt-fp-empty-title', role: 'status' }, t('This list could not be read'))))
-      : files.length === 0
-        ? h('div', { className: 'bt-products' }, h('div', { className: 'bt-fp-empty' },
-            h('div', { className: 'bt-fp-empty-title' }, t('No deliverables yet')),
-            h('div', { className: 'bt-fp-empty-text' }, t('Files a Bot hands over are listed here.'))))
-        : h('div', { className: 'bt-products', role: 'list' }, files.map(file => {
-            const name = basename(file.path)
-            const meta = [atText(file.at), folderOf(file.path)].filter(part => part !== '').join(' · ')
-            return h('button', {
-              key: file.path, type: 'button', role: 'listitem', className: 'bt-prod-row',
-              'aria-label': `${t('Preview')} ${name}`, onClick: () => open(file),
-            },
-            h('span', { className: 'bt-prod-ico', 'aria-hidden': true }, h(FileTypeIcon, { path: file.path, size: 18 })),
-            h('span', { className: 'bt-prod-copy' },
-              h('span', { className: 'bt-prod-name' }, name),
-              meta === '' ? null : h('span', { className: 'bt-prod-meta' }, meta)))
-          }))
+      : h('div', { className: 'bt-products' },
+          // The list is what this host saw delivered, and it is not backfilled: a short
+          // list is the truth rather than a bug, so it says so above itself.
+          h('div', { className: 'bt-prod-note' }, t('Only files delivered since this run started are listed.')),
+          files.length === 0
+            ? h('div', { className: 'bt-fp-empty' },
+                h('div', { className: 'bt-fp-empty-title' }, t('No deliverables yet')),
+                h('div', { className: 'bt-fp-empty-text' }, t('Files a Bot hands over are listed here.')))
+            : h('div', { className: 'bt-prod-rows', role: 'list' }, files.map(file => {
+                const name = basename(file.path)
+                const meta = [atText(file.at), folderOf(file.path)].filter(part => part !== '').join(' · ')
+                return h('button', {
+                  key: file.path, type: 'button', role: 'listitem', className: 'bt-prod-row',
+                  'aria-label': `${t('Preview')} ${name}`, onClick: () => open(file),
+                },
+                h('span', { className: 'bt-prod-ico', 'aria-hidden': true }, h(FileTypeIcon, { path: file.path, size: 18 })),
+                h('span', { className: 'bt-prod-copy' },
+                  h('span', { className: 'bt-prod-name' }, name),
+                  meta === '' ? null : h('span', { className: 'bt-prod-meta' }, meta)))
+              })))
   return h(Fragment, null,
     h(PreviewHead, { name: t('All deliverables'), onClose }),
     body)

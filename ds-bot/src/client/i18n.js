@@ -491,6 +491,7 @@ const ZH = {
   'All deliverables': '全部产物',
   'No deliverables yet': '还没有产物',
   'Files a Bot hands over are listed here.': '机器人交付的文件会列在这里。',
+  'Only files delivered since this run started are listed.': '只显示本次启动以来交付过的文件。',
   'This list could not be read': '这份列表读不出来',
   Source: '源码',
   'Open navigation': '打开导航',

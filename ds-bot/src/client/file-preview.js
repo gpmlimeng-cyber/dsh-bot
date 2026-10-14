@@ -184,6 +184,8 @@ export const FILE_PREVIEW_CSS = `
 /* Everything the team delivered, listed in the same panel and opened from a row. */
 .bt-products{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:6px}
 .bt-products>.bt-fp-empty{flex:1}
+.bt-prod-note{flex:none;padding:4px 10px 8px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
+.bt-prod-rows{display:flex;flex-direction:column}
 .bt-prod-row{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:10px;background:none;color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer}
 .bt-prod-row:hover{background:var(--bt-hover)}
 .bt-prod-row:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--bt-accent)}
