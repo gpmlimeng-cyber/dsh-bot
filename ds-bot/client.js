@@ -4747,23 +4747,23 @@ var FILE_PREVIEW_CSS = `
    panel carries the shape: full screen on a phone, the right column on a desktop, so
    nothing here is sized per band.
 
-   The bar is sized off the panel's own right-sidebar header, so the two read alike: its
-   head row is 12+36+6 = 54px tall, and its title is the 17/24 name (.bt-drawer-top and
-   .bt-drawer-name in styles.js). The controls here take the one number the drawer's 36px
-   round control does not reach -- a 44px touch target, the size a finger is owed on the
-   page the user actually taps -- so the two ends are 44 wide while the icon inside stays
-   the same 16px the drawer draws. */
-.bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:54px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
-.bt-preview-back{flex:none;width:44px;height:44px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+   The bar takes the drawer's title -- the 17/24 name (.bt-drawer-name in styles.js) -- and
+   grows from there: the controls are a 48px touch target, the size a finger is owed on the
+   page the user actually taps, and the drawing inside them is 20px so the control does not
+   look small next to the 17px name beside it. The bar is 56px, which leaves the 48px
+   control 4px at either end rather than touching the edges. */
+.bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
+.bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-preview-back svg{width:16px;height:16px}
+.bt-preview-back svg{width:20px;height:20px}
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
-   The reserve is the two controls and their gaps, so a long name never slides under one. */
-.bt-preview-name{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 128px);font-size:17px;line-height:24px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+   The reserve is the two controls, their padding and their gaps, so a long name never
+   slides under one: 48 + 48 + 20 of padding + 20 of slack. */
+.bt-preview-name{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 136px);font-size:17px;line-height:24px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-preview-menu{margin-left:auto}
-.bt-preview-more{flex:none;width:44px;height:44px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-preview-more svg{width:16px;height:16px}
+.bt-preview-more svg{width:20px;height:20px}
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
