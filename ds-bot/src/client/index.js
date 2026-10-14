@@ -608,6 +608,10 @@ export function apply(ctx) {
     // One workspace file for the panel's Files tab; the host answers with the file
     // or the reason it could not be read.
     panelFile: path => call('panel-file', { path }),
+    // One delivered file for a card, wherever on the phone the Bot put it. The host
+    // only answers for the paths its own `deliverables/presented` events carried, so a
+    // card can open what was handed to this team and nothing else.
+    presentFile: path => call('present-file', { path }),
     // A failed action away from any form (a menu, the palette) shows as a toast.
     reportError: (error, where = 'action') => {
       noteClientError(where, error)

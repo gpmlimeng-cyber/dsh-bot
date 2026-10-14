@@ -184,7 +184,7 @@ function GroupMessage({ bot, text, room, roster, actions, msgKey, useUi, deliver
     h('span', { className: 'bt-group-name', style: { color: inkText(colorOf(bot)) } }, bot.name,
       room?.admin === bot.id ? h('span', { className: 'bt-group-role' }, t('Admin')) : null),
     h(Bubbles, { texts: [text], roster, selfId: bot.id, actions, sessionId: room?.id, msgKey, useUi, lead }),
-    h(DeliverableCards, { deliverables }))
+    h(DeliverableCards, { deliverables, actions }))
 }
 
 // A centered event line that names a group chat and opens it.

@@ -76,3 +76,27 @@ test('a phone keeps its way out: the copy-path button and the sentence about the
   assert.ok(source.includes('PHONE_COPY_HINT'), 'the fallback names the folder the phone can reach')
   assert.ok(rule('.bt-dcard-hint{').includes('word-break:break-all'), 'the sentence wraps instead of scrolling sideways')
 })
+
+// A tap on the card reads the file through the host, which answers for the paths a Bot
+// actually delivered. Only a picture or text can be shown; everything else keeps the
+// path to copy.
+test('a tap shows the delivered file here, and only what can be shown', () => {
+  const source = card.join('\n')
+  assert.ok(source.includes('const answer = await actions?.presentFile?.(file.path)'), 'the card reads through the host action')
+  assert.ok(source.includes("answer?.ok === true && (answer.kind === 'image' || answer.kind === 'text' || answer.kind === 'markdown')"), 'a binary or an unreadable file is not shown')
+  assert.ok(source.includes("h('img', { src: `data:"), 'an image is shown as itself')
+  assert.ok(source.includes(": h('pre', { className: 'bt-dcard-text' }, read.text ?? '')"), 'text is shown as text')
+  // A second tap puts the file away, and the label says which tap it is.
+  assert.ok(source.includes("if (state === 'shown') {") && source.includes('setRead(null)'), 'a second tap puts it away')
+  assert.ok(source.includes("`${state === 'shown' ? t('Hide preview') : t('Preview')} ${name}`"), 'the hit target names its tap')
+  assert.ok(source.includes("state === 'reading' ? t('Opening…') : metaText(file, name)"), 'a read in flight says so, since a phone shows no hover')
+  assert.ok(i18n.includes("Preview: '预览'") && i18n.includes("'Hide preview': '收起预览'"), 'both labels are translated')
+  // Bounded height: one delivered file cannot push the conversation off the screen.
+  assert.ok(rule('.bt-dcard-view img{').includes('max-height:260px'), 'a picture is capped')
+  assert.ok(rule('.bt-dcard-text{').includes('overflow:auto') && rule('.bt-dcard-text{').includes('max-height:260px'), 'text scrolls inside its own box')
+})
+
+test('the card is wired to the host action that answers for delivered files', () => {
+  assert.ok(read('index.js').includes("presentFile: path => call('present-file', { path })"), 'the client exposes the action')
+  assert.ok(read('cells.js').includes('h(DeliverableCards, { deliverables, actions })'), 'the group reply hands the card its actions')
+})

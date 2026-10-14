@@ -213,6 +213,9 @@ export function install(rt) {
     if (target.includes('\0') || !delivered.has(target)) return { ok: false, error: 'That file was not delivered to this team.' }
     const found = await regularFile(target)
     if (found.error !== undefined) return { ok: false, error: found.error }
+    // What is read is what sits at the delivered path now -- through a link if one was
+    // put there since. That path was writable by this same user and device all along, so
+    // following it grants nothing the delivered path did not already allow.
     return readRegular(found.real, basename(target), found.info)
   }
 

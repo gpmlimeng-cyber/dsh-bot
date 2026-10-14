@@ -480,6 +480,8 @@ const ZH = {
   'Copy path': '复制路径',
   Path: '路径',
   File: '文件',
+  Preview: '预览',
+  'Hide preview': '收起预览',
   'Opening…': '正在打开…',
   'Could not open it here. Copy the path and open the copy under {folder}': '这里打不开。复制路径，在手机文件管理的 {folder} 里打开副本',
   'Open navigation': '打开导航',

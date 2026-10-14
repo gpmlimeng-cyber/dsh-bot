@@ -535,6 +535,8 @@ var ZH = {
   "Copy path": "复制路径",
   Path: "路径",
   File: "文件",
+  Preview: "预览",
+  "Hide preview": "收起预览",
   "Opening…": "正在打开…",
   "Could not open it here. Copy the path and open the copy under {folder}": "这里打不开。复制路径，在手机文件管理的 {folder} 里打开副本",
   "Open navigation": "打开导航",
@@ -2212,6 +2214,12 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard:hover .bt-dcard-desc,.bt-dcard:focus-within .bt-dcard-desc{display:none}
 .bt-dcard:hover .bt-dcard-peek,.bt-dcard:focus-within .bt-dcard-peek{display:inline}
 .bt-dcard-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
+/* What a tap on the card reads back: a picture whole, or the file's text to read in
+   place. Both are capped in height so one delivered file cannot push the conversation
+   off the screen; the text scrolls inside its own box. */
+.bt-dcard-view{border-radius:10px;background:var(--bt-card);box-shadow:inset 0 0 0 .5px var(--bt-line);overflow:hidden}
+.bt-dcard-view img{display:block;width:100%;max-height:260px;object-fit:contain;background:var(--bt-main)}
+.bt-dcard-text{margin:0;max-height:260px;overflow:auto;padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:17px;color:var(--bt-ink);white-space:pre-wrap;word-break:break-word}
 .bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:inline-flex;gap:6px}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 .bt-dcard-btn{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:background-color .12s ease,color .12s ease}
@@ -4550,9 +4558,32 @@ var metaText = (file, name) => {
   const extension = (0, import_dsh_client_ui_primitives.fileExtension)(name).toUpperCase();
   return extension === "" ? t("File") : extension;
 };
-function DeliverableCard({ file }) {
+var readable = (answer) => answer?.ok === true && (answer.kind === "image" || answer.kind === "text" || answer.kind === "markdown");
+function DeliverableCard({ file, actions }) {
   const [state, setState] = (0, import_react6.useState)("idle");
+  const [read, setRead] = (0, import_react6.useState)(null);
   const name = basename(file.path);
+  const preview = async () => {
+    if (state === "reading") return;
+    if (state === "shown") {
+      setRead(null);
+      setState("idle");
+      return;
+    }
+    setState("reading");
+    try {
+      const answer = await actions?.presentFile?.(file.path);
+      if (!readable(answer)) {
+        setRead(null);
+        setState("failed");
+        return;
+      }
+      setRead(answer);
+      setState("shown");
+    } catch {
+      setState("failed");
+    }
+  };
   const open = async () => {
     if (state === "opening") return;
     setState("opening");
@@ -4581,15 +4612,21 @@ function DeliverableCard({ file }) {
       { className: "bt-dcard", "data-state": state === "failed" ? "fallback" : void 0 },
       // One hit target over the whole card, as DSH's own card has: the name and icon
       // carry no pointer events of their own, so a tap anywhere but the two buttons
-      // opens (or, on a phone, falls back to the hint below).
-      (0, import_react6.createElement)("button", { type: "button", className: "bt-dcard-hit", title: file.path, "aria-label": `${t("Open")} ${name}`, onClick: open }),
+      // reads the file and shows it.
+      (0, import_react6.createElement)("button", {
+        type: "button",
+        className: "bt-dcard-hit",
+        title: file.path,
+        "aria-label": `${state === "shown" ? t("Hide preview") : t("Preview")} ${name}`,
+        onClick: preview
+      }),
       (0, import_react6.createElement)("span", { className: "bt-dcard-ico", "aria-hidden": true }, (0, import_react6.createElement)(import_dsh_client_ui_primitives.FileTypeIcon, { path: file.path, size: 20 })),
       (0, import_react6.createElement)(
         "span",
         { className: "bt-dcard-copy" },
         (0, import_react6.createElement)("span", { className: "bt-dcard-name" }, name),
-        (0, import_react6.createElement)("span", { className: "bt-dcard-desc" }, metaText(file, name)),
-        (0, import_react6.createElement)("span", { className: "bt-dcard-peek", "aria-hidden": true }, t("Open"))
+        (0, import_react6.createElement)("span", { className: "bt-dcard-desc" }, state === "reading" ? t("Opening…") : metaText(file, name)),
+        (0, import_react6.createElement)("span", { className: "bt-dcard-peek", "aria-hidden": true }, state === "shown" ? t("Hide preview") : t("Preview"))
       ),
       (0, import_react6.createElement)(
         "span",
@@ -4607,10 +4644,15 @@ function DeliverableCard({ file }) {
         )
       )
     ),
+    state === "shown" && read !== null ? (0, import_react6.createElement)(
+      "div",
+      { className: "bt-dcard-view", "data-kind": read.kind },
+      read.kind === "image" ? (0, import_react6.createElement)("img", { src: `data:${read.mime ?? "application/octet-stream"};base64,${read.base64 ?? ""}`, alt: name }) : (0, import_react6.createElement)("pre", { className: "bt-dcard-text" }, read.text ?? "")
+    ) : null,
     state === "failed" ? (0, import_react6.createElement)("span", { className: "bt-dcard-hint", role: "status" }, t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT })) : null
   );
 }
-function DeliverableCards({ deliverables }) {
+function DeliverableCards({ deliverables, actions }) {
   const files = (deliverables ?? []).flatMap((entry) => (entry?.files ?? []).map((file, index) => ({
     path: file?.path,
     description: typeof file?.description === "string" ? file.description : void 0,
@@ -4619,7 +4661,7 @@ function DeliverableCards({ deliverables }) {
     index
   }))).filter((file) => typeof file.path === "string" && file.path !== "");
   if (files.length === 0) return null;
-  return (0, import_react6.createElement)("div", { className: "bt-dcards" }, files.map((file) => (0, import_react6.createElement)(DeliverableCard, { key: `${file.sessionId}:${file.seq}:${file.index}`, file })));
+  return (0, import_react6.createElement)("div", { className: "bt-dcards" }, files.map((file) => (0, import_react6.createElement)(DeliverableCard, { key: `${file.sessionId}:${file.seq}:${file.index}`, file, actions })));
 }
 
 // src/client/turn-reasoning.js
@@ -4856,7 +4898,7 @@ function GroupMessage({ bot, text, room: room2, roster, actions, msgKey, useUi, 
       room2?.admin === bot.id ? (0, import_react7.createElement)("span", { className: "bt-group-role" }, t("Admin")) : null
     ),
     (0, import_react7.createElement)(Bubbles, { texts: [text], roster, selfId: bot.id, actions, sessionId: room2?.id, msgKey, useUi, lead }),
-    (0, import_react7.createElement)(DeliverableCards, { deliverables })
+    (0, import_react7.createElement)(DeliverableCards, { deliverables, actions })
   );
 }
 function GroupEvent({ prefix, room: room2, name, roster, actions }) {
@@ -15696,6 +15738,10 @@ function apply(ctx) {
     // One workspace file for the panel's Files tab; the host answers with the file
     // or the reason it could not be read.
     panelFile: (path) => call("panel-file", { path }),
+    // One delivered file for a card, wherever on the phone the Bot put it. The host
+    // only answers for the paths its own `deliverables/presented` events carried, so a
+    // card can open what was handed to this team and nothing else.
+    presentFile: (path) => call("present-file", { path }),
     // A failed action away from any form (a menu, the palette) shows as a toast.
     reportError: (error, where = "action") => {
       noteClientError(where, error);
