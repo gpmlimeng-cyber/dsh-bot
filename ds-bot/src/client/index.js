@@ -233,6 +233,10 @@ export function apply(ctx) {
   // read_browser only in the Desktop profile (`browser` in the state).
   const bridge = window.dshDesktop?.protocolVersion === 1 ? window.dshDesktop.browser ?? null : null
   const browsers = bridge ? createBotBrowsers({ bridge, createSource }) : null
+  // The Better Sidebar service, published by the dsh-better-sidebar plugin when it is
+  // installed (DEV profile). It is deliberately not a dependency: without it the Bot
+  // panel keeps its own drawer, and nothing here may assume the service is there.
+  const betterSidebar = typeof ctx.get === 'function' ? ctx.get('betterSidebar') ?? null : null
   if (browsers) {
     ctx.effect(() => {
       let stopReads = null
@@ -735,7 +739,7 @@ export function apply(ctx) {
   })
   const browserPages = browsers?.pages ?? createSource({})
   const browserTabs = browsers?.tabs ?? createSource({})
-  const face = () => ({ actions, hooks: { roster, ui, activity, work, memoryNews, registry, turnClock, live, cards, browserPages, browserTabs, surface, update } })
+  const face = () => ({ actions, betterSidebar, hooks: { roster, ui, activity, work, memoryNews, registry, turnClock, live, cards, browserPages, browserTabs, surface, update } })
   ctx.effect(() => noticeApprovals({
     work,
     roster,

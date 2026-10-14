@@ -14983,6 +14983,7 @@ function apply(ctx) {
   }
   const bridge = window.dshDesktop?.protocolVersion === 1 ? window.dshDesktop.browser ?? null : null;
   const browsers = bridge ? createBotBrowsers({ bridge, createSource }) : null;
+  const betterSidebar = typeof ctx.get === "function" ? ctx.get("betterSidebar") ?? null : null;
   if (browsers) {
     ctx.effect(() => {
       let stopReads = null;
@@ -15516,7 +15517,7 @@ function apply(ctx) {
   });
   const browserPages = browsers?.pages ?? createSource({});
   const browserTabs = browsers?.tabs ?? createSource({});
-  const face = () => ({ actions, hooks: { roster, ui: ui2, activity, work, memoryNews, registry, turnClock, live, cards, browserPages, browserTabs, surface, update } });
+  const face = () => ({ actions, betterSidebar, hooks: { roster, ui: ui2, activity, work, memoryNews, registry, turnClock, live, cards, browserPages, browserTabs, surface, update } });
   ctx.effect(() => noticeApprovals({
     work,
     roster,
