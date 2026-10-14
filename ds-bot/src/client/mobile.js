@@ -6,12 +6,19 @@
 // Inside that line the skin has three widths, on the Compact/Medium/Expanded bands the
 // platforms themselves use (Xiaomi and HarmonyOS both publish 600 and 840): a phone
 // upright, a half-folded or portrait tablet, and an unfolded fold or landscape tablet.
-// The shell's own rail line stays the only switch between desktop and mobile, so the
-// 841-1023 band never fights the shell for the same column; these two only pick which
-// size of the mobile skin is drawn.
+// These two only pick which size of the mobile skin is drawn.
+//
+// The shell's rail line is the switch between the two layouts, with one exception: a
+// foldable held sideways. Unfolded it lands in the 841-1023 band (859x608 on the device
+// this was built against), and that is a desktop window in all but name — a sheet and a
+// full-screen panel waste it, and the PC layout is what was asked for there. So the
+// 841-1023 window is the desktop one while it is wider than it is tall; the mobile skin's
+// expanded band belongs to the portrait window of the same width (a 900x1200 tablet),
+// where there is no room beside the shell's rail. Up to 840 nothing changes: a phone,
+// however it is held, and a half-folded screen keep the mobile skin.
 import { useEffect, useState } from 'react'
 
-export const MOBILE_QUERY = '(max-width:1023px)'
+export const MOBILE_QUERY = '(max-width:840px), (max-width:1023px) and (orientation:portrait)'
 export const SIZE_MEDIUM_QUERY = '(min-width:600px)'
 export const SIZE_EXPANDED_QUERY = '(min-width:841px)'
 

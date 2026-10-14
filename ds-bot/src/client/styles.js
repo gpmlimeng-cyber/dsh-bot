@@ -938,6 +938,22 @@ html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh
    This must stay off the --bt-top-inset chain's inputs: mobile.js measures --bt-top-inset
    from --dsh-mobile-top-inset, and a definition on html cannot feed back into it. */
 html[data-bt-mobile]{--dsh-frame-chrome-top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)))}
+/* The same inset, for the desktop layout a foldable held sideways now gets (mobile.js):
+   the Android layer's own rules stop at 767px, so above the mobile line nothing consumed
+   --dsh-mobile-top-inset and the shell's frame began at y=0 — on this device the top 51px
+   are the status bar, so the header row, the rail's first row and the panel's top row all
+   sat behind it. The variable is published only where there is something to clear (the
+   layer keeps it at 0 while the app runs immersive) and is absent in every desktop
+   browser, so each rule here collapses to the 0px the shell already had. --bt-top-inset is
+   deliberately not in this chain: it is mobile.js's measured value, and on a desktop that
+   measurement would read the header's height and pad the frame for nothing. */
+html:not([data-bt-mobile]) [data-dsh-frame]>[class*="centerCol"],
+html:not([data-bt-mobile]) [data-dsh-frame]>[class*="sidebarCol"]{padding-top:var(--dsh-mobile-top-inset,0px)}
+html:not([data-bt-mobile]) .bt-panel,
+html:not([data-bt-mobile]) .bt-pane{top:max(var(--dsh-frame-chrome-top,0px),var(--dsh-mobile-top-inset,0px))}
+html:not([data-bt-mobile]) .bt-settings-layer,
+html:not([data-bt-mobile]) .bt-palette-layer,
+html:not([data-bt-mobile]) .bt-mem-layer{inset:max(var(--dsh-frame-chrome-top,0px),var(--dsh-mobile-top-inset,0px)) 0 0}
 /* The mobile skin has three sizes, on the Compact/Medium/Expanded lines the platforms
    publish (Xiaomi and HarmonyOS both use 600 and 840). The defaults below are the compact
    phone the skin draws where no band matches; a band only re-points these variables, and
