@@ -1013,6 +1013,27 @@ html[data-bt-pc] [data-sidebar-collapsed] [class*="_sidebarCol"] .bt-side>*:not(
 /* With the row gone, the open root's 4px is not re-applied: the shell pads the root 18px here,
    and the 4px only ever existed to finish the open row's climb onto the line. */
 html[data-bt-pc] .bt-side.bt-rail{margin-top:0}
+/* Touch feedback, shared by both touch bands (the PC band is the foldable held sideways,
+   so it is a finger too). Android's own tap highlight is the grey block that ignores this
+   skin's radius and colours: it is inherited, so one declaration on the root reaches every
+   control the shell draws as well, and neither band is ever published on a desktop window,
+   which is left alone entirely.
+   What replaces it is our own press tint, laid over the element as a background image and
+   not as a background colour, so a filled button keeps its fill and takes the tint on top;
+   being a background layer it is drawn inside the element's own radius (no square corner)
+   and it changes no box, so nothing can shift. Press only, never hover: a tap that turns
+   into a long press or a drag cleans up by itself when the finger leaves.
+   Reduced motion keeps the platform's colour change and drops both this tint and the small
+   press scale the sheet already carried.
+   The tint is important because a few of the shell's filled buttons pin their background with
+   an important shorthand of their own, and the one feedback has to outrank those too; the
+   swatch that draws a two-tone preview with its own background image is the one pressable
+   that keeps what it is drawing instead. */
+:is(html[data-bt-mobile],html[data-bt-pc]){-webkit-tap-highlight-color:transparent}
+:is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active:not(:disabled):not(.bt-swatch-default){background-image:linear-gradient(var(--bt-active),var(--bt-active))!important}
+@media (prefers-reduced-motion:reduce){
+:is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active{background-image:none!important;transform:none;scale:none}
+}
 /* The mobile skin has three sizes, on the Compact/Medium/Expanded lines the platforms
    publish (Xiaomi and HarmonyOS both use 600 and 840). The defaults below are the compact
    phone the skin draws where no band matches; a band only re-points these variables, and
