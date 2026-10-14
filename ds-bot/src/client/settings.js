@@ -228,7 +228,12 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
           h('h3', { className: 'bt-settings-group-head' }, t(group)),
           h('div', { className: 'bt-settings-group-card' },
             keys.map(key => h('button', {
-              key, type: 'button', className: 'bt-settings-item', 'aria-current': shown === key ? 'page' : undefined,
+              key, type: 'button', className: 'bt-settings-item',
+              // A phone's list is the top level, and no row on it is current: the page a row
+              // would open is not the page you are on. Marking one said otherwise -- it drew
+              // that row filled, and the glide thumb, whose selector matches [aria-current],
+              // parked behind it. Shown on a page, the phone hides this list anyway.
+              'aria-current': !mobile && shown === key ? 'page' : undefined,
               onClick: () => { setScreen('page'); actions.openSettings(key) },
             }, h(PAGE_ICONS[key]), h('span', { className: 'bt-settings-name' }, t(PAGE_TEXT[key])), h('span', { className: 'bt-set-go', 'aria-hidden': true }, h(ChevronRightIcon)))),
             // Harness settings is the last row of the last card: on the wide dialog it

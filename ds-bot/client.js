@@ -3014,26 +3014,41 @@ html[data-bt-mobile] .bt-settings-top{position:relative;flex:none;display:flex;a
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn{position:relative;flex:none;width:40px;height:40px;background:var(--bt-hover)}
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn::after{content:"";position:absolute;inset:-2px}
 html[data-bt-mobile] .bt-settings-top h2{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0 60px;text-align:center;font-size:16px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+/* The title bar is the page under it, not a surface of its own. It inherited the dialog's
+   --bt-main, which on the list screen is not the colour there: the list's base is the
+   sidebar colour, so a band of a different colour ran across the top, and it stayed there
+   while the list scrolled under it. Each screen names its own base, so the seam cannot come
+   back, and no rule adds a divider line. */
+html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}
+html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}
 /* That bar replaces the wide dialog's head and its floating close. */
 html[data-bt-mobile] .bt-settings-head,
 html[data-bt-mobile] .bt-settings-close{display:none}
 /* The list is cards now, and it scrolls: rows plus headings no longer fit a phone. */
 html[data-bt-mobile] .bt-settings-nav{width:100%;flex:1;overflow-y:auto;border-right:0;padding:8px max(12px,calc((100% - var(--bt-set-max,100%))/2)) max(16px,env(safe-area-inset-bottom))}
+/* The glide thumb belongs to the wide dialog's column, where it parks behind the row
+   matching [aria-current]. On a phone the list is the top level and no row is current --
+   the row that opens a page is not that page -- so it has nothing to park on. */
+html[data-bt-mobile] .bt-settings-nav>.bt-thumb{display:none}
 html[data-bt-mobile] .bt-settings-group{display:block}
 html[data-bt-mobile] .bt-settings-group+.bt-settings-group{margin-top:16px}
-html[data-bt-mobile] .bt-settings-group-head{display:block;margin:0 0 8px;padding:0 12px 0 13px;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-settings-group-head{display:block;margin:0 0 8px;padding:0 12px 0 13px;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-2)}
 html[data-bt-mobile] .bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card);overflow:hidden}
 html[data-bt-mobile] .bt-settings-main{width:100%;height:auto;flex:1;min-height:0}
-html[data-bt-mobile] .bt-settings-item{min-height:var(--bt-set-row-h,52px);padding:0 12px;border-radius:0;font-size:15px;line-height:22px;gap:12px}
+/* The list reads in two levels: the row's name is the text, one step below the 15px it
+   was and in the primary ink, and everything beside it is the second level at the group
+   heading's size and colour -- the 24px icons included, or they read as heavier than the
+   name they belong to. The chevron is that same second level: same colour, same size. */
+html[data-bt-mobile] .bt-settings-item{min-height:var(--bt-set-row-h,52px);padding:0 12px;border-radius:0;font-size:14px;line-height:20px;gap:12px;color:var(--bt-ink)}
 /* The name takes the room the chevron does not: it ellipsises, and the chevron lands on
    the card's inner edge rather than behind the text. The row carries its own width
    because this is a <button> in a block card — without it the button shrinks to its
    content, and margin-left:auto on the chevron has no free space to spend. */
 html[data-bt-mobile] .bt-settings-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-bt-mobile] .bt-settings-group-card>.bt-settings-item+.bt-settings-item{border-top:.5px solid var(--bt-line)}
-html[data-bt-mobile] .bt-settings-item>svg{flex:none;width:24px;height:24px}
-html[data-bt-mobile] .bt-set-go{display:flex;margin-left:auto;color:var(--bt-ink-3)}
-html[data-bt-mobile] .bt-set-go svg{width:16px;height:16px}
+html[data-bt-mobile] .bt-settings-item>svg{flex:none;width:24px;height:24px;color:var(--bt-ink-2)}
+html[data-bt-mobile] .bt-set-go{display:flex;margin-left:auto;color:var(--bt-ink-2)}
+html[data-bt-mobile] .bt-set-go svg{width:13px;height:13px}
 html[data-bt-mobile] .bt-settings-scroll{padding:12px 12px max(24px,env(safe-area-inset-bottom))}
 /* A settings row is a label and whatever changes it, side by side; on a phone the row has
    the width for that now, so it only needs the height a finger wants. */
@@ -3052,13 +3067,9 @@ html[data-bt-mobile][data-bt-size=expanded] [class*="_centerCol"]{margin-right:v
    panel there is nothing to hide from: it stays, over the conversation and clear of the
    column, which is how the session stays switchable while the details are open. */
 html[data-bt-mobile][data-bt-size=expanded] body:has(.bt-panel) .bt-mobile-bar{display:flex;right:var(--bt-detail-w)}
-/* Two columns of group cards, one 16px gutter, each row as tall as its taller card. The
-   glide thumb measures one list and would cut across both columns, so the grid drops it
-   and the current row paints itself again. */
+/* Two columns of group cards, one 16px gutter, each row as tall as its taller card. */
 html[data-bt-mobile][data-bt-size=expanded] .bt-settings-nav{display:grid;grid-template-columns:repeat(var(--bt-set-cols,1),minmax(0,1fr));column-gap:16px;row-gap:16px;align-content:start;align-items:start}
 html[data-bt-mobile][data-bt-size=expanded] .bt-settings-group{margin-top:0}
-html[data-bt-mobile][data-bt-size=expanded] .bt-settings-nav>.bt-thumb{display:none}
-html[data-bt-mobile][data-bt-size=expanded] .bt-settings-nav[data-glide] .bt-settings-item[aria-current=page]{background:var(--bt-active);color:var(--bt-ink)}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
    under the floating pill, and the property inherits into these buttons. Size lives here,
@@ -12748,7 +12759,11 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
               key,
               type: "button",
               className: "bt-settings-item",
-              "aria-current": shown === key ? "page" : void 0,
+              // A phone's list is the top level, and no row on it is current: the page a row
+              // would open is not the page you are on. Marking one said otherwise -- it drew
+              // that row filled, and the glide thumb, whose selector matches [aria-current],
+              // parked behind it. Shown on a page, the phone hides this list anyway.
+              "aria-current": !mobile && shown === key ? "page" : void 0,
               onClick: () => {
                 setScreen("page");
                 actions.openSettings(key);
