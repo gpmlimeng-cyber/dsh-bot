@@ -181,10 +181,12 @@ export const FILE_PREVIEW_CSS = `
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* 34px box: the chevron's 11 units of geometry plus its 2 units of stroke are 13/20 of the
-   box, so it lands at 22.1px tall. The stroke is set here, not in the shared icon: the same
-   chevron heads half the shell's pages, where 1.6 is the weight they were drawn for. */
-.bt-preview-back svg{width:34px;height:34px;stroke-width:2}
+/* 36px box: the chevron's 11 units of geometry plus its 2 units of stroke are 13/20 of the
+   box, so it lands at 23.4px tall. The stroke is set here, not in the shared icon: the same
+   chevron heads half the shell's pages, where 1.6 is the weight they were drawn for. It
+   keeps 1.4px over the 22px asked for on purpose -- a device measures a drawing a little
+   under the arithmetic, and an ink sitting exactly on the line rounds whichever way. */
+.bt-preview-back svg{width:36px;height:36px;stroke-width:2}
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -192,11 +194,11 @@ export const FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* 30px box around the three filled dots: they paint 15/20 of it, so the row is 22.5px wide
-   with 6px dots. A row of dots has no height to grow -- its ink is the dot diameter -- so it
-   is the width that carries the size here. The plain DotsIcon paints 1.5-unit dots, 1.8px
-   here and 2.2px at this box: still a pinprick. */
-.bt-preview-more svg{width:30px;height:30px}
+/* 34px box around the three filled dots: they paint 15/20 of it, so the row is 25.5px wide
+   with 6.8px dots, over the 22px row and 6px dot the bar asks for. A row of dots has no
+   height to grow -- its ink is the dot diameter -- so it is the width that carries the size
+   here. The plain DotsIcon paints 1.5-unit dots, 2.6px here: still a pinprick. */
+.bt-preview-more svg{width:34px;height:34px}
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}

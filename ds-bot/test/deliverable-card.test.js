@@ -64,11 +64,12 @@ test('the card’s exits are three named icons, each a 44px target', () => {
   assert.ok(btn.includes('width:44px') && btn.includes('height:44px'), 'a 44px touch target')
   // The drawing is what the eye judges -- a 44px target around a small glyph still reads as
   // a small button -- so the box is sized for the ink these glyphs paint out of their 20x20
-  // box at the 2-unit stroke set here: at 34px the eye lands at 28.9x22.1, the arrow at
-  // 25.5x26.4, the sheets at 23.8x23.8 and the tick at 22.1x17, which is the 22px the
-  // preview bar's own controls paint.
+  // box at the 2-unit stroke set here: at 36px the eye lands at 30.6x23.4, the arrow at
+  // 27x27.9, the sheets at 25.2x25.2 and the tick at 23.4x18, which clears the 22px the
+  // preview bar's own controls paint. The 44px control does not grow with it: the card is a
+  // 60px tile with 8px of padding, so a 48px control would break the tile the user approved.
   const glyph = rule('.bt-dcard-btn svg{')
-  assert.ok(glyph.includes('width:34px') && glyph.includes('height:34px'), 'and the glyph box is 34px')
+  assert.ok(glyph.includes('width:36px') && glyph.includes('height:36px'), 'and the glyph box is 36px')
   assert.ok(glyph.includes('stroke-width:2'), 'drawn at the 2-unit stroke the preview bar uses')
   assert.ok(rule('.bt-dcard-ico{').includes('width:40px'), 'the tile it matches stays 40px')
   assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the three never wrap into a second row the 60px tile would clip')
@@ -236,9 +237,9 @@ test('the preview page’s title bar is back, the name, and one more menu', () =
   assert.ok(source.includes("h('span', { className: 'bt-preview-name' }, name)"), 'the name is the middle part')
   assert.ok(source.includes('import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsBoldIcon, ExternalIcon, EyeIcon, SwitchIcon }'), 'a back arrow, the menu’s own icons and the card’s three are imported')
   // The "···" draws the filled dots: the hairline ones paint 1.5-unit dots that land at
-  // 1.8px in the 48px control, which is why it looked empty. The 30px box matches the rule
+  // 2.6px in the 48px control, which is why it looked empty. The 34px box matches the rule
   // in file-preview.js that sizes it, so the two never drift apart.
-  assert.ok(source.includes('}, h(DotsBoldIcon, { size: 30 })),'), 'the menu’s anchor draws the filled dots')
+  assert.ok(source.includes('}, h(DotsBoldIcon, { size: 34 })),'), 'the menu’s anchor draws the filled dots')
   // The menu is the platform’s own component and carries both exits, which are the same
   // behaviour the card’s row of buttons runs: one definition, two chromes.
   assert.ok(source.includes("import { FileTypeIcon, fileExtension, ImageLightbox, Menu }"), 'the menu is the platform’s, not one of ours')
@@ -307,9 +308,12 @@ test('the message cards and the panel’s list are one component', () => {
 // 56px, so the control keeps 4px at either end. What the eye judges is the drawing, and the
 // icons paint only part of their own 20x20 box (the chevron 11 units, the filled dots 15), so
 // the boxes are sized for the ink and the stroke is thickened to 2 -- a bigger hairline reads
-// as small as the small one did: 34px paints a 22.1px chevron, 30px paints a 22.5px row of
-// 6px dots. The 22px is the same ink the card's own three exits paint. Pinned here so a later
-// edit cannot quietly shrink them back.
+// as small as the small one did: 36px paints a 23.4px chevron, 34px paints a 25.5px row of
+// 6.8px dots. Each keeps a little over the 22px asked for, since a drawing sitting on the line
+// rounds whichever way a device measures it. That 22px is the same ink the card's exits paint
+// and the card's own 44px controls are left where they were: the tile is 60px with 8px of
+// padding, so a 48px control would break it. Pinned here so a later edit cannot quietly shrink
+// them back.
 test('the title bar is 56px, its controls 48px, and their drawings 22px of ink', () => {
   assert.ok(styles.some(line => line.includes('.bt-drawer-name{font-size:17px;line-height:24px;')), 'the drawer names a Bot at 17/24')
   assert.ok(previewRule('.bt-preview-head{').includes('height:56px'), 'so the page’s bar is 56px')
@@ -318,9 +322,15 @@ test('the title bar is 56px, its controls 48px, and their drawings 22px of ink',
     assert.ok(previewRule(prefix).includes('width:48px') && previewRule(prefix).includes('height:48px'), `${prefix} is a 48px touch target`)
   }
   const back = previewRule('.bt-preview-back svg{')
-  assert.ok(back.includes('width:34px') && back.includes('height:34px'), 'the chevron’s box is 34px, which paints its 13/20 as 22.1px')
+  assert.ok(back.includes('width:36px') && back.includes('height:36px'), 'the chevron’s box is 36px, which paints its 13/20 as 23.4px')
   assert.ok(back.includes('stroke-width:2'), 'and it is stroked at 2, not the 1.6 the shared chevron keeps elsewhere')
-  assert.ok(previewRule('.bt-preview-more svg{').includes('width:30px'), 'the dots’ box is 30px, which paints their 15/20 as 22.5px wide')
+  const dots = previewRule('.bt-preview-more svg{')
+  assert.ok(dots.includes('width:34px') && dots.includes('height:34px'), 'the dots’ box is 34px, which paints their 15/20 as a 25.5px row')
+  // The dots are judged as a diameter as well as a row: three marks of a hairline's weight are
+  // what made this control look empty, so the arithmetic is tied to the glyph itself -- the
+  // filled dots are 4 units across, and 4 units of a 34px box is 6.8px.
+  assert.ok(read('icons.js').includes('cy: 10, r: 2 }'), 'the filled dots are 4 units across')
+  assert.ok(4 * 34 / 20 >= 6, 'which lands over the 6px the bar asks for')
   assert.ok(!read('file-preview.js').includes('html[data-bt-pc] .bt-preview'), 'and no band gets a smaller control back')
   // The reserve for the centred name is the two controls, their padding and their gaps, so a
   // long name never slides under one.

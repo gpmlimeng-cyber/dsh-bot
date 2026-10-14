@@ -261,16 +261,18 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 /* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
    is the touch target the card's own 60px tile can hold exactly (8px of padding above and
-   below), and the same size the preview page's controls take. The drawing is what the eye
-   judges, so the box is sized to paint 22px of ink at the 2-unit stroke set here -- the same
-   22px the preview bar's own controls paint, on a card and on the preview page alike. The
-   three glyphs are drawn to different fractions of their box (the eye widest, the sheets
-   narrowest), and 34px is the one box that clears 22px for all of them, the tick included:
-   eye 28.9x22.1, arrow 25.5x26.4, sheets 23.8x23.8, tick 22.1x17. */
+   below) and it does not grow -- a 48px control would break the tile the user has already
+   approved -- so the drawing is what grows. The box is sized to paint 22px of ink at the
+   2-unit stroke set here, the same ink the preview bar's own controls paint, and it keeps a
+   little over it: a device measures a drawing a little under the arithmetic, and an ink
+   sitting exactly on the line rounds whichever way. The three glyphs are drawn to different
+   fractions of their box (the eye widest, the sheets narrowest), and 36px is the one box
+   that clears 22px for all of them, the tick included: eye 30.6x23.4, arrow 27x27.9,
+   sheets 25.2x25.2, tick 23.4x18. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
-.bt-dcard-btn svg{width:34px;height:34px;stroke-width:2}
+.bt-dcard-btn svg{width:36px;height:36px;stroke-width:2}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 
