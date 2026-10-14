@@ -308,6 +308,10 @@ export function install(rt) {
         // A file a Bot delivered to this team, wherever on the phone it put it.
         case 'present-file':
           return ok(await rt.deliveredFile(String(body.path ?? '')))
+        // Every file this team's Bots delivered, newest first: the phone's list of them.
+        // Read-only, and nothing but paths and times leaves the host.
+        case 'list-delivered':
+          return ok({ files: rt.deliveredList() })
         // A copy of one delivered file, put where another app can read it: the shell's
         // chooser opens shared-storage paths only, so this is what "open in another app"
         // hands it. Writes outside the team state, so a reading host does not answer it.

@@ -18,12 +18,24 @@ import { createElement as h, Fragment, useEffect, useRef, useState } from 'react
 import { FileTypeIcon, fileExtension, ImageLightbox } from '@deepseek-ai/dsh-client-ui-primitives'
 import { CheckIcon, CloseIcon, CopyIcon } from './icons.js'
 import { FileView } from './file-preview.js'
-import { t } from './i18n.js'
+import { t, dateLocale } from './i18n.js'
 
 const basename = (path) => {
   const at = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
   return at === -1 ? path : path.slice(at + 1)
 }
+
+// The folder a path sits in, for the list's second line; '' at the root, where there is
+// no folder to name.
+const folderOf = (path) => {
+  const at = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
+  return at <= 0 ? '' : path.slice(0, at)
+}
+
+// When a file was delivered, in the reader's own language and a short form.
+const atText = (at) => (Number.isFinite(at)
+  ? new Intl.DateTimeFormat(dateLocale(), { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(at)
+  : '')
 
 // The mobile fallback folder the user's own file manager can reach. Its exact path is
 // a product convention, not something DSH tells us, so it is only offered as a hint.
@@ -100,6 +112,10 @@ export function DeliverableActions({ file, actions, onFailed }) {
         failed(shared)
         return
       }
+      // A file opened from the list of everything delivered carries no message
+      // coordinates, so the engine's own opener has nothing to point at: the sentence
+      // sends the reader to the path instead.
+      if (file.sessionId === undefined) { failed(null); return }
       // POST is what DSH's own card does; it authenticates with the session cookie.
       const response = await fetch(openUrl(file), { method: 'POST', credentials: 'same-origin' })
       // 409 = no Host desktop (a phone); 422 = path no longer maps. Both fall back to
@@ -228,9 +244,7 @@ export function DeliveredPreview({ file, actions, onClose }) {
           ? h('div', { className: 'bt-preview-body bt-fp-image' }, h('img', { src: `data:${read.mime ?? 'application/octet-stream'};base64,${read.base64 ?? ''}`, alt: name }))
           : h('div', { className: 'bt-preview-body' }, h(FileView, { file: source ? { ...read, kind: 'text' } : read }))
   return h(Fragment, null,
-    h('div', { className: 'bt-preview-head' },
-      h('button', { type: 'button', className: 'bt-preview-close', onClick: onClose, 'aria-label': t('Close preview'), title: t('Close preview') }, h(CloseIcon)),
-      h('span', { className: 'bt-preview-name' }, name),
+    h(PreviewHead, { name, onClose },
       state === 'shown' && read.kind === 'html'
         ? h('button', { type: 'button', className: 'bt-preview-toggle', onClick: () => setSource(current => !current) }, source ? t('Preview') : t('Source'))
         : null),
@@ -239,6 +253,73 @@ export function DeliveredPreview({ file, actions, onClose }) {
       h(DeliverableActions, { file, actions, onFailed: setFailure }),
       failure ? h('span', { className: 'bt-dcard-hint', role: 'status' }, exitsSentence(failure.shared)) : null))
 }
+
+/**
+ * The title bar both panel pages open with: the way back, what is being shown, and
+ * whatever that page puts beside the two (a page's source toggle, and nothing else).
+ */
+function PreviewHead({ name, onClose, children }) {
+  return h('div', { className: 'bt-preview-head' },
+    h('button', { type: 'button', className: 'bt-preview-close', onClick: onClose, 'aria-label': t('Close preview'), title: t('Close preview') }, h(CloseIcon)),
+    h('span', { className: 'bt-preview-name' }, name),
+    children)
+}
+
+/**
+ * Everything the team's Bots have handed over, newest first, in the panel a preview opens
+ * in -- full screen on a phone, the right column on a desktop. It is a view of the same
+ * host record the cards were registered from, so it lists what was really delivered, and
+ * a row opens a file the way its card does. Read-only: it lists and opens.
+ */
+export function DeliveredList({ actions, onClose }) {
+  const [state, setState] = useState('reading') // reading | shown | failed
+  const [files, setFiles] = useState([])
+  const ask = useRef(actions)
+  ask.current = actions
+  useEffect(() => {
+    let live = true
+    void (async () => {
+      try {
+        const answer = await ask.current?.listDelivered?.()
+        if (!live) return
+        if (!Array.isArray(answer?.files)) { setState('failed'); return }
+        setFiles(answer.files.filter(entry => typeof entry?.path === 'string' && entry.path !== ''))
+        setState('shown')
+      } catch {
+        if (live) setState('failed')
+      }
+    })()
+    return () => { live = false }
+  }, [])
+  const open = (file) => {
+    if (isPicture(basename(file.path))) actions?.previewImage?.(file)
+    else actions?.previewFile?.(file)
+  }
+  const body = state === 'reading'
+    ? h('div', { className: 'bt-products' }, h('div', { className: 'bt-fp-empty' }, h('div', { className: 'bt-fp-empty-title' }, t('Loading…'))))
+    : state === 'failed'
+      ? h('div', { className: 'bt-products' }, h('div', { className: 'bt-fp-empty' }, h('div', { className: 'bt-fp-empty-title', role: 'status' }, t('This list could not be read'))))
+      : files.length === 0
+        ? h('div', { className: 'bt-products' }, h('div', { className: 'bt-fp-empty' },
+            h('div', { className: 'bt-fp-empty-title' }, t('No deliverables yet')),
+            h('div', { className: 'bt-fp-empty-text' }, t('Files a Bot hands over are listed here.'))))
+        : h('div', { className: 'bt-products', role: 'list' }, files.map(file => {
+            const name = basename(file.path)
+            const meta = [atText(file.at), folderOf(file.path)].filter(part => part !== '').join(' · ')
+            return h('button', {
+              key: file.path, type: 'button', role: 'listitem', className: 'bt-prod-row',
+              'aria-label': `${t('Preview')} ${name}`, onClick: () => open(file),
+            },
+            h('span', { className: 'bt-prod-ico', 'aria-hidden': true }, h(FileTypeIcon, { path: file.path, size: 18 })),
+            h('span', { className: 'bt-prod-copy' },
+              h('span', { className: 'bt-prod-name' }, name),
+              meta === '' ? null : h('span', { className: 'bt-prod-meta' }, meta)))
+          }))
+  return h(Fragment, null,
+    h(PreviewHead, { name: t('All deliverables'), onClose }),
+    body)
+}
+
 
 /**
  * A delivered picture, opened in the platform's own image preview: the lightbox DSH

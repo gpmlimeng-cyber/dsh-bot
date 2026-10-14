@@ -148,9 +148,9 @@ test('a delivered page renders sandboxed, with its policy spelled out', () => {
 // re-renders that reply, and a preview held there used to close itself.
 test('a preview is held outside the message, so a new message cannot close it', () => {
   const index = read('index.js')
-  assert.ok(index.includes('preview: null, lightbox: null'), 'the panel state carries the preview')
-  assert.ok(index.includes('actions.previewFile = (file) => ui.set(state => ({ ...state, preview: file, lightbox: null, view: \'preview\' }))'), 'opening the page sets it on the panel state')
-  assert.ok(index.includes('actions.previewImage = (file) => ui.set(state => ({ ...state, lightbox: file, preview: null }))'), 'so does the image preview')
+  assert.ok(index.includes('preview: null, lightbox: null, products: false'), 'the panel state carries the preview')
+  assert.ok(index.includes("actions.previewFile = (file) => ui.set(state => ({ ...state, preview: file, lightbox: null, products: false, view: 'preview' }))"), 'opening the page sets it on the panel state')
+  assert.ok(index.includes("actions.previewImage = (file) => ui.set(state => ({ ...state, lightbox: file, preview: null, products: false }))"), 'so does the image preview')
   assert.ok(index.includes('actions.closePreview = () =>'), 'and only an explicit close takes it away')
   assert.ok(read('overlays.js').includes('h(DeliveredLightbox, {'), 'the image preview is mounted by the overlay host, not by the card')
   assert.ok(read('browser-pane.js').includes("pane.view === 'preview' && pane.preview"), 'the panel draws the preview page')

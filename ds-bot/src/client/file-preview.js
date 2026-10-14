@@ -177,4 +177,14 @@ export const FILE_PREVIEW_CSS = `
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
 .bt-preview-acts{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-end;padding:8px 10px;border-top:.5px solid var(--bt-line)}
 .bt-preview-acts .bt-dcard-hint{flex:1 1 100%;text-align:left}
+/* Everything the team delivered, listed in the same panel and opened from a row. */
+.bt-products{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:6px}
+.bt-products>.bt-fp-empty{flex:1}
+.bt-prod-row{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:10px;background:none;color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer}
+.bt-prod-row:hover{background:var(--bt-hover)}
+.bt-prod-row:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--bt-accent)}
+.bt-prod-ico{flex:none;box-sizing:border-box;width:32px;height:32px;display:grid;place-items:center;border-radius:8px;border:.5px solid var(--bt-line);color:var(--bt-accent);overflow:hidden}
+.bt-prod-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bt-prod-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-prod-meta{font-size:11px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 `

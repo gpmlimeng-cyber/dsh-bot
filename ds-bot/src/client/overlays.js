@@ -32,13 +32,14 @@ export function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useA
   // for it even when no subject is selected at all.
   const open = ui.details
     ? { id: ui.details, view: ui.view ?? 'details', renaming: ui.renaming, tab: ui.tab, preview: ui.preview }
-    : ui.preview ? { id: '', view: 'preview', renaming: false, tab: null, preview: ui.preview } : null
+    : ui.preview ? { id: '', view: 'preview', renaming: false, tab: null, preview: ui.preview }
+      : ui.products && ui.view === 'products' ? { id: '', view: 'products', renaming: false, tab: null } : null
   const [kept, setKept] = useState(open)
   useEffect(() => {
     if (open) { setKept(open); return undefined }
     const timer = setTimeout(() => setKept(null), PANEL_LINGER_MS)
     return () => clearTimeout(timer)
-  }, [ui.details, ui.view, ui.renaming, ui.tab, ui.preview])
+  }, [ui.details, ui.view, ui.renaming, ui.tab, ui.preview, ui.products])
   const pane = open ?? kept
   const [settings, settingsLeaving] = useLinger(ui.settings, DIALOG_EXIT_MS)
   const [memory, memoryLeaving] = useLinger(ui.memory && roster.byId[ui.memory] ? ui.memory : null, DIALOG_EXIT_MS)

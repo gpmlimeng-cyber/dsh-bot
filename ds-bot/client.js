@@ -543,6 +543,10 @@ var ZH = {
   "Close preview": "关闭预览",
   "Image preview": "图片预览",
   "File preview": "文件预览",
+  "All deliverables": "全部产物",
+  "No deliverables yet": "还没有产物",
+  "Files a Bot hands over are listed here.": "机器人交付的文件会列在这里。",
+  "This list could not be read": "这份列表读不出来",
   Source: "源码",
   "Open navigation": "打开导航",
   "Close navigation": "关闭导航",
@@ -4734,6 +4738,16 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
 .bt-preview-acts{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-end;padding:8px 10px;border-top:.5px solid var(--bt-line)}
 .bt-preview-acts .bt-dcard-hint{flex:1 1 100%;text-align:left}
+/* Everything the team delivered, listed in the same panel and opened from a row. */
+.bt-products{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:6px}
+.bt-products>.bt-fp-empty{flex:1}
+.bt-prod-row{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:10px;background:none;color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer}
+.bt-prod-row:hover{background:var(--bt-hover)}
+.bt-prod-row:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--bt-accent)}
+.bt-prod-ico{flex:none;box-sizing:border-box;width:32px;height:32px;display:grid;place-items:center;border-radius:8px;border:.5px solid var(--bt-line);color:var(--bt-accent);overflow:hidden}
+.bt-prod-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bt-prod-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-prod-meta{font-size:11px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 `;
 
 // src/client/deliverables.js
@@ -4743,6 +4757,11 @@ var basename = (path) => {
   const at = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
   return at === -1 ? path : path.slice(at + 1);
 };
+var folderOf = (path) => {
+  const at = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
+  return at <= 0 ? "" : path.slice(0, at);
+};
+var atText = (at) => Number.isFinite(at) ? new Intl.DateTimeFormat(dateLocale(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(at) : "";
 var PHONE_COPY_HINT = "/storage/emulated/0/DSH/deliverables/";
 var PICTURE_NAME = /\.(?:png|jpe?g|gif|webp|avif|bmp|ico|svg)$/iu;
 var isPicture = (name) => PICTURE_NAME.test(name);
@@ -4778,6 +4797,10 @@ function DeliverableActions({ file, actions, onFailed }) {
           return;
         }
         failed(shared2);
+        return;
+      }
+      if (file.sessionId === void 0) {
+        failed(null);
         return;
       }
       const response = await fetch(openUrl(file), { method: "POST", credentials: "same-origin" });
@@ -4899,10 +4922,8 @@ function DeliveredPreview({ file, actions, onClose }) {
     import_react7.Fragment,
     null,
     (0, import_react7.createElement)(
-      "div",
-      { className: "bt-preview-head" },
-      (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-close", onClick: onClose, "aria-label": t("Close preview"), title: t("Close preview") }, (0, import_react7.createElement)(CloseIcon)),
-      (0, import_react7.createElement)("span", { className: "bt-preview-name" }, name),
+      PreviewHead,
+      { name, onClose },
       state === "shown" && read.kind === "html" ? (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-toggle", onClick: () => setSource((current) => !current) }, source ? t("Preview") : t("Source")) : null
     ),
     body,
@@ -4912,6 +4933,78 @@ function DeliveredPreview({ file, actions, onClose }) {
       (0, import_react7.createElement)(DeliverableActions, { file, actions, onFailed: setFailure }),
       failure ? (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
     )
+  );
+}
+function PreviewHead({ name, onClose, children }) {
+  return (0, import_react7.createElement)(
+    "div",
+    { className: "bt-preview-head" },
+    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-close", onClick: onClose, "aria-label": t("Close preview"), title: t("Close preview") }, (0, import_react7.createElement)(CloseIcon)),
+    (0, import_react7.createElement)("span", { className: "bt-preview-name" }, name),
+    children
+  );
+}
+function DeliveredList({ actions, onClose }) {
+  const [state, setState] = (0, import_react7.useState)("reading");
+  const [files, setFiles] = (0, import_react7.useState)([]);
+  const ask = (0, import_react7.useRef)(actions);
+  ask.current = actions;
+  (0, import_react7.useEffect)(() => {
+    let live = true;
+    void (async () => {
+      try {
+        const answer = await ask.current?.listDelivered?.();
+        if (!live) return;
+        if (!Array.isArray(answer?.files)) {
+          setState("failed");
+          return;
+        }
+        setFiles(answer.files.filter((entry) => typeof entry?.path === "string" && entry.path !== ""));
+        setState("shown");
+      } catch {
+        if (live) setState("failed");
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, []);
+  const open = (file) => {
+    if (isPicture(basename(file.path))) actions?.previewImage?.(file);
+    else actions?.previewFile?.(file);
+  };
+  const body = state === "reading" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…")))) : state === "failed" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title", role: "status" }, t("This list could not be read")))) : files.length === 0 ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)(
+    "div",
+    { className: "bt-fp-empty" },
+    (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("No deliverables yet")),
+    (0, import_react7.createElement)("div", { className: "bt-fp-empty-text" }, t("Files a Bot hands over are listed here."))
+  )) : (0, import_react7.createElement)("div", { className: "bt-products", role: "list" }, files.map((file) => {
+    const name = basename(file.path);
+    const meta = [atText(file.at), folderOf(file.path)].filter((part) => part !== "").join(" · ");
+    return (0, import_react7.createElement)(
+      "button",
+      {
+        key: file.path,
+        type: "button",
+        role: "listitem",
+        className: "bt-prod-row",
+        "aria-label": `${t("Preview")} ${name}`,
+        onClick: () => open(file)
+      },
+      (0, import_react7.createElement)("span", { className: "bt-prod-ico", "aria-hidden": true }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.FileTypeIcon, { path: file.path, size: 18 })),
+      (0, import_react7.createElement)(
+        "span",
+        { className: "bt-prod-copy" },
+        (0, import_react7.createElement)("span", { className: "bt-prod-name" }, name),
+        meta === "" ? null : (0, import_react7.createElement)("span", { className: "bt-prod-meta" }, meta)
+      )
+    );
+  }));
+  return (0, import_react7.createElement)(
+    import_react7.Fragment,
+    null,
+    (0, import_react7.createElement)(PreviewHead, { name: t("All deliverables"), onClose }),
+    body
   );
 }
 function DeliveredLightbox({ file, actions, onClose, onUnreadable }) {
@@ -7815,7 +7908,7 @@ function BrowserView({ bot, tabId, leaving, landed, actions, useBrowserPages }) 
 function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages }) {
   const bot = roster.byId[pane.id];
   const canBrowse = Boolean(bot && roster.browser === true && actions.browserShow);
-  const view = pane.view === "preview" && pane.preview ? "preview" : pane.view === "browser" && canBrowse ? "browser" : pane.view === "files" ? "files" : "details";
+  const view = pane.view === "preview" && pane.preview ? "preview" : pane.view === "products" ? "products" : pane.view === "browser" && canBrowse ? "browser" : pane.view === "files" ? "files" : "details";
   const tabState = useBrowserTabs((map) => bot ? map[bot.id] ?? EMPTY_TABS : EMPTY_TABS);
   const active = tabState.active;
   const page = useBrowserPages((pages) => (active ? pages[active] : null) ?? EMPTY_PAGE);
@@ -8010,14 +8103,14 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
     for (const name of ends) grip.addEventListener(name, onEnd);
   };
   const hasStrip = canBrowse && tabState.ids.length > 0;
-  const showStrip = view !== "preview" && (hasStrip || view === "files");
+  const showStrip = view !== "preview" && view !== "products" && (hasStrip || view === "files");
   return (0, import_react14.createElement)(
     "aside",
     {
       ref: root,
       className: "bt-panel",
       "data-view": view,
-      "aria-label": `${view === "files" ? t("Files") : view === "preview" ? t("File preview") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details")}`,
+      "aria-label": `${view === "files" ? t("Files") : view === "preview" ? t("File preview") : view === "products" ? t("All deliverables") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details")}`,
       "data-leaving": leaving || void 0,
       "aria-hidden": leaving || void 0,
       "data-settling": settling || void 0,
@@ -8039,6 +8132,10 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
       "div",
       { key: `preview:${pane.preview?.path ?? ""}`, className: "bt-panel-view" },
       (0, import_react14.createElement)(DeliveredPreview, { file: pane.preview, actions: panelActions, onClose: () => actions.closePreview?.() })
+    ) : view === "products" ? (0, import_react14.createElement)(
+      "div",
+      { key: "products", className: "bt-panel-view" },
+      (0, import_react14.createElement)(DeliveredList, { actions: panelActions, onClose: () => actions.closeProducts?.() })
     ) : view === "files" ? (0, import_react14.createElement)(FilePreview, { key: "files", actions: panelActions }) : (0, import_react14.createElement)(
       "div",
       { key: `details:${pane.id}:${pane.renaming ? "rename" : ""}:${pane.tab ?? ""}`, className: "bt-panel-view" },
@@ -14114,6 +14211,9 @@ function ContextMenu({ menu, roster, actions, leaving = false }) {
       bot && isMainBot && mainCount > 1 ? [t("Remove Main Bot role"), StarLineIcon, () => actions.setMain(bot.id, false)] : null
     ],
     [[t("Copy conversation ID"), CopyIcon, () => navigator.clipboard?.writeText(bot ? currentPart(bot) : menu.id)]],
+    // Every file this team's Bots handed over, in the workspace they handed it over in.
+    // Not an action on this entry, which is why it stands in a group of its own.
+    [[t("All deliverables"), FolderIcon, () => actions.openProducts()]],
     [
       isMainBot ? null : [t("Hide from sidebar"), HideIcon, () => actions.setFlags(menu.id, { hidden: true })],
       isMainBot ? null : [room2 ? t("Delete group") : t("Delete"), TrashIcon, () => bot ? actions.deleteBot(bot.id) : actions.deleteRoom(menu.id), true]
@@ -14201,7 +14301,7 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
     previous.current = current;
     if (current) actions.followPanel?.(current);
   }, [current]);
-  const open = ui2.details ? { id: ui2.details, view: ui2.view ?? "details", renaming: ui2.renaming, tab: ui2.tab, preview: ui2.preview } : ui2.preview ? { id: "", view: "preview", renaming: false, tab: null, preview: ui2.preview } : null;
+  const open = ui2.details ? { id: ui2.details, view: ui2.view ?? "details", renaming: ui2.renaming, tab: ui2.tab, preview: ui2.preview } : ui2.preview ? { id: "", view: "preview", renaming: false, tab: null, preview: ui2.preview } : ui2.products && ui2.view === "products" ? { id: "", view: "products", renaming: false, tab: null } : null;
   const [kept, setKept] = (0, import_react37.useState)(open);
   (0, import_react37.useEffect)(() => {
     if (open) {
@@ -14210,7 +14310,7 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
     }
     const timer = setTimeout(() => setKept(null), PANEL_LINGER_MS);
     return () => clearTimeout(timer);
-  }, [ui2.details, ui2.view, ui2.renaming, ui2.tab, ui2.preview]);
+  }, [ui2.details, ui2.view, ui2.renaming, ui2.tab, ui2.preview, ui2.products]);
   const pane = open ?? kept;
   const [settings, settingsLeaving] = useLinger(ui2.settings, DIALOG_EXIT_MS);
   const [memory, memoryLeaving] = useLinger(ui2.memory && roster.byId[ui2.memory] ? ui2.memory : null, DIALOG_EXIT_MS);
@@ -15254,7 +15354,7 @@ function apply(ctx) {
   } catch {
     seenAt = {};
   }
-  const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null });
+  const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false });
   const surface = createSource({ mode: readMode(), plain: false });
   let agentSessionCache = /* @__PURE__ */ new Set();
   try {
@@ -15861,6 +15961,9 @@ function apply(ctx) {
     // only answers for the paths its own `deliverables/presented` events carried, so a
     // card can open what was handed to this team and nothing else.
     presentFile: (path) => call("present-file", { path }),
+    // Every file this team's Bots delivered, newest first, paths and times only. The
+    // same host list the cards were registered from, so the panel and the cards agree.
+    listDelivered: () => call("list-delivered"),
     // A copy of one delivered file, put where the phone's other apps can read it: the
     // shell's own chooser opens shared storage only, so this is what hands the file over.
     shareFile: (path) => call("present-share", { path }),
@@ -15913,10 +16016,12 @@ function apply(ctx) {
   actions.closePanel = () => {
     ui2.set((state) => state.details ? { ...state, details: null, view: "details", renaming: false, tab: null, preview: null } : state);
   };
-  actions.previewFile = (file) => ui2.set((state) => ({ ...state, preview: file, lightbox: null, view: "preview" }));
-  actions.previewImage = (file) => ui2.set((state) => ({ ...state, lightbox: file, preview: null }));
+  actions.previewFile = (file) => ui2.set((state) => ({ ...state, preview: file, lightbox: null, products: false, view: "preview" }));
+  actions.previewImage = (file) => ui2.set((state) => ({ ...state, lightbox: file, preview: null, products: false }));
   actions.closePreview = () => ui2.set((state) => state.preview === null ? state : { ...state, preview: null, view: state.view === "preview" ? "details" : state.view });
   actions.closeLightbox = () => ui2.set((state) => state.lightbox === null ? state : { ...state, lightbox: null });
+  actions.openProducts = () => ui2.set((state) => ({ ...state, products: true, preview: null, lightbox: null, view: "products", menu: null }));
+  actions.closeProducts = () => ui2.set((state) => state.products ? { ...state, products: false, view: state.view === "products" ? "details" : state.view } : state);
   actions.signInEntry = () => ctx.slots.entries?.("settings.models.sign-in")?.[0] ?? null;
   actions.canSignIn = () => Boolean(actions.signInEntry());
   const OWN_PANELS = ["plugins", "schedules"];

@@ -278,6 +278,17 @@ export function install(rt) {
     return readRegular(found.real, basename(target), found.info)
   }
 
+  // Everything this team's Bots have handed over, newest first: the read-only view of the
+  // same list the cards already come from, for the phone's "all deliverables" panel.
+  // Paths and times only, and a path is listed even after its file is gone -- the panel
+  // says what was delivered, and an open still falls back when the bytes are not there.
+  // The list is read newest-first before the sort as well, so two deliveries inside the
+  // same millisecond still come back in the order they happened.
+  const deliveredList = () => [...delivered]
+    .reverse()
+    .map(([path, at]) => ({ path, at }))
+    .sort((one, two) => two.at - one.at)
+
   // Where a copy goes so the phone can hand the file to another app: the shell's
   // chooser opens absolute device paths with whatever app can read them, and only the
   // shared storage is readable by other apps -- an app's own files are not. This is the
@@ -326,5 +337,5 @@ export function install(rt) {
   void loadDelivered()
 
   ctx.effect(() => () => {}, 'ds-bot: file previews')
-  Object.assign(rt, { panelFile, rememberDelivered, deliveredFile, shareDelivered, deliveredCount: () => delivered.size })
+  Object.assign(rt, { panelFile, rememberDelivered, deliveredFile, deliveredList, shareDelivered, deliveredCount: () => delivered.size })
 }

@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { isMainOf } from './sources.js'
 import { currentPart } from './text.js'
-import { GearIcon, PinIcon, UnreadIcon, PencilIcon, StarLineIcon, CopyIcon, HideIcon, TrashIcon, DuplicateIcon } from './icons.js'
+import { GearIcon, PinIcon, UnreadIcon, PencilIcon, StarLineIcon, CopyIcon, HideIcon, TrashIcon, DuplicateIcon, FolderIcon } from './icons.js'
 import { useEscape } from './overlay-hooks.js'
 import { t } from './i18n.js'
 
@@ -42,6 +42,9 @@ export function ContextMenu({ menu, roster, actions, leaving = false }) {
       bot && isMainBot && mainCount > 1 ? [t('Remove Main Bot role'), StarLineIcon, () => actions.setMain(bot.id, false)] : null,
     ],
     [[t('Copy conversation ID'), CopyIcon, () => navigator.clipboard?.writeText(bot ? currentPart(bot) : menu.id)]],
+    // Every file this team's Bots handed over, in the workspace they handed it over in.
+    // Not an action on this entry, which is why it stands in a group of its own.
+    [[t('All deliverables'), FolderIcon, () => actions.openProducts()]],
     [
       isMainBot ? null : [t('Hide from sidebar'), HideIcon, () => actions.setFlags(menu.id, { hidden: true })],
       isMainBot ? null : [room ? t('Delete group') : t('Delete'), TrashIcon, () => (bot ? actions.deleteBot(bot.id) : actions.deleteRoom(menu.id)), true],

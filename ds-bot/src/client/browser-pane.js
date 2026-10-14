@@ -10,7 +10,7 @@ import { STORAGE } from './storage.js'
 import { SPRING_SHAPE, springEasing } from './motion.js'
 import { DetailsDrawer } from './details-drawer.js'
 import { FilePreview } from './file-preview.js'
-import { DeliveredPreview } from './deliverables.js'
+import { DeliveredList, DeliveredPreview } from './deliverables.js'
 import { isPcLayout, usePcColumns } from './mobile.js'
 import { pcDetailsWidth } from './pc-layout.js'
 import { t } from './i18n.js'
@@ -303,9 +303,11 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   const canBrowse = Boolean(bot && roster.browser === true && actions.browserShow)
   // A delivered file's own page comes first: it needs no Bot and no browser, and its
   // shape is the panel's own (full screen on a phone, the right column on a desktop).
+  // The list of everything delivered does too, and draws the same title bar.
   const view = pane.view === 'preview' && pane.preview
     ? 'preview'
-    : pane.view === 'browser' && canBrowse ? 'browser' : pane.view === 'files' ? 'files' : 'details'
+    : pane.view === 'products' ? 'products'
+      : pane.view === 'browser' && canBrowse ? 'browser' : pane.view === 'files' ? 'files' : 'details'
   const tabState = useBrowserTabs(map => (bot ? (map[bot.id] ?? EMPTY_TABS) : EMPTY_TABS))
   const active = tabState.active
   const page = useBrowserPages(pages => (active ? pages[active] : null) ?? EMPTY_PAGE)
@@ -496,9 +498,9 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   // The Files tab needs no browser, so the strip shows even without one. Its own
   // view is chosen by `view === 'files'`, which the panel falls back from only when
   // the subject disappears. A preview draws its own title bar instead of the strip.
-  const showStrip = view !== 'preview' && (hasStrip || view === 'files')
+  const showStrip = view !== 'preview' && view !== 'products' && (hasStrip || view === 'files')
   return h('aside', {
-    ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'preview' ? t('File preview') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}`,
+    ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'preview' ? t('File preview') : view === 'products' ? t('All deliverables') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}`,
     'data-leaving': leaving || undefined, 'aria-hidden': leaving || undefined, 'data-settling': settling || undefined,
     'data-instant': instant || undefined, 'data-dragging': dragging || undefined, style: { '--bt-panel-w': `${panelWidth}px` },
     onAnimationEnd: (event) => { if (event.target === event.currentTarget) setLanded(true) },
@@ -515,7 +517,10 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
       : view === 'preview'
         ? h('div', { key: `preview:${pane.preview?.path ?? ''}`, className: 'bt-panel-view' },
             h(DeliveredPreview, { file: pane.preview, actions: panelActions, onClose: () => actions.closePreview?.() }))
-        : view === 'files'
+        : view === 'products'
+          ? h('div', { key: 'products', className: 'bt-panel-view' },
+              h(DeliveredList, { actions: panelActions, onClose: () => actions.closeProducts?.() }))
+          : view === 'files'
         ? h(FilePreview, { key: 'files', actions: panelActions })
         : h('div', { key: `details:${pane.id}:${pane.renaming ? 'rename' : ''}:${pane.tab ?? ''}`, className: 'bt-panel-view' },
             h(DetailsDrawer, {

@@ -59,7 +59,7 @@ export function apply(ctx) {
   try { seenAt = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '{}') ?? {} } catch { seenAt = {} }
   // `details` is the panel's subject (a Session id); `view` picks details or the
   // subject Bot's browser inside it.
-  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null })
+  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false })
   // Bot mode paints the whole team surface; Agent mode withdraws every slot and
   // style so the shell's own interface returns. `plain` stays false until a Bot-mode
   // view hosts a plain session, which drops only the conversation replacements.
@@ -612,6 +612,9 @@ export function apply(ctx) {
     // only answers for the paths its own `deliverables/presented` events carried, so a
     // card can open what was handed to this team and nothing else.
     presentFile: path => call('present-file', { path }),
+    // Every file this team's Bots delivered, newest first, paths and times only. The
+    // same host list the cards were registered from, so the panel and the cards agree.
+    listDelivered: () => call('list-delivered'),
     // A copy of one delivered file, put where the phone's other apps can read it: the
     // shell's own chooser opens shared storage only, so this is what hands the file over.
     shareFile: path => call('present-share', { path }),
@@ -668,10 +671,15 @@ export function apply(ctx) {
   // a picture in the platform's own image preview, anything readable in the panel's own
   // page. The preview lives in `ui`, not in the message cell, so a new message arriving
   // in the conversation cannot close it.
-  actions.previewFile = (file) => ui.set(state => ({ ...state, preview: file, lightbox: null, view: 'preview' }))
-  actions.previewImage = (file) => ui.set(state => ({ ...state, lightbox: file, preview: null }))
+  actions.previewFile = (file) => ui.set(state => ({ ...state, preview: file, lightbox: null, products: false, view: 'preview' }))
+  actions.previewImage = (file) => ui.set(state => ({ ...state, lightbox: file, preview: null, products: false }))
   actions.closePreview = () => ui.set(state => (state.preview === null ? state : { ...state, preview: null, view: state.view === 'preview' ? 'details' : state.view }))
   actions.closeLightbox = () => ui.set(state => (state.lightbox === null ? state : { ...state, lightbox: null }))
+  // The phone's "all deliverables" panel: the same container a preview opens in, listing
+  // every file the team's Bots handed over. It needs no conversation behind it, so the
+  // panel opens for it the way it does for a preview. Read-only: it lists and opens.
+  actions.openProducts = () => ui.set(state => ({ ...state, products: true, preview: null, lightbox: null, view: 'products', menu: null }))
+  actions.closeProducts = () => ui.set(state => (state.products ? { ...state, products: false, view: state.view === 'products' ? 'details' : state.view } : state))
   // Whether AccountLauncher holds the shell's settings seat; FooterAccount steps aside if so.
   actions.signInEntry = () => ctx.slots.entries?.('settings.models.sign-in')?.[0] ?? null
   actions.canSignIn = () => Boolean(actions.signInEntry())

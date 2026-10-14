@@ -308,6 +308,28 @@ test('a saved list longer than the cap is trimmed to the cap', async (t) => {
   assert.equal(host.rt.deliveredCount(), 500)
 })
 
+// The phone's list of everything delivered reads the same record the cards were registered
+// from: newest first, paths and times only, through one read-only call.
+test('the delivered list answers newest first, and carries no file content', async (t) => {
+  const outside = mkdtempSync(join(tmpdir(), 'ds-bot-delivered-list-'))
+  t.after(() => rmSync(outside, { recursive: true, force: true, maxRetries: 5 }))
+  const older = join(outside, 'older.md')
+  const newer = join(outside, 'newer.md')
+  writeFileSync(older, '# older')
+  writeFileSync(newer, '# newer')
+  const { rt, call, stop } = start()
+  t.after(stop)
+  await rt.rememberDelivered([older])
+  await rt.rememberDelivered([newer])
+  const answer = (await call('list-delivered')).value
+  assert.deepEqual(answer.files.map(entry => entry.path), [newer, older], 'the newest delivery comes first')
+  assert.deepEqual(Object.keys(answer.files[0]).sort(), ['at', 'path'], 'a path and its time, nothing else')
+  assert.ok(Number.isFinite(answer.files[0].at))
+  assert.ok(!JSON.stringify(answer).includes('# newer'), 'no byte of any delivered file is in the list')
+  // The same list the cards are answered from, so the two cannot disagree.
+  assert.equal(answer.files.length, rt.deliveredCount())
+})
+
 // Handing a file to another app means putting a copy where that app can read it: the
 // shell's chooser opens shared storage, and a delivered file sits in the app's own. The
 // gate is the same read gate, and a name already there is numbered rather than replaced,
