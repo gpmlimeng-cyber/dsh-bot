@@ -628,6 +628,14 @@ const ZH = {
   "Updated {name}'s memory": '已更新 {name} 的记忆',
   "Memory updated. Open {name}'s memory": '记忆已更新，打开 {name} 的记忆',
 
+  // Needs you
+  'Needs you': '需要你',
+  'Nothing needs your attention': '暂时没有需要你处理的事',
+  'Waiting for a key': '等你填密钥',
+  'Someone replied': '有人回了你',
+  '{tool} waits for approval': '{tool} 等你审批',
+  'The key {name} is waiting': '密钥 {name} 等你处理',
+
   // Browser
   'Close browser': '关闭浏览器',
   'Open browser': '打开浏览器',

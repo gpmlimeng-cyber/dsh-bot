@@ -18,6 +18,7 @@ import { Overlays } from './overlays.js'
 import { createBotBrowsers, serveBrowserReads } from './bot-browsers.js'
 import { BROWSER_CSS } from './browser-pane.js'
 import { FILE_PREVIEW_CSS } from './file-preview.js'
+import { ATTENTION_CSS } from './attention.js'
 import { SECRET_CSS, SecretDock } from './secret-card.js'
 import { MODEL_CSS, ModelChoiceDock, DeepSeekSignIn } from './model-menu.js'
 import { BOT_SETTINGS_CSS } from './bot-settings.js'
@@ -790,6 +791,7 @@ export function apply(ctx) {
     installCompiledStyles(USER_MESSAGE_CSS, 'user-messages'),
     browsers ? installCompiledStyles(BROWSER_CSS, 'browser') : null,
     installCompiledStyles(FILE_PREVIEW_CSS, 'file-preview'),
+    installCompiledStyles(ATTENTION_CSS, 'attention'),
     installTheme(),
     shadow('sidebar.workspaces', { priority: -10, inject: face }, TeamSidebar),
     shadow('sidebar.brand.mark', { priority: -10 }, BrandMark),

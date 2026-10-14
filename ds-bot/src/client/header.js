@@ -5,6 +5,7 @@ import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon, PlusIcon, 
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { useMobile } from './mobile.js'
 import { ActivityIndicator } from './activity-row.js'
+import { NeedsYou } from './attention.js'
 import { clockLabel, openingTurn, unseenSince } from './cells.js'
 import { t } from './i18n.js'
 
@@ -43,7 +44,7 @@ function MemoryNotice({ shown }) {
     h('span', { className: 'bt-pill-mem-in', ref: inner }, h('span', { className: 'bt-pill-mem-ico' }, h(MemoryIcon)), label))
 }
 
-export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSession, useActivity, useMemoryNews, useTurnClock, useUi, useLive, actions }) {
+export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSession, useActivity, useMemoryNews, useTurnClock, useUi, useLive, useWork, actions }) {
   const roster = useRoster(value => value)
   const title = useSessions(list => list.byId[sessionId]?.displayTitle ?? list.byId[sessionId]?.title ?? '')
   const firstTurns = useSessions((list) => {
@@ -107,6 +108,7 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h(MemoryNotice, { shown: memoryNotice }),
     h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
+    useWork && useUi ? h(NeedsYou, { useRoster, useWork, useUi, actions }) : null,
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, actions }))
   if (!mobile) return head

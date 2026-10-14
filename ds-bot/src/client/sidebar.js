@@ -103,29 +103,12 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   // Main Bot badge the avatar already carries is the whole of the difference that stays.
   if (tile && wide && !drawer) {
     return h('div', { className: 'bt-tile-wrap' },
-      // The shortcuts float around the tile in the space its column already reserves;
-      // the rail has no room for them, so this branch is the wide column only.
-      h('div', { className: 'bt-tile-bubbles' },
-        h('button', {
-          type: 'button', className: 'bt-bubble-btn', 'data-place': 'top', 'data-i': '1',
-          'aria-label': t('New chat'), title: t('New chat'), onClick: () => actions.openNewChat('new'),
-        }, h('span', { className: 'bt-bubble-text' }, t('New chat'))),
-        h('button', {
-          type: 'button', className: 'bt-bubble-btn', 'data-place': 'mid', 'data-i': '2',
-          'aria-label': t('New Bot'), title: t('New Bot'), onClick: () => actions.openNewChat('create'),
-        }, h('span', { className: 'bt-bubble-text' }, t('New Bot'))),
-        h('button', {
-          type: 'button', className: 'bt-bubble-btn', 'data-place': 'bot', 'data-i': '3',
-          'aria-label': t('New group'), title: t('New group'), onClick: () => actions.openNewChat('group'),
-        }, h('span', { className: 'bt-bubble-text' }, t('New group')))),
       h('button', {
       type: 'button', className: 'bt-tile', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
       'data-bot-id': id, title: preview || bot.name, onClick: () => actions.openSession(id), onContextMenu,
     },
     h(BotAvatar, { bot, size: 60, state, main: true }),
-    h('span', { className: 'bt-tile-line' },
-      h('span', { className: 'bt-tile-name' }, bot.name),
-      bot.role ? h('span', { className: 'bt-chip' }, bot.role) : null)))
+    h('span', { className: 'bt-tile-name' }, bot.name)))
   }
   return h('button', {
     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,

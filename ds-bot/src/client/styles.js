@@ -120,57 +120,12 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-round:hover,html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round:hover{background:var(--bt-hover)}
 .bt-round:active{transform:scale(.94)}
 .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
-.bt-tile-wrap{position:relative;display:flex;flex-direction:column;align-items:flex-start;padding:30px 0 40px}
-/* Shortcuts float around the main Bot's tile, each a chat bubble whose tail points back
-   at it. They sit in the padding this column already reserves, so the tile does not move. */
-/* Shortcuts stack in the column's own right half, one line each, all tails on the left
-   edge pointing back at the tile. The cap keeps the longest label inside the sidebar. */
-.bt-tile-bubbles{position:absolute;left:104px;top:30px;bottom:40px;width:150px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
-/* Speech bubbles around the main Bot: short lines of text, not icons, so the Bot reads as
-   asking for something. Each is a capsule with a tail pointing back at the tile, and the
-   three differ in size so the group does not look like a toolbar. */
-.bt-bubble-btn{pointer-events:auto;display:inline-flex;align-items:center;align-self:flex-start;
-  max-width:150px;padding:4px 10px;border-radius:12px;background:var(--bt-card);border:1px solid var(--bt-line);color:var(--bt-ink-2);
-  font-family:inherit;font-size:11px;line-height:16px;cursor:pointer;
-  box-shadow:0 6px 16px -6px rgba(0,0,0,.22);
-  transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing},color .12s ease,background-color .12s ease;
-  animation:bt-bubble-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards}
-/* A 1px light edge along the top reads as raised, the way a fresh line does. */
-.bt-bubble-btn::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}
-body[data-ds-dark-theme] .bt-bubble-btn::before{box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
-/* Text only: the icon carried no meaning the words did not already carry, and it cost
-   about 19px of the column's width. */
-.bt-bubble-text{color:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* The tails converge on the avatar's centre. The upper bubble's tail leaves its lower-left
-   corner and the lower bubble's its upper-left, so both point at the same spot below and
-   above the middle line. */
-.bt-bubble-btn[data-i="1"]{animation-delay:60ms}
-.bt-bubble-btn[data-i="2"]{animation-delay:120ms}
-.bt-bubble-btn[data-i="3"]{animation-delay:180ms}
-.bt-bubble-btn:hover{color:var(--bt-ink);background:var(--bt-hover)}
-.bt-bubble-btn:hover{transform:translate(-2px,0)}
-/* All three tails sit on the left edge, aiming back at the tile's centre: the first
-   bubble's tail at its lower-left, the middle one's at its left centre, the last one's
-   at its upper-left. */
-.bt-bubble-btn::after{content:"";position:absolute;left:-5px;width:0;height:0;border:5px solid transparent;border-right-color:var(--bt-card);border-left:0}
-.bt-bubble-btn[data-i="1"]::after{bottom:6px}
-.bt-bubble-btn[data-i="2"]::after{top:50%;margin-top:-5px}
-.bt-bubble-btn[data-i="3"]::after{top:6px}
-@keyframes bt-bubble-in{from{opacity:0;scale:.7}}
-body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s ease,background-color .12s ease}
-@media (prefers-reduced-motion:reduce){.bt-bubble-btn{animation:none;transition:none}}
-@media (prefers-reduced-motion:reduce){.bt-bubble-btn{animation:none;transition:none}}
+.bt-tile-wrap{position:relative;display:flex;flex-direction:column;align-items:center;padding:30px 0 40px}
 .bt-tile{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;max-width:104px;padding:6px 8px 4px;border-radius:12px;border:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:inherit;transition:background-color .12s ease}
 .bt-tile:hover{background:var(--bt-hover)}
 .bt-tile[aria-current=page]{background:var(--bt-active)}
 .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* The name and the role chip share one row under the avatar. The name yields first:
-   the chip keeps its intrinsic width so "Chief of Staff" stays readable, and the tile
-   is wide enough for the pair (measured 32px + 80px) inside its 280px column. */
-.bt-tile-line{display:flex;align-items:center;justify-content:center;gap:6px;max-width:100%;min-width:0}
-.bt-tile-line>.bt-tile-name{min-width:0;flex:0 1 auto}
-.bt-tile-line>.bt-chip{flex:0 0 auto;max-width:none}
+/* The role chip a group member wears (Admin) is a tag on a row, not on a tile. */
 .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
 .bt-row{display:flex;align-items:center;gap:8px;min-height:54px;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--bt-ink);text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-family:inherit;transition:background-color .12s ease}
 .bt-row:hover{background:var(--bt-hover)}
@@ -189,9 +144,7 @@ body[data-bt-motion=quiet] .bt-bubble-btn{animation:none;transition:color .12s e
 .bt-unread{width:8px;height:8px;border-radius:50%;background:#1084fe;flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
 .bt-unread-wait{background:var(--bt-star)}
 .bt-rail{align-items:center;padding:0 0 8px}
-/* The rail has no room for the tile's floating shortcuts. */
 .bt-rail .bt-tile-wrap{padding:0}
-.bt-rail .bt-tile-bubbles{display:none}
 .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px}
 /* Below the shell's own narrow line the rail becomes a modal drawer, opened by the
    floating hamburger and closed by a tap on the scrim. Both are portalled to <body>
