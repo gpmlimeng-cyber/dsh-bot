@@ -269,3 +269,43 @@ test('a saved list longer than the cap is trimmed to the cap', async (t) => {
   assert.equal(host.rt.deliveredCount(), 500)
 })
 
+// Handing a file to another app means putting a copy where that app can read it: the
+// shell's chooser opens shared storage, and a delivered file sits in the app's own. The
+// gate is the same read gate, and a name already there is numbered rather than replaced,
+// so a copy a reader may have open in another app is never written over.
+test('a delivered file is copied out for another app, and never over a file already there', async (t) => {
+  const shared = mkdtempSync(join(tmpdir(), 'ds-bot-shared-'))
+  t.after(() => rmSync(shared, { recursive: true, force: true, maxRetries: 5 }))
+  const outside = mkdtempSync(join(tmpdir(), 'ds-bot-delivered-share-'))
+  t.after(() => rmSync(outside, { recursive: true, force: true, maxRetries: 5 }))
+  const { rt, call, stop } = start({ config: { sharedDir: shared } })
+  t.after(stop)
+  const report = join(outside, 'report.md')
+  writeFileSync(report, 'first')
+  // Nothing is copied out for a path a Bot never delivered, whatever it points at.
+  const before = (await call('present-share', { path: report })).value
+  assert.equal(before.ok, false)
+  assert.match(before.error, /was not delivered/)
+  rt.rememberDelivered([report])
+  const first = (await call('present-share', { path: report })).value
+  assert.deepEqual([first.ok, first.path, first.name], [true, join(shared, 'report.md'), 'report.md'])
+  assert.equal(readFileSync(first.path, 'utf8'), 'first')
+  // The same name again: a numbered copy, and the first one is left as it was.
+  writeFileSync(report, 'second')
+  const again = (await call('present-share', { path: report })).value
+  assert.equal(again.path, join(shared, 'report (2).md'))
+  assert.equal(readFileSync(first.path, 'utf8'), 'first')
+  assert.equal(readFileSync(again.path, 'utf8'), 'second')
+  // A folder, a path that is gone, and a path that was never delivered answer with a
+  // reason instead of a copy.
+  for (const path of [join(outside, 'gone.md'), '/etc/hosts', '']) {
+    assert.equal((await call('present-share', { path })).value.ok, false, `${path} must be refused`)
+  }
+  // A name with no suffix is numbered too, without losing the whole name.
+  const notes = join(outside, 'NOTES')
+  writeFileSync(notes, 'one')
+  rt.rememberDelivered([notes])
+  assert.equal((await call('present-share', { path: notes })).value.path, join(shared, 'NOTES'))
+  assert.equal((await call('present-share', { path: notes })).value.path, join(shared, 'NOTES (2)'))
+})
+

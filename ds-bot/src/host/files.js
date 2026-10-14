@@ -3,7 +3,7 @@
 // is the whole risk: a path that escapes the workspace (an absolute path, a `..`
 // walk, a link out of it) must never reach the disk, so every path is resolved
 // against the root and checked twice — once as written, once as it really is.
-import { mkdir, open, readFile, realpath, rename, stat, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, open, readFile, realpath, rename, stat, writeFile } from 'node:fs/promises'
 import { basename, isAbsolute, join, resolve, sep } from 'node:path'
 
 // What is read at most. A text or Markdown file gives back its first TEXT_MAX bytes
@@ -16,6 +16,10 @@ const HEAD_MAX = 512
 // How many delivered paths stay readable. A phone opens what was just handed to it, so
 // the window only has to outlast the conversation it belongs to.
 const DELIVERED_MAX = 500
+// What one file may weigh to be copied out for another app. The copy is meant to be a
+// small delivery, not a way to fill the phone up, so a large one keeps the copy-path
+// answer instead.
+export const SHARED_MAX = 64 * 1024 * 1024
 // Suffixes shown as text. Everything else that is not an image is a binary.
 const TEXT_SUFFIX = new Set([
   'bash', 'bibtex', 'c', 'cfg', 'clj', 'cljs', 'conf', 'cpp', 'cs', 'css', 'csv', 'dart', 'diff',
@@ -262,8 +266,53 @@ export function install(rt) {
     return readRegular(found.real, basename(target), found.info)
   }
 
+  // Where a copy goes so the phone can hand the file to another app: the shell's
+  // chooser opens absolute device paths with whatever app can read them, and only the
+  // shared storage is readable by other apps -- an app's own files are not. This is the
+  // same folder the card names when it falls back to "copy the path".
+  const sharedDir = config.sharedDir ?? '/storage/emulated/0/DSH/deliverables'
+
+  // One name in a folder, numbered rather than replaced: a second delivery of the same
+  // file must not overwrite the copy a reader may already have open in another app.
+  const freeName = async (dir, name) => {
+    const dot = name.lastIndexOf('.')
+    const stem = dot > 0 ? name.slice(0, dot) : name
+    const suffix = dot > 0 ? name.slice(dot) : ''
+    for (let count = 1; ; count += 1) {
+      const candidate = count === 1 ? name : `${stem} (${count})${suffix}`
+      try {
+        await stat(join(dir, candidate))
+      } catch {
+        return candidate
+      }
+    }
+  }
+
+  /**
+   * A copy of one delivered file, put where the phone's other apps can read it. The
+   * gate is the same as a read -- only a path this host saw delivered -- and the copy
+   * never replaces a file that is already there.
+   */
+  const shareDelivered = async (input) => {
+    const target = String(input ?? '')
+    if (target.includes('\0') || !delivered.has(target)) return { ok: false, error: 'That file was not delivered to this team.' }
+    const found = await regularFile(target)
+    if (found.error !== undefined) return { ok: false, error: found.error }
+    if (found.info.size > SHARED_MAX) return { ok: false, error: `That file is larger than ${Math.round(SHARED_MAX / 1024 / 1024)} MB, too large to copy here.` }
+    const name = basename(target)
+    try {
+      await mkdir(sharedDir, { recursive: true })
+      const copy = join(sharedDir, await freeName(sharedDir, name))
+      await copyFile(found.real, copy)
+      return { ok: true, path: copy, name }
+    } catch (error) {
+      warn('ds-bot: could not copy a delivered file to %s: %s', sharedDir, error)
+      return { ok: false, error: 'That file could not be copied for another app.' }
+    }
+  }
+
   void loadDelivered()
 
   ctx.effect(() => () => {}, 'ds-bot: file previews')
-  Object.assign(rt, { panelFile, rememberDelivered, deliveredFile, deliveredCount: () => delivered.size })
+  Object.assign(rt, { panelFile, rememberDelivered, deliveredFile, shareDelivered, deliveredCount: () => delivered.size })
 }

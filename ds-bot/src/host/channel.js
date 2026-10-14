@@ -82,7 +82,7 @@ export function install(rt) {
   })
   // What a host that only reads the team may still answer.
   // Updates change the dsh profile, not the team, so a reading host may run them too.
-  const READS = new Set(['state', 'models', 'efforts', 'earlier', 'room-progress', 'exchange', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'panel-file'])
+  const READS = new Set(['state', 'models', 'efforts', 'earlier', 'room-progress', 'exchange', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'panel-file', 'present-file'])
 
   function setPrefs(body) {
     if (body.theme !== undefined) {
@@ -308,6 +308,11 @@ export function install(rt) {
         // A file a Bot delivered to this team, wherever on the phone it put it.
         case 'present-file':
           return ok(await rt.deliveredFile(String(body.path ?? '')))
+        // A copy of one delivered file, put where another app can read it: the shell's
+        // chooser opens shared-storage paths only, so this is what "open in another app"
+        // hands it. Writes outside the team state, so a reading host does not answer it.
+        case 'present-share':
+          return ok(await rt.shareDelivered(String(body.path ?? '')))
         case 'browser-wait': {
           if (rt.browserChannel === undefined) return fail('Bot browsers are off on this host', 'bot/browser-off')
           const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 100) : ''

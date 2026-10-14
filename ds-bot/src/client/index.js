@@ -612,6 +612,9 @@ export function apply(ctx) {
     // only answers for the paths its own `deliverables/presented` events carried, so a
     // card can open what was handed to this team and nothing else.
     presentFile: path => call('present-file', { path }),
+    // A copy of one delivered file, put where the phone's other apps can read it: the
+    // shell's own chooser opens shared storage only, so this is what hands the file over.
+    shareFile: path => call('present-share', { path }),
     // A failed action away from any form (a menu, the palette) shows as a toast.
     reportError: (error, where = 'action') => {
       noteClientError(where, error)

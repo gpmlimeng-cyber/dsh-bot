@@ -107,3 +107,26 @@ test('the card is wired to the host action that answers for delivered files', ()
   assert.ok(read('index.js').includes("presentFile: path => call('present-file', { path })"), 'the client exposes the action')
   assert.ok(read('cells.js').includes('h(DeliverableCards, { deliverables, actions })'), 'the group reply hands the card its actions')
 })
+
+// The third way out, for a phone: hand the file to another app. The shell exposes its own
+// chooser (window.__dshOpenPath), which opens a shared-storage path with whichever app can
+// read it -- and a delivered file is in the app's own storage, which other apps cannot
+// read, so a copy goes out first. A desktop has no chooser and keeps the engine's opener.
+test('the card hands a file to another app, and keeps the shell from taking the tap', () => {
+  const source = card.join('\n')
+  assert.ok(source.includes('const chooser = globalThis.__dshOpenPath'), 'the shell’s chooser is used when it is there')
+  assert.ok(source.includes('await actions?.shareFile?.(file.path)'), 'a copy goes out for it first')
+  assert.ok(source.includes("chooser(copy.path, 'view') === true"), 'the copy is what opens')
+  assert.ok(source.includes("fetch(openUrl(file), { method: 'POST', credentials: 'same-origin' })"), 'a desktop keeps the engine’s opener')
+  assert.ok(read('index.js').includes("shareFile: path => call('present-share', { path })"), 'the client exposes the copy-out action')
+  assert.ok(i18n.includes("'Open with another app': '用其它应用打开'"), 'the button says what it does')
+  assert.ok(source.includes("? t('Could not open it here. The copy is at {path}', { path: shared })")
+    && i18n.includes("'Could not open it here. The copy is at {path}'"), 'when no app takes the copy, the card names it')
+  // The shell intercepts a click whose target’s title looks like a path and sends that
+  // path to its own chooser. The hit target must therefore carry no title: with one, a tap
+  // meant for the preview would leave the app for a chooser that cannot read the file.
+  const start = card.findIndex(line => line.includes("className: 'bt-dcard-hit'"))
+  const end = card.findIndex(line => line.includes('onClick: preview'))
+  assert.ok(start !== -1 && end > start, 'the hit target is still one button')
+  assert.ok(!card.slice(start, end + 1).join('\n').includes('title:'), 'the hit target carries no title for the shell to read')
+})

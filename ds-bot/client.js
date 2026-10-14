@@ -539,6 +539,8 @@ var ZH = {
   "Hide preview": "收起预览",
   "Opening…": "正在打开…",
   "Could not open it here. Copy the path and open the copy under {folder}": "这里打不开。复制路径，在手机文件管理的 {folder} 里打开副本",
+  "Could not open it here. The copy is at {path}": "这里打不开。副本在 {path}",
+  "Open with another app": "用其它应用打开",
   "Open navigation": "打开导航",
   "Close navigation": "关闭导航",
   "Team navigation": "团队导航",
@@ -4742,6 +4744,7 @@ var readable = (answer) => answer?.ok === true && (answer.kind === "image" || an
 function DeliverableCard({ file, actions }) {
   const [state, setState] = (0, import_react7.useState)("idle");
   const [read, setRead] = (0, import_react7.useState)(null);
+  const [shared2, setShared] = (0, import_react7.useState)(null);
   const name = basename(file.path);
   const preview = async () => {
     if (state === "reading") return;
@@ -4768,6 +4771,17 @@ function DeliverableCard({ file, actions }) {
     if (state === "opening") return;
     setState("opening");
     try {
+      const chooser = globalThis.__dshOpenPath;
+      if (typeof chooser === "function") {
+        const copy3 = await actions?.shareFile?.(file.path);
+        setShared(copy3?.ok === true ? copy3.path : null);
+        if (copy3?.ok === true && chooser(copy3.path, "view") === true) {
+          setState("idle");
+          return;
+        }
+        setState("failed");
+        return;
+      }
       const response = await fetch(openUrl(file), { method: "POST", credentials: "same-origin" });
       if (response.ok || response.status === 409 || response.status === 422) setState(response.ok ? "idle" : "failed");
       else setState("failed");
@@ -4792,11 +4806,13 @@ function DeliverableCard({ file, actions }) {
       { className: "bt-dcard", "data-state": state === "failed" ? "fallback" : void 0 },
       // One hit target over the whole card, as DSH's own card has: the name and icon
       // carry no pointer events of their own, so a tap anywhere but the two buttons
-      // reads the file and shows it.
+      // reads the file and shows it. It carries no `title` on purpose: the shell
+      // intercepts a click whose target's title looks like a path and sends that path to
+      // its own chooser, which would take this tap away from the preview (a delivered
+      // path is in the app's own storage, where no other app can follow it anyway).
       (0, import_react7.createElement)("button", {
         type: "button",
         className: "bt-dcard-hit",
-        title: file.path,
         "aria-label": `${state === "shown" ? t("Hide preview") : t("Preview")} ${name}`,
         onClick: preview
       }),
@@ -4814,7 +4830,7 @@ function DeliverableCard({ file, actions }) {
         (0, import_react7.createElement)(
           "button",
           { type: "button", className: "bt-dcard-btn", disabled: state === "opening", onClick: open },
-          state === "opening" ? t("Opening…") : t("Open")
+          state === "opening" ? t("Opening…") : t("Open with another app")
         ),
         (0, import_react7.createElement)(
           "button",
@@ -4831,7 +4847,11 @@ function DeliverableCard({ file, actions }) {
       // renderer, so a delivered README looks the way it does in the Files tab.
       read.kind === "image" ? (0, import_react7.createElement)("img", { src: `data:${read.mime ?? "application/octet-stream"};base64,${read.base64 ?? ""}`, alt: name }) : (0, import_react7.createElement)(FileView, { file: read })
     ) : null,
-    state === "failed" ? (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT })) : null
+    state === "failed" ? (0, import_react7.createElement)(
+      "span",
+      { className: "bt-dcard-hint", role: "status" },
+      shared2 !== null ? t("Could not open it here. The copy is at {path}", { path: shared2 }) : t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT })
+    ) : null
   );
 }
 function DeliverableCards({ deliverables, actions }) {
@@ -15745,6 +15765,9 @@ function apply(ctx) {
     // only answers for the paths its own `deliverables/presented` events carried, so a
     // card can open what was handed to this team and nothing else.
     presentFile: (path) => call("present-file", { path }),
+    // A copy of one delivered file, put where the phone's other apps can read it: the
+    // shell's own chooser opens shared storage only, so this is what hands the file over.
+    shareFile: (path) => call("present-share", { path }),
     // A failed action away from any form (a menu, the palette) shows as a toast.
     reportError: (error, where = "action") => {
       noteClientError(where, error);

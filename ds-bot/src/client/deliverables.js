@@ -7,11 +7,11 @@
 // (dsh-client-ui-deliverables lib/client.js): a 60px tile, a 40px type icon, the name
 // over its metadata, and one hit target covering the whole card.
 //
-// Two ways out stay, because a phone and a desktop need different ones: the whole card
-// opens the file here (a picture as itself, text and Markdown through the panel's own
-// viewer), the Open button still asks the Host to open it in a desktop application, and
-// when neither can, the card says so and offers the path to copy -- which is how a phone
-// reaches its own copy of the file.
+// Three ways out, because a phone and a desktop need different ones: a tap opens the file
+// here (a picture as itself, text and Markdown through the panel's own viewer); the other
+// button hands it to another app, which on a phone means the shell's own chooser -- and
+// that one reads shared storage, where no other app can follow the app's private copy, so
+// a copy goes out first; and when neither can, the card offers the path to copy.
 import { createElement as h, useState } from 'react'
 import { FileTypeIcon, fileExtension } from '@deepseek-ai/dsh-client-ui-primitives'
 import { CopyIcon, CheckIcon } from './icons.js'
@@ -52,6 +52,9 @@ const readable = (answer) => answer?.ok === true && (answer.kind === 'image' || 
 function DeliverableCard({ file, actions }) {
   const [state, setState] = useState('idle') // idle | reading | shown | opening | copied | failed
   const [read, setRead] = useState(null)
+  // Where the copy for another app landed, once one was made. It is what the fallback
+  // names when no app took the file, so the reader can open the copy itself.
+  const [shared, setShared] = useState(null)
   const name = basename(file.path)
   // The whole card reads the file here and shows it. Tapping a card that is showing
   // puts it away, so the transcript stays the thing on screen.
@@ -76,10 +79,28 @@ function DeliverableCard({ file, actions }) {
       setState('failed')
     }
   }
+  // The second way out: hand the file to another app on the phone. The shell exposes its
+  // own chooser (window.__dshOpenPath), which opens a shared-storage path with whichever
+  // app can read it -- and a delivered file sits in the app's own storage, which no other
+  // app can read, so a copy goes out first. A desktop has no chooser: there the engine's
+  // own opener answers the POST, as it always did.
   const open = async () => {
     if (state === 'opening') return
     setState('opening')
     try {
+      const chooser = globalThis.__dshOpenPath
+      if (typeof chooser === 'function') {
+        const copy = await actions?.shareFile?.(file.path)
+        setShared(copy?.ok === true ? copy.path : null)
+        if (copy?.ok === true && chooser(copy.path, 'view') === true) {
+          setState('idle')
+          return
+        }
+        // The copy can be there even when no app took it, so name the file rather than
+        // only the folder: a file manager opens the file itself from that path.
+        setState('failed')
+        return
+      }
       // POST is what DSH's own card does; it authenticates with the session cookie.
       const response = await fetch(openUrl(file), { method: 'POST', credentials: 'same-origin' })
       // 409 = no Host desktop (a phone); 422 = path no longer maps. Both fall back to
@@ -103,11 +124,13 @@ function DeliverableCard({ file, actions }) {
     h('div', { className: 'bt-dcard', 'data-state': state === 'failed' ? 'fallback' : undefined },
       // One hit target over the whole card, as DSH's own card has: the name and icon
       // carry no pointer events of their own, so a tap anywhere but the two buttons
-      // reads the file and shows it.
+      // reads the file and shows it. It carries no `title` on purpose: the shell
+      // intercepts a click whose target's title looks like a path and sends that path to
+      // its own chooser, which would take this tap away from the preview (a delivered
+      // path is in the app's own storage, where no other app can follow it anyway).
       h('button', {
         type: 'button',
         className: 'bt-dcard-hit',
-        title: file.path,
         'aria-label': `${state === 'shown' ? t('Hide preview') : t('Preview')} ${name}`,
         onClick: preview,
       }),
@@ -118,7 +141,7 @@ function DeliverableCard({ file, actions }) {
         h('span', { className: 'bt-dcard-peek', 'aria-hidden': true }, state === 'shown' ? t('Hide preview') : t('Preview'))),
       h('span', { className: 'bt-dcard-acts' },
         h('button', { type: 'button', className: 'bt-dcard-btn', disabled: state === 'opening', onClick: open },
-          state === 'opening' ? t('Opening…') : t('Open')),
+          state === 'opening' ? t('Opening…') : t('Open with another app')),
         h('button', { type: 'button', className: 'bt-dcard-btn', onClick: copy, 'aria-label': t('Copy path'), title: t('Copy path') },
           state === 'copied' ? h(CheckIcon) : h(CopyIcon), state === 'copied' ? t('Copied') : t('Path')))),
     state === 'shown' && read !== null
@@ -130,7 +153,10 @@ function DeliverableCard({ file, actions }) {
           : h(FileView, { file: read }))
       : null,
     state === 'failed'
-      ? h('span', { className: 'bt-dcard-hint', role: 'status' }, t('Could not open it here. Copy the path and open the copy under {folder}', { folder: PHONE_COPY_HINT }))
+      ? h('span', { className: 'bt-dcard-hint', role: 'status' },
+        shared !== null
+          ? t('Could not open it here. The copy is at {path}', { path: shared })
+          : t('Could not open it here. Copy the path and open the copy under {folder}', { folder: PHONE_COPY_HINT }))
       : null)
 }
 

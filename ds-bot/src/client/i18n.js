@@ -484,6 +484,8 @@ const ZH = {
   'Hide preview': '收起预览',
   'Opening…': '正在打开…',
   'Could not open it here. Copy the path and open the copy under {folder}': '这里打不开。复制路径，在手机文件管理的 {folder} 里打开副本',
+  'Could not open it here. The copy is at {path}': '这里打不开。副本在 {path}',
+  'Open with another app': '用其它应用打开',
   'Open navigation': '打开导航',
   'Close navigation': '关闭导航',
   'Team navigation': '团队导航',
