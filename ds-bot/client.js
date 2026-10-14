@@ -2230,13 +2230,14 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 /* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
    is the touch target the card's own 60px tile can hold exactly (8px of padding above and
-   below), and the same size the preview page's controls take. The glyph grows with it -- a
-   44px target around a 13px drawing still reads as a small button -- to the 20px the card's
-   own 40px type tile draws its icon at, so the tile and the three exits match. */
+   below), and the same size the preview page's controls take. The drawing is what the eye
+   judges, and these glyphs paint about 0.8 of their box, so the box is 24px: the eye lands
+   at 19.8px, the arrow and the sheets at 17.4, next to the 20px icon the card's own 40px
+   type tile draws. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
-.bt-dcard-btn svg{width:20px;height:20px}
+.bt-dcard-btn svg{width:24px;height:24px}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, "scale")}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 
@@ -4749,13 +4750,18 @@ var FILE_PREVIEW_CSS = `
 
    The bar takes the drawer's title -- the 17/24 name (.bt-drawer-name in styles.js) -- and
    grows from there: the controls are a 48px touch target, the size a finger is owed on the
-   page the user actually taps, and the drawing inside them is 20px so the control does not
-   look small next to the 17px name beside it. The bar is 56px, which leaves the 48px
-   control 4px at either end rather than touching the edges. */
+   page the user actually taps, and the bar is 56px, which leaves that control 4px at either
+   end rather than touching the edges.
+
+   The drawing inside a control is what the eye judges, and the icons are drawn small in
+   their own 20x20 box: the back chevron paints 12.6 of the 20 units, the dots only 15. The
+   box is therefore sized for the ink, not the other way round -- a 20px box would paint a
+   12.6px chevron, which is what made a 48px control look small. */
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-preview-back svg{width:20px;height:20px}
+/* 30px box: the chevron paints 12.6/20 of it, so it lands at 18.9px tall. */
+.bt-preview-back svg{width:30px;height:30px}
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -4763,7 +4769,9 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-preview-more svg{width:20px;height:20px}
+/* 24px box around the three filled dots: they paint 15/20 of it, so the row is 18px wide
+   with 4.8px dots. The plain DotsIcon paints 1.5-unit dots (1.8px here) -- barely visible. */
+.bt-preview-more svg{width:24px;height:24px}
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
@@ -4907,7 +4915,9 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
       "aria-label": t("More"),
       title: t("More"),
       onClick: () => setShown((value) => !value)
-    }, (0, import_react7.createElement)(DotsIcon)),
+      // The filled dots, not the hairline ones: DotsIcon paints 1.5-unit dots that land at
+      // 1.8px in this control, which is why a 48px button still looks empty.
+    }, (0, import_react7.createElement)(DotsBoldIcon, { size: 24 })),
     items,
     onSelect: (id) => {
       setShown(false);

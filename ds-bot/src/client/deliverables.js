@@ -16,7 +16,7 @@
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { FileTypeIcon, fileExtension, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsIcon, ExternalIcon, EyeIcon, SwitchIcon } from './icons.js'
+import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsBoldIcon, ExternalIcon, EyeIcon, SwitchIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { t, dateLocale } from './i18n.js'
 
@@ -193,7 +193,9 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
     anchor: h('button', {
       type: 'button', className: 'bt-preview-more', 'aria-haspopup': 'menu', 'aria-expanded': shown,
       'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
-    }, h(DotsIcon)),
+      // The filled dots, not the hairline ones: DotsIcon paints 1.5-unit dots that land at
+      // 1.8px in this control, which is why a 48px button still looks empty.
+    }, h(DotsBoldIcon, { size: 24 })),
     items,
     onSelect: (id) => {
       setShown(false)

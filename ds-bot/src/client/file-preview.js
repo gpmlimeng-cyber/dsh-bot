@@ -169,13 +169,18 @@ export const FILE_PREVIEW_CSS = `
 
    The bar takes the drawer's title -- the 17/24 name (.bt-drawer-name in styles.js) -- and
    grows from there: the controls are a 48px touch target, the size a finger is owed on the
-   page the user actually taps, and the drawing inside them is 20px so the control does not
-   look small next to the 17px name beside it. The bar is 56px, which leaves the 48px
-   control 4px at either end rather than touching the edges. */
+   page the user actually taps, and the bar is 56px, which leaves that control 4px at either
+   end rather than touching the edges.
+
+   The drawing inside a control is what the eye judges, and the icons are drawn small in
+   their own 20x20 box: the back chevron paints 12.6 of the 20 units, the dots only 15. The
+   box is therefore sized for the ink, not the other way round -- a 20px box would paint a
+   12.6px chevron, which is what made a 48px control look small. */
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-preview-back svg{width:20px;height:20px}
+/* 30px box: the chevron paints 12.6/20 of it, so it lands at 18.9px tall. */
+.bt-preview-back svg{width:30px;height:30px}
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -183,7 +188,9 @@ export const FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-preview-more svg{width:20px;height:20px}
+/* 24px box around the three filled dots: they paint 15/20 of it, so the row is 18px wide
+   with 4.8px dots. The plain DotsIcon paints 1.5-unit dots (1.8px here) -- barely visible. */
+.bt-preview-more svg{width:24px;height:24px}
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
