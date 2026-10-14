@@ -2231,13 +2231,15 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
    is the touch target the card's own 60px tile can hold exactly (8px of padding above and
    below), and the same size the preview page's controls take. The drawing is what the eye
-   judges, and these glyphs paint about 0.8 of their box, so the box is 24px: the eye lands
-   at 19.8px, the arrow and the sheets at 17.4, next to the 20px icon the card's own 40px
-   type tile draws. */
+   judges, so the box is sized to paint 22px of ink at the 2-unit stroke set here -- the same
+   22px the preview bar's own controls paint, on a card and on the preview page alike. The
+   three glyphs are drawn to different fractions of their box (the eye widest, the sheets
+   narrowest), and 34px is the one box that clears 22px for all of them, the tick included:
+   eye 28.9x22.1, arrow 25.5x26.4, sheets 23.8x23.8, tick 22.1x17. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
-.bt-dcard-btn svg{width:24px;height:24px}
+.bt-dcard-btn svg{width:34px;height:34px;stroke-width:2}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, "scale")}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 
@@ -4754,14 +4756,18 @@ var FILE_PREVIEW_CSS = `
    end rather than touching the edges.
 
    The drawing inside a control is what the eye judges, and the icons are drawn small in
-   their own 20x20 box: the back chevron paints 12.6 of the 20 units, the dots only 15. The
-   box is therefore sized for the ink, not the other way round -- a 20px box would paint a
-   12.6px chevron, which is what made a 48px control look small. */
+   their own 20x20 box: the back chevron paints 12.6 of the 20 units at the 1.6 stroke it
+   was drawn with, the dots only 15. The box is therefore sized for the ink, not the other
+   way round -- a 20px box would paint a 12.6px chevron, which is what made a 48px control
+   look small -- and the size asked for is 22px of ink, with the stroke thickened to 2 so a
+   bigger glyph does not read as a bigger hairline. Every control in this bar carries it. */
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* 30px box: the chevron paints 12.6/20 of it, so it lands at 18.9px tall. */
-.bt-preview-back svg{width:30px;height:30px}
+/* 34px box: the chevron's 11 units of geometry plus its 2 units of stroke are 13/20 of the
+   box, so it lands at 22.1px tall. The stroke is set here, not in the shared icon: the same
+   chevron heads half the shell's pages, where 1.6 is the weight they were drawn for. */
+.bt-preview-back svg{width:34px;height:34px;stroke-width:2}
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -4769,9 +4775,11 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* 24px box around the three filled dots: they paint 15/20 of it, so the row is 18px wide
-   with 4.8px dots. The plain DotsIcon paints 1.5-unit dots (1.8px here) -- barely visible. */
-.bt-preview-more svg{width:24px;height:24px}
+/* 30px box around the three filled dots: they paint 15/20 of it, so the row is 22.5px wide
+   with 6px dots. A row of dots has no height to grow -- its ink is the dot diameter -- so it
+   is the width that carries the size here. The plain DotsIcon paints 1.5-unit dots, 1.8px
+   here and 2.2px at this box: still a pinprick. */
+.bt-preview-more svg{width:30px;height:30px}
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
@@ -4916,8 +4924,9 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
       title: t("More"),
       onClick: () => setShown((value) => !value)
       // The filled dots, not the hairline ones: DotsIcon paints 1.5-unit dots that land at
-      // 1.8px in this control, which is why a 48px button still looks empty.
-    }, (0, import_react7.createElement)(DotsBoldIcon, { size: 24 })),
+      // 1.8px in this control, which is why a 48px button still looks empty. 30px is the box
+      // the bar's rule sizes it to as well, so the two agree.
+    }, (0, import_react7.createElement)(DotsBoldIcon, { size: 30 })),
     items,
     onSelect: (id) => {
       setShown(false);

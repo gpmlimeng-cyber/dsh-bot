@@ -262,13 +262,15 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
    is the touch target the card's own 60px tile can hold exactly (8px of padding above and
    below), and the same size the preview page's controls take. The drawing is what the eye
-   judges, and these glyphs paint about 0.8 of their box, so the box is 24px: the eye lands
-   at 19.8px, the arrow and the sheets at 17.4, next to the 20px icon the card's own 40px
-   type tile draws. */
+   judges, so the box is sized to paint 22px of ink at the 2-unit stroke set here -- the same
+   22px the preview bar's own controls paint, on a card and on the preview page alike. The
+   three glyphs are drawn to different fractions of their box (the eye widest, the sheets
+   narrowest), and 34px is the one box that clears 22px for all of them, the tick included:
+   eye 28.9x22.1, arrow 25.5x26.4, sheets 23.8x23.8, tick 22.1x17. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
-.bt-dcard-btn svg{width:24px;height:24px}
+.bt-dcard-btn svg{width:34px;height:34px;stroke-width:2}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 

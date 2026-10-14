@@ -194,8 +194,9 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
       type: 'button', className: 'bt-preview-more', 'aria-haspopup': 'menu', 'aria-expanded': shown,
       'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
       // The filled dots, not the hairline ones: DotsIcon paints 1.5-unit dots that land at
-      // 1.8px in this control, which is why a 48px button still looks empty.
-    }, h(DotsBoldIcon, { size: 24 })),
+      // 1.8px in this control, which is why a 48px button still looks empty. 30px is the box
+      // the bar's rule sizes it to as well, so the two agree.
+    }, h(DotsBoldIcon, { size: 30 })),
     items,
     onSelect: (id) => {
       setShown(false)
