@@ -638,6 +638,9 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
       [t('Connectors'), ConnectorIcon, () => actions.openConnectors()],
       [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
       [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
+      // Panels other plugins registered: one row each above the separator, the same
+      // action the native icon column runs. Nothing here while none are registered.
+      ...(actions.panelEntries?.() ?? []).map(entry => [entry.label, PlugIcon, () => actions.selectPanel(entry.id)]),
     ],
     [
       [t('Switch to classic Agent mode'), SwitchIcon, () => actions.setSurface('agent')],

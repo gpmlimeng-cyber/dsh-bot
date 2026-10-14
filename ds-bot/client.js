@@ -6240,7 +6240,10 @@ function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboardi
       [t("Usage"), GaugeIcon, () => actions.openSettings("usage")],
       [t("Connectors"), ConnectorIcon, () => actions.openConnectors()],
       [t("Automation tasks"), ClockIcon, () => actions.selectPanel("schedules")],
-      [t("Bot settings"), GearIcon, () => actions.openSettings("general")]
+      [t("Bot settings"), GearIcon, () => actions.openSettings("general")],
+      // Panels other plugins registered: one row each above the separator, the same
+      // action the native icon column runs. Nothing here while none are registered.
+      ...(actions.panelEntries?.() ?? []).map((entry) => [entry.label, PlugIcon, () => actions.selectPanel(entry.id)])
     ],
     [
       [t("Switch to classic Agent mode"), SwitchIcon, () => actions.setSurface("agent")]
@@ -15435,6 +15438,11 @@ function apply(ctx) {
   };
   actions.signInEntry = () => ctx.slots.entries?.("settings.models.sign-in")?.[0] ?? null;
   actions.canSignIn = () => Boolean(actions.signInEntry());
+  actions.panelEntries = () => (ctx.slots.entriesOfSlot?.("sidebar.panellist") ?? []).map(({ options }) => ({
+    id: options.id,
+    order: options.order ?? 0,
+    label: typeof options.label === "function" ? options.label() : options.label ?? options.id
+  })).sort((one, two) => one.order - two.order);
   actions.signIn = () => ui2.set((state) => ({ ...state, signIn: (state.signIn ?? 0) + 1 }));
   actions.closeSignIn = () => ui2.set((state) => ({ ...state, signIn: null }));
   actions.accountT = () => ctx.get("locale").bind("settings.account");

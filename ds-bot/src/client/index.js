@@ -642,6 +642,16 @@ export function apply(ctx) {
   // Whether AccountLauncher holds the shell's settings seat; FooterAccount steps aside if so.
   actions.signInEntry = () => ctx.slots.entries?.('settings.models.sign-in')?.[0] ?? null
   actions.canSignIn = () => Boolean(actions.signInEntry())
+  // The global panels other plugins registered, for the account menu's second list:
+  // the same mapping the shell's own panel column runs (id, order, resolved label),
+  // winners per cell in registration order.
+  actions.panelEntries = () => (ctx.slots.entriesOfSlot?.('sidebar.panellist') ?? [])
+    .map(({ options }) => ({
+      id: options.id,
+      order: options.order ?? 0,
+      label: typeof options.label === 'function' ? options.label() : options.label ?? options.id,
+    }))
+    .sort((one, two) => one.order - two.order)
   actions.signIn = () => ui.set(state => ({ ...state, signIn: (state.signIn ?? 0) + 1 }))
   actions.closeSignIn = () => ui.set(state => ({ ...state, signIn: null }))
   actions.accountT = () => ctx.get('locale').bind('settings.account')
