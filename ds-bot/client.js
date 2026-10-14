@@ -3130,9 +3130,12 @@ html[data-bt-mobile] .bt-set-row{padding:12px;min-height:52px}
    full-bleed sheet wastes the width it has — it floats centred at 70vw instead. */
 html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:15vw;right:15vw;width:70vw!important;border-left:.5px solid var(--bt-line-2);border-radius:16px 16px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3)}
 /* Expanded: there is room for the conversation and the panel at once, so the panel is a
-   right-hand column again and the column keeps its 480px instead of being covered. */
+   right-hand column again and the column keeps its 480px instead of being covered.
+   The reservation is for the panel, so it is gated on the panel being there: without the
+   gate it applied to a folded screen with nothing open, where the column is the whole
+   screen (measured 859 wide: 56 of rail + 324 of column + 479 let go to nobody). */
 html[data-bt-mobile][data-bt-size=expanded] .bt-panel{left:auto;right:0;width:var(--bt-detail-w)!important;border-left:.5px solid var(--bt-line-2)}
-html[data-bt-mobile][data-bt-size=expanded] [class*="_centerCol"]{margin-right:var(--bt-detail-w)!important}
+html[data-bt-mobile][data-bt-size=expanded] body:has(.bt-panel) [class*="_centerCol"]{margin-right:var(--bt-detail-w)!important}
 /* The floating bar is hidden over a panel because the panel sits under it. Beside the
    panel there is nothing to hide from: it stays, over the conversation and clear of the
    column, which is how the session stays switchable while the details are open. */
