@@ -3,7 +3,7 @@
 // row opens the conversation the item belongs to; the popover holds no controls of
 // its own — answers, approvals and keys are given where the cards already live.
 // One view of one device: nothing here tracks revisions or other windows.
-import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
+import { createElement as h, Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { t } from './i18n.js'
 
@@ -117,7 +117,10 @@ export function NeedsYou({ useRoster, useWork, useUi, actions }) {
   const unread = useUi(state => state.unread ?? {})
   const [open, setOpen] = useState(false)
   const anchor = useRef(null)
-  const indexed = useRoster(value => ({ byId: value.byId, roomsById: value.roomsById }))
+  // Cached, so the store selector keeps a stable reference between reads: a fresh
+  // object per read is the one shape useSyncExternalStore cannot take.
+  const rosterView = useRoster(value => value)
+  const indexed = useMemo(() => ({ byId: rosterView.byId, roomsById: rosterView.roomsById }), [rosterView.byId, rosterView.roomsById])
   const items = needsYou(roster, { approvals }, unread, indexed)
   if (items.length === 0) return null
   return h(Fragment, null,

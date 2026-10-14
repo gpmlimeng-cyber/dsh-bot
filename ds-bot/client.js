@@ -6509,7 +6509,8 @@ function NeedsYou({ useRoster, useWork, useUi, actions }) {
   const unread = useUi((state) => state.unread ?? {});
   const [open, setOpen] = (0, import_react11.useState)(false);
   const anchor = (0, import_react11.useRef)(null);
-  const indexed = useRoster((value) => ({ byId: value.byId, roomsById: value.roomsById }));
+  const rosterView = useRoster((value) => value);
+  const indexed = (0, import_react11.useMemo)(() => ({ byId: rosterView.byId, roomsById: rosterView.roomsById }), [rosterView.byId, rosterView.roomsById]);
   const items = needsYou(roster, { approvals }, unread, indexed);
   if (items.length === 0) return null;
   return (0, import_react11.createElement)(
