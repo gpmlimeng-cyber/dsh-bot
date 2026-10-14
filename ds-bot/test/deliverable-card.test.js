@@ -85,7 +85,14 @@ test('a tap shows the delivered file here, and only what can be shown', () => {
   assert.ok(source.includes('const answer = await actions?.presentFile?.(file.path)'), 'the card reads through the host action')
   assert.ok(source.includes("answer?.ok === true && (answer.kind === 'image' || answer.kind === 'text' || answer.kind === 'markdown')"), 'a binary or an unreadable file is not shown')
   assert.ok(source.includes("h('img', { src: `data:"), 'an image is shown as itself')
-  assert.ok(source.includes(": h('pre', { className: 'bt-dcard-text' }, read.text ?? '')"), 'text is shown as text')
+  // Text and Markdown go through the panel's own viewer rather than a second one drawn
+  // here: one renderer means a delivered README looks the same in the card and in the
+  // Files tab, and a fence or a heading is rendered instead of shown as its marks.
+  assert.ok(source.includes('h(FileView, { file: read })'), 'text and Markdown are shown by the panel’s viewer')
+  const panel = read('file-preview.js')
+  assert.ok(panel.includes('export function FileView({ file })'), 'the viewer is the panel’s own')
+  assert.ok(panel.includes('file ? h(FileView, { file }) : null'), 'the panel renders it with the same call')
+  assert.ok(panel.includes("h(MarkdownText, { text: file.text ?? '', labels: mdLabels() })"), 'Markdown goes through DSH’s renderer')
   // A second tap puts the file away, and the label says which tap it is.
   assert.ok(source.includes("if (state === 'shown') {") && source.includes('setRead(null)'), 'a second tap puts it away')
   assert.ok(source.includes("`${state === 'shown' ? t('Hide preview') : t('Preview')} ${name}`"), 'the hit target names its tap')
@@ -93,7 +100,7 @@ test('a tap shows the delivered file here, and only what can be shown', () => {
   assert.ok(i18n.includes("Preview: '预览'") && i18n.includes("'Hide preview': '收起预览'"), 'both labels are translated')
   // Bounded height: one delivered file cannot push the conversation off the screen.
   assert.ok(rule('.bt-dcard-view img{').includes('max-height:260px'), 'a picture is capped')
-  assert.ok(rule('.bt-dcard-text{').includes('overflow:auto') && rule('.bt-dcard-text{').includes('max-height:260px'), 'text scrolls inside its own box')
+  assert.ok(rule('.bt-dcard-view .bt-fp-body{').includes('overflow:auto') && rule('.bt-dcard-view .bt-fp-body{').includes('max-height:260px'), 'so does the viewer’s own box')
 })
 
 test('the card is wired to the host action that answers for delivered files', () => {

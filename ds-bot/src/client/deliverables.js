@@ -8,12 +8,14 @@
 // over its metadata, and one hit target covering the whole card.
 //
 // Two ways out stay, because a phone and a desktop need different ones: the whole card
-// opens the file here (an image, or the text itself), the Open button still asks the
-// Host to open it in a desktop application, and when neither can, the card says so and
-// offers the path to copy -- which is how a phone reaches its own copy of the file.
+// opens the file here (a picture as itself, text and Markdown through the panel's own
+// viewer), the Open button still asks the Host to open it in a desktop application, and
+// when neither can, the card says so and offers the path to copy -- which is how a phone
+// reaches its own copy of the file.
 import { createElement as h, useState } from 'react'
 import { FileTypeIcon, fileExtension } from '@deepseek-ai/dsh-client-ui-primitives'
 import { CopyIcon, CheckIcon } from './icons.js'
+import { FileView } from './file-preview.js'
 import { t } from './i18n.js'
 
 const basename = (path) => {
@@ -121,9 +123,11 @@ function DeliverableCard({ file, actions }) {
           state === 'copied' ? h(CheckIcon) : h(CopyIcon), state === 'copied' ? t('Copied') : t('Path')))),
     state === 'shown' && read !== null
       ? h('div', { className: 'bt-dcard-view', 'data-kind': read.kind },
+        // A picture is shown as itself; Markdown and text go through the panel's own
+        // renderer, so a delivered README looks the way it does in the Files tab.
         read.kind === 'image'
           ? h('img', { src: `data:${read.mime ?? 'application/octet-stream'};base64,${read.base64 ?? ''}`, alt: name })
-          : h('pre', { className: 'bt-dcard-text' }, read.text ?? ''))
+          : h(FileView, { file: read }))
       : null,
     state === 'failed'
       ? h('span', { className: 'bt-dcard-hint', role: 'status' }, t('Could not open it here. Copy the path and open the copy under {folder}', { folder: PHONE_COPY_HINT }))

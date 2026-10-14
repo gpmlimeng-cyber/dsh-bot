@@ -255,12 +255,13 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard:hover .bt-dcard-desc,.bt-dcard:focus-within .bt-dcard-desc{display:none}
 .bt-dcard:hover .bt-dcard-peek,.bt-dcard:focus-within .bt-dcard-peek{display:inline}
 .bt-dcard-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
-/* What a tap on the card reads back: a picture whole, or the file's text to read in
-   place. Both are capped in height so one delivered file cannot push the conversation
-   off the screen; the text scrolls inside its own box. */
+/* What a tap on the card reads back: a picture whole, or the file's text read in place
+   by the panel's own viewer (file-preview.js), so Markdown arrives rendered. Both are
+   capped in height so one delivered file cannot push the conversation off the screen;
+   the text scrolls inside its own box. */
 .bt-dcard-view{border-radius:10px;background:var(--bt-card);box-shadow:inset 0 0 0 .5px var(--bt-line);overflow:hidden}
 .bt-dcard-view img{display:block;width:100%;max-height:260px;object-fit:contain;background:var(--bt-main)}
-.bt-dcard-text{margin:0;max-height:260px;overflow:auto;padding:10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:17px;color:var(--bt-ink);white-space:pre-wrap;word-break:break-word}
+.bt-dcard-view .bt-fp-body{flex:none;overflow:auto;max-height:260px;padding:10px 12px}
 .bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:inline-flex;gap:6px}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 .bt-dcard-btn{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:background-color .12s ease,color .12s ease}

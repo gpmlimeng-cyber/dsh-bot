@@ -53,8 +53,12 @@ function ImageView({ file }) {
   return h('div', { className: 'bt-fp-body bt-fp-image' }, h('img', { src: `data:${file.mime ?? 'application/octet-stream'};base64,${file.base64 ?? ''}`, alt: file.name, onError: () => setFailed(true) }))
 }
 
-/** What the panel shows for one file, once the host answered. */
-function FileView({ file }) {
+/**
+ * What the panel shows for one file, once the host answered. A delivered file shown in
+ * the conversation is a file too, so the card re-uses this rather than drawing a second
+ * viewer: Markdown goes through DSH's own renderer, text keeps its line numbers.
+ */
+export function FileView({ file }) {
   if (file.kind === 'markdown') return h(MarkdownView, { file })
   if (file.kind === 'image') return h(ImageView, { file })
   if (file.kind === 'text') return h(TextView, { file })
