@@ -13,6 +13,7 @@ import { hostText, t } from './i18n.js'
 import { showsDshRow } from './dsh-offer.js'
 import { useMobile, usePcColumns } from './mobile.js'
 import { pcSidebarStep, shellCollapsed } from './pc-layout.js'
+import { NavToggle } from './header.js'
 
 // -------------------------------------------------------------------------
 // Sidebar
@@ -383,6 +384,23 @@ export function TeamSidebar(props) {
   const drawerFoot = mobile ? h('div', { className: 'bt-side-foot' },
     h(AccountLauncher, { seat: false, actions }),
     h(ConnectPlugins, { wide: true, actions })) : null
+  // The PC band draws the phone drawer's top row: the same hamburger, then the search field,
+  // then New (the row itself is built below). The hamburger is not a child of that row — on
+  // a phone it lives in the floating bar, and the band draws that same bar box holding
+  // nothing but this button, so the two bands and the column's two widths all land on the
+  // same 12/10 (styles.js places `.bt-mobile-nav` inside whichever bar holds it).
+  const drawerChrome = mobile || pc
+  // Which way the button offers, read off the shell rather than off `wide`: below its 1024
+  // line `wide` is `!collapsed || !settled`, so it stays true for the few hundred ms a fold
+  // takes, and the button would offer to close a column that is already closing.
+  const pcFolded = shellCollapsed(document, wide)
+  const pcNav = pc
+    ? createPortal(h('div', { className: 'bt-pc-nav' },
+        h(NavToggle, {
+          open: !pcFolded,
+          onToggle: () => (pcFolded ? props.expandSidebar?.() : actions.collapseSidebar?.()),
+        })), document.body)
+    : null
   const drawer = h('div', {
     className: wide ? 'bt-side' : 'bt-side bt-rail', role: wide ? undefined : 'region',
     'data-mobile-open': mobileOpen || undefined, onKeyDown: typeToSearch,
@@ -390,11 +408,12 @@ export function TeamSidebar(props) {
     onTouchEnd: mobile ? onTouchEnd : undefined, onTouchCancel: mobile ? onTouchEnd : undefined,
   },
     listWide ? h('div', { className: 'bt-side-top' },
-      mobile ? null : h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
+      drawerChrome ? null : h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
-      // On a phone the icon button becomes the field itself (styles.js carries the row's
-      // shape): same single action, the search lives in the palette either way.
-      mobile
+      // On a phone, and in the PC band's column, the icon button becomes the field itself
+      // (styles.js carries the row's shape): same single action, the search lives in the
+      // palette either way.
+      drawerChrome
         ? h('div', { className: 'bt-side-search' },
             h(SearchIcon),
             h('input', {
@@ -423,6 +442,7 @@ export function TeamSidebar(props) {
     // narrow line that column is the 56px rail, and a fixed panel inside it is still
     // clipped by whatever containing block or overflow the column brings. Portalled to
     // <body> it is clipped by nothing — the same move the scrim beside it already makes.
+    pcNav,
     mobile ? createPortal(drawer, document.body) : drawer)
 }
 

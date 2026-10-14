@@ -44,6 +44,22 @@ function MemoryNotice({ shown }) {
     h('span', { className: 'bt-pill-mem-in', ref: inner }, h('span', { className: 'bt-pill-mem-ico' }, h(MemoryIcon)), label))
 }
 
+// The one hamburger the skin draws. The phone's floating bar holds it over the drawer, and
+// the PC band's sidebar column holds it in its own top row (sidebar.js); both render this
+// component inside a bar box, which is what puts them on the same pixel — styles.js places
+// `.bt-mobile-nav` at 12/10 of whichever bar contains it. Only the action differs: the
+// drawer's own state on a phone, the shell's sidebar column in the PC band.
+export function NavToggle({ open, onToggle }) {
+  return h('button', {
+    type: 'button', className: 'bt-mobile-nav', 'aria-expanded': open,
+    // The label follows the state, like the scrim's: an unchanged "Open navigation"
+    // while the drawer is up tells a screen reader the wrong thing, and made the
+    // device crew's own verification ambiguous.
+    'aria-label': open ? t('Close navigation') : t('Open navigation'),
+    onClick: onToggle,
+  }, open ? h(ChevronLeftIcon) : h(MenuIcon))
+}
+
 export function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, useSessionStatus, useSession, useActivity, useMemoryNews, useTurnClock, useUi, useLive, useWork, actions }) {
   const roster = useRoster(value => value)
   const title = useSessions(list => list.byId[sessionId]?.displayTitle ?? list.byId[sessionId]?.title ?? '')
@@ -148,14 +164,7 @@ export function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, u
     // that state to the stylesheet (the pill steps aside there) and the button draws the
     // collapse affordance instead of the hamburger.
     createPortal(h('div', { className: 'bt-mobile-bar', 'data-nav-open': mobileNavOpen || undefined },
-      h('button', {
-        type: 'button', className: 'bt-mobile-nav', 'aria-expanded': mobileNavOpen,
-        // The label follows the state, like the scrim's: an unchanged "Open navigation"
-        // while the drawer is up tells a screen reader the wrong thing, and made the
-        // device crew's own verification ambiguous.
-        'aria-label': mobileNavOpen ? t('Close navigation') : t('Open navigation'),
-        onClick: () => actions.toggleMobileNav(),
-      }, mobileNavOpen ? h(ChevronLeftIcon) : h(MenuIcon)),
+      h(NavToggle, { open: mobileNavOpen, onToggle: () => actions.toggleMobileNav() }),
       head,
       h('div', { className: 'bt-mobile-acts' },
         h('button', {

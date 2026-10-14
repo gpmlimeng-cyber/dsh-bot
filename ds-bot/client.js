@@ -2149,7 +2149,8 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
    selectors below must not repeat border, radius, fill or shadow, or the two would be free
    to disagree. */
 .bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-side-search,
-html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
+html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round,
+html[data-bt-pc] .bt-side .bt-side-top .bt-round{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
 .bt-pill:active{transform:scale(.965)}
@@ -2909,6 +2910,18 @@ html:not([data-bt-mobile]) .bt-pane{top:max(var(--dsh-frame-chrome-top,0px),var(
 html:not([data-bt-mobile]) .bt-settings-layer,
 html:not([data-bt-mobile]) .bt-palette-layer,
 html:not([data-bt-mobile]) .bt-mem-layer{inset:max(var(--dsh-frame-chrome-top,0px),var(--dsh-mobile-top-inset,0px)) 0 0}
+/* The PC band's sidebar column takes the phone drawer's top row — the hamburger, then the
+   search field, then New — rather than the desktop row's brand and search button: the
+   column is 280 there, and the band needs the corner for the hamburger it draws itself
+   (sidebar.js spills a .bt-pc-nav bar, so the button lands on the phone's own 12/10 no
+   matter which way the column is folded). Two numbers, both from the phone's rules above:
+   the row starts where the drawer's would (its own top padding removed; the column already
+   begins on the inset line the floating bar sits 10px below), and it keeps the same 52px
+   clear for the button. The rail too: with the row gone the hamburger would land on the
+   rail's first button, so the rail's own controls start under its box. */
+html[data-bt-pc] .bt-side .bt-side-top{padding-top:0;padding-left:52px;padding-right:0}
+html[data-bt-pc] .bt-side .bt-side-top .bt-round{flex:0 0 40px;width:40px;height:40px}
+html[data-bt-pc] .bt-side.bt-rail{padding-top:52px}
 /* The mobile skin has three sizes, on the Compact/Medium/Expanded lines the platforms
    publish (Xiaomi and HarmonyOS both use 600 and 840). The defaults below are the compact
    phone the skin draws where no band matches; a band only re-points these variables, and
@@ -2948,7 +2961,7 @@ html[data-bt-mobile][data-bt-size=expanded]{
    purpose: with the drawer up, the bar's hamburger is the visible way to collapse it,
    which is why the two rules below take the pill out of the way and make room for that
    button in the drawer's own top row. */
-.bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
+.bt-mobile-bar,.bt-pc-nav{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
 /* With the drawer open the pill would sit on the drawer's own search/new row — same y,
    and the pill's centred box reaches ~136px past the drawer's left edge. The drawer is
    already where a chat is picked, so while it is up the bar carries only its collapse
@@ -5583,916 +5596,19 @@ function usePcColumns() {
   return pc;
 }
 
-// src/client/sidebar.js
+// src/client/attention.js
 var import_react10 = require("react");
 var import_react_dom3 = require("react-dom");
-var import_dsh_client_ui_primitives2 = require("@deepseek-ai/dsh-client-ui-primitives");
-function useMarkedUnread(id, active, marked, actions) {
-  (0, import_react10.useEffect)(() => {
-    if (active && marked) actions.clearUnread(id);
-  }, [active, marked]);
-}
-var PinMark = () => (0, import_react10.createElement)("span", { className: "bt-pin", "aria-hidden": true }, (0, import_react10.createElement)(PinMarkIcon));
-function countOf(roster, sessionIds) {
-  const counts2 = roster.counts;
-  if (counts2 === void 0) return void 0;
-  let total = 0;
-  let indexed = false;
-  for (const id of sessionIds) {
-    const value = counts2[id];
-    if (typeof value === "number") {
-      total += value;
-      indexed = true;
-    }
-  }
-  return indexed ? total : void 0;
-}
-function RowMeta({ at }) {
-  const time = at > 0 ? relativeShort(at) : "";
-  if (time === "") return null;
-  return (0, import_react10.createElement)("span", { className: "bt-row-meta" }, (0, import_react10.createElement)("span", { className: "bt-row-time" }, time));
-}
-function RowSub({ preview, count }) {
-  if (!preview && count === void 0) return null;
-  return (0, import_react10.createElement)(
-    "span",
-    { className: "bt-row-sub" },
-    preview ? (0, import_react10.createElement)("span", { className: "bt-row-preview" }, preview) : null,
-    count === void 0 ? null : (0, import_react10.createElement)("span", { className: "bt-row-count", title: t("{count} messages", { count }) }, String(count))
-  );
-}
-var useApproval = (useWork, match) => useWork ? useWork((work) => (work.approvals ?? []).some(match)) : false;
-var useGroupWork = (useWork, pick2) => useWork ? useWork((work) => pick2(work.rooms ?? {}).join(",")) : "";
-var workKeys = (text) => text === "" ? [] : text.split(",").map((key) => {
-  const [id, tool] = key.split("|");
-  return { id, tool: tool || void 0 };
-});
-var workLine = (lead, tool, more) => (0, import_react10.createElement)(Shimmer, null, `${lead} · ${workPhrase(tool)}…${more > 0 ? ` +${more}` : ""}`);
-function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, drawer, marked }) {
-  const id = bot.id;
-  const part = currentPart(bot);
-  const preview = useSessions((list) => previewOf(list, part, roster.exchangeTurns[part]));
-  const at = useSessions((list) => list.byId[part]?.updatedAt ?? 0);
-  const running = useSessionStatus((map) => map.get(part)?.running === true);
-  const active = useSessionRetainInfo(part, (info) => (info?.retainedBy?.mainView ?? 0) > 0);
-  const unread = useSessionStatus((map) => map.get(part)?.completionUnread === true || map.get(part)?.pendingInteraction !== void 0) || marked && !active;
-  useMarkedUnread(id, active, marked, actions);
-  const main = isMainOf(roster, id);
-  const tile = roster.mainBotId === id;
-  const approval = useApproval(useWork, (entry) => entry.botId === id);
-  const alert = roster.questions?.[part] !== void 0 || approval;
-  const doing = useActivity((map) => map[id]);
-  const groups = workKeys(useGroupWork(useWork, (rooms) => Object.entries(rooms).flatMap(([roomId, entries2]) => entries2.filter((entry) => entry.botId === id).map((entry) => `${roomId}|${entry.tool ?? ""}`))));
-  const away = !running && groups.length > 0;
-  const state = botState(running || away, doing, alert);
-  const awayLine = away ? workLine(roster.roomsById[groups[0].id]?.name ?? t("a group chat"), groups[0].tool, groups.length - 1) : null;
-  if (bot.hidden && !active && !main) return null;
-  const onContextMenu = (event) => {
-    event.preventDefault();
-    actions.openMenu({ kind: "bot", id, x: event.clientX, y: event.clientY });
-  };
-  const pinned = bot.pinned === true && !tile;
-  const label = [bot.name, main ? t("Main Bot") : "", pinned ? t("Pinned") : "", running || away ? t("Working") : "", approval ? t("Waiting for your approval") : alert ? t("Waiting for your answer") : "", unread ? t("Unread activity") : ""].filter(Boolean).join(", ");
-  if (tile && wide && !drawer) {
-    return (0, import_react10.createElement)(
-      "div",
-      { className: "bt-tile-wrap" },
-      (0, import_react10.createElement)(
-        "button",
-        {
-          type: "button",
-          className: "bt-tile",
-          "aria-label": label,
-          "aria-current": active ? "page" : void 0,
-          "data-bot-id": id,
-          title: preview || bot.name,
-          onClick: () => actions.openSession(id),
-          onContextMenu
-        },
-        (0, import_react10.createElement)(BotAvatar, { bot, size: 60, state, main: true }),
-        (0, import_react10.createElement)("span", { className: "bt-tile-name" }, bot.name)
-      )
-    );
-  }
-  return (0, import_react10.createElement)(
-    "button",
-    {
-      type: "button",
-      className: "bt-row",
-      "aria-label": label,
-      "aria-current": active ? "page" : void 0,
-      "data-bot-id": id,
-      title: wide ? void 0 : bot.name,
-      onClick: () => actions.openSession(id),
-      onContextMenu
-    },
-    (0, import_react10.createElement)(BotAvatar, { bot, size: 36, state, main }),
-    pinned && !wide ? (0, import_react10.createElement)(PinMark) : null,
-    wide ? (0, import_react10.createElement)(
-      "span",
-      { className: "bt-row-body" },
-      (0, import_react10.createElement)(
-        "span",
-        { className: "bt-row-name" },
-        (0, import_react10.createElement)("span", { className: "bt-row-title" }, bot.name),
-        pinned ? (0, import_react10.createElement)(PinMark) : null,
-        (0, import_react10.createElement)(RowMeta, { at })
-      ),
-      (0, import_react10.createElement)(RowSub, { preview: awayLine ?? preview, count: countOf(roster, [part, ...bot.parts ?? []]) })
-    ) : null,
-    wide && unread && !active ? (0, import_react10.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
-  );
-}
-function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked }) {
-  const id = room2.id;
-  const fallback = useSessions((list) => previewOf(list, id));
-  const preview = room2.preview?.replace(/\s+/g, " ").trim() || fallback;
-  const at = useSessions((list) => list.byId[id]?.updatedAt ?? 0);
-  const active = useSessionRetainInfo(id, (info) => (info?.retainedBy?.mainView ?? 0) > 0);
-  const unread = useSessionStatus((map) => map.get(id)?.completionUnread === true) || marked && !active;
-  useMarkedUnread(id, active, marked, actions);
-  const approval = useApproval(useWork, (entry) => entry.roomId === id);
-  const members = workKeys(useGroupWork(useWork, (rooms) => (rooms[id] ?? []).map((entry) => `${entry.botId}|${entry.tool ?? ""}`)));
-  const first = roster.byId[members[0]?.id];
-  const workingLine = first ? workLine(first.name, members[0].tool, members.length - 1) : null;
-  if (room2.hidden && !active) return null;
-  const pinned = room2.pinned === true;
-  const label = [room2.name, pinned ? t("Pinned") : "", members.length > 0 ? t("Working") : "", approval ? t("Waiting for your approval") : ""].filter(Boolean).join(", ");
-  return (0, import_react10.createElement)(
-    "button",
-    {
-      type: "button",
-      className: "bt-row",
-      "aria-label": label,
-      "aria-current": active ? "page" : void 0,
-      "data-room-id": id,
-      onClick: () => actions.openSession(id),
-      onContextMenu: (event) => {
-        event.preventDefault();
-        actions.openMenu({ kind: "room", id, x: event.clientX, y: event.clientY });
-      }
-    },
-    (0, import_react10.createElement)(RoomAvatar, { room: room2, roster, size: 36 }),
-    pinned && !wide ? (0, import_react10.createElement)(PinMark) : null,
-    wide ? (0, import_react10.createElement)(
-      "span",
-      { className: "bt-row-body" },
-      (0, import_react10.createElement)(
-        "span",
-        { className: "bt-row-name" },
-        (0, import_react10.createElement)("span", { className: "bt-row-title" }, room2.name),
-        pinned ? (0, import_react10.createElement)(PinMark) : null,
-        (0, import_react10.createElement)(RowMeta, { at })
-      ),
-      // A group's messages live in each member's own hidden Session, so the indexed
-      // lines would count the same conversation once per member. No number, then.
-      (0, import_react10.createElement)(RowSub, { preview: workingLine ?? preview })
-    ) : null,
-    wide && approval && !active ? (0, import_react10.createElement)("span", { className: "bt-unread bt-unread-wait", "aria-hidden": true }) : wide && unread && !active ? (0, import_react10.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
-  );
-}
-function AgentSessionRow({ session, agent, actions, renaming, index }) {
-  const input = (0, import_react10.useRef)(null);
-  (0, import_react10.useLayoutEffect)(() => {
-    if (!renaming) return;
-    input.current?.focus();
-    input.current?.select();
-  }, [renaming]);
-  if (renaming) {
-    const commit = (keep) => {
-      const value = input.current?.value ?? "";
-      if (!keep || value.trim() === "" || value.trim() === session.title) {
-        actions.endAgentRename();
-        return;
-      }
-      void (async () => {
-        try {
-          await actions.renameAgentSession(agent.id, session.id, value);
-          actions.endAgentRename();
-        } catch (error) {
-          actions.reportError(error, "agent-rename");
-        }
-      })();
-    };
-    return (0, import_react10.createElement)(
-      "div",
-      { className: "bt-agent-sub-row bt-agent-edit", style: { "--i": index } },
-      (0, import_react10.createElement)("input", {
-        ref: input,
-        defaultValue: session.title,
-        "aria-label": t("Rename"),
-        onKeyDown: (event) => {
-          if (event.nativeEvent.isComposing) return;
-          if (event.key === "Enter") commit(true);
-          else if (event.key === "Escape") commit(false);
-        },
-        onBlur: () => commit(true)
-      })
-    );
-  }
-  return (0, import_react10.createElement)(
-    "button",
-    {
-      type: "button",
-      className: "bt-agent-sub-row",
-      "aria-current": session.active ? "page" : void 0,
-      style: { "--i": index },
-      onClick: () => actions.openAgentSession(session.id),
-      onContextMenu: (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        actions.openMenu({ kind: "agent-session", id: session.id, agentId: agent.id, x: event.clientX, y: event.clientY });
-      }
-    },
-    (0, import_react10.createElement)("span", { className: "bt-agent-sub-title" }, session.title),
-    (0, import_react10.createElement)("span", { className: "bt-agent-sub-time" }, session.at > 0 ? relativeShort(session.at) : "")
-  );
-}
-function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked }) {
-  const info = useSessions((list) => JSON.stringify(agent.sessions.map((id) => {
-    const row = list.byId[id];
-    return {
-      id,
-      // A blank Session's title is the workspace folder name; show the label instead.
-      title: row?.blank === true ? "" : row?.displayTitle ?? row?.title ?? "",
-      at: row?.updatedAt ?? 0,
-      running: row?.running === true,
-      active: (row?.retainedBy?.mainView ?? 0) > 0
-    };
-  }).sort((a, b) => b.at - a.at)));
-  const statusInfo = useSessionStatus((map) => JSON.stringify(agent.sessions.map((id) => ({
-    id,
-    running: map.get(id)?.running === true,
-    unread: map.get(id)?.completionUnread === true
-  }))));
-  const statuses = Object.fromEntries(JSON.parse(statusInfo).map((entry) => [entry.id, entry]));
-  const sessions = JSON.parse(info).map((session) => ({
-    ...session,
-    running: statuses[session.id]?.running ?? session.running,
-    unread: statuses[session.id]?.unread ?? false,
-    title: session.title === "" ? t("New session") : session.title
-  }));
-  const renaming = useUi((value) => value.renameAgent);
-  const active = sessions.some((session) => session.active);
-  const running = sessions.some((session) => session.running);
-  const unread = sessions.some((session) => session.unread) || marked && !active;
-  useMarkedUnread(agent.id, active, marked, actions);
-  const preview = sessions[0]?.title ?? t("New session");
-  const label = ["DSH Agent", running ? t("Working") : "", unread ? t("Unread activity") : ""].filter(Boolean).join(", ");
-  const open = active && wide;
-  return (0, import_react10.createElement)(
-    "div",
-    { className: "bt-agent" },
-    (0, import_react10.createElement)(
-      "button",
-      {
-        type: "button",
-        className: "bt-row",
-        "aria-label": label,
-        "aria-current": active ? "page" : void 0,
-        "data-agent-id": agent.id,
-        title: wide ? void 0 : "DSH Agent",
-        onClick: () => actions.openAgent(agent.id),
-        onContextMenu: (event) => {
-          event.preventDefault();
-          actions.openMenu({ kind: "agent", id: agent.id, x: event.clientX, y: event.clientY });
-        }
-      },
-      (0, import_react10.createElement)("span", { className: `bt-agent-ava${running ? " bt-run" : ""}` }, (0, import_react10.createElement)(import_dsh_client_ui_primitives2.FishLogo, { size: 22 })),
-      wide ? (0, import_react10.createElement)(
-        "span",
-        { className: "bt-row-body" },
-        (0, import_react10.createElement)("span", { className: "bt-row-name" }, "DSH Agent"),
-        (0, import_react10.createElement)(RowSub, { preview })
-      ) : null,
-      wide && unread && !active ? (0, import_react10.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
-    ),
-    (0, import_react10.createElement)(
-      "div",
-      { className: "bt-agent-sub", "data-open": open || void 0 },
-      (0, import_react10.createElement)(
-        "div",
-        { className: "bt-agent-sub-in" },
-        (0, import_react10.createElement)(
-          "button",
-          { type: "button", className: "bt-agent-sub-row bt-agent-new", style: { "--i": 0 }, onClick: () => {
-            void actions.newAgentSession(agent.id).catch((error) => actions.reportError(error, "agent-session"));
-          } },
-          (0, import_react10.createElement)(PlusIcon),
-          (0, import_react10.createElement)("span", { className: "bt-agent-sub-title" }, t("New session"))
-        ),
-        sessions.map((session, index) => (0, import_react10.createElement)(AgentSessionRow, {
-          key: session.id,
-          session,
-          agent,
-          actions,
-          index: index + 1,
-          renaming: renaming === session.id
-        }))
-      )
-    )
-  );
-}
-var GLIDE = springEasing(1e3, 63);
-function useListGlide(listRef, layout, key) {
-  const tops = (0, import_react10.useRef)({ layout, map: /* @__PURE__ */ new Map() });
-  (0, import_react10.useLayoutEffect)(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const next = /* @__PURE__ */ new Map();
-    const still = reducedMotion() || tops.current.layout !== layout;
-    for (const row of list.querySelectorAll("[data-bot-id],[data-room-id],[data-agent-id]")) {
-      const id = row.dataset.botId ?? row.dataset.roomId ?? row.dataset.agentId;
-      const top = row.offsetTop;
-      next.set(id, top);
-      const before = tops.current.map.get(id);
-      if (!still && before !== void 0 && Math.abs(before - top) > 0.5) {
-        row.animate([{ transform: `translateY(${before - top}px)` }, { transform: "none" }], GLIDE);
-      }
-    }
-    tops.current = { layout, map: next };
-  }, [layout, key]);
-}
-function TeamSidebar(props) {
-  const { wide, useRoster, useUi, useSessions, actions } = props;
-  const listRef = (0, import_react10.useRef)(null);
-  const roster = useRoster((value) => value);
-  const markedUnread = useUi((value) => value.unread);
-  const mobileOpen = useUi((value) => value.mobileNav === true);
-  const mobile = useMobile();
-  const pc = usePcColumns();
-  const pcSidebar = (0, import_react10.useRef)({ band: null, opened: false });
-  (0, import_react10.useEffect)(() => {
-    const step = pcSidebarStep(pcSidebar.current.band, pc, shellCollapsed(document, wide), pcSidebar.current.opened);
-    pcSidebar.current = { band: pc, opened: step.opened };
-    if (step.call === "expand") props.expandSidebar?.();
-    if (step.call === "collapse") actions.collapseSidebar?.();
-  }, [pc]);
-  props.useRegistry((value) => value);
-  const updated = useSessions((list) => {
-    const stamps = {};
-    for (const id of list.ids) stamps[id] = list.byId[id]?.updatedAt ?? 0;
-    return JSON.stringify(stamps);
-  });
-  const order = (0, import_react10.useMemo)(() => {
-    const stamps = JSON.parse(updated);
-    const entries2 = [
-      ...roster.bots.filter((bot) => bot.id !== roster.mainBotId).map((bot) => ({ kind: "bot", item: bot, at: stamps[currentPart(bot)] ?? bot.createdAt })),
-      ...roster.rooms.map((room2) => ({ kind: "room", item: room2, at: stamps[room2.id] ?? room2.createdAt })),
-      // The Agent sorts by its most recent Session, falling back to when it was added.
-      ...(roster.agents ?? []).map((agent) => ({ kind: "agent", item: agent, at: Math.max(0, ...agent.sessions.map((id) => stamps[id] ?? 0)) || agent.createdAt }))
-    ];
-    return entries2.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at);
-  }, [roster, updated]);
-  const main = roster.byId[roster.mainBotId];
-  const listWide = wide || mobileOpen;
-  useListGlide(listRef, listWide, order.map((entry) => entry.item.id).join(","));
-  useLandOnMainBot(roster, useSessions, actions);
-  const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide: listWide, drawer: mobileOpen };
-  const [search, setSearch] = (0, import_react10.useState)("");
-  (0, import_react10.useEffect)(() => {
-    if (!mobileOpen) setSearch("");
-  }, [mobileOpen]);
-  const runSearch = (value) => {
-    setSearch(value);
-    if (value.trim() !== "") actions.openPalette(value);
-  };
-  const typeToSearch = (event) => {
-    if (event.defaultPrevented || event.key.length !== 1 || event.key === " " || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return;
-    if (event.target instanceof Element && event.target.closest("input,textarea,[contenteditable]")) return;
-    event.preventDefault();
-    actions.openPalette(event.key);
-  };
-  const SWIPE_CLOSE_PX = 48;
-  const drag = (0, import_react10.useRef)(null);
-  const onTouchStart = (event) => {
-    const touch = event.touches[0];
-    drag.current = touch ? { x: touch.clientX, y: touch.clientY, settled: false } : null;
-  };
-  const onTouchMove = (event) => {
-    const start = drag.current;
-    const touch = event.touches[0];
-    if (start === null || start.settled || touch === void 0) return;
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-    if (Math.abs(dy) >= Math.abs(dx)) {
-      drag.current = null;
-      return;
-    }
-    if (dx <= -SWIPE_CLOSE_PX) {
-      start.settled = true;
-      actions.closeMobileNav();
-    }
-  };
-  const onTouchEnd = () => {
-    drag.current = null;
-  };
-  const drawerFoot = mobile ? (0, import_react10.createElement)(
-    "div",
-    { className: "bt-side-foot" },
-    (0, import_react10.createElement)(AccountLauncher, { seat: false, actions }),
-    (0, import_react10.createElement)(ConnectPlugins, { wide: true, actions })
-  ) : null;
-  const drawer = (0, import_react10.createElement)(
-    "div",
-    {
-      className: wide ? "bt-side" : "bt-side bt-rail",
-      role: wide ? void 0 : "region",
-      "data-mobile-open": mobileOpen || void 0,
-      onKeyDown: typeToSearch,
-      onTouchStart: mobile ? onTouchStart : void 0,
-      onTouchMove: mobile ? onTouchMove : void 0,
-      onTouchEnd: mobile ? onTouchEnd : void 0,
-      onTouchCancel: mobile ? onTouchEnd : void 0
-    },
-    listWide ? (0, import_react10.createElement)(
-      "div",
-      { className: "bt-side-top" },
-      mobile ? null : (0, import_react10.createElement)("span", { className: "bt-brand" }, (0, import_react10.createElement)(BrandMark, { size: 22 }), (0, import_react10.createElement)(BrandName)),
-      (0, import_react10.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
-      // On a phone the icon button becomes the field itself (styles.js carries the row's
-      // shape): same single action, the search lives in the palette either way.
-      mobile ? (0, import_react10.createElement)(
-        "div",
-        { className: "bt-side-search" },
-        (0, import_react10.createElement)(SearchIcon),
-        (0, import_react10.createElement)("input", {
-          type: "text",
-          enterKeyHint: "search",
-          autoComplete: "off",
-          spellCheck: false,
-          placeholder: t("Search"),
-          value: search,
-          "aria-label": t("Search"),
-          onChange: (event) => runSearch(event.target.value),
-          onKeyDown: (event) => {
-            if (event.key === "Enter" && search.trim() !== "") actions.openPalette(search);
-          }
-        })
-      ) : (0, import_react10.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Search"), title: t("Search"), onClick: () => actions.openPalette() }, (0, import_react10.createElement)(SearchIcon)),
-      (0, import_react10.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react10.createElement)(PlusIcon))
-    ) : (0, import_react10.createElement)(
-      import_react10.Fragment,
-      null,
-      (0, import_react10.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
-      (0, import_react10.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react10.createElement)(PlusIcon))
-    ),
-    (0, import_react10.createElement)(
-      "div",
-      { ref: listRef, className: "bt-list", role: "region", "aria-label": t("Bot list") },
-      main ? (0, import_react10.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react10.createElement)("div", { className: "bt-hint" }, t("Setting up your Main Bot…")),
-      order.map((entry) => entry.kind === "bot" ? (0, import_react10.createElement)(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true }) : entry.kind === "room" ? (0, import_react10.createElement)(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true }) : (0, import_react10.createElement)(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true }))
-    ),
-    drawerFoot
-  );
-  return (0, import_react10.createElement)(
-    import_react10.Fragment,
-    null,
-    (0, import_react_dom3.createPortal)((0, import_react10.createElement)("button", { type: "button", className: "bt-mobile-scrim", "data-open": mobileOpen || void 0, "aria-label": t("Close navigation"), tabIndex: mobileOpen ? 0 : -1, onClick: actions.closeMobileNav }), document.body),
-    // The drawer cannot live inside the shell's sidebar column: below the shell's
-    // narrow line that column is the 56px rail, and a fixed panel inside it is still
-    // clipped by whatever containing block or overflow the column brings. Portalled to
-    // <body> it is clipped by nothing — the same move the scrim beside it already makes.
-    mobile ? (0, import_react_dom3.createPortal)(drawer, document.body) : drawer
-  );
-}
-function UpdateButton({ useUpdate, actions }) {
-  const update = useUpdate((value) => value);
-  const [open, setOpen] = (0, import_react10.useState)(false);
-  const [box, setBox] = (0, import_react10.useState)(null);
-  const [error, setError] = (0, import_react10.useState)("");
-  const [dshError, setDshError] = (0, import_react10.useState)("");
-  const button = (0, import_react10.useRef)(null);
-  (0, import_react10.useEffect)(() => {
-    if (!open) return void 0;
-    const onDown = (event) => {
-      if (event.target instanceof Element && (event.target.closest(".bt-update-pop") || button.current?.contains(event.target))) return;
-      setOpen(false);
-    };
-    const onKey = (event) => {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        setOpen(false);
-        button.current?.focus();
-      }
-    };
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey, true);
-    return () => {
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey, true);
-    };
-  }, [open]);
-  const phase = update?.phase ?? "idle";
-  const dsh = update?.dsh;
-  const dshPhase = dsh?.phase ?? "idle";
-  const dshRow = showsDshRow(dsh, update?.app);
-  if (!update?.available && !dshRow && phase === "idle" && dshPhase === "idle") return null;
-  const cloudPhase = phase === "installing" || dshPhase === "installing" ? "installing" : phase !== "idle" ? phase : dshPhase;
-  const toggle = () => {
-    const rect = button.current?.getBoundingClientRect();
-    if (rect) setBox({ left: Math.max(8, Math.min(rect.left, window.innerWidth - 288)), top: rect.bottom + 6 });
-    setOpen((value) => !value);
-  };
-  const start = () => {
-    setError("");
-    void actions.installUpdate().catch((failure) => setError(hostText(failure?.message ?? String(failure))));
-  };
-  const startDsh = () => {
-    setDshError("");
-    void actions.installDshUpdate().catch((failure) => setDshError(hostText(failure?.message ?? String(failure))));
-  };
-  const label = phase === "installing" ? t("Updating DS Bot…") : dshPhase === "installing" ? t("Updating DSH…") : phase === "installed" ? t("DS Bot {version} is installed. Restart DSH to use it.", { version: update.installed ?? update.latest }) : dshPhase === "installed" ? t("Restart DSH to start using DSH {version}.", { version: dsh.installed ?? dsh.verified }) : update?.available ? t("DS Bot {version} is available", { version: update.latest }) : t("DSH {version} is available", { version: dsh?.verified });
-  const message = error || (phase === "failed" ? update.error : "");
-  const dshMessage = dshError || (dshPhase === "failed" ? dsh?.error : "");
-  const dshText = dshPhase === "installed" ? t("Restart DSH to start using DSH {version}.", { version: dsh.installed ?? dsh.verified }) : dsh?.available === false && dsh?.blockedBy ? t("Update DS Bot {version} first.", { version: dsh.blockedBy }) : t("You have {version}.", { version: dsh?.current });
-  return (0, import_react10.createElement)(
-    import_react10.Fragment,
-    null,
-    (0, import_react10.createElement)("button", {
-      ref: button,
-      type: "button",
-      className: "bt-round bt-update",
-      "data-phase": cloudPhase,
-      "aria-label": label,
-      title: label,
-      "aria-haspopup": "dialog",
-      "aria-expanded": open,
-      onClick: toggle
-    }, (0, import_react10.createElement)(CloudDownloadIcon, { done: phase === "installed" }), phase === "failed" || dshPhase === "failed" ? (0, import_react10.createElement)("span", { className: "bt-update-dot", "aria-hidden": true }) : null),
-    open && box ? (0, import_react_dom3.createPortal)((0, import_react10.createElement)(
-      "div",
-      { className: "bt-update-pop", role: "dialog", "aria-label": update?.available || phase !== "idle" ? t("DS Bot update") : t("DSH update"), style: box },
-      update?.available || phase !== "idle" ? (0, import_react10.createElement)(
-        import_react10.Fragment,
-        null,
-        (0, import_react10.createElement)("div", { className: "bt-update-title" }, phase === "installed" ? t("Update installed") : t("DS Bot {version}", { version: update.latest })),
-        (0, import_react10.createElement)("div", { className: "bt-update-text" }, phase === "installed" ? t("Restart DSH to start using DS Bot {version}.", { version: update.installed ?? update.latest }) : t("You have {version}.", { version: update.current })),
-        message ? (0, import_react10.createElement)("div", { className: "bt-update-error", role: "alert" }, t("The update did not finish: {reason}", { reason: message })) : null,
-        (0, import_react10.createElement)(
-          "div",
-          { className: "bt-update-actions" },
-          update.notesUrl ? (0, import_react10.createElement)("a", { className: "bt-update-notes", href: update.notesUrl, target: "_blank", rel: "noopener noreferrer" }, t("What's new")) : null,
-          phase === "installed" ? null : (0, import_react10.createElement)("button", {
-            type: "button",
-            className: "bt-update-go",
-            disabled: phase === "installing",
-            onClick: start
-          }, phase === "installing" ? t("Updating…") : phase === "failed" ? t("Try again") : t("Update"))
-        )
-      ) : null,
-      dshRow ? (0, import_react10.createElement)(
-        "div",
-        { className: "bt-update-dsh" },
-        (0, import_react10.createElement)("div", { className: "bt-update-title" }, t("DSH {version}", { version: dsh.verified })),
-        (0, import_react10.createElement)("div", { className: "bt-update-text" }, dshText),
-        dshMessage ? (0, import_react10.createElement)("div", { className: "bt-update-error", role: "alert" }, t("The update did not finish: {reason}", { reason: dshMessage })) : null,
-        (0, import_react10.createElement)(
-          "div",
-          { className: "bt-update-actions" },
-          dsh.kind === "app" ? dsh.available ? (0, import_react10.createElement)("button", { type: "button", className: "bt-update-go", onClick: () => void actions.openAppUpdates(dsh.verified).catch(() => {
-          }) }, t("Open updates")) : null : !dsh.available && dshPhase === "idle" ? null : dshPhase === "installed" ? null : (0, import_react10.createElement)("button", {
-            type: "button",
-            className: "bt-update-go",
-            disabled: dshPhase === "installing",
-            onClick: startDsh
-          }, dshPhase === "installing" ? t("Updating…") : dshPhase === "failed" ? t("Try again") : t("Update"))
-        )
-      ) : null
-    ), document.body) : null
-  );
-}
-function ConnectPlugins({ wide, actions }) {
-  const tipId = (0, import_react10.useId)();
-  const [tip, setTip] = (0, import_react10.useState)(false);
-  const timer = (0, import_react10.useRef)(0);
-  const button = (0, import_react10.useRef)(null);
-  const [box, setBox] = (0, import_react10.useState)(null);
-  (0, import_react10.useEffect)(() => () => clearTimeout(timer.current), []);
-  if (!wide) return null;
-  const show = () => {
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      const rect = button.current?.getBoundingClientRect();
-      if (!rect) return;
-      const left = Math.max(8, Math.min(rect.left, window.innerWidth - 268));
-      setBox({ left, bottom: window.innerHeight - rect.top + 10 });
-      setTip(true);
-    }, 250);
-  };
-  const hide = () => {
-    clearTimeout(timer.current);
-    setTip(false);
-  };
-  return (0, import_react10.createElement)(
-    "span",
-    { className: "bt-connect-wrap" },
-    (0, import_react10.createElement)(
-      "button",
-      {
-        ref: button,
-        type: "button",
-        className: "bt-connect bt-connect-foot",
-        "aria-describedby": tip ? tipId : void 0,
-        onMouseEnter: show,
-        onMouseLeave: hide,
-        onFocus: show,
-        onBlur: hide,
-        onClick: () => actions.selectPanel("plugins")
-      },
-      (0, import_react10.createElement)(PlugIcon),
-      t("Connect plugins"),
-      (0, import_react10.createElement)("span", { className: "bt-connect-warn", "aria-hidden": true }, "!")
-    ),
-    tip && box ? (0, import_react_dom3.createPortal)((0, import_react10.createElement)(
-      "span",
-      { role: "tooltip", id: tipId, className: "bt-connect-tip", style: box },
-      t("Plugin compatibility is not fully verified.")
-    ), document.body) : null
-  );
-}
-function YouAvatar() {
-  return (0, import_react10.createElement)(
-    "span",
-    { className: "bt-you-wrap" },
-    (0, import_react10.createElement)("span", { className: "bt-you", "aria-hidden": true }, (0, import_react10.createElement)(BotMark, { look: MAIN_LOOK, size: 24 })),
-    (0, import_react10.createElement)("span", { style: { position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" } }, t("Settings"))
-  );
-}
-var openShellSettings = null;
-var openShellOnboarding = null;
-var shellShortcuts = null;
-function holdShellShortcuts(shortcuts) {
-  shellShortcuts = shortcuts;
-  return () => {
-    if (shellShortcuts === shortcuts) shellShortcuts = null;
-  };
-}
-function openHarnessSettings() {
-  requestAnimationFrame(() => {
-    if (openShellSettings) {
-      openShellSettings();
-      return;
-    }
-    const desktop = document.querySelector('button[aria-haspopup="menu"][data-signed-out]');
-    if (desktop) openThroughMenu(desktop);
-    else pressSettingsShortcut();
-  });
-}
-function openHarnessOnboarding(id) {
-  requestAnimationFrame(() => {
-    if (openShellOnboarding) openShellOnboarding(id);
-    else openHarnessSettings();
-  });
-}
-function openThroughMenu(trigger) {
-  const before = new Set(document.querySelectorAll('[role="menu"]'));
-  trigger.click();
-  let frames = 0;
-  const look = () => {
-    const menu = [...document.querySelectorAll('[role="menu"]')].find((node) => !before.has(node));
-    const item = menu?.querySelector('button[role="menuitem"]');
-    if (item) item.click();
-    else if (++frames < 30) requestAnimationFrame(look);
-    else pressSettingsShortcut();
-  };
-  requestAnimationFrame(look);
-}
-function pressSettingsShortcut() {
-  const binding = shellShortcuts?.catalog.getSnapshot().find((row) => row.id === "settings.open")?.binding;
-  if (!binding) return;
-  const held = new Set(binding.modifiers);
-  window.dispatchEvent(new KeyboardEvent("keydown", {
-    code: binding.code,
-    key: binding.code === "Comma" ? "," : "",
-    bubbles: true,
-    cancelable: true,
-    ctrlKey: held.has("control"),
-    altKey: held.has("alt"),
-    shiftKey: held.has("shift"),
-    metaKey: held.has("meta")
-  }));
-}
-function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions }) {
-  const [open, setOpen] = (0, import_react10.useState)(false);
-  (0, import_react10.useLayoutEffect)(() => {
-    if (!seat) return void 0;
-    actions.seatAccount(true);
-    return () => actions.seatAccount(false);
-  }, [seat]);
-  const [box, setBox] = (0, import_react10.useState)(null);
-  const button = (0, import_react10.useRef)(null);
-  (0, import_react10.useEffect)(() => {
-    if (settingsOpen) setOpen(false);
-  }, [settingsOpen]);
-  (0, import_react10.useEffect)(() => {
-    if (!openSettings) return void 0;
-    openShellSettings = openSettings;
-    return () => {
-      if (openShellSettings === openSettings) openShellSettings = null;
-    };
-  }, [openSettings]);
-  (0, import_react10.useEffect)(() => {
-    if (!openOnboarding) return void 0;
-    openShellOnboarding = openOnboarding;
-    return () => {
-      if (openShellOnboarding === openOnboarding) openShellOnboarding = null;
-    };
-  }, [openOnboarding]);
-  (0, import_react10.useEffect)(() => {
-    if (!open) return void 0;
-    const onDown = (event) => {
-      if (event.target instanceof Element && (event.target.closest(".bt-account-menu") || button.current?.contains(event.target))) return;
-      setOpen(false);
-    };
-    const onKey = (event) => {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        setOpen(false);
-        button.current?.focus();
-      }
-    };
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey, true);
-    return () => {
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey, true);
-    };
-  }, [open]);
-  const toggle = () => {
-    const rect = button.current?.getBoundingClientRect();
-    if (rect) setBox({ left: rect.left, bottom: window.innerHeight - rect.top + 5 });
-    setOpen((value) => !value);
-  };
-  const groups = [
-    [
-      [t("Usage"), GaugeIcon, () => actions.openSettings("usage")],
-      [t("Connectors"), ConnectorIcon, () => actions.openConnectors()],
-      [t("Automation tasks"), ClockIcon, () => actions.selectPanel("schedules")],
-      [t("Bot settings"), GearIcon, () => actions.openSettings("general")],
-      // Panels other plugins registered: one row each above the separator, the same
-      // action the native icon column runs. Nothing here while none are registered.
-      ...(actions.panelEntries?.() ?? []).map((entry) => [entry.label, PlugIcon, () => actions.selectPanel(entry.id)])
-    ],
-    [
-      [t("Switch to classic Agent mode"), SwitchIcon, () => actions.setSurface("agent")]
-    ]
-  ];
-  return (0, import_react10.createElement)(
-    import_react10.Fragment,
-    null,
-    (0, import_react10.createElement)(
-      "button",
-      { ref: button, type: "button", className: "bt-account", "aria-label": t("Account"), "aria-haspopup": "menu", "aria-expanded": open, onClick: toggle },
-      (0, import_react10.createElement)("span", { className: "bt-you", "aria-hidden": true }, (0, import_react10.createElement)(BotMark, { look: MAIN_LOOK, size: 24 }))
-    ),
-    open && box ? (0, import_react_dom3.createPortal)((0, import_react10.createElement)(
-      "div",
-      { className: "bt-menu bt-menu-up bt-account-menu", role: "menu", "aria-label": t("Account"), style: box },
-      groups.map((group, index) => (0, import_react10.createElement)(
-        import_react10.Fragment,
-        { key: index },
-        index > 0 ? (0, import_react10.createElement)("div", { className: "bt-menu-sep", role: "separator" }) : null,
-        group.map(([label, Icon, run, hint]) => (0, import_react10.createElement)("button", {
-          key: label,
-          type: "button",
-          role: "menuitem",
-          onClick: () => {
-            setOpen(false);
-            void Promise.resolve(run()).catch((error) => actions.reportError(error, "menu"));
-          }
-        }, (0, import_react10.createElement)(Icon), (0, import_react10.createElement)("span", { className: "bt-menu-label" }, label), hint ? (0, import_react10.createElement)("span", { className: "bt-menu-hint" }, hint) : null))
-      ))
-    ), document.body) : null
-  );
-}
-function useLandOnMainBot(roster, useSessions, actions) {
-  const mainView = useSessions((list) => {
-    const row = Object.values(list.byId).find((session) => (session?.retainedBy?.mainView ?? 0) > 0);
-    return row ? `${row.id}|${row.blank ? 1 : 0}` : "";
-  });
-  const lastBot = (0, import_react10.useRef)(null);
-  (0, import_react10.useEffect)(() => {
-    if (!roster.ready || !roster.mainBotId) return void 0;
-    const [id, blank3] = mainView.split("|");
-    const bot = id === "" ? void 0 : roster.byId[id];
-    if (bot !== void 0) {
-      lastBot.current = { botId: bot.id, sessionId: id };
-      if (currentPart(bot) !== id) actions.landOn(bot.id);
-      return void 0;
-    }
-    if (id !== "" && (roster.roomsById[id] || (actions.isAgentSession?.(id) ?? roster.agentOf[id] !== void 0) || blank3 !== "1")) {
-      lastBot.current = null;
-      return void 0;
-    }
-    const last = lastBot.current;
-    const timer = setTimeout(() => actions.landOn(roster.mainBotId, last), last ? 0 : 400);
-    return () => clearTimeout(timer);
-  }, [mainView, roster]);
-}
-function FooterAccount(props) {
-  const seated = props.useUi((value) => value.accountSeated === true);
-  if (seated) return null;
-  return (0, import_react10.createElement)("span", { className: "bt-foot-account" }, (0, import_react10.createElement)(AccountLauncher, { ...props, seat: false }));
-}
-function BotReturn({ wide, useSurface, actions }) {
-  const mode = useSurface((value) => value.mode);
-  if (mode !== "agent") return null;
-  return (0, import_react10.createElement)(
-    "button",
-    { type: "button", className: "bt-return", "aria-label": t("DS Bot"), title: t("DS Bot"), onClick: () => actions.setSurface("bot") },
-    (0, import_react10.createElement)(BotMark, { look: MAIN_LOOK, size: 20 }),
-    wide ? (0, import_react10.createElement)("span", { className: "bt-return-name" }, t("DS Bot")) : null
-  );
-}
-var RETURN_CSS = `
-.bt-return{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:0;border-radius:999px;background:none;color:inherit;font:inherit;font-size:14px;line-height:20px;cursor:pointer;transition:background-color .12s ease}
-.bt-return:hover{background:rgba(127,127,127,.14)}
-.bt-return:active{transform:scale(.96)}
-.bt-return .bt-mark{display:inline-flex;flex:none;line-height:0}
-.bt-return .bt-mark svg{width:100%;height:100%;overflow:visible}
-/* Shell styles carry --bt-ink-deepseek and Agent mode withdraws them; pin it here. */
-.bt-return .bt-mark{--bt-ink-deepseek:#4D6BFE}
-.bt-return-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-`;
-function BrandMark({ size = 24 }) {
-  return (0, import_react10.createElement)("span", { className: "bt-brand-whale" }, (0, import_react10.createElement)(BotMark, { look: MAIN_LOOK, size }));
-}
-function BrandName() {
-  return (0, import_react10.createElement)("span", { style: { fontWeight: 600, fontSize: 14 } }, "DS Bot");
-}
-var SIDEBAR_CSS = `
-.bt-side-top .bt-brand{cursor:default;padding-left:6px}
-.bt-side-top .bt-brand:hover{background:none}
-.bt-brand .bt-mark{flex:none}
-.bt-pin{flex:none;display:inline-flex;color:var(--bt-ink-3)}
-.bt-rail .bt-row{position:relative}
-.bt-rail .bt-pin{position:absolute;top:3px;left:calc(50% + 12px)}
-[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"],[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"]>div{display:contents!important}
-.bt-foot-account{order:-1;flex:none;display:inline-flex}
-[class*="_footArea"]:has(.bt-foot-account) .bt-connect-foot{order:0;flex:1 1 auto;min-width:0;width:auto}
-[class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"]{order:1;flex:none}
-[class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"] button[class*="_trigger"] [class*="_label"]{display:none!important}
-
-/* The update cloud springs in when a newer DS Bot shows up; its arrow drops in a
-   loop while the install runs. */
-.bt-round.bt-update{position:relative;color:var(--bt-accent,#4D6BFE);animation:bt-update-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
-.bt-round.bt-update svg{width:17px;height:17px}
-.bt-round.bt-update[data-phase=installed]{color:var(--bt-ink-2)}
-@keyframes bt-update-in{from{opacity:0;transform:scale(.6);filter:blur(4px)}}
-.bt-update[data-phase=installing] .bt-cloud-arrow{animation:bt-cloud-drop 1.1s cubic-bezier(.45,0,.55,1) infinite}
-@keyframes bt-cloud-drop{0%{transform:translateY(-3px);opacity:0}35%{opacity:1}70%{transform:translateY(1px);opacity:1}100%{transform:translateY(2px);opacity:0}}
-.bt-update-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#E5484D;box-shadow:0 0 0 1.5px var(--bt-sidebar)}
-.bt-update-pop{position:fixed;z-index:60;width:280px;padding:14px 14px 12px;border-radius:14px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 10px 20px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);color:var(--bt-ink);box-sizing:border-box;transform-origin:top left;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;animation:bt-update-pop ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
-@keyframes bt-update-pop{from{opacity:0;transform:scale(.96);filter:blur(4px)}}
-.bt-update-title{font-size:14px;line-height:20px;font-weight:600}
-.bt-update-text{margin-top:2px;font-size:12.5px;line-height:18px;color:var(--bt-ink-2)}
-.bt-update-error{margin-top:8px;font-size:12px;line-height:17px;color:#c21d2e;overflow-wrap:anywhere;max-height:90px;overflow:auto}
-.bt-update-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px}
-.bt-update-notes{margin-right:auto;font-size:12.5px;color:var(--bt-ink-2);text-decoration:none}
-.bt-update-notes:hover{color:var(--bt-ink);text-decoration:underline}
-.bt-update-go{height:30px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-accent,#4D6BFE);color:var(--bt-accent-ink,#fff);font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .12s ease,transform .12s ease}
-.bt-update-go:hover:not(:disabled){opacity:.9}
-.bt-update-go:active:not(:disabled){transform:scale(.96)}
-.bt-update-go:disabled{opacity:.6;cursor:default}
-.bt-update-dsh:not(:first-child){margin-top:12px;padding-top:12px;border-top:.5px solid var(--bt-line-2)}
-@media (prefers-reduced-motion:reduce){.bt-round.bt-update,.bt-update-pop,.bt-update .bt-cloud-arrow{animation:none}}
-
-/* The DSH Agent row and its expanding Session list. The black whale is the
-   harness's own mark, so the row reads as "plain dsh" next to the Bot marks. */
-.bt-agent-ava{flex:none;width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--bt-hover);color:var(--bt-ink)}
-.bt-agent-ava.bt-run{animation:bt-agent-pulse 1.4s ease-in-out infinite}
-@keyframes bt-agent-pulse{0%,100%{opacity:1}50%{opacity:.55}}
-.bt-agent-sub{display:grid;grid-template-rows:0fr;transition:grid-template-rows ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
-.bt-agent-sub[data-open]{grid-template-rows:1fr}
-.bt-agent-sub-in{overflow:hidden;min-height:0;margin-left:44px}
-.bt-agent-sub-row{display:flex;align-items:center;gap:8px;width:100%;padding:5px 10px 5px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:20px;text-align:left;cursor:pointer}
-.bt-agent-sub-row:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-agent-sub-row[aria-current=page]{background:var(--bt-hover);color:var(--bt-ink);font-weight:500}
-.bt-agent-sub-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-agent-sub-time{flex:none;font-size:11px;color:var(--bt-ink-3)}
-.bt-agent-new{color:var(--bt-ink-3)}
-.bt-agent-new svg{width:14px;height:14px;flex:none}
-.bt-agent-edit{padding:3px 10px 3px 4px}
-.bt-agent-edit input{width:100%;border:0;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;line-height:20px;padding:2px 8px;outline:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
-.bt-agent-sub[data-open] .bt-agent-sub-row{animation:bt-agent-row-in .24s ease both;animation-delay:calc(var(--i, 0)*30ms)}
-@keyframes bt-agent-row-in{from{opacity:0;filter:blur(4px)}to{opacity:1;filter:blur(0)}}
-@media (prefers-reduced-motion:reduce){.bt-agent-sub{transition:none}.bt-agent-sub .bt-agent-sub-row{animation:none}}
-`;
-
-// src/client/attention.js
-var import_react11 = require("react");
-var import_react_dom4 = require("react-dom");
-var BellIcon = () => (0, import_react11.createElement)(
+var BellIcon = () => (0, import_react10.createElement)(
   "svg",
   { width: 14, height: 14, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
-  (0, import_react11.createElement)("path", { d: "M15.5 13.5H4.5c.8-.9 1.5-1.6 1.5-4.5a4 4 0 0 1 8 0c0 2.9.7 3.6 1.5 4.5z" }),
-  (0, import_react11.createElement)("path", { d: "M8.3 16a1.8 1.8 0 0 0 3.4 0" })
+  (0, import_react10.createElement)("path", { d: "M15.5 13.5H4.5c.8-.9 1.5-1.6 1.5-4.5a4 4 0 0 1 8 0c0 2.9.7 3.6 1.5 4.5z" }),
+  (0, import_react10.createElement)("path", { d: "M8.3 16a1.8 1.8 0 0 0 3.4 0" })
 );
-var ChevronIcon = () => (0, import_react11.createElement)(
+var ChevronIcon = () => (0, import_react10.createElement)(
   "svg",
   { width: 12, height: 12, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
-  (0, import_react11.createElement)("path", { d: "M7.5 4.5L13 10l-5.5 5.5" })
+  (0, import_react10.createElement)("path", { d: "M7.5 4.5L13 10l-5.5 5.5" })
 );
 function needsYou(roster, work, unread, indexed) {
   const nameOf = (id) => {
@@ -6546,8 +5662,8 @@ function needsYou(roster, work, unread, indexed) {
   return items.sort((one, two) => rank[one.kind] - rank[two.kind] || one.where.localeCompare(two.where));
 }
 function NeedsYouPop({ anchor, items, onClose, onOpen }) {
-  const pop = (0, import_react11.useRef)(null);
-  (0, import_react11.useEffect)(() => {
+  const pop = (0, import_react10.useRef)(null);
+  (0, import_react10.useEffect)(() => {
     const onDown = (event) => {
       if (pop.current?.contains(event.target) || anchor.current?.contains(event.target)) return;
       onClose();
@@ -6569,11 +5685,11 @@ function NeedsYouPop({ anchor, items, onClose, onOpen }) {
   const top = (box?.bottom ?? 0) + 6;
   const right = window.innerWidth - (box?.right ?? 0);
   const label = { question: t("Waiting for your answer"), approval: t("Waiting for your approval"), secret: t("Waiting for a key"), unread: t("Someone replied") };
-  return (0, import_react_dom4.createPortal)(
-    (0, import_react11.createElement)(
+  return (0, import_react_dom3.createPortal)(
+    (0, import_react10.createElement)(
       "div",
       { className: "bt-attention-pop", ref: pop, role: "dialog", "aria-label": t("Needs you"), style: { top: `${top}px`, right: `${right}px` } },
-      items.map((item) => (0, import_react11.createElement)(
+      items.map((item) => (0, import_react10.createElement)(
         "button",
         {
           key: `${item.kind}:${item.open}:${item.title}`,
@@ -6585,12 +5701,12 @@ function NeedsYouPop({ anchor, items, onClose, onOpen }) {
             onOpen(item.open);
           }
         },
-        (0, import_react11.createElement)("span", { className: "bt-attention-kind" }, label[item.kind]),
-        (0, import_react11.createElement)("span", { className: "bt-attention-title" }, item.title),
-        (0, import_react11.createElement)("span", { className: "bt-attention-where" }, item.where),
-        (0, import_react11.createElement)("span", { className: "bt-attention-go", "aria-hidden": true }, (0, import_react11.createElement)(ChevronIcon))
+        (0, import_react10.createElement)("span", { className: "bt-attention-kind" }, label[item.kind]),
+        (0, import_react10.createElement)("span", { className: "bt-attention-title" }, item.title),
+        (0, import_react10.createElement)("span", { className: "bt-attention-where" }, item.where),
+        (0, import_react10.createElement)("span", { className: "bt-attention-go", "aria-hidden": true }, (0, import_react10.createElement)(ChevronIcon))
       )),
-      items.length === 0 ? (0, import_react11.createElement)("div", { className: "bt-attention-empty" }, t("Nothing needs your attention")) : null
+      items.length === 0 ? (0, import_react10.createElement)("div", { className: "bt-attention-empty" }, t("Nothing needs your attention")) : null
     ),
     document.body
   );
@@ -6599,16 +5715,16 @@ function NeedsYou({ useRoster, useWork, useUi, actions }) {
   const roster = useRoster((value) => value);
   const approvals = useWork((work) => work.approvals ?? []);
   const unread = useUi((state) => state.unread ?? {});
-  const [open, setOpen] = (0, import_react11.useState)(false);
-  const anchor = (0, import_react11.useRef)(null);
+  const [open, setOpen] = (0, import_react10.useState)(false);
+  const anchor = (0, import_react10.useRef)(null);
   const rosterView = useRoster((value) => value);
-  const indexed = (0, import_react11.useMemo)(() => ({ byId: rosterView.byId, roomsById: rosterView.roomsById }), [rosterView.byId, rosterView.roomsById]);
+  const indexed = (0, import_react10.useMemo)(() => ({ byId: rosterView.byId, roomsById: rosterView.roomsById }), [rosterView.byId, rosterView.roomsById]);
   const items = needsYou(roster, { approvals }, unread, indexed);
   if (items.length === 0) return null;
-  return (0, import_react11.createElement)(
-    import_react11.Fragment,
+  return (0, import_react10.createElement)(
+    import_react10.Fragment,
     null,
-    (0, import_react11.createElement)(
+    (0, import_react10.createElement)(
       "button",
       {
         ref: anchor,
@@ -6620,10 +5736,10 @@ function NeedsYou({ useRoster, useWork, useUi, actions }) {
         title: t("Needs you"),
         onClick: () => setOpen((value) => !value)
       },
-      (0, import_react11.createElement)(BellIcon),
-      (0, import_react11.createElement)("span", { className: "bt-attention-count" }, items.length > 9 ? "9+" : String(items.length))
+      (0, import_react10.createElement)(BellIcon),
+      (0, import_react10.createElement)("span", { className: "bt-attention-count" }, items.length > 9 ? "9+" : String(items.length))
     ),
-    open ? (0, import_react11.createElement)(NeedsYouPop, { anchor, items, onClose: () => setOpen(false), onOpen: (id) => actions.openSession(id) }) : null
+    open ? (0, import_react10.createElement)(NeedsYouPop, { anchor, items, onClose: () => setOpen(false), onOpen: (id) => actions.openSession(id) }) : null
   );
 }
 var ATTENTION_CSS = `
@@ -6648,15 +5764,15 @@ var ATTENTION_CSS = `
 `;
 
 // src/client/header.js
-var import_react12 = require("react");
-var import_react_dom5 = require("react-dom");
-var GoArrow = () => (0, import_react12.createElement)("svg", { width: 14, height: 14, viewBox: "-12 -12 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true }, (0, import_react12.createElement)("path", { d: "M-7 0H7M2 -5L7 0L2 5" }));
+var import_react11 = require("react");
+var import_react_dom4 = require("react-dom");
+var GoArrow = () => (0, import_react11.createElement)("svg", { width: 14, height: 14, viewBox: "-12 -12 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true }, (0, import_react11.createElement)("path", { d: "M-7 0H7M2 -5L7 0L2 5" }));
 var MEMORY_NOTICE_MS = 3200;
 var noNews = (select) => select({});
 function useMemoryNotice(ids, useMemoryNews) {
   const seen = useMemoryNews((map) => Math.max(0, ...ids.map((id) => map?.[id]?.seen ?? 0)));
-  const [shown, setShown] = (0, import_react12.useState)(false);
-  (0, import_react12.useEffect)(() => {
+  const [shown, setShown] = (0, import_react11.useState)(false);
+  (0, import_react11.useEffect)(() => {
     const left = seen + MEMORY_NOTICE_MS - Date.now();
     setShown(seen > 0 && left > 0);
     if (seen === 0 || left <= 0) return void 0;
@@ -6666,17 +5782,29 @@ function useMemoryNotice(ids, useMemoryNews) {
   return shown;
 }
 function MemoryNotice({ shown }) {
-  const inner = (0, import_react12.useRef)(null);
-  const [width, setWidth] = (0, import_react12.useState)(0);
+  const inner = (0, import_react11.useRef)(null);
+  const [width, setWidth] = (0, import_react11.useState)(0);
   const label = t("Memory updated");
-  (0, import_react12.useLayoutEffect)(() => {
+  (0, import_react11.useLayoutEffect)(() => {
     if (shown) setWidth(inner.current?.scrollWidth ?? 0);
   }, [label, shown]);
-  return (0, import_react12.createElement)(
+  return (0, import_react11.createElement)(
     "span",
     { className: "bt-pill-mem", "aria-hidden": true, style: { "--bt-mem-w": `${width}px` } },
-    (0, import_react12.createElement)("span", { className: "bt-pill-mem-in", ref: inner }, (0, import_react12.createElement)("span", { className: "bt-pill-mem-ico" }, (0, import_react12.createElement)(MemoryIcon)), label)
+    (0, import_react11.createElement)("span", { className: "bt-pill-mem-in", ref: inner }, (0, import_react11.createElement)("span", { className: "bt-pill-mem-ico" }, (0, import_react11.createElement)(MemoryIcon)), label)
   );
+}
+function NavToggle({ open, onToggle }) {
+  return (0, import_react11.createElement)("button", {
+    type: "button",
+    className: "bt-mobile-nav",
+    "aria-expanded": open,
+    // The label follows the state, like the scrim's: an unchanged "Open navigation"
+    // while the drawer is up tells a screen reader the wrong thing, and made the
+    // device crew's own verification ambiguous.
+    "aria-label": open ? t("Close navigation") : t("Open navigation"),
+    onClick: onToggle
+  }, open ? (0, import_react11.createElement)(ChevronLeftIcon) : (0, import_react11.createElement)(MenuIcon));
 }
 function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, useSessionStatus, useSession, useActivity, useMemoryNews, useTurnClock, useUi, useLive, useWork, actions }) {
   const roster = useRoster((value) => value);
@@ -6691,7 +5819,7 @@ function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, useSessi
     const first = openingTurn(state[sessionId], firstTurns, hiddenTurns);
     return first && !unseenSince(visit, first.start) ? clockLabel(first.start) : "";
   });
-  (0, import_react12.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     if (opening) document.body.style.setProperty("--bt-first-sep", JSON.stringify(opening));
     else document.body.style.removeProperty("--bt-first-sep");
     return () => document.body.style.removeProperty("--bt-first-sep");
@@ -6707,14 +5835,14 @@ function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, useSessi
   const memoryIds = bot ? [bot.id] : room2?.members ?? [];
   const notice = useMemoryNotice(memoryIds, useNews);
   const changed = useNews((map) => latestMemoryChange(map, memoryIds));
-  (0, import_react12.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     document.body.style.setProperty("--bt-placeholder", JSON.stringify(name ? t("Message {name}", { name }) : t("Message")));
   }, [name, t("Message")]);
-  (0, import_react12.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     actions.beginVisit(sessionId);
     return () => actions.endVisit(sessionId);
   }, [sessionId]);
-  (0, import_react12.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     if (room2) document.body.dataset.btRoom = "";
     else delete document.body.dataset.btRoom;
     return () => {
@@ -6725,10 +5853,10 @@ function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, useSessi
   const mobile = useMobile();
   const mobileNavOpen = useUi((value) => value.mobileNav === true);
   const moreOpen = useUi((value) => value.menu !== null);
-  const head = (0, import_react12.createElement)(
+  const head = (0, import_react11.createElement)(
     "div",
     { className: "bt-head" },
-    (0, import_react12.createElement)(
+    (0, import_react11.createElement)(
       "button",
       {
         type: "button",
@@ -6742,15 +5870,15 @@ function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, useSessi
         "aria-label": memoryNotice ? t("Memory updated. Open {name}'s memory", { name: roster.byId[changed]?.name ?? name }) : t("View conversation details"),
         onClick: () => memoryNotice ? actions.openMemory(changed) : actions.toggleDetails(sessionId)
       },
-      bot ? (0, import_react12.createElement)(BotAvatar, { bot, size: 24, state: botState(running, doing, roster.questions?.[currentPart(bot)] !== void 0), badge: false }) : room2 ? (0, import_react12.createElement)(RoomAvatar, { room: room2, roster, size: 24 }) : null,
-      (0, import_react12.createElement)("span", { className: "bt-pill-name" }, bot?.name ?? room2?.name ?? (title || t("New chat"))),
-      (0, import_react12.createElement)(MemoryNotice, { shown: memoryNotice }),
-      (0, import_react12.createElement)("span", { className: "bt-pill-go", "aria-hidden": true }, (0, import_react12.createElement)(GoArrow))
+      bot ? (0, import_react11.createElement)(BotAvatar, { bot, size: 24, state: botState(running, doing, roster.questions?.[currentPart(bot)] !== void 0), badge: false }) : room2 ? (0, import_react11.createElement)(RoomAvatar, { room: room2, roster, size: 24 }) : null,
+      (0, import_react11.createElement)("span", { className: "bt-pill-name" }, bot?.name ?? room2?.name ?? (title || t("New chat"))),
+      (0, import_react11.createElement)(MemoryNotice, { shown: memoryNotice }),
+      (0, import_react11.createElement)("span", { className: "bt-pill-go", "aria-hidden": true }, (0, import_react11.createElement)(GoArrow))
     ),
-    (0, import_react12.createElement)("span", { className: "bt-sr", role: "status" }, memoryNotice ? t("Memory updated") : ""),
-    useWork && useUi ? (0, import_react12.createElement)(NeedsYou, { useRoster, useWork, useUi, actions }) : null,
-    (0, import_react12.createElement)(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
-    (0, import_react12.createElement)(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, actions })
+    (0, import_react11.createElement)("span", { className: "bt-sr", role: "status" }, memoryNotice ? t("Memory updated") : ""),
+    useWork && useUi ? (0, import_react11.createElement)(NeedsYou, { useRoster, useWork, useUi, actions }) : null,
+    (0, import_react11.createElement)(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
+    (0, import_react11.createElement)(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, actions })
   );
   if (!mobile) return head;
   const agent = (roster.agents ?? []).find((entry) => entry.sessions?.includes(sessionId));
@@ -6761,38 +5889,29 @@ function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, useSessi
     const box = event.currentTarget.getBoundingClientRect();
     actions.openMenu({ ...menuTarget, x: Math.round(box.right - 8), y: Math.round(box.bottom + 6) });
   };
-  return (0, import_react12.createElement)(
-    import_react12.Fragment,
+  return (0, import_react11.createElement)(
+    import_react11.Fragment,
     null,
-    (0, import_react12.createElement)("span", { className: "bt-head-mark", "aria-hidden": true }),
+    (0, import_react11.createElement)("span", { className: "bt-head-mark", "aria-hidden": true }),
     // While the drawer is up the bar is the one control left on top of it, so it reports
     // that state to the stylesheet (the pill steps aside there) and the button draws the
     // collapse affordance instead of the hamburger.
-    (0, import_react_dom5.createPortal)((0, import_react12.createElement)(
+    (0, import_react_dom4.createPortal)((0, import_react11.createElement)(
       "div",
       { className: "bt-mobile-bar", "data-nav-open": mobileNavOpen || void 0 },
-      (0, import_react12.createElement)("button", {
-        type: "button",
-        className: "bt-mobile-nav",
-        "aria-expanded": mobileNavOpen,
-        // The label follows the state, like the scrim's: an unchanged "Open navigation"
-        // while the drawer is up tells a screen reader the wrong thing, and made the
-        // device crew's own verification ambiguous.
-        "aria-label": mobileNavOpen ? t("Close navigation") : t("Open navigation"),
-        onClick: () => actions.toggleMobileNav()
-      }, mobileNavOpen ? (0, import_react12.createElement)(ChevronLeftIcon) : (0, import_react12.createElement)(MenuIcon)),
+      (0, import_react11.createElement)(NavToggle, { open: mobileNavOpen, onToggle: () => actions.toggleMobileNav() }),
       head,
-      (0, import_react12.createElement)(
+      (0, import_react11.createElement)(
         "div",
         { className: "bt-mobile-acts" },
-        (0, import_react12.createElement)("button", {
+        (0, import_react11.createElement)("button", {
           type: "button",
           className: "bt-mobile-act",
           "aria-label": t("New…"),
           title: t("New…"),
           onClick: () => actions.openNewChat("new")
-        }, (0, import_react12.createElement)(PlusIcon)),
-        menuTarget === null ? null : (0, import_react12.createElement)("button", {
+        }, (0, import_react11.createElement)(PlusIcon)),
+        menuTarget === null ? null : (0, import_react11.createElement)("button", {
           type: "button",
           className: "bt-mobile-act",
           "aria-haspopup": "menu",
@@ -6800,14 +5919,14 @@ function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, useSessi
           "aria-label": t("More"),
           title: t("More"),
           onClick: openMore
-        }, (0, import_react12.createElement)(DotsBoldIcon, { size: 18 }))
+        }, (0, import_react11.createElement)(DotsBoldIcon, { size: 18 }))
       )
     ), document.body)
   );
 }
 function useTranscriptView() {
-  const [view, setView] = (0, import_react12.useState)(null);
-  (0, import_react12.useEffect)(() => {
+  const [view, setView] = (0, import_react11.useState)(null);
+  (0, import_react11.useEffect)(() => {
     let frame = 0;
     let watched = null;
     const observer = new MutationObserver(() => schedule());
@@ -6873,18 +5992,18 @@ function NewMessagePills({ sessionId, useSessions, useUi, useTurnClock }) {
   });
   const view = useTranscriptView();
   const unpinned = view?.unpinned === true;
-  const [release, setRelease] = (0, import_react12.useState)({ base: null, dismissed: false });
-  const [above, setAbove] = (0, import_react12.useState)({ seen: false, dismissed: false });
-  (0, import_react12.useEffect)(() => {
+  const [release, setRelease] = (0, import_react11.useState)({ base: null, dismissed: false });
+  const [above, setAbove] = (0, import_react11.useState)({ seen: false, dismissed: false });
+  (0, import_react11.useEffect)(() => {
     setRelease({ base: unpinned ? replies : null, dismissed: false });
   }, [unpinned]);
-  (0, import_react12.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     if (view?.divider === "in-view") setAbove((state) => state.seen ? state : { ...state, seen: true });
   }, [view?.divider]);
   const fresh = release.base === null ? 0 : replies - release.base;
   const showDown = unpinned && fresh > 0 && !release.dismissed;
   const showUp = view?.divider === "above" && !above.seen && !above.dismissed;
-  (0, import_react12.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     const scroller = document.querySelector("[data-conversation-scroll]");
     if (!scroller) return void 0;
     scroller.toggleAttribute("data-bt-news", showDown);
@@ -6892,16 +6011,16 @@ function NewMessagePills({ sessionId, useSessions, useUi, useTurnClock }) {
   }, [showDown]);
   if (!view || !showDown && !showUp) return null;
   const label = (count) => count === 1 ? t("1 new message") : count > 0 ? t("{count} new messages", { count }) : t("New messages");
-  const pill = (direction, count, style, onJump, onDismiss) => (0, import_react12.createElement)(
+  const pill = (direction, count, style, onJump, onDismiss) => (0, import_react11.createElement)(
     "div",
     { className: "bt-news", "data-direction": direction, style },
-    (0, import_react12.createElement)(
+    (0, import_react11.createElement)(
       "button",
       { type: "button", className: "bt-news-jump", onClick: onJump },
-      (0, import_react12.createElement)("span", { className: "bt-news-ico" }, (0, import_react12.createElement)(direction === "up" ? ArrowUpIcon : ArrowDownIcon)),
+      (0, import_react11.createElement)("span", { className: "bt-news-ico" }, (0, import_react11.createElement)(direction === "up" ? ArrowUpIcon : ArrowDownIcon)),
       label(count)
     ),
-    (0, import_react12.createElement)("button", {
+    (0, import_react11.createElement)("button", {
       type: "button",
       className: "bt-news-x",
       "aria-label": t("Dismiss new messages"),
@@ -6909,7 +6028,7 @@ function NewMessagePills({ sessionId, useSessions, useUi, useTurnClock }) {
         event.stopPropagation();
         onDismiss();
       }
-    }, (0, import_react12.createElement)(CloseIcon))
+    }, (0, import_react11.createElement)(CloseIcon))
   );
   const toLatest = () => {
     const scroller = document.querySelector("[data-conversation-scroll]");
@@ -6918,9 +6037,9 @@ function NewMessagePills({ sessionId, useSessions, useUi, useTurnClock }) {
     else scroller?.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
   };
   const toDivider = () => document.querySelector("[data-conversation-scroll] .bt-new-sep")?.scrollIntoView({ block: "center", behavior: "smooth" });
-  return (0, import_react_dom5.createPortal)(
-    (0, import_react12.createElement)(
-      import_react12.Fragment,
+  return (0, import_react_dom4.createPortal)(
+    (0, import_react11.createElement)(
+      import_react11.Fragment,
       null,
       showUp ? pill("up", unread, { left: view.center, top: view.top }, toDivider, () => setAbove((state) => ({ ...state, dismissed: true }))) : null,
       showDown ? pill("down", fresh, { left: view.center, bottom: view.bottom }, toLatest, () => setRelease((state) => ({ ...state, dismissed: true }))) : null
@@ -6928,6 +6047,915 @@ function NewMessagePills({ sessionId, useSessions, useUi, useTurnClock }) {
     document.body
   );
 }
+
+// src/client/sidebar.js
+var import_react12 = require("react");
+var import_react_dom5 = require("react-dom");
+var import_dsh_client_ui_primitives2 = require("@deepseek-ai/dsh-client-ui-primitives");
+function useMarkedUnread(id, active, marked, actions) {
+  (0, import_react12.useEffect)(() => {
+    if (active && marked) actions.clearUnread(id);
+  }, [active, marked]);
+}
+var PinMark = () => (0, import_react12.createElement)("span", { className: "bt-pin", "aria-hidden": true }, (0, import_react12.createElement)(PinMarkIcon));
+function countOf(roster, sessionIds) {
+  const counts2 = roster.counts;
+  if (counts2 === void 0) return void 0;
+  let total = 0;
+  let indexed = false;
+  for (const id of sessionIds) {
+    const value = counts2[id];
+    if (typeof value === "number") {
+      total += value;
+      indexed = true;
+    }
+  }
+  return indexed ? total : void 0;
+}
+function RowMeta({ at }) {
+  const time = at > 0 ? relativeShort(at) : "";
+  if (time === "") return null;
+  return (0, import_react12.createElement)("span", { className: "bt-row-meta" }, (0, import_react12.createElement)("span", { className: "bt-row-time" }, time));
+}
+function RowSub({ preview, count }) {
+  if (!preview && count === void 0) return null;
+  return (0, import_react12.createElement)(
+    "span",
+    { className: "bt-row-sub" },
+    preview ? (0, import_react12.createElement)("span", { className: "bt-row-preview" }, preview) : null,
+    count === void 0 ? null : (0, import_react12.createElement)("span", { className: "bt-row-count", title: t("{count} messages", { count }) }, String(count))
+  );
+}
+var useApproval = (useWork, match) => useWork ? useWork((work) => (work.approvals ?? []).some(match)) : false;
+var useGroupWork = (useWork, pick2) => useWork ? useWork((work) => pick2(work.rooms ?? {}).join(",")) : "";
+var workKeys = (text) => text === "" ? [] : text.split(",").map((key) => {
+  const [id, tool] = key.split("|");
+  return { id, tool: tool || void 0 };
+});
+var workLine = (lead, tool, more) => (0, import_react12.createElement)(Shimmer, null, `${lead} · ${workPhrase(tool)}…${more > 0 ? ` +${more}` : ""}`);
+function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, drawer, marked }) {
+  const id = bot.id;
+  const part = currentPart(bot);
+  const preview = useSessions((list) => previewOf(list, part, roster.exchangeTurns[part]));
+  const at = useSessions((list) => list.byId[part]?.updatedAt ?? 0);
+  const running = useSessionStatus((map) => map.get(part)?.running === true);
+  const active = useSessionRetainInfo(part, (info) => (info?.retainedBy?.mainView ?? 0) > 0);
+  const unread = useSessionStatus((map) => map.get(part)?.completionUnread === true || map.get(part)?.pendingInteraction !== void 0) || marked && !active;
+  useMarkedUnread(id, active, marked, actions);
+  const main = isMainOf(roster, id);
+  const tile = roster.mainBotId === id;
+  const approval = useApproval(useWork, (entry) => entry.botId === id);
+  const alert = roster.questions?.[part] !== void 0 || approval;
+  const doing = useActivity((map) => map[id]);
+  const groups = workKeys(useGroupWork(useWork, (rooms) => Object.entries(rooms).flatMap(([roomId, entries2]) => entries2.filter((entry) => entry.botId === id).map((entry) => `${roomId}|${entry.tool ?? ""}`))));
+  const away = !running && groups.length > 0;
+  const state = botState(running || away, doing, alert);
+  const awayLine = away ? workLine(roster.roomsById[groups[0].id]?.name ?? t("a group chat"), groups[0].tool, groups.length - 1) : null;
+  if (bot.hidden && !active && !main) return null;
+  const onContextMenu = (event) => {
+    event.preventDefault();
+    actions.openMenu({ kind: "bot", id, x: event.clientX, y: event.clientY });
+  };
+  const pinned = bot.pinned === true && !tile;
+  const label = [bot.name, main ? t("Main Bot") : "", pinned ? t("Pinned") : "", running || away ? t("Working") : "", approval ? t("Waiting for your approval") : alert ? t("Waiting for your answer") : "", unread ? t("Unread activity") : ""].filter(Boolean).join(", ");
+  if (tile && wide && !drawer) {
+    return (0, import_react12.createElement)(
+      "div",
+      { className: "bt-tile-wrap" },
+      (0, import_react12.createElement)(
+        "button",
+        {
+          type: "button",
+          className: "bt-tile",
+          "aria-label": label,
+          "aria-current": active ? "page" : void 0,
+          "data-bot-id": id,
+          title: preview || bot.name,
+          onClick: () => actions.openSession(id),
+          onContextMenu
+        },
+        (0, import_react12.createElement)(BotAvatar, { bot, size: 60, state, main: true }),
+        (0, import_react12.createElement)("span", { className: "bt-tile-name" }, bot.name)
+      )
+    );
+  }
+  return (0, import_react12.createElement)(
+    "button",
+    {
+      type: "button",
+      className: "bt-row",
+      "aria-label": label,
+      "aria-current": active ? "page" : void 0,
+      "data-bot-id": id,
+      title: wide ? void 0 : bot.name,
+      onClick: () => actions.openSession(id),
+      onContextMenu
+    },
+    (0, import_react12.createElement)(BotAvatar, { bot, size: 36, state, main }),
+    pinned && !wide ? (0, import_react12.createElement)(PinMark) : null,
+    wide ? (0, import_react12.createElement)(
+      "span",
+      { className: "bt-row-body" },
+      (0, import_react12.createElement)(
+        "span",
+        { className: "bt-row-name" },
+        (0, import_react12.createElement)("span", { className: "bt-row-title" }, bot.name),
+        pinned ? (0, import_react12.createElement)(PinMark) : null,
+        (0, import_react12.createElement)(RowMeta, { at })
+      ),
+      (0, import_react12.createElement)(RowSub, { preview: awayLine ?? preview, count: countOf(roster, [part, ...bot.parts ?? []]) })
+    ) : null,
+    wide && unread && !active ? (0, import_react12.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
+  );
+}
+function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked }) {
+  const id = room2.id;
+  const fallback = useSessions((list) => previewOf(list, id));
+  const preview = room2.preview?.replace(/\s+/g, " ").trim() || fallback;
+  const at = useSessions((list) => list.byId[id]?.updatedAt ?? 0);
+  const active = useSessionRetainInfo(id, (info) => (info?.retainedBy?.mainView ?? 0) > 0);
+  const unread = useSessionStatus((map) => map.get(id)?.completionUnread === true) || marked && !active;
+  useMarkedUnread(id, active, marked, actions);
+  const approval = useApproval(useWork, (entry) => entry.roomId === id);
+  const members = workKeys(useGroupWork(useWork, (rooms) => (rooms[id] ?? []).map((entry) => `${entry.botId}|${entry.tool ?? ""}`)));
+  const first = roster.byId[members[0]?.id];
+  const workingLine = first ? workLine(first.name, members[0].tool, members.length - 1) : null;
+  if (room2.hidden && !active) return null;
+  const pinned = room2.pinned === true;
+  const label = [room2.name, pinned ? t("Pinned") : "", members.length > 0 ? t("Working") : "", approval ? t("Waiting for your approval") : ""].filter(Boolean).join(", ");
+  return (0, import_react12.createElement)(
+    "button",
+    {
+      type: "button",
+      className: "bt-row",
+      "aria-label": label,
+      "aria-current": active ? "page" : void 0,
+      "data-room-id": id,
+      onClick: () => actions.openSession(id),
+      onContextMenu: (event) => {
+        event.preventDefault();
+        actions.openMenu({ kind: "room", id, x: event.clientX, y: event.clientY });
+      }
+    },
+    (0, import_react12.createElement)(RoomAvatar, { room: room2, roster, size: 36 }),
+    pinned && !wide ? (0, import_react12.createElement)(PinMark) : null,
+    wide ? (0, import_react12.createElement)(
+      "span",
+      { className: "bt-row-body" },
+      (0, import_react12.createElement)(
+        "span",
+        { className: "bt-row-name" },
+        (0, import_react12.createElement)("span", { className: "bt-row-title" }, room2.name),
+        pinned ? (0, import_react12.createElement)(PinMark) : null,
+        (0, import_react12.createElement)(RowMeta, { at })
+      ),
+      // A group's messages live in each member's own hidden Session, so the indexed
+      // lines would count the same conversation once per member. No number, then.
+      (0, import_react12.createElement)(RowSub, { preview: workingLine ?? preview })
+    ) : null,
+    wide && approval && !active ? (0, import_react12.createElement)("span", { className: "bt-unread bt-unread-wait", "aria-hidden": true }) : wide && unread && !active ? (0, import_react12.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
+  );
+}
+function AgentSessionRow({ session, agent, actions, renaming, index }) {
+  const input = (0, import_react12.useRef)(null);
+  (0, import_react12.useLayoutEffect)(() => {
+    if (!renaming) return;
+    input.current?.focus();
+    input.current?.select();
+  }, [renaming]);
+  if (renaming) {
+    const commit = (keep) => {
+      const value = input.current?.value ?? "";
+      if (!keep || value.trim() === "" || value.trim() === session.title) {
+        actions.endAgentRename();
+        return;
+      }
+      void (async () => {
+        try {
+          await actions.renameAgentSession(agent.id, session.id, value);
+          actions.endAgentRename();
+        } catch (error) {
+          actions.reportError(error, "agent-rename");
+        }
+      })();
+    };
+    return (0, import_react12.createElement)(
+      "div",
+      { className: "bt-agent-sub-row bt-agent-edit", style: { "--i": index } },
+      (0, import_react12.createElement)("input", {
+        ref: input,
+        defaultValue: session.title,
+        "aria-label": t("Rename"),
+        onKeyDown: (event) => {
+          if (event.nativeEvent.isComposing) return;
+          if (event.key === "Enter") commit(true);
+          else if (event.key === "Escape") commit(false);
+        },
+        onBlur: () => commit(true)
+      })
+    );
+  }
+  return (0, import_react12.createElement)(
+    "button",
+    {
+      type: "button",
+      className: "bt-agent-sub-row",
+      "aria-current": session.active ? "page" : void 0,
+      style: { "--i": index },
+      onClick: () => actions.openAgentSession(session.id),
+      onContextMenu: (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        actions.openMenu({ kind: "agent-session", id: session.id, agentId: agent.id, x: event.clientX, y: event.clientY });
+      }
+    },
+    (0, import_react12.createElement)("span", { className: "bt-agent-sub-title" }, session.title),
+    (0, import_react12.createElement)("span", { className: "bt-agent-sub-time" }, session.at > 0 ? relativeShort(session.at) : "")
+  );
+}
+function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked }) {
+  const info = useSessions((list) => JSON.stringify(agent.sessions.map((id) => {
+    const row = list.byId[id];
+    return {
+      id,
+      // A blank Session's title is the workspace folder name; show the label instead.
+      title: row?.blank === true ? "" : row?.displayTitle ?? row?.title ?? "",
+      at: row?.updatedAt ?? 0,
+      running: row?.running === true,
+      active: (row?.retainedBy?.mainView ?? 0) > 0
+    };
+  }).sort((a, b) => b.at - a.at)));
+  const statusInfo = useSessionStatus((map) => JSON.stringify(agent.sessions.map((id) => ({
+    id,
+    running: map.get(id)?.running === true,
+    unread: map.get(id)?.completionUnread === true
+  }))));
+  const statuses = Object.fromEntries(JSON.parse(statusInfo).map((entry) => [entry.id, entry]));
+  const sessions = JSON.parse(info).map((session) => ({
+    ...session,
+    running: statuses[session.id]?.running ?? session.running,
+    unread: statuses[session.id]?.unread ?? false,
+    title: session.title === "" ? t("New session") : session.title
+  }));
+  const renaming = useUi((value) => value.renameAgent);
+  const active = sessions.some((session) => session.active);
+  const running = sessions.some((session) => session.running);
+  const unread = sessions.some((session) => session.unread) || marked && !active;
+  useMarkedUnread(agent.id, active, marked, actions);
+  const preview = sessions[0]?.title ?? t("New session");
+  const label = ["DSH Agent", running ? t("Working") : "", unread ? t("Unread activity") : ""].filter(Boolean).join(", ");
+  const open = active && wide;
+  return (0, import_react12.createElement)(
+    "div",
+    { className: "bt-agent" },
+    (0, import_react12.createElement)(
+      "button",
+      {
+        type: "button",
+        className: "bt-row",
+        "aria-label": label,
+        "aria-current": active ? "page" : void 0,
+        "data-agent-id": agent.id,
+        title: wide ? void 0 : "DSH Agent",
+        onClick: () => actions.openAgent(agent.id),
+        onContextMenu: (event) => {
+          event.preventDefault();
+          actions.openMenu({ kind: "agent", id: agent.id, x: event.clientX, y: event.clientY });
+        }
+      },
+      (0, import_react12.createElement)("span", { className: `bt-agent-ava${running ? " bt-run" : ""}` }, (0, import_react12.createElement)(import_dsh_client_ui_primitives2.FishLogo, { size: 22 })),
+      wide ? (0, import_react12.createElement)(
+        "span",
+        { className: "bt-row-body" },
+        (0, import_react12.createElement)("span", { className: "bt-row-name" }, "DSH Agent"),
+        (0, import_react12.createElement)(RowSub, { preview })
+      ) : null,
+      wide && unread && !active ? (0, import_react12.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
+    ),
+    (0, import_react12.createElement)(
+      "div",
+      { className: "bt-agent-sub", "data-open": open || void 0 },
+      (0, import_react12.createElement)(
+        "div",
+        { className: "bt-agent-sub-in" },
+        (0, import_react12.createElement)(
+          "button",
+          { type: "button", className: "bt-agent-sub-row bt-agent-new", style: { "--i": 0 }, onClick: () => {
+            void actions.newAgentSession(agent.id).catch((error) => actions.reportError(error, "agent-session"));
+          } },
+          (0, import_react12.createElement)(PlusIcon),
+          (0, import_react12.createElement)("span", { className: "bt-agent-sub-title" }, t("New session"))
+        ),
+        sessions.map((session, index) => (0, import_react12.createElement)(AgentSessionRow, {
+          key: session.id,
+          session,
+          agent,
+          actions,
+          index: index + 1,
+          renaming: renaming === session.id
+        }))
+      )
+    )
+  );
+}
+var GLIDE = springEasing(1e3, 63);
+function useListGlide(listRef, layout, key) {
+  const tops = (0, import_react12.useRef)({ layout, map: /* @__PURE__ */ new Map() });
+  (0, import_react12.useLayoutEffect)(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const next = /* @__PURE__ */ new Map();
+    const still = reducedMotion() || tops.current.layout !== layout;
+    for (const row of list.querySelectorAll("[data-bot-id],[data-room-id],[data-agent-id]")) {
+      const id = row.dataset.botId ?? row.dataset.roomId ?? row.dataset.agentId;
+      const top = row.offsetTop;
+      next.set(id, top);
+      const before = tops.current.map.get(id);
+      if (!still && before !== void 0 && Math.abs(before - top) > 0.5) {
+        row.animate([{ transform: `translateY(${before - top}px)` }, { transform: "none" }], GLIDE);
+      }
+    }
+    tops.current = { layout, map: next };
+  }, [layout, key]);
+}
+function TeamSidebar(props) {
+  const { wide, useRoster, useUi, useSessions, actions } = props;
+  const listRef = (0, import_react12.useRef)(null);
+  const roster = useRoster((value) => value);
+  const markedUnread = useUi((value) => value.unread);
+  const mobileOpen = useUi((value) => value.mobileNav === true);
+  const mobile = useMobile();
+  const pc = usePcColumns();
+  const pcSidebar = (0, import_react12.useRef)({ band: null, opened: false });
+  (0, import_react12.useEffect)(() => {
+    const step = pcSidebarStep(pcSidebar.current.band, pc, shellCollapsed(document, wide), pcSidebar.current.opened);
+    pcSidebar.current = { band: pc, opened: step.opened };
+    if (step.call === "expand") props.expandSidebar?.();
+    if (step.call === "collapse") actions.collapseSidebar?.();
+  }, [pc]);
+  props.useRegistry((value) => value);
+  const updated = useSessions((list) => {
+    const stamps = {};
+    for (const id of list.ids) stamps[id] = list.byId[id]?.updatedAt ?? 0;
+    return JSON.stringify(stamps);
+  });
+  const order = (0, import_react12.useMemo)(() => {
+    const stamps = JSON.parse(updated);
+    const entries2 = [
+      ...roster.bots.filter((bot) => bot.id !== roster.mainBotId).map((bot) => ({ kind: "bot", item: bot, at: stamps[currentPart(bot)] ?? bot.createdAt })),
+      ...roster.rooms.map((room2) => ({ kind: "room", item: room2, at: stamps[room2.id] ?? room2.createdAt })),
+      // The Agent sorts by its most recent Session, falling back to when it was added.
+      ...(roster.agents ?? []).map((agent) => ({ kind: "agent", item: agent, at: Math.max(0, ...agent.sessions.map((id) => stamps[id] ?? 0)) || agent.createdAt }))
+    ];
+    return entries2.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at);
+  }, [roster, updated]);
+  const main = roster.byId[roster.mainBotId];
+  const listWide = wide || mobileOpen;
+  useListGlide(listRef, listWide, order.map((entry) => entry.item.id).join(","));
+  useLandOnMainBot(roster, useSessions, actions);
+  const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide: listWide, drawer: mobileOpen };
+  const [search, setSearch] = (0, import_react12.useState)("");
+  (0, import_react12.useEffect)(() => {
+    if (!mobileOpen) setSearch("");
+  }, [mobileOpen]);
+  const runSearch = (value) => {
+    setSearch(value);
+    if (value.trim() !== "") actions.openPalette(value);
+  };
+  const typeToSearch = (event) => {
+    if (event.defaultPrevented || event.key.length !== 1 || event.key === " " || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return;
+    if (event.target instanceof Element && event.target.closest("input,textarea,[contenteditable]")) return;
+    event.preventDefault();
+    actions.openPalette(event.key);
+  };
+  const SWIPE_CLOSE_PX = 48;
+  const drag = (0, import_react12.useRef)(null);
+  const onTouchStart = (event) => {
+    const touch = event.touches[0];
+    drag.current = touch ? { x: touch.clientX, y: touch.clientY, settled: false } : null;
+  };
+  const onTouchMove = (event) => {
+    const start = drag.current;
+    const touch = event.touches[0];
+    if (start === null || start.settled || touch === void 0) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dy) >= Math.abs(dx)) {
+      drag.current = null;
+      return;
+    }
+    if (dx <= -SWIPE_CLOSE_PX) {
+      start.settled = true;
+      actions.closeMobileNav();
+    }
+  };
+  const onTouchEnd = () => {
+    drag.current = null;
+  };
+  const drawerFoot = mobile ? (0, import_react12.createElement)(
+    "div",
+    { className: "bt-side-foot" },
+    (0, import_react12.createElement)(AccountLauncher, { seat: false, actions }),
+    (0, import_react12.createElement)(ConnectPlugins, { wide: true, actions })
+  ) : null;
+  const drawerChrome = mobile || pc;
+  const pcFolded = shellCollapsed(document, wide);
+  const pcNav = pc ? (0, import_react_dom5.createPortal)((0, import_react12.createElement)(
+    "div",
+    { className: "bt-pc-nav" },
+    (0, import_react12.createElement)(NavToggle, {
+      open: !pcFolded,
+      onToggle: () => pcFolded ? props.expandSidebar?.() : actions.collapseSidebar?.()
+    })
+  ), document.body) : null;
+  const drawer = (0, import_react12.createElement)(
+    "div",
+    {
+      className: wide ? "bt-side" : "bt-side bt-rail",
+      role: wide ? void 0 : "region",
+      "data-mobile-open": mobileOpen || void 0,
+      onKeyDown: typeToSearch,
+      onTouchStart: mobile ? onTouchStart : void 0,
+      onTouchMove: mobile ? onTouchMove : void 0,
+      onTouchEnd: mobile ? onTouchEnd : void 0,
+      onTouchCancel: mobile ? onTouchEnd : void 0
+    },
+    listWide ? (0, import_react12.createElement)(
+      "div",
+      { className: "bt-side-top" },
+      drawerChrome ? null : (0, import_react12.createElement)("span", { className: "bt-brand" }, (0, import_react12.createElement)(BrandMark, { size: 22 }), (0, import_react12.createElement)(BrandName)),
+      (0, import_react12.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
+      // On a phone, and in the PC band's column, the icon button becomes the field itself
+      // (styles.js carries the row's shape): same single action, the search lives in the
+      // palette either way.
+      drawerChrome ? (0, import_react12.createElement)(
+        "div",
+        { className: "bt-side-search" },
+        (0, import_react12.createElement)(SearchIcon),
+        (0, import_react12.createElement)("input", {
+          type: "text",
+          enterKeyHint: "search",
+          autoComplete: "off",
+          spellCheck: false,
+          placeholder: t("Search"),
+          value: search,
+          "aria-label": t("Search"),
+          onChange: (event) => runSearch(event.target.value),
+          onKeyDown: (event) => {
+            if (event.key === "Enter" && search.trim() !== "") actions.openPalette(search);
+          }
+        })
+      ) : (0, import_react12.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Search"), title: t("Search"), onClick: () => actions.openPalette() }, (0, import_react12.createElement)(SearchIcon)),
+      (0, import_react12.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react12.createElement)(PlusIcon))
+    ) : (0, import_react12.createElement)(
+      import_react12.Fragment,
+      null,
+      (0, import_react12.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
+      (0, import_react12.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react12.createElement)(PlusIcon))
+    ),
+    (0, import_react12.createElement)(
+      "div",
+      { ref: listRef, className: "bt-list", role: "region", "aria-label": t("Bot list") },
+      main ? (0, import_react12.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react12.createElement)("div", { className: "bt-hint" }, t("Setting up your Main Bot…")),
+      order.map((entry) => entry.kind === "bot" ? (0, import_react12.createElement)(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true }) : entry.kind === "room" ? (0, import_react12.createElement)(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true }) : (0, import_react12.createElement)(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true }))
+    ),
+    drawerFoot
+  );
+  return (0, import_react12.createElement)(
+    import_react12.Fragment,
+    null,
+    (0, import_react_dom5.createPortal)((0, import_react12.createElement)("button", { type: "button", className: "bt-mobile-scrim", "data-open": mobileOpen || void 0, "aria-label": t("Close navigation"), tabIndex: mobileOpen ? 0 : -1, onClick: actions.closeMobileNav }), document.body),
+    // The drawer cannot live inside the shell's sidebar column: below the shell's
+    // narrow line that column is the 56px rail, and a fixed panel inside it is still
+    // clipped by whatever containing block or overflow the column brings. Portalled to
+    // <body> it is clipped by nothing — the same move the scrim beside it already makes.
+    pcNav,
+    mobile ? (0, import_react_dom5.createPortal)(drawer, document.body) : drawer
+  );
+}
+function UpdateButton({ useUpdate, actions }) {
+  const update = useUpdate((value) => value);
+  const [open, setOpen] = (0, import_react12.useState)(false);
+  const [box, setBox] = (0, import_react12.useState)(null);
+  const [error, setError] = (0, import_react12.useState)("");
+  const [dshError, setDshError] = (0, import_react12.useState)("");
+  const button = (0, import_react12.useRef)(null);
+  (0, import_react12.useEffect)(() => {
+    if (!open) return void 0;
+    const onDown = (event) => {
+      if (event.target instanceof Element && (event.target.closest(".bt-update-pop") || button.current?.contains(event.target))) return;
+      setOpen(false);
+    };
+    const onKey = (event) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        setOpen(false);
+        button.current?.focus();
+      }
+    };
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey, true);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+  const phase = update?.phase ?? "idle";
+  const dsh = update?.dsh;
+  const dshPhase = dsh?.phase ?? "idle";
+  const dshRow = showsDshRow(dsh, update?.app);
+  if (!update?.available && !dshRow && phase === "idle" && dshPhase === "idle") return null;
+  const cloudPhase = phase === "installing" || dshPhase === "installing" ? "installing" : phase !== "idle" ? phase : dshPhase;
+  const toggle = () => {
+    const rect = button.current?.getBoundingClientRect();
+    if (rect) setBox({ left: Math.max(8, Math.min(rect.left, window.innerWidth - 288)), top: rect.bottom + 6 });
+    setOpen((value) => !value);
+  };
+  const start = () => {
+    setError("");
+    void actions.installUpdate().catch((failure) => setError(hostText(failure?.message ?? String(failure))));
+  };
+  const startDsh = () => {
+    setDshError("");
+    void actions.installDshUpdate().catch((failure) => setDshError(hostText(failure?.message ?? String(failure))));
+  };
+  const label = phase === "installing" ? t("Updating DS Bot…") : dshPhase === "installing" ? t("Updating DSH…") : phase === "installed" ? t("DS Bot {version} is installed. Restart DSH to use it.", { version: update.installed ?? update.latest }) : dshPhase === "installed" ? t("Restart DSH to start using DSH {version}.", { version: dsh.installed ?? dsh.verified }) : update?.available ? t("DS Bot {version} is available", { version: update.latest }) : t("DSH {version} is available", { version: dsh?.verified });
+  const message = error || (phase === "failed" ? update.error : "");
+  const dshMessage = dshError || (dshPhase === "failed" ? dsh?.error : "");
+  const dshText = dshPhase === "installed" ? t("Restart DSH to start using DSH {version}.", { version: dsh.installed ?? dsh.verified }) : dsh?.available === false && dsh?.blockedBy ? t("Update DS Bot {version} first.", { version: dsh.blockedBy }) : t("You have {version}.", { version: dsh?.current });
+  return (0, import_react12.createElement)(
+    import_react12.Fragment,
+    null,
+    (0, import_react12.createElement)("button", {
+      ref: button,
+      type: "button",
+      className: "bt-round bt-update",
+      "data-phase": cloudPhase,
+      "aria-label": label,
+      title: label,
+      "aria-haspopup": "dialog",
+      "aria-expanded": open,
+      onClick: toggle
+    }, (0, import_react12.createElement)(CloudDownloadIcon, { done: phase === "installed" }), phase === "failed" || dshPhase === "failed" ? (0, import_react12.createElement)("span", { className: "bt-update-dot", "aria-hidden": true }) : null),
+    open && box ? (0, import_react_dom5.createPortal)((0, import_react12.createElement)(
+      "div",
+      { className: "bt-update-pop", role: "dialog", "aria-label": update?.available || phase !== "idle" ? t("DS Bot update") : t("DSH update"), style: box },
+      update?.available || phase !== "idle" ? (0, import_react12.createElement)(
+        import_react12.Fragment,
+        null,
+        (0, import_react12.createElement)("div", { className: "bt-update-title" }, phase === "installed" ? t("Update installed") : t("DS Bot {version}", { version: update.latest })),
+        (0, import_react12.createElement)("div", { className: "bt-update-text" }, phase === "installed" ? t("Restart DSH to start using DS Bot {version}.", { version: update.installed ?? update.latest }) : t("You have {version}.", { version: update.current })),
+        message ? (0, import_react12.createElement)("div", { className: "bt-update-error", role: "alert" }, t("The update did not finish: {reason}", { reason: message })) : null,
+        (0, import_react12.createElement)(
+          "div",
+          { className: "bt-update-actions" },
+          update.notesUrl ? (0, import_react12.createElement)("a", { className: "bt-update-notes", href: update.notesUrl, target: "_blank", rel: "noopener noreferrer" }, t("What's new")) : null,
+          phase === "installed" ? null : (0, import_react12.createElement)("button", {
+            type: "button",
+            className: "bt-update-go",
+            disabled: phase === "installing",
+            onClick: start
+          }, phase === "installing" ? t("Updating…") : phase === "failed" ? t("Try again") : t("Update"))
+        )
+      ) : null,
+      dshRow ? (0, import_react12.createElement)(
+        "div",
+        { className: "bt-update-dsh" },
+        (0, import_react12.createElement)("div", { className: "bt-update-title" }, t("DSH {version}", { version: dsh.verified })),
+        (0, import_react12.createElement)("div", { className: "bt-update-text" }, dshText),
+        dshMessage ? (0, import_react12.createElement)("div", { className: "bt-update-error", role: "alert" }, t("The update did not finish: {reason}", { reason: dshMessage })) : null,
+        (0, import_react12.createElement)(
+          "div",
+          { className: "bt-update-actions" },
+          dsh.kind === "app" ? dsh.available ? (0, import_react12.createElement)("button", { type: "button", className: "bt-update-go", onClick: () => void actions.openAppUpdates(dsh.verified).catch(() => {
+          }) }, t("Open updates")) : null : !dsh.available && dshPhase === "idle" ? null : dshPhase === "installed" ? null : (0, import_react12.createElement)("button", {
+            type: "button",
+            className: "bt-update-go",
+            disabled: dshPhase === "installing",
+            onClick: startDsh
+          }, dshPhase === "installing" ? t("Updating…") : dshPhase === "failed" ? t("Try again") : t("Update"))
+        )
+      ) : null
+    ), document.body) : null
+  );
+}
+function ConnectPlugins({ wide, actions }) {
+  const tipId = (0, import_react12.useId)();
+  const [tip, setTip] = (0, import_react12.useState)(false);
+  const timer = (0, import_react12.useRef)(0);
+  const button = (0, import_react12.useRef)(null);
+  const [box, setBox] = (0, import_react12.useState)(null);
+  (0, import_react12.useEffect)(() => () => clearTimeout(timer.current), []);
+  if (!wide) return null;
+  const show = () => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const rect = button.current?.getBoundingClientRect();
+      if (!rect) return;
+      const left = Math.max(8, Math.min(rect.left, window.innerWidth - 268));
+      setBox({ left, bottom: window.innerHeight - rect.top + 10 });
+      setTip(true);
+    }, 250);
+  };
+  const hide = () => {
+    clearTimeout(timer.current);
+    setTip(false);
+  };
+  return (0, import_react12.createElement)(
+    "span",
+    { className: "bt-connect-wrap" },
+    (0, import_react12.createElement)(
+      "button",
+      {
+        ref: button,
+        type: "button",
+        className: "bt-connect bt-connect-foot",
+        "aria-describedby": tip ? tipId : void 0,
+        onMouseEnter: show,
+        onMouseLeave: hide,
+        onFocus: show,
+        onBlur: hide,
+        onClick: () => actions.selectPanel("plugins")
+      },
+      (0, import_react12.createElement)(PlugIcon),
+      t("Connect plugins"),
+      (0, import_react12.createElement)("span", { className: "bt-connect-warn", "aria-hidden": true }, "!")
+    ),
+    tip && box ? (0, import_react_dom5.createPortal)((0, import_react12.createElement)(
+      "span",
+      { role: "tooltip", id: tipId, className: "bt-connect-tip", style: box },
+      t("Plugin compatibility is not fully verified.")
+    ), document.body) : null
+  );
+}
+function YouAvatar() {
+  return (0, import_react12.createElement)(
+    "span",
+    { className: "bt-you-wrap" },
+    (0, import_react12.createElement)("span", { className: "bt-you", "aria-hidden": true }, (0, import_react12.createElement)(BotMark, { look: MAIN_LOOK, size: 24 })),
+    (0, import_react12.createElement)("span", { style: { position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" } }, t("Settings"))
+  );
+}
+var openShellSettings = null;
+var openShellOnboarding = null;
+var shellShortcuts = null;
+function holdShellShortcuts(shortcuts) {
+  shellShortcuts = shortcuts;
+  return () => {
+    if (shellShortcuts === shortcuts) shellShortcuts = null;
+  };
+}
+function openHarnessSettings() {
+  requestAnimationFrame(() => {
+    if (openShellSettings) {
+      openShellSettings();
+      return;
+    }
+    const desktop = document.querySelector('button[aria-haspopup="menu"][data-signed-out]');
+    if (desktop) openThroughMenu(desktop);
+    else pressSettingsShortcut();
+  });
+}
+function openHarnessOnboarding(id) {
+  requestAnimationFrame(() => {
+    if (openShellOnboarding) openShellOnboarding(id);
+    else openHarnessSettings();
+  });
+}
+function openThroughMenu(trigger) {
+  const before = new Set(document.querySelectorAll('[role="menu"]'));
+  trigger.click();
+  let frames = 0;
+  const look = () => {
+    const menu = [...document.querySelectorAll('[role="menu"]')].find((node) => !before.has(node));
+    const item = menu?.querySelector('button[role="menuitem"]');
+    if (item) item.click();
+    else if (++frames < 30) requestAnimationFrame(look);
+    else pressSettingsShortcut();
+  };
+  requestAnimationFrame(look);
+}
+function pressSettingsShortcut() {
+  const binding = shellShortcuts?.catalog.getSnapshot().find((row) => row.id === "settings.open")?.binding;
+  if (!binding) return;
+  const held = new Set(binding.modifiers);
+  window.dispatchEvent(new KeyboardEvent("keydown", {
+    code: binding.code,
+    key: binding.code === "Comma" ? "," : "",
+    bubbles: true,
+    cancelable: true,
+    ctrlKey: held.has("control"),
+    altKey: held.has("alt"),
+    shiftKey: held.has("shift"),
+    metaKey: held.has("meta")
+  }));
+}
+function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions }) {
+  const [open, setOpen] = (0, import_react12.useState)(false);
+  (0, import_react12.useLayoutEffect)(() => {
+    if (!seat) return void 0;
+    actions.seatAccount(true);
+    return () => actions.seatAccount(false);
+  }, [seat]);
+  const [box, setBox] = (0, import_react12.useState)(null);
+  const button = (0, import_react12.useRef)(null);
+  (0, import_react12.useEffect)(() => {
+    if (settingsOpen) setOpen(false);
+  }, [settingsOpen]);
+  (0, import_react12.useEffect)(() => {
+    if (!openSettings) return void 0;
+    openShellSettings = openSettings;
+    return () => {
+      if (openShellSettings === openSettings) openShellSettings = null;
+    };
+  }, [openSettings]);
+  (0, import_react12.useEffect)(() => {
+    if (!openOnboarding) return void 0;
+    openShellOnboarding = openOnboarding;
+    return () => {
+      if (openShellOnboarding === openOnboarding) openShellOnboarding = null;
+    };
+  }, [openOnboarding]);
+  (0, import_react12.useEffect)(() => {
+    if (!open) return void 0;
+    const onDown = (event) => {
+      if (event.target instanceof Element && (event.target.closest(".bt-account-menu") || button.current?.contains(event.target))) return;
+      setOpen(false);
+    };
+    const onKey = (event) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        setOpen(false);
+        button.current?.focus();
+      }
+    };
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey, true);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+  const toggle = () => {
+    const rect = button.current?.getBoundingClientRect();
+    if (rect) setBox({ left: rect.left, bottom: window.innerHeight - rect.top + 5 });
+    setOpen((value) => !value);
+  };
+  const groups = [
+    [
+      [t("Usage"), GaugeIcon, () => actions.openSettings("usage")],
+      [t("Connectors"), ConnectorIcon, () => actions.openConnectors()],
+      [t("Automation tasks"), ClockIcon, () => actions.selectPanel("schedules")],
+      [t("Bot settings"), GearIcon, () => actions.openSettings("general")],
+      // Panels other plugins registered: one row each above the separator, the same
+      // action the native icon column runs. Nothing here while none are registered.
+      ...(actions.panelEntries?.() ?? []).map((entry) => [entry.label, PlugIcon, () => actions.selectPanel(entry.id)])
+    ],
+    [
+      [t("Switch to classic Agent mode"), SwitchIcon, () => actions.setSurface("agent")]
+    ]
+  ];
+  return (0, import_react12.createElement)(
+    import_react12.Fragment,
+    null,
+    (0, import_react12.createElement)(
+      "button",
+      { ref: button, type: "button", className: "bt-account", "aria-label": t("Account"), "aria-haspopup": "menu", "aria-expanded": open, onClick: toggle },
+      (0, import_react12.createElement)("span", { className: "bt-you", "aria-hidden": true }, (0, import_react12.createElement)(BotMark, { look: MAIN_LOOK, size: 24 }))
+    ),
+    open && box ? (0, import_react_dom5.createPortal)((0, import_react12.createElement)(
+      "div",
+      { className: "bt-menu bt-menu-up bt-account-menu", role: "menu", "aria-label": t("Account"), style: box },
+      groups.map((group, index) => (0, import_react12.createElement)(
+        import_react12.Fragment,
+        { key: index },
+        index > 0 ? (0, import_react12.createElement)("div", { className: "bt-menu-sep", role: "separator" }) : null,
+        group.map(([label, Icon, run, hint]) => (0, import_react12.createElement)("button", {
+          key: label,
+          type: "button",
+          role: "menuitem",
+          onClick: () => {
+            setOpen(false);
+            void Promise.resolve(run()).catch((error) => actions.reportError(error, "menu"));
+          }
+        }, (0, import_react12.createElement)(Icon), (0, import_react12.createElement)("span", { className: "bt-menu-label" }, label), hint ? (0, import_react12.createElement)("span", { className: "bt-menu-hint" }, hint) : null))
+      ))
+    ), document.body) : null
+  );
+}
+function useLandOnMainBot(roster, useSessions, actions) {
+  const mainView = useSessions((list) => {
+    const row = Object.values(list.byId).find((session) => (session?.retainedBy?.mainView ?? 0) > 0);
+    return row ? `${row.id}|${row.blank ? 1 : 0}` : "";
+  });
+  const lastBot = (0, import_react12.useRef)(null);
+  (0, import_react12.useEffect)(() => {
+    if (!roster.ready || !roster.mainBotId) return void 0;
+    const [id, blank3] = mainView.split("|");
+    const bot = id === "" ? void 0 : roster.byId[id];
+    if (bot !== void 0) {
+      lastBot.current = { botId: bot.id, sessionId: id };
+      if (currentPart(bot) !== id) actions.landOn(bot.id);
+      return void 0;
+    }
+    if (id !== "" && (roster.roomsById[id] || (actions.isAgentSession?.(id) ?? roster.agentOf[id] !== void 0) || blank3 !== "1")) {
+      lastBot.current = null;
+      return void 0;
+    }
+    const last = lastBot.current;
+    const timer = setTimeout(() => actions.landOn(roster.mainBotId, last), last ? 0 : 400);
+    return () => clearTimeout(timer);
+  }, [mainView, roster]);
+}
+function FooterAccount(props) {
+  const seated = props.useUi((value) => value.accountSeated === true);
+  if (seated) return null;
+  return (0, import_react12.createElement)("span", { className: "bt-foot-account" }, (0, import_react12.createElement)(AccountLauncher, { ...props, seat: false }));
+}
+function BotReturn({ wide, useSurface, actions }) {
+  const mode = useSurface((value) => value.mode);
+  if (mode !== "agent") return null;
+  return (0, import_react12.createElement)(
+    "button",
+    { type: "button", className: "bt-return", "aria-label": t("DS Bot"), title: t("DS Bot"), onClick: () => actions.setSurface("bot") },
+    (0, import_react12.createElement)(BotMark, { look: MAIN_LOOK, size: 20 }),
+    wide ? (0, import_react12.createElement)("span", { className: "bt-return-name" }, t("DS Bot")) : null
+  );
+}
+var RETURN_CSS = `
+.bt-return{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:0;border-radius:999px;background:none;color:inherit;font:inherit;font-size:14px;line-height:20px;cursor:pointer;transition:background-color .12s ease}
+.bt-return:hover{background:rgba(127,127,127,.14)}
+.bt-return:active{transform:scale(.96)}
+.bt-return .bt-mark{display:inline-flex;flex:none;line-height:0}
+.bt-return .bt-mark svg{width:100%;height:100%;overflow:visible}
+/* Shell styles carry --bt-ink-deepseek and Agent mode withdraws them; pin it here. */
+.bt-return .bt-mark{--bt-ink-deepseek:#4D6BFE}
+.bt-return-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+`;
+function BrandMark({ size = 24 }) {
+  return (0, import_react12.createElement)("span", { className: "bt-brand-whale" }, (0, import_react12.createElement)(BotMark, { look: MAIN_LOOK, size }));
+}
+function BrandName() {
+  return (0, import_react12.createElement)("span", { style: { fontWeight: 600, fontSize: 14 } }, "DS Bot");
+}
+var SIDEBAR_CSS = `
+.bt-side-top .bt-brand{cursor:default;padding-left:6px}
+.bt-side-top .bt-brand:hover{background:none}
+.bt-brand .bt-mark{flex:none}
+.bt-pin{flex:none;display:inline-flex;color:var(--bt-ink-3)}
+.bt-rail .bt-row{position:relative}
+.bt-rail .bt-pin{position:absolute;top:3px;left:calc(50% + 12px)}
+[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"],[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"]>div{display:contents!important}
+.bt-foot-account{order:-1;flex:none;display:inline-flex}
+[class*="_footArea"]:has(.bt-foot-account) .bt-connect-foot{order:0;flex:1 1 auto;min-width:0;width:auto}
+[class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"]{order:1;flex:none}
+[class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"] button[class*="_trigger"] [class*="_label"]{display:none!important}
+
+/* The update cloud springs in when a newer DS Bot shows up; its arrow drops in a
+   loop while the install runs. */
+.bt-round.bt-update{position:relative;color:var(--bt-accent,#4D6BFE);animation:bt-update-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
+.bt-round.bt-update svg{width:17px;height:17px}
+.bt-round.bt-update[data-phase=installed]{color:var(--bt-ink-2)}
+@keyframes bt-update-in{from{opacity:0;transform:scale(.6);filter:blur(4px)}}
+.bt-update[data-phase=installing] .bt-cloud-arrow{animation:bt-cloud-drop 1.1s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes bt-cloud-drop{0%{transform:translateY(-3px);opacity:0}35%{opacity:1}70%{transform:translateY(1px);opacity:1}100%{transform:translateY(2px);opacity:0}}
+.bt-update-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#E5484D;box-shadow:0 0 0 1.5px var(--bt-sidebar)}
+.bt-update-pop{position:fixed;z-index:60;width:280px;padding:14px 14px 12px;border-radius:14px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 10px 20px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);color:var(--bt-ink);box-sizing:border-box;transform-origin:top left;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;animation:bt-update-pop ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
+@keyframes bt-update-pop{from{opacity:0;transform:scale(.96);filter:blur(4px)}}
+.bt-update-title{font-size:14px;line-height:20px;font-weight:600}
+.bt-update-text{margin-top:2px;font-size:12.5px;line-height:18px;color:var(--bt-ink-2)}
+.bt-update-error{margin-top:8px;font-size:12px;line-height:17px;color:#c21d2e;overflow-wrap:anywhere;max-height:90px;overflow:auto}
+.bt-update-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px}
+.bt-update-notes{margin-right:auto;font-size:12.5px;color:var(--bt-ink-2);text-decoration:none}
+.bt-update-notes:hover{color:var(--bt-ink);text-decoration:underline}
+.bt-update-go{height:30px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-accent,#4D6BFE);color:var(--bt-accent-ink,#fff);font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .12s ease,transform .12s ease}
+.bt-update-go:hover:not(:disabled){opacity:.9}
+.bt-update-go:active:not(:disabled){transform:scale(.96)}
+.bt-update-go:disabled{opacity:.6;cursor:default}
+.bt-update-dsh:not(:first-child){margin-top:12px;padding-top:12px;border-top:.5px solid var(--bt-line-2)}
+@media (prefers-reduced-motion:reduce){.bt-round.bt-update,.bt-update-pop,.bt-update .bt-cloud-arrow{animation:none}}
+
+/* The DSH Agent row and its expanding Session list. The black whale is the
+   harness's own mark, so the row reads as "plain dsh" next to the Bot marks. */
+.bt-agent-ava{flex:none;width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--bt-hover);color:var(--bt-ink)}
+.bt-agent-ava.bt-run{animation:bt-agent-pulse 1.4s ease-in-out infinite}
+@keyframes bt-agent-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.bt-agent-sub{display:grid;grid-template-rows:0fr;transition:grid-template-rows ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
+.bt-agent-sub[data-open]{grid-template-rows:1fr}
+.bt-agent-sub-in{overflow:hidden;min-height:0;margin-left:44px}
+.bt-agent-sub-row{display:flex;align-items:center;gap:8px;width:100%;padding:5px 10px 5px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:20px;text-align:left;cursor:pointer}
+.bt-agent-sub-row:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-agent-sub-row[aria-current=page]{background:var(--bt-hover);color:var(--bt-ink);font-weight:500}
+.bt-agent-sub-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-agent-sub-time{flex:none;font-size:11px;color:var(--bt-ink-3)}
+.bt-agent-new{color:var(--bt-ink-3)}
+.bt-agent-new svg{width:14px;height:14px;flex:none}
+.bt-agent-edit{padding:3px 10px 3px 4px}
+.bt-agent-edit input{width:100%;border:0;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;line-height:20px;padding:2px 8px;outline:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
+.bt-agent-sub[data-open] .bt-agent-sub-row{animation:bt-agent-row-in .24s ease both;animation-delay:calc(var(--i, 0)*30ms)}
+@keyframes bt-agent-row-in{from{opacity:0;filter:blur(4px)}to{opacity:1;filter:blur(0)}}
+@media (prefers-reduced-motion:reduce){.bt-agent-sub{transition:none}.bt-agent-sub .bt-agent-sub-row{animation:none}}
+`;
 
 // src/client/storage.js
 var STORAGE = {

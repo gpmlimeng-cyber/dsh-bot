@@ -193,7 +193,8 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
    selectors below must not repeat border, radius, fill or shadow, or the two would be free
    to disagree. */
 .bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-side-search,
-html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
+html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round,
+html[data-bt-pc] .bt-side .bt-side-top .bt-round{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
 .bt-pill:active{transform:scale(.965)}
@@ -954,6 +955,18 @@ html:not([data-bt-mobile]) .bt-pane{top:max(var(--dsh-frame-chrome-top,0px),var(
 html:not([data-bt-mobile]) .bt-settings-layer,
 html:not([data-bt-mobile]) .bt-palette-layer,
 html:not([data-bt-mobile]) .bt-mem-layer{inset:max(var(--dsh-frame-chrome-top,0px),var(--dsh-mobile-top-inset,0px)) 0 0}
+/* The PC band's sidebar column takes the phone drawer's top row — the hamburger, then the
+   search field, then New — rather than the desktop row's brand and search button: the
+   column is 280 there, and the band needs the corner for the hamburger it draws itself
+   (sidebar.js spills a .bt-pc-nav bar, so the button lands on the phone's own 12/10 no
+   matter which way the column is folded). Two numbers, both from the phone's rules above:
+   the row starts where the drawer's would (its own top padding removed; the column already
+   begins on the inset line the floating bar sits 10px below), and it keeps the same 52px
+   clear for the button. The rail too: with the row gone the hamburger would land on the
+   rail's first button, so the rail's own controls start under its box. */
+html[data-bt-pc] .bt-side .bt-side-top{padding-top:0;padding-left:52px;padding-right:0}
+html[data-bt-pc] .bt-side .bt-side-top .bt-round{flex:0 0 40px;width:40px;height:40px}
+html[data-bt-pc] .bt-side.bt-rail{padding-top:52px}
 /* The mobile skin has three sizes, on the Compact/Medium/Expanded lines the platforms
    publish (Xiaomi and HarmonyOS both use 600 and 840). The defaults below are the compact
    phone the skin draws where no band matches; a band only re-points these variables, and
@@ -993,7 +1006,7 @@ html[data-bt-mobile][data-bt-size=expanded]{
    purpose: with the drawer up, the bar's hamburger is the visible way to collapse it,
    which is why the two rules below take the pill out of the way and make room for that
    button in the drawer's own top row. */
-.bt-mobile-bar{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
+.bt-mobile-bar,.bt-pc-nav{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px 0 0;pointer-events:none}
 /* With the drawer open the pill would sit on the drawer's own search/new row — same y,
    and the pill's centred box reaches ~136px past the drawer's left edge. The drawer is
    already where a chat is picked, so while it is up the bar carries only its collapse
