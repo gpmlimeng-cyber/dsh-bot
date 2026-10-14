@@ -258,12 +258,11 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
    never wrap: the tile is a fixed 60px, so a second row would be clipped, and the name
    column is the one that gives way instead.
 
-   The row is a cluster at the card's right end, 2px apart, so the rounded hover fills read
-   as a single strip rather than three islands. That 2px is the space between the controls,
-   not between the drawings: each 44px control holds 25-31px of ink, so the glyphs stand
-   about 17px apart however little the boxes are separated -- any closer would mean the
-   44px targets overlapping each other. */
-.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:nowrap;align-items:center;gap:2px;justify-content:flex-end}
+   The row keeps a 4px gap and is held at the card's right end. The gap is not the lever on
+   how tight the row reads -- a 44px control holds 23-31px of ink, so the glyphs stand 19-22px
+   apart and squeezing the gap to 2px would move them by 4px across the whole row, which the
+   eye does not see. What the row reads as is the ink; the ink is sized in the rule below. */
+.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:nowrap;align-items:center;gap:4px;justify-content:flex-end}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 /* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
    is the touch target the card's own 60px tile can hold exactly (8px of padding above and

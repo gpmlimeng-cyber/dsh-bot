@@ -73,11 +73,12 @@ test('the card’s exits are three named icons, each a 44px target', () => {
   assert.ok(glyph.includes('stroke-width:2'), 'drawn at the 2-unit stroke the preview bar uses')
   assert.ok(rule('.bt-dcard-ico{').includes('width:40px'), 'the tile it matches stays 40px')
   assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the three never wrap into a second row the 60px tile would clip')
-  // The row is one cluster at the card's right end. The 2px is between the controls, not
-  // between the drawings: a 44px control around 25-31px of ink keeps the glyphs about 17px
-  // apart whatever the gap is, and anything closer means the touch targets overlapping.
-  assert.ok(rule('.bt-dcard-acts{').includes('gap:2px'), 'the three sit 2px apart as one cluster')
-  assert.ok(rule('.bt-dcard-acts{').includes('justify-content:flex-end'), 'and the cluster stays at the card’s right end')
+  // The row is held at the card's right end, with the 4px gap it has always had: the gap is
+  // not what makes the row read tight -- a 44px control around 23-31px of ink leaves the
+  // glyphs 19-22px apart, and 2px of box space moves them by 4px across the whole row, which
+  // the eye does not see. The ink is the lever, and it is pinned separately below.
+  assert.ok(rule('.bt-dcard-acts{').includes('gap:4px'), 'the three keep their 4px gap')
+  assert.ok(rule('.bt-dcard-acts{').includes('justify-content:flex-end'), 'and the row stays at the card’s right end')
   for (const [act, shape] of [['preview', '}, h(EyeIcon))'], ['open', '}, h(ExternalIcon))'], ['copy', "}, state === 'copied' ? h(CheckIcon) : h(CopyIcon)))"]]) {
     assert.ok(source.includes(`'data-act': '${act}'`), `the ${act} exit is marked`)
     assert.ok(source.includes(shape), `and draws its own icon (${act})`)
