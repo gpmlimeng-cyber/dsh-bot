@@ -1,5 +1,5 @@
-import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
-import { isMainOf } from './sources.js'
+import { createElement as h, Fragment, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { isMainOf, EMPTY_ROSTER } from './sources.js'
 import { HEADER, currentPart, stripHeader, usageOf, sessionStatsOf, contextPressureOf } from './text.js'
 import { PlusIcon, ShareIcon, CloseIcon, ChevronLeftIcon, GearIcon } from './icons.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
@@ -333,9 +333,53 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
       bot && tab === 'browser' ? h(BrowserCards, { bot, sessionId, roster, actions, useBrowserTabs, useBrowserPages }) : null)]
 }
 
+// Every bare source the slot renderer hands a component is bound to a `use<Name>`
+// selector hook at its own boundary. A Better Sidebar tab is mounted by that
+// service, not by the renderer, so nothing is bound for it — the wrapper binds the
+// drawer's sources here, exactly the way the renderer would, and the drawer cannot
+// tell which surface carries it.
+const boundSelectors = new WeakMap()
+const emptySource = (value) => ({ getSnapshot: () => value, subscribe: () => () => {} })
+const ABSENT = {
+  roster: emptySource(EMPTY_ROSTER),
+  sessions: emptySource({ byId: {}, projectionsBySession: {} }),
+  sessionStatus: emptySource(new Map()),
+  activity: emptySource({}),
+  work: emptySource({}),
+  browserTabs: emptySource({}),
+  browserPages: emptySource({}),
+}
+function selectorOf(name, source) {
+  const found = source ?? ABSENT[name]
+  let bound = boundSelectors.get(found)
+  if (bound === undefined) {
+    const subscribe = (notify) => found.subscribe(notify)
+    const getSnapshot = () => found.getSnapshot()
+    bound = (select) => {
+      const snapshot = useSyncExternalStore(subscribe, getSnapshot)
+      return typeof select === 'function' ? select(snapshot) : snapshot
+    }
+    boundSelectors.set(found, bound)
+  }
+  return bound
+}
+
 // The Bot details drawer as a Better Sidebar tab: the same component, carried by the
 // service's right-column tab instead of our own panel. `face` is the inject face the
-// panel would receive; the drawer cannot tell the difference.
-export function BetterDetailsTab({ sessionId, face }) {
-  return h(DetailsDrawer, { sessionId, hasStrip: true, ...face })
+// panel would receive; `standard` holds the shell's own sources (the session list and
+// its status), which the tab host does not pass through the slot renderer.
+export function BetterDetailsTab({ sessionId, face, standard }) {
+  const hooks = face?.hooks ?? {}
+  return h(DetailsDrawer, {
+    sessionId,
+    hasStrip: true,
+    roster: selectorOf('roster', hooks.roster)(state => state),
+    actions: face?.actions,
+    useSessions: selectorOf('sessions', standard?.sessions),
+    useSessionStatus: selectorOf('sessionStatus', standard?.sessionStatus),
+    useActivity: selectorOf('activity', hooks.activity),
+    useWork: selectorOf('work', hooks.work),
+    useBrowserTabs: selectorOf('browserTabs', hooks.browserTabs),
+    useBrowserPages: selectorOf('browserPages', hooks.browserPages),
+  })
 }

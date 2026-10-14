@@ -10471,8 +10471,46 @@ function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, a
     )
   ];
 }
-function BetterDetailsTab({ sessionId, face }) {
-  return (0, import_react24.createElement)(DetailsDrawer, { sessionId, hasStrip: true, ...face });
+var boundSelectors = /* @__PURE__ */ new WeakMap();
+var emptySource = (value) => ({ getSnapshot: () => value, subscribe: () => () => {
+} });
+var ABSENT = {
+  roster: emptySource(EMPTY_ROSTER),
+  sessions: emptySource({ byId: {}, projectionsBySession: {} }),
+  sessionStatus: emptySource(/* @__PURE__ */ new Map()),
+  activity: emptySource({}),
+  work: emptySource({}),
+  browserTabs: emptySource({}),
+  browserPages: emptySource({})
+};
+function selectorOf(name, source) {
+  const found = source ?? ABSENT[name];
+  let bound2 = boundSelectors.get(found);
+  if (bound2 === void 0) {
+    const subscribe = (notify) => found.subscribe(notify);
+    const getSnapshot = () => found.getSnapshot();
+    bound2 = (select) => {
+      const snapshot = (0, import_react24.useSyncExternalStore)(subscribe, getSnapshot);
+      return typeof select === "function" ? select(snapshot) : snapshot;
+    };
+    boundSelectors.set(found, bound2);
+  }
+  return bound2;
+}
+function BetterDetailsTab({ sessionId, face, standard }) {
+  const hooks = face?.hooks ?? {};
+  return (0, import_react24.createElement)(DetailsDrawer, {
+    sessionId,
+    hasStrip: true,
+    roster: selectorOf("roster", hooks.roster)((state) => state),
+    actions: face?.actions,
+    useSessions: selectorOf("sessions", standard?.sessions),
+    useSessionStatus: selectorOf("sessionStatus", standard?.sessionStatus),
+    useActivity: selectorOf("activity", hooks.activity),
+    useWork: selectorOf("work", hooks.work),
+    useBrowserTabs: selectorOf("browserTabs", hooks.browserTabs),
+    useBrowserPages: selectorOf("browserPages", hooks.browserPages)
+  });
 }
 
 // src/client/composer.js
@@ -15537,7 +15575,14 @@ function apply(ctx) {
         description: () => t("Details of the conversation you are reading"),
         order: -100,
         single: true,
-        component: ({ scope }) => BetterDetailsTab({ sessionId: scope.sessionId, face: face() })
+        component: ({ scope }) => BetterDetailsTab({
+          sessionId: scope.sessionId,
+          face: face(),
+          // The tab host mounts the component outside the slot renderer, so the
+          // shell's own sources travel with it. Read late: `uiSession` may appear
+          // after this plugin.
+          standard: { sessions: ctx.sessions.list, sessionStatus: ctx.get("uiSession")?.sessionStatus }
+        })
       });
       let opened = false;
       let off = () => {

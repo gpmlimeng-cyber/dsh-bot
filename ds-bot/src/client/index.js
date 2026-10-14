@@ -759,7 +759,14 @@ export function apply(ctx) {
         description: () => t('Details of the conversation you are reading'),
         order: -100,
         single: true,
-        component: ({ scope }) => BetterDetailsTab({ sessionId: scope.sessionId, face: face() }),
+        component: ({ scope }) => BetterDetailsTab({
+          sessionId: scope.sessionId,
+          face: face(),
+          // The tab host mounts the component outside the slot renderer, so the
+          // shell's own sources travel with it. Read late: `uiSession` may appear
+          // after this plugin.
+          standard: { sessions: ctx.sessions.list, sessionStatus: ctx.get('uiSession')?.sessionStatus },
+        }),
       })
       // Open the tab once, on the first conversation the main view lands on, without
       // stealing focus. Never again: the tab bar's own close is invisible to us, so
