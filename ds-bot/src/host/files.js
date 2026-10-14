@@ -3,8 +3,8 @@
 // is the whole risk: a path that escapes the workspace (an absolute path, a `..`
 // walk, a link out of it) must never reach the disk, so every path is resolved
 // against the root and checked twice — once as written, once as it really is.
-import { open, realpath, stat } from 'node:fs/promises'
-import { basename, isAbsolute, resolve, sep } from 'node:path'
+import { mkdir, open, readFile, realpath, rename, stat, writeFile } from 'node:fs/promises'
+import { basename, isAbsolute, join, resolve, sep } from 'node:path'
 
 // What is read at most. A text or Markdown file gives back its first TEXT_MAX bytes
 // and says it was cut off; an image is read whole up to IMAGE_MAX and is a binary
@@ -111,7 +111,7 @@ const readSome = async (file, size) => {
 const readHead = async (file, size) => readSome(file, Math.min(size, HEAD_MAX))
 
 export function install(rt) {
-  const { ctx, config } = rt
+  const { ctx, config, home, warn } = rt
 
   // The team's workspace root: the one its Sessions run in, else the configured
   // one. Without it there is nothing a path could be relative to.
@@ -197,15 +197,58 @@ export function install(rt) {
   // tool named this exact path in a deliverables/presented event and the host kept it.
   // Only those paths are readable, so no directory is opened up and the read surface is
   // exactly "a file a Bot handed over". Anything the host never saw is refused before it
-  // is even stat'ed. The list is capped: it is a window on recent work, not a record.
+  // is even stat'ed.
+  //
+  // The list is kept across restarts, because the cards already in the chat are the
+  // reason it exists: a restart must not turn every one of them into "not delivered".
+  // It holds paths and times only -- never a byte of any file -- and every read still
+  // goes through regularFile, so a path that has since gone falls back rather than
+  // answering. It is capped: this is a window on recent work, not a record.
+  const deliveredPath = join(home, 'delivered.json')
   const delivered = new Map()
+  let saving = Promise.resolve()
+  const keep = (path, at = Date.now()) => {
+    delivered.delete(path)
+    delivered.set(path, at)
+    while (delivered.size > DELIVERED_MAX) delivered.delete(delivered.keys().next().value)
+  }
+  const saveDelivered = () => {
+    saving = saving.then(async () => {
+      const body = JSON.stringify({ version: 1, files: [...delivered].map(([path, at]) => ({ path, at })) })
+      // Written beside the real file and renamed over it, so a reader never sees half a
+      // JSON document, and created 0600: the paths a team delivered are its own business.
+      const temporary = `${deliveredPath}.tmp`
+      try {
+        await mkdir(home, { recursive: true })
+        await writeFile(temporary, body, { mode: 0o600 })
+        await rename(temporary, deliveredPath)
+      } catch (error) {
+        warn('ds-bot: could not save the delivered-file list: %s', error)
+      }
+    }).catch(() => {})
+    return saving
+  }
   const rememberDelivered = (paths) => {
-    if (!Array.isArray(paths)) return
+    if (!Array.isArray(paths)) return undefined
+    let remembered = false
     for (const path of paths) {
       if (typeof path !== 'string' || path === '') continue
-      delivered.delete(path)
-      delivered.set(path, Date.now())
-      while (delivered.size > DELIVERED_MAX) delivered.delete(delivered.keys().next().value)
+      keep(path)
+      remembered = true
+    }
+    return remembered ? saveDelivered() : undefined
+  }
+  const loadDelivered = async () => {
+    try {
+      const parsed = JSON.parse(await readFile(deliveredPath, 'utf8'))
+      if (!Array.isArray(parsed?.files)) return
+      for (const entry of parsed.files) {
+        if (typeof entry?.path !== 'string' || entry.path === '') continue
+        // The saved time is kept when it is there: it is what a later expiry would use.
+        keep(entry.path, Number.isFinite(entry.at) ? entry.at : Date.now())
+      }
+    } catch {
+      // No list yet, or one this host cannot read: the window simply starts empty.
     }
   }
   const deliveredFile = async (input) => {
@@ -219,6 +262,8 @@ export function install(rt) {
     return readRegular(found.real, basename(target), found.info)
   }
 
+  void loadDelivered()
+
   ctx.effect(() => () => {}, 'ds-bot: file previews')
-  Object.assign(rt, { panelFile, rememberDelivered, deliveredFile })
+  Object.assign(rt, { panelFile, rememberDelivered, deliveredFile, deliveredCount: () => delivered.size })
 }

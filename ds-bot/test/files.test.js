@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -7,8 +7,7 @@ import { IMAGE_MAX, TEXT_MAX, fileKind } from '../src/host/files.js'
 import { createRuntime } from '../index.js'
 import { fakeContext } from './fake-ctx.js'
 
-function start({ config = {} } = {}) {
-  const home = mkdtempSync(join(tmpdir(), 'ds-bot-files-'))
+function start({ config = {}, home = mkdtempSync(join(tmpdir(), 'ds-bot-files-')) } = {}) {
   const workspace = mkdtempSync(join(tmpdir(), 'ds-bot-files-ws-'))
   const ctx = fakeContext()
   Object.assign(ctx, {
@@ -30,7 +29,15 @@ function start({ config = {} } = {}) {
     rmSync(home, { recursive: true, force: true, maxRetries: 5 })
     rmSync(workspace, { recursive: true, force: true, maxRetries: 5 })
   }
-  return { workspace, call, rt, stop }
+  return { home, workspace, call, rt, stop }
+}
+
+// A home with a delivered-file list already on disk, as a restart would find it.
+function withList(t, body) {
+  const home = mkdtempSync(join(tmpdir(), 'ds-bot-files-'))
+  writeFileSync(join(home, 'delivered.json'), body)
+  t.after(() => rmSync(home, { recursive: true, force: true, maxRetries: 5 }))
+  return home
 }
 
 test('a workspace file comes back with its kind and its text', async (t) => {
@@ -213,5 +220,52 @@ test('a delivered path that is gone, or is now a folder, answers with a reason',
   rt.rememberDelivered([gone, folder])
   assert.match((await call('present-file', { path: gone })).value.error, /does not exist/)
   assert.match((await call('present-file', { path: folder })).value.error, /is a folder/)
+})
+
+// The cards already in a chat are the reason the list exists, so a restart must not turn
+// them all into "not delivered". What is saved is the paths and the times, nothing else,
+// and a saved path still has to be a regular file that is there when it is read.
+test('the delivered list is saved as paths and times, and survives a restart', async (t) => {
+  const outside = mkdtempSync(join(tmpdir(), 'ds-bot-delivered-saved-'))
+  t.after(() => rmSync(outside, { recursive: true, force: true, maxRetries: 5 }))
+  const report = join(outside, 'kept.md')
+  writeFileSync(report, '# Kept\n\nBody.')
+  const first = start()
+  await first.rt.rememberDelivered([report])
+  const saved = join(first.home, 'delivered.json')
+  // The list is its own file: paths and times, no content of any file.
+  assert.equal(statSync(saved).mode & 0o777, 0o600, 'the list is readable by its owner only')
+  const body = readFileSync(saved, 'utf8')
+  const parsed = JSON.parse(body)
+  assert.deepEqual(parsed.files.map(entry => entry.path), [report])
+  assert.deepEqual(Object.keys(parsed.files[0]).sort(), ['at', 'path'])
+  assert.ok(Number.isFinite(parsed.files[0].at))
+  assert.ok(!body.includes('Kept'), 'no byte of the file itself is saved')
+  first.stop()
+  // A host that starts with that list on disk has it again, without a new delivery.
+  const restarted = start({ home: withList(t, body) })
+  t.after(() => restarted.stop())
+  const until = Date.now() + 2000
+  while (restarted.rt.deliveredCount() === 0 && Date.now() < until) await new Promise(resolve => setImmediate(resolve))
+  assert.equal(restarted.rt.deliveredCount(), 1)
+  const read = (await restarted.call('present-file', { path: report })).value
+  assert.deepEqual([read.ok, read.kind, read.text], [true, 'markdown', '# Kept\n\nBody.'])
+  // A path in the list that is gone now still falls back rather than answering.
+  const gone = withList(t, JSON.stringify({ version: 1, files: [{ path: join(outside, 'gone.md'), at: 1 }] }))
+  const later = start({ home: gone })
+  t.after(() => later.stop())
+  const until2 = Date.now() + 2000
+  while (later.rt.deliveredCount() === 0 && Date.now() < until2) await new Promise(resolve => setImmediate(resolve))
+  assert.equal(later.rt.deliveredCount(), 1)
+  assert.match((await later.call('present-file', { path: join(outside, 'gone.md') })).value.error, /does not exist/)
+})
+
+test('a saved list longer than the cap is trimmed to the cap', async (t) => {
+  const many = JSON.stringify({ version: 1, files: Array.from({ length: 501 }, (_, index) => ({ path: `/tmp/none/${index}.md`, at: index })) })
+  const host = start({ home: withList(t, many) })
+  t.after(() => host.stop())
+  const until = Date.now() + 2000
+  while (host.rt.deliveredCount() === 0 && Date.now() < until) await new Promise(resolve => setImmediate(resolve))
+  assert.equal(host.rt.deliveredCount(), 500)
 })
 
