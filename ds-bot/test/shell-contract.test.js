@@ -1,5 +1,5 @@
 // The PC band (841-1023 landscape, pc-layout.js) gets its sidebar column from the shell
-// rather than from a rule of our own, which means this plugin depends on three names that
+// rather than from a rule of our own, which means this plugin depends on names and shapes that
 // live in packages we do not own. This file is that dependency, written down: if upstream
 // renames one of them, a red test says so instead of a folded screen that quietly stops
 // opening its column.
@@ -10,13 +10,14 @@
 //     the shell's own `if (collapsed) toggleSidebar()`, so it cannot fold an open column;
 //   * `toggleSidebar` on the layout service -- the only handle on the closing direction.
 //
-// Two more things the PC band's stylesheet reads off the shell, added when the band's three
-// top rows were put on one line: the sidebar column's class suffix (the band pins the
-// hamburger to that column, one address that neither the column's width nor the shell's
-// padding can move) and the top padding the shell's own sidebar root carries in each of the
-// column's two widths. The band cannot read that padding from CSS -- the class is hashed and
-// the amount is upstream's -- so it mirrors it into `--bt-shell-pad-top` and the open row
-// takes the last 4px from the difference. A mirror rots, so this is what tells us it did.
+// Three more things the PC band's stylesheet reads off the shell, added when the band's three
+// top rows were put on one line and the folded column was emptied down to its button: the
+// sidebar column's class suffix (the band pins the hamburger to that column, one address that
+// neither the column's width nor the shell's padding can move), the top padding the shell's own
+// sidebar root carries with the column open, and the chrome parts the folded band hides. The
+// band cannot read that padding from CSS -- the class is hashed and the amount is upstream's --
+// so it mirrors it into `--bt-shell-pad-top` and the open row takes the last 4px from the
+// difference. A mirror rots, so this is what tells us it did.
 //
 // What is deliberately NOT asserted is the shell's column geometry: the 264-420 clamp, the
 // grid template, the 56px rail. That is upstream's own layout, not a contract this plugin
@@ -64,11 +65,12 @@ test('the layout still names the sidebar column that the band hangs the button o
   assert.match(layout, /_sidebarCol\s*\{/)
 })
 
-// Both numbers the band mirrors, read from the shell rather than restated: the shell's sidebar
-// root with the column open, and the same root once the column is the rail. If upstream pads
-// either one differently, the band's own arithmetic (4px onto the line, 44px onto the rail's
-// first control) is wrong from that build on -- and it would be wrong silently, as a 2 or 4px
-// seam between three rows that are supposed to share one line.
+// The one number the band mirrors, read from the shell rather than restated: the shell pads
+// its sidebar root 6px with the column open, while the band's row has to start 10px below the
+// status bar's inset, the same place the middle column's header row puts its controls. The
+// difference between those two -- 4px -- is what the row is given, and it is only right while
+// both sides agree. If upstream pads the root differently the row lands 2 or 4px off the line
+// and it would be off silently, as a seam between three rows that are supposed to share one.
 test('the shell still pads its sidebar root by what the band mirrors', { skip: sidebar ? false : absent }, () => {
   const rules = [...sidebar.matchAll(/([^{}]*)\{([^{}]*)\}/g)].map(([, sel, body]) => [sel, body])
   const root = rules.filter(([sel]) => /_root(\.|$)/.test(sel.trim().replace(/^[^\w.#\-[]+/, '')))
@@ -77,11 +79,23 @@ test('the shell still pads its sidebar root by what the band mirrors', { skip: s
     return found ? Number(found[1].trim().split(/\s+/)[0].replace('px', '')) : null
   }
   const open = root.filter(([sel]) => !/collapsed/.test(sel)).map(padTop).find(value => value !== null)
-  const folded = root.filter(([sel]) => /collapsed/.test(sel)).map(padTop).find(value => value !== null)
   const own = readFileSync(new URL('../src/client/styles.js', import.meta.url), 'utf8')
   const band = /html\[data-bt-pc\]\{--bt-shell-pad-top:(\d+)px\}/.exec(own)
-  const rail = /\.bt-side\.bt-rail\{--bt-shell-pad-top:(\d+)px/.exec(own)
-  assert.ok(open !== null && folded !== null && band && rail, 'every side of the mirror is readable')
+  assert.ok(open !== null && band, 'every side of the mirror is readable')
   assert.equal(Number(band[1]), open)
-  assert.equal(Number(rail[1]), folded)
+})
+
+// The folded band empties the column down to its own button, and the parts it has to empty are
+// the shell's rather than ours: the names are read out of the band's own stylesheet and looked
+// for in the installed shell, so a rename upstream shows up here instead of leaving the account
+// launcher and Connect under what is supposed to be an empty rail. The band's own children are
+// hidden structurally and are not part of this.
+test('the sidebar chrome the folded band hides still exists in the shell', { skip: sidebar ? false : absent }, () => {
+  const own = readFileSync(new URL('../src/client/styles.js', import.meta.url), 'utf8')
+  const hidden = [...own.matchAll(/\[data-sidebar-collapsed\][^{}]*\{[^}]*display:none!important[^}]*\}/g)]
+    .flatMap(([rule]) => [...rule.matchAll(/\[class\*="_(\w+)"\]/g)].map(([, name]) => name))
+  // The column itself is in the same rule and is not chrome; the test above holds it.
+  const chrome = [...new Set(hidden)].filter(name => name !== 'sidebarCol')
+  assert.ok(chrome.length > 0, 'the folded rule names the shell parts it hides')
+  for (const name of chrome) assert.match(sidebar, new RegExp(`_${name}\\b`))
 })

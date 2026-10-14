@@ -991,11 +991,22 @@ html[data-bt-pc] .bt-side{margin-top:calc(var(--bt-top-line) - var(--bt-shell-pa
 html[data-bt-pc] .bt-side>.bt-mobile-nav{left:12px;top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,0px)) + var(--bt-top-line))}
 html[data-bt-pc] .bt-side .bt-side-top{padding-top:0;padding-left:52px;padding-right:0}
 html[data-bt-pc] .bt-side .bt-side-top .bt-round{flex:0 0 40px;width:40px;height:40px;position:relative}
-/* Folded, the row is gone and only the hamburger is left, on the same pixel as before: the
-   root gives back the 4px it takes when open (the shell pads it 18 here, not 6), and the
-   rail's own first control keeps the phone's 52px below the line, measured from where the
-   row would have ended. */
-html[data-bt-pc] .bt-side.bt-rail{--bt-shell-pad-top:18px;margin-top:0;padding-top:calc(var(--bt-top-line) + 52px - var(--bt-shell-pad-top))}
+/* Folded, the rail is emptied rather than narrowed: the column comes down to the one button,
+   on the pixel it keeps when the column is open. Both sides go -- what this skin puts inside
+   the root (the rail's two round buttons and the icon list) and the chrome the shell draws
+   around our slot (its logo row, its panel list and its foot area, which would otherwise leave
+   the account launcher and Connect under an empty rail).
+   The trigger is the shell's own data-sidebar-collapsed on the frame rather than our
+   bt-rail class: that class follows the wide flag, which stays true for the few hundred ms a
+   fold takes, so the row and the list would still be there while the column is already 56
+   wide. (Backticks stay out of these comments: this text is a template literal.)
+   The column itself keeps its 56: that width is the shell's, it is the anchor our button is
+   measured against, and the button (12 across) still clears it. */
+html[data-bt-pc] [data-sidebar-collapsed] [class*="_sidebarCol"] :is([class*="_logoRow"],[class*="_panelList"],[class*="_footArea"]),
+html[data-bt-pc] [data-sidebar-collapsed] [class*="_sidebarCol"] .bt-side>*:not(.bt-mobile-nav){display:none!important}
+/* With the row gone, the open root's 4px is not re-applied: the shell pads the root 18px here,
+   and the 4px only ever existed to finish the open row's climb onto the line. */
+html[data-bt-pc] .bt-side.bt-rail{margin-top:0}
 /* The mobile skin has three sizes, on the Compact/Medium/Expanded lines the platforms
    publish (Xiaomi and HarmonyOS both use 600 and 840). The defaults below are the compact
    phone the skin draws where no band matches; a band only re-points these variables, and
