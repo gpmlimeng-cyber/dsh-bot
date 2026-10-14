@@ -25,6 +25,12 @@ const rule = (prefix) => {
   assert.equal(found.length, 1, `${prefix} is declared once, found ${found.length}`)
   return found[0]
 }
+// The preview page's own chrome is styled next to it in file-preview.js, not in styles.js.
+const previewRule = (prefix) => {
+  const found = read('file-preview.js').split('\n').filter(line => line.startsWith(prefix))
+  assert.equal(found.length, 1, `${prefix} is declared once, found ${found.length}`)
+  return found[0]
+}
 
 test('the tile is DSH-shaped: 60px tall, a 40px type tile, one hit target over it', () => {
   const tile = rule('.bt-dcard{')
@@ -55,7 +61,7 @@ test('two columns fold to one when the card column is narrow', () => {
 })
 
 test('the icon is DSH’s FileTypeIcon, sized as DSH sizes it', () => {
-  assert.ok(card.some(line => line.includes("import { FileTypeIcon, fileExtension, ImageLightbox } from '@deepseek-ai/dsh-client-ui-primitives'")), 'the card imports the host icon and the host image preview')
+  assert.ok(card.some(line => line.includes("import { FileTypeIcon, fileExtension, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'")), 'the card imports the host icon, the host image preview and the host menu')
   assert.ok(card.some(line => line.includes('h(FileTypeIcon, { path: file.path, size: 20 })')), 'the icon follows the file path')
   assert.ok(!card.some(line => line.includes('PaperclipIcon')), 'the placeholder paperclip is gone')
 })
@@ -184,4 +190,45 @@ test('the card hands a file to another app, and keeps the shell from taking the 
   const end = card.findIndex(line => line.includes('onClick: preview'))
   assert.ok(start !== -1 && end > start, 'the hit target is still one button')
   assert.ok(!card.slice(start, end + 1).join('\n').includes('title:'), 'the hit target carries no title for the shell to read')
+})
+
+// The preview page's title bar is three parts: back on the left, the name centred over
+// the bar, and one "···" menu on the right -- the two exits live in that menu, so the
+// bar stays three parts and a page's source toggle joins them instead of crowding it.
+test('the preview page’s title bar is back, the name, and one more menu', () => {
+  const source = card.join('\n')
+  assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(ChevronLeftIcon))"), 'the left control is a back button, named for a reader')
+  assert.ok(source.includes("h('span', { className: 'bt-preview-name' }, name)"), 'the name is the middle part')
+  assert.ok(source.includes('import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsIcon, SwitchIcon }'), 'a back arrow and the menu’s own icons are imported')
+  // The menu is the platform’s own component and carries both exits, which are the same
+  // behaviour the card’s row of buttons runs: one definition, two chromes.
+  assert.ok(source.includes("import { FileTypeIcon, fileExtension, ImageLightbox, Menu }"), 'the menu is the platform’s, not one of ours')
+  assert.ok(source.includes('export function useDeliverableExits(file, actions, onFailed)'), 'the exits are defined once')
+  assert.equal(source.split('useDeliverableExits(file, actions, onFailed)').length - 1, 3, 'and used by both chromes')
+  assert.ok(source.includes("h(Menu, {"), 'the page’s exits are a menu')
+  assert.ok(source.includes("align: 'end'"), 'aligned to the bar’s end')
+  assert.ok(source.includes("{ id: 'open', icon: h(SwitchIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') }"), 'the first item opens in another app')
+  assert.ok(source.includes("{ id: 'copy', icon: state === 'copied' ? h(CheckIcon) : h(CopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') }"), 'the second copies the path')
+  assert.ok(source.includes("'aria-label': t('More'), title: t('More')"), 'the menu button is named')
+  assert.ok(i18n.includes("Back: '后退'") && i18n.includes("More: '更多'"), 'both names are translated')
+  // A page’s source toggle rides in the same menu rather than in the bar.
+  assert.ok(source.includes("const toggle = state === 'shown' && read.kind === 'html' ? { id: 'source', label: source ? t('Preview') : t('Source') } : null"), 'a page offers its source in the menu')
+  assert.ok(!source.includes('bt-preview-toggle'), 'the old bar toggle is gone')
+  assert.ok(!read('file-preview.js').includes('.bt-preview-toggle'), 'and so is its style')
+  // The bar itself: the name centred over the bar, the menu pushed to its end.
+  assert.ok(previewRule('.bt-preview-name{').includes('position:absolute'), 'the name is centred over the bar')
+  assert.ok(previewRule('.bt-preview-name{').includes('text-overflow:ellipsis'), 'and gives way with an ellipsis')
+  assert.ok(previewRule('.bt-preview-menu{').includes('margin-left:auto'), 'the menu sits at the end')
+})
+
+// The platform’s own preview returns focus to what opened it and already skips a node
+// that left the document. A card can still be redrawn while the picture is up, so the
+// page takes the focus back to the same card when it is there, and never steals a focus
+// the platform did restore.
+test('a lost focus goes back to the same card, and a restored one is left alone', () => {
+  const source = card.join('\n')
+  assert.ok(source.includes('if (active !== null && active !== document.body) return'), 'only a focus that was lost is taken back')
+  assert.ok(source.includes("const again = [...document.querySelectorAll('.bt-dcard-hit')]"), 'the same card is looked up again')
+  assert.ok(source.includes("(node.getAttribute('aria-label') ?? '').endsWith(` ${name}`)"), 'by the name it announces')
+  assert.ok(source.includes('if (again instanceof HTMLElement) again.focus()'), 'and takes the focus when it is really there')
 })

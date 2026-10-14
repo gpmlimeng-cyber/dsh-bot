@@ -15,8 +15,8 @@
 // goes to shared storage first, since no other app can read the app's own), or copy the
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
-import { FileTypeIcon, fileExtension, ImageLightbox } from '@deepseek-ai/dsh-client-ui-primitives'
-import { CheckIcon, CloseIcon, CopyIcon } from './icons.js'
+import { FileTypeIcon, fileExtension, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
+import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsIcon, SwitchIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { t, dateLocale } from './i18n.js'
 
@@ -77,18 +77,19 @@ export const exitsSentence = (shared) => (shared !== null && shared !== undefine
   : t('Could not open it here. Copy the path and open the copy under {folder}', { folder: PHONE_COPY_HINT }))
 
 /**
- * The two ways a phone reaches a delivered file it cannot show in place. Shared by the
- * card and the preview page on purpose: one definition, so the two cannot drift apart.
+ * The two ways a phone reaches a delivered file it cannot show in place, as behaviour
+ * only -- the card draws them as a row of buttons, the preview page as its "···" menu,
+ * and both go through this one definition so they cannot drift apart.
  *
- * The second one asks the shell's own chooser (window.__dshOpenPath, a system chooser
- * that hands an absolute device path to an app that can read it). A delivered file sits
- * in the app's own storage, which no other app can read, so a copy goes to shared
- * storage first. A host without the chooser -- a desktop -- keeps the engine's opener.
+ * The first asks the shell's own chooser (window.__dshOpenPath, a system chooser that
+ * hands an absolute device path to an app that can read it). A delivered file sits in
+ * the app's own storage, which no other app can read, so a copy goes to shared storage
+ * first. A host without the chooser -- a desktop -- keeps the engine's opener.
  *
- * A refusal is reported to the host through `onFailed({ shared })` rather than written
+ * A refusal is reported to the caller through `onFailed({ shared })` rather than written
  * here: the card clips at 60px, so its sentence has to live outside the tile.
  */
-export function DeliverableActions({ file, actions, onFailed }) {
+export function useDeliverableExits(file, actions, onFailed) {
   const [state, setState] = useState('idle') // idle | opening | copied | failed
   const failed = (next) => {
     setState('failed')
@@ -136,11 +137,48 @@ export function DeliverableActions({ file, actions, onFailed }) {
       failed(null)
     }
   }
+  return { state, open, copy }
+}
+
+/** The exits as the card's own row of buttons, which is the shape DSH's card has. */
+export function DeliverableActions({ file, actions, onFailed }) {
+  const { state, open, copy } = useDeliverableExits(file, actions, onFailed)
   return h(Fragment, null,
     h('button', { type: 'button', className: 'bt-dcard-btn', disabled: state === 'opening', onClick: open },
       state === 'opening' ? t('Opening…') : t('Open with another app')),
     h('button', { type: 'button', className: 'bt-dcard-btn', onClick: copy, 'aria-label': t('Copy path'), title: t('Copy path') },
       state === 'copied' ? h(CheckIcon) : h(CopyIcon), state === 'copied' ? t('Copied') : t('Path')))
+}
+
+/**
+ * The exits as the preview page's own "···" menu: the platform's Menu component, so the
+ * dropdown behaves like every other one in the shell (focus, Escape, a portal, aligning
+ * itself to the edge). A page adds its source toggle to the same menu rather than
+ * crowding the title bar.
+ */
+function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
+  const { state, open, copy } = useDeliverableExits(file, actions, onFailed)
+  const [shown, setShown] = useState(false)
+  const items = [
+    ...(extra === null ? [] : [extra]),
+    { id: 'open', icon: h(SwitchIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') },
+    { id: 'copy', icon: state === 'copied' ? h(CheckIcon) : h(CopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') },
+  ]
+  return h(Menu, {
+    className: 'bt-preview-menu', open: shown, autoFocus: true, portal: true, align: 'end',
+    onClose: () => setShown(false),
+    anchor: h('button', {
+      type: 'button', className: 'bt-preview-more', 'aria-haspopup': 'menu', 'aria-expanded': shown,
+      'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
+    }, h(DotsIcon)),
+    items,
+    onSelect: (id) => {
+      setShown(false)
+      if (id === 'copy') void copy()
+      else if (id === 'open') void open()
+      else if (extra !== null && id === extra.id) onExtra?.()
+    },
+  })
 }
 
 function DeliverableCard({ file, actions }) {
@@ -243,15 +281,16 @@ export function DeliveredPreview({ file, actions, onClose }) {
           // looked like a picture and whose bytes say otherwise.
           ? h('div', { className: 'bt-preview-body bt-fp-image' }, h('img', { src: `data:${read.mime ?? 'application/octet-stream'};base64,${read.base64 ?? ''}`, alt: name }))
           : h('div', { className: 'bt-preview-body' }, h(FileView, { file: source ? { ...read, kind: 'text' } : read }))
+  // A page keeps its source one item away in the same menu, so the bar stays three parts:
+  // back on the left, the name centred, the menu on the right.
+  const toggle = state === 'shown' && read.kind === 'html' ? { id: 'source', label: source ? t('Preview') : t('Source') } : null
   return h(Fragment, null,
     h(PreviewHead, { name, onClose },
-      state === 'shown' && read.kind === 'html'
-        ? h('button', { type: 'button', className: 'bt-preview-toggle', onClick: () => setSource(current => !current) }, source ? t('Preview') : t('Source'))
-        : null),
+      h(PreviewMenu, { file, actions, onFailed: setFailure, extra: toggle, onExtra: () => setSource(current => !current) })),
     body,
-    h('div', { className: 'bt-preview-acts' },
-      h(DeliverableActions, { file, actions, onFailed: setFailure }),
-      failure ? h('span', { className: 'bt-dcard-hint', role: 'status' }, exitsSentence(failure.shared)) : null))
+    // A refusal is the one thing that still needs a line of its own under the file.
+    failure ? h('div', { className: 'bt-preview-acts' },
+      h('span', { className: 'bt-dcard-hint', role: 'status' }, exitsSentence(failure.shared))) : null)
 }
 
 /**
@@ -260,7 +299,7 @@ export function DeliveredPreview({ file, actions, onClose }) {
  */
 function PreviewHead({ name, onClose, children }) {
   return h('div', { className: 'bt-preview-head' },
-    h('button', { type: 'button', className: 'bt-preview-close', onClick: onClose, 'aria-label': t('Close preview'), title: t('Close preview') }, h(CloseIcon)),
+    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(ChevronLeftIcon)),
     h('span', { className: 'bt-preview-name' }, name),
     children)
 }
@@ -351,6 +390,19 @@ export function DeliveredLightbox({ file, actions, onClose, onUnreadable }) {
     })()
     return () => { live = false }
   }, [file.path])
+  // The platform's own preview puts focus back on whatever opened it, and it already
+  // skips a node that has left the document (ModalLayer checks isConnected). A card can
+  // still be re-rendered away while the picture is up, and then there is nothing left to
+  // return to: the same card is looked up again -- the list redrew it, so it is there --
+  // and takes the focus instead of leaving it nowhere. Only a focus that was lost is
+  // taken back; one the platform restored is left exactly where it put it.
+  useEffect(() => () => {
+    const active = document.activeElement
+    if (active !== null && active !== document.body) return
+    const again = [...document.querySelectorAll('.bt-dcard-hit')]
+      .find(node => (node.getAttribute('aria-label') ?? '').endsWith(` ${name}`))
+    if (again instanceof HTMLElement) again.focus()
+  }, [name])
   if (src === null || typeof ImageLightbox !== 'function') return null
   return h(ImageLightbox, {
     src,

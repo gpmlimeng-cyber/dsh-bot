@@ -4723,16 +4723,20 @@ var FILE_PREVIEW_CSS = `
 .bt-fp-image{display:flex;align-items:flex-start;justify-content:center;padding:14px}
 .bt-fp-image img{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain}
 .bt-fp-foot{flex:none;padding:6px 12px 8px;border-top:.5px solid var(--bt-line);font-size:11.5px;line-height:15px;color:var(--bt-ink-3);font-family:var(--bt-fp-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* A delivered file's own page in the panel (deliverables.js): a title bar, the file, and
-   the two exits at its foot. The panel carries the shape -- full screen on a phone, the
-   right column on a desktop -- so nothing here is sized per band. */
-.bt-preview-head{display:flex;align-items:center;gap:8px;height:44px;flex:none;padding:0 8px 0 6px;border-bottom:.5px solid var(--bt-line)}
-.bt-preview-close{flex:none;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-.bt-preview-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-preview-close svg{width:15px;height:15px}
-.bt-preview-name{flex:1;min-width:0;font-size:13px;line-height:18px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-preview-toggle{flex:none;height:26px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-2);font:inherit;font-size:12px;font-weight:500;cursor:pointer}
-.bt-preview-toggle:hover{background:var(--bt-active);color:var(--bt-ink)}
+/* A delivered file's own page in the panel (deliverables.js): a title bar -- back on the
+   left, the name centred, the "···" menu on the right -- the file, and the exits. The
+   panel carries the shape: full screen on a phone, the right column on a desktop, so
+   nothing here is sized per band. */
+.bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:44px;flex:none;padding:0 8px 0 6px;border-bottom:.5px solid var(--bt-line)}
+.bt-preview-back{flex:none;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-preview-back svg{width:15px;height:15px}
+/* Centred over the bar itself, so the name is in the middle whatever the two ends hold. */
+.bt-preview-name{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 96px);font-size:13px;line-height:18px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-preview-menu{margin-left:auto}
+.bt-preview-more{flex:none;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-preview-more svg{width:16px;height:16px}
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
@@ -4777,7 +4781,7 @@ var metaText = (file, name) => {
   return extension === "" ? t("File") : extension;
 };
 var exitsSentence = (shared2) => shared2 !== null && shared2 !== void 0 ? t("Could not open it here. The copy is at {path}", { path: shared2 }) : t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT });
-function DeliverableActions({ file, actions, onFailed }) {
+function useDeliverableExits(file, actions, onFailed) {
   const [state, setState] = (0, import_react7.useState)("idle");
   const failed = (next) => {
     setState("failed");
@@ -4820,6 +4824,10 @@ function DeliverableActions({ file, actions, onFailed }) {
       failed(null);
     }
   };
+  return { state, open, copy: copy2 };
+}
+function DeliverableActions({ file, actions, onFailed }) {
+  const { state, open, copy: copy2 } = useDeliverableExits(file, actions, onFailed);
   return (0, import_react7.createElement)(
     import_react7.Fragment,
     null,
@@ -4835,6 +4843,39 @@ function DeliverableActions({ file, actions, onFailed }) {
       state === "copied" ? t("Copied") : t("Path")
     )
   );
+}
+function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
+  const { state, open, copy: copy2 } = useDeliverableExits(file, actions, onFailed);
+  const [shown, setShown] = (0, import_react7.useState)(false);
+  const items = [
+    ...extra === null ? [] : [extra],
+    { id: "open", icon: (0, import_react7.createElement)(SwitchIcon), label: state === "opening" ? t("Opening…") : t("Open with another app") },
+    { id: "copy", icon: state === "copied" ? (0, import_react7.createElement)(CheckIcon) : (0, import_react7.createElement)(CopyIcon), label: state === "copied" ? t("Copied") : t("Copy path") }
+  ];
+  return (0, import_react7.createElement)(import_dsh_client_ui_primitives2.Menu, {
+    className: "bt-preview-menu",
+    open: shown,
+    autoFocus: true,
+    portal: true,
+    align: "end",
+    onClose: () => setShown(false),
+    anchor: (0, import_react7.createElement)("button", {
+      type: "button",
+      className: "bt-preview-more",
+      "aria-haspopup": "menu",
+      "aria-expanded": shown,
+      "aria-label": t("More"),
+      title: t("More"),
+      onClick: () => setShown((value) => !value)
+    }, (0, import_react7.createElement)(DotsIcon)),
+    items,
+    onSelect: (id) => {
+      setShown(false);
+      if (id === "copy") void copy2();
+      else if (id === "open") void open();
+      else if (extra !== null && id === extra.id) onExtra?.();
+    }
+  });
 }
 function DeliverableCard({ file, actions }) {
   const name = basename(file.path);
@@ -4918,28 +4959,29 @@ function DeliveredPreview({ file, actions, onClose }) {
     (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("This file has no preview")),
     (0, import_react7.createElement)("div", { className: "bt-fp-empty-text", role: "status" }, t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT }))
   ) : read.kind === "html" && !source ? (0, import_react7.createElement)("iframe", { className: "bt-preview-frame", sandbox: "", srcDoc: frameDocument(read.text ?? ""), title: name }) : read.kind === "image" ? (0, import_react7.createElement)("div", { className: "bt-preview-body bt-fp-image" }, (0, import_react7.createElement)("img", { src: `data:${read.mime ?? "application/octet-stream"};base64,${read.base64 ?? ""}`, alt: name })) : (0, import_react7.createElement)("div", { className: "bt-preview-body" }, (0, import_react7.createElement)(FileView, { file: source ? { ...read, kind: "text" } : read }));
+  const toggle = state === "shown" && read.kind === "html" ? { id: "source", label: source ? t("Preview") : t("Source") } : null;
   return (0, import_react7.createElement)(
     import_react7.Fragment,
     null,
     (0, import_react7.createElement)(
       PreviewHead,
       { name, onClose },
-      state === "shown" && read.kind === "html" ? (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-toggle", onClick: () => setSource((current) => !current) }, source ? t("Preview") : t("Source")) : null
+      (0, import_react7.createElement)(PreviewMenu, { file, actions, onFailed: setFailure, extra: toggle, onExtra: () => setSource((current) => !current) })
     ),
     body,
-    (0, import_react7.createElement)(
+    // A refusal is the one thing that still needs a line of its own under the file.
+    failure ? (0, import_react7.createElement)(
       "div",
       { className: "bt-preview-acts" },
-      (0, import_react7.createElement)(DeliverableActions, { file, actions, onFailed: setFailure }),
-      failure ? (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
-    )
+      (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared))
+    ) : null
   );
 }
 function PreviewHead({ name, onClose, children }) {
   return (0, import_react7.createElement)(
     "div",
     { className: "bt-preview-head" },
-    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-close", onClick: onClose, "aria-label": t("Close preview"), title: t("Close preview") }, (0, import_react7.createElement)(CloseIcon)),
+    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react7.createElement)(ChevronLeftIcon)),
     (0, import_react7.createElement)("span", { className: "bt-preview-name" }, name),
     children
   );
@@ -5033,6 +5075,12 @@ function DeliveredLightbox({ file, actions, onClose, onUnreadable }) {
       live = false;
     };
   }, [file.path]);
+  (0, import_react7.useEffect)(() => () => {
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
+    const again = [...document.querySelectorAll(".bt-dcard-hit")].find((node) => (node.getAttribute("aria-label") ?? "").endsWith(` ${name}`));
+    if (again instanceof HTMLElement) again.focus();
+  }, [name]);
   if (src === null || typeof import_dsh_client_ui_primitives2.ImageLightbox !== "function") return null;
   return (0, import_react7.createElement)(import_dsh_client_ui_primitives2.ImageLightbox, {
     src,

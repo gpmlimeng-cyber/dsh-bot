@@ -162,16 +162,20 @@ export const FILE_PREVIEW_CSS = `
 .bt-fp-image{display:flex;align-items:flex-start;justify-content:center;padding:14px}
 .bt-fp-image img{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain}
 .bt-fp-foot{flex:none;padding:6px 12px 8px;border-top:.5px solid var(--bt-line);font-size:11.5px;line-height:15px;color:var(--bt-ink-3);font-family:var(--bt-fp-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* A delivered file's own page in the panel (deliverables.js): a title bar, the file, and
-   the two exits at its foot. The panel carries the shape -- full screen on a phone, the
-   right column on a desktop -- so nothing here is sized per band. */
-.bt-preview-head{display:flex;align-items:center;gap:8px;height:44px;flex:none;padding:0 8px 0 6px;border-bottom:.5px solid var(--bt-line)}
-.bt-preview-close{flex:none;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-.bt-preview-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-preview-close svg{width:15px;height:15px}
-.bt-preview-name{flex:1;min-width:0;font-size:13px;line-height:18px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-preview-toggle{flex:none;height:26px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-2);font:inherit;font-size:12px;font-weight:500;cursor:pointer}
-.bt-preview-toggle:hover{background:var(--bt-active);color:var(--bt-ink)}
+/* A delivered file's own page in the panel (deliverables.js): a title bar -- back on the
+   left, the name centred, the "···" menu on the right -- the file, and the exits. The
+   panel carries the shape: full screen on a phone, the right column on a desktop, so
+   nothing here is sized per band. */
+.bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:44px;flex:none;padding:0 8px 0 6px;border-bottom:.5px solid var(--bt-line)}
+.bt-preview-back{flex:none;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-preview-back svg{width:15px;height:15px}
+/* Centred over the bar itself, so the name is in the middle whatever the two ends hold. */
+.bt-preview-name{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 96px);font-size:13px;line-height:18px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-preview-menu{margin-left:auto}
+.bt-preview-more{flex:none;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-preview-more svg{width:16px;height:16px}
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
