@@ -4,8 +4,8 @@
 // parts of it a later edit could quietly drop or retune --
 //
 //   a 60px tile in a two-column grid that folds to one column when the card column is
-//   narrow, a 40px tile for the type icon, the name over its metadata (13/20 name,
-//   10/16 metadata), one hit target covering the whole card, and the metadata line giving
+//   narrow, a 40px tile for the type icon, the name over its metadata (15/21 name,
+//   12/17 metadata), one hit target covering the whole card, and the metadata line giving
 //   way to the hint while the card is hovered or focused.
 //
 // Two things are ours and must survive the port: the copy-path button (the only thing a
@@ -46,9 +46,19 @@ test('the tile is DSH-shaped: 60px tall, a 40px type tile, one hit target over i
   assert.ok(rule('.bt-dcard-acts{').includes('pointer-events:auto'))
 })
 
-test('the name and its metadata keep the two sizes, and nothing swaps places on hover', () => {
-  assert.ok(rule('.bt-dcard-name{').includes('font-size:13px') && rule('.bt-dcard-name{').includes('line-height:20px'))
-  assert.ok(rule('.bt-dcard-desc{').includes('font-size:10px') && rule('.bt-dcard-desc{').includes('line-height:16px'))
+test('the name and its metadata keep their two sizes, and nothing swaps places on hover', () => {
+  // The sizes come from the delivery list the user pointed at: a step larger and heavier for
+  // the name, a step down in the quiet grey under it, and the two lines tight together.
+  assert.ok(rule('.bt-dcard-name{').includes('font-size:15px') && rule('.bt-dcard-name{').includes('line-height:21px'))
+  assert.ok(rule('.bt-dcard-name{').includes('font-weight:600'), 'the name carries medium weight, not the plain 500')
+  assert.ok(rule('.bt-dcard-desc{').includes('font-size:12px') && rule('.bt-dcard-desc{').includes('line-height:17px'))
+  assert.ok(rule('.bt-dcard-copy{').includes('gap:1px'), 'and the second line sits tight under the first')
+  // 21 + 1 + 17 = 39 of the tile's 44px of content room, so the tile is still 60px.
+  assert.ok(rule('.bt-dcard{').includes('height:60px'), 'the tile does not grow with the type')
+  // The type mark is sized against the exit icons rather than left at the platform's own
+  // 28px default or the 20px it had: the platform's document glyph fills 24.8x28 of its own
+  // 28-unit box, so 24px paints 21.2x24px of ink beside 23-31px of exit ink.
+  assert.ok(card.join('\n').includes('h(FileTypeIcon, { path: file.path, size: 24 })'), 'the type mark is 24px')
   // The second line used to be replaced by the word "Preview" while the pointer was on the
   // card. The eye in the acts row says that now, so the line stays where it is.
   assert.ok(!styles.includes('.bt-dcard-peek'), 'the hover-only word is gone')
@@ -102,9 +112,11 @@ test('two columns fold to one when the card column is narrow', () => {
   assert.ok(styles.includes('@container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}'))
 })
 
-test('the icon is DSH’s FileTypeIcon, sized as DSH sizes it', () => {
+test('the icon is DSH’s FileTypeIcon, sized against the row it sits in', () => {
   assert.ok(card.some(line => line.includes("import { FileTypeIcon, fileExtension, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'")), 'the card imports the host icon, the host image preview and the host menu')
-  assert.ok(card.some(line => line.includes('h(FileTypeIcon, { path: file.path, size: 20 })')), 'the icon follows the file path')
+  // 24px, not the platform's 28px default and not the 20px it had: the document glyph fills
+  // 24.8x28 of its own box, so 24px paints 21.2x24px beside the 23-31px the exits paint.
+  assert.ok(card.some(line => line.includes('h(FileTypeIcon, { path: file.path, size: 24 })')), 'the icon follows the file path, at the row’s size')
   assert.ok(!card.some(line => line.includes('PaperclipIcon')), 'the placeholder paperclip is gone')
 })
 

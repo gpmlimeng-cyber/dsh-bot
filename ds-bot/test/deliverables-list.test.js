@@ -50,6 +50,9 @@ test('the list keeps the message cards, and only gives them the panel’s shape'
   assert.ok(list.includes('meta: metaOf?.(file)'), 'and the card is handed it')
   assert.ok(list.includes('const folderOf = (path) => {') && list.includes('const atText = (at) => (Number.isFinite(at)'), 'both are defined once')
   assert.ok(preview.includes('.bt-products .bt-dcards{'), 'the panel gives the shared cards their width')
+  // The rows of a stack sit closer than the rows of the message's two-column grid: the
+  // reference list the user pointed at reads as a stack of tiles, not as a grid.
+  assert.ok(preview.includes(".bt-products .bt-dcards{margin-left:0;grid-template-columns:minmax(0,1fr);gap:6px;padding:0 2px 6px}"), 'and a tighter row gap than the grid')
 })
 
 test('an empty list and a list that cannot be read each say so, in the reader’s language', () => {

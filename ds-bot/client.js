@@ -2217,9 +2217,13 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-hit{position:absolute;inset:0;z-index:1;width:100%;padding:0;border:0;border-radius:inherit;background:0 0;cursor:pointer}
 .bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);outline:none}
 .bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;box-sizing:border-box;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;border:.5px solid var(--bt-line);background:var(--bt-card);color:var(--bt-accent);overflow:hidden}
-.bt-dcard-copy{position:relative;z-index:2;pointer-events:none;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
-.bt-dcard-name{font-size:13px;line-height:20px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-dcard-desc{font-size:10px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The two lines take the weight and the sizes of the delivery list the user pointed at: the
+   name is a step larger and carries medium weight, the second line a step down in the
+   quiet grey, and the two sit tight against each other -- 21 + 1 + 17 = 39px of the tile's
+   44px of content room, so the tile itself stays 60px. */
+.bt-dcard-copy{position:relative;z-index:2;pointer-events:none;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:1px}
+.bt-dcard-name{font-size:15px;line-height:21px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-dcard-desc{font-size:12px;line-height:17px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-dcard-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
 /* The exits sit in one row inside the card, and the sentence that explains a refusal
    is written by the card itself -- outside the tile -- since the tile clips at 60px. The
@@ -4801,7 +4805,9 @@ var FILE_PREVIEW_CSS = `
 .bt-products{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:6px}
 .bt-products>.bt-fp-empty{flex:1}
 .bt-prod-note{flex:none;padding:4px 10px 8px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
-.bt-products .bt-dcards{margin-left:0;grid-template-columns:minmax(0,1fr);padding:0 2px 6px}
+/* The list's rows sit closer than the message's two-column grid: the reference list is a
+   stack of tiles, not a grid, so 10px of gap read as a gap rather than as rhythm. */
+.bt-products .bt-dcards{margin-left:0;grid-template-columns:minmax(0,1fr);gap:6px;padding:0 2px 6px}
 `;
 
 // src/client/deliverables.js
@@ -4964,7 +4970,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         "aria-label": `${t("Preview")} ${name}`,
         onClick: preview
       }),
-      (0, import_react7.createElement)("span", { className: "bt-dcard-ico", "aria-hidden": true }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.FileTypeIcon, { path: file.path, size: 20 })),
+      (0, import_react7.createElement)("span", { className: "bt-dcard-ico", "aria-hidden": true }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.FileTypeIcon, { path: file.path, size: 24 })),
       (0, import_react7.createElement)(
         "span",
         { className: "bt-dcard-copy" },
