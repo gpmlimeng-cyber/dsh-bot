@@ -264,19 +264,21 @@ test('the message cards and the panel’s list are one component', () => {
 })
 
 // The preview page's title bar is sized off the panel's own right-sidebar header, so the
-// two read alike: the same bar height, the same title size, the same hit size. The three
-// numbers are pinned here with the rules they come from, so neither side can drift.
-test('the title bar takes the right sidebar’s own numbers', () => {
+// two read alike: the same bar height, the same title size. Its controls are the one number
+// that does not come from there -- 44px, the touch target a finger is owed on the page the
+// user taps, which the drawer's own 36px control does not reach. The numbers are pinned
+// here with the rules they come from, so neither side can drift.
+test('the title bar takes the right sidebar’s numbers and a 44px touch target', () => {
   assert.ok(styles.some(line => line.includes('.bt-drawer-top{display:flex;justify-content:flex-end;gap:8px;padding:12px 17px 6px 12px}')), 'the drawer head is 12+36+6 tall')
-  assert.ok(styles.some(line => line.includes('.bt-round{width:36px;height:36px;')), 'and its control is a 36px hit target')
+  assert.ok(styles.some(line => line.includes('.bt-round{width:36px;height:36px;')), 'and its control is the 36px the bar is built around')
   assert.ok(styles.some(line => line.includes('.bt-drawer-name{font-size:17px;line-height:24px;')), 'and its title is 17/24')
   assert.ok(previewRule('.bt-preview-head{').includes('height:54px'), 'so the page’s bar is 54px')
   assert.ok(previewRule('.bt-preview-name{').includes('font-size:17px') && previewRule('.bt-preview-name{').includes('line-height:24px'), 'and its title is 17/24')
   for (const prefix of ['.bt-preview-back{', '.bt-preview-more{']) {
-    assert.ok(previewRule(prefix).includes('width:36px') && previewRule(prefix).includes('height:36px'), `${prefix} is a 36px hit target`)
+    assert.ok(previewRule(prefix).includes('width:44px') && previewRule(prefix).includes('height:44px'), `${prefix} is a 44px touch target`)
   }
-  assert.ok(read('file-preview.js').includes('html[data-bt-pc] .bt-preview-back,html[data-bt-pc] .bt-preview-more{width:40px;height:40px}'), 'and 40px where the drawer’s own control is')
+  assert.ok(!read('file-preview.js').includes('html[data-bt-pc] .bt-preview'), 'and no band gets a smaller control back')
   // The reserve for the centred name is the two controls and their gaps, so a long name
   // never slides under one.
-  assert.ok(previewRule('.bt-preview-name{').includes('max-width:calc(100% - 112px)'), 'a long name never slides under a control')
+  assert.ok(previewRule('.bt-preview-name{').includes('max-width:calc(100% - 128px)'), 'a long name never slides under a control')
 })
