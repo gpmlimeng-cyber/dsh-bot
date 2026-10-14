@@ -1376,6 +1376,14 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-c
    the reason the value is expressed as a subtraction rather than a share. Only the Bot's own
    row is touched: the user's side keeps the base cap. */
 html[data-bt-mobile][data-bt-size=compact] [class*="_body"]:has(> [class*="_scrollBody"]) .bt-astack{--bt-bubble-max:calc(100% - 30px)}
+/* On a hand the three tools sit under the bubble rather than beside it: there is no hover to
+   chase, and beside the bubble they eat the text's width. They stay absolutely positioned, so
+   a hidden toolbar still reserves no room; a group's avatar column is stepped over so they
+   line up with the bubble itself. The hover bridge that existed for the sideways placement
+   has nothing left to bridge. */
+html[data-bt-mobile] .bt-tools{top:100%;left:0;margin:6px 0 0;transform:none}
+html[data-bt-mobile] .bt-astack[data-lead] .bt-tools{left:30px}
+html[data-bt-mobile] .bt-tools::after{display:none}
 [data-turn-tail]>:not([data-slot="conversation.chat.turnTail"]){display:none!important}
 [class*="_flowItem"][data-chat-flow-kind="turn-tail"]:not(:has([data-slot="conversation.chat.turnTail"]:not(:empty))){display:none!important}
 /* Every team Session belongs to a Bot or a group, so a blank one is an empty chat, not
