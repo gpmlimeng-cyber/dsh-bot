@@ -2865,24 +2865,30 @@ html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh
 html[data-bt-mobile]{--dsh-frame-chrome-top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)))}
 /* The mobile skin has three sizes, on the Compact/Medium/Expanded lines the platforms
    publish (Xiaomi and HarmonyOS both use 600 and 840). The defaults below are the compact
-   phone the skin has always drawn, so nothing changes where no band matches; a band only
-   re-points these variables, and every rule that needs one reads it here. The shell's own
-   1024 line stays the one switch between desktop and mobile, so 841-1023 is still ours. */
+   phone the skin draws where no band matches; a band only re-points these variables, and
+   every rule that needs one reads it here. The shell's own 1024 line stays the one switch
+   between desktop and mobile, so 841-1023 is still ours. A list's pitch steps with the
+   band: 48px on a phone, which is still clear of the 44px a finger wants, and the roomier
+   52px where the screen has width to spare. The gap between cards moves with the pitch,
+   or tighter rows would leave the gaps looking loose around them. */
 html[data-bt-mobile]{
   --bt-drawer-w:min(86vw,320px);
   --bt-set-max:100%;
-  --bt-set-row-h:52px;
+  --bt-set-row-h:48px;
+  --bt-set-gap:14px;
   --bt-set-cols:1;
 }
 html[data-bt-mobile][data-bt-size=medium]{
   --bt-drawer-w:min(68vw,400px);
   --bt-set-max:720px;
-  --bt-set-row-h:56px;
+  --bt-set-row-h:52px;
+  --bt-set-gap:16px;
 }
 html[data-bt-mobile][data-bt-size=expanded]{
   --bt-drawer-w:min(520px,50vw);
   --bt-set-max:880px;
-  --bt-set-row-h:56px;
+  --bt-set-row-h:52px;
+  --bt-set-gap:16px;
   --bt-set-cols:2;
   --bt-detail-w:480px;
 }/* The bar floats above every panel this skin opens, not just the conversation: the New…
@@ -3031,24 +3037,43 @@ html[data-bt-mobile] .bt-settings-nav{width:100%;flex:1;overflow-y:auto;border-r
    the row that opens a page is not that page -- so it has nothing to park on. */
 html[data-bt-mobile] .bt-settings-nav>.bt-thumb{display:none}
 html[data-bt-mobile] .bt-settings-group{display:block}
-html[data-bt-mobile] .bt-settings-group+.bt-settings-group{margin-top:16px}
+html[data-bt-mobile] .bt-settings-group+.bt-settings-group{margin-top:var(--bt-set-gap,14px)}
 html[data-bt-mobile] .bt-settings-group-head{display:block;margin:0 0 8px;padding:0 12px 0 13px;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-2)}
-html[data-bt-mobile] .bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card);overflow:hidden}
+/* The group card takes the widest radius in the skin, one step up from the 12px the page
+   cards carry: it is the frame around a whole group, and at 12px its corners read tighter
+   than the group heading above them suggests. The rows inside it are flush neighbours --
+   the card's own edge and fill is what separates one group from the next, so no line is
+   drawn between rows. */
+html[data-bt-mobile] .bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:16px;background:var(--bt-card);overflow:hidden}
 html[data-bt-mobile] .bt-settings-main{width:100%;height:auto;flex:1;min-height:0}
 /* The list reads in two levels: the row's name is the text, one step below the 15px it
    was and in the primary ink, and everything beside it is the second level at the group
    heading's size and colour -- the 24px icons included, or they read as heavier than the
    name they belong to. The chevron is that same second level: same colour, same size. */
-html[data-bt-mobile] .bt-settings-item{min-height:var(--bt-set-row-h,52px);padding:0 12px;border-radius:0;font-size:14px;line-height:20px;gap:12px;color:var(--bt-ink)}
+html[data-bt-mobile] .bt-settings-item{min-height:var(--bt-set-row-h,48px);padding:0 12px;border-radius:0;font-size:14px;line-height:20px;gap:12px;color:var(--bt-ink)}
 /* The name takes the room the chevron does not: it ellipsises, and the chevron lands on
    the card's inner edge rather than behind the text. The row carries its own width
    because this is a <button> in a block card — without it the button shrinks to its
    content, and margin-left:auto on the chevron has no free space to spend. */
 html[data-bt-mobile] .bt-settings-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-html[data-bt-mobile] .bt-settings-group-card>.bt-settings-item+.bt-settings-item{border-top:.5px solid var(--bt-line)}
 html[data-bt-mobile] .bt-settings-item>svg{flex:none;width:24px;height:24px;color:var(--bt-ink-2)}
 html[data-bt-mobile] .bt-set-go{display:flex;margin-left:auto;color:var(--bt-ink-2)}
 html[data-bt-mobile] .bt-set-go svg{width:13px;height:13px}
+/* The pages under the list open lists of the same kind -- a Bot, a group chat, a model's
+   usage row -- so they read at the same two levels: the row's own line is the text, at the
+   list's size in the primary ink, and what sits beside it is the second level, which means
+   the tag pills one step down and the chevron at the group heading's colour and size. Only
+   the rows that carry a Bot or a group chat are picked out: a form's own rows, which are a
+   label and a control, keep the sizes the form gave them. */
+html[data-bt-mobile] .bt-set-row:has(.bt-set-bot){font-size:14px;line-height:20px;color:var(--bt-ink)}
+html[data-bt-mobile] .bt-set-row:has(.bt-set-bot) .bt-tag{font-size:13px;line-height:18px}
+html[data-bt-mobile] .bt-set-row:has(.bt-set-bot) .bt-chevron{color:var(--bt-ink-2)}
+html[data-bt-mobile] .bt-set-row:has(.bt-set-bot) .bt-chevron svg{width:13px;height:13px}
+/* Those rows are options in a card, the same as the rows of the list above them, so no line
+   is drawn between them either. */
+html[data-bt-mobile] .bt-set-card>.bt-set-row:has(.bt-set-bot)+.bt-set-row:has(.bt-set-bot){border-top:0}
+html[data-bt-mobile] .bt-us-row-line{font-size:14px;line-height:20px}
+html[data-bt-mobile] .bt-us-row-sub{font-size:13px;line-height:18px;color:var(--bt-ink-2)}
 html[data-bt-mobile] .bt-settings-scroll{padding:12px 12px max(24px,env(safe-area-inset-bottom))}
 /* A settings row is a label and whatever changes it, side by side; on a phone the row has
    the width for that now, so it only needs the height a finger wants. */
@@ -3067,8 +3092,8 @@ html[data-bt-mobile][data-bt-size=expanded] [class*="_centerCol"]{margin-right:v
    panel there is nothing to hide from: it stays, over the conversation and clear of the
    column, which is how the session stays switchable while the details are open. */
 html[data-bt-mobile][data-bt-size=expanded] body:has(.bt-panel) .bt-mobile-bar{display:flex;right:var(--bt-detail-w)}
-/* Two columns of group cards, one 16px gutter, each row as tall as its taller card. */
-html[data-bt-mobile][data-bt-size=expanded] .bt-settings-nav{display:grid;grid-template-columns:repeat(var(--bt-set-cols,1),minmax(0,1fr));column-gap:16px;row-gap:16px;align-content:start;align-items:start}
+/* Two columns of group cards, one gutter apart, each row as tall as its taller card. */
+html[data-bt-mobile][data-bt-size=expanded] .bt-settings-nav{display:grid;grid-template-columns:repeat(var(--bt-set-cols,1),minmax(0,1fr));column-gap:var(--bt-set-gap,14px);row-gap:var(--bt-set-gap,14px);align-content:start;align-items:start}
 html[data-bt-mobile][data-bt-size=expanded] .bt-settings-group{margin-top:0}
 .bt-mobile-bar .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-chat-content-width,748px);margin-inline:auto}
 /* pointer-events:auto is required: .bt-head sets none to let the transcript scroll
