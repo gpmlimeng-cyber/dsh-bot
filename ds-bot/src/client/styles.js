@@ -1193,6 +1193,21 @@ html[data-bt-mobile] .bt-set-row:has(.bt-set-bot) .bt-chevron svg{width:13px;hei
 html[data-bt-mobile] .bt-set-card>.bt-set-row:has(.bt-set-bot)+.bt-set-row:has(.bt-set-bot){border-top:0}
 html[data-bt-mobile] .bt-us-row-line{font-size:14px;line-height:20px}
 html[data-bt-mobile] .bt-us-row-sub{font-size:13px;line-height:18px;color:var(--bt-ink-2)}
+/* The usage page opens with a strip of four figures in one row. On a phone that row cannot
+   hold four: at 425px the 1.6fr 1fr 1fr 1fr columns leave the total about 103px of content
+   and the three beside it about 51px, while the total's line -- a 34px figure, its unit and
+   its delta, all nowrap -- wants about three times that. A nowrap box paints outside its
+   own cell wherever there is no clip, so the total ran over the next cell's label, and the
+   51px cells ellipsised their own labels ("缓存…"). The total takes a row of its own and
+   the three figures share the row below, where each has room for its whole label, and the
+   value is clipped at its own cell so it cannot reach a neighbour again. Expanded, which
+   has the width for the original row, keeps it. */
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-us-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-us-stat{padding:14px}
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-us-stat-main{grid-column:1/-1;border-bottom:1px solid var(--bt-line)}
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-us-stat+.bt-us-stat{border-left:0}
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-us-stat:nth-child(n+3){border-left:1px solid var(--bt-line)}
+html[data-bt-mobile] .bt-us-stat-value{overflow:hidden}
 html[data-bt-mobile] .bt-settings-scroll{padding:12px 12px max(24px,env(safe-area-inset-bottom))}
 /* A settings row is a label and whatever changes it, side by side; on a phone the row has
    the width for that now, so it only needs the height a finger wants. */
