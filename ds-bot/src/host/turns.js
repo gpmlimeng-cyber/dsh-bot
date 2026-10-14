@@ -391,6 +391,10 @@ export function install(rt) {
         const data = event.data
         if (!Array.isArray(data?.files)) break
         entry.deliverables = [...(entry.deliverables ?? []), { sessionId: id, seq: event.seq, files: data.files }]
+        // What a Bot hands over usually sits outside the team workspace, where the
+        // panel's own reader refuses it by design. Remembering these exact paths is what
+        // lets a phone open a file that was just delivered, and nothing else.
+        rt.rememberDelivered?.(data.files.map(file => file?.path))
         break
       }
       case 'turn/end': {

@@ -305,6 +305,9 @@ export function install(rt) {
         // The Desktop window's long poll for read_browser, and its answers.
         case 'panel-file':
           return ok(await rt.panelFile(String(body.path ?? '')))
+        // A file a Bot delivered to this team, wherever on the phone it put it.
+        case 'present-file':
+          return ok(await rt.deliveredFile(String(body.path ?? '')))
         case 'browser-wait': {
           if (rt.browserChannel === undefined) return fail('Bot browsers are off on this host', 'bot/browser-off')
           const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 100) : ''

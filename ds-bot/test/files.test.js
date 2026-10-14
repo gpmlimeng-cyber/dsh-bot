@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { IMAGE_MAX, TEXT_MAX, fileKind } from '../src/host/files.js'
-import { apply } from '../index.js'
+import { createRuntime } from '../index.js'
 import { fakeContext } from './fake-ctx.js'
 
 function start({ config = {} } = {}) {
@@ -20,7 +20,7 @@ function start({ config = {} } = {}) {
   let route
   const register = ctx.connection.fetch.register
   ctx.connection.fetch.register = (options) => { route = options; return register(options) }
-  apply(ctx, { home, workspace, ...config })
+  const rt = createRuntime(ctx, { home, workspace, ...config })
   const call = async (endpoint, payload) => {
     const response = await route.fetch(new Request('http://localhost/api/bot', { method: 'POST', body: JSON.stringify({ endpoint, payload }) }))
     return response.json()
@@ -30,7 +30,7 @@ function start({ config = {} } = {}) {
     rmSync(home, { recursive: true, force: true, maxRetries: 5 })
     rmSync(workspace, { recursive: true, force: true, maxRetries: 5 })
   }
-  return { workspace, call, stop }
+  return { workspace, call, rt, stop }
 }
 
 test('a workspace file comes back with its kind and its text', async (t) => {
@@ -171,5 +171,47 @@ test('fileKind trusts the bytes over the suffix', () => {
   assert.equal(fileKind('a.png', 0, Buffer.alloc(0)), 'binary')
   // An unknown suffix is a binary even with text inside.
   assert.equal(fileKind('a.zip', 10, text), 'binary')
+})
+
+test('a delivered file is readable wherever it was put, and only it is', async (t) => {
+  const { workspace, rt, call, stop } = start()
+  t.after(stop)
+  const outside = mkdtempSync(join(tmpdir(), 'ds-bot-delivered-'))
+  t.after(() => rmSync(outside, { recursive: true, force: true, maxRetries: 5 }))
+  const report = join(outside, 'report.md')
+  const shot = join(outside, 'pixel.png')
+  writeFileSync(report, '# Delivered\n\nBody.')
+  writeFileSync(shot, Buffer.from('89504e470d0a1a0a', 'hex'))
+  writeFileSync(join(workspace, 'secret.md'), 'not delivered')
+  // Nothing outside the workspace is readable until a Bot has handed it over.
+  const before = (await call('present-file', { path: report })).value
+  assert.equal(before.ok, false)
+  assert.match(before.error, /was not delivered/)
+  rt.rememberDelivered([report, shot])
+  const read = (await call('present-file', { path: report })).value
+  assert.deepEqual([read.ok, read.kind, read.name, read.text], [true, 'markdown', 'report.md', '# Delivered\n\nBody.'])
+  const image = (await call('present-file', { path: shot })).value
+  assert.deepEqual([image.ok, image.kind, image.mime], [true, 'image', 'image/png'])
+  assert.equal(image.base64, Buffer.from('89504e470d0a1a0a', 'hex').toString('base64'))
+  // Remembering one path must not open the door for another — not even one inside the
+  // workspace, and not a path that was never delivered.
+  for (const path of [join(workspace, 'secret.md'), join(outside, 'other.md'), '', '/etc/hosts']) {
+    assert.equal((await call('present-file', { path })).value.ok, false, `${path} must be refused`)
+  }
+  // The panel's own rule is untouched: it still refuses absolute paths.
+  assert.equal((await call('panel-file', { path: report })).value.ok, false)
+})
+
+test('a delivered path that is gone, or is now a folder, answers with a reason', async (t) => {
+  const { rt, call, stop } = start()
+  t.after(stop)
+  const outside = mkdtempSync(join(tmpdir(), 'ds-bot-delivered-gone-'))
+  t.after(() => rmSync(outside, { recursive: true, force: true, maxRetries: 5 }))
+  const gone = join(outside, 'gone.md')
+  const folder = join(outside, 'folder')
+  mkdirSync(folder)
+  rt.rememberDelivered([gone, folder])
+  assert.match((await call('present-file', { path: gone })).value.error, /does not exist/)
+  assert.match((await call('present-file', { path: folder })).value.error, /is a folder/)
 })
 

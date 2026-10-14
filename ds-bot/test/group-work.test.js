@@ -287,3 +287,32 @@ test('members still at work show in the team view and in the prompts of the othe
   host.finish('gc', '没问题。')
   await settle(() => result() !== undefined)
 })
+
+// A Bot hands files over from wherever it keeps them, and on this phone that is outside
+// the team workspace, where the panel's own reader refuses a path by design. The event
+// that carries the delivery is what makes those exact paths readable, and the reply that
+// goes into the room is what carries them to the card.
+test('a delivered file becomes readable for the phone, and only that path', async (t) => {
+  const host = await start(t)
+  const outside = mkdtempSync(join(tmpdir(), 'ds-bot-delivered-'))
+  t.after(() => rmSync(outside, { recursive: true, force: true, maxRetries: 5 }))
+  const report = join(outside, 'report.md')
+  writeFileSync(report, '# Delivered\n\nBody.')
+  const result = host.round('c1', host.say('@Chief 让 Writer 交一份报告'))
+  await settle(() => host.agentOf('ga').calls.length === 1)
+  host.begin('ga')
+  host.finish('ga', '@Writer 把报告交上来')
+  await settle(() => host.agentOf('gb').calls.length === 1)
+  host.begin('gb')
+  // Before the delivery the path is refused, wherever it sits.
+  assert.match((await host.call('present-file', { path: report })).value.error, /was not delivered/)
+  host.emit('gb', 'deliverables/presented', { files: [{ path: report, description: '报告（初稿）' }] })
+  const read = (await host.call('present-file', { path: report })).value
+  assert.deepEqual([read.ok, read.kind, read.name, read.text], [true, 'markdown', 'report.md', '# Delivered\n\nBody.'])
+  assert.equal((await host.call('present-file', { path: join(outside, 'other.md') })).value.ok, false)
+  host.finish('gb', '报告交上来了')
+  await settle(() => result() !== undefined)
+  // The reply carries the path, the description and the coordinates the card needs.
+  const reply = result().replies.find(entry => entry.name === 'Writer')
+  assert.deepEqual(reply.deliverables.map(entry => entry.files), [[{ path: report, description: '报告（初稿）' }]])
+})

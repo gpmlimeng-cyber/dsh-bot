@@ -13,6 +13,9 @@ export const TEXT_MAX = 120_000
 export const IMAGE_MAX = 2_000_000
 // How many bytes the signature check looks at, and so how much a small file reads.
 const HEAD_MAX = 512
+// How many delivered paths stay readable. A phone opens what was just handed to it, so
+// the window only has to outlast the conversation it belongs to.
+const DELIVERED_MAX = 500
 // Suffixes shown as text. Everything else that is not an image is a binary.
 const TEXT_SUFFIX = new Set([
   'bash', 'bibtex', 'c', 'cfg', 'clj', 'cljs', 'conf', 'cpp', 'cs', 'css', 'csv', 'dart', 'diff',
@@ -125,35 +128,29 @@ export function install(rt) {
     try { return await realpath(root) } catch { return root }
   }
 
-  /**
-   * One file for the panel: `path` is relative to the workspace root.
-   * @returns {Promise<{ok:true, kind:string, name:string, size:number, mtime:number, text?:string, base64?:string, mime?:string, truncated?:boolean} | {ok:false, error:string}>}
-   */
-  const panelFile = async (input) => {
-    const root = await realRoot(workspacePath() ?? '')
-    if (root === '') return { ok: false, error: 'This Bot team has no workspace.' }
-    const target = safePath(root, input)
-    if (target === null) return { ok: false, error: 'That path is outside the workspace.' }
+  // Stat and resolve one regular file: a folder, a special file and a path that is not
+  // there are all refused. The real path comes back so the caller can apply its own
+  // policy before a single byte is read.
+  const regularFile = async (target) => {
     let info
     try {
       info = await stat(target)
-      if (info.isDirectory()) return { ok: false, error: 'That is a folder.' }
-      if (!info.isFile()) return { ok: false, error: 'That is not a regular file.' }
+      if (info.isDirectory()) return { error: 'That is a folder.' }
+      if (!info.isFile()) return { error: 'That is not a regular file.' }
     } catch {
-      return { ok: false, error: 'That file does not exist.' }
+      return { error: 'That file does not exist.' }
     }
-    // The real path, not the written one: a link inside the workspace that points
-    // out of it is refused here, so the check cannot be walked around.
-    let real
     try {
-      real = await realpath(target)
+      return { info, real: await realpath(target) }
     } catch {
-      return { ok: false, error: 'That file could not be read.' }
+      return { error: 'That file could not be read.' }
     }
-    if (inside(root, real) === null) return { ok: false, error: 'That path leaves the workspace.' }
-    const name = basename(target)
-    // Read once, after every path check: the head decides the kind, and a small file
-    // is already all of itself, so the content needs no second open.
+  }
+
+  // The bytes of a regular file whose path policy has already passed. Read once: the
+  // head decides the kind, and a small file is already all of itself, so the content
+  // needs no second open.
+  const readRegular = async (real, name, info) => {
     const base = { ok: true, name, size: info.size, mtime: Math.round(info.mtimeMs) }
     const unreadable = { ok: false, error: 'That file could not be read.' }
     let head
@@ -178,6 +175,47 @@ export function install(rt) {
     }
   }
 
+  /**
+   * One file for the panel: `path` is relative to the workspace root.
+   * @returns {Promise<{ok:true, kind:string, name:string, size:number, mtime:number, text?:string, base64?:string, mime?:string, truncated?:boolean} | {ok:false, error:string}>}
+   */
+  const panelFile = async (input) => {
+    const root = await realRoot(workspacePath() ?? '')
+    if (root === '') return { ok: false, error: 'This Bot team has no workspace.' }
+    const target = safePath(root, input)
+    if (target === null) return { ok: false, error: 'That path is outside the workspace.' }
+    const found = await regularFile(target)
+    if (found.error !== undefined) return { ok: false, error: found.error }
+    // The real path, not the written one: a link inside the workspace that points out
+    // of it is refused here, so the check cannot be walked around.
+    if (inside(root, found.real) === null) return { ok: false, error: 'That path leaves the workspace.' }
+    return readRegular(found.real, basename(target), found.info)
+  }
+
+  // A delivered file sits wherever the Bot put it, almost always outside the team
+  // workspace, so the workspace rule cannot answer for it. What can: DSH's own `present`
+  // tool named this exact path in a deliverables/presented event and the host kept it.
+  // Only those paths are readable, so no directory is opened up and the read surface is
+  // exactly "a file a Bot handed over". Anything the host never saw is refused before it
+  // is even stat'ed. The list is capped: it is a window on recent work, not a record.
+  const delivered = new Map()
+  const rememberDelivered = (paths) => {
+    if (!Array.isArray(paths)) return
+    for (const path of paths) {
+      if (typeof path !== 'string' || path === '') continue
+      delivered.delete(path)
+      delivered.set(path, Date.now())
+      while (delivered.size > DELIVERED_MAX) delivered.delete(delivered.keys().next().value)
+    }
+  }
+  const deliveredFile = async (input) => {
+    const target = String(input ?? '')
+    if (target.includes('\0') || !delivered.has(target)) return { ok: false, error: 'That file was not delivered to this team.' }
+    const found = await regularFile(target)
+    if (found.error !== undefined) return { ok: false, error: found.error }
+    return readRegular(found.real, basename(target), found.info)
+  }
+
   ctx.effect(() => () => {}, 'ds-bot: file previews')
-  Object.assign(rt, { panelFile })
+  Object.assign(rt, { panelFile, rememberDelivered, deliveredFile })
 }
