@@ -3220,8 +3220,20 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-c
    card it took its height out of the draft, which is what pushed the input down as soon
    as a file was attached; absolutely positioned it costs the card nothing, so the card
    measures the same with and without attachments. The card is already position:relative
-   and clips none of its own children, and the 8px clears its top edge. */
-html[data-bt-mobile] [data-composer-card]>[data-slot="conversation.input.attachments"]{position:absolute;left:0;right:0;bottom:calc(100% + 8px)}
+   and clips none of its own children.
+   The slot itself cannot be positioned: its outlet is a div carrying an inline
+   "display:contents" (dsh-client-ui-renderer, SlotOutlet), so it generates no box and
+   flex/position on it are inert -- measured, the card still grew by the rail's height and
+   the thumb sat left of the input on one line. The box that has to move is therefore the
+   rail element inside the outlet, and only its outer one: the scrollable rail is nested in
+   it and must keep its own flow. Its own -6px bottom margin would have eaten into the gap,
+   so it goes.
+   12px of clearance rather than 8: the accessibility tree's boxes run a couple of px
+   larger than the elements they stand for (it reports the 64px thumbnail at 65-66px), so
+   the same tree reads this gap about 2px short -- 8px of CSS came back as 6.2. The air is
+   there to read as clear separation, not as a margin to argue over. */
+html[data-bt-mobile] [data-composer-card] [data-slot="conversation.input.attachments"]>[class*="_rail"],
+html[data-bt-mobile] [data-composer-card] [data-slot="conversation.input.attachments"] [class*="_rail"]:has([class*="_rail"]){position:absolute;left:0;right:0;bottom:calc(100% + 12px);margin:0}
 /* That rail no longer changes the card's size, so the shape that used to follow the size
    change would now be a jump all by itself. */
 html[data-bt-mobile] [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *){border-radius:22px!important}
