@@ -2220,20 +2220,21 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-copy{position:relative;z-index:2;pointer-events:none;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
 .bt-dcard-name{font-size:13px;line-height:20px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-dcard-desc{font-size:10px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-dcard-peek{display:none;font-size:10px;line-height:16px;color:var(--bt-ink-2)}
-.bt-dcard:hover .bt-dcard-desc,.bt-dcard:focus-within .bt-dcard-desc{display:none}
-.bt-dcard:hover .bt-dcard-peek,.bt-dcard:focus-within .bt-dcard-peek{display:inline}
 .bt-dcard-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
-/* The two exits sit in one row inside the card, and the sentence that explains a refusal
+/* The exits sit in one row inside the card, and the sentence that explains a refusal
    is written by the card itself -- outside the tile -- since the tile clips at 60px. The
-   preview page renders the same acts row at its foot. */
-.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-end}
+   preview page renders the same acts row at its foot. Three controls go in one row and
+   never wrap: the tile is a fixed 60px, so a second row would be clipped, and the name
+   column is the one that gives way instead. */
+.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:nowrap;align-items:center;gap:4px;justify-content:flex-end}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
-.bt-dcard-btn{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:background-color .12s ease,color .12s ease}
-.bt-dcard-btn:hover{background:var(--bt-active)}
+/* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
+   is the touch target the card's own 60px tile can hold exactly (8px of padding above and
+   below), and the same size the preview page's controls take. */
+.bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
+.bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
-.bt-dcard-btn svg{width:13px;height:13px}
-.bt-dcard[data-state=fallback] .bt-dcard-btn:first-child{display:none}
+.bt-dcard-btn svg{width:16px;height:16px}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, "scale")}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 
@@ -3914,6 +3915,8 @@ var InfoIcon = lineIcon(["M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z", "M10 
 var StarLineIcon = lineIcon(["M10 3l2.1 4.3 4.7.7-3.4 3.3.8 4.7L10 13.8 5.8 16l.8-4.7L3.2 8l4.7-.7z"]);
 var CopyIcon = lineIcon(["M8.5 7h6A1.5 1.5 0 0 1 16 8.5v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 7 14.5v-6A1.5 1.5 0 0 1 8.5 7z", "M4 12.5V5.5A1.5 1.5 0 0 1 5.5 4H13"]);
 var HideIcon = lineIcon(["M3 3l14 14", "M8.6 5.2A7.6 7.6 0 0 1 10 5c4.5 0 7 5 7 5a12.6 12.6 0 0 1-2 2.6M12.2 14.5A6.8 6.8 0 0 1 10 15c-4.5 0-7-5-7-5a12.4 12.4 0 0 1 3-3.4", "M8.5 8.5a2 2 0 0 0 3 3"]);
+var EyeIcon = lineIcon(["M10 4.5c4.3 0 7 3.4 7.5 5.5-.5 2.1-3.2 5.5-7.5 5.5S3 12.1 2.5 10C3 7.9 5.7 4.5 10 4.5z", "M10 7.7a2.3 2.3 0 1 1 0 4.6 2.3 2.3 0 0 1 0-4.6z"]);
+var ExternalIcon = lineIcon(["M16.5 12v3.5A1.5 1.5 0 0 1 15 17H5a1.5 1.5 0 0 1-1.5-1.5v-10A1.5 1.5 0 0 1 5 4h3.5", "M11 3.5h5.5V9", "M16.5 3.5L9.5 10.5"]);
 var TrashIcon = lineIcon(["M3.5 5.5h13", "M8 5.5V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.5", "M5 5.5l.7 10A1.5 1.5 0 0 0 7.2 17h5.6a1.5 1.5 0 0 0 1.5-1.5l.7-10", "M8.5 9v4.5M11.5 9v4.5"]);
 var DuplicateIcon = lineIcon(["M7 7h8.5v9.5H7z", "M4.5 13V3.5H13", "M11.25 9.5v4.5M9 11.75h4.5"]);
 var SlidersIcon = lineIcon(["M4 6.5h5M12.5 6.5H16M4 13.5h4M11.5 13.5H16", "M10.5 4.5v4M9.5 11.5v4"]);
@@ -4847,22 +4850,37 @@ function useDeliverableExits(file, actions, onFailed) {
   };
   return { state, open, copy: copy2 };
 }
-function DeliverableActions({ file, actions, onFailed }) {
+function DeliverableActions({ file, actions, preview, onFailed }) {
   const { state, open, copy: copy2 } = useDeliverableExits(file, actions, onFailed);
+  const name = basename(file.path);
   return (0, import_react7.createElement)(
     import_react7.Fragment,
     null,
-    (0, import_react7.createElement)(
-      "button",
-      { type: "button", className: "bt-dcard-btn", disabled: state === "opening", onClick: open },
-      state === "opening" ? t("Opening…") : t("Open with another app")
-    ),
-    (0, import_react7.createElement)(
-      "button",
-      { type: "button", className: "bt-dcard-btn", onClick: copy2, "aria-label": t("Copy path"), title: t("Copy path") },
-      state === "copied" ? (0, import_react7.createElement)(CheckIcon) : (0, import_react7.createElement)(CopyIcon),
-      state === "copied" ? t("Copied") : t("Path")
-    )
+    (0, import_react7.createElement)("button", {
+      type: "button",
+      className: "bt-dcard-btn",
+      "data-act": "preview",
+      "aria-label": `${t("Preview")} ${name}`,
+      title: t("Preview"),
+      onClick: preview
+    }, (0, import_react7.createElement)(EyeIcon)),
+    (0, import_react7.createElement)("button", {
+      type: "button",
+      className: "bt-dcard-btn",
+      "data-act": "open",
+      disabled: state === "opening",
+      onClick: open,
+      title: state === "opening" ? t("Opening…") : t("Open with another app"),
+      "aria-label": state === "opening" ? t("Opening…") : t("Open with another app")
+    }, (0, import_react7.createElement)(ExternalIcon)),
+    (0, import_react7.createElement)("button", {
+      type: "button",
+      className: "bt-dcard-btn",
+      "data-act": "copy",
+      onClick: copy2,
+      title: state === "copied" ? t("Copied") : t("Copy path"),
+      "aria-label": state === "copied" ? t("Copied") : t("Copy path")
+    }, state === "copied" ? (0, import_react7.createElement)(CheckIcon) : (0, import_react7.createElement)(CopyIcon))
   );
 }
 function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
@@ -4922,10 +4940,9 @@ function DeliverableCard({ file, actions, meta, role }) {
         "span",
         { className: "bt-dcard-copy" },
         (0, import_react7.createElement)("span", { className: "bt-dcard-name" }, name),
-        (0, import_react7.createElement)("span", { className: "bt-dcard-desc" }, meta ?? metaText(file, name)),
-        (0, import_react7.createElement)("span", { className: "bt-dcard-peek", "aria-hidden": true }, t("Preview"))
+        (0, import_react7.createElement)("span", { className: "bt-dcard-desc" }, meta ?? metaText(file, name))
       ),
-      (0, import_react7.createElement)("span", { className: "bt-dcard-acts" }, (0, import_react7.createElement)(DeliverableActions, { file, actions, onFailed: setFailure }))
+      (0, import_react7.createElement)("span", { className: "bt-dcard-acts" }, (0, import_react7.createElement)(DeliverableActions, { file, actions, preview, onFailed: setFailure }))
     ),
     failure ? (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
   );

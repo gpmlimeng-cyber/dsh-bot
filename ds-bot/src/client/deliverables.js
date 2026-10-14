@@ -16,7 +16,7 @@
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { FileTypeIcon, fileExtension, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsIcon, SwitchIcon } from './icons.js'
+import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsIcon, ExternalIcon, EyeIcon, SwitchIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { t, dateLocale } from './i18n.js'
 
@@ -145,13 +145,32 @@ export function useDeliverableExits(file, actions, onFailed) {
 }
 
 /** The exits as the card's own row of buttons, which is the shape DSH's card has. */
-export function DeliverableActions({ file, actions, onFailed }) {
+/**
+ * The exits as the card's own row of buttons, which is the shape DSH's card has. They are
+ * icons, not words: three word pills need more width than the card has to spare, and the
+ * name is what the card is for. Each keeps its words in `aria-label`, so a reader still
+ * hears "Copy path", and the same three stay written out in the preview page's menu.
+ * `preview` comes in rather than being rebuilt here, so the eye and a tap on the card are
+ * one action with one name.
+ */
+export function DeliverableActions({ file, actions, preview, onFailed }) {
   const { state, open, copy } = useDeliverableExits(file, actions, onFailed)
+  const name = basename(file.path)
   return h(Fragment, null,
-    h('button', { type: 'button', className: 'bt-dcard-btn', disabled: state === 'opening', onClick: open },
-      state === 'opening' ? t('Opening…') : t('Open with another app')),
-    h('button', { type: 'button', className: 'bt-dcard-btn', onClick: copy, 'aria-label': t('Copy path'), title: t('Copy path') },
-      state === 'copied' ? h(CheckIcon) : h(CopyIcon), state === 'copied' ? t('Copied') : t('Path')))
+    h('button', {
+      type: 'button', className: 'bt-dcard-btn', 'data-act': 'preview',
+      'aria-label': `${t('Preview')} ${name}`, title: t('Preview'), onClick: preview,
+    }, h(EyeIcon)),
+    h('button', {
+      type: 'button', className: 'bt-dcard-btn', 'data-act': 'open', disabled: state === 'opening',
+      onClick: open, title: state === 'opening' ? t('Opening…') : t('Open with another app'),
+      'aria-label': state === 'opening' ? t('Opening…') : t('Open with another app'),
+    }, h(ExternalIcon)),
+    h('button', {
+      type: 'button', className: 'bt-dcard-btn', 'data-act': 'copy', onClick: copy,
+      title: state === 'copied' ? t('Copied') : t('Copy path'),
+      'aria-label': state === 'copied' ? t('Copied') : t('Copy path'),
+    }, state === 'copied' ? h(CheckIcon) : h(CopyIcon)))
 }
 
 /**
@@ -214,9 +233,8 @@ function DeliverableCard({ file, actions, meta, role }) {
       h('span', { className: 'bt-dcard-ico', 'aria-hidden': true }, h(FileTypeIcon, { path: file.path, size: 20 })),
       h('span', { className: 'bt-dcard-copy' },
         h('span', { className: 'bt-dcard-name' }, name),
-        h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name)),
-        h('span', { className: 'bt-dcard-peek', 'aria-hidden': true }, t('Preview'))),
-      h('span', { className: 'bt-dcard-acts' }, h(DeliverableActions, { file, actions, onFailed: setFailure }))),
+        h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name))),
+      h('span', { className: 'bt-dcard-acts' }, h(DeliverableActions, { file, actions, preview, onFailed: setFailure }))),
     failure ? h('span', { className: 'bt-dcard-hint', role: 'status' }, exitsSentence(failure.shared)) : null)
 }
 

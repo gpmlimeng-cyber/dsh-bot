@@ -251,20 +251,21 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-copy{position:relative;z-index:2;pointer-events:none;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px}
 .bt-dcard-name{font-size:13px;line-height:20px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-dcard-desc{font-size:10px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-dcard-peek{display:none;font-size:10px;line-height:16px;color:var(--bt-ink-2)}
-.bt-dcard:hover .bt-dcard-desc,.bt-dcard:focus-within .bt-dcard-desc{display:none}
-.bt-dcard:hover .bt-dcard-peek,.bt-dcard:focus-within .bt-dcard-peek{display:inline}
 .bt-dcard-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
-/* The two exits sit in one row inside the card, and the sentence that explains a refusal
+/* The exits sit in one row inside the card, and the sentence that explains a refusal
    is written by the card itself -- outside the tile -- since the tile clips at 60px. The
-   preview page renders the same acts row at its foot. */
-.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-end}
+   preview page renders the same acts row at its foot. Three controls go in one row and
+   never wrap: the tile is a fixed 60px, so a second row would be clipped, and the name
+   column is the one that gives way instead. */
+.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:nowrap;align-items:center;gap:4px;justify-content:flex-end}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
-.bt-dcard-btn{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 10px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:background-color .12s ease,color .12s ease}
-.bt-dcard-btn:hover{background:var(--bt-active)}
+/* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
+   is the touch target the card's own 60px tile can hold exactly (8px of padding above and
+   below), and the same size the preview page's controls take. */
+.bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
+.bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
-.bt-dcard-btn svg{width:13px;height:13px}
-.bt-dcard[data-state=fallback] .bt-dcard-btn:first-child{display:none}
+.bt-dcard-btn svg{width:16px;height:16px}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 

@@ -46,11 +46,35 @@ test('the tile is DSH-shaped: 60px tall, a 40px type tile, one hit target over i
   assert.ok(rule('.bt-dcard-acts{').includes('pointer-events:auto'))
 })
 
-test('the name and its metadata keep the two sizes, and the metadata gives way on hover', () => {
+test('the name and its metadata keep the two sizes, and nothing swaps places on hover', () => {
   assert.ok(rule('.bt-dcard-name{').includes('font-size:13px') && rule('.bt-dcard-name{').includes('line-height:20px'))
   assert.ok(rule('.bt-dcard-desc{').includes('font-size:10px') && rule('.bt-dcard-desc{').includes('line-height:16px'))
-  assert.ok(styles.includes('.bt-dcard:hover .bt-dcard-desc,.bt-dcard:focus-within .bt-dcard-desc{display:none}'))
-  assert.ok(styles.includes('.bt-dcard:hover .bt-dcard-peek,.bt-dcard:focus-within .bt-dcard-peek{display:inline}'))
+  // The second line used to be replaced by the word "Preview" while the pointer was on the
+  // card. The eye in the acts row says that now, so the line stays where it is.
+  assert.ok(!styles.includes('.bt-dcard-peek'), 'the hover-only word is gone')
+  assert.ok(!styles.includes('.bt-dcard:hover .bt-dcard-desc'), 'and the second line no longer gives way')
+})
+
+// The card's three exits are icons, not words: three word pills take more width than the
+// card has to spare. The words stay in aria-label (a reader still hears them) and in the
+// preview page's menu, and the target is the 44px the preview page's own controls take.
+test('the card’s exits are three named icons, each a 44px target', () => {
+  const source = card.join('\n')
+  const btn = rule('.bt-dcard-btn{')
+  assert.ok(btn.includes('width:44px') && btn.includes('height:44px'), 'a 44px touch target')
+  assert.ok(rule('.bt-dcard-btn svg{').includes('width:16px'), 'the glyph itself is 16px')
+  assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the three never wrap into a second row the 60px tile would clip')
+  for (const [act, shape] of [['preview', '}, h(EyeIcon))'], ['open', '}, h(ExternalIcon))'], ['copy', "}, state === 'copied' ? h(CheckIcon) : h(CopyIcon)))"]]) {
+    assert.ok(source.includes(`'data-act': '${act}'`), `the ${act} exit is marked`)
+    assert.ok(source.includes(shape), `and draws its own icon (${act})`)
+  }
+  assert.ok(source.includes("'aria-label': `${t('Preview')} ${name}`"), 'the eye is named after the file it opens')
+  assert.ok(source.includes("'aria-label': state === 'opening' ? t('Opening…') : t('Open with another app')"), 'the arrow is named for the other app')
+  assert.ok(source.includes("'aria-label': state === 'copied' ? t('Copied') : t('Copy path')"), 'the copy icon is named for the path')
+  // No word is left painted on a button: the label that used to be its child would be one.
+  for (const painted of [": t('Open with another app'))", ": t('Copy path'))", "t('Path')"]) {
+    assert.ok(!source.includes(painted), `${painted} is no longer painted on a card button`)
+  }
 })
 
 test('two columns fold to one when the card column is narrow', () => {
@@ -187,7 +211,7 @@ test('the card hands a file to another app, and keeps the shell from taking the 
   // path to its own chooser. The hit target must therefore carry no title: with one, a tap
   // meant for the preview would leave the app for a chooser that cannot read the file.
   const start = card.findIndex(line => line.includes("className: 'bt-dcard-hit'"))
-  const end = card.findIndex(line => line.includes('onClick: preview'))
+  const end = card.findIndex((line, index) => index > start && line.includes('onClick: preview'))
   assert.ok(start !== -1 && end > start, 'the hit target is still one button')
   assert.ok(!card.slice(start, end + 1).join('\n').includes('title:'), 'the hit target carries no title for the shell to read')
 })
@@ -199,7 +223,7 @@ test('the preview page’s title bar is back, the name, and one more menu', () =
   const source = card.join('\n')
   assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(ChevronLeftIcon))"), 'the left control is a back button, named for a reader')
   assert.ok(source.includes("h('span', { className: 'bt-preview-name' }, name)"), 'the name is the middle part')
-  assert.ok(source.includes('import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsIcon, SwitchIcon }'), 'a back arrow and the menu’s own icons are imported')
+  assert.ok(source.includes('import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsIcon, ExternalIcon, EyeIcon, SwitchIcon }'), 'a back arrow, the menu’s own icons and the card’s three are imported')
   // The menu is the platform’s own component and carries both exits, which are the same
   // behaviour the card’s row of buttons runs: one definition, two chromes.
   assert.ok(source.includes("import { FileTypeIcon, fileExtension, ImageLightbox, Menu }"), 'the menu is the platform’s, not one of ours')
