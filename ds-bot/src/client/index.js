@@ -454,6 +454,15 @@ export function apply(ctx) {
     openVoice: (id) => { if (id) ui.set(state => ({ ...state, voice: id, menu: null })) },
     closeVoice: () => { ui.set(state => (state.voice ? { ...state, voice: null } : state)) },
     toggleDetails: (id, force) => {
+      // With the Better Sidebar service the drawer lives in DSH's right Sidebar, so the
+      // pill shows that page and never opens our own panel. The open is idempotent: the
+      // descriptor is `single`, so a second click brings the open tab forward instead of
+      // closing it or opening another. A type the reader disabled in the service's own
+      // settings falls back to the panel below, so the pill always shows something.
+      if (betterSidebar && id !== undefined && betterSidebar.isTabEnabled?.('ds-bot:details') !== false) {
+        betterSidebar.openTab({ type: 'ds-bot:details' }, { sessionId: id })
+        return
+      }
       ui.set((state) => {
         const details = force || state.details !== id || state.view !== 'details' ? id : null
         return { ...state, renaming: false, tab: null, details, view: 'details' }

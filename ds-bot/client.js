@@ -15264,6 +15264,10 @@ function apply(ctx) {
       ui2.set((state) => state.voice ? { ...state, voice: null } : state);
     },
     toggleDetails: (id, force) => {
+      if (betterSidebar && id !== void 0 && betterSidebar.isTabEnabled?.("ds-bot:details") !== false) {
+        betterSidebar.openTab({ type: "ds-bot:details" }, { sessionId: id });
+        return;
+      }
       ui2.set((state) => {
         const details = force || state.details !== id || state.view !== "details" ? id : null;
         return { ...state, renaming: false, tab: null, details, view: "details" };
