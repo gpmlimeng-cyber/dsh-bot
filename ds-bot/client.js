@@ -4740,17 +4740,24 @@ var FILE_PREVIEW_CSS = `
 /* A delivered file's own page in the panel (deliverables.js): a title bar -- back on the
    left, the name centred, the "···" menu on the right -- the file, and the exits. The
    panel carries the shape: full screen on a phone, the right column on a desktop, so
-   nothing here is sized per band. */
-.bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:44px;flex:none;padding:0 8px 0 6px;border-bottom:.5px solid var(--bt-line)}
-.bt-preview-back{flex:none;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+   nothing here is sized per band.
+
+   The bar is sized off the panel's own right-sidebar header, so the two read alike: its
+   head row is 12+36+6 = 54px tall with 36px round controls (styles.js .bt-drawer-top and
+   .bt-round, 40px from 841px up), and its title is the 17/24 name (.bt-drawer-name). The
+   same three numbers are used here -- same bar height, same title size, same hit size. */
+.bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:54px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
+.bt-preview-back{flex:none;width:36px;height:36px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-preview-back svg{width:15px;height:15px}
-/* Centred over the bar itself, so the name is in the middle whatever the two ends hold. */
-.bt-preview-name{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 96px);font-size:13px;line-height:18px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-preview-back svg{width:16px;height:16px}
+/* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
+   The reserve is the two controls and their gaps, so a long name never slides under one. */
+.bt-preview-name{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 112px);font-size:17px;line-height:24px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-preview-menu{margin-left:auto}
-.bt-preview-more{flex:none;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-preview-more{flex:none;width:36px;height:36px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-preview-more svg{width:16px;height:16px}
+html[data-bt-pc] .bt-preview-back,html[data-bt-pc] .bt-preview-more{width:40px;height:40px}
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
