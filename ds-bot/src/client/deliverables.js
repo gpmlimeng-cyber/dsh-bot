@@ -15,27 +15,15 @@
 // goes to shared storage first, since no other app can read the app's own), or copy the
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
-import { FileTypeIcon, fileExtension, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
+import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
 import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsBoldIcon, ExternalIcon, EyeIcon, SwitchIcon } from './icons.js'
 import { FileView } from './file-preview.js'
-import { t, dateLocale } from './i18n.js'
+import { t } from './i18n.js'
 
 const basename = (path) => {
   const at = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
   return at === -1 ? path : path.slice(at + 1)
 }
-
-// The folder a path sits in, for the list's second line; '' at the root, where there is
-// no folder to name.
-const folderOf = (path) => {
-  const at = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
-  return at <= 0 ? '' : path.slice(0, at)
-}
-
-// When a file was delivered, in the reader's own language and a short form.
-const atText = (at) => (Number.isFinite(at)
-  ? new Intl.DateTimeFormat(dateLocale(), { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(at)
-  : '')
 
 // The mobile fallback folder the user's own file manager can reach. Its exact path is
 // a product convention, not something DSH tells us, so it is only offered as a hint.
@@ -68,9 +56,40 @@ const metaText = (file, name) => {
   return extension === '' ? t('File') : extension
 }
 
+// The word for a kind of file, in the reader's language. The list's second line leads with
+// it, so it is a word rather than the extension a message's card shows.
+const TYPE_WORDS = {
+  md: 'Markdown file', markdown: 'Markdown file', mdx: 'Markdown file',
+  png: 'Image', jpg: 'Image', jpeg: 'Image', gif: 'Image', webp: 'Image', avif: 'Image', bmp: 'Image', ico: 'Image', svg: 'Image',
+  html: 'HTML file', htm: 'HTML file',
+  pdf: 'PDF file',
+  doc: 'Word document', docx: 'Word document', rtf: 'Word document',
+  xls: 'Spreadsheet', xlsx: 'Spreadsheet', csv: 'Spreadsheet', ods: 'Spreadsheet',
+  ppt: 'Slides', pptx: 'Slides', odp: 'Slides',
+  mp4: 'Video', mov: 'Video', webm: 'Video', mkv: 'Video', avi: 'Video',
+  mp3: 'Audio', wav: 'Audio', m4a: 'Audio', ogg: 'Audio', flac: 'Audio',
+  zip: 'Archive file', tar: 'Archive file', gz: 'Archive file', tgz: 'Archive file', '7z': 'Archive file', rar: 'Archive file',
+  js: 'Code file', mjs: 'Code file', cjs: 'Code file', ts: 'Code file', tsx: 'Code file', jsx: 'Code file',
+  py: 'Code file', go: 'Code file', rs: 'Code file', java: 'Code file', c: 'Code file', h: 'Code file',
+  cpp: 'Code file', css: 'Code file', json: 'Code file', yml: 'Code file', yaml: 'Code file',
+  toml: 'Code file', sh: 'Code file', sql: 'Code file', xml: 'Code file',
+}
+const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')
+
+// Sizes the list has learned, by path: a delivered file's size is the host's to know, and
+// the only read path this client already has is the one a preview opens a file with. No
+// new host action, so nothing here waits on a restart. A path that comes back unreadable
+// is remembered as such, so it is asked once and not once per redraw.
+const sizesOf = new Map()
+
 // What the panel's list says under the name where a message's card says what the file is:
-// when it arrived, and where it sits.
-const metaOf = (file) => [atText(file.at), folderOf(file.path)].filter(part => part !== '').join(' · ')
+// what kind of file it is, and how big -- the second line of the list the user pointed at.
+// The kind is in the name and shows at once; the size joins it when the host answers.
+const metaOf = (file) => {
+  const word = wordFor(file.path)
+  const size = sizesOf.get(file.path)
+  return Number.isFinite(size) ? `${word} · ${fileSizeText(size)}` : word
+}
 
 /**
  * The sentence that explains a refusal. Both places that can refuse (the card and the
@@ -364,6 +383,7 @@ function PreviewHead({ name, onClose, children }) {
 export function DeliveredList({ actions, onClose }) {
   const [state, setState] = useState('reading') // reading | shown | failed
   const [files, setFiles] = useState([])
+  const [, bumpSizes] = useState(0)
   const ask = useRef(actions)
   ask.current = actions
   useEffect(() => {
@@ -381,6 +401,28 @@ export function DeliveredList({ actions, onClose }) {
     })()
     return () => { live = false }
   }, [])
+  // The second line carries a size, and a size is the host's to know: one read per row,
+  // through the very read a preview opens a file with, one row at a time so a long list
+  // does not fire every read at once. A row shows its kind until its size lands, and each
+  // path is asked once -- `sizesOf` keeps the answer, a refusal included.
+  useEffect(() => {
+    let live = true
+    void (async () => {
+      for (const entry of files) {
+        if (sizesOf.has(entry.path)) continue
+        let answer = null
+        try {
+          answer = await ask.current?.presentFile?.(entry.path)
+        } catch {
+          answer = null
+        }
+        if (!live) return
+        sizesOf.set(entry.path, Number.isFinite(answer?.size) ? answer.size : null)
+        bumpSizes(count => count + 1)
+      }
+    })()
+    return () => { live = false }
+  }, [files])
   // A row from this list carries no message coordinates -- nothing here knows which
   // reply a file came from -- so the card's own exits do what they can: the phone's
   // chooser gets a copy, and the path is one tap away either way.

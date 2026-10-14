@@ -45,10 +45,18 @@ test('the list keeps the message cards, and only gives them the panel’s shape'
   assert.ok(!preview.includes('.bt-prod-row'), 'nor a row style of its own')
   assert.ok(!list.includes('const open = (file) =>'), 'the panel no longer opens files itself')
   // The second line is the one thing the panel changes: a message says what the file is,
-  // the list says when it arrived and where it sits.
-  assert.ok(list.includes('const metaOf = (file) => [atText(file.at), folderOf(file.path)]'), 'the list’s line is time and folder')
+  // the list names its kind and how big it is, the way the reference list does.
+  assert.ok(list.includes('const metaOf = (file) => {'), 'the list’s line is its own shape')
+  assert.ok(list.includes('return Number.isFinite(size) ? `${word} · ${fileSizeText(size)}` : word'), 'kind and size, joined the reference way')
+  assert.ok(list.includes("const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')"), 'the kind is a translated word, not the extension')
+  assert.ok(list.includes("import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu }"), 'and the size is the platform’s own formatter')
   assert.ok(list.includes('meta: metaOf?.(file)'), 'and the card is handed it')
-  assert.ok(list.includes('const folderOf = (path) => {') && list.includes('const atText = (at) => (Number.isFinite(at)'), 'both are defined once')
+  // The size is the host's, and this client's only read of a delivered file is the one the
+  // preview opens with -- so no new host action, and no restart to see the line.
+  assert.ok(list.includes('answer = await ask.current?.presentFile?.(entry.path)'), 'one read per row, through the preview’s own read')
+  assert.ok(list.includes('sizesOf.set(entry.path, Number.isFinite(answer?.size) ? answer.size : null)'), 'the answer is kept, a refusal included')
+  assert.ok(list.includes('if (sizesOf.has(entry.path)) continue'), 'so a path is asked once')
+  assert.ok(!list.includes('folderOf') && !list.includes('atText'), 'the time and the path left the line')
   assert.ok(preview.includes('.bt-products .bt-dcards{'), 'the panel gives the shared cards their width')
   // The rows of a stack sit closer than the rows of the message's two-column grid: the
   // reference list the user pointed at reads as a stack of tiles, not as a grid.
@@ -85,6 +93,16 @@ test('the panel is the one a preview opens in, title bar and all', () => {
   assert.ok(list.includes('function PreviewHead({ name, onClose, children })'), 'one title bar definition, shared by both pages')
   const previewUses = list.split('h(PreviewHead, ').length - 1
   assert.equal(previewUses, 2, 'and both pages use it')
+})
+
+test('every kind of file the list can name is translated', () => {
+  const block = list.slice(list.indexOf('const TYPE_WORDS = {'), list.indexOf('const wordFor'))
+  const words = [...new Set([...block.matchAll(/: '([^']+)'/g)].map(match => match[1]))]
+  assert.ok(words.length >= 8, `the kinds are a real table (${words.length})`)
+  for (const word of words) {
+    assert.ok(i18n.includes(`'${word}':`) || i18n.includes(`\n  ${word}:`), `${word} has a translation`)
+  }
+  assert.ok(i18n.includes("'Markdown file': 'Markdown 文件'") && i18n.includes("Image: '图片'"), 'and the two the reference shows read the reference’s way')
 })
 
 test('a leaving panel is inert, so a browser can both hide it and let its focus go', () => {

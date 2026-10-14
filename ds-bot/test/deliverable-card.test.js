@@ -113,7 +113,7 @@ test('two columns fold to one when the card column is narrow', () => {
 })
 
 test('the icon is DSH’s FileTypeIcon, sized against the row it sits in', () => {
-  assert.ok(card.some(line => line.includes("import { FileTypeIcon, fileExtension, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'")), 'the card imports the host icon, the host image preview and the host menu')
+  assert.ok(card.some(line => line.includes("import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'")), 'the card imports the host icon, the host image preview, the host size format and the host menu')
   // 24px, not the platform's 28px default and not the 20px it had: the document glyph fills
   // 24.8x28 of its own box, so 24px paints 21.2x24px beside the 23-31px the exits paint.
   assert.ok(card.some(line => line.includes('h(FileTypeIcon, { path: file.path, size: 24 })')), 'the icon follows the file path, at the row’s size')
@@ -260,7 +260,7 @@ test('the preview page’s title bar is back, the name, and one more menu', () =
   assert.ok(source.includes('}, h(DotsBoldIcon, { size: 34 })),'), 'the menu’s anchor draws the filled dots')
   // The menu is the platform’s own component and carries both exits, which are the same
   // behaviour the card’s row of buttons runs: one definition, two chromes.
-  assert.ok(source.includes("import { FileTypeIcon, fileExtension, ImageLightbox, Menu }"), 'the menu is the platform’s, not one of ours')
+  assert.ok(source.includes("import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu }"), 'the menu is the platform’s, not one of ours')
   assert.ok(source.includes('export function useDeliverableExits(file, actions, onFailed)'), 'the exits are defined once')
   assert.equal(source.split('useDeliverableExits(file, actions, onFailed)').length - 1, 3, 'and used by both chromes')
   assert.ok(source.includes("h(Menu, {"), 'the page’s exits are a menu')

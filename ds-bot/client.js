@@ -535,6 +535,19 @@ var ZH = {
   "Copy path": "复制路径",
   Path: "路径",
   File: "文件",
+  // The kinds a delivered file's second line names in the list, and the sizes beside them.
+  "Markdown file": "Markdown 文件",
+  "HTML file": "HTML 文件",
+  "PDF file": "PDF 文件",
+  "Word document": "Word 文档",
+  Spreadsheet: "表格",
+  Slides: "演示文稿",
+  Image: "图片",
+  Video: "视频",
+  Audio: "音频",
+  // A kind of file, beside the Archive action above -- hence the longer key.
+  "Archive file": "压缩包",
+  "Code file": "代码文件",
   Preview: "预览",
   "Opening…": "正在打开…",
   "Could not open it here. Copy the path and open the copy under {folder}": "这里打不开。复制路径，在手机文件管理的 {folder} 里打开副本",
@@ -4817,11 +4830,6 @@ var basename = (path) => {
   const at = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
   return at === -1 ? path : path.slice(at + 1);
 };
-var folderOf = (path) => {
-  const at = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
-  return at <= 0 ? "" : path.slice(0, at);
-};
-var atText = (at) => Number.isFinite(at) ? new Intl.DateTimeFormat(dateLocale(), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(at) : "";
 var PHONE_COPY_HINT = "/storage/emulated/0/DSH/deliverables/";
 var PICTURE_NAME = /\.(?:png|jpe?g|gif|webp|avif|bmp|ico|svg)$/iu;
 var isPicture = (name) => PICTURE_NAME.test(name);
@@ -4836,7 +4844,77 @@ var metaText = (file, name) => {
   const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toUpperCase();
   return extension === "" ? t("File") : extension;
 };
-var metaOf = (file) => [atText(file.at), folderOf(file.path)].filter((part) => part !== "").join(" · ");
+var TYPE_WORDS = {
+  md: "Markdown file",
+  markdown: "Markdown file",
+  mdx: "Markdown file",
+  png: "Image",
+  jpg: "Image",
+  jpeg: "Image",
+  gif: "Image",
+  webp: "Image",
+  avif: "Image",
+  bmp: "Image",
+  ico: "Image",
+  svg: "Image",
+  html: "HTML file",
+  htm: "HTML file",
+  pdf: "PDF file",
+  doc: "Word document",
+  docx: "Word document",
+  rtf: "Word document",
+  xls: "Spreadsheet",
+  xlsx: "Spreadsheet",
+  csv: "Spreadsheet",
+  ods: "Spreadsheet",
+  ppt: "Slides",
+  pptx: "Slides",
+  odp: "Slides",
+  mp4: "Video",
+  mov: "Video",
+  webm: "Video",
+  mkv: "Video",
+  avi: "Video",
+  mp3: "Audio",
+  wav: "Audio",
+  m4a: "Audio",
+  ogg: "Audio",
+  flac: "Audio",
+  zip: "Archive file",
+  tar: "Archive file",
+  gz: "Archive file",
+  tgz: "Archive file",
+  "7z": "Archive file",
+  rar: "Archive file",
+  js: "Code file",
+  mjs: "Code file",
+  cjs: "Code file",
+  ts: "Code file",
+  tsx: "Code file",
+  jsx: "Code file",
+  py: "Code file",
+  go: "Code file",
+  rs: "Code file",
+  java: "Code file",
+  c: "Code file",
+  h: "Code file",
+  cpp: "Code file",
+  css: "Code file",
+  json: "Code file",
+  yml: "Code file",
+  yaml: "Code file",
+  toml: "Code file",
+  sh: "Code file",
+  sql: "Code file",
+  xml: "Code file"
+};
+var wordFor = (path) => t(TYPE_WORDS[(0, import_dsh_client_ui_primitives2.fileExtension)(basename(path))] ?? "File");
+var sizesOf = /* @__PURE__ */ new Map();
+var metaOf = (file) => {
+  const word = wordFor(file.path);
+  const size = sizesOf.get(file.path);
+  return Number.isFinite(size) ? `${word} · ${(0, import_dsh_client_ui_primitives2.fileSizeText)(size)}` : word;
+};
 var exitsSentence = (shared2) => shared2 !== null && shared2 !== void 0 ? t("Could not open it here. The copy is at {path}", { path: shared2 }) : t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT });
 function useDeliverableExits(file, actions, onFailed) {
   const [state, setState] = (0, import_react7.useState)("idle");
@@ -5077,6 +5155,7 @@ function PreviewHead({ name, onClose, children }) {
 function DeliveredList({ actions, onClose }) {
   const [state, setState] = (0, import_react7.useState)("reading");
   const [files, setFiles] = (0, import_react7.useState)([]);
+  const [, bumpSizes] = (0, import_react7.useState)(0);
   const ask = (0, import_react7.useRef)(actions);
   ask.current = actions;
   (0, import_react7.useEffect)(() => {
@@ -5099,6 +5178,26 @@ function DeliveredList({ actions, onClose }) {
       live = false;
     };
   }, []);
+  (0, import_react7.useEffect)(() => {
+    let live = true;
+    void (async () => {
+      for (const entry of files) {
+        if (sizesOf.has(entry.path)) continue;
+        let answer = null;
+        try {
+          answer = await ask.current?.presentFile?.(entry.path);
+        } catch {
+          answer = null;
+        }
+        if (!live) return;
+        sizesOf.set(entry.path, Number.isFinite(answer?.size) ? answer.size : null);
+        bumpSizes((count) => count + 1);
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [files]);
   const rows = [{ files: files.map((entry) => ({ path: entry.path, at: entry.at })) }];
   const body = state === "reading" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…")))) : state === "failed" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title", role: "status" }, t("This list could not be read")))) : (0, import_react7.createElement)(
     "div",
