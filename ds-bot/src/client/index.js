@@ -8,6 +8,7 @@ import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } fro
 import { lookOf } from './mark.js'
 import { TeamSidebar, ConnectPlugins, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts } from './sidebar.js'
 import { HeaderPill } from './header.js'
+import { BetterDetailsTab } from './details-drawer.js'
 import { ComposerPlus, ComposerVoice, menuIcons } from './composer.js'
 import { CHATS_SOURCE, atSources } from './at-menu.js'
 import { VOICE_BUNDLE } from './speech.js'
@@ -28,7 +29,7 @@ import { USAGE_CSS } from './usage-page.js'
 import { SCHEDULE_CSS } from './schedules.js'
 import { STORAGE, migrateStorage } from './storage.js'
 import { groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
-import { installLocale, language } from './i18n.js'
+import { installLocale, language, t } from './i18n.js'
 import { noteClientError, quietly } from './diagnostics.js'
 import { ErrorToast, FEEDBACK_CSS } from './feedback.js'
 import { ABOUT_CSS } from './about.js'
@@ -746,6 +747,36 @@ export function apply(ctx) {
     shownSession: () => Object.values(ctx.sessions.list.getSnapshot().byId ?? {}).find(session => (session?.retainedBy?.mainView ?? 0) > 0)?.id,
     openSession: id => actions.openSession(id),
   }), 'ds-bot: approval notifications')
+  // With the Better Sidebar service present, the Bot details drawer rides in its right
+  // column as a tab: same component, same judgment, only the carrying surface moves.
+  // Registered once; nothing here assumes the service exists (the drawer keeps its own
+  // panel when it does not).
+  if (betterSidebar) {
+    ctx.effect(() => {
+      const dispose = betterSidebar.registerTab({
+        id: 'ds-bot:details',
+        title: () => t('Conversation details'),
+        description: () => t('Details of the conversation you are reading'),
+        order: -100,
+        single: true,
+        component: ({ scope }) => BetterDetailsTab({ sessionId: scope.sessionId, face: face() }),
+      })
+      // Open the tab once, on the first conversation the main view lands on, without
+      // stealing focus. Never again: the tab bar's own close is invisible to us, so
+      // there is no reliable "the user closed it" signal to honour.
+      let opened = false
+      const off = ctx.sessions.list.subscribe(() => {
+        if (opened) return
+        const sessionId = Object.values(ctx.sessions.list.getSnapshot().byId ?? {})
+          .find(session => (session?.retainedBy?.mainView ?? 0) > 0)?.id
+        if (sessionId === undefined) return
+        opened = true
+        off()
+        betterSidebar.openTab({ type: 'ds-bot:details', reveal: false }, sessionId)
+      })
+      return () => { off(); dispose() }
+    }, 'ds-bot: better sidebar tab')
+  }
   const assistantFace = (sessionId) => {
     const binding = ctx.sessions.binding(sessionId)
     if (binding === undefined) throw new Error(`ds-bot: unknown session "${sessionId}"`)

@@ -332,3 +332,10 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
       ] : null,
       bot && tab === 'browser' ? h(BrowserCards, { bot, sessionId, roster, actions, useBrowserTabs, useBrowserPages }) : null)]
 }
+
+// The Bot details drawer as a Better Sidebar tab: the same component, carried by the
+// service's right-column tab instead of our own panel. `face` is the inject face the
+// panel would receive; the drawer cannot tell the difference.
+export function BetterDetailsTab({ sessionId, face }) {
+  return h(DetailsDrawer, { sessionId, hasStrip: true, ...face })
+}

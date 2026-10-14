@@ -628,6 +628,9 @@ const ZH = {
   "Updated {name}'s memory": '已更新 {name} 的记忆',
   "Memory updated. Open {name}'s memory": '记忆已更新，打开 {name} 的记忆',
 
+  // Better Sidebar tab
+  'Details of the conversation you are reading': '你正在阅读的对话的详情',
+
   // Needs you
   'Needs you': '需要你',
   'Nothing needs your attention': '暂时没有需要你处理的事',
