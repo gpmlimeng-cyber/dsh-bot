@@ -7,6 +7,7 @@ import { PlusIcon, SearchIcon, GaugeIcon, PlugIcon, ClockIcon, GearIcon, PinMark
 import { MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
+import { Shimmer, workPhrase } from './cells.js'
 import { springEasing, SPRING_SHAPE } from './motion.js'
 import { hostText, t } from './i18n.js'
 import { showsDshRow } from './dsh-offer.js'
@@ -57,7 +58,20 @@ function RowSub({ preview, count }) {
     count === undefined ? null : h('span', { className: 'bt-row-count', title: t('{count} messages', { count }) }, String(count)))
 }
 
-function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, wide, drawer, marked }) {
+// Whether an approval waits for the user: for a Bot, in any of its Sessions; for a group,
+// from any of its members there.
+const useApproval = (useWork, match) => (useWork ? useWork(work => (work.approvals ?? []).some(match)) : false)
+
+// Work running in group Sessions, as "botId|tool" keys so a row redraws only when it
+// changes: the groups one Bot works in, or the members at work in one group.
+const useGroupWork = (useWork, pick) => (useWork ? useWork(work => pick(work.rooms ?? {}).join(',')) : '')
+const workKeys = text => (text === '' ? [] : text.split(',').map((key) => {
+  const [id, tool] = key.split('|')
+  return { id, tool: tool || undefined }
+}))
+const workLine = (lead, tool, more) => h(Shimmer, null, `${lead} · ${workPhrase(tool)}…${more > 0 ? ` +${more}` : ''}`)
+
+function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, drawer, marked }) {
   const id = bot.id
   const part = currentPart(bot)
   const preview = useSessions(list => previewOf(list, part, roster.exchangeTurns[part]))
@@ -68,16 +82,21 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   useMarkedUnread(id, active, marked, actions)
   const main = isMainOf(roster, id)
   const tile = roster.mainBotId === id
-  const alert = roster.questions?.[part] !== undefined
+  const approval = useApproval(useWork, entry => entry.botId === id)
+  const alert = roster.questions?.[part] !== undefined || approval
   const doing = useActivity(map => map[id])
-  const state = botState(running, doing, alert)
+  // Work in a group runs in a Session of its own, so the Bot's chat stays idle meanwhile.
+  const groups = workKeys(useGroupWork(useWork, rooms => Object.entries(rooms).flatMap(([roomId, entries]) => entries.filter(entry => entry.botId === id).map(entry => `${roomId}|${entry.tool ?? ''}`))))
+  const away = !running && groups.length > 0
+  const state = botState(running || away, doing, alert)
+  const awayLine = away ? workLine(roster.roomsById[groups[0].id]?.name ?? t('a group chat'), groups[0].tool, groups.length - 1) : null
   if (bot.hidden && !active && !main) return null
   const onContextMenu = (event) => {
     event.preventDefault()
     actions.openMenu({ kind: 'bot', id, x: event.clientX, y: event.clientY })
   }
   const pinned = bot.pinned === true && !tile
-  const label = [bot.name, main ? t('Main Bot') : '', pinned ? t('Pinned') : '', running ? t('Working') : '', alert ? t('Waiting for your answer') : '', unread ? t('Unread activity') : ''].filter(Boolean).join(', ')
+  const label = [bot.name, main ? t('Main Bot') : '', pinned ? t('Pinned') : '', running || away ? t('Working') : '', approval ? t('Waiting for your approval') : alert ? t('Waiting for your answer') : '', unread ? t('Unread activity') : ''].filter(Boolean).join(', ')
   // The wide column seats the Main Bot in its own tile, with the shortcuts that float
   // around it. The phone drawer renders that same wide list, so the tile followed it and
   // a 60px centred tile sat among 36px rows; the drawer wants the ordinary row, and the
@@ -117,11 +136,11 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   wide ? h('span', { className: 'bt-row-body' },
     h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null,
       h(RowMeta, { at })),
-    h(RowSub, { preview, count: countOf(roster, [part, ...(bot.parts ?? [])]) })) : null,
+    h(RowSub, { preview: awayLine ?? preview, count: countOf(roster, [part, ...(bot.parts ?? [])]) })) : null,
   wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
 }
 
-function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, wide, marked }) {
+function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked }) {
   const id = room.id
   const fallback = useSessions(list => previewOf(list, id))
   const preview = room.preview?.replace(/\s+/g, ' ').trim() || fallback
@@ -129,10 +148,15 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
   const active = useSessionRetainInfo(id, info => (info?.retainedBy?.mainView ?? 0) > 0)
   const unread = useSessionStatus(map => map.get(id)?.completionUnread === true) || (marked && !active)
   useMarkedUnread(id, active, marked, actions)
+  const approval = useApproval(useWork, entry => entry.roomId === id)
+  const members = workKeys(useGroupWork(useWork, rooms => (rooms[id] ?? []).map(entry => `${entry.botId}|${entry.tool ?? ''}`)))
+  const first = roster.byId[members[0]?.id]
+  const workingLine = first ? workLine(first.name, members[0].tool, members.length - 1) : null
   if (room.hidden && !active) return null
   const pinned = room.pinned === true
+  const label = [room.name, pinned ? t('Pinned') : '', members.length > 0 ? t('Working') : '', approval ? t('Waiting for your approval') : ''].filter(Boolean).join(', ')
   return h('button', {
-    type: 'button', className: 'bt-row', 'aria-label': pinned ? `${room.name}, ${t('Pinned')}` : room.name, 'aria-current': active ? 'page' : undefined,
+    type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
     'data-room-id': id, onClick: () => actions.openSession(id),
     onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'room', id, x: event.clientX, y: event.clientY }) },
   },
@@ -143,8 +167,9 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
       h(RowMeta, { at })),
     // A group's messages live in each member's own hidden Session, so the indexed
     // lines would count the same conversation once per member. No number, then.
-    h(RowSub, { preview })) : null,
-  wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
+    h(RowSub, { preview: workingLine ?? preview })) : null,
+  wide && approval && !active ? h('span', { className: 'bt-unread bt-unread-wait', 'aria-hidden': true })
+    : wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
 }
 
 // One expanded DSH Agent Session row: title, relative stamp, rename field, and a
@@ -300,7 +325,7 @@ export function TeamSidebar(props) {
   const listWide = wide || mobileOpen
   useListGlide(listRef, listWide, order.map(entry => entry.item.id).join(','))
   useLandOnMainBot(roster, useSessions, actions)
-  const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, wide: listWide, drawer: mobileOpen }
+  const rowProps = { roster, actions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide: listWide, drawer: mobileOpen }
   const [search, setSearch] = useState('')
   // The field is a handoff, not a second search implementation: the command palette owns the
   // searching, and opening it closes the drawer (openPalette clears mobileNav), so text kept

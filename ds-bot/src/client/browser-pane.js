@@ -8,7 +8,6 @@ import { createPortal } from 'react-dom'
 import { BotMark } from './mark.js'
 import { STORAGE } from './storage.js'
 import { SPRING_SHAPE, springEasing } from './motion.js'
-import { useMobile } from './mobile.js'
 import { DetailsDrawer } from './details-drawer.js'
 import { FilePreview } from './file-preview.js'
 import { t } from './i18n.js'
@@ -310,7 +309,6 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   const [resizing, setResizing] = useState(false)
   const instant = dragging || resizing
   const [reading, setReading] = useState(false)
-  const mobile = useMobile()
 
   const panelWidth = fitWidth(width ?? (view === 'details' ? DETAILS_WIDTH : DEFAULT_WIDTH), widthRange(view, viewport))
   // Once the browser or the Files tab has shown, the Bot page keeps its width (up to

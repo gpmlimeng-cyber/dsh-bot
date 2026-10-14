@@ -1,8 +1,8 @@
 import { call } from './api.js'
 import { isHex, inkText, paintCss } from './inks.js'
 import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
-import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
-import { themeCss, shellTokens, conversationTokens, registry, registerShape, registerTheme, allThemes } from './themes.js'
+import { countCards, createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
+import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
 import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
 import { lookOf } from './mark.js'
@@ -18,15 +18,15 @@ import { Overlays } from './overlays.js'
 import { createBotBrowsers, serveBrowserReads } from './bot-browsers.js'
 import { BROWSER_CSS } from './browser-pane.js'
 import { FILE_PREVIEW_CSS } from './file-preview.js'
-import { holdFlatTranscript } from './flat-transcript.js'
 import { SECRET_CSS, SecretDock } from './secret-card.js'
 import { MODEL_CSS, ModelChoiceDock, DeepSeekSignIn } from './model-menu.js'
 import { BOT_SETTINGS_CSS } from './bot-settings.js'
 import { GROUP_SETTINGS_CSS } from './group-settings.js'
+import { FOLDER_CSS } from './folder-menu.js'
 import { USAGE_CSS } from './usage-page.js'
 import { SCHEDULE_CSS } from './schedules.js'
 import { STORAGE, migrateStorage } from './storage.js'
-import { groupsFor, readMode, writeMode } from './surface.js'
+import { groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
 import { installLocale, language } from './i18n.js'
 import { noteClientError, quietly } from './diagnostics.js'
 import { ErrorToast, FEEDBACK_CSS } from './feedback.js'
@@ -34,8 +34,9 @@ import { ABOUT_CSS } from './about.js'
 import { MEMBER_CSS, MemberDock } from './member-status.js'
 import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-message.js'
 import { watchMobile } from './mobile.js'
+import { noticeApprovals } from './approval-notices.js'
 
-export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout', 'configForms']
+export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
 
 export function apply(ctx) {
   // The mobile layout flag (<html data-bt-mobile>) has to exist before the first paint,
@@ -99,6 +100,9 @@ export function apply(ctx) {
   let workKey = ''
   // Per Session, what its transcript has in flight (running tools, a streaming reply).
   const live = createSource({})
+  // Per Session, the ask_user and request_secret calls its transcript draws; the
+  // docks carry the cards of the other calls.
+  const cards = createSource({})
   // Per Session, the first visible time and the end time of each turn the transcript
   // has rendered; time separators compare one turn's end with the next turn's start.
   const turnClock = createSource({})
@@ -143,18 +147,16 @@ export function apply(ctx) {
     if (nextWork !== workKey) { workKey = nextWork; work.set(value.work ?? { bots: {}, approvals: [] }) }
     noteMemoryNews(value.memoryNews ?? {})
     const current = roster.getSnapshot()
-    // Connector states change without a new revision, so they come with every answer.
-    if (value.connectors !== undefined && current.ready && JSON.stringify(value.connectors) !== JSON.stringify(current.connectors ?? [])) {
-      roster.set({ ...current, connectors: value.connectors })
-    }
+    // Connector and capability states change without a new revision.
+    const live = {}
+    if (value.connectors !== undefined && JSON.stringify(value.connectors) !== JSON.stringify(current.connectors ?? [])) live.connectors = value.connectors
+    if (value.capabilityStatuses !== undefined && JSON.stringify(value.capabilityStatuses) !== JSON.stringify(current.capabilityStatuses ?? {})) live.capabilityStatuses = value.capabilityStatuses
     // Message counts move as messages arrive, also without a new revision. They stay
     // out of `stamps`: the sidebar's sort keys read that, and a new number there would
     // re-sort the list.
     const nextCounts = JSON.stringify(value.counts ?? {})
-    if (nextCounts !== countsKey) {
-      countsKey = nextCounts
-      roster.set({ ...roster.getSnapshot(), counts: value.counts ?? {} })
-    }
+    if (nextCounts !== countsKey) { countsKey = nextCounts; live.counts = value.counts ?? {} }
+    if (Object.keys(live).length > 0 && current.ready) roster.set({ ...current, ...live })
     if (value.unchanged || (value.revision === current.revision && value.modelsKey === current.modelsKey)) return
     // On a browser with no visit record yet, everything already there counts as seen.
     if (Object.keys(seenAt).length === 0) leaveVisits([...value.bots, ...value.rooms].map(entry => entry.id))
@@ -322,33 +324,13 @@ export function apply(ctx) {
     return () => {
       offRoster()
       offRegistry()
-      if (typeof releaseTokens === 'function') releaseTokens()
-      delete document.body.dataset.btMotion
-      style.remove()
+      try {
+        if (typeof releaseTokens === 'function') releaseTokens()
+      } finally {
+        delete document.body.dataset.btMotion
+        style.remove()
+      }
     }
-  }
-
-  // The user-bubble token rides with the conversation group, so a plain Session
-  // keeps dsh's own bubble colors while the Bot shell stays themed.
-  const installBubbleTokens = () => {
-    let release = null
-    let key = ''
-    const render = () => {
-      const snapshot = roster.getSnapshot()
-      const prefs = snapshot.ready ? snapshot.prefs ?? {} : savedPrefs
-      const themes = allThemes()
-      const id = themes[prefs.theme] ? prefs.theme : 'deepseek'
-      const next = `${id}|${registry.getSnapshot()}`
-      if (next === key) return
-      key = next
-      const drop = release
-      release = ctx.theme.overrideTokens('ds-bot: conversation', conversationTokens(themes[id]))
-      if (typeof drop === 'function') drop()
-    }
-    render()
-    const offRoster = roster.subscribe(render)
-    const offRegistry = registry.subscribe(render)
-    return () => { offRoster(); offRegistry(); if (typeof release === 'function') release() }
   }
 
   ctx.effect(() => {
@@ -564,6 +546,9 @@ export function apply(ctx) {
     updateBot: (id, patch) => after(call('update-bot', { id, ...patch })),
     refreshModels: () => after(call('models')).catch(() => {}),
     efforts: ref => call('efforts', { ref }),
+    folders: () => call('folders'),
+    folderPick: () => call('folder-pick'),
+    folderList: path => call('folder-list', { path: path ?? '' }),
     deleteBot: id => after(call('delete-bot', { id })),
     duplicateBot: id => after(call('duplicate-bot', { id })),
     setPrefs: prefs => after(call('set-prefs', prefs)),
@@ -573,6 +558,7 @@ export function apply(ctx) {
     answerQuestion: (sessionId, questionId, answer) => after(call('answer-question', { sessionId: partFor(sessionId), questionId, answer })),
     dismissQuestion: sessionId => after(call('dismiss-question', { sessionId })),
     answerApproval: (id, choice) => after(call('approval-answer', { id, choice })),
+    stopMemberWork: (roomId, botId) => after(call('stop-member-work', { roomId, botId })),
     // Values go out in these requests and never come back in a response.
     secretSet: payload => after(call('secret-set', payload)),
     secretAllow: requestId => after(call('secret-allow', { requestId })),
@@ -582,6 +568,10 @@ export function apply(ctx) {
     connectorConnect: (id, token) => after(call('connector-connect', { id, token })),
     connectorDisconnect: id => after(call('connector-disconnect', { id })),
     connectorRetry: id => after(call('connector-retry', { id })),
+    saveCapability: capability => after(call('capability-save', capability)),
+    deleteCapability: name => after(call('capability-delete', { name })),
+    approveCapability: name => after(call('capability-approve', { name })),
+    setBotCapability: (botId, name, attached) => after(call('bot-capability', { botId, name, attached })),
     schedules: () => call('schedules'),
     scheduleCreate: task => call('schedule-create', task),
     scheduleDelete: (sessionId, id) => call('schedule-delete', { sessionId, id }),
@@ -717,6 +707,9 @@ export function apply(ctx) {
       return { ...state, [sessionId]: next }
     })
   }
+  actions.noteCards = (sessionId, callIds, delta) => {
+    if (sessionId !== undefined) cards.set(state => countCards(state, sessionId, callIds, delta))
+  }
   actions.clearLive = sessionId => live.set((state) => {
     if (!state[sessionId]) return state
     const next = { ...state }
@@ -725,7 +718,13 @@ export function apply(ctx) {
   })
   const browserPages = browsers?.pages ?? createSource({})
   const browserTabs = browsers?.tabs ?? createSource({})
-  const face = () => ({ actions, hooks: { roster, ui, activity, work, memoryNews, registry, turnClock, live, browserPages, browserTabs, surface, update } })
+  const face = () => ({ actions, hooks: { roster, ui, activity, work, memoryNews, registry, turnClock, live, cards, browserPages, browserTabs, surface, update } })
+  ctx.effect(() => noticeApprovals({
+    work,
+    roster,
+    shownSession: () => Object.values(ctx.sessions.list.getSnapshot().byId ?? {}).find(session => (session?.retainedBy?.mainView ?? 0) > 0)?.id,
+    openSession: id => actions.openSession(id),
+  }), 'ds-bot: approval notifications')
   const assistantFace = (sessionId) => {
     const binding = ctx.sessions.binding(sessionId)
     if (binding === undefined) throw new Error(`ds-bot: unknown session "${sessionId}"`)
@@ -782,7 +781,7 @@ export function apply(ctx) {
     installCompiledStyles(SHELL_CSS, 'shell'),
     installCompiledStyles(SIDEBAR_CSS, 'sidebar'),
     installCompiledStyles(SECRET_CSS, 'secrets'),
-    installCompiledStyles(MODEL_CSS + BOT_SETTINGS_CSS + GROUP_SETTINGS_CSS, 'models'),
+    installCompiledStyles(MODEL_CSS + FOLDER_CSS + BOT_SETTINGS_CSS + GROUP_SETTINGS_CSS, 'models'),
     installCompiledStyles(USAGE_CSS, 'usage'),
     installCompiledStyles(SCHEDULE_CSS, 'schedules'),
     installCompiledStyles(FEEDBACK_CSS, 'feedback'),
@@ -798,8 +797,6 @@ export function apply(ctx) {
     shadow('sidebar.footer.action', { id: 'bot-account', order: -200, inject: face }, FooterAccount),
     shadow('sidebar.footer.action', { id: 'bot-connect', order: -100, inject: face }, ConnectPlugins),
     shadow('settings.trigger', { priority: -10 }, YouAvatar),
-    // ui-chat's "Transcript view" row: a lower priority on the same list id shadows it.
-    shadow('settings.general.item', { id: 'transcript-view', priority: -10 }, Nothing),
     // At priority -10 the whale wins the seat over a shell account plugin's own
     // launcher (the Desktop's "··· More"), which comes back in Agent mode.
     shadow('settings.launcher', { priority: -10, inject: face }, AccountLauncher),
@@ -809,18 +806,16 @@ export function apply(ctx) {
   ]
   const installConversation = () => [
     installCompiledStyles(CONVERSATION_CSS, 'conversation'),
-    installBubbleTokens(),
     installMentions(),
     installAtMenu(),
-    // Bot conversations are always flat, so the work-details mode is not a choice:
-    // the mode is held at `verbose` while this group is mounted.
-    holdFlatTranscript(ctx.configForms.get('ui-chat')),
     shadow('conversation.session.header', { priority: -10, inject: face }, HeaderPill),
     shadow('conversation.chat.node', { key: 'assistant-step', priority: -10, locale: 'chat', inject: assistantFace }, AssistantCell),
     shadow('conversation.chat.node', { key: 'turn-trigger', priority: -10, locale: 'chat', inject: face }, TriggerCell),
     shadow('conversation.chat.node', { key: 'tool-call', priority: -10, locale: 'chat', inject: face }, ToolCell),
     shadow('conversation.chat.node', { key: 'turn-process', priority: -10, locale: 'chat', inject: face }, TurnProcessCell),
-    shadow('conversation.chat.node', { key: 'turn-tail', priority: -10, locale: 'chat', inject: face }, TurnTailCell),
+    // DSH's own turn tail stays, so what other plugins add there shows, such as the
+    // cards of the files a turn delivered; its copy and branch row is hidden.
+    shadow('conversation.chat.turnTail', { id: 'bot-turn-separators', order: 1000, inject: face }, TurnTailCell),
     // A Bot condenses its conversation without telling anyone; the chat keeps showing
     // every message.
     shadow('conversation.chat.node', { key: 'question-reply', priority: -10, locale: 'chat' }, AnsweredCell),
@@ -912,20 +907,13 @@ export function apply(ctx) {
   }, 'ds-bot: agent surface')
 
   ctx.effect(() => {
-    const mounted = { shell: [], conversation: [] }
-    const reconcile = () => {
-      const wanted = groupsFor(surface.getSnapshot())
-      for (const group of ['shell', 'conversation']) {
-        if (wanted[group] === (mounted[group].length > 0)) continue
-        if (wanted[group]) mounted[group] = (group === 'shell' ? installShell : installConversation)()
-        else { for (const dispose of mounted[group]) dispose?.(); mounted[group] = [] }
-      }
-    }
+    const groups = surfaceGroups({ shell: installShell, conversation: installConversation })
+    const reconcile = () => groups.reconcile(groupsFor(surface.getSnapshot()))
     reconcile()
     const unsub = surface.subscribe(reconcile)
     return () => {
       unsub()
-      for (const group of ['shell', 'conversation']) { for (const dispose of mounted[group]) dispose?.(); mounted[group] = [] }
+      groups.dispose()
     }
   }, 'ds-bot: surface')
 }

@@ -145,7 +145,7 @@ test('fileKind trusts the bytes over the suffix', () => {
   const gif = Buffer.from('GIF89a0102', 'latin1')
   const webp = Buffer.concat([Buffer.from('RIFF', 'latin1'), Buffer.from([1, 2, 3, 4]), Buffer.from('WEBP', 'latin1'), Buffer.from([0, 0])])
   const avif = Buffer.concat([Buffer.from([0, 0, 0, 0x1c]), Buffer.from('ftyp', 'latin1'), Buffer.from('avif', 'latin1'), Buffer.from([0, 0, 0, 0])])
-  const bmp = Buffer.from('BM36000000', 'hex')
+  const bmp = Buffer.from('BM', 'latin1')
   const text = Buffer.from('hello, this is plain text\n')
   const binary = Buffer.from([0x00, 0x01, 0x02, 0x03])
   // An image suffix is believed only with that image's signature.
