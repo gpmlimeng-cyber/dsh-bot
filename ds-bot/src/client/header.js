@@ -44,7 +44,7 @@ function MemoryNotice({ shown }) {
     h('span', { className: 'bt-pill-mem-in', ref: inner }, h('span', { className: 'bt-pill-mem-ico' }, h(MemoryIcon)), label))
 }
 
-export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSession, useActivity, useMemoryNews, useTurnClock, useUi, useLive, useWork, actions }) {
+export function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, useSessionStatus, useSession, useActivity, useMemoryNews, useTurnClock, useUi, useLive, useWork, actions }) {
   const roster = useRoster(value => value)
   const title = useSessions(list => list.byId[sessionId]?.displayTitle ?? list.byId[sessionId]?.title ?? '')
   const firstTurns = useSessions((list) => {
@@ -98,7 +98,13 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
   const moreOpen = useUi(value => value.menu !== null)
   const head = h('div', { className: 'bt-head' },
     h('button', {
-      type: 'button', className: 'bt-pill', 'aria-expanded': detailsOpen, 'data-memory': memoryNotice ? 'updated' : undefined,
+      type: 'button', className: 'bt-pill',
+      // With the Better Sidebar service the drawer opens in the shell's right Sidebar,
+      // whose expanded state this client cannot read, so the button carries no
+      // `aria-expanded` there instead of one that is always false. Without the service
+      // it still opens our own panel, and the attribute stays exact.
+      ...(betterSidebar ? {} : { 'aria-expanded': detailsOpen }),
+      'data-memory': memoryNotice ? 'updated' : undefined,
       'aria-label': memoryNotice ? t('Memory updated. Open {name}\'s memory', { name: roster.byId[changed]?.name ?? name }) : t('View conversation details'),
       onClick: () => (memoryNotice ? actions.openMemory(changed) : actions.toggleDetails(sessionId)),
     },
