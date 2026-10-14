@@ -3372,6 +3372,19 @@ html[data-bt-mobile][data-bt-size=compact] .bt-astack[data-lead] .bt-tools{left:
 html[data-bt-mobile][data-bt-size=compact] .bt-tools::after{display:none}
 [data-turn-tail]>:not([data-slot="conversation.chat.turnTail"]){display:none!important}
 [class*="_flowItem"][data-chat-flow-kind="turn-tail"]:not(:has([data-slot="conversation.chat.turnTail"]:not(:empty))){display:none!important}
+/* The cards of the files a turn handed over sit at the turn's end, in every conversation
+   (cells.js TurnTailCell). They are the message cards themselves, so they take the full
+   width here instead of the avatar indent they have under a group reply. */
+[data-turn-tail] .bt-dcards{margin-left:0;margin-top:10px;padding:0 2px}
+/* DSH's own ui-deliverables draws its delivery cards in the very same turn tail, from the
+   same per-turn record, so a turn that handed files over would otherwise draw two sets of
+   cards. Ours is the one a phone can use -- it copies the path and hands the file to
+   another app -- so the platform's block is taken out. Its "files changed" card is another
+   module (compiled as P4kPIW_*) and this never touches it. The hook is the platform's own
+   marker on the row of presented cards, and the rule climbs to the box that holds exactly
+   that row (its heading and its "show all" toggle), so nothing of it is left behind. One
+   rule, easy to take back: delete it and both surfaces show again. */
+[class*="_root"]:has(>[data-presented-files-row]){display:none!important}
 /* Every team Session belongs to a Bot or a group, so a blank one is an empty chat, not
    the shell's new-session hero: no headline, no workspace or mode picker, and the
    composer stays docked at the bottom. */
@@ -4743,18 +4756,14 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
 .bt-preview-acts{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-end;padding:8px 10px;border-top:.5px solid var(--bt-line)}
 .bt-preview-acts .bt-dcard-hint{flex:1 1 100%;text-align:left}
-/* Everything the team delivered, listed in the same panel and opened from a row. */
+/* Everything the team delivered, in the same panel a preview opens in. The list is drawn
+   with the message cards themselves (deliverables.js), so there is no row style of its
+   own here: only the panel's own shape -- the cards take the full width instead of the
+   message's avatar indent, one to a row, under the line that says what the list is. */
 .bt-products{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:6px}
 .bt-products>.bt-fp-empty{flex:1}
 .bt-prod-note{flex:none;padding:4px 10px 8px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
-.bt-prod-rows{display:flex;flex-direction:column}
-.bt-prod-row{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:10px;background:none;color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer}
-.bt-prod-row:hover{background:var(--bt-hover)}
-.bt-prod-row:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--bt-accent)}
-.bt-prod-ico{flex:none;box-sizing:border-box;width:32px;height:32px;display:grid;place-items:center;border-radius:8px;border:.5px solid var(--bt-line);color:var(--bt-accent);overflow:hidden}
-.bt-prod-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.bt-prod-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-prod-meta{font-size:11px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-products .bt-dcards{margin-left:0;grid-template-columns:minmax(0,1fr);padding:0 2px 6px}
 `;
 
 // src/client/deliverables.js
@@ -4783,6 +4792,7 @@ var metaText = (file, name) => {
   const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toUpperCase();
   return extension === "" ? t("File") : extension;
 };
+var metaOf = (file) => [atText(file.at), folderOf(file.path)].filter((part) => part !== "").join(" · ");
 var exitsSentence = (shared2) => shared2 !== null && shared2 !== void 0 ? t("Could not open it here. The copy is at {path}", { path: shared2 }) : t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT });
 function useDeliverableExits(file, actions, onFailed) {
   const [state, setState] = (0, import_react7.useState)("idle");
@@ -4880,7 +4890,7 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
     }
   });
 }
-function DeliverableCard({ file, actions }) {
+function DeliverableCard({ file, actions, meta, role }) {
   const name = basename(file.path);
   const [failure, setFailure] = (0, import_react7.useState)(null);
   const preview = () => {
@@ -4889,7 +4899,7 @@ function DeliverableCard({ file, actions }) {
   };
   return (0, import_react7.createElement)(
     "div",
-    { className: "bt-dcard-wrap" },
+    { className: "bt-dcard-wrap", role },
     (0, import_react7.createElement)(
       "div",
       { className: "bt-dcard" },
@@ -4904,7 +4914,7 @@ function DeliverableCard({ file, actions }) {
         "span",
         { className: "bt-dcard-copy" },
         (0, import_react7.createElement)("span", { className: "bt-dcard-name" }, name),
-        (0, import_react7.createElement)("span", { className: "bt-dcard-desc" }, metaText(file, name)),
+        (0, import_react7.createElement)("span", { className: "bt-dcard-desc" }, meta ?? metaText(file, name)),
         (0, import_react7.createElement)("span", { className: "bt-dcard-peek", "aria-hidden": true }, t("Preview"))
       ),
       (0, import_react7.createElement)("span", { className: "bt-dcard-acts" }, (0, import_react7.createElement)(DeliverableActions, { file, actions, onFailed: setFailure }))
@@ -4912,16 +4922,31 @@ function DeliverableCard({ file, actions }) {
     failure ? (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
   );
 }
-function DeliverableCards({ deliverables, actions }) {
-  const files = (deliverables ?? []).flatMap((entry) => (entry?.files ?? []).map((file, index) => ({
+function DeliverableCards({ deliverables, actions, metaOf: metaOf2 = null, list = false }) {
+  const files = (deliverables ?? []).flatMap((entry) => (entry?.files ?? []).map((file, position) => ({
     path: file?.path,
     description: typeof file?.description === "string" ? file.description : void 0,
+    // A file's own coordinates when the source has them (DSH's turn record does), the
+    // position among its neighbours otherwise (the host's group replies do not).
+    at: file?.at,
     sessionId: entry.sessionId,
     seq: entry.seq,
-    index
+    index: Number.isInteger(file?.index) ? file.index : position
   }))).filter((file) => typeof file.path === "string" && file.path !== "");
   if (files.length === 0) return null;
-  return (0, import_react7.createElement)("div", { className: "bt-dcards" }, files.map((file) => (0, import_react7.createElement)(DeliverableCard, { key: `${file.sessionId}:${file.seq}:${file.index}`, file, actions })));
+  return (0, import_react7.createElement)(
+    "div",
+    { className: "bt-dcards", role: list ? "list" : void 0 },
+    files.map((file) => (0, import_react7.createElement)(DeliverableCard, {
+      // The same file can be handed over twice; a row without coordinates is keyed by its
+      // path, which is what makes it one row.
+      key: file.sessionId === void 0 ? file.path : `${file.sessionId}:${file.seq}:${file.index}`,
+      file,
+      actions,
+      meta: metaOf2?.(file),
+      role: list ? "listitem" : void 0
+    }))
+  );
 }
 var FRAME_POLICY = "default-src 'none'; style-src 'unsafe-inline'; img-src data:";
 var frameDocument = (text) => `<!doctype html><meta http-equiv="Content-Security-Policy" content="${FRAME_POLICY}">${text}`;
@@ -5014,10 +5039,7 @@ function DeliveredList({ actions, onClose }) {
       live = false;
     };
   }, []);
-  const open = (file) => {
-    if (isPicture(basename(file.path))) actions?.previewImage?.(file);
-    else actions?.previewFile?.(file);
-  };
+  const rows = [{ files: files.map((entry) => ({ path: entry.path, at: entry.at })) }];
   const body = state === "reading" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…")))) : state === "failed" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title", role: "status" }, t("This list could not be read")))) : (0, import_react7.createElement)(
     "div",
     { className: "bt-products" },
@@ -5029,28 +5051,7 @@ function DeliveredList({ actions, onClose }) {
       { className: "bt-fp-empty" },
       (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("No deliverables yet")),
       (0, import_react7.createElement)("div", { className: "bt-fp-empty-text" }, t("Files a Bot hands over are listed here."))
-    ) : (0, import_react7.createElement)("div", { className: "bt-prod-rows", role: "list" }, files.map((file) => {
-      const name = basename(file.path);
-      const meta = [atText(file.at), folderOf(file.path)].filter((part) => part !== "").join(" · ");
-      return (0, import_react7.createElement)(
-        "button",
-        {
-          key: file.path,
-          type: "button",
-          role: "listitem",
-          className: "bt-prod-row",
-          "aria-label": `${t("Preview")} ${name}`,
-          onClick: () => open(file)
-        },
-        (0, import_react7.createElement)("span", { className: "bt-prod-ico", "aria-hidden": true }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.FileTypeIcon, { path: file.path, size: 18 })),
-        (0, import_react7.createElement)(
-          "span",
-          { className: "bt-prod-copy" },
-          (0, import_react7.createElement)("span", { className: "bt-prod-name" }, name),
-          meta === "" ? null : (0, import_react7.createElement)("span", { className: "bt-prod-meta" }, meta)
-        )
-      );
-    }))
+    ) : (0, import_react7.createElement)(DeliverableCards, { deliverables: rows, actions, list: true, metaOf })
   );
   return (0, import_react7.createElement)(
     import_react7.Fragment,
@@ -5598,13 +5599,27 @@ function TurnTailCell({ turn: location2, sessionId, useTurnClock, useUi, actions
     const start = nextTurnStart(state[sessionId] ?? {}, turn);
     return start !== void 0 && start > visit.seen && start <= visit.entered;
   });
-  if (!label && !fresh) return null;
+  const delivered = turnDeliverables(location2, sessionId);
+  if (!label && !fresh && delivered.length === 0) return null;
   return (0, import_react8.createElement)(
     import_react8.Fragment,
     null,
+    delivered.length > 0 ? (0, import_react8.createElement)(DeliverableCards, { deliverables: delivered, actions }) : null,
     label ? (0, import_react8.createElement)("div", { className: "bt-time-sep", role: "separator" }, label) : null,
     fresh ? (0, import_react8.createElement)(NewDivider) : null
   );
+}
+function turnDeliverables(location2, sessionId) {
+  const presented = location2?.data?.get?.("deliverables")?.presented;
+  if (!Array.isArray(presented) || presented.length === 0) return [];
+  const bySequence = /* @__PURE__ */ new Map();
+  for (const file of presented) {
+    if (typeof file?.path !== "string" || file.path === "") continue;
+    const seq = file.seq;
+    if (!bySequence.has(seq)) bySequence.set(seq, []);
+    bySequence.get(seq).push({ path: file.path, description: file.description, index: file.index });
+  }
+  return [...bySequence].map(([seq, files]) => ({ sessionId, seq, files }));
 }
 function Shimmer({ children }) {
   return (0, import_react8.createElement)("span", { className: "bt-shimmer" }, children);

@@ -1404,6 +1404,19 @@ html[data-bt-mobile][data-bt-size=compact] .bt-astack[data-lead] .bt-tools{left:
 html[data-bt-mobile][data-bt-size=compact] .bt-tools::after{display:none}
 [data-turn-tail]>:not([data-slot="conversation.chat.turnTail"]){display:none!important}
 [class*="_flowItem"][data-chat-flow-kind="turn-tail"]:not(:has([data-slot="conversation.chat.turnTail"]:not(:empty))){display:none!important}
+/* The cards of the files a turn handed over sit at the turn's end, in every conversation
+   (cells.js TurnTailCell). They are the message cards themselves, so they take the full
+   width here instead of the avatar indent they have under a group reply. */
+[data-turn-tail] .bt-dcards{margin-left:0;margin-top:10px;padding:0 2px}
+/* DSH's own ui-deliverables draws its delivery cards in the very same turn tail, from the
+   same per-turn record, so a turn that handed files over would otherwise draw two sets of
+   cards. Ours is the one a phone can use -- it copies the path and hands the file to
+   another app -- so the platform's block is taken out. Its "files changed" card is another
+   module (compiled as P4kPIW_*) and this never touches it. The hook is the platform's own
+   marker on the row of presented cards, and the rule climbs to the box that holds exactly
+   that row (its heading and its "show all" toggle), so nothing of it is left behind. One
+   rule, easy to take back: delete it and both surfaces show again. */
+[class*="_root"]:has(>[data-presented-files-row]){display:none!important}
 /* Every team Session belongs to a Bot or a group, so a blank one is an empty chat, not
    the shell's new-session hero: no headline, no workspace or mode picker, and the
    composer stays docked at the bottom. */

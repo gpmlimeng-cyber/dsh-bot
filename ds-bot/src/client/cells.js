@@ -454,9 +454,10 @@ export function openingTurn(turns, firstTurns, hiddenTurns) {
 // Began after the user last left the conversation and before this visit opened it.
 export const unseenSince = (visit, time) => typeof visit?.seen === 'number' && time > visit.seen && time <= visit.entered
 
-// An entry in DSH's own turn tail, after what other plugins put there (the cards of
-// the files a turn delivered). The tail sits right before the next turn's first row,
-// so the separator for a pause between turns renders here.
+// An entry in DSH's own turn tail, beside the entries other plugins add there. The tail
+// sits right before the next turn's first row, so both the separator for a pause between
+// turns and the cards of the files this turn handed over render here -- in every
+// conversation, a group's own replies drawing theirs under the reply that carried them.
 export function TurnTailCell({ turn: location, sessionId, useTurnClock, useUi, actions }) {
   const turn = location.turn
   // DSH builds the tail from the turn's end, so it is there.
@@ -474,10 +475,34 @@ export function TurnTailCell({ turn: location, sessionId, useTurnClock, useUi, a
     const start = nextTurnStart(state[sessionId] ?? {}, turn)
     return start !== undefined && start > visit.seen && start <= visit.entered
   })
-  if (!label && !fresh) return null
+  const delivered = turnDeliverables(location, sessionId)
+  if (!label && !fresh && delivered.length === 0) return null
   return h(Fragment, null,
+    delivered.length > 0 ? h(DeliverableCards, { deliverables: delivered, actions }) : null,
     label ? h('div', { className: 'bt-time-sep', role: 'separator' }, label) : null,
     fresh ? h(NewDivider) : null)
+}
+
+/**
+ * What one turn handed over, in the shape the cards take. The events themselves leave a
+ * per-turn record on the turn (`{ produced, presented }` under "deliverables", put there
+ * by whichever plugin watched the events -- DSH's own delivery card reads the same one),
+ * so this is exactly this turn's deliveries: no history, and a turn that handed nothing
+ * over is simply empty.
+ */
+function turnDeliverables(location, sessionId) {
+  const presented = location?.data?.get?.('deliverables')?.presented
+  if (!Array.isArray(presented) || presented.length === 0) return []
+  const bySequence = new Map()
+  for (const file of presented) {
+    if (typeof file?.path !== 'string' || file.path === '') continue
+    const seq = file.seq
+    if (!bySequence.has(seq)) bySequence.set(seq, [])
+    // DSH's index is the place the file had in its own event; the card needs it to ask
+    // the engine to open that one.
+    bySequence.get(seq).push({ path: file.path, description: file.description, index: file.index })
+  }
+  return [...bySequence].map(([seq, files]) => ({ sessionId, seq, files }))
 }
 
 export function Shimmer({ children }) {

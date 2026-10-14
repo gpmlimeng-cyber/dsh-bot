@@ -181,16 +181,12 @@ export const FILE_PREVIEW_CSS = `
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
 .bt-preview-acts{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-end;padding:8px 10px;border-top:.5px solid var(--bt-line)}
 .bt-preview-acts .bt-dcard-hint{flex:1 1 100%;text-align:left}
-/* Everything the team delivered, listed in the same panel and opened from a row. */
+/* Everything the team delivered, in the same panel a preview opens in. The list is drawn
+   with the message cards themselves (deliverables.js), so there is no row style of its
+   own here: only the panel's own shape -- the cards take the full width instead of the
+   message's avatar indent, one to a row, under the line that says what the list is. */
 .bt-products{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:6px}
 .bt-products>.bt-fp-empty{flex:1}
 .bt-prod-note{flex:none;padding:4px 10px 8px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
-.bt-prod-rows{display:flex;flex-direction:column}
-.bt-prod-row{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:10px;background:none;color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer}
-.bt-prod-row:hover{background:var(--bt-hover)}
-.bt-prod-row:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--bt-accent)}
-.bt-prod-ico{flex:none;box-sizing:border-box;width:32px;height:32px;display:grid;place-items:center;border-radius:8px;border:.5px solid var(--bt-line);color:var(--bt-accent);overflow:hidden}
-.bt-prod-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.bt-prod-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-prod-meta{font-size:11px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-products .bt-dcards{margin-left:0;grid-template-columns:minmax(0,1fr);padding:0 2px 6px}
 `

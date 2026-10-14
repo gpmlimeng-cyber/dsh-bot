@@ -89,7 +89,7 @@ test('a phone keeps its way out: the copy-path button and the sentence about the
   assert.ok(rule('.bt-dcard-hint{').includes('word-break:break-all'), 'the sentence wraps instead of scrolling sideways')
   // The tile is a fixed 60px and clips, so its sentence is written under it, by the
   // wrapper -- not inside the tile, where it would be cut off.
-  assert.ok(source.includes("h('div', { className: 'bt-dcard-wrap' },"), 'the tile sits in a wrapper that can hold a line under it')
+  assert.ok(source.includes("h('div', { className: 'bt-dcard-wrap', role },"), 'the tile sits in a wrapper that can hold a line under it')
   const actsAt = source.indexOf("h('span', { className: 'bt-dcard-acts' }")
   const hintAt = source.indexOf('exitsSentence(failure.shared)')
   assert.ok(actsAt !== -1 && hintAt > actsAt, 'and the sentence is written after the tile’s own row')
@@ -231,4 +231,34 @@ test('a lost focus goes back to the same card, and a restored one is left alone'
   assert.ok(source.includes("const again = [...document.querySelectorAll('.bt-dcard-hit')]"), 'the same card is looked up again')
   assert.ok(source.includes("(node.getAttribute('aria-label') ?? '').endsWith(` ${name}`)"), 'by the name it announces')
   assert.ok(source.includes('if (again instanceof HTMLElement) again.focus()'), 'and takes the focus when it is really there')
+})
+
+// A turn that handed files over ends with the cards of that turn, in every conversation.
+// A group reply draws its own under the reply that carried them, so the turn tail covers
+// the rest. The per-turn record read here is the same one DSH's own delivery card reads,
+// which is what keeps the list to this turn's files instead of every file ever delivered.
+test('a turn that delivered files ends with the cards, in every conversation', () => {
+  const cells = read('cells.js')
+  assert.ok(cells.includes('export function TurnTailCell({ turn: location, sessionId, useTurnClock, useUi, actions })'), 'the turn tail is where they hang')
+  assert.ok(cells.includes("const presented = location?.data?.get?.('deliverables')?.presented"), 'the per-turn record is read off the turn itself')
+  assert.ok(cells.includes('h(DeliverableCards, { deliverables: delivered, actions })'), 'and drawn with the one card list, actions and all')
+  assert.ok(cells.includes('if (!label && !fresh && delivered.length === 0) return null'), 'a turn with neither a gap nor a delivery draws nothing')
+  assert.ok(cells.includes('bySequence.get(seq).push({ path: file.path, description: file.description, index: file.index })'), 'each file keeps the index the engine opens it by')
+  // Two surfaces drawing from the same record would show two sets of cards, so the
+  // platform's own block stands down -- its "files changed" card is another module.
+  assert.ok(styles.some(line => line.includes('[class*="_root"]:has(>[data-presented-files-row])')), 'the platform’s delivery cards stand down')
+  assert.ok(!styles.some(line => line.includes('P4kPIW') && line.includes('display:none')), 'and the files-changed card is left alone')
+  // The tail is not a message cell: the cards take the full width, not the avatar indent.
+  assert.ok(styles.some(line => line.includes('[data-turn-tail] .bt-dcards{margin-left:0;')), 'the turn tail’s cards are not indented')
+})
+
+// The panel's list and a message's list are the same card, so a later edit cannot give
+// the panel a row of its own again.
+test('the message cards and the panel’s list are one component', () => {
+  const source = card.join('\n')
+  assert.ok(source.includes('export function DeliverableCards({ deliverables, actions, metaOf = null, list = false })'), 'one card list, two callers')
+  assert.ok(source.includes("h('div', { className: 'bt-dcards', role: list ? 'list' : undefined },"), 'and the panel’s list still announces itself')
+  assert.ok(source.includes('meta: metaOf?.(file)'), 'the second line is the caller’s')
+  assert.ok(source.includes('index: Number.isInteger(file?.index) ? file.index : position'), 'a file that carries coordinates keeps them')
+  assert.ok(!source.includes('bt-prod-row'), 'no second row shape survives')
 })

@@ -68,6 +68,10 @@ const metaText = (file, name) => {
   return extension === '' ? t('File') : extension
 }
 
+// What the panel's list says under the name where a message's card says what the file is:
+// when it arrived, and where it sits.
+const metaOf = (file) => [atText(file.at), folderOf(file.path)].filter(part => part !== '').join(' · ')
+
 /**
  * The sentence that explains a refusal. Both places that can refuse (the card and the
  * preview page) write it through here, so the wording cannot drift between them.
@@ -181,7 +185,13 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
   })
 }
 
-function DeliverableCard({ file, actions }) {
+/**
+ * One delivered file, as the card DSH's own PresentedFileCard is shaped like. Both lists
+ * of deliverables draw through this one component -- the ones a message ends with, and the
+ * panel's list of everything -- so the two cannot drift apart; only what the second line
+ * says and where the coordinates come from differ.
+ */
+function DeliverableCard({ file, actions, meta, role }) {
   const name = basename(file.path)
   // A refusal writes its sentence under the tile, not in it: the tile is 60px and clips.
   const [failure, setFailure] = useState(null)
@@ -193,7 +203,7 @@ function DeliverableCard({ file, actions }) {
     if (isPicture(name)) actions?.previewImage?.(file)
     else actions?.previewFile?.(file)
   }
-  return h('div', { className: 'bt-dcard-wrap' },
+  return h('div', { className: 'bt-dcard-wrap', role },
     h('div', { className: 'bt-dcard' },
       h('button', {
         type: 'button',
@@ -204,25 +214,42 @@ function DeliverableCard({ file, actions }) {
       h('span', { className: 'bt-dcard-ico', 'aria-hidden': true }, h(FileTypeIcon, { path: file.path, size: 20 })),
       h('span', { className: 'bt-dcard-copy' },
         h('span', { className: 'bt-dcard-name' }, name),
-        h('span', { className: 'bt-dcard-desc' }, metaText(file, name)),
+        h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name)),
         h('span', { className: 'bt-dcard-peek', 'aria-hidden': true }, t('Preview'))),
       h('span', { className: 'bt-dcard-acts' }, h(DeliverableActions, { file, actions, onFailed: setFailure }))),
     failure ? h('span', { className: 'bt-dcard-hint', role: 'status' }, exitsSentence(failure.shared)) : null)
 }
 
-// One card per delivered file, under the group reply that carried them.
-export function DeliverableCards({ deliverables, actions }) {
+/**
+ * The cards for a set of deliverances: what a message ends with, and (with `metaOf` and
+ * `list`) the panel's list of everything the team handed over. `deliverables` is the same
+ * shape the host sends for a group reply -- `[{ sessionId, seq, files }]` -- and a file
+ * carries its own `index` when the source already knows it.
+ */
+export function DeliverableCards({ deliverables, actions, metaOf = null, list = false }) {
   const files = (deliverables ?? [])
-    .flatMap(entry => (entry?.files ?? []).map((file, index) => ({
+    .flatMap(entry => (entry?.files ?? []).map((file, position) => ({
       path: file?.path,
       description: typeof file?.description === 'string' ? file.description : undefined,
+      // A file's own coordinates when the source has them (DSH's turn record does), the
+      // position among its neighbours otherwise (the host's group replies do not).
+      at: file?.at,
       sessionId: entry.sessionId,
       seq: entry.seq,
-      index,
+      index: Number.isInteger(file?.index) ? file.index : position,
     })))
     .filter(file => typeof file.path === 'string' && file.path !== '')
   if (files.length === 0) return null
-  return h('div', { className: 'bt-dcards' }, files.map(file => h(DeliverableCard, { key: `${file.sessionId}:${file.seq}:${file.index}`, file, actions })))
+  return h('div', { className: 'bt-dcards', role: list ? 'list' : undefined },
+    files.map(file => h(DeliverableCard, {
+      // The same file can be handed over twice; a row without coordinates is keyed by its
+      // path, which is what makes it one row.
+      key: file.sessionId === undefined ? file.path : `${file.sessionId}:${file.seq}:${file.index}`,
+      file,
+      actions,
+      meta: metaOf?.(file),
+      role: list ? 'listitem' : undefined,
+    })))
 }
 
 // A page is rendered in a frame that cannot do anything: `sandbox=""` refuses scripts,
@@ -308,7 +335,10 @@ function PreviewHead({ name, onClose, children }) {
  * Everything the team's Bots have handed over, newest first, in the panel a preview opens
  * in -- full screen on a phone, the right column on a desktop. It is a view of the same
  * host record the cards were registered from, so it lists what was really delivered, and
- * a row opens a file the way its card does. Read-only: it lists and opens.
+ * it is drawn with the very cards the messages end with: same tile, same type icon, same
+ * two exits, one tap to the preview. Only the second line differs -- a message's card
+ * says what the file is, this one says when it arrived and where it sits. Read-only: it
+ * lists and opens.
  */
 export function DeliveredList({ actions, onClose }) {
   const [state, setState] = useState('reading') // reading | shown | failed
@@ -330,10 +360,10 @@ export function DeliveredList({ actions, onClose }) {
     })()
     return () => { live = false }
   }, [])
-  const open = (file) => {
-    if (isPicture(basename(file.path))) actions?.previewImage?.(file)
-    else actions?.previewFile?.(file)
-  }
+  // A row from this list carries no message coordinates -- nothing here knows which
+  // reply a file came from -- so the card's own exits do what they can: the phone's
+  // chooser gets a copy, and the path is one tap away either way.
+  const rows = [{ files: files.map(entry => ({ path: entry.path, at: entry.at })) }]
   const body = state === 'reading'
     ? h('div', { className: 'bt-products' }, h('div', { className: 'bt-fp-empty' }, h('div', { className: 'bt-fp-empty-title' }, t('Loading…'))))
     : state === 'failed'
@@ -346,18 +376,7 @@ export function DeliveredList({ actions, onClose }) {
             ? h('div', { className: 'bt-fp-empty' },
                 h('div', { className: 'bt-fp-empty-title' }, t('No deliverables yet')),
                 h('div', { className: 'bt-fp-empty-text' }, t('Files a Bot hands over are listed here.')))
-            : h('div', { className: 'bt-prod-rows', role: 'list' }, files.map(file => {
-                const name = basename(file.path)
-                const meta = [atText(file.at), folderOf(file.path)].filter(part => part !== '').join(' · ')
-                return h('button', {
-                  key: file.path, type: 'button', role: 'listitem', className: 'bt-prod-row',
-                  'aria-label': `${t('Preview')} ${name}`, onClick: () => open(file),
-                },
-                h('span', { className: 'bt-prod-ico', 'aria-hidden': true }, h(FileTypeIcon, { path: file.path, size: 18 })),
-                h('span', { className: 'bt-prod-copy' },
-                  h('span', { className: 'bt-prod-name' }, name),
-                  meta === '' ? null : h('span', { className: 'bt-prod-meta' }, meta)))
-              })))
+            : h(DeliverableCards, { deliverables: rows, actions, list: true, metaOf }))
   return h(Fragment, null,
     h(PreviewHead, { name: t('All deliverables'), onClose }),
     body)

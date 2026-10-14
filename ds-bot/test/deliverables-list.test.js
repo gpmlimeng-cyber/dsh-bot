@@ -1,8 +1,8 @@
-// The phone's "all deliverables" panel: one entry in the more menu, one list, and a row
-// that opens a file the way its card does. The list is the host's own record of what the
-// team delivered, read through one action, and the panel is the one a preview opens in --
-// so a phone gets it full screen with a title bar, and nothing about it is a second
-// container. These are the parts a later edit could quietly drop.
+// The phone's "all deliverables" panel: one entry in the more menu, one list the host
+// answers, and -- since the list is drawn with the message cards themselves -- nothing of
+// its own but a width and a second line. The panel is the one a preview opens in, so a
+// phone gets it full screen with a title bar, and nothing about it is a second container.
+// These are the parts a later edit could quietly drop.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
@@ -35,17 +35,21 @@ test('the list is read from the host, read-only, and the client has that one cal
   assert.ok(host('files.js').includes('deliveredFile, deliveredList, shareDelivered'), 'and hands it to the channel')
 })
 
-test('a row opens its file the way its card does, and shows what it is', () => {
+test('the list keeps the message cards, and only gives them the panel’s shape', () => {
   assert.ok(list.includes('export function DeliveredList({ actions, onClose })'), 'the panel is one component')
   assert.ok(list.includes('const answer = await ask.current?.listDelivered?.()'), 'it reads through the host action')
-  assert.ok(list.includes('if (isPicture(basename(file.path))) actions?.previewImage?.(file)'), 'a picture opens the image preview')
-  assert.ok(list.includes('else actions?.previewFile?.(file)'), 'everything else opens the preview page')
-  // Type icon, name, and when it arrived where it sits -- the row says what it is.
-  assert.ok(list.includes('h(FileTypeIcon, { path: file.path, size: 18 })'), 'the row carries the file type icon')
-  assert.ok(list.includes("h('span', { className: 'bt-prod-name' }, name)"), 'and the name')
-  assert.ok(list.includes('const meta = [atText(file.at), folderOf(file.path)]'), 'and the time with the folder it sits in')
+  // The very cards a message ends with, so a later edit cannot grow a second row design.
+  assert.ok(list.includes('h(DeliverableCards, { deliverables: rows, actions, list: true, metaOf })'), 'the list is the shared card list')
+  assert.ok(list.includes('const rows = [{ files: files.map(entry => ({ path: entry.path, at: entry.at })) }]'), 'fed the host’s rows')
+  assert.ok(!list.includes("className: 'bt-prod-row'"), 'and there is no row of its own')
+  assert.ok(!preview.includes('.bt-prod-row'), 'nor a row style of its own')
+  assert.ok(!list.includes('const open = (file) =>'), 'the panel no longer opens files itself')
+  // The second line is the one thing the panel changes: a message says what the file is,
+  // the list says when it arrived and where it sits.
+  assert.ok(list.includes('const metaOf = (file) => [atText(file.at), folderOf(file.path)]'), 'the list’s line is time and folder')
+  assert.ok(list.includes('meta: metaOf?.(file)'), 'and the card is handed it')
   assert.ok(list.includes('const folderOf = (path) => {') && list.includes('const atText = (at) => (Number.isFinite(at)'), 'both are defined once')
-  assert.ok(preview.includes('.bt-prod-name{') && preview.includes('.bt-prod-meta{'), 'and styled where the panel’s other styles live')
+  assert.ok(preview.includes('.bt-products .bt-dcards{'), 'the panel gives the shared cards their width')
 })
 
 test('an empty list and a list that cannot be read each say so, in the reader’s language', () => {
