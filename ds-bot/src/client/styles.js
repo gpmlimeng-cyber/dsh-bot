@@ -965,7 +965,10 @@ html[data-bt-mobile][data-bt-size=expanded]{
   --bt-set-row-h:52px;
   --bt-set-gap:16px;
   --bt-set-cols:2;
-  --bt-detail-w:480px;
+  /* The panel is a sidebar, not half the screen: 42% of a folded screen, capped at 400px.
+     On the 859px this device reports that is 361px, which leaves 443 to the conversation
+     column -- it was 480 of 859, 55.9%, and the column had 324. */
+  --bt-detail-w:min(400px,42vw);
 }/* The bar floats above every panel this skin opens, not just the conversation: the New…
    picker, the settings page, the palette and the memory dialog are all fixed layers of
    their own (pane 45, menu/settings 60, memory 61, palette 70) that start at the top of
