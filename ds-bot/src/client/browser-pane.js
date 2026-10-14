@@ -501,7 +501,13 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   const showStrip = view !== 'preview' && view !== 'products' && (hasStrip || view === 'files')
   return h('aside', {
     ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'preview' ? t('File preview') : view === 'products' ? t('All deliverables') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}`,
-    'data-leaving': leaving || undefined, 'aria-hidden': leaving || undefined, 'data-settling': settling || undefined,
+    // A leaving panel is out of the accessibility tree and holds no focus. `aria-hidden`
+    // cannot say that here: the tap that closed the panel leaves the focus on one of its own
+    // buttons, and a browser refuses to hide a subtree that still holds the focus -- it logs
+    // "Blocked aria-hidden on an element because its descendant retained focus", keeps
+    // announcing the panel, and leaves the focus on a control that is on its way out.
+    // `inert` is the browser's own answer: it hides the subtree and lets the focus go.
+    'data-leaving': leaving || undefined, inert: leaving ? '' : undefined, 'data-settling': settling || undefined,
     'data-instant': instant || undefined, 'data-dragging': dragging || undefined, style: { '--bt-panel-w': `${panelWidth}px` },
     onAnimationEnd: (event) => { if (event.target === event.currentTarget) setLanded(true) },
   },

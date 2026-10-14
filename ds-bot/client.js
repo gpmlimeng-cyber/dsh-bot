@@ -8191,8 +8191,14 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
       className: "bt-panel",
       "data-view": view,
       "aria-label": `${view === "files" ? t("Files") : view === "preview" ? t("File preview") : view === "products" ? t("All deliverables") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details")}`,
+      // A leaving panel is out of the accessibility tree and holds no focus. `aria-hidden`
+      // cannot say that here: the tap that closed the panel leaves the focus on one of its own
+      // buttons, and a browser refuses to hide a subtree that still holds the focus -- it logs
+      // "Blocked aria-hidden on an element because its descendant retained focus", keeps
+      // announcing the panel, and leaves the focus on a control that is on its way out.
+      // `inert` is the browser's own answer: it hides the subtree and lets the focus go.
       "data-leaving": leaving || void 0,
-      "aria-hidden": leaving || void 0,
+      inert: leaving ? "" : void 0,
       "data-settling": settling || void 0,
       "data-instant": instant || void 0,
       "data-dragging": dragging || void 0,

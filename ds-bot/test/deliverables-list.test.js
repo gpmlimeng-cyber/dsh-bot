@@ -83,3 +83,12 @@ test('the panel is the one a preview opens in, title bar and all', () => {
   const previewUses = list.split('h(PreviewHead, ').length - 1
   assert.equal(previewUses, 2, 'and both pages use it')
 })
+
+test('a leaving panel is inert, so a browser can both hide it and let its focus go', () => {
+  // The tap that closes a preview leaves the focus on a button inside the panel. `aria-hidden`
+  // is refused on a subtree that still holds the focus ("Blocked aria-hidden on an element
+  // because its descendant retained focus"), which leaves the panel announced and the focus on
+  // a control on its way out. `inert` is what the browser asks for instead: hidden, no focus.
+  assert.ok(pane.includes("inert: leaving ? '' : undefined"), 'the panel goes inert while it leaves')
+  assert.ok(!pane.includes("'aria-hidden': leaving"), 'and nothing hides it with aria-hidden while it holds the focus')
+})
