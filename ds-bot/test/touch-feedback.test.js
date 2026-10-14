@@ -41,11 +41,13 @@ test('the press tint covers buttons and the role-based rows, on press only', () 
   assert.ok(!rule.includes('background-color:'), rule)
 })
 
-test('reduced motion drops the press tint and the press scale together', () => {
-  const reset = lines.findIndex(line => line.includes('background-image:none!important'))
-  assert.ok(reset > 0, 'no reduced-motion reset of the press tint')
+test('reduced motion drops the press scale and leaves the press colour alone', () => {
+  const reset = lines.findIndex(line => line.includes(':active{transform:none;scale:none}'))
+  assert.ok(reset > 0, 'no reduced-motion reset of the press scale')
   const block = lines.slice(reset - 1, reset + 2).join('\n')
   assert.ok(block.includes('@media (prefers-reduced-motion:reduce)'), block)
-  assert.ok(block.includes('transform:none') && block.includes('scale:none'), block)
   assert.ok(block.includes(band), block)
+  // Reduce is about movement, and a device that turns system animations off reports reduce --
+  // silencing the tint as well would leave those taps answering with nothing at all.
+  assert.ok(!lines.some(line => line.includes(band) && line.includes('background-image:none')), 'reduced motion silences the tint again')
 })
