@@ -6,14 +6,11 @@ import { PC_DETAILS_MAX, PC_DETAILS_RATIO, PC_QUERY, pcDetailsWidth, pcSidebarSt
 // band and closed again on the way out, and only ever on a band change. Each case below is
 // one hand on the device: fold, unfold, and what the user did inside the band.
 
-test('the band opens a collapsed column and remembers that it did', () => {
-  assert.deepEqual(pcSidebarStep(null, true, true, false), { call: 'expand', opened: true })
-})
-
-test('a column the user already had open is not claimed', () => {
-  // The slot's own expand is a no-op on an open column, so the call is safe either way --
-  // but the exit must not close a column this band did not open.
-  assert.deepEqual(pcSidebarStep(null, true, false, false), { call: 'expand', opened: false })
+test('the band opens the column on entry, whether or not it was already up', () => {
+  // The slot's own expand is a no-op on an open column, so the call is safe either way; what
+  // matters is that a wrong `collapsed` read cannot leave the band without its column.
+  assert.equal(pcSidebarStep(null, true, true), 'expand')
+  assert.equal(pcSidebarStep(null, true, false), 'expand')
 })
 
 test('inside the band nothing acts, so a column the user folded stays folded', () => {
@@ -23,27 +20,27 @@ test('inside the band nothing acts, so a column the user folded stays folded', (
   // back null and the next pass read as an entry and re-opened the column -- a fold that undid
   // itself two seconds later. It is module state now (pc-layout.js, pcSidebarMemory), and this
   // case is what that memory is asked.
-  assert.deepEqual(pcSidebarStep(true, true, true, true), { call: null, opened: true })
-  assert.deepEqual(pcSidebarStep(true, true, false, false), { call: null, opened: false })
+  assert.equal(pcSidebarStep(true, true, true), null)
+  assert.equal(pcSidebarStep(true, true, false), null)
 })
 
-test('leaving the band closes the column this band opened', () => {
-  assert.deepEqual(pcSidebarStep(true, false, false, true), { call: 'collapse', opened: false })
-})
-
-test('leaving the band leaves a column the user had open alone', () => {
-  assert.deepEqual(pcSidebarStep(true, false, false, false), { call: null, opened: false })
+test('leaving the band closes an open column, whoever opened it', () => {
+  // The measured leak: the column was already open before the band was ever entered, so
+  // nothing in this plugin had claimed it -- and below 1024 the shell reads one flag for its
+  // desktop column and for its phone drawer, so it came back on the phone as a full-screen
+  // drawer over a 45% scrim. The exit is the one place that can tidy that.
+  assert.equal(pcSidebarStep(true, false, false), 'collapse')
 })
 
 test('leaving a column the user folded inside the band does not toggle it back open', () => {
   // The only handle on the closing direction is a toggle, so a collapse call here would
   // unfold the column instead of tidying up after this band.
-  assert.deepEqual(pcSidebarStep(true, false, true, true), { call: null, opened: false })
+  assert.equal(pcSidebarStep(true, false, true), null)
 })
 
 test('the first pass counts as a change, in either direction', () => {
-  assert.deepEqual(pcSidebarStep(null, false, false, false), { call: null, opened: false })
-  assert.deepEqual(pcSidebarStep(null, false, true, true), { call: null, opened: false })
+  assert.equal(pcSidebarStep(null, false, false), null)
+  assert.equal(pcSidebarStep(null, false, true), null)
 })
 
 test('the band query is the one complement of the phone layout', () => {

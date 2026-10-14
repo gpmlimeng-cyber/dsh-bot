@@ -5556,11 +5556,11 @@ function showsDshRow(dsh, app) {
 
 // src/client/pc-layout.js
 var PC_QUERY = "(min-width:841px) and (max-width:1023px) and (orientation:landscape)";
-var pcSidebarMemory = { band: null, opened: false };
-function pcSidebarStep(wasPc, isPc, collapsed, opened) {
-  if (isPc && wasPc !== true) return { call: "expand", opened: collapsed === true };
-  if (!isPc && wasPc === true) return { call: opened && !collapsed ? "collapse" : null, opened: false };
-  return { call: null, opened: isPc ? opened : false };
+var pcSidebarMemory = { band: null };
+function pcSidebarStep(wasPc, isPc, collapsed) {
+  if (isPc && wasPc !== true) return "expand";
+  if (!isPc && wasPc === true) return collapsed ? null : "collapse";
+  return null;
 }
 function shellCollapsed(doc, wide) {
   const find = (selector) => doc && typeof doc.querySelector === "function" ? doc.querySelector(selector) : null;
@@ -6478,11 +6478,10 @@ function TeamSidebar(props) {
   const mobile = useMobile();
   const pc = usePcColumns();
   (0, import_react12.useEffect)(() => {
-    const step = pcSidebarStep(pcSidebarMemory.band, pc, shellCollapsed(document, wide), pcSidebarMemory.opened);
+    const call2 = pcSidebarStep(pcSidebarMemory.band, pc, shellCollapsed(document, wide));
     pcSidebarMemory.band = pc;
-    pcSidebarMemory.opened = step.opened;
-    if (step.call === "expand") props.expandSidebar?.();
-    if (step.call === "collapse") actions.collapseSidebar?.();
+    if (call2 === "expand") props.expandSidebar?.();
+    if (call2 === "collapse") actions.collapseSidebar?.();
   }, [pc]);
   props.useRegistry((value) => value);
   const updated = useSessions((list) => {

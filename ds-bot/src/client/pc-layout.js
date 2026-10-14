@@ -9,8 +9,8 @@
 export const PC_QUERY = '(min-width:841px) and (max-width:1023px) and (orientation:landscape)'
 
 /**
- * What the last band change left behind, and whether this plugin opened the column for that
- * band. This is module state on purpose, and the reason is a bug the device crew saw: the
+ * What the last band change left behind. This is module state on purpose, and the reason is a
+ * bug the device crew saw: the
  * shell draws its sidebar column from two trees -- the wide one, and the rail it switches to a
  * couple of seconds after the column folds, once its own `settled` catches up -- so this
  * component is unmounted and mounted again as part of that switch. Held in a `useRef`, the
@@ -19,7 +19,7 @@ export const PC_QUERY = '(min-width:841px) and (max-width:1023px) and (orientati
  * Held here it outlives the remount, and the same band change makes no call at all. It dies
  * with the page, which is the lifetime this wants: a reload is a fresh band to open.
  */
-export const pcSidebarMemory = { band: null, opened: false }
+export const pcSidebarMemory = { band: null }
 
 /**
  * What the sidebar does on one band change — and only on a band change.
@@ -29,24 +29,28 @@ export const pcSidebarMemory = { band: null, opened: false }
  * 841-1023 <-> portrait never does, so the phone layout would inherit a column it did not
  * ask for. Hence the pair: open on entry, close on exit, and nothing in between.
  *
- * `opened` is whether this plugin is the one that opened it. A column the user opened by
- * hand is never closed by us, and one the user closed by hand inside the band stays closed
- * (`wasPc === isPc` means no transition, so no call at all).
+ * The exit closes the column whenever it is still open, whoever opened it, and that is not
+ * politeness but the fix for a leak measured on the device: below 1024 the shell reads
+ * *one* flag for two different surfaces — `toggleSidebar` flips `narrowExpanded`, and the
+ * same flag draws the desktop column and the phone's full-screen drawer with its own scrim.
+ * A column a hand left open before the band was ever entered therefore came back on the
+ * phone as the shell's drawer over a 45% black scrim. Only a band change reaches this
+ * branch (`wasPc === true`, `isPc === false`), and no other band shows the shell's own
+ * sidebar at all — the phone drawer is `.bt-side.bt-rail`, our own body-level element — so
+ * closing here can only tidy that leak, never take away a surface the user is looking at.
  *
  * @param {boolean|null} wasPc - the band before this render; null on the first pass.
  * @param {boolean} isPc - the band now.
  * @param {boolean} collapsed - whether the shell's sidebar is collapsed right now.
- * @param {boolean} opened - whether this plugin opened the column for the current band.
- * @returns {{call: 'expand'|'collapse'|null, opened: boolean}}
+ * @returns {'expand'|'collapse'|null} the one call to make, if any.
  */
-export function pcSidebarStep(wasPc, isPc, collapsed, opened) {
+export function pcSidebarStep(wasPc, isPc, collapsed) {
   // The entry call is unconditional: the slot's `expandSidebar` only toggles a collapsed
   // column, so calling it on an open one changes nothing, while skipping it on a wrong
-  // `collapsed` read would leave the band without its column for good. What we remember is
-  // the pre-call state, which is what decides the exit.
-  if (isPc && wasPc !== true) return { call: 'expand', opened: collapsed === true }
-  if (!isPc && wasPc === true) return { call: opened && !collapsed ? 'collapse' : null, opened: false }
-  return { call: null, opened: isPc ? opened : false }
+  // `collapsed` read would leave the band without its column for good.
+  if (isPc && wasPc !== true) return 'expand'
+  if (!isPc && wasPc === true) return collapsed ? null : 'collapse'
+  return null
 }
 
 /**

@@ -293,21 +293,21 @@ export function TeamSidebar(props) {
   // A foldable held sideways draws the desktop layout (mobile.js), and the desktop layout
   // wants the shell's own sidebar column instead of the 56px rail the shell keeps below its
   // 1024 line. The shell hands this slot the one safe way to open it — `expandSidebar`,
-  // which does nothing when the column is already up; closing what we opened is the layout
-  // service's own toggle. Only a band change acts (pcSidebarStep), so a hand that folds the
-  // column away inside the band keeps it folded, and the phone layout never inherits a
-  // column it did not ask for.
+  // which does nothing when the column is already up; closing is the layout service's own
+  // toggle, and the exit closes whatever is still open (pc-layout.js has the why: below
+  // 1024 the shell reads one flag for both its desktop column and its phone drawer). Only a
+  // band change acts (pcSidebarStep), so a hand that folds the column away inside the band
+  // keeps it folded.
   //
   // Where that memory lives is load-bearing (pc-layout.js, pcSidebarMemory): the shell swaps
   // this column between two trees when it folds, which unmounts this component, and a ref
   // would come back null and re-open the column the hand just folded.
   const pc = usePcColumns()
   useEffect(() => {
-    const step = pcSidebarStep(pcSidebarMemory.band, pc, shellCollapsed(document, wide), pcSidebarMemory.opened)
+    const call = pcSidebarStep(pcSidebarMemory.band, pc, shellCollapsed(document, wide))
     pcSidebarMemory.band = pc
-    pcSidebarMemory.opened = step.opened
-    if (step.call === 'expand') props.expandSidebar?.()
-    if (step.call === 'collapse') actions.collapseSidebar?.()
+    if (call === 'expand') props.expandSidebar?.()
+    if (call === 'collapse') actions.collapseSidebar?.()
   }, [pc])
   props.useRegistry(value => value)
   const updated = useSessions(list => {
