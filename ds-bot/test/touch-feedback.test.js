@@ -5,16 +5,16 @@
 // filled button keeps its fill and the tint is drawn inside whatever radius the element has;
 // being a background layer it also changes no box, so a press cannot shift anything.
 //
-// The same two bands carry the sidebar's own chrome, and its list is where a finger scrolls a
-// long roster, so the bar that WebView draws down the edge of the list is hidden there -- the
-// bar only, with the scrolling left alone.
+// The same two bands carry the rest of the phone's chrome: the bar this WebView draws down
+// the edge of anything that scrolls is hidden there -- on the band's own scroller and on every
+// element under it -- with the scrolling itself left exactly as it was.
 //
 // Four things this file holds still, each of them a way this could quietly regress: a selector
 // that stops covering the role-based rows (the shell's own list rows are not buttons), a press
 // state that moves to hover and then sticks after a long press, a reduced-motion reset that
 // silences the press colour instead of only the movement, and a scrollbar rule that either
-// reaches every scroller in the app or takes the scrolling away with the bar. The desktop
-// window publishes neither band, so everything asserted here can only ever reach a touch layout.
+// reaches past the bands or takes the scrolling away with the bar. The desktop window publishes
+// neither band, so everything asserted here can only ever reach a touch layout.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
@@ -57,18 +57,22 @@ test('reduced motion drops the press scale and leaves the press colour alone', (
   assert.ok(!lines.some(line => line.includes(band) && line.includes('background-image:none')), 'reduced motion silences the tint again')
 })
 
-test('the sidebar hides the bar and keeps the scrolling', () => {
-  const width = lines.filter(line => line.includes('scrollbar-width:none'))
-  assert.equal(width.length, 1)
-  // The sidebar of the two touch bands only: a bare `.bt-list` here would reach the list
-  // wherever it is drawn, and a bare scroller selector would reach the whole app.
-  assert.ok(width[0].startsWith(`${band} .bt-side .bt-list{scrollbar-width:none}`), width[0])
-  assert.ok(!width[0].includes('overflow'), width[0])
-  const webkit = lines.filter(line => line.includes('::-webkit-scrollbar{display:none}'))
-  assert.equal(webkit.length, 1)
-  assert.ok(webkit[0].startsWith(`${band} .bt-side .bt-list::-webkit-scrollbar`), webkit[0])
-  // The hiding is visual only: the container is still the scroller it was.
+test('the mobile bands hide every scrollbar and keep the scrolling', () => {
+  // One rule for the whole band, not a list of containers that goes stale the next time a
+  // screen is added -- and the band element itself, whose scroller no descendant rule reaches.
+  const width = lines.findIndex(line => line.includes('{scrollbar-width:none}'))
+  assert.ok(width > 0, 'no scrollbar-width declaration')
+  assert.equal(lines[width], `${band} *{scrollbar-width:none}`)
+  assert.equal(lines[width - 1], `${band},`)
+  const webkit = lines.findIndex(line => line.includes('display:none;width:0;height:0'))
+  assert.ok(webkit > 0, 'no hidden scrollbar box')
+  assert.equal(lines[webkit], `${band} ::-webkit-scrollbar{display:none;width:0;height:0}`)
+  assert.equal(lines[webkit - 1], `${band}::-webkit-scrollbar,`)
+  // Hiding the bar is visual only: nothing here takes a scroller's scrolling away.
+  assert.ok(!lines[width].includes('overflow') && !lines[webkit].includes('overflow'), `${lines[width]} ${lines[webkit]}`)
   const list = lines.filter(line => line.startsWith('.bt-list{'))
   assert.equal(list.length, 1)
   assert.ok(list[0].includes('overflow-y:auto'), list[0])
+  // And nothing bare: a `*` outside the band would reach the desktop window too.
+  assert.ok(lines.every(line => !(line.includes('scrollbar') && /(^|,)\s*\*\{/.test(line))), 'a scrollbar rule escaped the bands')
 })
