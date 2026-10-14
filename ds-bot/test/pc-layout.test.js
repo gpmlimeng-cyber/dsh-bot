@@ -72,11 +72,13 @@ test('with no frame at all the slot prop is the last resort', () => {
 })
 
 // The panel's width in the band. The device reports 859 x 608 for the unfolded window.
-test('the details column is 292 of an 859px window, capped at 300', () => {
-  assert.equal(pcDetailsWidth(859), 292)
-  assert.equal(pcDetailsWidth(850), Math.round(850 * PC_DETAILS_RATIO))
+test('the details column is 280 of an 859px window, and the cap holds across the band', () => {
+  assert.equal(pcDetailsWidth(859), 280)
+  assert.equal(pcDetailsWidth(1023), PC_DETAILS_MAX)
   assert.equal(pcDetailsWidth(1200), PC_DETAILS_MAX)
+  // 33vw drops below the cap only under 848px, at the bottom of the band.
   assert.equal(pcDetailsWidth(841), Math.round(841 * PC_DETAILS_RATIO))
+  assert.ok(pcDetailsWidth(841) < PC_DETAILS_MAX)
 })
 
 test('every width the band can ask for stays under the desktop default it replaces', () => {

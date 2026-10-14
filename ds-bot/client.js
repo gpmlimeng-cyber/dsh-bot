@@ -5465,8 +5465,8 @@ function shellCollapsed(doc, wide) {
   if (column) return (column.getBoundingClientRect?.().width ?? 0) < 100;
   return !wide;
 }
-var PC_DETAILS_MAX = 300;
-var PC_DETAILS_RATIO = 0.34;
+var PC_DETAILS_MAX = 280;
+var PC_DETAILS_RATIO = 0.33;
 function pcDetailsWidth(viewport) {
   return Math.round(Math.min(PC_DETAILS_MAX, viewport * PC_DETAILS_RATIO));
 }

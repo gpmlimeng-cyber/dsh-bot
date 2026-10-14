@@ -55,10 +55,12 @@ export function shellCollapsed(doc, wide) {
 }
 
 // The details column in the PC band. The desktop default (browser-pane.js) is 320px, which
-// on this device's 859px window would leave the conversation 267 behind its 280px sidebar;
-// min(300, 34vw) is 292 there. Only the PC band changes it -- a desktop window keeps 320.
-export const PC_DETAILS_MAX = 300
-export const PC_DETAILS_RATIO = 0.34
+// on this device's 859px window would leave the conversation 259 beside the 280px sidebar
+// the shell opens; min(280, 33vw) is 280 there -- and 280 across the whole band, since 33vw
+// only drops below the cap under 848px. The conversation then has 299 with the panel up and
+// 579 without. Only the PC band changes it; a desktop window keeps 320.
+export const PC_DETAILS_MAX = 280
+export const PC_DETAILS_RATIO = 0.33
 
 export function pcDetailsWidth(viewport) {
   return Math.round(Math.min(PC_DETAILS_MAX, viewport * PC_DETAILS_RATIO))
