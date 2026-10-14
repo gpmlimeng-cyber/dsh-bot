@@ -5,11 +5,16 @@
 // filled button keeps its fill and the tint is drawn inside whatever radius the element has;
 // being a background layer it also changes no box, so a press cannot shift anything.
 //
-// Three things this file holds still, each of them a way the feedback could quietly regress:
-// a selector that stops covering the role-based rows (the shell's own list rows are not
-// buttons), a press state that moves to hover and then sticks after a long press, and a
-// reduced-motion reset that leaves the press scale running. The desktop window publishes
-// neither band, so everything asserted here can only ever reach a touch layout.
+// The same two bands carry the sidebar's own chrome, and its list is where a finger scrolls a
+// long roster, so the bar that WebView draws down the edge of the list is hidden there -- the
+// bar only, with the scrolling left alone.
+//
+// Four things this file holds still, each of them a way this could quietly regress: a selector
+// that stops covering the role-based rows (the shell's own list rows are not buttons), a press
+// state that moves to hover and then sticks after a long press, a reduced-motion reset that
+// silences the press colour instead of only the movement, and a scrollbar rule that either
+// reaches every scroller in the app or takes the scrolling away with the bar. The desktop
+// window publishes neither band, so everything asserted here can only ever reach a touch layout.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
@@ -50,4 +55,20 @@ test('reduced motion drops the press scale and leaves the press colour alone', (
   // Reduce is about movement, and a device that turns system animations off reports reduce --
   // silencing the tint as well would leave those taps answering with nothing at all.
   assert.ok(!lines.some(line => line.includes(band) && line.includes('background-image:none')), 'reduced motion silences the tint again')
+})
+
+test('the sidebar hides the bar and keeps the scrolling', () => {
+  const width = lines.filter(line => line.includes('scrollbar-width:none'))
+  assert.equal(width.length, 1)
+  // The sidebar of the two touch bands only: a bare `.bt-list` here would reach the list
+  // wherever it is drawn, and a bare scroller selector would reach the whole app.
+  assert.ok(width[0].startsWith(`${band} .bt-side .bt-list{scrollbar-width:none}`), width[0])
+  assert.ok(!width[0].includes('overflow'), width[0])
+  const webkit = lines.filter(line => line.includes('::-webkit-scrollbar{display:none}'))
+  assert.equal(webkit.length, 1)
+  assert.ok(webkit[0].startsWith(`${band} .bt-side .bt-list::-webkit-scrollbar`), webkit[0])
+  // The hiding is visual only: the container is still the scroller it was.
+  const list = lines.filter(line => line.startsWith('.bt-list{'))
+  assert.equal(list.length, 1)
+  assert.ok(list[0].includes('overflow-y:auto'), list[0])
 })

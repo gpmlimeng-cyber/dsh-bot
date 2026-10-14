@@ -1038,6 +1038,20 @@ html[data-bt-pc] .bt-side.bt-rail{margin-top:0}
 @media (prefers-reduced-motion:reduce){
 :is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active{transform:none;scale:none}
 }
+/* The sidebar's list scrolls without a bar. The drawer and the PC band's column are the two
+   places a finger scrolls a long roster, and the bar this WebView draws there is a gutter of
+   its own colour down the edge of the list, which reads as part of the skin and eats the
+   width the rows are laid out in. Scrolling itself is untouched: the list keeps its
+   overflow-y, and only the bar is hidden, in both spellings (scrollbar-width for the engines
+   that have it, the WebKit pseudo-element for this device). Neither is inherited, so both are
+   written against the container itself.
+   The scope is this skin's own list inside the sidebar of the two touch bands: the
+   conversation, the settings pages and the detail panel keep the scrolling they had, and
+   nothing here is a blanket rule over every scroller in the app. The shell's own sidebar
+   column has nothing to hide either -- it is overflow:hidden, and so is the region area
+   inside it, which is why no rule is written for the shell's side of the column. */
+:is(html[data-bt-mobile],html[data-bt-pc]) .bt-side .bt-list{scrollbar-width:none}
+:is(html[data-bt-mobile],html[data-bt-pc]) .bt-side .bt-list::-webkit-scrollbar{display:none}
 /* The mobile skin has three sizes, on the Compact/Medium/Expanded lines the platforms
    publish (Xiaomi and HarmonyOS both use 600 and 840). The defaults below are the compact
    phone the skin draws where no band matches; a band only re-points these variables, and
