@@ -21,7 +21,8 @@ const reactRequire = createRequire(join(PLUGIN, '..', 'deepseek-harness', 'node_
 const React = reactRequire('react')
 const reactDom = reactRequire('react-dom/client')
 
-const dom = new JSDOM('<!doctype html><html><body><div id="root"></div><div id="portal"></div></body></html>', { url: 'https://ds-bot.test/' })
+// pretendToBeVisual supplies requestAnimationFrame, which the header's activity row uses.
+const dom = new JSDOM('<!doctype html><html><body><div id="root"></div><div id="portal"></div></body></html>', { url: 'https://ds-bot.test/', pretendToBeVisual: true })
 globalThis.window = dom.window
 globalThis.document = dom.window.document
 Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true })
@@ -57,6 +58,12 @@ const bundle = await build({
   bundle: true, format: 'cjs', platform: 'node', write: false,
   external: ['react', 'react-dom'],
 })
+// The real header, so the test exercises the guard where it lives.
+const headerBundle = await build({
+  entryPoints: [fileURLToPath(new URL('../src/client/header.js', import.meta.url))],
+  bundle: true, format: 'cjs', platform: 'node', write: false,
+  external: ['react', 'react-dom', '@deepseek-ai/dsh-client-ui-primitives'],
+})
 const module = { exports: {} }
 // The bundle gets the real react and react-dom: the vm boundary must not fork the
 // module identity, or the hooks stop matching the renderer's.
@@ -69,6 +76,25 @@ runInNewContext(bundle.outputFiles[0].text, {
   },
 })
 const { NeedsYou, needsYou } = module.exports
+const headerModule = { exports: {} }
+runInNewContext(headerBundle.outputFiles[0].text, {
+  module: headerModule, exports: headerModule.exports,
+  // The header's effects touch the DOM timers and observers directly, so the sandbox
+  // needs the same constructors the browser gives the page.
+  window: dom.window, document: dom.window.document, MutationObserver: dom.window.MutationObserver,
+  requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window), cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+  setTimeout, clearTimeout, setInterval, clearInterval, Date, JSON, Math, localStorage: dom.window.localStorage,
+  navigator: dom.window.navigator, getComputedStyle: dom.window.getComputedStyle,
+  require: name => {
+    // The header's chain touches the primitives package only through cells.js's
+    // MarkdownText, which this surface never draws.
+    if (name === 'react') return React
+    if (name === 'react-dom') return reactDom
+    if (name === '@deepseek-ai/dsh-client-ui-primitives') return { MarkdownText: () => null }
+    throw new Error(`no platform module ${name}`)
+  },
+})
+const { HeaderPill } = headerModule.exports
 
 const seat = (overrides = {}) => ({ useRoster: pick => pick(roster.getSnapshot()), useWork: pick => pick(work.getSnapshot()), useUi: pick => pick(ui.getSnapshot()), actions, ...overrides })
 
@@ -80,6 +106,45 @@ async function renderSeat(props) {
   root.render(React.createElement(NeedsYou, props))
   await new Promise(resolve => setTimeout(resolve, 30))
   return { container, root, cleanup: () => { root.unmount(); container.remove() } }
+}
+
+// The header needs every hook the seat receives; the sources double for all of them,
+// so a withheld useWork is the only hole in the surface.
+const sessions = source({ byId: {} })
+const sessionStatus = source(new Map())
+const activity = source({})
+const memoryNews = source({})
+const turnClock = source({})
+const live = source({})
+const calls = []
+const pillActions = { beginVisit: () => {}, endVisit: () => {}, openSession: id => calls.push(id), clearLive: () => {} }
+
+async function renderPill({ work } = {}) {
+  const container = document.createElement('div')
+  document.body.append(container)
+  const props = {
+    sessionId: 's1',
+    useRoster: pick => pick(roster.getSnapshot()),
+    useSessions: pick => pick(sessions.getSnapshot()),
+    useSessionStatus: pick => pick(sessionStatus.getSnapshot()),
+    useSession: pick => pick(sessionStatus.getSnapshot()),
+    useActivity: pick => pick(activity.getSnapshot()),
+    useMemoryNews: pick => pick(memoryNews.getSnapshot()),
+    useTurnClock: pick => pick(turnClock.getSnapshot()),
+    useUi: pick => pick(ui.getSnapshot()),
+    useLive: pick => pick(live.getSnapshot()),
+    ...(work === undefined ? {} : { useWork: pick => pick(work.getSnapshot()) }),
+    actions: pillActions,
+  }
+  const errors = []
+  const onError = event => errors.push(`uncaught: ${event.error?.message ?? event.message}`.slice(0, 300))
+  window.addEventListener('error', onError)
+  const root = reactDom.createRoot(container)
+  try { root.render(React.createElement(HeaderPill, props)) } catch (error) { errors.push(`render threw: ${error}`) }
+  await new Promise(resolve => setTimeout(resolve, 30))
+  window.removeEventListener('error', onError)
+  if (errors.length > 0 && container.children.length === 0) throw new Error(`HeaderPill mount failed: ${errors.join(' || ')}`)
+  return { container, cleanup: () => { root.unmount(); container.remove() } }
 }
 
 const deep = value => JSON.parse(JSON.stringify(value))
@@ -106,19 +171,15 @@ test('N = 0 renders null: no button, no empty shell', async () => {
   cleanup()
 })
 
-test('a missing useWork is held by the header guard, not a TypeError', async () => {
-  // The guard itself lives in header.js (`useWork && useUi ? … : null`); the same
-  // predicate here stands in for it. What must never happen is a render that calls
-  // `useWork(...)` with nothing to call, and with the guard the component is simply
-  // not mounted.
-  const props = seat({ useWork: undefined })
-  const guarded = Boolean(props.useWork) && Boolean(props.useUi)
-  assert.equal(guarded, false)
-  let thrown = null
-  try {
-    needsYou(roster.getSnapshot(), props.useWork ? props.useWork(work.getSnapshot()) : { approvals: [] }, ui.getSnapshot().unread ?? {}, roster.getSnapshot())
-  } catch (error) { thrown = error }
-  assert.equal(thrown, null)
+test('a missing useWork is held by the real HeaderPill guard, not a TypeError', async () => {
+  // The guard is header.js's own `useWork && useUi ? h(NeedsYou, …) : null`; the test
+  // mounts the real HeaderPill (the bundled header.js) with useWork withheld and
+  // asserts the pill still renders whole and nothing throws. With the guard mutated
+  // away this mount throws `useWork is not a function` and this test goes red.
+  const { container, cleanup } = await renderPill({ work: undefined })
+  assert.ok(container.querySelector('.bt-pill'), 'the pill renders without useWork')
+  assert.equal(container.querySelector('.bt-attention'), null, 'NeedsYou is not mounted')
+  cleanup()
 })
 
 test('the count caps at 9+', async () => {
