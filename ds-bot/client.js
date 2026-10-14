@@ -4852,7 +4852,6 @@ function useDeliverableExits(file, actions, onFailed) {
 }
 function DeliverableActions({ file, actions, preview, onFailed }) {
   const { state, open, copy: copy2 } = useDeliverableExits(file, actions, onFailed);
-  const name = basename(file.path);
   return (0, import_react7.createElement)(
     import_react7.Fragment,
     null,
@@ -4860,7 +4859,7 @@ function DeliverableActions({ file, actions, preview, onFailed }) {
       type: "button",
       className: "bt-dcard-btn",
       "data-act": "preview",
-      "aria-label": `${t("Preview")} ${name}`,
+      "aria-label": t("Preview"),
       title: t("Preview"),
       onClick: preview
     }, (0, import_react7.createElement)(EyeIcon)),

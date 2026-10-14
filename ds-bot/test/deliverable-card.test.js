@@ -68,9 +68,12 @@ test('the card’s exits are three named icons, each a 44px target', () => {
     assert.ok(source.includes(`'data-act': '${act}'`), `the ${act} exit is marked`)
     assert.ok(source.includes(shape), `and draws its own icon (${act})`)
   }
-  assert.ok(source.includes("'aria-label': `${t('Preview')} ${name}`"), 'the eye is named after the file it opens')
+  // Each button carries its own name -- the word pill used to be that name -- and none of
+  // them repeats the file name, which the card itself already writes.
+  assert.ok(source.includes("'aria-label': t('Preview'), title: t('Preview')"), 'the eye is named for what it does')
   assert.ok(source.includes("'aria-label': state === 'opening' ? t('Opening…') : t('Open with another app')"), 'the arrow is named for the other app')
   assert.ok(source.includes("'aria-label': state === 'copied' ? t('Copied') : t('Copy path')"), 'the copy icon is named for the path')
+  assert.equal(source.split("`${t('Preview')} ${name}`").length - 1, 1, 'only the card-wide hit target repeats the file name')
   // No word is left painted on a button: the label that used to be its child would be one.
   for (const painted of [": t('Open with another app'))", ": t('Copy path'))", "t('Path')"]) {
     assert.ok(!source.includes(painted), `${painted} is no longer painted on a card button`)

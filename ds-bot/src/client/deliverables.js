@@ -148,18 +148,18 @@ export function useDeliverableExits(file, actions, onFailed) {
 /**
  * The exits as the card's own row of buttons, which is the shape DSH's card has. They are
  * icons, not words: three word pills need more width than the card has to spare, and the
- * name is what the card is for. Each keeps its words in `aria-label`, so a reader still
- * hears "Copy path", and the same three stay written out in the preview page's menu.
- * `preview` comes in rather than being rebuilt here, so the eye and a tap on the card are
- * one action with one name.
+ * name is what the card is for. Each one is named for a reader in `aria-label` -- the word
+ * pill said it before, so a button that only draws an icon has to carry its own name -- and
+ * the name of the file is not repeated: the card already writes it. The same three words
+ * stay written out in the preview page's menu. `preview` comes in rather than being rebuilt
+ * here, so the eye and a tap on the card are one action with one name.
  */
 export function DeliverableActions({ file, actions, preview, onFailed }) {
   const { state, open, copy } = useDeliverableExits(file, actions, onFailed)
-  const name = basename(file.path)
   return h(Fragment, null,
     h('button', {
       type: 'button', className: 'bt-dcard-btn', 'data-act': 'preview',
-      'aria-label': `${t('Preview')} ${name}`, title: t('Preview'), onClick: preview,
+      'aria-label': t('Preview'), title: t('Preview'), onClick: preview,
     }, h(EyeIcon)),
     h('button', {
       type: 'button', className: 'bt-dcard-btn', 'data-act': 'open', disabled: state === 'opening',
