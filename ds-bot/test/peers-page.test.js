@@ -87,6 +87,23 @@ test('a row opens that Bot\'s chat and lands back on the conversation', () => {
   assert.match(open, /actions\.closePeers\(\)[\s\S]*actions\.selectPanel\(null\)[\s\S]*actions\.openSession\(id\)/, open)
 })
 
+test('the header\'s new button opens the real create-Bot form, not a dead end', () => {
+  // The user asked for 新建 in this page's header. What it opens is the platform's own create-Bot
+  // flow, taken straight to the form: new-chat.js reads mode 'create' as an initial draft, and the
+  // command palette's own "Create Bot" goes to exactly the same place (palette.js).
+  assert.ok(peers.includes("'aria-label': t('Create Bot')"), 'named for what it does, in the existing string')
+  assert.ok(peers.includes("onClick: () => actions.openNewChat('create')"), 'and it asks for the form')
+  const newChat = code('new-chat.js')
+  assert.ok(newChat.includes("mode === 'create' ? { name: '', fromList: false } : null"), 'which opens the form itself, not the picker')
+  assert.ok(code('palette.js').includes("title: t('Create Bot'), run: () => actions.openNewChat('create')"), 'the same door the command palette uses')
+  // It sits in the title row, and the page closes on the way: openNewChat clears `peers`.
+  assert.ok(peers.includes("className: 'bt-peers-head'"), 'in the title row')
+  assert.ok(index.includes('openNewChat: (mode) =>') && index.includes('newChat: mode') && index.includes('peers: false'), 'and the form is never stacked on the page')
+  // One control, one surface: the skin stays the shared declaration (styles.js), never a copy here.
+  assert.ok(code('styles.js').includes('html[data-bt-mobile] .bt-peers-head .bt-round,'), 'the skin list carries this control')
+  assert.ok(!peers.includes('box-shadow:0 2px 8px -1px rgba(0,0,0,.06)'), 'and this sheet does not restate the surface')
+})
+
 test('the page is a surface of its own, with its own state', () => {
   assert.ok(index.includes('peers: false'), 'a state of its own, not the drawer\'s')
   assert.ok(index.includes('openPeers: () =>'), 'opened by its own action')

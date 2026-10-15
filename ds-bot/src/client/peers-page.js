@@ -9,7 +9,7 @@
 import { createElement as h, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BotMark } from './mark.js'
-import { ChevronRightIcon, SearchIcon } from './icons.js'
+import { ChevronRightIcon, PlusIcon, SearchIcon } from './icons.js'
 import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
 
@@ -37,7 +37,17 @@ export function PeersPage({ useRoster, useUi, actions }) {
   }
   return createPortal(h('div', { className: 'bt-peers', role: 'region', 'aria-label': t('Peers') },
     h('div', { className: 'bt-peers-top' },
-      h('h2', { className: 'bt-peers-title' }, t('Peers')),
+      // 新建伙伴, and it is the real thing: actions.openNewChat('create') opens the create-Bot
+      // form straight (new-chat.js takes that mode as an initial draft), which is exactly where
+      // the command palette's own "Create Bot" goes -- no button that does nothing. The page is
+      // closed on the way there: openNewChat clears `peers`, so the form never stacks on it.
+      h('div', { className: 'bt-peers-head' },
+        h('h2', { className: 'bt-peers-title' }, t('Peers')),
+        h('button', {
+          type: 'button', className: 'bt-round bt-peers-new',
+          'aria-label': t('Create Bot'), title: t('Create Bot'),
+          onClick: () => actions.openNewChat('create'),
+        }, h(PlusIcon))),
       h('div', { className: 'bt-side-search' },
         h(SearchIcon),
         h('input', {
@@ -73,6 +83,12 @@ html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;fl
 html[data-bt-mobile][data-bt-keyboard] .bt-peers{padding-bottom:12px}
 html[data-bt-mobile] .bt-peers-top{flex:none;display:flex;flex-direction:column;gap:10px;padding-bottom:8px}
 html[data-bt-mobile] .bt-peers-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
+/* The title row: 伙伴 on the left, 新建 on the right at the page's own edge. The button is a
+   control of the chrome, so its surface (fill, hairline, radius, shadow) is the one shared
+   declaration in styles.js -- the same control the drawer's + and the conversation pill read.
+   Only size and layout live here. */
+html[data-bt-mobile] .bt-peers-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+html[data-bt-mobile] .bt-peers-head .bt-round{flex:0 0 40px;width:40px;height:40px}
 html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
