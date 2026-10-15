@@ -154,10 +154,13 @@ test('the page is 全部设置\'s own look, to the letter', () => {
   ]) {
     assert.ok(settings.includes(rule), `the skin declares it: ${rule.slice(0, 48)}…`)
   }
-  // Which leaves the strip: four rules, and no look of the page's own beside them.
+  // Which leaves the strip: four rules, and no look of the page's own beside them. The two above
+  // them are not a look either: they take the dialog's entrance off this layer (the test below).
   const own = sheet.split('\n').filter(line => line.startsWith('html['))
-  assert.equal(own.length, 4, `expected the strip's four rules, found ${own.length}`)
-  assert.ok(own.every(line => line.includes('.bt-subback')), 'every one of them the strip\'s')
+  const strip = own.filter(line => line.includes('.bt-subback'))
+  assert.equal(strip.length, 4, `expected the strip's four rules, found ${strip.length}`)
+  assert.equal(own.length, 6, `expected the strip's four rules and the page's two, found ${own.length}`)
+  assert.ok(own.every(line => line.includes('.bt-subback') || line.includes('[data-page=discover]')), 'and every one is the strip\'s or names this page\'s layer')
 })
 
 test('the page is a surface of its own, one at a time', () => {
@@ -235,13 +238,24 @@ test('the page and its tab carry one name, and the copy is in the dictionary', (
 test('every rule is a phone rule, and the page hands the shell nothing but the strip', () => {
   const rules = read('discover-page.js').split('\n').filter(line => line.startsWith('html['))
   // The page has no look of its own at all -- it is the settings page's, and the sheet is the
-  // strip's own four rules. Which layers hide the top row is the skin's list in styles.js.
-  assert.equal(rules.length, 4, `expected the strip's four rules, found ${rules.length}`)
+  // strip's own four rules plus the two that take the modal's entrance off a page. Which layers
+  // hide the top row is the skin's list in styles.js.
+  assert.equal(rules.length, 6, `expected the strip's four rules and the page's two, found ${rules.length}`)
   for (const line of rules) {
     const after = line.slice('html[data-bt-mobile]'.length)
     assert.ok(after.startsWith(' ') || after.startsWith('{') || after.startsWith('[data-bt-keyboard]'), line)
   }
-  assert.ok(rules.every(line => line.includes('.bt-subback')), 'and every one is the strip\'s')
+  const strip = rules.filter(line => line.includes('.bt-subback'))
+  assert.equal(strip.length, 4, 'four of them are the strip\'s')
+  const page = rules.filter(line => !line.includes('.bt-subback'))
+  assert.equal(page.length, 2, 'and two name this page\'s layer')
+  assert.ok(page.every(line => line.includes('.bt-settings-layer[data-page=discover]>')), 'each on that layer')
+  assert.ok(page.some(line => line.includes('.bt-scrim{display:none}')), 'the veil is not drawn')
+  assert.ok(page.some(line => line.includes('.bt-settings{animation:none}')), 'and nothing fades in')
+  // The dialog keeps both, or every modal in the skin would land flat: the rules name the layer
+  // by its marker rather than the shell's class, which is what the settings dialog itself wears.
+  assert.ok(read('discover-page.js').includes("'data-page': 'discover'"), 'the marker is on the layer')
+  assert.ok(!read('discover-page.js').includes('.bt-settings-layer{'), 'and no rule widens to every user of the shell')
   // The head, the body's scrolling, the card's corners, the row's height and type, the gap between
   // two cards, the icon's size and colour and the chevron's: all of that is the settings page's,
   // declared once there, so there is nothing here to read back. 伙伴 borrows that head too, and

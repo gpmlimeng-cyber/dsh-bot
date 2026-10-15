@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 99ce645d
+// Source fingerprint: e90a97d7
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16201,7 +16201,7 @@ function DiscoverPage({ useUi, actions }) {
   if (!open || !mobile) return null;
   return (0, import_react_dom14.createPortal)((0, import_react41.createElement)(
     "div",
-    { className: "bt-settings-layer bt-discover", style: { left: paneLeft } },
+    { className: "bt-settings-layer bt-discover", "data-page": "discover", style: { left: paneLeft } },
     (0, import_react41.createElement)("div", { className: "bt-scrim", onMouseDown: () => actions.closeDiscover() }),
     (0, import_react41.createElement)(
       "div",
@@ -16253,6 +16253,17 @@ function DiscoverBack({ useUi, actions }) {
   ), document.body);
 }
 var DISCOVER_CSS = `
+/* The page is not the dialog, even though it wears the dialog's shell. The settings page arrives
+   as a modal over the conversation: a 32% veil to catch the tap that closes it, and an entrance
+   (bt-fade on the veil, bt-veil-in/bt-dialog-rise on the dialog) that says a surface has been
+   summoned over what was already there. On a phone that dialog is full screen, so the same pair
+   over this page reads as the last page showing through the new one for 220ms -- the ghost the
+   user reported when switching tabs. A page is drawn, not summoned: the veil is not drawn at all
+   (it lies behind a full-screen dialog, so it takes no tap anyway) and nothing fades in -- the
+   first frame is the finished page. Only this layer is named, so the settings dialog keeps both.
+   The marker is on the layer, the rules read it, and the look above it is untouched. */
+html[data-bt-mobile] .bt-settings-layer[data-page=discover]>.bt-scrim{display:none}
+html[data-bt-mobile] .bt-settings-layer[data-page=discover]>.bt-settings{animation:none}
 /* The strip over a shell panel's second level, sitting where the page's own head sits. Which layers
    hide the conversation's top row is the skin's business, not
    this page's: the discover page and this strip are both named in the list in styles.js. */
@@ -16265,7 +16276,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "99ce645d" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "e90a97d7" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
