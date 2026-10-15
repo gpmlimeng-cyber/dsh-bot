@@ -43,8 +43,12 @@ export const DISCOVER_CARDS = [
 // exist. Exported so the list can be checked without a DOM.
 export const DISCOVER_ROWS = DISCOVER_CARDS.flat()
 
-// The rows whose door is a shell panel: those are the ones that need a back of ours (see below).
-export const PANEL_ROWS = ['plugins', 'schedules']
+// The rows whose door is a shell panel: the plugin manager is the one screen of this list that has
+// no settings page of its own, so it is the one that needs the strip below. (The automation tasks
+// row used to open the shell's own panel too, and that panel is not registered in every window --
+// tapping it there left the list closed over the conversation with nothing opened. Its settings
+// page is the same subject and is always there, so that row takes that door now.)
+export const PANEL_ROWS = ['plugins']
 
 export function DiscoverPage({ useUi, actions }) {
   const open = useUi(value => value.discover === true)

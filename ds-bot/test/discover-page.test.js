@@ -67,7 +67,7 @@ test('the list is three cards of doors that already exist, with no headings', ()
   assert.ok(discover.includes('onClick: () => actions.openDiscoverRow(key)'), 'the row asks for its key')
   assert.ok(!discover.includes('selectPanel') && !discover.includes('openSettings'), 'and the page itself opens nothing')
   // The two panel rows are the ones with no back of their own; see the strip below.
-  assert.deepEqual(panelRows, ['plugins', 'schedules'], 'the shell panels this page opens')
+  assert.deepEqual(panelRows, ['plugins'], 'the one row whose door is a shell panel')
   assert.ok(discover.includes('PANEL_ROWS.includes('), 'and that list is read, not rewritten')
 })
 
@@ -75,12 +75,19 @@ test('the row that opens a shell panel is the only one that needs a back of ours
   // The plugin manager and the automation tasks screen are the shell's own main panels and draw
   // no back, so the page carries a second level for exactly those two.
   assert.match(index, /if \(PANEL_ROWS\.includes\(key\)\) \{[\s\S]*actions\.selectPanel\(key\)/, 'a panel row selects the panel')
+  // And it selects it before the page steps aside, inside a guard: selectPanel throws on an id
+  // nothing registered, and a row that threw after closing the list would leave the conversation
+  // showing with nothing opened -- which is what tapping the automation row used to do in a window
+  // where the shell had no such panel.
+  const row = index.slice(index.indexOf('openDiscoverRow: (key) =>'), index.indexOf('closeDiscoverRow:'))
+  assert.ok(row.includes('try {') && row.includes('} catch {') && row.includes('return'), 'a panel that is not registered leaves the list up')
+  assert.ok(row.indexOf('actions.selectPanel(key)') < row.indexOf('discoverPanel: key'), 'the panel opens first, so a throw changes nothing')
   // The rows that are not panels land on the screens 我的 already opens, under the same page keys
   // the settings dialog uses: one screen, one key, whichever door is taken.
   const settings = sidebar.slice(sidebar.indexOf("t('Usage')"), sidebar.indexOf("t('Bot settings')"))
   assert.ok(settings.includes("actions.openSettings('usage')"), '用量 is the usage screen')
   assert.ok(settings.includes('actions.openConnectors()'), '连接器 is the connectors screen')
-  for (const key of ['connectors', 'capabilities', 'secrets', 'usage']) {
+  for (const key of ['connectors', 'capabilities', 'schedules', 'secrets', 'usage']) {
     assert.ok(read('settings.js').includes(`['${key}', `), `${key} is a settings page the dialog already draws`)
   }
   assert.ok(index.includes('settings: { page: key, id: null }'), 'and every one of this page\'s rows uses the row key as that page')

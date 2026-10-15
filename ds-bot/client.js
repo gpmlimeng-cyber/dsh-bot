@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 12905131
+// Source fingerprint: 0b542c2e
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16191,7 +16191,7 @@ var DISCOVER_CARDS = [
   ]
 ];
 var DISCOVER_ROWS = DISCOVER_CARDS.flat();
-var PANEL_ROWS = ["plugins", "schedules"];
+var PANEL_ROWS = ["plugins"];
 function DiscoverPage({ useUi, actions }) {
   const open = useUi((value) => value.discover === true);
   const panel = useUi((value) => value.discoverPanel ?? null);
@@ -16271,7 +16271,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "12905131" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "0b542c2e" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16876,9 +16876,9 @@ function apply(ctx) {
       ui2.set((state) => state.peers ? { ...state, peers: false } : state);
     },
     // 发现 is a page of its own (discover-page.js): a list whose rows are doors that already
-    // exist. The panel rows are the shell's own panels, which draw no back, so the page carries
-    // the second-level state for them and its own strip; the settings rows are the screens 我的
-    // opens, with a back already.
+    // exist. One row is a shell panel, which draws no back, so the page carries the second-level
+    // state for it and its own strip; the rest are the settings screens 我的 opens, with a back
+    // already, and each of those is a page of this skin that is always there.
     openDiscover: () => {
       ui2.set((state) => state.discover ? state : { ...state, discover: true, discoverPanel: null, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null });
     },
@@ -16887,8 +16887,12 @@ function apply(ctx) {
     },
     openDiscoverRow: (key) => {
       if (PANEL_ROWS.includes(key)) {
+        try {
+          actions.selectPanel(key);
+        } catch {
+          return;
+        }
         ui2.set((state) => ({ ...state, discover: false, discoverPanel: key, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null }));
-        actions.selectPanel(key);
         return;
       }
       ui2.set((state) => ({ ...state, discover: false, discoverPanel: key, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }));

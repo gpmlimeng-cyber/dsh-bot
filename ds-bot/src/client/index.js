@@ -604,15 +604,23 @@ export function apply(ctx) {
     openPeers: () => { ui.set(state => (state.peers ? state : { ...state, peers: true, mobileNav: false, settings: null, menu: null, palette: null, newChat: null, discover: false, discoverPanel: null })) },
     closePeers: () => { ui.set(state => (state.peers ? { ...state, peers: false } : state)) },
     // 发现 is a page of its own (discover-page.js): a list whose rows are doors that already
-    // exist. The panel rows are the shell's own panels, which draw no back, so the page carries
-    // the second-level state for them and its own strip; the settings rows are the screens 我的
-    // opens, with a back already.
+    // exist. One row is a shell panel, which draws no back, so the page carries the second-level
+    // state for it and its own strip; the rest are the settings screens 我的 opens, with a back
+    // already, and each of those is a page of this skin that is always there.
     openDiscover: () => { ui.set(state => (state.discover ? state : { ...state, discover: true, discoverPanel: null, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null })) },
     closeDiscover: () => { ui.set(state => (state.discover || state.discoverPanel !== null ? { ...state, discover: false, discoverPanel: null } : state)) },
     openDiscoverRow: (key) => {
       if (PANEL_ROWS.includes(key)) {
+        // Only if the shell has that panel in this window: selectPanel throws on an id nothing
+        // registered (layout service), and a row that threw would leave the list closed over the
+        // conversation with nothing opened -- which is what tapping it used to do in a window
+        // where the panel was not registered. The list stays up instead.
+        try {
+          actions.selectPanel(key)
+        } catch {
+          return
+        }
         ui.set(state => ({ ...state, discover: false, discoverPanel: key, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null }))
-        actions.selectPanel(key)
         return
       }
       // A settings row is a second level too, so `discoverPanel` remembers which row opened it
