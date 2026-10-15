@@ -1563,15 +1563,16 @@ html[data-bt-mobile][data-bt-size=compact] .bt-tools::after{display:none}
    the same 16px padding on each side and the same width cap. */
 [class*="_root"]:has(> [data-composer-card]){padding:0 16px 16px 16px!important}
 [class*="_root"]:has(> [data-composer-card])>[data-composer-card]{max-width:var(--dsh-chat-content-width,1200px)!important;margin-inline:auto}
-/* On an upright phone the composer sat 16px clear of the bar, which reads as a gap rather than
-   a dock; the user asked for it closer. Only the composer's own breathing room shrinks -- the
-   column's 56px reservation (--bt-nav-h + --bt-nav-gap) is what keeps the bar off the content
-   and is not touched here, so the gap is exactly the 8px below and nothing can be covered.
+/* On an upright phone the composer sat 16px clear of what is below it, which reads as a gap
+   rather than a dock; the user asked for it closer. Only the composer's own breathing room
+   shrinks -- the column's 56px reservation (--bt-nav-h + --bt-nav-gap) is what keeps the bar off
+   the content and is not touched here, so the gap is exactly the 8px below and nothing can be
+   covered.
 
-   Gated off while the keyboard is up: that state has its own measured geometry (the bar hidden,
-   the column's reservation given back, the card landing on the keyboard's top edge) and it is
-   not the state the user was looking at. */
-html[data-bt-mobile][data-bt-portrait]:not([data-bt-keyboard]) [class*="_root"]:has(> [data-composer-card]){padding-bottom:8px!important}
+   The keyboard is the same gap in the other state: with the bar hidden and the column's
+   reservation given back, the platform's own 16px still held the card off the keyboard (measured
+   on the device), so the one rule covers both and the card sits 8px above either. */
+html[data-bt-mobile][data-bt-portrait] [class*="_root"]:has(> [data-composer-card]){padding-bottom:8px!important}
 [data-composer-card]>[class*="_row"]{display:contents!important}
 [data-composer-card] [class*="_tools"]{order:1;flex:none;align-self:flex-end;margin:0}
 [data-composer-card]>[data-input-scroll]{order:2;flex:1 1 0;min-width:0;padding:0 8px!important;margin:0!important}
@@ -1616,12 +1617,11 @@ html[data-bt-mobile] [data-slot="conversation.input.attachments"] [class*="_remo
    its own and no hairline, so only the icon reads. What is left is feedback -- a light tint
    while it is held or while its menu is open -- and the press tint every other control in the
    skin answers with. Size and ink are the device-sampled pair. */
-.bt-plus{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:none;box-shadow:none;color:#8f8f8f;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
+.bt-plus{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:none;box-shadow:none;color:var(--bt-ink);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
 .bt-plus:active{scale:.9}
-.bt-plus svg{width:13px;height:13px;transition:${spring(SPRING_POP, 'rotate')}}
+.bt-plus svg{width:20px;height:20px;transition:${spring(SPRING_POP, 'rotate')}}
 .bt-plus[aria-expanded=true] svg{rotate:45deg}
-body[data-ds-dark-theme] .bt-plus{color:var(--bt-ink-2)}
 .bt-plus-menu{min-width:180px}
 [data-composer-card] [class*="_tools"]{gap:0!important}
 [data-composer-card] [class*="_modes"]:empty{display:none!important}
