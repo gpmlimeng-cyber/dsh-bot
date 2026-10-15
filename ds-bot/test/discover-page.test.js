@@ -67,7 +67,7 @@ test('the list is three cards of doors that already exist, with no headings', ()
   assert.ok(discover.includes('onClick: () => actions.openDiscoverRow(key)'), 'the row asks for its key')
   assert.ok(!discover.includes('selectPanel') && !discover.includes('openSettings'), 'and the page itself opens nothing')
   // The two panel rows are the ones with no back of their own; see the strip below.
-  assert.deepEqual(panelRows, ['plugins'], 'the one row whose door is a shell panel')
+  assert.deepEqual(panelRows, ['plugins', 'schedules'], 'the rows whose door is a shell panel, with our strip')
   assert.ok(discover.includes('PANEL_ROWS.includes('), 'and that list is read, not rewritten')
 })
 

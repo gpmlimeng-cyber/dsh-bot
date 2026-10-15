@@ -611,17 +611,20 @@ export function apply(ctx) {
     closeDiscover: () => { ui.set(state => (state.discover || state.discoverPanel !== null ? { ...state, discover: false, discoverPanel: null } : state)) },
     openDiscoverRow: (key) => {
       if (PANEL_ROWS.includes(key)) {
-        // Only if the shell has that panel in this window: selectPanel throws on an id nothing
-        // registered (layout service), and a row that threw would leave the list closed over the
-        // conversation with nothing opened -- which is what tapping it used to do in a window
-        // where the panel was not registered. The list stays up instead.
+        // The panel first, and inside a guard: selectPanel throws on an id nothing registered
+        // (layout service), and that panel is not there in every window. The page steps aside only
+        // once the panel is actually up, so a missing one can never leave the list closed over the
+        // conversation with nothing opened.
         try {
           actions.selectPanel(key)
-        } catch {
+          ui.set(state => ({ ...state, discover: false, discoverPanel: key, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null }))
           return
+        } catch {
+          // No such panel here. The automation row has a settings page of the same subject, which is
+          // always there and comes back to this list on the way out; the plugin manager has no other
+          // door at all, so its row leaves the list up rather than closing it over nothing.
+          if (key !== 'schedules') return
         }
-        ui.set(state => ({ ...state, discover: false, discoverPanel: key, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null }))
-        return
       }
       // A settings row is a second level too, so `discoverPanel` remembers which row opened it
       // even though the list itself steps aside: the tab stays on 发现 while the page is up,

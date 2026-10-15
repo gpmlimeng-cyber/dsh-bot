@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 0b542c2e
+// Source fingerprint: eae1edd0
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16191,7 +16191,7 @@ var DISCOVER_CARDS = [
   ]
 ];
 var DISCOVER_ROWS = DISCOVER_CARDS.flat();
-var PANEL_ROWS = ["plugins"];
+var PANEL_ROWS = ["plugins", "schedules"];
 function DiscoverPage({ useUi, actions }) {
   const open = useUi((value) => value.discover === true);
   const panel = useUi((value) => value.discoverPanel ?? null);
@@ -16271,7 +16271,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "0b542c2e" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "eae1edd0" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16889,11 +16889,11 @@ function apply(ctx) {
       if (PANEL_ROWS.includes(key)) {
         try {
           actions.selectPanel(key);
-        } catch {
+          ui2.set((state) => ({ ...state, discover: false, discoverPanel: key, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null }));
           return;
+        } catch {
+          if (key !== "schedules") return;
         }
-        ui2.set((state) => ({ ...state, discover: false, discoverPanel: key, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null }));
-        return;
       }
       ui2.set((state) => ({ ...state, discover: false, discoverPanel: key, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }));
     },
