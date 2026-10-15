@@ -3695,6 +3695,9 @@ function publishThemeColor() {
   if (own.content !== page) own.content = page;
 }
 function installStyles(text, tag) {
+  for (const old of document.head.querySelectorAll("style[data-dsh-bot]")) {
+    if (old.dataset.dshBot === tag) old.remove();
+  }
   const style = document.createElement("style");
   style.dataset.dshBot = tag;
   style.textContent = text;

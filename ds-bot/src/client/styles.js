@@ -1712,6 +1712,15 @@ export function publishThemeColor() {
 }
 
 export function installStyles(text, tag) {
+  // One sheet per name. This runs again every time the plugin is applied -- an HMR push, a
+  // surface toggle back to Bot mode -- and appending a second copy each time leaves several
+  // generations of rules in <head> at once, where which one wins is document order rather
+  // than age. That is a page that reads as half-updated: some rules from the bundle on
+  // screen, some from an older one. browser-pane.js drops its own rule the same way before
+  // rebuilding it.
+  for (const old of document.head.querySelectorAll('style[data-dsh-bot]')) {
+    if (old.dataset.dshBot === tag) old.remove()
+  }
   const style = document.createElement('style')
   style.dataset.dshBot = tag
   style.textContent = text
