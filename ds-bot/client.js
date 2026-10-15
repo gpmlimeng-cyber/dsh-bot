@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 3e917181
+// Source fingerprint: 51b144a0
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3260,33 +3260,18 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width
    container — no fill, no filter — so what is behind the *gaps* between the controls is
    untouched; the skin belongs to the pill, the hamburger and the right frame, and is
    declared once, below, edit each.
-   The fade band is the mirror of the one the exchange dialog already puts above its own
-   footer (.bt-exchange .bt-dialog-foot::before: 40px, opaque var(--bt-main) at the edge it
-   hugs fading to nothing), so the top of the screen fades by the same 40px the bottom does,
-   and only its direction differs. Its top edge is the bar's own top, which is the status
-   bar's lower edge, so a message reads as arriving from under the status bar. Its head is
-   the same colour mixed to 80% instead of opaque: that is the one shim this skin needs it to
-   give, because the band's head is also the only part of it that runs behind the controls —
-   at 100% it composited with their fill into near-total coverage, which is what the phone
-   saw when it reported no translucency at all. The cost is stated rather than hidden: 20% of
-   a bright message can ghost through the very first row at the status bar, and the band is
-   no longer an exact match for the footer's, only a perceptually even one.
+   The band the bar used to carry above its controls (a 40px fade of the page colour, starting
+   at the bar's top and painting over the veil) went with this: it was the second veil, it began
+   at exactly the status bar's lower edge, and the strip over the status bar has since grown to
+   cover the whole of what it covered and more. What is left here is the controls themselves.
    The controls are opaque cards, not windows: --bt-card, no border, no filter, and the two
    soft shadows the composer's card already carries. The half-pixel border they used to wear
    read on the device as one divider line straight across the whole top row, and the 30% fill
    behind a 16px blur let the transcript show through as a haze the user named "not the same
    colour at the top" — so the frost went rather than got tuned. Their labels are carried by
    the card, which is opaque; the contrast question the blur used to answer does not arise.
-   It keeps z-index -1 so it paints under the controls rather than over them; it is a child
-   of the bar, so the bar's own stacking context (95) still holds it above the conversation.
    The scroll box reserves --bt-fade-h at the top (the rule above), which clears this bar, so
    the first line is not covered on arrival. */
-html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 80%,transparent),transparent)}
-html[data-bt-mobile] .bt-mobile-bar[data-nav-open]::after,
-html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar::after,
-html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar::after,
-html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar::after,
-html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar::after{display:none}
 /* Every full-screen layer this skin draws brings its own top: the panes (New..., the
    exchange, voice and the browser, all .bt-pane), the details column (.bt-panel), the
    memory dialog and the palette close themselves, and the settings screen has its own
@@ -16164,7 +16149,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "3e917181" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "51b144a0" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
