@@ -1,0 +1,3 @@
+
+# Bundles backed up beside the build before a rebuild; the live one is client.js.
+*.bak-*
