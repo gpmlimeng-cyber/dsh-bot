@@ -95,6 +95,16 @@ test('发现 is not drawn without the shell panel, and is never selected without
   assert.ok(index.includes("ctx.slots.subscribe?.('main', readPlugins)"), 'and watched, so a late plugin manager still gets its tab')
 })
 
+test('a popup menu is drawn over the bar', () => {
+  // The menus clamp to the viewport bottom (context-menu.js), so a long-press on one of
+  // the last rows lands under a 56px bar that takes the taps there.
+  const menu = css.find(line => line.includes('.bt-menu{'))
+  assert.ok(menu, 'the portrait rule for menus')
+  assert.ok(menu.includes('z-index:96'), menu)
+  const bar = css.find(line => line.includes('.bt-nav{'))
+  assert.ok(bar.includes('z-index:95'), 'and the bar is a step below it')
+})
+
 test('the flag the sheet and the tree share is published on mobile and portrait only', () => {
   assert.ok(mobile.includes("export const PORTRAIT_QUERY = '(orientation: portrait)'"), 'the query is named')
   assert.ok(mobile.includes("document.documentElement.dataset.btPortrait = '1'"), 'the flag is published')

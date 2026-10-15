@@ -15781,6 +15781,13 @@ html[data-bt-mobile][data-bt-portrait] .bt-mobile-scrim{display:none}
    page carries its own top row, and the pill belongs to the conversation behind it. */
 html[data-bt-mobile][data-bt-portrait] .bt-mobile-nav{opacity:0;visibility:hidden;pointer-events:none}
 html[data-bt-mobile][data-bt-portrait] body:has(.bt-side.bt-rail[data-mobile-open]) .bt-mobile-bar{display:none}
+/* A popup menu goes over the bar, not under it. The shell's menus clamp themselves to the
+   viewport (context-menu.js: innerHeight - 8), which knows nothing about a 56px bar, so a
+   long-press on one of the last rows would leave its lower items behind the bar — the bar
+   is on top and takes the taps there, so they would simply be unreachable. The bar keeps
+   95 over the pages it belongs to (the peers page 79, Settings 60) and only the transient
+   menu outranks it. */
+html[data-bt-mobile][data-bt-portrait] .bt-menu{z-index:96}
 `;
 
 // src/client/index.js
