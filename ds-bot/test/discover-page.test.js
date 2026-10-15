@@ -166,11 +166,13 @@ test('the page is a surface of its own, one at a time', () => {
   assert.ok(active.indexOf('ui.discover') < active.indexOf('ui.settings'), 'and before Settings')
   assert.ok(nav.includes('actions.openDiscover()'), 'and opens the list')
   // The conversation's own top row carries that conversation's title, so it steps aside for this
-  // page and for a settings screen opened from it: both are the settings layer, and the skin
-  // already hides the bar for that layer. The strip of a shell panel's second level needs its own
-  // line -- it is not that layer -- and 伙伴 keeps its copy.
+  // page and for the strip of a shell panel's second level. Which layers do that is the skin's list
+  // (styles.js), and 发现 and its strip are both named in it -- the list page also carries the
+  // settings layer, which that list already had. 伙伴 keeps its own copy: it is not that layer.
   assert.ok(styles.includes('body:has(.bt-settings-layer) :is(.bt-mobile-bar,.bt-topfade)'), 'the page is the settings layer, so the bar steps aside by the skin\'s own rule')
-  assert.ok(discover.includes('body:has(.bt-subback) .bt-mobile-bar{display:none}'), 'and the strip hides it too')
+  assert.ok(styles.includes('body:has(.bt-discover) :is(.bt-mobile-bar,.bt-topfade)'), 'and 发现 is named in the list as well')
+  assert.ok(styles.includes('body:has(.bt-subback) :is(.bt-mobile-bar,.bt-topfade)'), 'and so is the strip, which is no layer of the skin\'s')
+  assert.ok(!discover.includes('bt-mobile-bar'), 'the page leaves that list to the skin')
   assert.ok(read('peers-page.js').includes('body:has(.bt-peers) .bt-mobile-bar{display:none}'), 'the same rule 伙伴 uses, in its own sheet')
   // Every opener that puts another full-pane surface over the conversation takes this page down
   // with it. Two deliberate exceptions: openSettings/openConnectors are the doors this page's own
@@ -218,14 +220,14 @@ test('the page and its tab carry one name, and the copy is in the dictionary', (
 test('every rule is a phone rule, and the page hands the shell nothing but the strip', () => {
   const rules = read('discover-page.js').split('\n').filter(line => line.startsWith('html['))
   // The page's own look is two rules (the hairline between the rows of a card, the 8px between two
-  // cards) over the settings page's, and the sheet is the strip's four plus the one line that keeps
-  // the conversation's top row off a shell panel's second level.
-  assert.equal(rules.length, 7, `expected the page's two, the strip's four and the bar's, found ${rules.length}`)
+  // cards) over the settings page's, and the sheet is the strip's four. Which layers hide the top
+  // row is the skin's list in styles.js, not a rule of this page's.
+  assert.equal(rules.length, 6, `expected the page's two and the strip's four, found ${rules.length}`)
   for (const line of rules) {
     const after = line.slice('html[data-bt-mobile]'.length)
     assert.ok(after.startsWith(' ') || after.startsWith('{') || after.startsWith('[data-bt-keyboard]'), line)
   }
-  assert.ok(rules.every(line => line.includes('.bt-discover ') || line.includes('.bt-subback') || line.includes('.bt-mobile-bar')), 'and every one is the page\'s, the strip\'s or the bar\'s')
+  assert.ok(rules.every(line => line.includes('.bt-discover ') || line.includes('.bt-subback')), 'and every one is the page\'s or the strip\'s')
   // The head, the body's scrolling, the card's corners, the row's height and type, the gap between
   // two cards, the icon's size and colour and the chevron's: all of that is the settings page's,
   // declared once there, so there is nothing here to read back.

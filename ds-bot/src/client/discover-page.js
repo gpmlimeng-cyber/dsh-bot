@@ -114,9 +114,8 @@ export const DISCOVER_CSS = `
 html[data-bt-mobile] .bt-discover .bt-settings-item+.bt-settings-item::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
 html[data-bt-mobile] .bt-discover .bt-settings-group+.bt-settings-group{margin-top:8px}
 /* The strip over a shell panel's second level (a panel draws no back of its own), sitting where the
-   page's own head sits. That level is not the settings layer, so it also needs its own line to keep
-   the conversation's top row out. */
-html[data-bt-mobile] body:has(.bt-subback) .bt-mobile-bar{display:none}
+   page's own head sits. Which layers hide the conversation's top row is the skin's business, not
+   this page's: the discover page and this strip are both named in the list in styles.js. */
 html[data-bt-mobile] .bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px 0;z-index:96;display:flex;align-items:center;background:var(--bt-main);pointer-events:none}
 html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 html[data-bt-mobile] .bt-subback-btn:hover{background:var(--bt-hover)}

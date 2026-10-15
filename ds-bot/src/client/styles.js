@@ -1298,7 +1298,12 @@ html[data-bt-mobile] body:has(.bt-pane) :is(.bt-mobile-bar,.bt-topfade),
 html[data-bt-mobile] body:has(.bt-panel) :is(.bt-mobile-bar,.bt-topfade),
 html[data-bt-mobile] body:has(.bt-mem-layer) :is(.bt-mobile-bar,.bt-topfade),
 html[data-bt-mobile] body:has(.bt-palette-layer) :is(.bt-mobile-bar,.bt-topfade),
-html[data-bt-mobile] body:has(.bt-settings-layer) :is(.bt-mobile-bar,.bt-topfade){display:none}
+html[data-bt-mobile] body:has(.bt-settings-layer) :is(.bt-mobile-bar,.bt-topfade),
+/* 发现 is the settings layer itself (discover-page.js), so the line above already covers its
+   list; these two name it anyway, and cover the strip a shell panel's second level draws -- that
+   level is not a layer of this skin at all, only the strip is ours. */
+html[data-bt-mobile] body:has(.bt-discover) :is(.bt-mobile-bar,.bt-topfade),
+html[data-bt-mobile] body:has(.bt-subback) :is(.bt-mobile-bar,.bt-topfade){display:none}
 /* On a phone the settings dialog is the screen rather than a card floating on it. A 198px
    page column beside a page needs a width a phone has not got -- at 425px it left the page
    179px, which is what made the whole thing read as broken. The two columns become two
