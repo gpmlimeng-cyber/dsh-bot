@@ -45,7 +45,7 @@ import { t } from './i18n.js'
 const TABS = [
   ['tasks', 'Chats', FluentChatIcon, FluentChatFilledIcon],
   ['peers', 'Peers', FluentBotIcon, FluentBotFilledIcon],
-  ['plugins', 'Plugins', FluentCompassIcon, FluentCompassFilledIcon],
+  ['plugins', 'Discover', FluentCompassIcon, FluentCompassFilledIcon],
   ['me', 'Me', FluentPersonIcon, FluentPersonFilledIcon],
 ]
 
@@ -55,33 +55,37 @@ export function BottomNav({ useUi, useNav, actions }) {
   const mobile = useMobile()
   const portrait = usePortrait()
   if (!mobile || !portrait) return null
-  // Exactly one tab is current, and it is read rather than remembered: Settings and the
-  // peers page are this plugin's own overlays and win over the page behind them; below
-  // them the shell's panel decides. A main panel that is neither the conversation nor
-  // "plugins" (the shell's scheduled-tasks page, opened from its own list) leaves every
-  // tab unlit rather than claiming the conversation is on screen.
-  const active = ui.settings ? 'me'
-    : ui.peers ? 'peers'
-      : ui.discover || ui.discoverPanel !== null ? 'plugins'
-      : nav.panel === 'plugins' ? 'plugins'
-        : nav.panel === null ? 'tasks' : null
+  // Exactly one tab is current, and it is read rather than remembered. 发现 comes first: its
+  // second level includes screens this plugin opens as Settings (连接器, 能力, 秘钥, 用量),
+  // and the tab must stay on the page the user came in through rather than jump to 我的.
+  // Below it the plugin's own overlays win over the page behind them, and then the shell's
+  // panel decides. A main panel that is neither the conversation nor "plugins" (the shell's
+  // scheduled-tasks page, opened from its own list) leaves every tab unlit rather than
+  // claiming the conversation is on screen.
+  const active = ui.discover || ui.discoverPanel !== null ? 'plugins'
+    : ui.settings ? 'me'
+      : ui.peers ? 'peers'
+        : nav.panel === 'plugins' ? 'plugins'
+          : nav.panel === null ? 'tasks' : null
   const go = (id) => {
     // The page already on screen is left where it is: a tab bar picks a page, and tapping
     // the one you are on does not navigate (the app the user copied behaves that way, and
     // the exits for a page are the other three tabs).
     if (active === id) return
     if (id === 'tasks') {
+      // 发现 first: a page opened from its list would otherwise be retraced to the list by
+      // closeSettings, which is one step back rather than all the way out.
+      actions.closeDiscover()
+      actions.closeSettings()
       actions.closePeers()
       actions.closeMobileNav()
-      actions.closeSettings()
-      actions.closeDiscover()
       actions.selectPanel(null)
       return
     }
     if (id === 'peers') {
+      actions.closeDiscover()
       actions.closeSettings()
       actions.closeMobileNav()
-      actions.closeDiscover()
       actions.openPeers()
       return
     }

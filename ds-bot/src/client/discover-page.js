@@ -1,27 +1,42 @@
 // 发现: a page of its own, a list of the things this skin and the shell keep behind it, rather
 // than the plugin manager opened straight away (which is what the tab used to do). Every row is a
-// door that already exists -- the plugin manager panel, the connectors screen, the automation
-// tasks panel and the usage page -- so nothing here invents a route; the row that opens a shell
-// panel carries our own back strip, because a panel draws no back of its own.
+// door that already exists -- the plugin manager panel, the connectors, capabilities, automation
+// tasks and secrets screens, the usage page -- so nothing here invents a route; the row that opens
+// a shell panel carries our own back strip, because a panel draws no back of its own, and the
+// settings rows step back to this list on their way out (index.js, closeSettings).
 //
 // One surface at a time, like the peers page: opening this page closes the others, and the rows
 // close it on the way to what they open.
 import { createElement as h, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, GaugeIcon, PlugIcon } from './icons.js'
+import { ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, GaugeIcon, PlugIcon, SlidersIcon } from './icons.js'
+import { KeyIcon } from './secret-card.js'
 import { useEscape, usePaneLeft } from './overlay-hooks.js'
 import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
 
-// The rows, in the order they are drawn: key, label, icon. Exported so the list can be checked
-// without a DOM. The keys are the row's identity too -- the second-level state carries one of the
-// panel ones, and the settings ones are the same screens 我的 already opens.
-export const DISCOVER_ROWS = [
-  ['plugins', 'Plugin manager', PlugIcon],
-  ['connectors', 'Connectors', ConnectorIcon],
-  ['schedules', 'Automation tasks', ClockIcon],
-  ['usage', 'Usage', GaugeIcon],
+// The cards, in the order they are drawn, and the rows inside each one: key, label, icon. A card
+// is a group the user reads as one block -- its rows share the surface and one hairline separates
+// each from the next (the CSS, below) -- so no card carries a header of its own.
+//
+// Only rows whose door this skin can already open are here. 模型 and Agent 预设 have none of ours:
+// DSH keeps the model list in its own settings dialog, reachable as a whole but not one page of
+// it, and there is no agent-preset entry to open at all. They are left out rather than drawn as
+// buttons that go nowhere.
+export const DISCOVER_CARDS = [
+  [['plugins', 'Plugin manager', PlugIcon]],
+  [
+    ['connectors', 'Connectors', ConnectorIcon],
+    ['capabilities', 'Capabilities', SlidersIcon],
+    ['schedules', 'Automation tasks', ClockIcon],
+    ['secrets', 'Secrets', KeyIcon],
+  ],
+  [['usage', 'Usage', GaugeIcon]],
 ]
+
+// The same list without its grouping, in drawing order, for anything that only asks which rows
+// exist. Exported so the list can be checked without a DOM.
+export const DISCOVER_ROWS = DISCOVER_CARDS.flat()
 
 // The rows whose door is a shell panel: those are the ones that need a back of ours (see below).
 export const PANEL_ROWS = ['plugins', 'schedules']
@@ -32,17 +47,17 @@ export function DiscoverPage({ useUi, actions }) {
   const paneLeft = usePaneLeft()
   useEscape(() => actions.closeDiscover())
   if (!open || !mobile) return null
-  return createPortal(h('div', { className: 'bt-discover', role: 'region', 'aria-label': t('Plugins'), style: { left: paneLeft } },
-    h('div', { className: 'bt-discover-head' }, h('h2', { className: 'bt-discover-title' }, t('Plugins'))),
-    h('div', { className: 'bt-discover-list', role: 'list' }, DISCOVER_ROWS.map(([key, label, Icon]) => h('div', {
-      key, className: 'bt-discover-item', role: 'listitem',
-    },
-    h('button', {
-      type: 'button', className: 'bt-discover-row', 'data-row': key, onClick: () => actions.openDiscoverRow(key),
+  return createPortal(h('div', { className: 'bt-discover', role: 'region', 'aria-label': t('Discover'), style: { left: paneLeft } },
+    h('div', { className: 'bt-discover-head' }, h('h2', { className: 'bt-discover-title' }, t('Discover'))),
+    h('div', { className: 'bt-discover-list', role: 'list' }, DISCOVER_CARDS.map((rows, card) => h('div', {
+      key: `card:${card}`, className: 'bt-discover-card', role: 'presentation',
+    }, rows.map(([key, label, Icon]) => h('button', {
+      key, type: 'button', className: 'bt-discover-row', 'data-row': key,
+      onClick: () => actions.openDiscoverRow(key),
     },
     h('span', { className: 'bt-discover-icon', 'aria-hidden': true }, h(Icon)),
     h('span', { className: 'bt-discover-name' }, t(label)),
-    h('span', { className: 'bt-discover-go', 'aria-hidden': true }, h(ChevronRightIcon))))))), document.body)
+    h('span', { className: 'bt-discover-go', 'aria-hidden': true }, h(ChevronRightIcon)))))))), document.body)
 }
 
 // The strip a second-level panel carries. The plugin manager and the automation tasks page are
@@ -52,7 +67,9 @@ export function DiscoverPage({ useUi, actions }) {
 export function DiscoverBack({ useUi, actions }) {
   const panel = useUi(value => (PANEL_ROWS.includes(value.discoverPanel) ? value.discoverPanel : null))
   const mobile = useMobile()
-  useEscape(() => actions.closeDiscoverPage())
+  // One layer at a time: this strip and Escape both go back to the list, and the list's own
+  // Escape is what leaves the page (the page, above).
+  useEscape(() => actions.closeDiscoverRow())
   useEffect(() => {
     if (panel === null) return undefined
     document.documentElement.dataset.btSubpage = '1'
@@ -74,9 +91,19 @@ html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
 html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}
 html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
 html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain}
-html[data-bt-mobile] .bt-discover-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:12px;background:var(--bt-card);color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
+/* A card is one group: the same surface the composer's card and the floating controls wear, from
+   the one shadow token, with the rows sharing it rather than each carrying its own. It clips its
+   rows so the first and last follow its corners, which is also what keeps a row's own tint off
+   the radius. */
+html[data-bt-mobile] .bt-discover-card{flex:none;overflow:hidden;border-radius:16px;background:var(--bt-card);box-shadow:var(--bt-float-shadow)}
+html[data-bt-mobile] .bt-discover-row{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:0;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-discover-row:hover{background:var(--bt-hover)}
-html[data-bt-mobile] .bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink-2)}
+/* The hairline between two rows of one card. It is drawn, not a border, because it must start at
+   the icon's own edge and stop short of the card's: a border would run the full width and meet
+   both edges. The colour is the skin's lightest line token -- no new grey lives here. */
+html[data-bt-mobile] .bt-discover-row+.bt-discover-row::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
+html[data-bt-mobile] .bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}
+html[data-bt-mobile] .bt-discover-icon svg{width:20px;height:20px}
 html[data-bt-mobile] .bt-discover-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-bt-mobile] .bt-discover-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
 /* The second-level strip: the height the panel's column reserves for it. */

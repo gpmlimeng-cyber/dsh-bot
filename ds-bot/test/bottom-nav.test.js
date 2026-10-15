@@ -61,7 +61,7 @@ test('the bar and the three pages under it take their foot from one token', () =
 
 test('the four pages are named for a UI dump, tasks first', () => {
   const order = [...nav.matchAll(/\['(tasks|peers|plugins|me)', '(\w+)'/g)].map(match => [match[1], match[2]])
-  assert.deepEqual(order, [['tasks', 'Chats'], ['peers', 'Peers'], ['plugins', 'Plugins'], ['me', 'Me']])
+  assert.deepEqual(order, [['tasks', 'Chats'], ['peers', 'Peers'], ['plugins', 'Discover'], ['me', 'Me']])
   // The accessible name is the label itself, and it is on the button rather than left to
   // the drawn text, which is hidden from the tree: a real-device dump reads this.
   assert.ok(nav.includes("'aria-label': t(label)"), 'each tab carries its own label')
@@ -125,7 +125,7 @@ test('the four names are dictionary copy, shared with the accessible name', () =
   for (const row of rows) assert.ok(!/[\u4e00-\u9fff]/.test(row), `no Chinese baked into ${row.trim()}`)
   assert.equal((nav.match(/t\(label\)/g) ?? []).length, 2, 'one translated string, drawn once and named once')
   const i18n = read('i18n.js')
-  for (const [key, zh] of [['Chats', '任务'], ['Peers', '伙伴'], ['Plugins', '发现'], ['Me', '我的']]) {
+  for (const [key, zh] of [['Chats', '任务'], ['Peers', '伙伴'], ['Discover', '发现'], ['Me', '我的']]) {
     assert.ok(i18n.includes(`${key}: '${zh}'`), `${key} carries its Chinese copy`)
   }
   // The table ships Chinese only: the key text IS the English copy and the host locale
@@ -150,11 +150,14 @@ test('the selected page is the sampled ink and heavier, not the accent', () => {
 })
 
 test('each tab reads the page it belongs to, and never keeps a selection of its own', () => {
-  // The main panel is the shell's; the two overlays are ours. Both are read.
-  assert.ok(nav.includes("const active = ui.settings ? 'me'"), 'Settings wins')
+  // 发现 is read first: its second level includes screens this plugin opens as Settings
+  // (连接器, 能力, 秘钥, 用量), and the light has to stay on the page the user came in
+  // through rather than jump to 我的 while one of them is up.
+  assert.ok(nav.includes("const active = ui.discover || ui.discoverPanel !== null ? 'plugins'"), '发现 wins')
   // 伙伴 is a page of its own now: it is lit by its own state, not by the conversation's
   // drawer, which stays the drawer's (and would otherwise light the tab from any chat).
-  const chain = nav.slice(nav.indexOf('const active = ui.settings'), nav.indexOf('const go ='))
+  const chain = nav.slice(nav.indexOf('const active = ui.discover'), nav.indexOf('const go ='))
+  assert.ok(chain.includes("ui.settings ? 'me'"), 'then Settings, for the pages opened anywhere else')
   assert.match(chain, /ui\.peers \? 'peers'/, 'the peers page wins next')
   assert.ok(!chain.includes('mobileNav'), 'the drawer no longer stands in for the peers page')
   assert.ok(nav.includes(": nav.panel === 'plugins' ? 'plugins'"), 'then the shell panel')
@@ -167,14 +170,16 @@ test('a tab closes the other pages before it acts', () => {
   // order, so neither can be left standing over the page that replaces it.
   const branch = (from, to) => go.slice(go.indexOf(`id === '${from}'`), to === null ? go.length : go.indexOf(`id === '${to}'`))
   const tasks = branch('tasks', 'peers')
-  assert.match(tasks, /actions\.closeMobileNav\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.closeDiscover\(\)[\s\S]*actions\.selectPanel\(null\)/, tasks)
+  // 发现 is closed first: a settings page opened from its list steps back to that list in
+  // closeSettings, so clearing the page first is what makes 任务 leave it altogether.
+  assert.match(tasks, /actions\.closeDiscover\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.closePeers\(\)[\s\S]*actions\.closeMobileNav\(\)[\s\S]*actions\.selectPanel\(null\)/, tasks)
   // 发现 is our own page now (discover-page.js), not the plugin manager opened straight away:
   // the tab opens the list, and the list's own row is what opens the panel.
   const plugins = branch('plugins', null)
   assert.match(plugins, /actions\.closeMobileNav\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.openDiscover\(\)/, plugins)
   // 伙伴 is a page of its own: the settings screen and the conversation's drawer both go
   // before it opens, and the tab opens the page rather than the drawer.
-  assert.match(branch('peers', 'plugins'), /actions\.closeSettings\(\)[\s\S]*actions\.closeMobileNav\(\)[\s\S]*actions\.openPeers\(\)/, 'the other surfaces go first')
+  assert.match(branch('peers', 'plugins'), /actions\.closeDiscover\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.closeMobileNav\(\)[\s\S]*actions\.openPeers\(\)/, 'the other surfaces go first')
   // The drawer is not a page of the bar: a tab that leaves the conversation still closes it.
   assert.match(tasks, /actions\.closePeers\(\)[\s\S]*actions\.closeMobileNav\(\)/, tasks)
   assert.match(plugins, /actions\.closePeers\(\)[\s\S]*actions\.closeMobileNav\(\)/, plugins)

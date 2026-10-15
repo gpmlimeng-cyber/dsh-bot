@@ -25,7 +25,9 @@ const ZH = {
   // The phone's bottom bar (nav-bar.js). Four page names and the bar's own label.
   Chats: '任务',
   Peers: '伙伴',
-  Plugins: '发现',
+  // The 发现 page and the tab that opens it (nav-bar.js, discover-page.js) are one page, so they
+  // carry one name: "Discover". 插件 is the first row of that page's list, never the page itself.
+  Discover: '发现',
   'Plugin manager': '插件',
   Me: '我的',
   Pages: '页面',

@@ -513,8 +513,16 @@ export function apply(ctx) {
     // settings dialog is a popup over a panel the user deliberately opened, and closing
     // it must not take that panel away too.
     closeSettings: () => {
-      if (ui.getSnapshot().settings === null) return
-      ui.set(state => ({ ...state, settings: null }))
+      const state = ui.getSnapshot()
+      if (state.settings === null) return
+      // A page opened from 发现 goes back to the list it came from rather than past it: the
+      // second level retraces one step at a time (its own Escape and its back both land here).
+      if (state.discoverPanel !== null) {
+        ui.set(current => ({ ...current, settings: null, discover: true, discoverPanel: null }))
+        if (isPortraitNav()) ctx.layout.selectPanel(null)
+        return
+      }
+      ui.set(current => ({ ...current, settings: null }))
       if (isPortraitNav()) ctx.layout.selectPanel(null)
     },
     openMemory: (botId) => { ui.set(state => ({ ...state, memory: botId, menu: null, palette: null })) },
@@ -607,7 +615,11 @@ export function apply(ctx) {
         actions.selectPanel(key)
         return
       }
-      ui.set(state => ({ ...state, discover: false, discoverPanel: null, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }))
+      // A settings row is a second level too, so `discoverPanel` remembers which row opened it
+      // even though the list itself steps aside: the tab stays on 发现 while the page is up,
+      // and closing it comes back to the list (closeSettings, above) instead of jumping past
+      // it to the conversation.
+      ui.set(state => ({ ...state, discover: false, discoverPanel: key, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }))
     },
     // The strip's back: the panel goes and the list comes back.
     closeDiscoverRow: () => {

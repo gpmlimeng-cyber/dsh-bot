@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: d6379009
+// Source fingerprint: 988949b7
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -63,7 +63,9 @@ var ZH = {
   // The phone's bottom bar (nav-bar.js). Four page names and the bar's own label.
   Chats: "任务",
   Peers: "伙伴",
-  Plugins: "发现",
+  // The 发现 page and the tab that opens it (nav-bar.js, discover-page.js) are one page, so they
+  // carry one name: "Discover". 插件 is the first row of that page's list, never the page itself.
+  Discover: "发现",
   "Plugin manager": "插件",
   Me: "我的",
   Pages: "页面",
@@ -15869,7 +15871,7 @@ var import_react_dom12 = require("react-dom");
 var TABS = [
   ["tasks", "Chats", FluentChatIcon, FluentChatFilledIcon],
   ["peers", "Peers", FluentBotIcon, FluentBotFilledIcon],
-  ["plugins", "Plugins", FluentCompassIcon, FluentCompassFilledIcon],
+  ["plugins", "Discover", FluentCompassIcon, FluentCompassFilledIcon],
   ["me", "Me", FluentPersonIcon, FluentPersonFilledIcon]
 ];
 function BottomNav({ useUi, useNav, actions }) {
@@ -15878,21 +15880,21 @@ function BottomNav({ useUi, useNav, actions }) {
   const mobile = useMobile();
   const portrait = usePortrait();
   if (!mobile || !portrait) return null;
-  const active = ui2.settings ? "me" : ui2.peers ? "peers" : ui2.discover || ui2.discoverPanel !== null ? "plugins" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
+  const active = ui2.discover || ui2.discoverPanel !== null ? "plugins" : ui2.settings ? "me" : ui2.peers ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
   const go = (id) => {
     if (active === id) return;
     if (id === "tasks") {
+      actions.closeDiscover();
+      actions.closeSettings();
       actions.closePeers();
       actions.closeMobileNav();
-      actions.closeSettings();
-      actions.closeDiscover();
       actions.selectPanel(null);
       return;
     }
     if (id === "peers") {
+      actions.closeDiscover();
       actions.closeSettings();
       actions.closeMobileNav();
-      actions.closeDiscover();
       actions.openPeers();
       return;
     }
@@ -16159,12 +16161,17 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/discover-page.js
 var import_react41 = require("react");
 var import_react_dom14 = require("react-dom");
-var DISCOVER_ROWS = [
-  ["plugins", "Plugin manager", PlugIcon],
-  ["connectors", "Connectors", ConnectorIcon],
-  ["schedules", "Automation tasks", ClockIcon],
-  ["usage", "Usage", GaugeIcon]
+var DISCOVER_CARDS = [
+  [["plugins", "Plugin manager", PlugIcon]],
+  [
+    ["connectors", "Connectors", ConnectorIcon],
+    ["capabilities", "Capabilities", SlidersIcon],
+    ["schedules", "Automation tasks", ClockIcon],
+    ["secrets", "Secrets", KeyIcon]
+  ],
+  [["usage", "Usage", GaugeIcon]]
 ];
+var DISCOVER_ROWS = DISCOVER_CARDS.flat();
 var PANEL_ROWS = ["plugins", "schedules"];
 function DiscoverPage({ useUi, actions }) {
   const open = useUi((value) => value.discover === true);
@@ -16174,34 +16181,31 @@ function DiscoverPage({ useUi, actions }) {
   if (!open || !mobile) return null;
   return (0, import_react_dom14.createPortal)((0, import_react41.createElement)(
     "div",
-    { className: "bt-discover", role: "region", "aria-label": t("Plugins"), style: { left: paneLeft } },
-    (0, import_react41.createElement)("div", { className: "bt-discover-head" }, (0, import_react41.createElement)("h2", { className: "bt-discover-title" }, t("Plugins"))),
-    (0, import_react41.createElement)("div", { className: "bt-discover-list", role: "list" }, DISCOVER_ROWS.map(([key, label, Icon]) => (0, import_react41.createElement)(
-      "div",
+    { className: "bt-discover", role: "region", "aria-label": t("Discover"), style: { left: paneLeft } },
+    (0, import_react41.createElement)("div", { className: "bt-discover-head" }, (0, import_react41.createElement)("h2", { className: "bt-discover-title" }, t("Discover"))),
+    (0, import_react41.createElement)("div", { className: "bt-discover-list", role: "list" }, DISCOVER_CARDS.map((rows, card) => (0, import_react41.createElement)("div", {
+      key: `card:${card}`,
+      className: "bt-discover-card",
+      role: "presentation"
+    }, rows.map(([key, label, Icon]) => (0, import_react41.createElement)(
+      "button",
       {
         key,
-        className: "bt-discover-item",
-        role: "listitem"
+        type: "button",
+        className: "bt-discover-row",
+        "data-row": key,
+        onClick: () => actions.openDiscoverRow(key)
       },
-      (0, import_react41.createElement)(
-        "button",
-        {
-          type: "button",
-          className: "bt-discover-row",
-          "data-row": key,
-          onClick: () => actions.openDiscoverRow(key)
-        },
-        (0, import_react41.createElement)("span", { className: "bt-discover-icon", "aria-hidden": true }, (0, import_react41.createElement)(Icon)),
-        (0, import_react41.createElement)("span", { className: "bt-discover-name" }, t(label)),
-        (0, import_react41.createElement)("span", { className: "bt-discover-go", "aria-hidden": true }, (0, import_react41.createElement)(ChevronRightIcon))
-      )
-    )))
+      (0, import_react41.createElement)("span", { className: "bt-discover-icon", "aria-hidden": true }, (0, import_react41.createElement)(Icon)),
+      (0, import_react41.createElement)("span", { className: "bt-discover-name" }, t(label)),
+      (0, import_react41.createElement)("span", { className: "bt-discover-go", "aria-hidden": true }, (0, import_react41.createElement)(ChevronRightIcon))
+    )))))
   ), document.body);
 }
 function DiscoverBack({ useUi, actions }) {
   const panel = useUi((value) => PANEL_ROWS.includes(value.discoverPanel) ? value.discoverPanel : null);
   const mobile = useMobile();
-  useEscape(() => actions.closeDiscoverPage());
+  useEscape(() => actions.closeDiscoverRow());
   (0, import_react41.useEffect)(() => {
     if (panel === null) return void 0;
     document.documentElement.dataset.btSubpage = "1";
@@ -16227,9 +16231,19 @@ html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
 html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}
 html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
 html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain}
-html[data-bt-mobile] .bt-discover-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:12px;background:var(--bt-card);color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
+/* A card is one group: the same surface the composer's card and the floating controls wear, from
+   the one shadow token, with the rows sharing it rather than each carrying its own. It clips its
+   rows so the first and last follow its corners, which is also what keeps a row's own tint off
+   the radius. */
+html[data-bt-mobile] .bt-discover-card{flex:none;overflow:hidden;border-radius:16px;background:var(--bt-card);box-shadow:var(--bt-float-shadow)}
+html[data-bt-mobile] .bt-discover-row{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:0;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-discover-row:hover{background:var(--bt-hover)}
-html[data-bt-mobile] .bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink-2)}
+/* The hairline between two rows of one card. It is drawn, not a border, because it must start at
+   the icon's own edge and stop short of the card's: a border would run the full width and meet
+   both edges. The colour is the skin's lightest line token -- no new grey lives here. */
+html[data-bt-mobile] .bt-discover-row+.bt-discover-row::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
+html[data-bt-mobile] .bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}
+html[data-bt-mobile] .bt-discover-icon svg{width:20px;height:20px}
 html[data-bt-mobile] .bt-discover-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-bt-mobile] .bt-discover-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
 /* The second-level strip: the height the panel's column reserves for it. */
@@ -16242,7 +16256,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "d6379009" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "988949b7" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16740,8 +16754,14 @@ function apply(ctx) {
     // settings dialog is a popup over a panel the user deliberately opened, and closing
     // it must not take that panel away too.
     closeSettings: () => {
-      if (ui2.getSnapshot().settings === null) return;
-      ui2.set((state) => ({ ...state, settings: null }));
+      const state = ui2.getSnapshot();
+      if (state.settings === null) return;
+      if (state.discoverPanel !== null) {
+        ui2.set((current) => ({ ...current, settings: null, discover: true, discoverPanel: null }));
+        if (isPortraitNav()) ctx.layout.selectPanel(null);
+        return;
+      }
+      ui2.set((current) => ({ ...current, settings: null }));
       if (isPortraitNav()) ctx.layout.selectPanel(null);
     },
     openMemory: (botId) => {
@@ -16856,7 +16876,7 @@ function apply(ctx) {
         actions.selectPanel(key);
         return;
       }
-      ui2.set((state) => ({ ...state, discover: false, discoverPanel: null, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }));
+      ui2.set((state) => ({ ...state, discover: false, discoverPanel: key, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }));
     },
     // The strip's back: the panel goes and the list comes back.
     closeDiscoverRow: () => {

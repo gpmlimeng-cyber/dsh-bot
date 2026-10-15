@@ -1,9 +1,10 @@
 // 发现 is a page of its own (discover-page.js), not the plugin manager opened the moment the tab
 // is tapped: the tab opens a list, and the list's rows are the doors that already existed — the
-// plugin manager panel, the connectors screen, the automation tasks panel and the usage page.
-// Nothing here invents a route, so what is pinned is the mapping (which row opens which door),
-// the one thing the page does add (the strip the shell's own panels do not draw), and the wiring
-// that keeps it a single surface: one page at a time, and the tab bar above it.
+// plugin manager panel, the connectors, capabilities, automation-tasks and secrets screens, and
+// the usage page. Nothing here invents a route, so what is pinned is the mapping (which row opens
+// which door), the one thing the page does add (the strip the shell's own panels do not draw), the
+// cards those rows share, and the wiring that keeps it a single surface: one page at a time, one
+// layer at a time, and the tab bar above it.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
@@ -18,21 +19,38 @@ const nav = code('nav-bar.js')
 const sidebar = code('sidebar.js')
 const styles = code('styles.js')
 
-// The rows, read out of the declaration rather than copied: the order is the page's own, and a
-// row added or removed here has to be answered for in the assertions below.
-const rows = [...discover.slice(discover.indexOf('export const DISCOVER_ROWS'), discover.indexOf('export const PANEL_ROWS'))
-  .matchAll(/\['([a-z]+)', '([^']+)', (\w+)\]/g)].map(match => [match[1], match[2], match[3]])
+// The cards, read out of the declaration rather than copied: the drawing order is the page's own,
+// and a row added or removed here has to be answered for in the assertions below. A card opens
+// with its own `[` line or with an inline first row; its rows follow indented under it.
+const cardsBlock = discover.slice(discover.indexOf('export const DISCOVER_CARDS = ['), discover.indexOf('export const DISCOVER_ROWS'))
+const cards = []
+for (const line of cardsBlock.split('\n')) {
+  if (line.trim() === '[' || (/^ {2}\[/.test(line) && line.includes("['"))) cards.push([])
+  const row = /\[['"]([a-z]+)['"], ['"]([^'"]+)['"], (\w+)\]/.exec(line)
+  if (row && cards.length > 0) cards[cards.length - 1].push([row[1], row[2], row[3]])
+}
+const rows = cards.flat()
 const panelRows = [...discover.slice(discover.indexOf('export const PANEL_ROWS')).match(/\[[^\]]*\]/)[0]
   .matchAll(/'([a-z]+)'/g)].map(match => match[1])
 
-test('the list is four doors that already exist, in one place', () => {
-  assert.deepEqual(rows.map(row => row[0]), ['plugins', 'connectors', 'schedules', 'usage'], 'the four rows, in order')
-  assert.deepEqual(rows.map(row => row[1]), ['Plugin manager', 'Connectors', 'Automation tasks', 'Usage'], 'named by the screens they open')
-  // Every icon is one the skin already draws, out of the one icon module.
+test('the list is six doors that already exist, grouped into three cards', () => {
+  // 三张卡: 插件 ｜ 连接器·能力·定时任务·密钥 ｜ 用量. The third holds one row rather than the
+  // three the user drew, because two of them have no door of ours (below): the card is kept
+  // anyway, so the day a route appears the row has a home.
+  assert.deepEqual(cards.map(card => card.length), [1, 4, 1], '三张卡, one row per card where the door is missing')
+  assert.deepEqual(rows.map(row => row[0]), ['plugins', 'connectors', 'capabilities', 'schedules', 'secrets', 'usage'], 'the rows, in order')
+  assert.deepEqual(rows.map(row => row[1]), ['Plugin manager', 'Connectors', 'Capabilities', 'Automation tasks', 'Secrets', 'Usage'], 'named by the screens they open')
+  // 模型 and Agent 预设 are the two the user asked for that have no door of ours: DSH keeps the
+  // model list in its own settings dialog (reachable whole, not one page of it) and there is no
+  // agent-preset entry at all. They are left out rather than drawn as buttons that go nowhere.
+  assert.ok(!discover.includes('Agent preset'), 'no dead 模型 row')
+  assert.ok(!rows.some(row => row[0] === 'models'), 'and no dead Agent 预设 row')
+  // Every icon is one the skin already draws, out of its own modules.
   assert.ok(discover.includes("} from './icons.js'"), 'the icons come from icons.js')
   for (const [, , icon] of rows) {
     assert.ok(discover.includes(icon), `${icon} is imported rather than drawn here`)
-    assert.ok(read('icons.js').includes(`export const ${icon} =`), `${icon} already exists`)
+    const drawn = read('icons.js').includes(`export const ${icon} =`) || read('secret-card.js').includes(`export const ${icon} =`)
+    assert.ok(drawn, `${icon} already exists`)
   }
   // A row is the door itself: the page holds a key and a label, never an action of its own, so
   // its own door is looked up in one place (index.js).
@@ -47,16 +65,15 @@ test('the row that opens a shell panel is the only one that needs a back of ours
   // The plugin manager and the automation tasks screen are the shell's own main panels and draw
   // no back, so the page carries a second level for exactly those two.
   assert.match(index, /if \(PANEL_ROWS\.includes\(key\)\) \{[\s\S]*actions\.selectPanel\(key\)/, 'a panel row selects the panel')
-  // The other two land on the screens 我的 already opens, under the same page keys the sidebar's
-  // own doors use: one screen, one key, whichever door is taken.
+  // The other four land on the screens 我的 already opens, under the same page keys the settings
+  // dialog uses: one screen, one key, whichever door is taken.
   const settings = sidebar.slice(sidebar.indexOf("t('Usage')"), sidebar.indexOf("t('Bot settings')"))
   assert.ok(settings.includes("actions.openSettings('usage')"), '用量 is the usage screen')
   assert.ok(settings.includes('actions.openConnectors()'), '连接器 is the connectors screen')
-  assert.ok(index.includes("openConnectors: () => { ui.set(state => ({ ...state, settings: { page: 'connectors'"), 'which is the key this page uses')
-  assert.ok(index.includes('settings: { page: key, id: null }'), 'and both of this page\'s rows use the row key as that page')
-  for (const key of rows.map(row => row[0]).filter(key => !panelRows.includes(key))) {
-    assert.ok(key === 'connectors' || key === 'usage', `${key} has a screen behind it`)
+  for (const key of ['connectors', 'capabilities', 'secrets', 'usage']) {
+    assert.ok(read('settings.js').includes(`['${key}', `), `${key} is a settings page the dialog already draws`)
   }
+  assert.ok(index.includes('settings: { page: key, id: null }'), 'and every one of this page\'s rows uses the row key as that page')
 })
 
 test('the second level carries the strip a shell panel does not draw', () => {
@@ -70,11 +87,18 @@ test('the second level carries the strip a shell panel does not draw', () => {
   assert.ok(back.includes('delete document.documentElement.dataset.btSubpage'), 'and withdrawn')
   assert.ok(styles.includes('html[data-bt-mobile][data-bt-portrait][data-bt-subpage] [data-dsh-frame]>[class*="centerCol"]{padding-top:calc(var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)) + 56px)!important}'), 'the panel\'s column reserves it')
   assert.ok(!discover.includes('dataset.btSubpage') || back.includes('dataset.btSubpage'), 'published from the strip alone')
-  // Both levels have a way out: the list closes on Escape, the strip leaves the page.
+  // One layer at a time: the strip and Escape both go back to the list, and the list's own Escape
+  // is what leaves the page. The strip used to jump straight out of the page.
   assert.match(discover, /useEscape\(\(\) => actions\.closeDiscover\(\)\)/, 'Escape closes the list')
-  assert.match(discover, /useEscape\(\(\) => actions\.closeDiscoverPage\(\)\)/, 'and leaves the page from the second level')
+  assert.match(back, /useEscape\(\(\) => actions\.closeDiscoverRow\(\)\)/, 'and steps back one level from the second')
+  assert.ok(!back.includes('closeDiscoverPage'), 'the strip never skips the list')
   assert.match(index, /closeDiscoverRow: \(\) => \{[\s\S]*actions\.selectPanel\(null\)[\s\S]*discoverPanel: null, discover: true/, 'back: the panel goes and the list returns')
-  assert.match(index, /closeDiscoverPage: \(\) => \{[\s\S]*actions\.selectPanel\(null\)[\s\S]*discover: false, discoverPanel: null/, 'Escape: the page goes altogether')
+  assert.match(index, /closeDiscoverPage: \(\) => \{[\s\S]*actions\.selectPanel\(null\)[\s\S]*discover: false, discoverPanel: null/, 'the page still has a way out altogether')
+  // A settings page opened from this list steps back to the list too, not past it: its own Escape
+  // and its back both land on closeSettings, which reads the row it came from.
+  const close = index.slice(index.indexOf('closeSettings: () =>'), index.indexOf('openMemory:'))
+  assert.ok(close.includes('state.discoverPanel !== null'), 'closing a page this list opened comes back here')
+  assert.ok(close.includes('discover: true, discoverPanel: null'), 'to the list it came from')
   // The strip is the skin's measurement, not a local one: 48px control, 22px glyph, page colour.
   assert.ok(discover.includes('.bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px)'), 'the strip covers the status bar and the row')
   assert.ok(discover.includes('z-index:96'), 'over the panel')
@@ -82,6 +106,35 @@ test('the second level carries the strip a shell panel does not draw', () => {
   assert.ok(discover.includes('pointer-events:none'), 'the strip does not eat the panel\'s taps')
   assert.ok(discover.includes('.bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px'), 'the control is 48px')
   assert.ok(discover.includes('.bt-subback-btn>svg{width:22px;height:22px}'), 'and its glyph 22px')
+})
+
+test('a card is one surface, and one hairline separates its rows', () => {
+  // The card, not the row, carries the skin: the same card surface the composer and the floating
+  // controls wear, and the one shadow token they both read.
+  const card = discover.slice(discover.indexOf('.bt-discover-card{'), discover.indexOf('.bt-discover-row{'))
+  assert.ok(card.includes('border-radius:16px'), 'rounded like the reference')
+  assert.ok(card.includes('background:var(--bt-card)'), 'on the card colour')
+  assert.ok(card.includes('box-shadow:var(--bt-float-shadow)'), 'the one shared shadow, not a value of its own')
+  assert.ok(card.includes('overflow:hidden'), 'and it clips its rows, so the ends follow its corners')
+  const row = discover.slice(discover.indexOf('.bt-discover-row{'), discover.indexOf('.bt-discover-row:hover'))
+  assert.ok(row.includes('min-height:56px'), 'a row is 56px')
+  assert.ok(row.includes('background:none'), 'the row adds no surface of its own')
+  assert.ok(row.includes('position:relative'), 'and it is the hairline\'s origin')
+  // The hairline is drawn rather than a border: a border would run the card's whole width and meet
+  // both edges, and it must start at the icon and stop short of them. Colour: the skin's own
+  // lightest line token -- no new grey is written here.
+  const line = discover.split('\n').find(line => line.includes('.bt-discover-row+.bt-discover-row::before'))
+  assert.ok(line, 'the hairline between two rows has its rule')
+  assert.ok(line.includes('left:12px') && line.includes('right:12px'), 'inset from both edges, starting at the icon')
+  assert.ok(!line.includes('left:0') && !line.includes('right:0'), 'and never reaching them')
+  assert.ok(line.includes('background:var(--bt-line-weak)'), 'in the shared faint-line token')
+  assert.ok(read('styles.js').includes('--bt-line-weak:'), 'which the skin declares')
+  assert.ok(!/#[0-9a-f]{3,8}|rgba?\(/i.test(line), 'with no colour of its own')
+  // A card holds its rows with no gap: the 8px belongs between cards.
+  assert.ok(discover.includes('.bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px'), '8px between cards')
+  assert.ok(discover.includes('.bt-discover-card{flex:none;'), 'and none inside one')
+  assert.ok(discover.includes('.bt-discover-icon svg{width:20px;height:20px}'), 'the icon is 20px')
+  assert.ok(discover.includes('.bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}'), 'drawn in the ink, not the muted one')
 })
 
 test('the page is a surface of its own, one at a time', () => {
@@ -92,9 +145,12 @@ test('the page is a surface of its own, one at a time', () => {
   assert.ok(index.includes("shadow('shell.overlay', { id: 'bot-discover', order: 44, inject: face }, DiscoverPage)"), 'drawn on an overlay entry of its own')
   assert.ok(index.includes("shadow('shell.overlay', { id: 'bot-discover-back', order: 46, inject: face }, DiscoverBack)"), 'and the strip on one above it')
   assert.ok(index.includes("installCompiledStyles(DISCOVER_CSS, 'discover')"), 'with its own named sheet')
-  // The tab lights while the page or its second level is up, and it opens the list rather than
-  // the panel: the tab is a page of the bar, and the panel is a row of the page.
-  assert.ok(nav.includes(": ui.discover || ui.discoverPanel !== null ? 'plugins'"), 'the tab lights for both levels')
+  // The tab lights while the page or its second level is up -- including the second level that is
+  // a settings screen, which is why 发现 is read before Settings: the light stays on the page the
+  // user came in through. It opens the list rather than the panel.
+  const active = nav.slice(nav.indexOf('const active ='), nav.indexOf('const go = (id) =>'))
+  assert.ok(active.startsWith('const active = ui.discover || ui.discoverPanel !== null ? \'plugins\''), '发现 is read first, so a settings page under it does not move the light')
+  assert.ok(active.indexOf('ui.discover') < active.indexOf('ui.settings'), 'and before Settings')
   assert.ok(nav.includes('actions.openDiscover()'), 'and opens the list')
   // Every opener that puts another full-pane surface over the conversation takes this page down
   // with it. Two deliberate exceptions: openSettings/openConnectors are the doors this page's own
@@ -115,13 +171,17 @@ test('the page is a surface of its own, one at a time', () => {
   const go = nav.slice(nav.indexOf('const go = (id) =>'), nav.indexOf('return createPortal'))
   assert.ok(go.includes('actions.openDiscover()'), 'the 发现 tab opens the list')
   assert.equal([...go.matchAll(/actions\.closeDiscover\(\)/g)].length, 3, 'and the other three tabs close it')
+  assert.ok(go.indexOf('actions.closeDiscover()') < go.indexOf('actions.closeSettings()'), 'before Settings, which would otherwise step back to the list')
 })
 
 test('the page and its tab carry one name, and the copy is in the dictionary', () => {
   // The tab is 发现 (nav-bar's own label): the page it opens is the same page, so it wears the
-  // same name rather than a second one.
-  assert.ok(nav.includes("['plugins', 'Plugins', FluentCompassIcon, FluentCompassFilledIcon]"), 'the tab is the 发现 tab')
-  assert.ok(discover.includes("h('h2', { className: 'bt-discover-title' }, t('Plugins'))"), 'the page title is that tab\'s label')
+  // same name rather than a second one -- and that name is "Discover", not "Plugins" (插件 is
+  // only the first row of this page's list).
+  assert.ok(nav.includes("['plugins', 'Discover', FluentCompassIcon, FluentCompassFilledIcon]"), 'the tab is the 发现 tab')
+  assert.ok(discover.includes("h('h2', { className: 'bt-discover-title' }, t('Discover'))"), 'the page title is that tab\'s label')
+  assert.ok(discover.includes("'aria-label': t('Discover')"), 'and so is the region it is announced as')
+  assert.ok(!/t\('Plugins'\)/.test(discover), 'the page never calls itself 插件')
   // Every string is a key the dictionary has, in the language the rest of the skin is in.
   const keys = [...discover.matchAll(/t\('([^']+)'\)/g)].map(match => match[1])
   assert.ok(keys.length >= 2, `expected the page's strings, found ${keys.length}`)
@@ -146,9 +206,10 @@ test('every rule is a phone rule, and the floor stays the bar\'s', () => {
   // defect the user reported under the composer.
   assert.ok(rules.some(line => line.includes('padding:') && line.includes('var(--bt-nav-h) + var(--bt-nav-gap)')), 'the bar\'s height is given back')
   assert.ok(rules.some(line => line.includes('[data-bt-keyboard] .bt-discover{padding-bottom:12px}')), 'and given back to the keyboard')
-  // The list item is the list item and the row inside stays a button: a button that called itself
-  // a list item stops being announced as a button (the members list draws it the same way).
-  assert.ok(discover.includes("className: 'bt-discover-item', role: 'listitem'"), 'the wrapper is the list item')
+  // The card is the group and the row inside stays a button: a group announces nothing, and a
+  // button that called itself a list item stops being announced as a button.
+  assert.ok(discover.includes("className: 'bt-discover-card', role: 'presentation'"), 'the card is the wrapper')
+  assert.ok(!discover.includes('bt-discover-item'), 'and the per-row wrapper is gone with the per-row card')
   const row = discover.slice(discover.indexOf("className: 'bt-discover-row'"), discover.indexOf("className: 'bt-discover-name'"))
   assert.ok(!row.includes('role:'), `the row keeps the button role: ${row}`)
   for (const borrowed of ['bt-row-body', 'bt-row-meta', 'RowMeta', 'unread']) {
