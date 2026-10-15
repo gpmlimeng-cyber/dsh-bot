@@ -3666,6 +3666,24 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-part-line{display:flex;align-items:center;gap:10px;margin:10px 0 6px;font-size:11px;line-height:14px;color:var(--bt-ink-3)}
 .bt-part-line::before,.bt-part-line::after{content:"";flex:1;height:1px;background:var(--bt-line)}
 `;
+function publishThemeColor() {
+  if (typeof document === "undefined") return;
+  const own = document.head.querySelector("meta[data-bt-theme-color]");
+  const page = getComputedStyle(document.body).getPropertyValue("--bt-page").trim();
+  if (page === "" || document.body.hasAttribute("data-ds-dark-theme")) {
+    if (own) own.remove();
+    return;
+  }
+  if (!own) {
+    const meta = document.createElement("meta");
+    meta.name = "theme-color";
+    meta.dataset.btThemeColor = "";
+    document.head.prepend(meta);
+    meta.content = page;
+    return;
+  }
+  if (own.content !== page) own.content = page;
+}
 function installStyles(text, tag) {
   const style = document.createElement("style");
   style.dataset.dshBot = tag;
@@ -16187,6 +16205,7 @@ function apply(ctx) {
       const accent = isHex(prefs.accent) ? prefs.accent : void 0;
       const motion = prefs.motion === "quiet" || prefs.motion === "lively" ? prefs.motion : "normal";
       document.body.dataset.btMotion = motion;
+      publishThemeColor();
       const next = `${id}|${accent ?? ""}|${motion}|${registry.getSnapshot()}`;
       if (next === key) return;
       key = next;
@@ -16204,13 +16223,17 @@ function apply(ctx) {
     render();
     const offRoster = roster.subscribe(render);
     const offRegistry = registry.subscribe(render);
+    const themeWatch = new MutationObserver(publishThemeColor);
+    themeWatch.observe(document.body, { attributes: true, attributeFilter: ["data-ds-dark-theme"] });
     return () => {
       offRoster();
       offRegistry();
+      themeWatch.disconnect();
       try {
         if (typeof releaseTokens === "function") releaseTokens();
       } finally {
         delete document.body.dataset.btMotion;
+        document.head.querySelector("meta[data-bt-theme-color]")?.remove();
         style.remove();
       }
     };

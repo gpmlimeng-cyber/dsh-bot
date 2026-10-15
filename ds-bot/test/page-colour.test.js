@@ -61,6 +61,25 @@ test('the platform base token is overridden exactly once, on the light theme', (
   assert.ok(rule.includes('!important'), 'an inline declaration needs the flag to be beaten')
 })
 
+// The shell reads the page colour from <meta name="theme-color">, and the platform's own
+// presenter had already written the old one before this skin's colour took effect. Ours goes
+// first in <head> (a consumer reads the first matching tag), and it is removed in dark so the
+// platform's value stands there.
+test('the page colour reaches the shell through the meta tag, light theme only', () => {
+  const styles = read('styles.js')
+  const helper = styles.slice(styles.indexOf('export function publishThemeColor'))
+  assert.ok(helper.includes("document.head.prepend(meta)"), 'ours leads the platform\'s tag')
+  assert.ok(helper.includes("meta.dataset.btThemeColor = ''"), 'and is marked as ours, so the presenter keeps its own')
+  assert.ok(helper.includes("getPropertyValue('--bt-page')"), 'the value is the page token, not a second copy of the colour')
+  assert.ok(helper.includes("hasAttribute('data-ds-dark-theme')") && helper.includes('own.remove()'), 'dark removes ours and leaves the platform\'s')
+  // Wired where the theme is applied, and watched, because the platform flips the flag itself.
+  const index = read('index.js')
+  assert.ok(index.includes('import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles, publishThemeColor }'), 'imported')
+  assert.ok(index.includes('      publishThemeColor()\n'), 'applied with the theme')
+  assert.ok(index.includes("new MutationObserver(publishThemeColor)") && index.includes("attributeFilter: ['data-ds-dark-theme']"), 'and re-applied when the platform flips dark')
+  assert.ok(index.includes("document.head.querySelector('meta[data-bt-theme-color]')?.remove()"), 'removed when the surface withdraws')
+})
+
 test('the bar wears the page colour, opaque', () => {
   const bar = nav.split('\n').find(line => line.includes('.bt-nav{'))
   assert.ok(bar.includes('background:var(--bt-page)'), bar)
