@@ -410,6 +410,13 @@ test('the transcript scrolls under the strip, and still arrives clear of it', ()
   for (const line of readers) assert.ok(line.includes('var(--bt-fade-h'), line)
   // The phone held sideways has no strip, so its inset is untouched -- the two rules above are
   // the only ones that give it up, and both carry the portrait gate.
+  // The conversation is the only panel with a veil over it: every other panel in the same
+  // column has nothing above it, so it keeps the inset and its head cannot slide under the
+  // system row (the 发现 tab's plugin page did, because the column had given the inset up).
+  const others = lines.find(line => line.startsWith(`${gate}[data-dsh-frame]>[class*="centerCol"]:not(`))
+  assert.ok(others, 'the other panels get the inset back')
+  assert.ok(others.includes('padding-top:var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))!important'), others)
+  assert.ok(others.includes(':not(:has([data-conversation-scroll]))'), 'keyed off the transcript only the conversation has')
   const ungated = lines.filter(line => line.startsWith('html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]'))
   assert.equal(ungated.length, 1, 'one rule, the original one, without the portrait gate')
   assert.ok(ungated[0].includes('padding-top:var(--dsh-mobile-top-inset'), ungated[0])

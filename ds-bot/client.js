@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 548bcd6c
+// Source fingerprint: 3e917181
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3033,6 +3033,13 @@ html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh
    it was (the 10px fallback). */
 html[data-bt-mobile][data-bt-portrait] [data-dsh-frame]>[class*="centerCol"]{padding-top:0!important}
 html[data-bt-mobile][data-bt-portrait] [class*="_scroll"]:has(> [class*="_column"]){padding-top:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px))!important}
+/* The conversation is the only panel that has a veil drawn over it (nav-bar.js draws it on the
+   tasks tab, and it is the chat's), so it is the only one that may give the inset up. Every
+   other panel in this column -- the plugin manager the 发现 tab opens, the automation tasks,
+   anything a plugin registers -- has nothing over its top, and without this its own head starts
+   at y=0 and slides under the system row. The marker is the transcript's own scroll element,
+   which only the conversation has (mobile.js reads the same one for the inset). */
+html[data-bt-mobile][data-bt-portrait] [data-dsh-frame]>[class*="centerCol"]:not(:has([data-conversation-scroll])){padding-top:var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))!important}
 /* One definition, every consumer: the shell's own --dsh-frame-chrome-top is set only under
    html[data-windows-titlebar] (and the darwin frame), never on Android, so every fixed
    layer that reads it — ours and the shell's own masks alike — fell through to 0 and
@@ -16157,7 +16164,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "548bcd6c" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "3e917181" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
