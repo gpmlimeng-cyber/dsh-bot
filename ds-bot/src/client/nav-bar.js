@@ -24,10 +24,10 @@
 import { createElement as h } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  FluentChatFilledIcon, FluentChatIcon,
-  FluentCompassFilledIcon, FluentCompassIcon,
-  FluentPeopleFilledIcon, FluentPeopleIcon,
-  FluentPersonFilledIcon, FluentPersonIcon,
+  IonChatbubbleFilledIcon, IonChatbubbleIcon,
+  IonCompassFilledIcon, IonCompassIcon,
+  IonPeopleFilledIcon, IonPeopleIcon,
+  IonPersonFilledIcon, IonPersonIcon,
 } from './icons.js'
 import { useMobile, usePortrait } from './mobile.js'
 import { t } from './i18n.js'
@@ -37,18 +37,18 @@ import { t } from './i18n.js'
 // at render time like every other string here, so the bar names its pages in the language
 // the rest of the interface is in (Chinese must not be hard-coded into the labels).
 //
-// Each page carries two drawings of one shape, Fluent's, on the grid every glyph in this
-// skin is on (icons.js): the outline while the page is not the current one and the solid
-// one while it is, which is the state the user asked for and the reason the bar does not
-// thicken a stroke to fake it. 任务 takes Fluent's chat bubble (round, tail at the lower
-// left — the shape the user's screenshot draws), 发现 its compass and 我的 its round-headed
-// figure, both also from that screenshot; 伙伴 takes the same set's people, since that
-// screenshot's second tab is a scheduled-tasks page with no shape of its own to copy.
+// Each page carries two drawings of one shape, from Ionicons (icons.js): the outline while
+// the page is not the current one and the solid one while it is, which is the state the user
+// asked for and the reason the bar never thickens a stroke to fake it. 任务 takes its
+// chatbubble (a round bubble whose tail leaves at the lower left -- the shape the user's
+// screenshots draw), 发现 its compass and 我的 its round-headed person, both also from those
+// screenshots; 伙伴 takes the same set's people, since that screenshot's second tab is a
+// scheduled-tasks page with no shape of its own to copy.
 const TABS = [
-  ['tasks', 'Tasks', FluentChatIcon, FluentChatFilledIcon],
-  ['peers', 'Peers', FluentPeopleIcon, FluentPeopleFilledIcon],
-  ['plugins', 'Discover', FluentCompassIcon, FluentCompassFilledIcon],
-  ['me', 'Me', FluentPersonIcon, FluentPersonFilledIcon],
+  ['tasks', 'Tasks', IonChatbubbleIcon, IonChatbubbleFilledIcon],
+  ['peers', 'Peers', IonPeopleIcon, IonPeopleFilledIcon],
+  ['plugins', 'Discover', IonCompassIcon, IonCompassFilledIcon],
+  ['me', 'Me', IonPersonIcon, IonPersonFilledIcon],
 ]
 
 export function BottomNav({ useUi, useNav, actions }) {
@@ -134,7 +134,7 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
-/* The drawings are Fluent's 24px grid and carry their own 24px box (icons.js), so nothing
+/* The drawings carry their own 24px box (their grid is Ionicons' 512, icons.js), so nothing
    here sizes them; only the flex row's power to squeeze them is taken away. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-ink)}

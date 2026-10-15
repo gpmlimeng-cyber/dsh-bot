@@ -63,31 +63,33 @@ test('the four pages are named for a UI dump, tasks first', () => {
   assert.ok(nav.includes("h('span', { className: 'bt-nav-tab-text', 'aria-hidden': true }, t(label))"), 'the drawn label is translated too')
 })
 
-// The two states are two drawings of one shape, copied from Fluent -- not one drawing with a
-// heavier stroke, which is what the user ruled out. The data is byte-for-byte what
-// @fluentui/svg-icons ships, so it can be diffed against the package, and its licence
-// travels with it.
-test('each page is Fluent’s outline and Fluent’s fill, credited where they live', () => {
+// The two states are two drawings of one shape, copied from Ionicons -- not one drawing with
+// a heavier stroke, which is what the user ruled out. The data is byte-for-byte what the
+// package ships, so it can be diffed against it, and its licence travels with it.
+test('each page is Ionicons’ outline and Ionicons’ fill, credited where they live', () => {
   const icons = read('icons.js')
-  assert.ok(icons.includes('Fluent System Icons (MIT) · Copyright (c) 2020 Microsoft Corporation · @fluentui/svg-icons v1.1.344'), 'the MIT notice sits with the data')
+  assert.ok(icons.includes('Ionicons (MIT) · Copyright (c) 2015-present Ionic (http://ionic.io/) · ionicons v8.1.0'), 'the MIT notice sits with the artwork')
   const glyphs = [
-    ['M12 2a10 10 0 1 1-4.59 18.89L3.6 21.96', 'chat, the outline'],
-    ['M12 2a10 10 0 1 1-4.64 18.86l-4.3 1.12', 'chat, the solid one'],
-    ['M5.5 8a2.5 2.5 0 1 1 5 0', 'people, the outline'],
-    ['M8 12a4 4 0 1 0 0-8', 'people, the solid one'],
-    ['M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m0 1.5a8.5 8.5 0 1 0 0 17', 'compass, the outline'],
-    ['M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20M8.56 7.43', 'compass, the solid one'],
-    ['M17.75 14C19 14 20 15 20 16.25v.57', 'person, the outline'],
-    ['M17.75 14C19 14 20 15 20 16.25v.92', 'person, the solid one'],
+    ['M87.49 380c1.19-4.38-1.44-10.47', 'chatbubble, the outline'],
+    ['M76.83 480a25.69 25.69 0 0 1-25.57-25.74', 'chatbubble, the solid one'],
+    ['M402 168c-2.93 40.67-33.1 72-66 72', 'people, the outline'],
+    ['M336 256c-20.56 0-40.44-9.18-56-25.84', 'people, the solid one'],
+    ['M448 256c0-106-86-192-192-192', 'compass, the outline'],
+    ['M256 48C141.31 48 48 141.31 48 256', 'compass, the solid one'],
+    ['M344 144c-3.92 52.87-44 96-88 96', 'person, the outline'],
+    ['M332.64 64.58C313.18 43.57 286 32 256 32', 'person, the solid one'],
   ]
-  for (const [data, what] of glyphs) assert.ok(icons.includes(data), `${what} is @fluentui/svg-icons' own data`)
-  // Two frames, two families, and nothing hand-drawn: Lucide's stroke factory above, and
-  // Fluent's filled one here. Both are declared once.
-  assert.equal(icons.split("const fluentIcon = (d, box = FLUENT_NAV_BOX)").length - 1, 1, 'one Fluent factory')
-  assert.equal(icons.split('Fluent System Icons (MIT)').length - 1, 2, 'declared in the notice and in one comment')
-  for (const dead of ['LucideMessageReplyIcon', 'LucideUsersIcon', 'LucideCompassIcon', 'LucideUserRoundIcon', 'LUCIDE_NAV_BOX']) {
+  for (const [data, what] of glyphs) assert.ok(icons.includes(data), `${what} is ionicons' own artwork`)
+  // One factory for this family, declared once, on the grid Ionicons draws on -- and the
+  // family that stood in for it one round is gone, with its notice.
+  assert.equal(icons.split('const ionicon = (children, box = IONICON_BOX)').length - 1, 1, 'one Ionicons factory')
+  assert.ok(icons.includes("viewBox: '0 0 512 512', fill: 'currentColor'"), 'on Ionicons\' own 512 grid')
+  for (const dead of ['fluentIcon', 'FLUENT_NAV_BOX', 'FluentChatIcon', 'Fluent System Icons (MIT)', '@fluentui/svg-icons']) {
     assert.ok(!icons.includes(dead), `${dead} is gone with the family it belonged to`)
   }
+  // Nothing is pinned here: Ionicons' 32-unit stroke on a 512 grid is 1.5px at this box.
+  assert.ok(!icons.includes('non-scaling-stroke"...attributes'), 'the Lucide pinning is not copied here')
+  assert.ok(Math.abs(32 * 24 / 512 - 1.5) < 0.001, 'the outline weight lands on the skin\'s own 1.5px')
 })
 
 test('the tab on screen draws the filled one, and says so in the tree', () => {

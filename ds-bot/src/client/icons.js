@@ -1,6 +1,6 @@
 // Icons for the shell's own surfaces. What is not drawn here is copied, at the foot of the
 // file: the deliverables screens draw Lucide's glyphs, and the phone's bottom bar draws
-// Fluent's, each with its own notice.
+// Ionicons', each with its own notice.
 /*! Lucide (ISC) · path data from lucide-static v1.57.0 */
 import { createElement as h } from 'react'
 
@@ -168,38 +168,57 @@ export const LucideCopyIcon = lucideIcon([
 ], LUCIDE_MENU_BOX)
 export const LucideCheckIcon = lucideIcon([['path', { d: 'M20 6 9 17l-5-5' }]], LUCIDE_MENU_BOX)
 
-// --- Fluent System Icons (MIT) · Copyright (c) 2020 Microsoft Corporation · @fluentui/svg-icons v1.1.344 -----
-// The phone's bottom bar draws each of its four pages twice: the outline while the page is
-// not the current one, the solid drawing while it is. The platform's own pack is this
-// family -- it names its icons the same way (IconChatOutlineRegular, and the bar's own
-// back arrow was one) -- but it ships ten Filled glyphs in total (lib/types/icons/index.d.ts:
-// CheckCircle, Close, CloseCircle, Dislike, Like, Nowrap, Pin, Stop, TriangleRight, Wrap)
-// and not one of them is a page of ours, so no pair can be built out of it. Fluent publishes
-// every glyph in both weights, which is what makes the two states the same artwork at two
-// weights instead of one shape plus a thicker stroke.
+// --- Ionicons (MIT) · artwork from ionicons v8.1.0 --------------------------------
+// The four pages of the phone's bottom bar, in both weights: the outline while a page is
+// not the current one and the solid drawing while it is. The user's screenshots are this
+// set -- a solid bubble with its tail at the lower left, a compass, a round-headed figure --
+// and Ionicons publishes every glyph both ways, which is what the two states need. (The
+// platform's own pack is a different family and ships ten Filled glyphs, none of them a page
+// of ours; Fluent stood in for one round before the screenshots were readable as Ionicons.)
 //
-// Both weights are filled geometry -- the Regular file is the same drawing with its outline
-// turned into a ring -- so this frame carries no stroke and there is no line to pin: what
-// changes between the two states is the shape. One grid and one box, as with Lucide above:
-// the bar is 56px and its reference (the user's screenshot of another bar) draws its page
-// glyphs at about the grid's own 24px, so these are not measured against the pill's 13px.
+// A pair is two files: `X-outline.svg` strokes its path on the 512 grid and `X.svg` fills
+// one, so the frame carries the fill colour and each shape keeps the attributes its own file
+// gives it. Nothing is pinned: Ionicons' 32 units of stroke on this grid render 1.5px at the
+// 24px box the bar draws, which is the weight the rest of the skin's glyphs use.
 //
-// Fluent is MIT-licensed; its notice travels with its path data, in the form a bundler keeps:
-/*! Fluent System Icons (MIT) · Copyright (c) 2020 Microsoft Corporation · @fluentui/svg-icons v1.1.344 */
-const FLUENT_NAV_BOX = 24
-const fluentIcon = (d, box = FLUENT_NAV_BOX) => function FluentIcon() {
-  return h('svg', { width: box, height: box, viewBox: '0 0 24 24', fill: 'currentColor', 'aria-hidden': true }, h('path', { d }))
+// Ionicons is MIT-licensed; its notice travels with its artwork, in the form a bundler keeps:
+/*! Ionicons (MIT) · Copyright (c) 2015-present Ionic (http://ionic.io/) · ionicons v8.1.0 */
+const IONICON_BOX = 24
+const ionicon = (children, box = IONICON_BOX) => function Ionicon() {
+  return h('svg', { width: box, height: box, viewBox: '0 0 512 512', fill: 'currentColor', 'aria-hidden': true },
+    children.map(([tag, attributes], index) => h(tag, { key: index, ...attributes })))
 }
-// 任务: Fluent's chat bubble -- round, with its tail leaving at the lower left, which is the
-// shape the user's screenshot draws there.
-export const FluentChatIcon = fluentIcon('M12 2a10 10 0 1 1-4.59 18.89L3.6 21.96a1.25 1.25 0 0 1-1.54-1.54l1.06-3.83A10 10 0 0 1 12 2m0 1.5a8.5 8.5 0 0 0-7.43 12.64l.15.27-1.1 3.98 3.98-1.11.27.15A8.5 8.5 0 1 0 12 3.5M8.75 13h4.5a.75.75 0 0 1 .1 1.5h-4.6a.75.75 0 0 1-.1-1.5zh4.5zm0-3.5h6.5a.75.75 0 0 1 .1 1.5h-6.6a.75.75 0 0 1-.1-1.5zh6.5z')
-export const FluentChatFilledIcon = fluentIcon('M12 2a10 10 0 1 1-4.64 18.86l-4.3 1.12a.85.85 0 0 1-1.03-1.04l1.11-4.29A10 10 0 0 1 12 2m1.25 11h-4.6a.75.75 0 0 0 0 1.5h4.7a.75.75 0 0 0 0-1.5zm2-3.5h-6.6a.75.75 0 0 0 0 1.5h6.7a.75.75 0 0 0 0-1.5z')
-// 伙伴: ours to choose, since that screenshot's second tab is a scheduled-tasks page.
-export const FluentPeopleIcon = fluentIcon('M5.5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8m7.5 5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0M17 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6m-2.75 13.04q1.04.44 2.75.46c2.28 0 3.59-.7 4.3-1.56a3 3 0 0 0 .7-1.73v-.03c0-1.2-.97-2.18-2.18-2.18H14.1q.6.63.81 1.5h4.91a.7.7 0 0 1 .68.7l-.04.18q-.05.25-.32.6C19.8 17.42 18.97 18 17 18c-.98 0-1.67-.15-2.17-.34q-.14.62-.58 1.38M4.25 14C3.01 14 2 15 2 16.25v.28l.01.2q.02.21.1.53c.09.42.29.98.68 1.55C3.61 19.97 5.17 21 8 21s4.39-1.03 5.2-2.2a4.5 4.5 0 0 0 .8-2.27v-.28c0-1.24-1-2.25-2.25-2.25zm-.75 2.5v-.25c0-.41.34-.75.75-.75h7.5c.41 0 .75.34.75.75v.34l-.06.33c-.07.28-.2.65-.46 1.02-.5.71-1.56 1.56-3.98 1.56s-3.49-.85-3.98-1.56a3 3 0 0 1-.52-1.43')
-export const FluentPeopleFilledIcon = fluentIcon('M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8m9 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6M4.25 14C3.01 14 2 15 2 16.25v.25S2 21 8 21s6-4.5 6-4.5v-.25c0-1.24-1-2.25-2.25-2.25zM17 19.5a7 7 0 0 1-2.75-.46 5.5 5.5 0 0 0 .75-2.49v-.3c0-.87-.34-1.66-.9-2.25h5.7c1.22 0 2.2.98 2.2 2.2 0 0 0 3.3-5 3.3')
+// 任务: the bubble whose tail leaves at the lower left, as the screenshot draws it.
+export const IonChatbubbleIcon = ionicon([
+  ['path', { d: 'M87.49 380c1.19-4.38-1.44-10.47-3.95-14.86a45 45 0 0 0-2.54-3.8 199.8 199.8 0 0 1-33-110C47.65 139.09 140.73 48 255.83 48 356.21 48 440 117.54 459.58 209.85a199 199 0 0 1 4.42 41.64c0 112.41-89.49 204.93-204.59 204.93-18.3 0-43-4.6-56.47-8.37s-26.92-8.77-30.39-10.11a31.1 31.1 0 0 0-11.12-2.07 30.7 30.7 0 0 0-12.09 2.43l-67.83 24.48a16 16 0 0 1-4.67 1.22 9.6 9.6 0 0 1-9.57-9.74 16 16 0 0 1 .6-3.29Z', fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeMiterlimit: 10, strokeWidth: '32px' }],
+])
+export const IonChatbubbleFilledIcon = ionicon([
+  ['path', { d: 'M76.83 480a25.69 25.69 0 0 1-25.57-25.74 29.1 29.1 0 0 1 1.2-7.63L70.88 380c.77-2.46-.1-4.94-1.23-6.9l-.22-.4c-.08-.13-.46-.66-.73-1.05s-.58-.81-.86-1.22l-.19-.27A215.66 215.66 0 0 1 32 251.37c-.18-57.59 22.35-112 63.46-153.28C138 55.47 194.9 32 255.82 32A227.4 227.4 0 0 1 398 81.84c39.45 31.75 66.87 76 77.21 124.68a213.5 213.5 0 0 1 4.78 45c0 58.93-22.64 114.28-63.76 155.87-41.48 42-97.18 65.06-156.83 65.06-21 0-47.87-5.36-60.77-9-15.52-4.34-30.23-10-31.85-10.6a15.1 15.1 0 0 0-5.37-1 14.75 14.75 0 0 0-5.8 1.15l-.85.33-67.48 24.38A29.4 29.4 0 0 1 76.83 480m10.65-100' }],
+])
+// 伙伴: ours to choose -- that screenshot's second tab is a scheduled-tasks page.
+export const IonPeopleIcon = ionicon([
+  ['path', { d: 'M402 168c-2.93 40.67-33.1 72-66 72s-63.12-31.32-66-72c-3-42.31 26.37-72 66-72s69 30.46 66 72', fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '32px' }],
+  ['path', { d: 'M336 304c-65.17 0-127.84 32.37-143.54 95.41-2.08 8.34 3.15 16.59 11.72 16.59h263.65c8.57 0 13.77-8.25 11.72-16.59C463.85 335.36 401.18 304 336 304Z', fill: 'none', stroke: 'currentColor', strokeMiterlimit: 10, strokeWidth: '32px' }],
+  ['path', { d: 'M200 185.94c-2.34 32.48-26.72 58.06-53 58.06s-50.7-25.57-53-58.06C91.61 152.15 115.34 128 147 128s55.39 24.77 53 57.94', fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '32px' }],
+  ['path', { d: 'M206 306c-18.05-8.27-37.93-11.45-59-11.45-52 0-102.1 25.85-114.65 76.2-1.65 6.66 2.53 13.25 9.37 13.25H154', fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeMiterlimit: 10, strokeWidth: '32px' }],
+])
+export const IonPeopleFilledIcon = ionicon([
+  ['path', { d: 'M336 256c-20.56 0-40.44-9.18-56-25.84-15.13-16.25-24.37-37.92-26-61-1.74-24.62 5.77-47.26 21.14-63.76S312 80 336 80c23.83 0 45.38 9.06 60.7 25.52 15.47 16.62 23 39.22 21.26 63.63-1.67 23.11-10.9 44.77-26 61C376.44 246.82 356.57 256 336 256M467.83 432H204.18a27.71 27.71 0 0 1-22-10.67 30.22 30.22 0 0 1-5.26-25.79c8.42-33.81 29.28-61.85 60.32-81.08C264.79 297.4 299.86 288 336 288c36.85 0 71 9 98.71 26.05 31.11 19.13 52 47.33 60.38 81.55a30.27 30.27 0 0 1-5.32 25.78A27.68 27.68 0 0 1 467.83 432M147 260c-35.19 0-66.13-32.72-69-72.93-1.42-20.6 5-39.65 18-53.62 12.86-13.83 31-21.45 51-21.45s38 7.66 50.93 21.57c13.1 14.08 19.5 33.09 18 53.52-2.87 40.2-33.8 72.91-68.93 72.91M212.66 291.45c-17.59-8.6-40.42-12.9-65.65-12.9-29.46 0-58.07 7.68-80.57 21.62-25.51 15.83-42.67 38.88-49.6 66.71a27.39 27.39 0 0 0 4.79 23.36A25.32 25.32 0 0 0 41.72 400h111a8 8 0 0 0 7.87-6.57c.11-.63.25-1.26.41-1.88 8.48-34.06 28.35-62.84 57.71-83.82a8 8 0 0 0-.63-13.39c-1.57-.92-3.37-1.89-5.42-2.89' }],
+])
 // 发现: the compass the screenshot draws.
-export const FluentCompassIcon = fluentIcon('M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17M7.08 8.7c-.4-1.01.6-2.02 1.63-1.62l.2.09 3.75 1.42a4.8 4.8 0 0 1 2.75 2.75l.16.43 1.63 3.79a1.25 1.25 0 0 1-1.64 1.64l-3.76-1.61-.46-.18a4.8 4.8 0 0 1-2.75-2.75L7.21 9.03zm3 3.48c.32.8.95 1.44 1.74 1.78l.52.23 2.98 1.13-1.14-3-.22-.5a3.3 3.3 0 0 0-1.78-1.74L8.7 8.7z')
-export const FluentCompassFilledIcon = fluentIcon('M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20M8.56 7.43a.88.88 0 0 0-1.13 1.13l1.5 3.97a4.4 4.4 0 0 0 2.54 2.53l3.97 1.5a.88.88 0 0 0 1.13-1.12l-1.51-3.96a4.4 4.4 0 0 0-2.53-2.54z')
+export const IonCompassIcon = ionicon([
+  ['path', { d: 'M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192Z', fill: 'none', stroke: 'currentColor', strokeMiterlimit: 10, strokeWidth: '32px' }],
+  ['path', { d: 'm350.67 150.93-117.2 46.88a64 64 0 0 0-35.66 35.66l-46.88 117.2a8 8 0 0 0 10.4 10.4l117.2-46.88a64 64 0 0 0 35.66-35.66l46.88-117.2a8 8 0 0 0-10.4-10.4M256 280a24 24 0 1 1 24-24 24 24 0 0 1-24 24' }],
+])
+export const IonCompassFilledIcon = ionicon([
+  ['circle', { cx: 256, cy: 256, r: 24 }],
+  ['path', { d: 'M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208 208-93.31 208-208S370.69 48 256 48m105.07 113.33-46.88 117.2a64 64 0 0 1-35.66 35.66l-117.2 46.88a8 8 0 0 1-10.4-10.4l46.88-117.2a64 64 0 0 1 35.66-35.66l117.2-46.88a8 8 0 0 1 10.4 10.4' }],
+])
 // 我的: the round-headed figure the screenshot draws.
-export const FluentPersonIcon = fluentIcon('M17.75 14C19 14 20 15 20 16.25v.57c0 .9-.32 1.76-.9 2.44Q16.74 22.01 12 22q-4.74.01-7.1-2.74a3.8 3.8 0 0 1-.9-2.43v-.58C4 15 5.01 14 6.25 14zm0 1.5H6.25a.75.75 0 0 0-.75.75v.58c0 .53.2 1.05.54 1.46C7.3 19.76 9.26 20.5 12 20.5q4.09 0 5.96-2.21c.35-.41.54-.93.54-1.47v-.57a.75.75 0 0 0-.75-.75M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10m0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7')
-export const FluentPersonFilledIcon = fluentIcon('M17.75 14C19 14 20 15 20 16.25v.92q-.01.88-.5 1.6Q17.13 22 12 22q-5.15 0-7.49-3.24a2.8 2.8 0 0 1-.5-1.6v-.91C4 15 5 14 6.24 14zM12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10')
+export const IonPersonIcon = ionicon([
+  ['path', { d: 'M344 144c-3.92 52.87-44 96-88 96s-84.15-43.12-88-96c-4-55 35-96 88-96s92 42 88 96', fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '32px' }],
+  ['path', { d: 'M256 304c-87 0-175.3 48-191.64 138.6C62.39 453.52 68.57 464 80 464h352c11.44 0 17.62-10.48 15.65-21.4C431.3 352 343 304 256 304Z', fill: 'none', stroke: 'currentColor', strokeMiterlimit: 10, strokeWidth: '32px' }],
+])
+export const IonPersonFilledIcon = ionicon([
+  ['path', { d: 'M332.64 64.58C313.18 43.57 286 32 256 32c-30.16 0-57.43 11.5-76.8 32.38-19.58 21.11-29.12 49.8-26.88 80.78C156.76 206.28 203.27 256 256 256s99.16-49.71 103.67-110.82c2.27-30.7-7.33-59.33-27.03-80.6M432 480H80a31 31 0 0 1-24.2-11.13c-6.5-7.77-9.12-18.38-7.18-29.11C57.06 392.94 83.4 353.61 124.8 326c36.78-24.51 83.37-38 131.2-38s94.42 13.5 131.2 38c41.4 27.6 67.74 66.93 76.18 113.75 1.94 10.73-.68 21.34-7.18 29.11A31 31 0 0 1 432 480' }],
+])
