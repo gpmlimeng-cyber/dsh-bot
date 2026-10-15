@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 08a4213b
+// Source fingerprint: 6f20003a
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -6604,6 +6604,9 @@ function watchMobile() {
       window.addEventListener("focus", onViewport);
       window.addEventListener("blur", onViewport);
       document.addEventListener?.("visibilitychange", onViewport);
+      if (typeof MutationObserver === "function") {
+        new MutationObserver(() => publishKeyboard()).observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
+      }
     }
   }
   return mql?.matches === true;
@@ -16120,7 +16123,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "08a4213b" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "6f20003a" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

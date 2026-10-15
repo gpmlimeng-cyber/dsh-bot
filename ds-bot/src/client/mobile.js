@@ -230,6 +230,14 @@ export function watchMobile() {
       window.addEventListener('focus', onViewport)
       window.addEventListener('blur', onViewport)
       document.addEventListener?.('visibilitychange', onViewport)
+      // The shell writes its IME inset into the root's own style (--dsh-android-ime-bottom, the
+      // variable the whole skin reads for the keyboard), so the keyboard's transition is
+      // observable on the root itself: re-decide the flag the moment it moves. Without this the
+      // flag waits for the next viewport event, and on the device it was seen sitting stale for a
+      // few seconds after a keyboard closed -- the bar still away with the keyboard already gone.
+      if (typeof MutationObserver === 'function') {
+        new MutationObserver(() => publishKeyboard()).observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })
+      }
     }
   }
   return mql?.matches === true

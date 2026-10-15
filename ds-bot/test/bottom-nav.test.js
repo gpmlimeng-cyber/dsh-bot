@@ -217,6 +217,9 @@ test('the keyboard takes the bar and the room it reserved', () => {
   assert.ok(mobile.includes("delete document.documentElement.dataset.btKeyboard"), 'and taken back when it closes')
   assert.ok(mobile.includes("window.visualViewport?.addEventListener?.('resize'"), 'watched where the keyboard shows up')
   assert.ok(mobile.includes("window.addEventListener('focus', onViewport)") && mobile.includes("window.addEventListener('blur', onViewport)") && mobile.includes("document.addEventListener?.('visibilitychange', onViewport)"), 'and re-decided when the window is gained or lost, not only on a resize')
+  // The shell writes the inset into the root's own style, so the keyboard's own transition is
+  // observable: waiting for the next viewport event left the flag stale after the keyboard closed.
+  assert.ok(mobile.includes("new MutationObserver(() => publishKeyboard()).observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })"), 're-decided where the inset is written')
 })
 
 test('the bar has no frame at all, and wears the page colour', () => {
