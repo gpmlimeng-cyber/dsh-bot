@@ -19,37 +19,36 @@ const nav = code('nav-bar.js')
 const sidebar = code('sidebar.js')
 const styles = code('styles.js')
 
-// The groups, read out of the declaration rather than copied: the drawing order and the headings
-// are the page's own, and a row added or removed here has to be answered for in the assertions
-// below. A group opens with its own `['Heading', [` line; its rows follow indented under it.
-const groupsBlock = discover.slice(discover.indexOf('export const DISCOVER_GROUPS = ['), discover.indexOf('export const DISCOVER_HEADINGS'))
-const groups = []
-for (const line of groupsBlock.split('\n')) {
-  if (/^ {2}\['[^']+', \[$/.test(line)) { groups.push([]); continue }
-  const row = /^\s*\['([a-z]+)', '([^']+)', (\w+)\],$/.exec(line)
-  if (row && groups.length > 0) groups[groups.length - 1].push([row[1], row[2], row[3]])
+// The cards, read out of the declaration rather than copied: the drawing order and the grouping are
+// the page's own, and a row added or removed here has to be answered for in the assertions below.
+// A card opens with its own `[` line; its rows follow indented under it.
+const cardsBlock = discover.slice(discover.indexOf('export const DISCOVER_CARDS = ['), discover.indexOf('export const DISCOVER_ROWS'))
+const cards = []
+for (const line of cardsBlock.split('\n')) {
+  if (line.trim() === '[' || line.trim() === '[[') cards.push([])
+  const row = /\[['"]([a-z]+)['"], ['"]([^'"]+)['"], (\w+)\]/.exec(line)
+  if (row && cards.length > 0) cards[cards.length - 1].push([row[1], row[2], row[3]])
 }
-const headings = [...groupsBlock.matchAll(/^ {2}\['([^']+)', \[$/gm)].map(match => match[1])
-const rows = groups.flat()
+const rows = cards.flat()
 const panelRows = [...discover.slice(discover.indexOf('export const PANEL_ROWS')).match(/\[[^\]]*\]/)[0]
   .matchAll(/'([a-z]+)'/g)].map(match => match[1])
 
-test('the list is three groups of doors that already exist, one card each', () => {
-  // 插件 ｜ 连接与自动化 ｜ 模型与用量 -- the user's own grouping, in this order, one row per card.
-  assert.deepEqual(headings, ['Plugins', 'Connections & automation', 'Models & usage'], 'three headings, in order')
-  assert.deepEqual(groups.map(group => group.length), [1, 2, 1], '插件 heads a single row and still shows its heading')
+test('the list is three cards of doors that already exist, with no headings', () => {
+  // 插件 ｜ 连接器·自动化任务 ｜ 用量 -- the user's own grouping, in this order, one card per group.
+  assert.deepEqual(cards.map(card => card.length), [1, 2, 1], 'three cards, 1/2/1 rows')
   assert.deepEqual(rows.map(row => row[0]), ['plugins', 'connectors', 'schedules', 'usage'], 'the rows, in order')
   assert.deepEqual(rows.map(row => row[1]), ['Plugin manager', 'Connectors', 'Automation tasks', 'Usage'], 'named by the screens they open')
+  // No heading anywhere: the grouping is the card, so the page draws no heading element of its own
+  // and keeps no heading copy in the dictionary.
+  assert.ok(!discover.includes('grouphead'), 'no heading is drawn')
+  assert.ok(!discover.includes("'Models & usage'") && !discover.includes('Models & usage'), 'and no heading copy is left in the page')
+  assert.ok(!('Models & usage' in DICTIONARY.zh), 'nor in the dictionary')
   // 模型 and Agent 预设 are the two the user asked for that have no door of ours: the model chooser
   // is per Bot (and per Session), inside a Bot's own menu, and the only preset in the skin is that
   // Bot's permission preset, inside its settings. They are left out rather than drawn as buttons
-  // that go nowhere -- the group is here, with the row that does have a screen, while it is asked.
+  // that go nowhere -- their card keeps the row that does have a screen, while it is asked.
   assert.ok(!discover.includes('Agent preset'), 'no dead Agent 预设 row')
   assert.ok(!rows.some(row => row[0] === 'models'), 'and no dead 模型 row')
-  // Every heading is a translated string of its own, and the heading is drawn for every group --
-  // the one-row group included.
-  assert.ok(discover.includes("h('div', { className: 'bt-discover-grouphead' }, t(heading))"), 'the heading is drawn per group, in the dictionary\'s words')
-  for (const heading of headings) assert.ok(heading in DICTIONARY.zh, `${heading} has a Chinese string`)
   // Every icon is Fluent artwork the skin carries, from the one icon module -- not a line drawing
   // of ours, and not a name without a definition behind it.
   assert.ok(discover.includes("} from './icons.js'"), 'the icons come from icons.js')
@@ -113,32 +112,31 @@ test('the second level carries the strip a shell panel does not draw', () => {
   assert.ok(discover.includes('.bt-subback-btn>svg{width:22px;height:22px}'), 'and its glyph 22px')
 })
 
-test('a row is a card of its own, from the shared surface', () => {
+test('a card is one surface, and one hairline separates its rows', () => {
   // The card, not the row, carries the skin: the same card surface the composer and the floating
   // controls wear, and the one shadow token they both read.
   const card = discover.slice(discover.indexOf('.bt-discover-card{'), discover.indexOf('.bt-discover-row{'))
   assert.ok(card.includes('border-radius:16px'), 'rounded like the reference')
   assert.ok(card.includes('background:var(--bt-card)'), 'on the card colour')
   assert.ok(card.includes('box-shadow:var(--bt-float-shadow)'), 'the one shared shadow, not a value of its own')
-  assert.ok(card.includes('overflow:hidden'), 'and it clips its row, so a row\'s tint stops at its corners')
+  assert.ok(card.includes('overflow:hidden'), 'and it clips its rows, so the ends follow its corners')
   const row = discover.slice(discover.indexOf('.bt-discover-row{'), discover.indexOf('.bt-discover-row:hover'))
   assert.ok(row.includes('min-height:56px'), 'a row is 56px')
   assert.ok(row.includes('background:none'), 'the row adds no surface of its own')
-  // Nothing is shared between rows any more: one row per card means there is no divider to draw,
-  // and the rule that drew one is gone rather than left behind unused.
-  assert.ok(!discover.includes('::before'), 'no hairline is drawn between rows')
-  assert.ok(!discover.includes('--bt-line-weak'), 'and no line token is read here')
-  // The spacing is the grouping: 16px between two groups, 8px between the cards inside one, so a
-  // heading reads as belonging to the cards under it.
-  assert.ok(discover.includes('.bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:16px'), '16px between groups')
-  assert.ok(discover.includes('.bt-discover-group{display:flex;flex-direction:column;gap:8px}'), '8px between the cards of one group')
-  assert.ok(discover.includes('.bt-discover-card{flex:none;'), 'a card takes the width it is given')
-  // The heading is the skin's small grey line: the muted ink, 13px, and no surface of its own.
-  const head = discover.split('\n').find(line => line.includes('.bt-discover-grouphead{'))
-  assert.ok(head, 'the heading has a rule')
-  assert.ok(head.includes('color:var(--bt-ink-3)'), 'in the muted ink')
-  assert.ok(head.includes('font-size:13px'), 'at the small size')
-  assert.ok(!head.includes('background:'), 'with no surface of its own')
+  assert.ok(row.includes('position:relative'), 'and it is the hairline\'s origin')
+  // The hairline is drawn rather than a border: a border would run the card's whole width and meet
+  // both edges, and it must start at the icon and stop short of them. Colour: the skin's own
+  // lightest line token -- no new grey is written here.
+  const line = discover.split('\n').find(entry => entry.includes('.bt-discover-row+.bt-discover-row::before'))
+  assert.ok(line, 'the hairline between two rows has its rule')
+  assert.ok(line.includes('left:12px') && line.includes('right:12px'), 'inset from both edges, starting at the icon')
+  assert.ok(!line.includes('left:0') && !line.includes('right:0'), 'and never reaching them')
+  assert.ok(line.includes('background:var(--bt-line-weak)'), 'in the shared faint-line token')
+  assert.ok(read('styles.js').includes('--bt-line-weak:'), 'which the skin declares')
+  assert.ok(!/#[0-9a-f]{3,8}|rgba?\(/i.test(line), 'with no colour of its own')
+  // The grouping is the card and nothing else: 8px between two cards, no heading, no wrapper.
+  assert.ok(discover.includes('.bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px'), '8px between cards')
+  assert.ok(!discover.includes('.bt-discover-group'), 'and no group wrapper or heading to carry the grouping')
   assert.ok(discover.includes('.bt-discover-icon svg{width:20px;height:20px}'), 'the icon is 20px')
   assert.ok(discover.includes('.bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}'), 'drawn in the ink, not the muted one')
   assert.ok(discover.includes('.bt-discover-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}'), 'the chevron a shade lighter, at the row\'s far end')

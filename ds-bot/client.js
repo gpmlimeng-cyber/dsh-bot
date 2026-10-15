@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 30e49b70
+// Source fingerprint: fd1c2d55
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -66,10 +66,6 @@ var ZH = {
   // The 发现 page and the tab that opens it (nav-bar.js, discover-page.js) are one page, so they
   // carry one name: "Discover". 插件 is the first row of that page's list, never the page itself.
   Discover: "发现",
-  // The headings of that page's three groups (discover-page.js): 插件 heads the row that opens the
-  // plugin manager, and the other two read the way the settings dialog already groups its pages.
-  Plugins: "插件",
-  "Models & usage": "模型与用量",
   "Plugin manager": "插件",
   Me: "我的",
   Pages: "页面",
@@ -16169,20 +16165,19 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/discover-page.js
 var import_react41 = require("react");
 var import_react_dom14 = require("react-dom");
-var DISCOVER_GROUPS = [
-  ["Plugins", [
+var DISCOVER_CARDS = [
+  [
     ["plugins", "Plugin manager", FluentPuzzlePieceIcon]
-  ]],
-  ["Connections & automation", [
+  ],
+  [
     ["connectors", "Connectors", FluentPlugConnectedIcon],
     ["schedules", "Automation tasks", FluentClockIcon]
-  ]],
-  ["Models & usage", [
+  ],
+  [
     ["usage", "Usage", FluentDataUsageIcon]
-  ]]
+  ]
 ];
-var DISCOVER_HEADINGS = DISCOVER_GROUPS.map(([heading]) => heading);
-var DISCOVER_ROWS = DISCOVER_GROUPS.flatMap(([, rows]) => rows);
+var DISCOVER_ROWS = DISCOVER_CARDS.flat();
 var PANEL_ROWS = ["plugins", "schedules"];
 function DiscoverPage({ useUi, actions }) {
   const open = useUi((value) => value.discover === true);
@@ -16194,33 +16189,25 @@ function DiscoverPage({ useUi, actions }) {
     "div",
     { className: "bt-discover", role: "region", "aria-label": t("Discover"), style: { left: paneLeft } },
     (0, import_react41.createElement)("div", { className: "bt-discover-head" }, (0, import_react41.createElement)("h2", { className: "bt-discover-title" }, t("Discover"))),
-    (0, import_react41.createElement)("div", { className: "bt-discover-list", role: "list" }, DISCOVER_GROUPS.map(([heading, rows]) => (0, import_react41.createElement)(
+    (0, import_react41.createElement)("div", { className: "bt-discover-list", role: "list" }, DISCOVER_CARDS.map((rows, card) => (0, import_react41.createElement)(
       "div",
       {
-        key: heading,
-        className: "bt-discover-group",
+        key: `card:${card}`,
+        className: "bt-discover-card",
         role: "presentation"
       },
-      (0, import_react41.createElement)("div", { className: "bt-discover-grouphead" }, t(heading)),
       rows.map(([key, label, Icon]) => (0, import_react41.createElement)(
-        "div",
+        "button",
         {
           key,
-          className: "bt-discover-card",
-          role: "presentation"
+          type: "button",
+          className: "bt-discover-row",
+          "data-row": key,
+          onClick: () => actions.openDiscoverRow(key)
         },
-        (0, import_react41.createElement)(
-          "button",
-          {
-            type: "button",
-            className: "bt-discover-row",
-            "data-row": key,
-            onClick: () => actions.openDiscoverRow(key)
-          },
-          (0, import_react41.createElement)("span", { className: "bt-discover-icon", "aria-hidden": true }, (0, import_react41.createElement)(Icon)),
-          (0, import_react41.createElement)("span", { className: "bt-discover-name" }, t(label)),
-          (0, import_react41.createElement)("span", { className: "bt-discover-go", "aria-hidden": true }, (0, import_react41.createElement)(ChevronRightIcon))
-        )
+        (0, import_react41.createElement)("span", { className: "bt-discover-icon", "aria-hidden": true }, (0, import_react41.createElement)(Icon)),
+        (0, import_react41.createElement)("span", { className: "bt-discover-name" }, t(label)),
+        (0, import_react41.createElement)("span", { className: "bt-discover-go", "aria-hidden": true }, (0, import_react41.createElement)(ChevronRightIcon))
       ))
     )))
   ), document.body);
@@ -16253,17 +16240,18 @@ html[data-bt-mobile] .bt-discover{position:fixed;inset:0;z-index:79;display:flex
 html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
 html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}
 html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
-html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:16px;overflow-y:auto;overscroll-behavior:contain}
-/* A group is a heading and the cards under it: 8px between the cards, the list's own 16px between
-   two groups, so the heading reads as belonging to what follows rather than to what came before. */
-html[data-bt-mobile] .bt-discover-group{display:flex;flex-direction:column;gap:8px}
-html[data-bt-mobile] .bt-discover-grouphead{padding:0 4px;color:var(--bt-ink-3);font-size:13px;line-height:18px}
-/* A row is its own card: the same surface the composer's card and the floating controls wear, from
-   the one shadow token. The list's 8px gap is the space between two cards, and the row clips its
-   own tint at the card's corners. */
+html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain}
+/* A card is one group of rows: the same surface the composer's card and the floating controls wear,
+   from the one shadow token, and the list's 8px gap is the space between two cards. It clips its
+   rows so the first and last follow its corners, which is also what keeps a row's own tint off the
+   radius. No heading: the grouping is the card, and the rows inside it share the surface. */
 html[data-bt-mobile] .bt-discover-card{flex:none;overflow:hidden;border-radius:16px;background:var(--bt-card);box-shadow:var(--bt-float-shadow)}
-html[data-bt-mobile] .bt-discover-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:0;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
+html[data-bt-mobile] .bt-discover-row{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:0;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-discover-row:hover{background:var(--bt-hover)}
+/* The hairline between two rows of one card. It is drawn, not a border, because it must start at
+   the icon's own edge and stop short of the card's: a border would run the full width and meet
+   both edges. The colour is the skin's lightest line token -- no new grey lives here. */
+html[data-bt-mobile] .bt-discover-row+.bt-discover-row::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
 html[data-bt-mobile] .bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}
 html[data-bt-mobile] .bt-discover-icon svg{width:20px;height:20px}
 html[data-bt-mobile] .bt-discover-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -16278,7 +16266,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "30e49b70" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "fd1c2d55" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

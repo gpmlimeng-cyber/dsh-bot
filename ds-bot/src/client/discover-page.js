@@ -14,34 +14,30 @@ import { useEscape, usePaneLeft } from './overlay-hooks.js'
 import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
 
-// The groups, in the order they are drawn, each with its own small grey heading and one row per
-// card under it -- the user drew the list that way: a heading, then a white card for every row
-// (the reference's 资料库 / 专家 / 技能 ...). The heading with a single row under it is kept as it
-// is: a group is a group however short it is, and the day a row has a door it has a home.
+// The cards, in the order they are drawn, and the rows inside each one: key, label, icon. A card is
+// one group the user reads as one block -- no heading, one surface, one hairline between the rows
+// (the CSS below) -- so the grouping is the card itself: 插件 ｜ 连接器·自动化任务 ｜ 用量.
 //
 // Only rows whose door this skin can already open are here. 模型 and Agent 预设 have none of ours:
 // the model chooser is per Bot (and per Session) and lives inside a Bot's own menu, and the only
 // "preset" anywhere is that Bot's permission preset, also inside its settings. They are left out
-// rather than drawn as buttons that go nowhere.
-export const DISCOVER_GROUPS = [
-  ['Plugins', [
+// rather than drawn as buttons that go nowhere, and the card keeps the rows that do have a screen.
+export const DISCOVER_CARDS = [
+  [
     ['plugins', 'Plugin manager', FluentPuzzlePieceIcon],
-  ]],
-  ['Connections & automation', [
+  ],
+  [
     ['connectors', 'Connectors', FluentPlugConnectedIcon],
     ['schedules', 'Automation tasks', FluentClockIcon],
-  ]],
-  ['Models & usage', [
+  ],
+  [
     ['usage', 'Usage', FluentDataUsageIcon],
-  ]],
+  ],
 ]
-
-// The heading of each group, in drawing order, for the copy check.
-export const DISCOVER_HEADINGS = DISCOVER_GROUPS.map(([heading]) => heading)
 
 // The same list without its grouping, in drawing order, for anything that only asks which rows
 // exist. Exported so the list can be checked without a DOM.
-export const DISCOVER_ROWS = DISCOVER_GROUPS.flatMap(([, rows]) => rows)
+export const DISCOVER_ROWS = DISCOVER_CARDS.flat()
 
 // The rows whose door is a shell panel: those are the ones that need a back of ours (see below).
 export const PANEL_ROWS = ['plugins', 'schedules']
@@ -54,20 +50,16 @@ export function DiscoverPage({ useUi, actions }) {
   if (!open || !mobile) return null
   return createPortal(h('div', { className: 'bt-discover', role: 'region', 'aria-label': t('Discover'), style: { left: paneLeft } },
     h('div', { className: 'bt-discover-head' }, h('h2', { className: 'bt-discover-title' }, t('Discover'))),
-    h('div', { className: 'bt-discover-list', role: 'list' }, DISCOVER_GROUPS.map(([heading, rows]) => h('div', {
-      key: heading, className: 'bt-discover-group', role: 'presentation',
+    h('div', { className: 'bt-discover-list', role: 'list' }, DISCOVER_CARDS.map((rows, card) => h('div', {
+      key: `card:${card}`, className: 'bt-discover-card', role: 'presentation',
     },
-    h('div', { className: 'bt-discover-grouphead' }, t(heading)),
-    rows.map(([key, label, Icon]) => h('div', {
-      key, className: 'bt-discover-card', role: 'presentation',
-    },
-    h('button', {
-      type: 'button', className: 'bt-discover-row', 'data-row': key,
+    rows.map(([key, label, Icon]) => h('button', {
+      key, type: 'button', className: 'bt-discover-row', 'data-row': key,
       onClick: () => actions.openDiscoverRow(key),
     },
     h('span', { className: 'bt-discover-icon', 'aria-hidden': true }, h(Icon)),
     h('span', { className: 'bt-discover-name' }, t(label)),
-    h('span', { className: 'bt-discover-go', 'aria-hidden': true }, h(ChevronRightIcon))))))))), document.body)
+    h('span', { className: 'bt-discover-go', 'aria-hidden': true }, h(ChevronRightIcon)))))))), document.body)
 }
 
 // The strip a second-level panel carries. The plugin manager and the automation tasks page are
@@ -100,17 +92,18 @@ html[data-bt-mobile] .bt-discover{position:fixed;inset:0;z-index:79;display:flex
 html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
 html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}
 html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
-html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:16px;overflow-y:auto;overscroll-behavior:contain}
-/* A group is a heading and the cards under it: 8px between the cards, the list's own 16px between
-   two groups, so the heading reads as belonging to what follows rather than to what came before. */
-html[data-bt-mobile] .bt-discover-group{display:flex;flex-direction:column;gap:8px}
-html[data-bt-mobile] .bt-discover-grouphead{padding:0 4px;color:var(--bt-ink-3);font-size:13px;line-height:18px}
-/* A row is its own card: the same surface the composer's card and the floating controls wear, from
-   the one shadow token. The list's 8px gap is the space between two cards, and the row clips its
-   own tint at the card's corners. */
+html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain}
+/* A card is one group of rows: the same surface the composer's card and the floating controls wear,
+   from the one shadow token, and the list's 8px gap is the space between two cards. It clips its
+   rows so the first and last follow its corners, which is also what keeps a row's own tint off the
+   radius. No heading: the grouping is the card, and the rows inside it share the surface. */
 html[data-bt-mobile] .bt-discover-card{flex:none;overflow:hidden;border-radius:16px;background:var(--bt-card);box-shadow:var(--bt-float-shadow)}
-html[data-bt-mobile] .bt-discover-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:0;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
+html[data-bt-mobile] .bt-discover-row{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:0;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-discover-row:hover{background:var(--bt-hover)}
+/* The hairline between two rows of one card. It is drawn, not a border, because it must start at
+   the icon's own edge and stop short of the card's: a border would run the full width and meet
+   both edges. The colour is the skin's lightest line token -- no new grey lives here. */
+html[data-bt-mobile] .bt-discover-row+.bt-discover-row::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
 html[data-bt-mobile] .bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}
 html[data-bt-mobile] .bt-discover-icon svg{width:20px;height:20px}
 html[data-bt-mobile] .bt-discover-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
