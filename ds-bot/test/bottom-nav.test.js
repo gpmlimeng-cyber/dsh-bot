@@ -353,7 +353,9 @@ test('the status bar\'s join is softened by a band that takes no taps', () => {
   assert.ok(band.includes('top:0'), 'the strip starts at the screen edge, over the status bar')
   assert.ok(band.includes('height:var(--bt-fade-h'), 'as tall as the token, which reaches the pill row')
   assert.ok(!band.includes('+ 56px'), 'the number lives in the one definition, not here')
-  assert.ok(band.includes('background:linear-gradient(to bottom,var(--bt-main),transparent)'), 'one ramp from the top: the words stay half-visible through it, status bar row included')
+  assert.ok(band.includes('background:linear-gradient(to bottom,var(--bt-main) 0'), 'solid at the screen edge, so the very top row reads through nothing')
+  assert.ok(band.includes('var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) / 2'), 'solid for half the status bar, from the same token the inset is')
+  assert.ok(band.includes('transparent var(--bt-fade-h))'), 'then one ramp to nothing at the strip\'s own foot')
   assert.ok(!band.includes('calc(100% - 10px)'), 'with no step inside the ramp')
     // The tint is all of it: the user asked to read the text under the strip, not to see it smeared.
   assert.ok(!band.includes('backdrop-filter'), 'no blur, so what passes under stays legible')

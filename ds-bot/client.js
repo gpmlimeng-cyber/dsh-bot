@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: e427321e
+// Source fingerprint: 91eb7abd
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3773,13 +3773,13 @@ function installCompiledStyles(text, tag) {
 }
 
 // src/client/status-bar.js
-var statusBarMode = (page) => ["solid", page, "auto"];
-function publishStatusBarMode(report, mode = statusBarMode("#fcfcfc")) {
+var STATUS_BAR_MODE = ["transparent", "", "auto"];
+function publishStatusBarMode(report) {
   if (typeof window === "undefined") return false;
   const bridge = window.dshStatusBarBridge;
   if (bridge === null || typeof bridge !== "object" || typeof bridge.set !== "function") return false;
   try {
-    bridge.set(...mode);
+    bridge.set(...STATUS_BAR_MODE);
     return true;
   } catch (error) {
     if (typeof report === "function") report(error);
@@ -3788,12 +3788,12 @@ function publishStatusBarMode(report, mode = statusBarMode("#fcfcfc")) {
 }
 var ASK_AGAIN_MS = [250, 750, 2e3, 4e3];
 var ladderScheduled = false;
-function askForStatusBar(report, mode) {
-  const landed = publishStatusBarMode(report, mode);
+function askForStatusBar(report) {
+  const landed = publishStatusBarMode(report);
   if (!ladderScheduled) {
     ladderScheduled = true;
     for (const delay of ASK_AGAIN_MS) setTimeout(() => {
-      publishStatusBarMode(report, mode);
+      publishStatusBarMode(report);
     }, delay);
   }
   return landed;
@@ -15950,11 +15950,12 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-fade-h:calc(var(--bt
    56px back, so there is nothing for a frost to show through. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-main);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* The strip over the status bar. Once the shell hands the surface over (status-bar.js asks it
-   to), content scrolls under the system bars, and this is one continuous veil over it: the
-   page's own colour from the screen edge, thinning to nothing by --bt-fade-h. It starts at full
-   strength rather than part-way so that the words scrolling under it stay readable through it --
-   the user asked to see them half-visible in the status bar row too ("状态栏我希望也能看到半透明的
-   文字"), the opposite of the version that was opaque up to the status bar's own height.
+   to), content scrolls under the system bars, and this is the veil over it: the page's own colour
+   at full strength for the first half of the status bar's height, then thinning to nothing by
+   --bt-fade-h. The head is solid so nothing reads through the very top row, and the fade below it
+   keeps the words half-visible as they scroll up -- the user asked for a little more opacity at
+   the top ("状态栏只是稍微调整透明度"), not for the row to be painted out entirely, which is what
+   the version that stayed solid to --bt-top-inset did.
    The height is --bt-fade-h: the pill row's lower edge plus a 6px margin, so the veil covers
    the controls' own band and ends just past it. The bar draws over it (95 against 94), so the
    controls themselves are never tinted -- only what scrolls under them.
@@ -15967,7 +15968,7 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
    It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
    while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
    (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
-html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main),transparent)}
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main) 0,var(--bt-main) calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) / 2),transparent var(--bt-fade-h))}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}
@@ -16149,7 +16150,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "e427321e" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "91eb7abd" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16422,10 +16423,6 @@ function apply(ctx) {
     render();
     const offRoster = roster.subscribe(render);
     const offRegistry = registry.subscribe(render);
-    const darkWatch2 = new MutationObserver(() => {
-      render();
-    });
-    darkWatch2.observe(document.body, { attributes: true, attributeFilter: ["data-ds-dark-theme"] });
     return () => {
       offRoster();
       offRegistry();
@@ -16444,7 +16441,7 @@ function apply(ctx) {
       const accent = isHex(prefs.accent) ? prefs.accent : void 0;
       const motion = prefs.motion === "quiet" || prefs.motion === "lively" ? prefs.motion : "normal";
       document.body.dataset.btMotion = motion;
-      askForStatusBar(quietly("status bar"), statusBarMode((document.body.hasAttribute("data-ds-dark-theme") ? themes[id].dark : themes[id].light).bg));
+      askForStatusBar(quietly("status bar"));
       const next = `${id}|${accent ?? ""}|${motion}|${registry.getSnapshot()}`;
       if (next === key) return;
       key = next;
@@ -16465,7 +16462,6 @@ function apply(ctx) {
     return () => {
       offRoster();
       offRegistry();
-      darkWatch.disconnect();
       try {
         if (typeof releaseTokens === "function") releaseTokens();
       } finally {

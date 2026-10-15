@@ -5,7 +5,7 @@ import { countCards, createSource, EMPTY_ROSTER, indexRoster, isAgentSession } f
 import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
 import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
-import { askForStatusBar, statusBarMode } from './status-bar.js'
+import { askForStatusBar } from './status-bar.js'
 import { lookOf } from './mark.js'
 import { TeamSidebar, ConnectPlugins, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts } from './sidebar.js'
 import { HeaderPill } from './header.js'
@@ -310,10 +310,6 @@ export function apply(ctx) {
     render()
     const offRoster = roster.subscribe(render)
     const offRegistry = registry.subscribe(render)
-    // The platform flips dark mode on <body> on its own; the strip the shell paints is the theme's
-    // colour, so it has to be asked again with the new one.
-    const darkWatch = new MutationObserver(() => { render() })
-    darkWatch.observe(document.body, { attributes: true, attributeFilter: ['data-ds-dark-theme'] })
     return () => { offRoster(); offRegistry(); style.remove() }
   }
 
@@ -331,12 +327,12 @@ export function apply(ctx) {
       const accent = isHex(prefs.accent) ? prefs.accent : undefined
       const motion = prefs.motion === 'quiet' || prefs.motion === 'lively' ? prefs.motion : 'normal'
       document.body.dataset.btMotion = motion
-      // The status bar is the shell's to paint and the page asks it to paint the page's own
-      // colour, so the strip above cannot disagree with what is under it (status-bar.js); the
-      // colour is this theme's, and the page's own design colour is what every surface below
-      // reads too. The ask is repeated while the bridge is missing, because the theme renders as
-      // the plugin applies and the shell may inject the object after that.
-      askForStatusBar(quietly('status bar'), statusBarMode((document.body.hasAttribute('data-ds-dark-theme') ? themes[id].dark : themes[id].light).bg))
+      // The status bar is the shell's to paint, and the page's top strip is drawn from the
+      // page's own colour (nav-bar.js), so the ask is the whole of it: the band is handed over
+      // and nothing is read back. The ask is repeated while the bridge is missing, because the
+      // theme renders as the plugin applies and the shell may inject the object after that
+      // (status-bar.js).
+      askForStatusBar(quietly('status bar'))
       const next = `${id}|${accent ?? ''}|${motion}|${registry.getSnapshot()}`
       if (next === key) return
       key = next
@@ -354,7 +350,6 @@ export function apply(ctx) {
     return () => {
       offRoster()
       offRegistry()
-      darkWatch.disconnect()
       try {
         if (typeof releaseTokens === 'function') releaseTokens()
       } finally {

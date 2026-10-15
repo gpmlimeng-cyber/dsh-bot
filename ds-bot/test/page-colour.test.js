@@ -171,7 +171,8 @@ test('the strip fades out of the page\'s own colour, and the shell\'s is never r
   assert.ok(!index.includes('--bt-shell-bg') && !index.includes('publishShellBackground'), 'and nothing wires one')
   // The strip is the page's own colour thinning to nothing -- never the shell's: the page's
   // design colour is the one it fades out of.
-  assert.ok(nav.includes('linear-gradient(to bottom,var(--bt-main),transparent)'), 'the strip fades out of the page\'s own colour, from the top edge')
+  assert.ok(nav.includes('linear-gradient(to bottom,var(--bt-main) 0'), 'the strip is the page\'s own colour, solid at the top edge')
+  assert.ok(nav.includes('transparent var(--bt-fade-h))'), 'and fades to nothing at its own foot')
   assert.ok(read('themes.js').includes("light: { bg: '#fcfcfc', sidebar: '#fcfcfc'"), 'and the page keeps the design colour')
 })
 
