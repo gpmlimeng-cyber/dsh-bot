@@ -138,7 +138,7 @@ test('the page colour is read from the shell, in the light theme, with the sampl
   // --bt-main / --bt-sidebar follows in one step; the palette's sample stands as the fallback.
   // The shell colour feeds the top fade and nothing else: the page's own colour is the design's.
   assert.ok(!styles.includes('--bt-main:var(--bt-shell-bg)'), 'the shell colour does not decide the page colour')
-  assert.ok(nav.includes('color-mix(in srgb,var(--bt-shell-bg,var(--bt-main)) 72%,transparent)'), 'it is the frosted strip\'s tint')
+  assert.ok(nav.includes('color-mix(in srgb,var(--bt-main) 72%,transparent)'), 'it is the frosted strip\'s tint')
   assert.ok(read('themes.js').includes("light: { bg: '#fcfcfc', sidebar: '#fcfcfc'"), 'and the page keeps the design colour')
   // Wired where the theme is applied, and watched: the platform rewrites that declaration on
   // its own, and the watch lives on <html> where the declaration is.

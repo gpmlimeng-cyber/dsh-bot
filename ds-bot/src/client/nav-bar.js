@@ -138,16 +138,16 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe
    56px back, so there is nothing for a frost to show through. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-main);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* The strip over the status bar. Once the shell hands the surface over (status-bar.js asks it
-   to), content scrolls under the system bars, and this is what keeps it legible: a frosted
-   layer as tall as the status bar, then a 10px fade so the strip has no bottom edge. The tint
-   is the page's own colour at 72%. While an older shell still paints its own band the tint
-   starts from that colour instead -- which is what softens the join there -- and once nothing
-   is left to read it is the page's own colour, i.e. invisible over nothing.
+   to), content scrolls under the system bars, and this is what keeps it legible. The tint is
+   the page's own colour at 72% at the very top, fading to nothing across the whole strip --
+   not a solid band with a fade tacked onto its last 10px, which reads as a step rather than a
+   gradient, which is what the user pointed at. The height is the status bar plus the 10px it
+   needs to land on nothing, and the blur covers all of it.
 
    It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
    while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
    (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
-html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);z-index:94;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-shell-bg,var(--bt-main)) 72%,transparent) calc(100% - 10px),transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);z-index:94;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 72%,transparent),transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}
