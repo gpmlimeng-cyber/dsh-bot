@@ -23,17 +23,25 @@
 // two pages must never stack.
 import { createElement as h } from 'react'
 import { createPortal } from 'react-dom'
-import { ChatsIcon, GearIcon, PeopleIcon, PlugIcon } from './icons.js'
+import { LucideCompassIcon, LucideMessageReplyIcon, LucideUserRoundIcon, LucideUsersIcon } from './icons.js'
 import { useMobile, usePortrait } from './mobile.js'
 import { t } from './i18n.js'
 
 // Order on screen, left to right: the tasks first. The labels are the accessible names —
-// a real-device UI dump reads them, and so does a screen reader.
+// a real-device UI dump reads them, and so does a screen reader — and they are translated
+// at render time like every other string here, so the bar names its pages in the language
+// the rest of the interface is in (Chinese must not be hard-coded into the labels).
+//
+// The glyphs are Lucide's copied data, on the grid every other glyph in this skin is on
+// (icons.js): 任务 takes Lucide's reply bubble, whose tail leaves at the lower left with a
+// leftward arrow inside, and 发现/我的 take its compass and round-headed user — the three
+// shapes the user's screenshot draws. 伙伴 takes the same set's users: that screenshot's
+// second tab is a scheduled-tasks page, so there is no shape of its own to copy.
 const TABS = [
-  ['tasks', 'Tasks', ChatsIcon],
-  ['peers', 'Peers', PeopleIcon],
-  ['plugins', 'Discover', PlugIcon],
-  ['me', 'Me', GearIcon],
+  ['tasks', 'Tasks', LucideMessageReplyIcon],
+  ['peers', 'Peers', LucideUsersIcon],
+  ['plugins', 'Discover', LucideCompassIcon],
+  ['me', 'Me', LucideUserRoundIcon],
 ]
 
 export function BottomNav({ useUi, useNav, actions }) {
@@ -113,11 +121,15 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
-/* The icons this skin already draws are 15px line glyphs (icons.js, lineIcon), so the tab
-   sizes them up; the stroke scales with the box and stays a hairline, the same as the
-   24px settings rows do on a phone. */
-html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none;width:22px;height:22px}
-html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-accent)}
+/* The glyphs are Lucide's 24px grid and carry their own 24px box (icons.js), so nothing
+   here sizes them; only the flex row's power to squeeze them is taken away. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-ink)}
+/* The selected page is the ink of the tab bar's own text at its heavier weight, not the
+   accent: the screenshot the user asked for draws its selected page in black and its
+   unselected ones in a light grey, and an accent-blue tab beside a black one would read as
+   two different states. --bt-ink is that black, and follows the theme in the dark one. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active] .bt-nav-tab-text{font-weight:600}
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab-text{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* The conversation column gives the bar its height back. centerCol is a stretched grid
    item with overflow:hidden, so its own padding is what shortens the column: the

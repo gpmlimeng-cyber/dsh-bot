@@ -4015,6 +4015,26 @@ var LucideCopyIcon = lucideIcon([
   ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" }]
 ], LUCIDE_MENU_BOX);
 var LucideCheckIcon = lucideIcon([["path", { d: "M20 6 9 17l-5-5" }]], LUCIDE_MENU_BOX);
+var LUCIDE_NAV_BOX = 24;
+var LucideMessageReplyIcon = lucideIcon([
+  ["path", { d: "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" }],
+  ["path", { d: "m10 15-3-3 3-3" }],
+  ["path", { d: "M7 12h8a2 2 0 0 1 2 2v1" }]
+], LUCIDE_NAV_BOX);
+var LucideUsersIcon = lucideIcon([
+  ["path", { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" }],
+  ["path", { d: "M16 3.128a4 4 0 0 1 0 7.744" }],
+  ["path", { d: "M22 21v-2a4 4 0 0 0-3-3.87" }],
+  ["circle", { cx: 9, cy: 7, r: 4 }]
+], LUCIDE_NAV_BOX);
+var LucideCompassIcon = lucideIcon([
+  ["circle", { cx: 12, cy: 12, r: 10 }],
+  ["path", { d: "m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" }]
+], LUCIDE_NAV_BOX);
+var LucideUserRoundIcon = lucideIcon([
+  ["circle", { cx: 12, cy: 8, r: 5 }],
+  ["path", { d: "M20 21a8 8 0 0 0-16 0" }]
+], LUCIDE_NAV_BOX);
 
 // src/client/questions.js
 var import_react4 = require("react");
@@ -15683,10 +15703,10 @@ function noticeApprovals({ work, roster, shownSession, openSession, since: since
 var import_react39 = require("react");
 var import_react_dom12 = require("react-dom");
 var TABS = [
-  ["tasks", "Tasks", ChatsIcon],
-  ["peers", "Peers", PeopleIcon],
-  ["plugins", "Discover", PlugIcon],
-  ["me", "Me", GearIcon]
+  ["tasks", "Tasks", LucideMessageReplyIcon],
+  ["peers", "Peers", LucideUsersIcon],
+  ["plugins", "Discover", LucideCompassIcon],
+  ["me", "Me", LucideUserRoundIcon]
 ];
 function BottomNav({ useUi, useNav, actions }) {
   const ui2 = useUi((value) => value);
@@ -15747,11 +15767,15 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
-/* The icons this skin already draws are 15px line glyphs (icons.js, lineIcon), so the tab
-   sizes them up; the stroke scales with the box and stays a hairline, the same as the
-   24px settings rows do on a phone. */
-html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none;width:22px;height:22px}
-html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-accent)}
+/* The glyphs are Lucide's 24px grid and carry their own 24px box (icons.js), so nothing
+   here sizes them; only the flex row's power to squeeze them is taken away. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-ink)}
+/* The selected page is the ink of the tab bar's own text at its heavier weight, not the
+   accent: the screenshot the user asked for draws its selected page in black and its
+   unselected ones in a light grey, and an accent-blue tab beside a black one would read as
+   two different states. --bt-ink is that black, and follows the theme in the dark one. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active] .bt-nav-tab-text{font-weight:600}
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab-text{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* The conversation column gives the bar its height back. centerCol is a stretched grid
    item with overflow:hidden, so its own padding is what shortens the column: the

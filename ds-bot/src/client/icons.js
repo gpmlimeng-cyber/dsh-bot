@@ -110,7 +110,7 @@ export const SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: Cha
 
 // --- Lucide (ISC) · path data from lucide-static v1.57.0 -------------------
 // Copied glyph data, not drawings of ours. Lucide's grid is the reason to take it: one
-// 24x24 viewBox, one round cap and join, so five different glyphs share a corner and a set of
+// 24x24 viewBox, one round cap and join, so every glyph shares a corner and a set of
 // proportions instead of each being a shape somebody eyeballed. The data below is byte-for-
 // byte what lucide-static ships; the boxes and the stroke are ours.
 //
@@ -123,6 +123,11 @@ export const SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: Cha
 // the pill's own icons measure (a screenshot of that pill, not a canvas: 12-13px of ink at
 // 1.2-1.5px of stroke). ink = units * box / 24 + stroke, so the boxes differ where the glyphs do:
 // the chevron's 12 units of height want 23px, the ellipsis' 16-unit row 17px.
+//
+// The phone's bottom bar is the one place with a reference of its own: the user's screenshot of
+// a 56-64px bar, whose page glyphs are drawn at the grid's own 24px, not at the pill's 13. Those
+// four are the last group below and they say so where they are declared -- the pill-derived
+// boxes above are untouched by them.
 //
 // The ellipsis works at that size for a reason worth keeping: its dots are outlined circles of
 // r=1, and the hole left in one is 2 * box / 24 - stroke. At the 42px box these first wore that
@@ -166,3 +171,33 @@ export const LucideCopyIcon = lucideIcon([
   ['path', { d: 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2' }],
 ], LUCIDE_MENU_BOX)
 export const LucideCheckIcon = lucideIcon([['path', { d: 'M20 6 9 17l-5-5' }]], LUCIDE_MENU_BOX)
+
+// The phone's bottom bar draws these four, one per page, at the grid's own 24px: the bar is
+// 56px and its reference (the user's screenshot of another app's bar) draws its page glyphs at
+// about this size, so these are not measured against the pill's 13px like the ones above.
+// Lucide's glyphs are laid out to look even at 24, so one box for all four keeps them even.
+// 任务 gets Lucide's own reply bubble -- a round bubble whose tail leaves at the lower left with
+// a leftward arrow inside -- which is the shape the user's screenshot draws (that one is filled
+// solid; this outline is the same glyph on the same grid until the original asset is in hand).
+// 伙伴 is ours to choose: the screenshot's second tab is a scheduled-tasks page, so it takes the
+// same set's users glyph rather than one of its own.
+const LUCIDE_NAV_BOX = 24
+export const LucideMessageReplyIcon = lucideIcon([
+  ['path', { d: 'M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719' }],
+  ['path', { d: 'm10 15-3-3 3-3' }],
+  ['path', { d: 'M7 12h8a2 2 0 0 1 2 2v1' }],
+], LUCIDE_NAV_BOX)
+export const LucideUsersIcon = lucideIcon([
+  ['path', { d: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' }],
+  ['path', { d: 'M16 3.128a4 4 0 0 1 0 7.744' }],
+  ['path', { d: 'M22 21v-2a4 4 0 0 0-3-3.87' }],
+  ['circle', { cx: 9, cy: 7, r: 4 }],
+], LUCIDE_NAV_BOX)
+export const LucideCompassIcon = lucideIcon([
+  ['circle', { cx: 12, cy: 12, r: 10 }],
+  ['path', { d: 'm16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z' }],
+], LUCIDE_NAV_BOX)
+export const LucideUserRoundIcon = lucideIcon([
+  ['circle', { cx: 12, cy: 8, r: 5 }],
+  ['path', { d: 'M20 21a8 8 0 0 0-16 0' }],
+], LUCIDE_NAV_BOX)

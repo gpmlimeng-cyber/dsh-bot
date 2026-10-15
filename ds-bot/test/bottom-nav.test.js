@@ -58,6 +58,43 @@ test('the four pages are named for a UI dump, tasks first', () => {
   // the drawn text, which is hidden from the tree: a real-device dump reads this.
   assert.ok(nav.includes("'aria-label': t(label)"), 'each tab carries its own label')
   assert.ok(nav.includes("'aria-current': active === id ? 'page' : undefined"), 'the current tab says so')
+  // Every label goes through t(), so the bar names its pages in the interface's language
+  // and Chinese is not baked into the source.
+  assert.ok(nav.includes("h('span', { className: 'bt-nav-tab-text', 'aria-hidden': true }, t(label))"), 'the drawn label is translated too')
+})
+
+// The three shapes the user's screenshot draws are copied from Lucide, not drawn here:
+// byte-for-byte the data lucide-static ships, so it can be diffed against the package.
+test('the page glyphs are Lucide’s copied data, on the grid the rest of the skin uses', () => {
+  assert.ok(nav.includes("import { LucideCompassIcon, LucideMessageReplyIcon, LucideUserRoundIcon, LucideUsersIcon } from './icons.js'"), 'the bar draws the copied set')
+  const icons = read('icons.js')
+  assert.ok(icons.includes('Lucide (ISC) · path data from lucide-static v1.57.0'), 'the ISC notice sits with the data')
+  const glyphs = [
+    ["m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z", 'compass, the needle'],
+    ["M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719", 'message-circle-reply, the bubble and its tail'],
+    ["m10 15-3-3 3-3", 'message-circle-reply, the arrow inside it'],
+    ["M7 12h8a2 2 0 0 1 2 2v1", 'message-circle-reply, the arrow stem'],
+    ["M20 21a8 8 0 0 0-16 0", 'user-round, the shoulders'],
+    ["M16 3.128a4 4 0 0 1 0 7.744", 'users, the second head'],
+  ]
+  for (const [data, what] of glyphs) assert.ok(icons.includes(data), `${what} is lucide-static’s own data`)
+  // One factory, one grid, one stroke: the new glyphs ride the same declaration the
+  // deliverables screens do, and their box is the grid's own 24 -- the bar's reference, not
+  // the pill's 13px.
+  assert.equal(icons.split("viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',").length - 1, 1, 'still one glyph factory, one grid')
+  assert.ok(icons.includes('const LUCIDE_NAV_BOX = 24'), 'the bar draws on the grid at its own 24px')
+  const boxed = icons.split('], LUCIDE_NAV_BOX)').length - 1
+  assert.equal(boxed, 4, `all four page glyphs share the one box, found ${boxed}`)
+})
+
+test('the selected page is ink and heavier, not the accent', () => {
+  const active = css.find(line => line.includes('.bt-nav-tab[data-active]') && line.includes('color'))
+  assert.ok(active.includes('color:var(--bt-ink)'), active)
+  const rest = css.find(line => line.includes('.bt-nav-tab{'))
+  assert.ok(rest.includes('color:var(--bt-ink-3)'), 'the unselected pages are the light grey')
+  const bold = css.find(line => line.includes('.bt-nav-tab[data-active] .bt-nav-tab-text'))
+  assert.ok(bold.includes('font-weight:600'), bold)
+  assert.ok(!nav.includes('var(--bt-accent)'), 'the accent is not a tab state')
 })
 
 test('each tab reads the page it belongs to, and never keeps a selection of its own', () => {
