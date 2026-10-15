@@ -2244,9 +2244,10 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
    never wrap: the tile is a fixed 60px, so a second row would be clipped, and the name
    column is the one that gives way instead. Two rather than three: looking at the file is
    what a tap anywhere on the card already does, so the eye was a second button spending
-   44px of the name's width on the same action. That 48px goes back to the name -- in the
-   panel's 409px row the name column goes from 189px to 237px, which is what the name of a
-   file needs to be read whole.
+   44px of the name's width on the same action. The panel's rows go one step further and keep
+   a single "···" -- the same two exits, by name -- because there the two icons cost the name
+   92px: in the panel's 409px row the name column is 189px behind them and 285px behind the
+   one control, which is what the name of a file needs to be read whole.
 
    The row keeps a 4px gap and is held at the card's right end. The gap is not the lever on
    how tight the row reads -- a 44px control holds 22-24px of ink, so the glyphs stand about
@@ -2267,6 +2268,10 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
+/* The panel row's "···" arrives inside the platform Menu's own span; it is one control, so
+   it neither shrinks nor wraps. The dots themselves are DotsBoldIcon at 34px -- the filled
+   ones, sized exactly as the preview bar's own "···" is, so the two pages' menus match. */
+.bt-dcard-menu{flex:none;display:inline-flex}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, "scale")}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 
@@ -4979,8 +4984,28 @@ function useDeliverableExits(file, actions, onFailed) {
   };
   return { state, open, copy: copy2 };
 }
-function DeliverableActions({ file, actions, onFailed }) {
-  const { state, open, copy: copy2 } = useDeliverableExits(file, actions, onFailed);
+function DeliverableActions({ file, actions, onFailed, menu = false }) {
+  const exits = useDeliverableExits(file, actions, onFailed);
+  const [shown, setShown] = (0, import_react7.useState)(false);
+  const { state, open, copy: copy2 } = exits;
+  if (menu) {
+    return (0, import_react7.createElement)(ExitsMenu, {
+      exits,
+      shown,
+      setShown,
+      className: "bt-dcard-menu",
+      anchor: (0, import_react7.createElement)("button", {
+        type: "button",
+        className: "bt-dcard-btn",
+        "data-act": "more",
+        "aria-haspopup": "menu",
+        "aria-expanded": shown,
+        "aria-label": t("More"),
+        title: t("More"),
+        onClick: () => setShown((value) => !value)
+      }, (0, import_react7.createElement)(DotsBoldIcon, { size: 34 }))
+    });
+  }
   return (0, import_react7.createElement)(
     import_react7.Fragment,
     null,
@@ -5003,21 +5028,38 @@ function DeliverableActions({ file, actions, onFailed }) {
     }, state === "copied" ? (0, import_react7.createElement)(CardCheckIcon) : (0, import_react7.createElement)(CardCopyIcon))
   );
 }
-function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
-  const { state, open, copy: copy2 } = useDeliverableExits(file, actions, onFailed);
-  const [shown, setShown] = (0, import_react7.useState)(false);
-  const items = [
-    ...extra === null ? [] : [extra],
-    { id: "open", icon: (0, import_react7.createElement)(SwitchIcon), label: state === "opening" ? t("Opening…") : t("Open with another app") },
-    { id: "copy", icon: state === "copied" ? (0, import_react7.createElement)(CheckIcon) : (0, import_react7.createElement)(CopyIcon), label: state === "copied" ? t("Copied") : t("Copy path") }
-  ];
+var exitItems = (state) => [
+  { id: "open", icon: (0, import_react7.createElement)(SwitchIcon), label: state === "opening" ? t("Opening…") : t("Open with another app") },
+  { id: "copy", icon: state === "copied" ? (0, import_react7.createElement)(CheckIcon) : (0, import_react7.createElement)(CopyIcon), label: state === "copied" ? t("Copied") : t("Copy path") }
+];
+function ExitsMenu({ exits, shown, setShown, className, anchor, extra = null, onExtra }) {
   return (0, import_react7.createElement)(import_dsh_client_ui_primitives2.Menu, {
-    className: "bt-preview-menu",
+    className,
     open: shown,
     autoFocus: true,
     portal: true,
     align: "end",
     onClose: () => setShown(false),
+    anchor,
+    items: [...extra === null ? [] : [extra], ...exitItems(exits.state)],
+    onSelect: (id) => {
+      setShown(false);
+      if (id === "copy") void exits.copy();
+      else if (id === "open") void exits.open();
+      else if (extra !== null && extra.id === id) onExtra?.();
+    }
+  });
+}
+function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
+  const exits = useDeliverableExits(file, actions, onFailed);
+  const [shown, setShown] = (0, import_react7.useState)(false);
+  return (0, import_react7.createElement)(ExitsMenu, {
+    exits,
+    shown,
+    setShown,
+    className: "bt-preview-menu",
+    extra,
+    onExtra,
     anchor: (0, import_react7.createElement)("button", {
       type: "button",
       className: "bt-preview-more",
@@ -5029,17 +5071,10 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
       // The filled dots, not the hairline ones: DotsIcon paints 1.5-unit dots that land at
       // 2.6px in this control, which is why a 48px button still looks empty. 34px is the box
       // the bar's rule sizes it to as well, so the two agree.
-    }, (0, import_react7.createElement)(DotsBoldIcon, { size: 34 })),
-    items,
-    onSelect: (id) => {
-      setShown(false);
-      if (id === "copy") void copy2();
-      else if (id === "open") void open();
-      else if (extra !== null && id === extra.id) onExtra?.();
-    }
+    }, (0, import_react7.createElement)(DotsBoldIcon, { size: 34 }))
   });
 }
-function DeliverableCard({ file, actions, meta, role }) {
+function DeliverableCard({ file, actions, meta, role, menu = false }) {
   const name = basename(file.path);
   const [failure, setFailure] = (0, import_react7.useState)(null);
   const preview = () => {
@@ -5065,7 +5100,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         (0, import_react7.createElement)("span", { className: "bt-dcard-name" }, name),
         (0, import_react7.createElement)("span", { className: "bt-dcard-desc" }, meta ?? metaText(file, name))
       ),
-      (0, import_react7.createElement)("span", { className: "bt-dcard-acts" }, (0, import_react7.createElement)(DeliverableActions, { file, actions, onFailed: setFailure }))
+      (0, import_react7.createElement)("span", { className: "bt-dcard-acts" }, (0, import_react7.createElement)(DeliverableActions, { file, actions, menu, onFailed: setFailure }))
     ),
     failure ? (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
   );
@@ -5092,7 +5127,9 @@ function DeliverableCards({ deliverables, actions, metaOf: metaOf2 = null, list 
       file,
       actions,
       meta: metaOf2?.(file),
-      role: list ? "listitem" : void 0
+      role: list ? "listitem" : void 0,
+      // The panel's rows give their width to the name: one "···" instead of the two icons.
+      menu: list
     }))
   );
 }

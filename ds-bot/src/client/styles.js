@@ -262,9 +262,10 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
    never wrap: the tile is a fixed 60px, so a second row would be clipped, and the name
    column is the one that gives way instead. Two rather than three: looking at the file is
    what a tap anywhere on the card already does, so the eye was a second button spending
-   44px of the name's width on the same action. That 48px goes back to the name -- in the
-   panel's 409px row the name column goes from 189px to 237px, which is what the name of a
-   file needs to be read whole.
+   44px of the name's width on the same action. The panel's rows go one step further and keep
+   a single "···" -- the same two exits, by name -- because there the two icons cost the name
+   92px: in the panel's 409px row the name column is 189px behind them and 285px behind the
+   one control, which is what the name of a file needs to be read whole.
 
    The row keeps a 4px gap and is held at the card's right end. The gap is not the lever on
    how tight the row reads -- a 44px control holds 22-24px of ink, so the glyphs stand about
@@ -285,6 +286,10 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
+/* The panel row's "···" arrives inside the platform Menu's own span; it is one control, so
+   it neither shrinks nor wraps. The dots themselves are DotsBoldIcon at 34px -- the filled
+   ones, sized exactly as the preview bar's own "···" is, so the two pages' menus match. */
+.bt-dcard-menu{flex:none;display:inline-flex}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 

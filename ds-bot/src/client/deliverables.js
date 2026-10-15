@@ -163,7 +163,6 @@ export function useDeliverableExits(file, actions, onFailed) {
   return { state, open, copy }
 }
 
-/** The exits as the card's own row of buttons, which is the shape DSH's card has. */
 /**
  * The exits as the card's own row of buttons, which is the shape DSH's card has. They are
  * icons, not words: word pills need more width than the card has to spare, and the name is
@@ -176,9 +175,30 @@ export function useDeliverableExits(file, actions, onFailed) {
  * already announces itself -- the whole-card hit target carries "Preview <name>" -- so a
  * second button for it only took 44px away from the name, which is the one thing on the
  * card a reader has to read.
+ *
+ * `menu` is the panel's shape of the same row: one "···" in the card's own control, opening
+ * the same two exits by name. A message's card is one of a grid two rows wide and the icons
+ * are what a thumb reaches for; the panel's rows are a stack the whole width of the phone,
+ * one file each, and there the two icons cost the name 92px of the width it needs to be
+ * readable. Same exits, same names, one chrome each -- and a tap on the row still opens the
+ * preview either way.
  */
-export function DeliverableActions({ file, actions, onFailed }) {
-  const { state, open, copy } = useDeliverableExits(file, actions, onFailed)
+export function DeliverableActions({ file, actions, onFailed, menu = false }) {
+  const exits = useDeliverableExits(file, actions, onFailed)
+  const [shown, setShown] = useState(false)
+  const { state, open, copy } = exits
+  // The panel's row: the same exits behind one control, so the name keeps the width the two
+  // icons would take from it.
+  if (menu) {
+    return h(ExitsMenu, {
+      exits, shown, setShown, className: 'bt-dcard-menu',
+      anchor: h('button', {
+        type: 'button', className: 'bt-dcard-btn', 'data-act': 'more',
+        'aria-haspopup': 'menu', 'aria-expanded': shown,
+        'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
+      }, h(DotsBoldIcon, { size: 34 })),
+    })
+  }
   return h(Fragment, null,
     h('button', {
       type: 'button', className: 'bt-dcard-btn', 'data-act': 'open', disabled: state === 'opening',
@@ -192,23 +212,39 @@ export function DeliverableActions({ file, actions, onFailed }) {
     }, state === 'copied' ? h(CardCheckIcon) : h(CardCopyIcon)))
 }
 
+/** What this file's exits can do, as menu items. Written here once: both menus show them. */
+const exitItems = (state) => [
+  { id: 'open', icon: h(SwitchIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') },
+  { id: 'copy', icon: state === 'copied' ? h(CheckIcon) : h(CopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') },
+]
+
 /**
- * The exits as the preview page's own "···" menu: the platform's Menu component, so the
- * dropdown behaves like every other one in the shell (focus, Escape, a portal, aligning
- * itself to the edge). A page adds its source toggle to the same menu rather than
- * crowding the title bar.
+ * Those exits as the platform's own Menu, which behaves like every other one in the shell
+ * (focus, Escape, a portal, aligning itself to the edge). The preview page's "···" and the
+ * panel row's single control are this one menu around two anchors, so the two cannot come
+ * to say different things; a page adds its source toggle here rather than crowding its bar.
  */
-function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
-  const { state, open, copy } = useDeliverableExits(file, actions, onFailed)
-  const [shown, setShown] = useState(false)
-  const items = [
-    ...(extra === null ? [] : [extra]),
-    { id: 'open', icon: h(SwitchIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') },
-    { id: 'copy', icon: state === 'copied' ? h(CheckIcon) : h(CopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') },
-  ]
+function ExitsMenu({ exits, shown, setShown, className, anchor, extra = null, onExtra }) {
   return h(Menu, {
-    className: 'bt-preview-menu', open: shown, autoFocus: true, portal: true, align: 'end',
+    className, open: shown, autoFocus: true, portal: true, align: 'end',
     onClose: () => setShown(false),
+    anchor,
+    items: [...(extra === null ? [] : [extra]), ...exitItems(exits.state)],
+    onSelect: (id) => {
+      setShown(false)
+      if (id === 'copy') void exits.copy()
+      else if (id === 'open') void exits.open()
+      else if (extra !== null && extra.id === id) onExtra?.()
+    },
+  })
+}
+
+/** The preview page's own "···": the same menu, opened from the bar's own control. */
+function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
+  const exits = useDeliverableExits(file, actions, onFailed)
+  const [shown, setShown] = useState(false)
+  return h(ExitsMenu, {
+    exits, shown, setShown, className: 'bt-preview-menu', extra, onExtra,
     anchor: h('button', {
       type: 'button', className: 'bt-preview-more', 'aria-haspopup': 'menu', 'aria-expanded': shown,
       'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
@@ -216,13 +252,6 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
       // 2.6px in this control, which is why a 48px button still looks empty. 34px is the box
       // the bar's rule sizes it to as well, so the two agree.
     }, h(DotsBoldIcon, { size: 34 })),
-    items,
-    onSelect: (id) => {
-      setShown(false)
-      if (id === 'copy') void copy()
-      else if (id === 'open') void open()
-      else if (extra !== null && id === extra.id) onExtra?.()
-    },
   })
 }
 
@@ -232,7 +261,7 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
  * panel's list of everything -- so the two cannot drift apart; only what the second line
  * says and where the coordinates come from differ.
  */
-function DeliverableCard({ file, actions, meta, role }) {
+function DeliverableCard({ file, actions, meta, role, menu = false }) {
   const name = basename(file.path)
   // A refusal writes its sentence under the tile, not in it: the tile is 60px and clips.
   const [failure, setFailure] = useState(null)
@@ -256,7 +285,7 @@ function DeliverableCard({ file, actions, meta, role }) {
       h('span', { className: 'bt-dcard-copy' },
         h('span', { className: 'bt-dcard-name' }, name),
         h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name))),
-      h('span', { className: 'bt-dcard-acts' }, h(DeliverableActions, { file, actions, onFailed: setFailure }))),
+      h('span', { className: 'bt-dcard-acts' }, h(DeliverableActions, { file, actions, menu, onFailed: setFailure }))),
     failure ? h('span', { className: 'bt-dcard-hint', role: 'status' }, exitsSentence(failure.shared)) : null)
 }
 
@@ -289,6 +318,8 @@ export function DeliverableCards({ deliverables, actions, metaOf = null, list = 
       actions,
       meta: metaOf?.(file),
       role: list ? 'listitem' : undefined,
+      // The panel's rows give their width to the name: one "···" instead of the two icons.
+      menu: list,
     })))
 }
 

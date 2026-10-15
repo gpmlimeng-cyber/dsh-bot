@@ -104,6 +104,15 @@ test('the card’s exits are two named icons, each a 44px target with the ink of
     assert.ok(source.includes(shape), `and draws its own icon (${act})`)
   }
   assert.ok(!source.includes("'data-act': 'preview'"), 'no third button: a tap on the card is the preview')
+  // The panel's rows spend that width on the name instead: the same two exits behind one
+  // "···" in the card's own 44px control, and a tap anywhere on the row still opens the
+  // preview. The exits' words are written once for both menus.
+  assert.ok(source.includes('export function DeliverableActions({ file, actions, onFailed, menu = false })'), 'the card’s exits carry the panel’s shape as well')
+  assert.ok(source.includes("className: 'bt-dcard-menu'"), 'and the panel gets one "···" in the card’s own control')
+  assert.ok(source.includes("'data-act': 'more'"), 'marked like the buttons it replaces')
+  assert.equal(source.split('exitItems(exits.state)').length - 1, 1, 'the two exits are written once for both menus')
+  assert.ok(source.includes('menu: list,'), 'the panel is what asks for that shape')
+  assert.ok(rule('.bt-dcard-menu{').includes('flex:none'), 'the one control neither shrinks nor wraps')
   assert.ok(!icons.includes('EyeIcon'), 'and the eye went with it')
   // Each button carries its own name -- the word pill used to be that name -- and none of
   // them repeats the file name, which the card itself already writes.

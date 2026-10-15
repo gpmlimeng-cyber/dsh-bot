@@ -41,6 +41,9 @@ test('the list keeps the message cards, and only gives them the panel’s shape'
   // The very cards a message ends with, so a later edit cannot grow a second row design.
   assert.ok(list.includes('h(DeliverableCards, { deliverables: rows, actions, list: true, metaOf })'), 'the list is the shared card list')
   assert.ok(list.includes('const rows = [{ files: files.map(entry => ({ path: entry.path, at: entry.at })) }]'), 'fed the host’s rows')
+  // The shared card, in the shape a row of a stack wants: one control at its right end
+  // rather than the message grid's two icons, which cost the name 92px of the row.
+  assert.ok(list.includes('menu: list,'), 'the panel asks the card for its one-control shape')
   assert.ok(!list.includes("className: 'bt-prod-row'"), 'and there is no row of its own')
   assert.ok(!preview.includes('.bt-prod-row'), 'nor a row style of its own')
   assert.ok(!list.includes('const open = (file) =>'), 'the panel no longer opens files itself')
