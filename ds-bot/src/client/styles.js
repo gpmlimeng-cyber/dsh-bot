@@ -35,11 +35,13 @@ export const SHELL_CSS = `
    moment the palette does. A test holds the two layers to each other (page-colour.test.js);
    keep them in step when you touch either.
 
-   Five tokens live only here, deliberately, and the palette has no counterpart for them:
-   --bt-nav-ink / --bt-nav-on (the bottom bar's own sampled pair), --bt-green, --bt-star, and
-   --bt-line-weak (the lightest hairline). --bt-accent-ink is the mirror case: the palette
-   computes it from the accent's luminance, so the fallback does not carry it. */
-body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#fcfcfc;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58)}
+   Six tokens live only here, deliberately, and the palette has no counterpart for them:
+   --bt-nav-ink / --bt-nav-on (the bottom bar's own sampled pair), --bt-green, --bt-star,
+   --bt-line-weak (the lightest hairline), and --bt-float-shadow (the one shadow every
+   floating card in this skin wears: the composer's card and the phone's three controls at
+   the top both read it, so the two can never drift apart). --bt-accent-ink is the mirror
+   case: the palette computes it from the accent's luminance, so the fallback does not carry it. */
+body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#fcfcfc;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58);--bt-float-shadow:0 2px 8px rgba(20,20,20,.08),0 1px 2px rgba(20,20,20,.04)}
 body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(242,242,242,.08);--bt-line-2:rgba(242,242,242,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(242,242,242,.09);--bt-tag-ink:rgba(242,242,242,.58)}
 /* The one !important below is for the base token the platform writes inline on <body>, which
    no normal rule of ours can outrank. */
@@ -1277,7 +1279,7 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width
    the first line is not covered on arrival. */
 html[data-bt-mobile] .bt-pill,
 html[data-bt-mobile] .bt-mobile-nav,
-html[data-bt-mobile] .bt-mobile-acts{border:0;background:var(--bt-card);box-shadow:rgba(20,20,20,.08) 0 2px 8px,rgba(20,20,20,.04) 0 1px 2px;-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-bt-mobile] .bt-mobile-acts{border:0;background:var(--bt-card);box-shadow:var(--bt-float-shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
 html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 80%,transparent),transparent)}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open]::after,
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar::after,
@@ -1549,7 +1551,7 @@ html[data-bt-mobile][data-bt-size=compact] .bt-tools::after{display:none}
    to wear is paid back into the padding (7.5 + 0.5 = 8), so the card's own box, the 8px it sits
    above the bar and every measured gap stay exactly as they were. Nothing colours an edge here
    any more, so no hover border colour is left either. */
-[data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:8px!important;box-sizing:border-box;background:var(--bt-card)!important;border:0!important;box-shadow:0 2px 8px rgba(20,20,20,.08),0 1px 2px rgba(20,20,20,.04)!important;transition:background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
+[data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:8px!important;box-sizing:border-box;background:var(--bt-card)!important;border:0!important;box-shadow:var(--bt-float-shadow)!important;transition:background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
 /* The composer takes the same measure as the conversation column, so both edges line up:
    the same 16px padding on each side and the same width cap. */

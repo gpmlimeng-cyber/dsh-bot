@@ -52,7 +52,7 @@ test('the tokens that live in one layer only are the documented ones', () => {
   const light = declarations(styles.find(line => line.startsWith('body{--bt-nav-ink:')))
   const theme = themeVars(THEMES.deepseek.light, false)
   assert.deepEqual([...light.keys()].filter(token => !(token in theme)).sort(),
-    ['--bt-green', '--bt-line-weak', '--bt-nav-ink', '--bt-nav-on', '--bt-star'], 'fallback only')
+    ['--bt-float-shadow', '--bt-green', '--bt-line-weak', '--bt-nav-ink', '--bt-nav-on', '--bt-star'], 'fallback only')
   assert.deepEqual(Object.keys(theme).filter(token => !light.has(token)), ['--bt-accent-ink'], 'palette only')
 })
 
@@ -103,9 +103,27 @@ test('the bar wears the sampled pair, and the input is white like the cards', ()
   // one light shadow. The half-pixel border is paid back into the padding (7.5 + 0.5 = 8), so
   // the card's box -- and the 8px above the bar measured on the device -- do not move.
   assert.ok(composer.includes('border:0!important'), 'no frame, on any side')
-  assert.ok(composer.includes('box-shadow:0 2px 8px rgba(20,20,20,.08),0 1px 2px rgba(20,20,20,.04)!important'), 'two soft layers, the float the user copied, and no ring')
+  assert.ok(composer.includes('box-shadow:var(--bt-float-shadow)!important'), 'the shared float, not a copy of its value')
   assert.ok(composer.includes('padding:8px!important'), 'with the border\'s half-pixel paid back')
   assert.ok(!composer.includes('border-color'), 'and nothing left for a hover border to colour')
+})
+
+// One floating object, one shadow: the composer's card and the phone's three controls at the top
+// are told to match, and a copied value drifts the moment either is touched. Both read
+// --bt-float-shadow, it is declared once, and this is what keeps it that way.
+test('every floating card reads one shared shadow token', () => {
+  const sheet = read('styles.js')
+  const declared = sheet.split('\n').filter(line => line.includes('--bt-float-shadow:'))
+  assert.equal(declared.length, 1, `declared once, found ${declared.length}`)
+  assert.ok(declared[0].startsWith('body{'), 'in the skin\'s own token block, so both bands and both themes see it')
+  assert.ok(declared[0].includes('0 2px 8px rgba(20,20,20,.08),0 1px 2px rgba(20,20,20,.04)'), 'two soft layers, no ring')
+  const readers = sheet.split('\n').filter(line => line.includes('box-shadow:var(--bt-float-shadow'))
+  assert.equal(readers.length, 2, `two readers -- the composer card and the top controls -- found ${readers.length}`)
+  assert.ok(readers.some(line => line.startsWith('[data-composer-card]{')), 'the composer card')
+  assert.ok(readers.some(line => line.startsWith('html[data-bt-mobile] .bt-mobile-acts{')), 'and the phone\'s three controls')
+  // Nothing carries the values a second time outside the declaration itself.
+  const copies = sheet.split('\n').filter(line => !line.includes('--bt-float-shadow:') && line.includes('rgba(20,20,20,.08) 0 2px 8px'))
+  assert.equal(copies.length, 0, `one copy of the value, in the token: found ${copies.length}`)
 })
 
 test('the page is painted where the platform painted its own, and only in the light theme', () => {
@@ -137,9 +155,10 @@ test('the strip fades out of the page\'s own colour, and the shell\'s is never r
   assert.ok(!sheet.includes('--bt-shell-bg') && !sheet.includes('publishShellBackground'), 'no reader, no token')
   const index = read('index.js')
   assert.ok(!index.includes('--bt-shell-bg') && !index.includes('publishShellBackground'), 'and nothing wires one')
-  // The strip starts from the page's own colour -- solid at the top edge, thinning to nothing --
-  // and never from the shell's: the page's design colour is the one it fades out of.
-  assert.ok(nav.includes('linear-gradient(to bottom,var(--bt-main),transparent)'), 'the strip fades out of the page\'s own colour')
+  // The strip is the page's own colour, solid over the status bar and thinning to nothing below
+  // it -- and never the shell's: the page's design colour is the one it fades out of.
+  assert.ok(nav.includes('linear-gradient(to bottom,var(--bt-main) 0,var(--bt-main) var(--bt-top-inset'), 'the strip is solid through the status bar, out of the page\'s own colour')
+  assert.ok(nav.includes('transparent var(--bt-fade-h))'), 'and reaches nothing at its own foot')
   assert.ok(read('themes.js').includes("light: { bg: '#fcfcfc', sidebar: '#fcfcfc'"), 'and the page keeps the design colour')
 })
 

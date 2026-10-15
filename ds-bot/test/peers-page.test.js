@@ -88,13 +88,11 @@ test('a row opens that Bot\'s chat and lands back on the conversation', () => {
 })
 
 test('the header\'s new button opens the real create-Bot form, not a dead end', () => {
-  // The user asked for 新建 in this page's header. What it opens is the platform's own create-Bot
-  // flow, taken straight to the form: new-chat.js reads mode 'create' as an initial draft, and the
-  // command palette's own "Create Bot" goes to exactly the same place (palette.js).
-  // The user asked for 新建 in this page's header: the same label the header's own ＋ carries, and
-  // it opens the platform's create-Bot flow taken straight to the form (new-chat.js reads mode
-  // 'create' as an initial draft, and the command palette's own "Create Bot" goes to the same door).
-  assert.ok(peers.includes("'aria-label': t('New…')"), 'named 新建, like the header\'s own new button')
+  // The user asked for 新建 in this page's header, and the label the skin carries is the
+  // header's own 「创建 Bot」: what it opens is the platform's create-Bot flow taken straight to
+  // the form (new-chat.js reads mode 'create' as an initial draft, and the command palette's own
+  // "Create Bot" goes to the same door).
+  assert.ok(peers.includes("'aria-label': t('Create Bot')"), 'named for what it does, in the existing string')
   assert.ok(peers.includes("onClick: () => actions.openNewChat('create')"), 'and it asks for the form')
   const newChat = code('new-chat.js')
   assert.ok(newChat.includes("mode === 'create' ? { name: '', fromList: false } : null"), 'which opens the form itself, not the picker')

@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 091ee7a3
+// Source fingerprint: 01403678
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2031,11 +2031,13 @@ var SHELL_CSS = `
    moment the palette does. A test holds the two layers to each other (page-colour.test.js);
    keep them in step when you touch either.
 
-   Five tokens live only here, deliberately, and the palette has no counterpart for them:
-   --bt-nav-ink / --bt-nav-on (the bottom bar's own sampled pair), --bt-green, --bt-star, and
-   --bt-line-weak (the lightest hairline). --bt-accent-ink is the mirror case: the palette
-   computes it from the accent's luminance, so the fallback does not carry it. */
-body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#fcfcfc;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58)}
+   Six tokens live only here, deliberately, and the palette has no counterpart for them:
+   --bt-nav-ink / --bt-nav-on (the bottom bar's own sampled pair), --bt-green, --bt-star,
+   --bt-line-weak (the lightest hairline), and --bt-float-shadow (the one shadow every
+   floating card in this skin wears: the composer's card and the phone's three controls at
+   the top both read it, so the two can never drift apart). --bt-accent-ink is the mirror
+   case: the palette computes it from the accent's luminance, so the fallback does not carry it. */
+body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#fcfcfc;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58);--bt-float-shadow:0 2px 8px rgba(20,20,20,.08),0 1px 2px rgba(20,20,20,.04)}
 body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(242,242,242,.08);--bt-line-2:rgba(242,242,242,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(242,242,242,.09);--bt-tag-ink:rgba(242,242,242,.58)}
 /* The one !important below is for the base token the platform writes inline on <body>, which
    no normal rule of ours can outrank. */
@@ -3272,7 +3274,7 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width
    the first line is not covered on arrival. */
 html[data-bt-mobile] .bt-pill,
 html[data-bt-mobile] .bt-mobile-nav,
-html[data-bt-mobile] .bt-mobile-acts{border:0;background:var(--bt-card);box-shadow:rgba(20,20,20,.08) 0 2px 8px,rgba(20,20,20,.04) 0 1px 2px;-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-bt-mobile] .bt-mobile-acts{border:0;background:var(--bt-card);box-shadow:var(--bt-float-shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
 html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 80%,transparent),transparent)}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open]::after,
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar::after,
@@ -3544,7 +3546,7 @@ html[data-bt-mobile][data-bt-size=compact] .bt-tools::after{display:none}
    to wear is paid back into the padding (7.5 + 0.5 = 8), so the card's own box, the 8px it sits
    above the bar and every measured gap stay exactly as they were. Nothing colours an edge here
    any more, so no hover border colour is left either. */
-[data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:8px!important;box-sizing:border-box;background:var(--bt-card)!important;border:0!important;box-shadow:0 2px 8px rgba(20,20,20,.08),0 1px 2px rgba(20,20,20,.04)!important;transition:background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
+[data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:8px!important;box-sizing:border-box;background:var(--bt-card)!important;border:0!important;box-shadow:var(--bt-float-shadow)!important;transition:background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
 /* The composer takes the same measure as the conversation column, so both edges line up:
    the same 16px padding on each side and the same width cap. */
@@ -15950,20 +15952,22 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-fade-h:calc(var(--bt
    56px back, so there is nothing for a frost to show through. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-main);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* The strip over the status bar. Once the shell hands the surface over (status-bar.js asks it
-   to), content scrolls under the system bars, and this is what keeps it legible. The page's own
-   colour is solid at the top edge and fades to nothing across the whole strip -- the user asked
-   for the top to be painted outright and the fade to start below it ("到顶部直接不透明，渐变"),
-   and for one continuous veil rather than a solid band with a fade tacked onto its last 10px,
-   which reads as a step rather than a gradient. The height is --bt-fade-h: down past the pill
+   to), content scrolls under the system bars, and this is what keeps it legible. It is solid
+   --bt-main from the screen edge down to the status bar's own height, and only below that does
+   it thin, reaching nothing by --bt-fade-h. The first version ramped from y=0, so by the status
+   bar's lower edge rather less than half of it was left and the clock sat on top of the text
+   scrolling under it (the user's screenshot) -- a band that is opaque where the system draws
+   and one ramp below it, with no step between the two.
+   The height is --bt-fade-h: down past the pill
    row, so the veil and the chrome it covers are one surface with no edge between them.
 
    No blur: the user asked for the text under it to be read through, not smeared ("不要模糊").
-   What passes under is covered by the solid top and then emerges as the veil thins.
+   What passes under is covered outright until the status bar's edge and emerges below it.
 
    It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
    while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
    (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
-html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main),transparent)}
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main) 0,var(--bt-main) var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))),transparent var(--bt-fade-h))}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}
@@ -16071,8 +16075,8 @@ function PeersPage({ useRoster, useUi, actions }) {
         (0, import_react40.createElement)("button", {
           type: "button",
           className: "bt-round bt-peers-new",
-          "aria-label": t("New…"),
-          title: t("New…"),
+          "aria-label": t("Create Bot"),
+          title: t("Create Bot"),
           onClick: () => actions.openNewChat("create")
         }, (0, import_react40.createElement)(PlusIcon))
       ),
@@ -16144,7 +16148,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "091ee7a3" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "01403678" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

@@ -45,7 +45,7 @@ export function PeersPage({ useRoster, useUi, actions }) {
         h('h2', { className: 'bt-peers-title' }, t('Peers')),
         h('button', {
           type: 'button', className: 'bt-round bt-peers-new',
-          'aria-label': t('New…'), title: t('New…'),
+          'aria-label': t('Create Bot'), title: t('Create Bot'),
           onClick: () => actions.openNewChat('create'),
         }, h(PlusIcon))),
       h('div', { className: 'bt-side-search' },
