@@ -19,8 +19,12 @@ test('the add button is a bare glyph, with no fill and no hairline of its own', 
   assert.ok(plus.includes('background:none'), `no fill of its own: ${plus}`)
   assert.ok(plus.includes('box-shadow:none'), `no hairline of its own: ${plus}`)
   assert.ok(plus.includes('border:0'), `and no border: ${plus}`)
-  // The icon is what carries it, so the glyph must not be sized to nothing either.
-  assert.ok(rule('.bt-plus svg{').includes('width:'), 'the glyph is sized')
+  // Size and ink are the pair sampled off the reference: a 13px glyph, and the light grey it
+  // is drawn in. Both are one-line changes, and both are pinned here so a later edit is
+  // deliberate rather than accidental.
+  assert.ok(rule('.bt-plus svg{').includes('width:13px') && rule('.bt-plus svg{').includes('height:13px'), 'the glyph is 13px, as sampled')
+  assert.ok(plus.includes('color:#8f8f8f'), `the sampled ink: ${plus}`)
+  assert.ok(styles.includes('body[data-ds-dark-theme] .bt-plus{color:var(--bt-ink-2)}'), 'dark keeps the skin\'s own ink')
   // Feedback stays: held and open-then-closed are different from rest, or the button would
   // answer nothing at all.
   assert.ok(rule('.bt-plus:hover,.bt-plus[aria-expanded=true]{').includes('background:'), 'a light tint when it is live')

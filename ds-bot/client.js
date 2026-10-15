@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: a92b6f23
+// Source fingerprint: ec10c336
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3598,11 +3598,12 @@ html[data-bt-mobile] [data-slot="conversation.input.attachments"] [class*="_remo
    its own and no hairline, so only the icon reads. What is left is feedback -- a light tint
    while it is held or while its menu is open -- and the press tint every other control in the
    skin answers with. Size and ink are the device-sampled pair. */
-.bt-plus{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:none;box-shadow:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, "scale")}}
+.bt-plus{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:none;box-shadow:none;color:#8f8f8f;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, "scale")}}
 .bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
 .bt-plus:active{scale:.9}
-.bt-plus svg{width:14px;height:14px;transition:${spring(SPRING_POP, "rotate")}}
+.bt-plus svg{width:13px;height:13px;transition:${spring(SPRING_POP, "rotate")}}
 .bt-plus[aria-expanded=true] svg{rotate:45deg}
+body[data-ds-dark-theme] .bt-plus{color:var(--bt-ink-2)}
 .bt-plus-menu{min-width:180px}
 [data-composer-card] [class*="_tools"]{gap:0!important}
 [data-composer-card] [class*="_modes"]:empty{display:none!important}
@@ -3780,6 +3781,21 @@ function installCompiledStyles(text, tag) {
     clearTimeout(timer);
     style.remove();
   };
+}
+
+// src/client/status-bar.js
+var STATUS_BAR_MODE = ["transparent", "", "auto"];
+function publishStatusBarMode(report) {
+  if (typeof window === "undefined") return false;
+  const bridge = window.dshStatusBarBridge;
+  if (bridge === null || typeof bridge !== "object" || typeof bridge.set !== "function") return false;
+  try {
+    bridge.set(...STATUS_BAR_MODE);
+    return true;
+  } catch (error) {
+    if (typeof report === "function") report(error);
+    return false;
+  }
 }
 
 // src/client/mark.js
@@ -15916,18 +15932,17 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe
    anyway: the conversation column, the peers page and the Settings screen all give it its
    56px back, so there is nothing for a frost to show through. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-main);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
-/* The first 10px of the page, softened. The page keeps the skin's own colour (#fcfcfc) and the
-   shell paints the band above it itself, in a colour it owns and can change between sessions
-   (it has changed once already). The two meet at the status bar's lower edge, so the fade
-   starts from the colour the shell is painting -- read from the page by
-   publishShellBackground, which is the only thing that token feeds -- and dissolves into the
-   page over 10px. A shell that goes edge-to-edge stops reporting a colour, the property goes
-   unset, the fade starts from the page's own colour and disappears: nothing changes here.
+/* The strip over the status bar. Once the shell hands the surface over (status-bar.js asks it
+   to), content scrolls under the system bars, and this is what keeps it legible: a frosted
+   layer as tall as the status bar, then a 10px fade so the strip has no bottom edge. The tint
+   is the page's own colour at 72%. While an older shell still paints its own band the tint
+   starts from that colour instead -- which is what softens the join there -- and once nothing
+   is left to read it is the page's own colour, i.e. invisible over nothing.
 
    It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
    while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
    (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
-html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;height:10px;z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-shell-bg,var(--bt-main)),transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);z-index:94;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-shell-bg,var(--bt-main)) 72%,transparent) calc(100% - 10px),transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}
@@ -16087,7 +16102,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "a92b6f23" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "ec10c336" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16378,6 +16393,7 @@ function apply(ctx) {
       const accent = isHex(prefs.accent) ? prefs.accent : void 0;
       const motion = prefs.motion === "quiet" || prefs.motion === "lively" ? prefs.motion : "normal";
       document.body.dataset.btMotion = motion;
+      publishStatusBarMode(quietly("status bar"));
       publishShellBackground();
       const next = `${id}|${accent ?? ""}|${motion}|${registry.getSnapshot()}`;
       if (next === key) return;

@@ -5,6 +5,7 @@ import { countCards, createSource, EMPTY_ROSTER, indexRoster, isAgentSession } f
 import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
 import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles, publishShellBackground } from './styles.js'
+import { publishStatusBarMode } from './status-bar.js'
 import { lookOf } from './mark.js'
 import { TeamSidebar, ConnectPlugins, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts } from './sidebar.js'
 import { HeaderPill } from './header.js'
@@ -326,8 +327,10 @@ export function apply(ctx) {
       const accent = isHex(prefs.accent) ? prefs.accent : undefined
       const motion = prefs.motion === 'quiet' || prefs.motion === 'lively' ? prefs.motion : 'normal'
       document.body.dataset.btMotion = motion
-      // The page's base colour is the shell's own: read it from the inline declaration the
-      // platform leaves on <html>. Watched below, because the platform rewrites it on its own.
+      // The status bar is the shell's to paint; ask it to hand the surface over, then read what
+      // it was painting in case it keeps doing so -- the frosted strip uses that colour while an
+      // older shell owns the strip, and the page's own once this one stops.
+      publishStatusBarMode(quietly('status bar'))
       publishShellBackground()
       const next = `${id}|${accent ?? ''}|${motion}|${registry.getSnapshot()}`
       if (next === key) return
