@@ -87,6 +87,24 @@ test('the page glyphs are Lucide’s copied data, on the grid the rest of the sk
   assert.equal(boxed, 4, `all four page glyphs share the one box, found ${boxed}`)
 })
 
+// The four names are copy, not code: they live in the dictionary every other string in
+// this skin lives in, and the drawn label and the accessible name are the same call — the
+// screen and a screen reader must not disagree, in either language.
+test('the four names are dictionary copy, shared with the accessible name', () => {
+  const rows = nav.split('\n').filter(line => /^\s*\['(tasks|peers|plugins|me)', /.test(line))
+  assert.equal(rows.length, 4, `one row per page, found ${rows.length}`)
+  for (const row of rows) assert.ok(!/[\u4e00-\u9fff]/.test(row), `no Chinese baked into ${row.trim()}`)
+  assert.equal((nav.match(/t\(label\)/g) ?? []).length, 2, 'one translated string, drawn once and named once')
+  const i18n = read('i18n.js')
+  for (const [key, zh] of [['Tasks', '任务'], ['Peers', '伙伴'], ['Discover', '发现'], ['Me', '我的']]) {
+    assert.ok(i18n.includes(`${key}: '${zh}'`), `${key} carries its Chinese copy`)
+  }
+  // The table ships Chinese only: the key text IS the English copy and the host locale
+  // falls back to it, so there is no second table that could drift out of step.
+  assert.ok(i18n.includes('export const DICTIONARY = { zh: ZH }'), 'one table, Chinese; English is the key')
+  assert.ok(i18n.includes("locale.register(NAMESPACE, 'zh', ZH)"), 'and that is the dictionary the locale service gets')
+})
+
 test('the selected page is ink and heavier, not the accent', () => {
   const active = css.find(line => line.includes('.bt-nav-tab[data-active]') && line.includes('color'))
   assert.ok(active.includes('color:var(--bt-ink)'), active)
