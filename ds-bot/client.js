@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 071233d5
+// Source fingerprint: 5c75554e
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16244,16 +16244,11 @@ function DiscoverBack({ useUi, actions }) {
   ), document.body);
 }
 var DISCOVER_CSS = `
-/* The two things this page adds to the settings page's own spec. The card wears the skin's floating
-   shadow -- the same token the composer's card and the floating controls read -- and the rows of one
-   card are separated by one hairline: drawn, not a border, because it starts at the icon's own edge
-   and stops short of the card's, where a border would run the full width and meet both edges. No new
-   grey lives here either: the line is the skin's own faintest. */
-html[data-bt-mobile] .bt-discover .bt-settings-group-card{box-shadow:var(--bt-float-shadow)}
-html[data-bt-mobile] .bt-discover .bt-settings-item+.bt-settings-item::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
-/* The strip over a shell panel's second level (a panel draws no back of its own), sitting where the
-   page's own head sits: page colour, the inset's height plus the row the back control needs. That
-   level is no longer the settings layer, so the conversation's top row needs its own line here. */
+/* Nothing of the page's own look is declared here: the layer, the dialog, the head and its centred
+   title, the scrolling body, the group cards, their corners and border, the rows' height and type,
+   the icons' size and colour, the chevrons and the spacing all come from the settings page's own
+   rules in styles.js. What is left is the strip a shell panel's second level needs -- that level is
+   not the settings layer, so it also needs its own line to keep the conversation's top row out. */
 html[data-bt-mobile] body:has(.bt-subback) .bt-mobile-bar{display:none}
 html[data-bt-mobile] .bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px 0;z-index:96;display:flex;align-items:center;background:var(--bt-main);pointer-events:none}
 html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
@@ -16264,7 +16259,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "071233d5" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "5c75554e" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

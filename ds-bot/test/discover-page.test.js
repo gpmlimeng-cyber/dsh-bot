@@ -118,36 +118,22 @@ test('the second level carries the strip a shell panel does not draw', () => {
   assert.ok(discover.includes('.bt-subback-btn>svg{width:22px;height:22px}'), 'and its glyph 22px')
 })
 
-test('the page is 全部设置\'s own look, plus the two things the user asked for', () => {
-  // The card, the row, the head, the spacing, the icon's size and colour, the chevron's: all of it
-  // is the settings page's, from styles.js, and this sheet restates none of it. What is left here
-  // is the shadow the user asked for on the card, the hairline between the rows of one card, and
-  // the strip a shell panel's second level needs.
+test('the page is 全部设置\'s own look, and declares none of it', () => {
+  // The card, the row, the head, the spacing, the icon's size and colour, the chevron's, the card's
+  // hairline border: all of it is the settings page's, from styles.js, and this sheet restates none
+  // of it -- nor adds to it. What is left here is the strip a shell panel's second level needs.
   const sheet = read('discover-page.js').slice(read('discover-page.js').indexOf('export const DISCOVER_CSS'))
-  // Only the page's own two rules are checked here: the strip is its own component and declares its
-  // own box.
-  const own = sheet.split('\n').filter(line => line.includes('.bt-discover '))
-  assert.equal(own.length, 2, `expected the page's two rules, found ${own.length}`)
-  for (const restated of ['border-radius:', 'min-height:', 'font-size:', 'padding:', 'justify-content:', 'text-align:', 'gap:']) {
-    assert.ok(!own.some(line => line.includes(restated)), `the page restates no ${restated} of the settings page's own`)
+  assert.ok(!sheet.includes('.bt-settings-group-card{'), 'the card keeps the settings page\'s own rule, border and corners')
+  assert.ok(!sheet.includes('box-shadow'), 'and no shadow is added to it')
+  assert.ok(!sheet.includes('::before'), 'and no hairline is drawn between its rows')
+  assert.ok(!sheet.includes('--bt-line-weak'), 'so the faint-line token is not read here either')
+  // The rules that do the work are the settings page's, and they are all still there.
+  const settings = read('styles.js')
+  for (const rule of ['.bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:16px;background:var(--bt-card);overflow:hidden}', '.bt-settings-item{min-height:var(--bt-set-row-h,48px)', '.bt-settings-item>svg{flex:none;width:24px;height:24px;color:var(--bt-ink-2)}', '.bt-settings-top h2{position:absolute']) {
+    assert.ok(settings.includes(rule), `the skin still declares ${rule.slice(0, 40)}…`)
   }
-  const card = sheet.split('\n').find(line => line.includes('.bt-discover .bt-settings-group-card{'))
-  assert.ok(card, 'the card gets one rule of its own')
-  assert.ok(card.includes('box-shadow:var(--bt-float-shadow)'), 'the one shared shadow, not a value of its own')
-  assert.ok(!card.includes('border-radius') && !card.includes('background:'), 'and nothing else: the rest is that page\'s')
-  // The hairline is drawn rather than a border: a border would run the card's whole width and meet
-  // both edges, and it must start at the icon and stop short of them. Colour: the skin's own
-  // lightest line token -- no new grey is written here.
-  const line = sheet.split('\n').find(entry => entry.includes('.bt-discover .bt-settings-item+.bt-settings-item::before'))
-  assert.ok(line, 'the hairline between two rows has its rule')
-  assert.ok(line.includes('left:12px') && line.includes('right:12px'), 'inset from both edges, starting at the icon')
-  assert.ok(!line.includes('left:0') && !line.includes('right:0'), 'and never reaching them')
-  assert.ok(line.includes('background:var(--bt-line-weak)'), 'in the shared faint-line token')
-  assert.ok(read('styles.js').includes('--bt-line-weak:'), 'which the skin declares')
-  assert.ok(!/#[0-9a-f]{3,8}|rgba?\(/i.test(line), 'with no colour of its own')
-  // And the row it draws on is the settings page's own, which already carries the position the
-  // pseudo-element needs.
-  assert.ok(read('styles.js').includes('.bt-settings-item{position:relative;'), 'the row is already a positioned box')
+  // Nothing of the page is declared under its own name either: the whole sheet is the strip.
+  assert.ok(!sheet.includes('.bt-discover '), 'the page declares no rule of its own')
 })
 
 test('the page is a surface of its own, one at a time', () => {
@@ -217,14 +203,14 @@ test('the page and its tab carry one name, and the copy is in the dictionary', (
 
 test('every rule is a phone rule, and the page hands the shell nothing but the strip', () => {
   const rules = read('discover-page.js').split('\n').filter(line => line.startsWith('html['))
-  // Two rules for what the user asked on top of 全部设置's spec (the card's shadow, the hairline
-  // between its rows) and the strip's four: the page has no look of its own beyond those.
-  assert.equal(rules.length, 7, `expected the page's own rules, found ${rules.length}`)
+  // The page declares no look of its own: the sheet is the strip's four rules and the one line that
+  // keeps the conversation's top row off a shell panel's second level.
+  assert.equal(rules.length, 5, `expected the strip's rules and the bar's, found ${rules.length}`)
   for (const line of rules) {
     const after = line.slice('html[data-bt-mobile]'.length)
     assert.ok(after.startsWith(' ') || after.startsWith('{') || after.startsWith('[data-bt-keyboard]'), line)
   }
-  assert.ok(rules.every(line => line.includes('.bt-discover') || line.includes('.bt-subback')), 'and every one is scoped to this page or to its strip')
+  assert.ok(rules.every(line => line.includes('.bt-subback') || line.includes('.bt-mobile-bar')), 'and every one is the strip\'s or the bar\'s')
   // The head, the body's scrolling, the card's corners, the row's height and type, the gap between
   // two cards, the icon's size and colour and the chevron's: all of that is the settings page's,
   // declared once there, so there is nothing here to read back.
