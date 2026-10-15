@@ -16843,7 +16843,7 @@ function apply(ctx) {
   }, "ds-bot: surface");
 }
 /*! Lucide (ISC) · path data from lucide-static v1.57.0 */
-/*! Fluent System Icons (MIT) · path data from @fluentui/svg-icons v1.1.344 */
+/*! Fluent System Icons (MIT) · Copyright (c) 2020 Microsoft Corporation · @fluentui/svg-icons v1.1.344 */
 return Object.defineProperty({ ...module.exports }, Symbol.toStringTag, { value: 'Module' })
   },
 })

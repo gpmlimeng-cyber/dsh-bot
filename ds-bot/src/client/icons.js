@@ -168,7 +168,7 @@ export const LucideCopyIcon = lucideIcon([
 ], LUCIDE_MENU_BOX)
 export const LucideCheckIcon = lucideIcon([['path', { d: 'M20 6 9 17l-5-5' }]], LUCIDE_MENU_BOX)
 
-// --- Fluent System Icons (MIT) · path data from @fluentui/svg-icons v1.1.344 -----
+// --- Fluent System Icons (MIT) · Copyright (c) 2020 Microsoft Corporation · @fluentui/svg-icons v1.1.344 -----
 // The phone's bottom bar draws each of its four pages twice: the outline while the page is
 // not the current one, the solid drawing while it is. The platform's own pack is this
 // family -- it names its icons the same way (IconChatOutlineRegular, and the bar's own
@@ -185,7 +185,7 @@ export const LucideCheckIcon = lucideIcon([['path', { d: 'M20 6 9 17l-5-5' }]], 
 // glyphs at about the grid's own 24px, so these are not measured against the pill's 13px.
 //
 // Fluent is MIT-licensed; its notice travels with its path data, in the form a bundler keeps:
-/*! Fluent System Icons (MIT) · path data from @fluentui/svg-icons v1.1.344 */
+/*! Fluent System Icons (MIT) · Copyright (c) 2020 Microsoft Corporation · @fluentui/svg-icons v1.1.344 */
 const FLUENT_NAV_BOX = 24
 const fluentIcon = (d, box = FLUENT_NAV_BOX) => function FluentIcon() {
   return h('svg', { width: box, height: box, viewBox: '0 0 24 24', fill: 'currentColor', 'aria-hidden': true }, h('path', { d }))

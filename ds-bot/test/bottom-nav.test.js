@@ -69,7 +69,7 @@ test('the four pages are named for a UI dump, tasks first', () => {
 // travels with it.
 test('each page is Fluent’s outline and Fluent’s fill, credited where they live', () => {
   const icons = read('icons.js')
-  assert.ok(icons.includes('Fluent System Icons (MIT) · path data from @fluentui/svg-icons v1.1.344'), 'the MIT notice sits with the data')
+  assert.ok(icons.includes('Fluent System Icons (MIT) · Copyright (c) 2020 Microsoft Corporation · @fluentui/svg-icons v1.1.344'), 'the MIT notice sits with the data')
   const glyphs = [
     ['M12 2a10 10 0 1 1-4.59 18.89L3.6 21.96', 'chat, the outline'],
     ['M12 2a10 10 0 1 1-4.64 18.86l-4.3 1.12', 'chat, the solid one'],
