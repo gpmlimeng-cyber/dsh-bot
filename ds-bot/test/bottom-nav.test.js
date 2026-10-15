@@ -25,7 +25,11 @@ test('every rule of the bar hangs on the mobile layout and an upright window', (
   // whole prefix of each one, so `html[data-bt-mobile]` alone or a bare `.bt-nav` cannot
   // slip in.
   assert.ok(css.length >= 8, `expected the bar's rules, found ${css.length}`)
-  for (const line of css) assert.ok(line.startsWith(`${GATE} `) || line.startsWith(`${GATE}{`), line)
+  for (const line of css) {
+    assert.ok(line.startsWith(GATE), line)
+    const after = line.slice(GATE.length)
+    assert.ok(after.startsWith(' ') || after.startsWith('{') || after.startsWith('[data-bt-keyboard]'), line)
+  }
   // The token the rule set is published on is the same gate, and it is the only place the
   // height is written down.
   assert.equal(css.filter(line => line.includes('--bt-nav-h:')).length, 1, '--bt-nav-h is declared once')
@@ -178,6 +182,28 @@ test('发现 is not drawn without the shell panel, and is never selected without
   assert.ok(index.includes("ctx.slots.subscribe?.('main', readPlugins)"), 'and watched, so a late plugin manager still gets its tab')
 })
 
+// The phone showed the composer floating a bar's height above the keyboard, with the bar
+// itself behind it. While the IME is up the bar goes and its 56px goes back to the
+// conversation; mobile.js publishes the flag from the platform's own IME inset and the
+// visual viewport, because the platform leaves no flag of its own.
+test('the keyboard takes the bar and the room it reserved', () => {
+  const rules = css.filter(line => line.includes('[data-bt-keyboard]'))
+  assert.ok(rules.some(line => line.includes('.bt-nav{display:none}')), 'the bar goes while the keyboard is up')
+  assert.ok(rules.some(line => line.includes('[class*="centerCol"]{padding-bottom:0!important}')), 'and the conversation gets its 56px back')
+  assert.ok(rules.some(line => line.includes('.bt-side.bt-rail{padding-bottom:12px}')), 'the peers page too')
+  assert.ok(rules.some(line => line.includes('.bt-settings-layer{bottom:0}')), 'and the Settings screen')
+  // A short transition, so the composer does not jump when the flag flips.
+  const reserved = css.find(line => line.includes('[class*="centerCol"]') && line.includes('var(--bt-nav-h)'))
+  assert.ok(reserved.includes('transition:padding-bottom .18s ease'), reserved)
+  // The flag itself: read from the platform's IME inset and the visual viewport, never guessed.
+  const mobile = read('mobile.js')
+  assert.ok(mobile.includes("getPropertyValue('--dsh-android-ime-bottom')"), 'the platform\'s IME inset is read')
+  assert.ok(mobile.includes('window.innerHeight - view.height > KEYBOARD_MIN_PX'), 'and the layout-vs-visual gap, since innerHeight stays put here')
+  assert.ok(mobile.includes("document.documentElement.dataset.btKeyboard = '1'"), 'published on the root')
+  assert.ok(mobile.includes("delete document.documentElement.dataset.btKeyboard"), 'and taken back when it closes')
+  assert.ok(mobile.includes("window.visualViewport?.addEventListener?.('resize'"), 'watched where the keyboard shows up')
+})
+
 test('the bar has no frame at all, and wears the page colour', () => {
   // The user asked for the frame gone -- all four sides, an outline and a shadow -- and for
   // the bar to be the same colour as the page it sits on. Written out rather than merely
@@ -204,6 +230,17 @@ test('the peers page starts at the top edge of the screen and carries the inset 
   assert.ok(page.includes(' + 10px)'), 'plus the base rule\'s own 10px, so the top row does not move')
   // The bar's own height is still given back at the foot of the same page.
   assert.ok(page.includes('padding-bottom:calc(var(--bt-nav-h)'), page)
+})
+
+// The user asked for the conversation's hamburger back. It toggles the same ui.mobileNav the
+// 伙伴 tab sets, so the two entries open one peers page rather than a drawer of its own.
+test('the hamburger stays, and opens the same peers page as the tab', () => {
+  assert.ok(!nav.includes('.bt-mobile-nav{opacity:0'), 'the hamburger is not hidden any more')
+  assert.ok(css.some(line => line.includes('body:has(.bt-side.bt-rail[data-mobile-open]) .bt-mobile-bar{display:none}')), 'the peers page still carries no bar of its own')
+  const header = read('header.js')
+  assert.ok(header.includes('onToggle: () => actions.toggleMobileNav()'), 'the hamburger toggles the nav state')
+  const sidebar = read('sidebar.js')
+  assert.ok(sidebar.includes('const mobileOpen = useUi(value => value.mobileNav === true)'), 'and that state is what renders the peers page')
 })
 
 test('a popup menu is drawn over the bar', () => {

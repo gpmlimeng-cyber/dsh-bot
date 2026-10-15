@@ -159,6 +159,29 @@ const publishInset = () => {
   if (top > 0) document.documentElement.style.setProperty('--bt-top-inset', `${top}px`)
 }
 
+// Whether the soft keyboard is up, mirrored onto <html data-bt-keyboard>. The platform has no
+// flag for it: @dsh-android/dsh-client-ui-responsive pins the frame's height to the visual
+// viewport while the IME is open (keyboard-boundary.ts) because Android 16 edge-to-edge does
+// not shrink the layout viewport, and it leaves the inset it works from on :root. So this
+// reads both things it does leave behind -- its --dsh-android-ime-bottom, and the gap between
+// the layout and visual viewports (innerHeight stays put on this device, vv.height does not)
+// -- and the stylesheet hides the bar and gives back the room it reserved.
+const KEYBOARD_MIN_PX = 80
+
+const keyboardUp = () => {
+  const ime = largestPx(getComputedStyle(document.documentElement).getPropertyValue('--dsh-android-ime-bottom'))
+  if (ime > 0) return true
+  const view = window.visualViewport
+  return view !== null && view !== undefined && window.innerHeight - view.height > KEYBOARD_MIN_PX
+}
+
+const publishKeyboard = () => {
+  if (typeof document === 'undefined') return
+  if (typeof window === 'undefined' || !window.visualViewport) return
+  if (keyboardUp()) document.documentElement.dataset.btKeyboard = '1'
+  else delete document.documentElement.dataset.btKeyboard
+}
+
 /** Start watching the breakpoint. Called from apply() so the flag is set before the first paint. */
 export function watchMobile() {
   const mql = media()
@@ -178,10 +201,16 @@ export function watchMobile() {
   // The transcript is mounted after this plugin applies, so measure on the next frames
   // rather than once, and again whenever the window changes shape.
   const tick = () => { if (mql?.matches === true) publishInset() }
+  const onViewport = () => { tick(); publishKeyboard() }
   if (typeof requestAnimationFrame === 'function') {
-    requestAnimationFrame(tick)
-    for (const delay of [300, 1200, 3000]) setTimeout(tick, delay)
-    if (typeof window !== 'undefined') window.addEventListener('resize', tick)
+    requestAnimationFrame(onViewport)
+    for (const delay of [300, 1200, 3000]) setTimeout(onViewport, delay)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', onViewport)
+      // The keyboard moves the visual viewport without resizing the window on this platform.
+      window.visualViewport?.addEventListener?.('resize', onViewport)
+      window.visualViewport?.addEventListener?.('scroll', onViewport)
+    }
   }
   return mql?.matches === true
 }

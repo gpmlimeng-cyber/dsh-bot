@@ -6508,6 +6508,19 @@ var publishInset = () => {
   const top = fromLayer > 0 ? Math.round(fromLayer) : scroller === null ? 0 : Math.round(scroller.getBoundingClientRect().top);
   if (top > 0) document.documentElement.style.setProperty("--bt-top-inset", `${top}px`);
 };
+var KEYBOARD_MIN_PX = 80;
+var keyboardUp = () => {
+  const ime = largestPx(getComputedStyle(document.documentElement).getPropertyValue("--dsh-android-ime-bottom"));
+  if (ime > 0) return true;
+  const view = window.visualViewport;
+  return view !== null && view !== void 0 && window.innerHeight - view.height > KEYBOARD_MIN_PX;
+};
+var publishKeyboard = () => {
+  if (typeof document === "undefined") return;
+  if (typeof window === "undefined" || !window.visualViewport) return;
+  if (keyboardUp()) document.documentElement.dataset.btKeyboard = "1";
+  else delete document.documentElement.dataset.btKeyboard;
+};
 function watchMobile() {
   const mql = media();
   publish(mql?.matches === true);
@@ -6522,10 +6535,18 @@ function watchMobile() {
   const tick = () => {
     if (mql?.matches === true) publishInset();
   };
+  const onViewport = () => {
+    tick();
+    publishKeyboard();
+  };
   if (typeof requestAnimationFrame === "function") {
-    requestAnimationFrame(tick);
-    for (const delay of [300, 1200, 3e3]) setTimeout(tick, delay);
-    if (typeof window !== "undefined") window.addEventListener("resize", tick);
+    requestAnimationFrame(onViewport);
+    for (const delay of [300, 1200, 3e3]) setTimeout(onViewport, delay);
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", onViewport);
+      window.visualViewport?.addEventListener?.("resize", onViewport);
+      window.visualViewport?.addEventListener?.("scroll", onViewport);
+    }
   }
   return mql?.matches === true;
 }
@@ -15874,7 +15895,7 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav-tab-text{max-width:100%;overflow:
    item with overflow:hidden, so its own padding is what shortens the column: the
    transcript scroller and the composer ride up together, and nothing sits under the bar.
    The same selector already carries the status bar's padding-top (styles.js:969). */
-html[data-bt-mobile][data-bt-portrait] [data-dsh-frame]>[class*="centerCol"]{padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap))!important}
+html[data-bt-mobile][data-bt-portrait] [data-dsh-frame]>[class*="centerCol"]{padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap))!important;transition:padding-bottom .18s ease}
 /* Settings is one of the four pages, so the bar stays over it — and the layer stops at
    the bar's top edge instead, which is what keeps its last rows reachable. */
 html[data-bt-mobile][data-bt-portrait] .bt-settings-layer{bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap))}
@@ -15896,13 +15917,21 @@ html[data-bt-mobile][data-bt-portrait] body:has(.bt-palette-layer) .bt-nav{displ
 html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail{top:0;padding-top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);width:100%;padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap));border-right:0;box-shadow:none}
 html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-left:0}
 html[data-bt-mobile][data-bt-portrait] .bt-mobile-scrim{display:none}
-/* The hamburger goes with the drawer: the 伙伴 tab is what opens the list now, and two
-   entries to one page is the duplication this replaces. It is hidden rather than removed
-   from the flow — the bar centres its three tracks, and taking the box away would slide
-   the pill off the screen's centre. The whole bar goes while the peers page is up: that
-   page carries its own top row, and the pill belongs to the conversation behind it. */
-html[data-bt-mobile][data-bt-portrait] .bt-mobile-nav{opacity:0;visibility:hidden;pointer-events:none}
+/* The hamburger stays on the conversation (the user asked for it back): it toggles the same
+   ui.mobileNav the 伙伴 tab sets, so both open the one peers page rather than a drawer of
+   their own. The peers page itself carries no hamburger — the whole bar goes while it is up,
+   because that page has its own top row and the pill belongs to the conversation behind it. */
 html[data-bt-mobile][data-bt-portrait] body:has(.bt-side.bt-rail[data-mobile-open]) .bt-mobile-bar{display:none}
+/* While the keyboard is up the bar goes and the 56px it reserved goes with it, so the
+   composer sits on the keyboard's top edge instead of floating a bar's height above it --
+   which is exactly what the phone showed. The flag is published by mobile.js, which reads
+   the platform's IME inset and the visual viewport: the platform pins the frame itself and
+   leaves no flag of its own to hang this on. The same reservation is given back on the
+   other two pages that make it. */
+html[data-bt-mobile][data-bt-portrait][data-bt-keyboard] .bt-nav{display:none}
+html[data-bt-mobile][data-bt-portrait][data-bt-keyboard] [data-dsh-frame]>[class*="centerCol"]{padding-bottom:0!important}
+html[data-bt-mobile][data-bt-portrait][data-bt-keyboard] .bt-side.bt-rail{padding-bottom:12px}
+html[data-bt-mobile][data-bt-portrait][data-bt-keyboard] .bt-settings-layer{bottom:0}
 /* A popup menu goes over the bar, not under it. The shell's menus clamp themselves to the
    viewport (context-menu.js: innerHeight - 8), which knows nothing about a 56px bar, so a
    long-press on one of the last rows would leave its lower items behind the bar — the bar
