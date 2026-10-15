@@ -230,8 +230,10 @@ test('every rule is a phone rule, and the page hands the shell nothing but the s
   assert.ok(rules.every(line => line.includes('.bt-discover ') || line.includes('.bt-subback')), 'and every one is the page\'s or the strip\'s')
   // The head, the body's scrolling, the card's corners, the row's height and type, the gap between
   // two cards, the icon's size and colour and the chevron's: all of that is the settings page's,
-  // declared once there, so there is nothing here to read back.
-  assert.ok(!read('peers-page.js').includes('bt-settings-'), 'and the peers page is left where it is')
+  // declared once there, so there is nothing here to read back. 伙伴 borrows that head too, and
+  // nothing else of it: its own list and rows are still its own.
+  assert.ok(read('peers-page.js').includes("className: 'bt-settings-top' }"), '伙伴\'s title row is that page\'s bar as well')
+  assert.ok(read('peers-page.js').includes("className: 'bt-peers-row'"), 'and its rows are still its own')
   // The row stays a button and the card is not announced: a button that called itself a list item
   // stops being announced as a button.
   assert.ok(discover.includes("className: 'bt-settings-group-card' }"), 'the card is the wrapper')

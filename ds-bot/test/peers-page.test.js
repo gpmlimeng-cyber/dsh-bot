@@ -101,11 +101,11 @@ test('the header\'s new button opens the real create-Bot form, not a dead end', 
   const newChat = code('new-chat.js')
   assert.ok(newChat.includes("mode === 'create' ? { name: '', fromList: false } : null"), 'which opens the form itself, not the picker')
   assert.ok(code('palette.js').includes("title: t('Create Bot'), run: () => actions.openNewChat('create')"), 'the same door the command palette uses')
-  // It sits in the title row, and the page closes on the way: openNewChat clears `peers`.
-  assert.ok(peers.includes("className: 'bt-peers-head'"), 'in the title row')
+  // It sits in 我的's own title bar, and the page closes on the way: openNewChat clears `peers`.
+  assert.ok(peers.includes("className: 'bt-settings-top' }"), 'in the title row')
   assert.ok(index.includes('openNewChat: (mode) =>') && index.includes('newChat: mode') && index.includes('peers: false'), 'and the form is never stacked on the page')
   // One control, one surface: the skin stays the shared declaration (styles.js), never a copy here.
-  assert.ok(code('styles.js').includes('html[data-bt-mobile] .bt-peers-head .bt-round,'), 'the skin list carries this control')
+  assert.ok(code('styles.js').includes('html[data-bt-mobile] .bt-peers-new,'), 'the skin list carries this control')
   assert.ok(!peers.includes('box-shadow:0 2px 8px -1px rgba(0,0,0,.06)'), 'and this sheet does not restate the surface')
 })
 
@@ -146,7 +146,10 @@ test('the parts of the address book the ask left out stay out', () => {
   for (const out of ['alphabet', 'pinyin', 'collapsible', 'Add friend', 'section', 'group']) {
     assert.ok(!peers.includes(out), `${out} was explicitly not asked for`)
   }
-  // One title and one search field, nothing else in the head.
-  assert.ok(peers.includes("h('h2', { className: 'bt-peers-title' }, t('Peers'))"), 'the title')
+  // One title and one search field, nothing else in the head -- and the title is the settings
+  // page's own bar, whose single rule centres whatever it holds at 16/24 (styles.js).
+  assert.ok(peers.includes("className: 'bt-settings-top' }"), 'the title, in the settings page\'s own bar')
+  assert.ok(peers.includes("h('h2', null, t('Peers'))"), 'which holds the name and nothing of its own')
+  assert.ok(!peers.includes('bt-peers-title') && !peers.includes('bt-peers-head'), 'with no title row of its own any more')
   assert.ok(peers.includes("className: 'bt-side-search'"), 'and the search field the sidebar already styles')
 })

@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: d8bcbd51
+// Source fingerprint: 24385ca9
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2250,7 +2250,7 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
    they sit on a white panel, where a white, edgeless circle would have nothing to read as.) */
 .bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-side-search,
 html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round,
-html[data-bt-mobile] .bt-peers-head .bt-round,
+html[data-bt-mobile] .bt-peers-new,
 html[data-bt-pc] .bt-side .bt-side-top .bt-round{background:var(--bt-card);border:0;border-radius:999px;box-shadow:var(--bt-float-shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
@@ -16092,10 +16092,12 @@ function PeersPage({ useRoster, useUi, actions }) {
       // form straight (new-chat.js takes that mode as an initial draft), which is exactly where
       // the command palette's own "Create Bot" goes -- no button that does nothing. The page is
       // closed on the way there: openNewChat clears `peers`, so the form never stacks on it.
+      // The title row is 我的's own (styles.js): the same 52px bar with the name centred in it by
+      // that page's own rule, and the one control this page has sitting at its right end.
       (0, import_react40.createElement)(
         "div",
-        { className: "bt-peers-head" },
-        (0, import_react40.createElement)("h2", { className: "bt-peers-title" }, t("Peers")),
+        { className: "bt-settings-top" },
+        (0, import_react40.createElement)("h2", null, t("Peers")),
         (0, import_react40.createElement)("button", {
           type: "button",
           className: "bt-round bt-peers-new",
@@ -16151,13 +16153,12 @@ html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;fl
    the bar itself. */
 html[data-bt-mobile][data-bt-keyboard] .bt-peers{padding-bottom:12px}
 html[data-bt-mobile] .bt-peers-top{flex:none;display:flex;flex-direction:column;gap:10px;padding-bottom:8px}
-html[data-bt-mobile] .bt-peers-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
-/* The title row: 伙伴 on the left, 新建 on the right at the page's own edge. The button is a
-   control of the chrome, so its surface (fill, hairline, radius, shadow) is the one shared
-   declaration in styles.js -- the same control the drawer's + and the conversation pill read.
-   Only size and layout live here. */
-html[data-bt-mobile] .bt-peers-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-html[data-bt-mobile] .bt-peers-head .bt-round{flex:0 0 40px;width:40px;height:40px}
+/* The title row is 我的's own (styles.js: .bt-settings-top): the 52px bar with the name centred in
+   it, out of the flow so the control beside it cannot pull it off centre. The button is a control
+   of the chrome, so its surface (fill, hairline, radius, shadow) is the one shared declaration in
+   styles.js -- the same control the drawer's + and the conversation pill read. Only size and layout
+   live here. */
+html[data-bt-mobile] .bt-peers-new{flex:0 0 40px;width:40px;height:40px;margin-left:auto}
 html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
@@ -16267,7 +16268,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "d8bcbd51" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "24385ca9" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

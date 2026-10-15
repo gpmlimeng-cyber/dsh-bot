@@ -130,7 +130,7 @@ test('every floating control reads the composer card\'s skin', () => {
     assert.ok(skin.includes(control), `${control} reads the skin: ${skin.slice(0, 120)}`)
   }
   assert.ok(skin.includes('html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round'), 'the drawer\'s round buttons too')
-  assert.ok(skin.includes('html[data-bt-mobile] .bt-peers-head .bt-round'), 'and the 伙伴 page\'s')
+  assert.ok(skin.includes('html[data-bt-mobile] .bt-peers-new'), 'and the 伙伴 page\'s')
   // The user asked for the top row to look like the input card: white, no edge, no blur.
   assert.ok(skin.includes('background:var(--bt-card)') && skin.includes('border:0'), 'white and edgeless')
   assert.ok(skin.includes('border-radius:999px'), 'still a full round')
