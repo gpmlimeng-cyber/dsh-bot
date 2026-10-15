@@ -7,7 +7,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { STATUS_BAR_MODE, publishStatusBarMode, askForStatusBar } from '../src/client/status-bar.js'
+import { statusBarMode, publishStatusBarMode, askForStatusBar } from '../src/client/status-bar.js'
 
 const withWindow = (bridge, run) => {
   const had = 'window' in globalThis
@@ -19,12 +19,15 @@ const withWindow = (bridge, run) => {
   }
 }
 
-test('the page asks for a transparent status bar, with the shell\'s own protocol', () => {
-  assert.deepEqual(STATUS_BAR_MODE, ['transparent', '', 'auto'], 'mode, colour and appearance, as documented')
+test('the page asks for the status bar in its own colour, with the shell\'s own protocol', () => {
+  assert.deepEqual(statusBarMode('#fcfcfc'), ['solid', '#fcfcfc', 'auto'], 'mode, colour and appearance, as documented')
+  // The strip is solid in the page's colour rather than handed over: transparent left the shell's
+  // own idea of where it ended showing as a line across the top.
+  assert.equal(statusBarMode('#141414')[1], '#141414', 'and the colour is the caller\'s, so dark mode can ask for its own')
   const calls = []
   const bridge = { set: (...args) => calls.push(args) }
   assert.equal(withWindow(bridge, () => publishStatusBarMode()), true, 'it reports that it asked')
-  assert.deepEqual(calls, [['transparent', '', 'auto']], 'and asked exactly once, exactly that')
+  assert.deepEqual(calls, [['solid', '#fcfcfc', 'auto']], 'and asked exactly once, exactly that')
   // Idempotent per the protocol: calling twice is not an error and asks the same thing again.
   withWindow(bridge, () => publishStatusBarMode())
   assert.equal(calls.length, 2)
@@ -46,8 +49,10 @@ test('a shell without the bridge is left alone, and is never asked twice about i
 
 test('and the writer wires it, as the only thing the strip needs from the shell', () => {
   const index = readFileSync(new URL('../src/client/index.js', import.meta.url), 'utf8')
-  assert.ok(index.includes("import { askForStatusBar } from './status-bar.js'"), 'imported')
-  assert.ok(index.includes("askForStatusBar(quietly('status bar'))"), 'called where the theme is applied')
+  assert.ok(index.includes("import { askForStatusBar, statusBarMode } from './status-bar.js'"), 'imported')
+  assert.ok(index.includes("askForStatusBar(quietly('status bar'), statusBarMode("), 'called where the theme is applied, with this theme\'s page colour')
+  assert.ok(index.includes("themes[id].dark : themes[id].light).bg"), 'the dark theme asks for its own colour')
+  assert.ok(index.includes("attributeFilter: ['data-ds-dark-theme']") && index.includes('darkWatch.disconnect()'), 'and the platform flipping dark asks again')
   assert.ok(!index.includes('publishShellBackground'), 'and nothing reads the shell\'s colour back')
 })
 
@@ -69,7 +74,7 @@ test('the ask is repeated over the next seconds, from one ladder per page', () =
     bridge = { set: (...args) => calls.push(args) }
     for (const fire of timers) fire()
     assert.ok(calls.length >= 1, 'asked the moment it appeared')
-    for (const call of calls) assert.deepEqual(call, ['transparent', '', 'auto'], 'and always the same ask')
+    for (const call of calls) assert.deepEqual(call, ['solid', '#fcfcfc', 'auto'], 'and always the same ask')
     // A later theme render asks directly but does not stack a second ladder of timers.
     const laid = timers.length
     assert.equal(askForStatusBar(), true, 'a later render asks')
