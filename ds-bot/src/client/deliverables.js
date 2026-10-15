@@ -231,9 +231,9 @@ export function DeliverableActions({ file, actions, onFailed }) {
       type: 'button', className: 'bt-dcard-btn', 'data-act': 'more',
       'aria-haspopup': 'menu', 'aria-expanded': shown,
       'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
-      // Lucide's three dots at 36px: they are r=1 circles on a 2-unit stroke, so each dot
-      // lands at 6px in a 27px row, and the box fits inside this 44px control whole.
-    }, h(LucideEllipsisIcon, { size: 36 })),
+      // Lucide's three dots at the size the shell's own controls draw: the glyph brings its
+      // box, so this control passes no size and cannot drift from the bar's identical anchor.
+    }, h(LucideEllipsisIcon)),
   })
 }
 
@@ -273,8 +273,8 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
     anchor: h('button', {
       type: 'button', className: 'bt-preview-more', 'aria-haspopup': 'menu', 'aria-expanded': shown,
       'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
-      // The same Lucide dots as the card's control: one glyph, two anchors, 6px dots.
-    }, h(LucideEllipsisIcon, { size: 36 })),
+      // The same Lucide dots as the card's control: one glyph, two anchors, one box.
+    }, h(LucideEllipsisIcon)),
   })
 }
 

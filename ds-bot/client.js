@@ -2266,8 +2266,8 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* One "···", no words: the words live in the menu and in aria-label. 44x44 is the touch
    target the card's own 60px tile can hold exactly (8px of padding above and below) and it
    does not grow -- a 48px control would break the tile the user has already approved. The
-   drawing is not sized here: it is Lucide's ellipsis, passed its 36px box by the control, so
-   the card's "···" and the bar's are the same glyph in the same box. */
+   drawing is not sized here: it is Lucide's ellipsis, which brings the same box and the same
+   1.2px stroke the bar's own "···" does, so the card's and the bar's are one glyph. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
@@ -3965,35 +3965,37 @@ var MemoryIcon = lineIcon(["M5.5 3.5h8A1.5 1.5 0 0 1 15 5v10a1.5 1.5 0 0 1-1.5 1
 var FolderIcon = lineIcon(["M3 6A1.5 1.5 0 0 1 4.5 4.5h3.2l1.8 2h6A1.5 1.5 0 0 1 17 8v6.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5z"]);
 var ChatsIcon = lineIcon(["M3.5 5.5A1.5 1.5 0 0 1 5 4h7a1.5 1.5 0 0 1 1.5 1.5V10A1.5 1.5 0 0 1 12 11.5H8L5 14v-2.5A1.5 1.5 0 0 1 3.5 10z", "M13.5 7.5H15A1.5 1.5 0 0 1 16.5 9v4.5A1.5 1.5 0 0 1 15 15v2l-2.5-2h-3A1.5 1.5 0 0 1 8 13.5V13"]);
 var SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: ChatsIcon, usage: GaugeIcon };
-var lucideIcon = (children, defaultSize) => function LucideIcon({ size = defaultSize }) {
+var LUCIDE_BOX = 15;
+var LUCIDE_STROKE = 1.2;
+var lucideIcon = (children) => function LucideIcon() {
   return (0, import_react3.createElement)("svg", {
-    width: size,
-    height: size,
+    width: LUCIDE_BOX,
+    height: LUCIDE_BOX,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: 2,
+    strokeWidth: LUCIDE_STROKE,
     strokeLinecap: "round",
     strokeLinejoin: "round",
     "aria-hidden": true
-  }, children.map(([tag, attributes], index) => (0, import_react3.createElement)(tag, { key: index, ...attributes })));
+  }, children.map(([tag, attributes], index) => (0, import_react3.createElement)(tag, { key: index, vectorEffect: "non-scaling-stroke", ...attributes })));
 };
-var LucideChevronLeftIcon = lucideIcon([["path", { d: "m15 18-6-6 6-6" }]], 38);
+var LucideChevronLeftIcon = lucideIcon([["path", { d: "m15 18-6-6 6-6" }]]);
 var LucideEllipsisIcon = lucideIcon([
   ["circle", { cx: 12, cy: 12, r: 1 }],
   ["circle", { cx: 19, cy: 12, r: 1 }],
   ["circle", { cx: 5, cy: 12, r: 1 }]
-], 36);
+]);
 var LucideExternalLinkIcon = lucideIcon([
   ["path", { d: "M15 3h6v6" }],
   ["path", { d: "M10 14 21 3" }],
   ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" }]
-], 16);
+]);
 var LucideCopyIcon = lucideIcon([
   ["rect", { width: 14, height: 14, x: 8, y: 8, rx: 2, ry: 2 }],
   ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" }]
-], 16);
-var LucideCheckIcon = lucideIcon([["path", { d: "M20 6 9 17l-5-5" }]], 16);
+]);
+var LucideCheckIcon = lucideIcon([["path", { d: "M20 6 9 17l-5-5" }]]);
 
 // src/client/questions.js
 var import_react4 = require("react");
@@ -4822,14 +4824,14 @@ var FILE_PREVIEW_CSS = `
 
    The drawing inside a control is what the eye judges, so neither is a shape we drew: both
    are Lucide (ISC) glyph data, copied from lucide-static and carrying its notice in icons.js.
-   One grid for every glyph is what makes them read as one set. Each arrives in the box its
-   own geometry needs for 22px of ink -- 38px of chevron, 36px of dots -- and the stroke is
-   Lucide's own 2 units of a 24-unit grid, so nothing here pins a width. */
+   One grid and one weight for every glyph is what makes them read as one set -- the box the
+   shell's own pill draws inside, and a stroke pinned by the glyph itself, so nothing here
+   sizes an icon or pins a width. */
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The bar's back arrow is Lucide's chevron-left: 6x12 units of a 24-unit grid, so a 38px
-   box paints 12.7x22.2 of ink with the glyph's own 2-unit stroke. Only the box is ours. */
+/* The bar's back arrow is Lucide's chevron-left: 6x12 units of a 24-unit grid, so the 15px
+   box it brings paints 5.0x8.7 of ink. The box and the stroke are the glyph's. */
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -4837,9 +4839,9 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The dots are Lucide's ellipsis in a 36px box: three r=1 circles on the glyph's 2-unit
-   stroke, which lands 6px of dot in a 27px row. A row of dots has no height to grow -- its
-   ink is the dot diameter -- so the width carries the size. */
+/* The dots are Lucide's ellipsis in the same 15px box: three r=1 circles, which land 2.45px
+   of dot in an 11.2px row at the glyph's pinned 1.2px stroke. A row of dots has no height to
+   grow -- its ink is the dot diameter -- so the glyph's own box carries the size. */
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
@@ -5044,9 +5046,9 @@ function DeliverableActions({ file, actions, onFailed }) {
       "aria-label": t("More"),
       title: t("More"),
       onClick: () => setShown((value) => !value)
-      // Lucide's three dots at 36px: they are r=1 circles on a 2-unit stroke, so each dot
-      // lands at 6px in a 27px row, and the box fits inside this 44px control whole.
-    }, (0, import_react7.createElement)(LucideEllipsisIcon, { size: 36 }))
+      // Lucide's three dots at the size the shell's own controls draw: the glyph brings its
+      // box, so this control passes no size and cannot drift from the bar's identical anchor.
+    }, (0, import_react7.createElement)(LucideEllipsisIcon))
   });
 }
 var exitItems = (state) => [
@@ -5089,8 +5091,8 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
       "aria-label": t("More"),
       title: t("More"),
       onClick: () => setShown((value) => !value)
-      // The same Lucide dots as the card's control: one glyph, two anchors, 6px dots.
-    }, (0, import_react7.createElement)(LucideEllipsisIcon, { size: 36 }))
+      // The same Lucide dots as the card's control: one glyph, two anchors, one box.
+    }, (0, import_react7.createElement)(LucideEllipsisIcon))
   });
 }
 function DeliverableCard({ file, actions, meta, role }) {

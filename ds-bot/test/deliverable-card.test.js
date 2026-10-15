@@ -77,18 +77,18 @@ test('the card’s exits are one "···", the same control in every list', () =
   const source = card.join('\n')
   const btn = rule('.bt-dcard-btn{')
   assert.ok(btn.includes('width:44px') && btn.includes('height:44px'), 'a 44px touch target')
-  // The drawing is what the eye judges, and it is the filled dots at the size the preview
-  // bar's own "···" draws them: three 4-unit circles in a 34px box, landing at 6.8px dots in a
-  // 25.5px row -- over the 6px a dot needs and the 22px the row needs together. The sheet does
-  // not size the glyph; the control passes the box, exactly as the bar's control does.
+  // The drawing is what the eye judges, and it is the same glyph the preview bar's own "···"
+  // draws: a 15px box, the one the shell's pill draws inside, with the stroke pinned at 1.2px
+  // -- 2.45px dots in an 11.2px row, well inside this 44px control. The sheet does not size the
+  // glyph and neither does the control: the glyph brings its own box.
   assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn svg')), 'the sheet does not size the control’s glyph')
-  assert.ok(source.includes('h(LucideEllipsisIcon, { size: 36 })'), 'it draws Lucide’s three dots')
+  assert.ok(source.includes('}, h(LucideEllipsisIcon)),'), 'it draws Lucide’s three dots')
+  assert.ok(!source.includes('{ size: 36 }'), 'and no call site sizes a Lucide glyph by hand')
   assert.ok(icons.includes('export function DotsBoldIcon'), 'though our own dot glyph stays where the phone bar uses it')
-  // Lucide's ellipsis is three r=1 circles on the glyph set's own 2-unit stroke, so each dot
-  // is 4 of the 24 units: a 36px box paints 6px of dot in a 27px row, over both the 6px and
-  // the 22px asked for, and the box is inside the 44px control whole.
-  assert.equal(4 * 36 / 24, 6, 'landing at 6px dots')
-  assert.equal(18 * 36 / 24, 27, 'in a 27px row')
+  // Lucide's ellipsis is three r=1 circles, 16x2 units of outline: the 15px box paints a
+  // 2.45px dot in an 11.2px row, with the stroke pinned rather than scaled by the box.
+  assert.equal((2 * 15 / 24 + 1.2).toFixed(2), '2.45', 'landing at 2.45px dots')
+  assert.equal((16 * 15 / 24 + 1.2).toFixed(1), '11.2', 'in an 11.2px row')
   // Lucide's data is copied, so its notice travels with it -- and the strings are theirs.
   assert.ok(icons.includes('Lucide (ISC) · path data from lucide-static v1.57.0'), 'the ISC notice is written where the data is')
   assert.ok(icons.includes("['circle', { cx: 12, cy: 12, r: 1 }]") && icons.includes("['circle', { cx: 19, cy: 12, r: 1 }]") && icons.includes("['circle', { cx: 5, cy: 12, r: 1 }]"), 'with the glyph’s own three circles, in lucide-static’s order')
@@ -130,7 +130,7 @@ test('the card’s exits are one "···", the same control in every list', () =
 test('every glyph is Lucide’s copied data, credited where it lives', () => {
   assert.ok(icons.includes('Lucide (ISC) · path data from lucide-static v1.57.0'), 'the ISC notice sits with the data')
   const glyphs = [
-    ["['path', { d: 'm15 18-6-6 6-6' }]", 'chevron-left, the bar’s back arrow at 38px'],
+    ["['path', { d: 'm15 18-6-6 6-6' }]", 'chevron-left, the bar’s back arrow'],
     ["['circle', { cx: 12, cy: 12, r: 1 }]", 'ellipsis, dot one of three'],
     ["['circle', { cx: 19, cy: 12, r: 1 }]", 'ellipsis, dot two'],
     ["['circle', { cx: 5, cy: 12, r: 1 }]", 'ellipsis, dot three'],
@@ -144,11 +144,19 @@ test('every glyph is Lucide’s copied data, credited where it lives', () => {
   for (const [data, what] of glyphs) {
     assert.ok(icons.includes(data), `${what} is lucide-static’s own data`)
   }
-  // One grid for all of them: Lucide's 24-unit box and 2-unit stroke, so no glyph is drawn
-  // at a weight of its own and no rule of ours has to correct one.
+  // One grid for all of them, and one weight. Lucide's own 2-unit stroke would scale with the
+  // box, so the box is the pill's -- the 15px box the shell draws inside it -- and the stroke
+  // is 1.2px pinned onto every shape, since vector-effect is not inherited and so cannot sit
+  // on the frame around the glyph.
   assert.equal(icons.split("viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',").length - 1, 1, 'one glyph factory, one grid')
-  assert.ok(icons.includes("strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round'"), 'at Lucide’s own stroke and joins')
+  assert.ok(icons.includes('const LUCIDE_BOX = 15') && icons.includes('const LUCIDE_STROKE = 1.2'), 'the box and one stroke, both ours')
+  assert.ok(icons.includes("{ key: index, vectorEffect: 'non-scaling-stroke'"), 'pinned per shape, so a bigger box cannot thicken it')
   assert.ok(!read('file-preview.js').includes('stroke-width:2'), 'and nothing pins a stroke afterwards')
+  // The pill's three icons paint 1.28px, 1.13px and 1.12px of stroke on screen (2.2 of 24 units
+  // in a 14px box, 1.5 of 20 in a 15px box, 1.6 of 20 in a 14px box). One number for every glyph
+  // of ours has to sit inside that band rather than on one end of it.
+  const pillStrokes = [2.2 * 14 / 24, 1.5 * 15 / 20, 1.6 * 14 / 20]
+  assert.ok(pillStrokes.every(px => Math.abs(px - 1.2) <= 0.09), '1.2px is the band the pill itself draws in')
 })
 
 test('two columns fold to one when the card column is narrow', () => {
@@ -315,7 +323,7 @@ test('the preview page’s title bar is back, the name, and one more menu', () =
   assert.ok(source.includes("} from './icons.js'"), 'the page’s glyphs come from our own module')
   // Every glyph in this page is Lucide's copied data: a page that hand-draws its chevron and
   // its dots is what read as cheap.
-  assert.ok(source.includes('}, h(LucideEllipsisIcon, { size: 36 })),'), 'the menu’s anchor draws Lucide’s three dots')
+  assert.ok(source.includes('}, h(LucideEllipsisIcon)),'), 'the menu’s anchor draws Lucide’s three dots')
   // The menu is the platform’s own component and carries both exits, which are the same
   // behaviour the card’s row of buttons runs: one definition, two chromes.
   assert.ok(source.includes("import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'") && source.includes("import { LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'"), 'the menu is the platform’s, and every glyph in it is Lucide’s data')
@@ -381,37 +389,24 @@ test('the message cards and the panel’s list are one component', () => {
 
 // The preview page's title bar takes the drawer's own title size, and grows from there: the
 // controls are a 48px touch target -- a finger's, not the drawer's 36px one -- and the bar is
-// 56px, so the control keeps 4px at either end. What the eye judges is the drawing, and the
-// icons paint only part of their own 20x20 box (the chevron 11 units, the filled dots 15), so
-// the boxes are sized for the ink and the stroke is thickened to 2 -- a bigger hairline reads
-// as small as the small one did: 36px paints a 23.4px chevron, 34px paints a 25.5px row of
-// 6.8px dots. Each keeps a little over the 22px asked for, since a drawing sitting on the line
-// rounds whichever way a device measures it. That 22px is the same ink the card's exits paint
-// and the card's own 44px controls are left where they were: the tile is 60px with 8px of
-// padding, so a 48px control would break it. Pinned here so a later edit cannot quietly shrink
-// them back.
-test('the title bar is 56px, its controls 48px, and their drawings 22px of ink', () => {
+// 56px, so the control keeps 4px at either end. The drawings are not sized here at all: every
+// glyph in these two screens is Lucide's, at the one box and one stroke measured off the pill
+// in the top bar, so the bar asks for nothing of its own and a later edit cannot quietly size
+// a glyph up again. The card's own 44px controls are left where they were: the tile is 60px
+// with 8px of padding, so a 48px control would break it.
+test('the title bar is 56px, its controls 48px, and no rule sizes a drawing', () => {
   assert.ok(styles.some(line => line.includes('.bt-drawer-name{font-size:17px;line-height:24px;')), 'the drawer names a Bot at 17/24')
   assert.ok(previewRule('.bt-preview-head{').includes('height:56px'), 'so the page’s bar is 56px')
   assert.ok(previewRule('.bt-preview-name{').includes('font-size:17px') && previewRule('.bt-preview-name{').includes('line-height:24px'), 'and its title is 17/24')
   for (const prefix of ['.bt-preview-back{', '.bt-preview-more{']) {
     assert.ok(previewRule(prefix).includes('width:48px') && previewRule(prefix).includes('height:48px'), `${prefix} is a 48px touch target`)
   }
-  // Both glyphs are the platform's own now, and each arrives with its box and its stroke:
-  // the chevron is pinned to the shell's 2px here, since the platform draws it at 1 unit of
-  // a 16-unit box, which would otherwise grow with the box.
+  // The glyphs bring the box and the stroke; no rule of ours and no call site corrects either.
   const source = card.join('\n')
-  assert.ok(source.includes('h(LucideChevronLeftIcon)'), 'the chevron arrives as Lucide’s glyph in its own 38px box')
+  assert.ok(source.includes('h(LucideChevronLeftIcon)'), 'the chevron arrives as Lucide’s glyph in the glyph’s own box')
   assert.ok(icons.includes("['path', { d: 'm15 18-6-6 6-6' }]"), 'verbatim from lucide-static')
-  assert.ok((12 + 2) * 38 / 24 >= 22, 'which paints 22.2px of ink, over the 22 the bar asks for')
-  assert.ok(!read('file-preview.js').includes('.bt-preview-back svg'), 'and no rule of ours pins the stroke')
-  assert.ok(source.includes('h(LucideEllipsisIcon, { size: 36 })'), 'the dots arrive as Lucide’s ellipsis in a 36px box')
-  // The dots are judged as a diameter as well as a row: three hairline marks are what made
-  // this control look empty. Lucide's dots are r=1 on a 2-unit stroke, so 36px paints 6px of
-  // dot in a 27px row.
-  assert.ok(source.split('h(LucideEllipsisIcon, { size: 36 })').length - 1 === 2, 'the same glyph opens both menus')
-  assert.ok((2 + 2) * 36 / 24 >= 6, 'which lands 6px of dot')
-  assert.ok((18 + 2) * 36 / 24 >= 22, 'in a row over 22px')
+  assert.ok(source.split('h(LucideEllipsisIcon)').length - 1 === 2, 'the same glyph opens both menus')
+  assert.ok(!source.includes('{ size: 36 }'), 'and neither control passes a size')
   assert.ok(!read('file-preview.js').includes('html[data-bt-pc] .bt-preview'), 'and no band gets a smaller control back')
   // The reserve for the centred name is the two controls, their padding and their gaps, so a
   // long name never slides under one.

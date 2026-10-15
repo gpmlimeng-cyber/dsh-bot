@@ -174,14 +174,14 @@ export const FILE_PREVIEW_CSS = `
 
    The drawing inside a control is what the eye judges, so neither is a shape we drew: both
    are Lucide (ISC) glyph data, copied from lucide-static and carrying its notice in icons.js.
-   One grid for every glyph is what makes them read as one set. Each arrives in the box its
-   own geometry needs for 22px of ink -- 38px of chevron, 36px of dots -- and the stroke is
-   Lucide's own 2 units of a 24-unit grid, so nothing here pins a width. */
+   One grid and one weight for every glyph is what makes them read as one set -- the box the
+   shell's own pill draws inside, and a stroke pinned by the glyph itself, so nothing here
+   sizes an icon or pins a width. */
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The bar's back arrow is Lucide's chevron-left: 6x12 units of a 24-unit grid, so a 38px
-   box paints 12.7x22.2 of ink with the glyph's own 2-unit stroke. Only the box is ours. */
+/* The bar's back arrow is Lucide's chevron-left: 6x12 units of a 24-unit grid, so the 15px
+   box it brings paints 5.0x8.7 of ink. The box and the stroke are the glyph's. */
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -189,9 +189,9 @@ export const FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The dots are Lucide's ellipsis in a 36px box: three r=1 circles on the glyph's 2-unit
-   stroke, which lands 6px of dot in a 27px row. A row of dots has no height to grow -- its
-   ink is the dot diameter -- so the width carries the size. */
+/* The dots are Lucide's ellipsis in the same 15px box: three r=1 circles, which land 2.45px
+   of dot in an 11.2px row at the glyph's pinned 1.2px stroke. A row of dots has no height to
+   grow -- its ink is the dot diameter -- so the glyph's own box carries the size. */
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
