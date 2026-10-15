@@ -1,3 +1,6 @@
+// Icons for the shell's own surfaces. The one exception to drawing them here is at the foot
+// of this file: the five glyphs the deliverables screens draw are Lucide's copied data.
+/*! Lucide (ISC) · path data from lucide-static v1.57.0 */
 import { createElement as h } from 'react'
 
 export function PlusIcon() {
@@ -105,9 +108,39 @@ export const FolderIcon = lineIcon(['M3 6A1.5 1.5 0 0 1 4.5 4.5h3.2l1.8 2h6A1.5 
 export const ChatsIcon = lineIcon(['M3.5 5.5A1.5 1.5 0 0 1 5 4h7a1.5 1.5 0 0 1 1.5 1.5V10A1.5 1.5 0 0 1 12 11.5H8L5 14v-2.5A1.5 1.5 0 0 1 3.5 10z', 'M13.5 7.5H15A1.5 1.5 0 0 1 16.5 9v4.5A1.5 1.5 0 0 1 15 15v2l-2.5-2h-3A1.5 1.5 0 0 1 8 13.5V13'])
 export const SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: ChatsIcon, usage: GaugeIcon }
 
-// The preview (and panel) title bar's back arrow: the shared chevron in a box cropped to its
-// own 5.5x11 units, so it lands at 12.6x23.2 of ink in the bar's 48px control -- over the
-// 22px asked for -- with the stroke a true 2px instead of the 3.6px a plain 36px box
-// rendered. (The delivered card's exits used to come from this factory too; they are one
-// "···" on the card now, and the platform Menu draws the two items at its own size.)
+// --- Lucide (ISC) · path data from lucide-static v1.57.0 -------------------
+// Copied glyph data, not drawings of ours. Lucide's grid is the reason to take it: one
+// 24x24 viewBox, one 2-unit stroke, one round cap and join, so five different glyphs share
+// a weight and a corner instead of each being a shape somebody eyeballed. The data below is
+// byte-for-byte what lucide-static ships -- only the size is ours, since rule 6 of the team
+// handbook is that nobody draws an icon until there is nothing left to copy.
+//
+// Lucide is ISC-licensed; its notice travels with its path data, in the form a bundler keeps:
+/*! Lucide (ISC) · path data from lucide-static v1.57.0 */
+const lucideIcon = (children, defaultSize) => function LucideIcon({ size = defaultSize }) {
+  return h('svg', {
+    width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+    strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true,
+  }, children.map(([tag, attributes], index) => h(tag, { key: index, ...attributes })))
+}
 
+// m15 18-6-6 6-6 -- 6x12 units, so 38px paints 12.7x22.2 of ink. The bar's back arrow.
+export const LucideChevronLeftIcon = lucideIcon([['path', { d: 'm15 18-6-6 6-6' }]], 38)
+// Three r=1 circles: 18x4 units of ink, so 36px paints 6px dots in a 27px row. The "···"
+// both the bar and the card open their menu with.
+export const LucideEllipsisIcon = lucideIcon([
+  ['circle', { cx: 12, cy: 12, r: 1 }],
+  ['circle', { cx: 19, cy: 12, r: 1 }],
+  ['circle', { cx: 5, cy: 12, r: 1 }],
+], 36)
+// The three the exits menu draws, at the size every other menu of the shell draws its icons.
+export const LucideExternalLinkIcon = lucideIcon([
+  ['path', { d: 'M15 3h6v6' }],
+  ['path', { d: 'M10 14 21 3' }],
+  ['path', { d: 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6' }],
+], 16)
+export const LucideCopyIcon = lucideIcon([
+  ['rect', { width: 14, height: 14, x: 8, y: 8, rx: 2, ry: 2 }],
+  ['path', { d: 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2' }],
+], 16)
+export const LucideCheckIcon = lucideIcon([['path', { d: 'M20 6 9 17l-5-5' }]], 16)

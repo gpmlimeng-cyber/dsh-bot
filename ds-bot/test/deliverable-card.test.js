@@ -82,14 +82,16 @@ test('the card’s exits are one "···", the same control in every list', () =
   // 25.5px row -- over the 6px a dot needs and the 22px the row needs together. The sheet does
   // not size the glyph; the control passes the box, exactly as the bar's control does.
   assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn svg')), 'the sheet does not size the control’s glyph')
-  assert.ok(source.includes('h(IconEllipsisOutlineRegular, { size: 48 })'), 'it draws the platform’s own three dots')
+  assert.ok(source.includes('h(LucideEllipsisIcon, { size: 36 })'), 'it draws Lucide’s three dots')
   assert.ok(icons.includes('export function DotsBoldIcon'), 'though our own dot glyph stays where the phone bar uses it')
-  // The platform glyph's dots are 2 of its 16 units, so a 48px box paints 6px dots in a
-  // 36px row: over the 22px row and exactly the 6px the card asks of a dot. That box is 4px
-  // wider than the 44px control, which is its transparent frame -- the row of dots inside is
-  // centred and narrower than the control, so nothing reaches the neighbour or the edge.
-  assert.equal(2 * 48 / 16, 6, 'landing at 6px dots')
-  assert.equal(12 * 48 / 16, 36, 'in a 36px row, inside the 44px control')
+  // Lucide's ellipsis is three r=1 circles on the glyph set's own 2-unit stroke, so each dot
+  // is 4 of the 24 units: a 36px box paints 6px of dot in a 27px row, over both the 6px and
+  // the 22px asked for, and the box is inside the 44px control whole.
+  assert.equal(4 * 36 / 24, 6, 'landing at 6px dots')
+  assert.equal(18 * 36 / 24, 27, 'in a 27px row')
+  // Lucide's data is copied, so its notice travels with it -- and the strings are theirs.
+  assert.ok(icons.includes('Lucide (ISC) · path data from lucide-static v1.57.0'), 'the ISC notice is written where the data is')
+  assert.ok(icons.includes("['circle', { cx: 12, cy: 12, r: 1 }]") && icons.includes("['circle', { cx: 19, cy: 12, r: 1 }]") && icons.includes("['circle', { cx: 5, cy: 12, r: 1 }]"), 'with the glyph’s own three circles, in lucide-static’s order')
   assert.ok(source.includes("'data-act': 'more'"), 'the control is marked')
   assert.ok(source.includes("'aria-haspopup': 'menu'"), 'and announces the menu it opens')
   assert.ok(source.includes("'aria-label': t('More'), title: t('More')"), 'named for a reader')
@@ -101,8 +103,8 @@ test('the card’s exits are one "···", the same control in every list', () =
   assert.equal(source.split("`${t('Preview')} ${name}`").length - 1, 1, 'only the card-wide hit target repeats the file name')
   // The exits' words are written once for both menus, and both are named.
   assert.equal(source.split('exitItems(exits.state)').length - 1, 1, 'the two exits are written once for both menus')
-  assert.ok(source.includes("{ id: 'open', icon: h(IconRightUpOutlineRegular), label: state === 'opening' ? t('Opening…') : t('Open with another app') }"), 'the first hands the file to another app')
-  assert.ok(source.includes("{ id: 'copy', icon: state === 'copied' ? h(IconCheckOutlineRegular) : h(IconCopyOutlineRegular), label: state === 'copied' ? t('Copied') : t('Copy path') }"), 'the second copies the path')
+  assert.ok(source.includes("{ id: 'open', icon: h(LucideExternalLinkIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') }"), 'the first hands the file to another app')
+  assert.ok(source.includes("{ id: 'copy', icon: state === 'copied' ? h(LucideCheckIcon) : h(LucideCopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') }"), 'the second copies the path')
   // One control for both lists: no list can ask for a shape of its own.
   assert.ok(source.includes('export function DeliverableActions({ file, actions, onFailed })'), 'the control takes nothing that depends on the list drawing it')
   assert.ok(!source.includes('menu = false') && !source.includes('menu: list'), 'and no list asks for another one')
@@ -120,6 +122,33 @@ test('the card’s exits are one "···", the same control in every list', () =
   for (const gone of ['CardCopyIcon', 'CardExternalIcon', 'CardCheckIcon', 'EyeIcon']) {
     assert.ok(!icons.includes(gone), `${gone} is gone`)
   }
+})
+
+// The five glyphs in these two screens are Lucide's, copied -- so their data can be diffed
+// against lucide-static byte for byte, and their licence travels with them. Nothing here is
+// drawn by hand: the team's rule is to take a glyph that exists before shaping one.
+test('every glyph is Lucide’s copied data, credited where it lives', () => {
+  assert.ok(icons.includes('Lucide (ISC) · path data from lucide-static v1.57.0'), 'the ISC notice sits with the data')
+  const glyphs = [
+    ["['path', { d: 'm15 18-6-6 6-6' }]", 'chevron-left, the bar’s back arrow at 38px'],
+    ["['circle', { cx: 12, cy: 12, r: 1 }]", 'ellipsis, dot one of three'],
+    ["['circle', { cx: 19, cy: 12, r: 1 }]", 'ellipsis, dot two'],
+    ["['circle', { cx: 5, cy: 12, r: 1 }]", 'ellipsis, dot three'],
+    ["['path', { d: 'M15 3h6v6' }]", 'external-link, the menu’s “open with another app”'],
+    ["['path', { d: 'M10 14 21 3' }]", 'external-link’s shaft'],
+    ["['path', { d: 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6' }]", 'external-link’s frame'],
+    ["{ width: 14, height: 14, x: 8, y: 8, rx: 2, ry: 2 }", 'copy, the sheet in front'],
+    ["['path', { d: 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2' }]", 'copy, the sheet behind'],
+    ["['path', { d: 'M20 6 9 17l-5-5' }]", 'check, the tick after a copy'],
+  ]
+  for (const [data, what] of glyphs) {
+    assert.ok(icons.includes(data), `${what} is lucide-static’s own data`)
+  }
+  // One grid for all of them: Lucide's 24-unit box and 2-unit stroke, so no glyph is drawn
+  // at a weight of its own and no rule of ours has to correct one.
+  assert.equal(icons.split("viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',").length - 1, 1, 'one glyph factory, one grid')
+  assert.ok(icons.includes("strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round'"), 'at Lucide’s own stroke and joins')
+  assert.ok(!read('file-preview.js').includes('stroke-width:2'), 'and nothing pins a stroke afterwards')
 })
 
 test('two columns fold to one when the card column is narrow', () => {
@@ -281,21 +310,21 @@ test('the card hands a file to another app, and keeps the shell from taking the 
 // bar stays three parts and a page's source toggle joins them instead of crowding it.
 test('the preview page’s title bar is back, the name, and one more menu', () => {
   const source = card.join('\n')
-  assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(IconChevronLeftOutlineRegular, { size: 42 }))"), 'the left control is a back button, named for a reader, drawing the platform’s chevron')
+  assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(LucideChevronLeftIcon))"), 'the left control is a back button, named for a reader, drawing Lucide’s chevron')
   assert.ok(source.includes("h('span', { className: 'bt-preview-name' }, name)"), 'the name is the middle part')
-  assert.ok(!source.includes("from './icons.js'"), 'and no glyph of ours is imported any more')
-  // Every glyph in this page is the shell's own: a page that hand-draws its chevron and its
-  // dots is what read as cheap.
-  assert.ok(source.includes('}, h(IconEllipsisOutlineRegular, { size: 48 })),'), 'the menu’s anchor draws the platform’s three dots')
+  assert.ok(source.includes("} from './icons.js'"), 'the page’s glyphs come from our own module')
+  // Every glyph in this page is Lucide's copied data: a page that hand-draws its chevron and
+  // its dots is what read as cheap.
+  assert.ok(source.includes('}, h(LucideEllipsisIcon, { size: 36 })),'), 'the menu’s anchor draws Lucide’s three dots')
   // The menu is the platform’s own component and carries both exits, which are the same
   // behaviour the card’s row of buttons runs: one definition, two chromes.
-  assert.ok(source.includes("import { fileExtension, fileSizeText, IconCheckOutlineRegular, IconChevronLeftOutlineRegular, IconCopyOutlineRegular, IconEllipsisOutlineRegular, IconRightUpOutlineRegular, ImageLightbox, Menu }"), 'the menu and the glyphs around it are all the platform’s')
+  assert.ok(source.includes("import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'") && source.includes("import { LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'"), 'the menu is the platform’s, and every glyph in it is Lucide’s data')
   assert.ok(source.includes('export function useDeliverableExits(file, actions, onFailed)'), 'the exits are defined once')
   assert.equal(source.split('useDeliverableExits(file, actions, onFailed)').length - 1, 3, 'and used by both chromes')
   assert.ok(source.includes("h(Menu, {"), 'the page’s exits are a menu')
   assert.ok(source.includes("align: 'end'"), 'aligned to the bar’s end')
-  assert.ok(source.includes("{ id: 'open', icon: h(IconRightUpOutlineRegular), label: state === 'opening' ? t('Opening…') : t('Open with another app') }"), 'the first item opens in another app, with the platform’s arrow')
-  assert.ok(source.includes("{ id: 'copy', icon: state === 'copied' ? h(IconCheckOutlineRegular) : h(IconCopyOutlineRegular), label: state === 'copied' ? t('Copied') : t('Copy path') }"), 'the second copies the path, and ticks with the platform’s check')
+  assert.ok(source.includes("{ id: 'open', icon: h(LucideExternalLinkIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') }"), 'the first item opens in another app, with Lucide’s external-link')
+  assert.ok(source.includes("{ id: 'copy', icon: state === 'copied' ? h(LucideCheckIcon) : h(LucideCopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') }"), 'the second copies the path, and ticks with Lucide’s check')
   assert.ok(source.includes("'aria-label': t('More'), title: t('More')"), 'the menu button is named')
   assert.ok(i18n.includes("Back: '后退'") && i18n.includes("More: '更多'"), 'both names are translated')
   // A page’s source toggle rides in the same menu rather than in the bar.
@@ -372,15 +401,17 @@ test('the title bar is 56px, its controls 48px, and their drawings 22px of ink',
   // the chevron is pinned to the shell's 2px here, since the platform draws it at 1 unit of
   // a 16-unit box, which would otherwise grow with the box.
   const source = card.join('\n')
-  assert.ok(source.includes('h(IconChevronLeftOutlineRegular, { size: 42 })'), 'the chevron arrives in a 42px box')
-  assert.ok(8 * 42 / 16 + 2 >= 22, 'which paints 23px of ink, over the 22 the bar asks for -- the box is a little over on purpose, since a stroke measured off a screen loses half a pixel of antialiasing and a glyph that only just reaches 22 reads as short')
-  assert.ok(read('file-preview.js').includes('.bt-preview-back svg{stroke-width:2}'), 'with the platform’s 1-unit stroke pinned to 2px')
-  assert.ok(source.includes('h(IconEllipsisOutlineRegular, { size: 48 })'), 'and the dots arrive in a 48px box')
+  assert.ok(source.includes('h(LucideChevronLeftIcon)'), 'the chevron arrives as Lucide’s glyph in its own 38px box')
+  assert.ok(icons.includes("['path', { d: 'm15 18-6-6 6-6' }]"), 'verbatim from lucide-static')
+  assert.ok((12 + 2) * 38 / 24 >= 22, 'which paints 22.2px of ink, over the 22 the bar asks for')
+  assert.ok(!read('file-preview.js').includes('.bt-preview-back svg'), 'and no rule of ours pins the stroke')
+  assert.ok(source.includes('h(LucideEllipsisIcon, { size: 36 })'), 'the dots arrive as Lucide’s ellipsis in a 36px box')
   // The dots are judged as a diameter as well as a row: three hairline marks are what made
-  // this control look empty. The platform's dots are 2 units of 16, so 48px paints 6px of
-  // dot in a 36px row.
-  assert.ok(2 * 48 / 16 >= 6, 'which lands 6px of dot')
-  assert.ok(12 * 48 / 16 >= 22, 'in a 36px row')
+  // this control look empty. Lucide's dots are r=1 on a 2-unit stroke, so 36px paints 6px of
+  // dot in a 27px row.
+  assert.ok(source.split('h(LucideEllipsisIcon, { size: 36 })').length - 1 === 2, 'the same glyph opens both menus')
+  assert.ok((2 + 2) * 36 / 24 >= 6, 'which lands 6px of dot')
+  assert.ok((18 + 2) * 36 / 24 >= 22, 'in a row over 22px')
   assert.ok(!read('file-preview.js').includes('html[data-bt-pc] .bt-preview'), 'and no band gets a smaller control back')
   // The reserve for the centred name is the two controls, their padding and their gaps, so a
   // long name never slides under one.

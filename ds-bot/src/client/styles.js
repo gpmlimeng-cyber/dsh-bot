@@ -280,8 +280,8 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* One "···", no words: the words live in the menu and in aria-label. 44x44 is the touch
    target the card's own 60px tile can hold exactly (8px of padding above and below) and it
    does not grow -- a 48px control would break the tile the user has already approved. The
-   drawing is not sized here: it is the platform's own three-dot glyph, passed its box by the
-   control, so the card's "···" and the bar's are one shape at two sizes. */
+   drawing is not sized here: it is Lucide's ellipsis, passed its 36px box by the control, so
+   the card's "···" and the bar's are the same glyph in the same box. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}

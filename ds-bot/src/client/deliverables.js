@@ -15,7 +15,8 @@
 // goes to shared storage first, since no other app can read the app's own), or copy the
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
-import { fileExtension, fileSizeText, IconCheckOutlineRegular, IconChevronLeftOutlineRegular, IconCopyOutlineRegular, IconEllipsisOutlineRegular, IconRightUpOutlineRegular, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
+import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
+import { LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { t } from './i18n.js'
 
@@ -230,19 +231,16 @@ export function DeliverableActions({ file, actions, onFailed }) {
       type: 'button', className: 'bt-dcard-btn', 'data-act': 'more',
       'aria-haspopup': 'menu', 'aria-expanded': shown,
       'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
-      // The platform's own three filled dots: 2 units of its 16-unit box, so 48px is the box
-      // that paints 6px dots in a 36px row -- the same box the bar's "···" takes, and the
-      // same dots. The box is 4px wider than this control, which is only its transparent
-      // frame: the drawing is a 36px row of dots centred in it, and the tile's own padding
-      // has room to spare. A glyph nobody has to draw is one nobody can draw badly.
-    }, h(IconEllipsisOutlineRegular, { size: 48 })),
+      // Lucide's three dots at 36px: they are r=1 circles on a 2-unit stroke, so each dot
+      // lands at 6px in a 27px row, and the box fits inside this 44px control whole.
+    }, h(LucideEllipsisIcon, { size: 36 })),
   })
 }
 
 /** What this file's exits can do, as menu items. Written here once: both menus show them. */
 const exitItems = (state) => [
-  { id: 'open', icon: h(IconRightUpOutlineRegular), label: state === 'opening' ? t('Opening…') : t('Open with another app') },
-  { id: 'copy', icon: state === 'copied' ? h(IconCheckOutlineRegular) : h(IconCopyOutlineRegular), label: state === 'copied' ? t('Copied') : t('Copy path') },
+  { id: 'open', icon: h(LucideExternalLinkIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') },
+  { id: 'copy', icon: state === 'copied' ? h(LucideCheckIcon) : h(LucideCopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') },
 ]
 
 /**
@@ -275,9 +273,8 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
     anchor: h('button', {
       type: 'button', className: 'bt-preview-more', 'aria-haspopup': 'menu', 'aria-expanded': shown,
       'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
-      // The same platform dots as the card's control, one step larger because this control
-      // is: 48px of box paints 6px dots in a 36px row.
-    }, h(IconEllipsisOutlineRegular, { size: 48 })),
+      // The same Lucide dots as the card's control: one glyph, two anchors, 6px dots.
+    }, h(LucideEllipsisIcon, { size: 36 })),
   })
 }
 
@@ -421,7 +418,7 @@ export function DeliveredPreview({ file, actions, onClose }) {
  */
 function PreviewHead({ name, onClose, children }) {
   return h('div', { className: 'bt-preview-head' },
-    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(IconChevronLeftOutlineRegular, { size: 42 })),
+    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(LucideChevronLeftIcon)),
     h('span', { className: 'bt-preview-name' }, name),
     children)
 }

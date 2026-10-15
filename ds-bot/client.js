@@ -2266,8 +2266,8 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* One "···", no words: the words live in the menu and in aria-label. 44x44 is the touch
    target the card's own 60px tile can hold exactly (8px of padding above and below) and it
    does not grow -- a 48px control would break the tile the user has already approved. The
-   drawing is not sized here: it is the platform's own three-dot glyph, passed its box by the
-   control, so the card's "···" and the bar's are one shape at two sizes. */
+   drawing is not sized here: it is Lucide's ellipsis, passed its 36px box by the control, so
+   the card's "···" and the bar's are the same glyph in the same box. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
@@ -3965,6 +3965,35 @@ var MemoryIcon = lineIcon(["M5.5 3.5h8A1.5 1.5 0 0 1 15 5v10a1.5 1.5 0 0 1-1.5 1
 var FolderIcon = lineIcon(["M3 6A1.5 1.5 0 0 1 4.5 4.5h3.2l1.8 2h6A1.5 1.5 0 0 1 17 8v6.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5z"]);
 var ChatsIcon = lineIcon(["M3.5 5.5A1.5 1.5 0 0 1 5 4h7a1.5 1.5 0 0 1 1.5 1.5V10A1.5 1.5 0 0 1 12 11.5H8L5 14v-2.5A1.5 1.5 0 0 1 3.5 10z", "M13.5 7.5H15A1.5 1.5 0 0 1 16.5 9v4.5A1.5 1.5 0 0 1 15 15v2l-2.5-2h-3A1.5 1.5 0 0 1 8 13.5V13"]);
 var SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: ChatsIcon, usage: GaugeIcon };
+var lucideIcon = (children, defaultSize) => function LucideIcon({ size = defaultSize }) {
+  return (0, import_react3.createElement)("svg", {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": true
+  }, children.map(([tag, attributes], index) => (0, import_react3.createElement)(tag, { key: index, ...attributes })));
+};
+var LucideChevronLeftIcon = lucideIcon([["path", { d: "m15 18-6-6 6-6" }]], 38);
+var LucideEllipsisIcon = lucideIcon([
+  ["circle", { cx: 12, cy: 12, r: 1 }],
+  ["circle", { cx: 19, cy: 12, r: 1 }],
+  ["circle", { cx: 5, cy: 12, r: 1 }]
+], 36);
+var LucideExternalLinkIcon = lucideIcon([
+  ["path", { d: "M15 3h6v6" }],
+  ["path", { d: "M10 14 21 3" }],
+  ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" }]
+], 16);
+var LucideCopyIcon = lucideIcon([
+  ["rect", { width: 14, height: 14, x: 8, y: 8, rx: 2, ry: 2 }],
+  ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" }]
+], 16);
+var LucideCheckIcon = lucideIcon([["path", { d: "M20 6 9 17l-5-5" }]], 16);
 
 // src/client/questions.js
 var import_react4 = require("react");
@@ -4791,22 +4820,16 @@ var FILE_PREVIEW_CSS = `
    page the user actually taps, and the bar is 56px, which leaves that control 4px at either
    end rather than touching the edges.
 
-   The drawing inside a control is what the eye judges, and both of them are the platform's
-   own glyphs now -- the icons the shell draws everywhere else -- instead of shapes we drew
-   ourselves, which is what read as cheap. Their box is still sized for the ink and not the
-   other way round (a 20px box would paint a 10px chevron in a 48px control), and the stroke
-   stays a flat 2px. */
+   The drawing inside a control is what the eye judges, so neither is a shape we drew: both
+   are Lucide (ISC) glyph data, copied from lucide-static and carrying its notice in icons.js.
+   One grid for every glyph is what makes them read as one set. Each arrives in the box its
+   own geometry needs for 22px of ink -- 38px of chevron, 36px of dots -- and the stroke is
+   Lucide's own 2 units of a 24-unit grid, so nothing here pins a width. */
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-.bt-preview-back svg{stroke-width:2}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The bar's back arrow is the platform's chevron in a 42px box: its 16-unit grid then paints
-   the 8-unit arrow as 21px of ink, 23px with the stroke, and the stroke is pinned to 2px
-   here, since the platform draws it at 1 unit -- which would grow with the box rather than
-   stay the weight the shell uses. A stroke-width set on the svg inherits down to the paths;
-   they set no width of their own. The box is a little over the 22px the bar asks for on
-   purpose: a stroke measured off a screen loses its antialiased edge, about half a pixel,
-   so a glyph that only just reaches 22 reads as short. */
+/* The bar's back arrow is Lucide's chevron-left: 6x12 units of a 24-unit grid, so a 38px
+   box paints 12.7x22.2 of ink with the glyph's own 2-unit stroke. Only the box is ours. */
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -4814,10 +4837,9 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The dots are the platform's own three-dot glyph in a 48px box, which paints its 2-unit
-   dots as 6px in a 36px row. A row of dots has no height to grow -- its ink is the dot
-   diameter -- so the width carries the size, and the glyph is filled, so no stroke width
-   enters into it. */
+/* The dots are Lucide's ellipsis in a 36px box: three r=1 circles on the glyph's 2-unit
+   stroke, which lands 6px of dot in a 27px row. A row of dots has no height to grow -- its
+   ink is the dot diameter -- so the width carries the size. */
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
@@ -5022,17 +5044,14 @@ function DeliverableActions({ file, actions, onFailed }) {
       "aria-label": t("More"),
       title: t("More"),
       onClick: () => setShown((value) => !value)
-      // The platform's own three filled dots: 2 units of its 16-unit box, so 48px is the box
-      // that paints 6px dots in a 36px row -- the same box the bar's "···" takes, and the
-      // same dots. The box is 4px wider than this control, which is only its transparent
-      // frame: the drawing is a 36px row of dots centred in it, and the tile's own padding
-      // has room to spare. A glyph nobody has to draw is one nobody can draw badly.
-    }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconEllipsisOutlineRegular, { size: 48 }))
+      // Lucide's three dots at 36px: they are r=1 circles on a 2-unit stroke, so each dot
+      // lands at 6px in a 27px row, and the box fits inside this 44px control whole.
+    }, (0, import_react7.createElement)(LucideEllipsisIcon, { size: 36 }))
   });
 }
 var exitItems = (state) => [
-  { id: "open", icon: (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconRightUpOutlineRegular), label: state === "opening" ? t("Opening…") : t("Open with another app") },
-  { id: "copy", icon: state === "copied" ? (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconCheckOutlineRegular) : (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconCopyOutlineRegular), label: state === "copied" ? t("Copied") : t("Copy path") }
+  { id: "open", icon: (0, import_react7.createElement)(LucideExternalLinkIcon), label: state === "opening" ? t("Opening…") : t("Open with another app") },
+  { id: "copy", icon: state === "copied" ? (0, import_react7.createElement)(LucideCheckIcon) : (0, import_react7.createElement)(LucideCopyIcon), label: state === "copied" ? t("Copied") : t("Copy path") }
 ];
 function ExitsMenu({ exits, shown, setShown, className, anchor, extra = null, onExtra }) {
   return (0, import_react7.createElement)(import_dsh_client_ui_primitives2.Menu, {
@@ -5070,9 +5089,8 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
       "aria-label": t("More"),
       title: t("More"),
       onClick: () => setShown((value) => !value)
-      // The same platform dots as the card's control, one step larger because this control
-      // is: 48px of box paints 6px dots in a 36px row.
-    }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconEllipsisOutlineRegular, { size: 48 }))
+      // The same Lucide dots as the card's control: one glyph, two anchors, 6px dots.
+    }, (0, import_react7.createElement)(LucideEllipsisIcon, { size: 36 }))
   });
 }
 function DeliverableCard({ file, actions, meta, role }) {
@@ -5193,7 +5211,7 @@ function PreviewHead({ name, onClose, children }) {
   return (0, import_react7.createElement)(
     "div",
     { className: "bt-preview-head" },
-    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconChevronLeftOutlineRegular, { size: 42 })),
+    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react7.createElement)(LucideChevronLeftIcon)),
     (0, import_react7.createElement)("span", { className: "bt-preview-name" }, name),
     children
   );
@@ -16600,6 +16618,7 @@ function apply(ctx) {
     };
   }, "ds-bot: surface");
 }
+/*! Lucide (ISC) · path data from lucide-static v1.57.0 */
 return Object.defineProperty({ ...module.exports }, Symbol.toStringTag, { value: 'Module' })
   },
 })
