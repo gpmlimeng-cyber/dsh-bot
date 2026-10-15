@@ -14,10 +14,9 @@ import { SPRING_SHAPE, SPRING_TAP, SPRING_STRETCH, SPRING_POP, spring } from './
 // the conversation renders.
 export const SHELL_CSS = `
 /* The page the content sits on, taken from the user's own screenshot: #f8f8f8, with the
-   cards and bubbles left white on top of it. The bubbles were #eee until the page went
-   grey: on a #f8f8f8 page a white bubble is the layering the user's screenshots show, where
-   the same colour on both would have flattened them. html and body are two different
-   surfaces on this device (measured rgb(241,243,241)
+   cards left white on top of it. The bubbles stay the #eee they have always been -- Lead's
+   freeze, after a round of white that the user's build never shipped. html and body are two
+   different surfaces on this device (measured rgb(241,243,241)
    and rgb(252,252,252)), so the page is painted on both -- a page painted only on body
    leaves the band above it showing the platform's own base, which is where the peers page's
    seam came from. Dark paints neither: see the rule below, where its value is only the
@@ -33,7 +32,7 @@ export const SHELL_CSS = `
    --bt-nav-ink / --bt-nav-on (the bottom bar's own sampled pair), --bt-green, --bt-star, and
    --bt-line-weak (the lightest hairline). --bt-accent-ink is the mirror case: the palette
    computes it from the accent's luminance, so the fallback does not carry it. */
-body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#f8f8f8;--bt-main:#f8f8f8;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58)}
+body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f8f8f8;--bt-main:#f8f8f8;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58)}
 body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(242,242,242,.08);--bt-line-2:rgba(242,242,242,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(242,242,242,.09);--bt-tag-ink:rgba(242,242,242,.58)}
 /* The page, on both layers and where the platform paints its own base: html itself (which
    cannot be a descendant of body, hence :has), body, the frame the whole app sits in, and
