@@ -1719,7 +1719,13 @@ div:has(> nav [class*="_marks"]){display:none!important}
 // dropped and the palette's sampled #f1f3f1 stands. That is the whole point: the band moved
 // once already today, and the page is meant to move with it instead of waiting for a new
 // sample and a new round of measuring.
-const COLOUR = /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|color\(|transparent$|currentcolor$)/i
+//
+// `transparent` and `currentcolor` are deliberately NOT read. They say the shell is not
+// painting its own surface there -- which is what an edge-to-edge shell says, and what this
+// shell now does -- and taking one of them as the page's colour would take the page's own
+// background away and let the view behind it through. A shell that stops painting simply
+// leaves the palette's colour standing, which is the fallback below.
+const COLOUR = /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|color\()/i
 export function publishShellBackground() {
   if (typeof document === 'undefined') return
   const root = document.documentElement

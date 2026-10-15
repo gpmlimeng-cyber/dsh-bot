@@ -226,8 +226,14 @@ test('the shell colour is read from the inline declaration and published', () =>
   longhand.read()
   assert.equal(longhand.declared.get('--bt-shell-bg'), '#f1f3f1', 'the long form too')
 
-  // Nothing readable, or something that is not a colour: the palette's sample stands.
-  for (const inline of [{}, { background: 'url(bg.png) center' }, { background: 'none' }]) {
+  // Nothing readable, or something that is not a colour: the palette's sample stands. The
+  // two keywords matter most -- an edge-to-edge shell says `transparent` about the surface it
+  // has stopped painting, and treating that as the page's colour would take the page's own
+  // background away.
+  for (const inline of [
+    {}, { background: 'url(bg.png) center' }, { background: 'none' },
+    { background: 'transparent' }, { 'background-color': 'transparent' },
+  ]) {
     const empty = loadReader(inline)
     empty.read()
     assert.equal(empty.declared.get('--bt-shell-bg'), undefined, `nothing published for ${JSON.stringify(inline)}`)

@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 0ae3b8e4
+// Source fingerprint: f9e9983c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3702,7 +3702,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-part-line{display:flex;align-items:center;gap:10px;margin:10px 0 6px;font-size:11px;line-height:14px;color:var(--bt-ink-3)}
 .bt-part-line::before,.bt-part-line::after{content:"";flex:1;height:1px;background:var(--bt-line)}
 `;
-var COLOUR = /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|color\(|transparent$|currentcolor$)/i;
+var COLOUR = /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|color\()/i;
 function publishShellBackground() {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
@@ -16110,7 +16110,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "0ae3b8e4" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "f9e9983c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
