@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: f3853f67
+// Source fingerprint: 5477aeba
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -8805,6 +8805,16 @@ function usePaneLeft() {
   return paneLeft;
 }
 
+// src/client/model-ref.js
+var servedOf = (roster, ref) => (roster.models ?? []).find((model) => model.ref === ref);
+function modelOf(bot, roster) {
+  const ref = bot.model ?? bot.appliedModel;
+  if (!ref) return void 0;
+  const served = servedOf(roster, ref);
+  const [provider, ...rest] = ref.split("/");
+  return { ref, name: served?.name ?? rest.join("/"), provider: served?.providerName ?? provider, served: served !== void 0 };
+}
+
 // src/client/model-menu.js
 var import_react16 = require("react");
 var import_react_dom7 = require("react-dom");
@@ -8825,14 +8835,6 @@ function groupModels(models) {
     const name = list[0].providerName ?? provider;
     return [names.get(name) > 1 ? `${name} (${provider})` : name, list];
   });
-}
-var servedOf = (roster, ref) => (roster.models ?? []).find((model) => model.ref === ref);
-function modelOf(bot, roster) {
-  const ref = bot.model ?? bot.appliedModel;
-  if (!ref) return void 0;
-  const served = servedOf(roster, ref);
-  const [provider, ...rest] = ref.split("/");
-  return { ref, name: served?.name ?? rest.join("/"), provider: served?.providerName ?? provider, served: served !== void 0 };
 }
 var effortCache = /* @__PURE__ */ new Map();
 function useEfforts(served, ref, actions) {
@@ -16102,6 +16104,13 @@ function peersRooms(rooms, query2) {
   const byName = [...rooms ?? []].filter((room2) => room2?.hidden !== true).sort((a, b) => (a?.name ?? "").localeCompare(b?.name ?? ""));
   return wanted === "" ? byName : byName.filter((room2) => (room2?.name ?? "").toLowerCase().includes(wanted));
 }
+function peersModel(bot, roster) {
+  return modelOf(bot, roster)?.name ?? null;
+}
+function peersFolder(workDir) {
+  const tail = (workDir ?? "").replace(/\/+$/, "").split("/").filter(Boolean).pop();
+  return tail ?? null;
+}
 function PeersPage({ useRoster, useUi, actions }) {
   const roster = useRoster((value) => value);
   const open = useUi((value) => value.peers === true);
@@ -16166,6 +16175,10 @@ function PeersPage({ useRoster, useUi, actions }) {
     // Both sections live in the page's one scroller, in that order: the group chats, then the
     // people. The wrapper carries the list item, the way the members list does: a button that
     // declared itself a list item would stop being announced as a button.
+    //
+    // A row is two lines: the name, and the line of description under it. What is a label is drawn
+    // as one (the skin's own .bt-tag: a Bot's role, and the Main Bot badge -- which only a Main Bot
+    // has); what is a value is small plain text (the model it runs on, the folder it works in).
     (0, import_react40.createElement)(
       "div",
       { className: "bt-peers-list" },
@@ -16185,31 +16198,57 @@ function PeersPage({ useRoster, useUi, actions }) {
             onClick: () => openChat(room2.id)
           },
           (0, import_react40.createElement)(RoomAvatar, { room: room2, roster, size: 36 }),
-          (0, import_react40.createElement)("span", { className: "bt-peers-name" }, room2.name),
+          (0, import_react40.createElement)(
+            "span",
+            { className: "bt-peers-body" },
+            (0, import_react40.createElement)("span", { className: "bt-peers-name" }, room2.name),
+            // A group has no model and no folder -- it is not one Bot's conversation -- but it does
+            // have members, which is the one thing worth a line under its name.
+            (0, import_react40.createElement)(
+              "span",
+              { className: "bt-peers-desc" },
+              (0, import_react40.createElement)("span", { className: "bt-peers-text" }, t("{count} members", { count: (room2.members ?? []).length }))
+            )
+          ),
           (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
         )
       ))) : null,
-      shown.length > 0 ? section(t("Peers"), shown.map((bot) => (0, import_react40.createElement)(
-        "div",
-        {
-          key: bot.id,
-          className: "bt-peers-item",
-          role: "listitem"
-        },
-        (0, import_react40.createElement)(
-          "button",
+      shown.length > 0 ? section(t("Peers"), shown.map((bot) => {
+        const model = peersModel(bot, roster);
+        const folder = peersFolder(bot.workDir);
+        return (0, import_react40.createElement)(
+          "div",
           {
-            type: "button",
-            className: "bt-peers-row",
-            "data-bot-id": bot.id,
-            onClick: () => openChat(bot.id)
+            key: bot.id,
+            className: "bt-peers-item",
+            role: "listitem"
           },
-          (0, import_react40.createElement)(BotMark, { bot, size: 36 }),
-          (0, import_react40.createElement)("span", { className: "bt-peers-name" }, bot.name),
-          bot.role ? (0, import_react40.createElement)("span", { className: "bt-tag" }, bot.role) : null,
+          (0, import_react40.createElement)(
+            "button",
+            {
+              type: "button",
+              className: "bt-peers-row",
+              "data-bot-id": bot.id,
+              onClick: () => openChat(bot.id)
+            },
+            (0, import_react40.createElement)(BotMark, { bot, size: 36 }),
+            (0, import_react40.createElement)(
+              "span",
+              { className: "bt-peers-body" },
+              (0, import_react40.createElement)("span", { className: "bt-peers-name" }, bot.name),
+              (0, import_react40.createElement)(
+                "span",
+                { className: "bt-peers-desc" },
+                bot.role ? (0, import_react40.createElement)("span", { className: "bt-tag" }, bot.role) : null,
+                model ? (0, import_react40.createElement)("span", { className: "bt-peers-text" }, model) : null,
+                folder ? (0, import_react40.createElement)("span", { className: "bt-peers-text" }, folder) : null,
+                isMainOf(roster, bot.id) ? (0, import_react40.createElement)("span", { className: "bt-tag" }, t("Main Bot")) : null
+              )
+            )
+          ),
           (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
-        )
-      ))) : null,
+        );
+      })) : null,
       groups.length === 0 && shown.length === 0 ? (0, import_react40.createElement)("div", { className: "bt-peers-empty", role: "status" }, t("Nothing matches")) : null
     )
   ), document.body);
@@ -16232,7 +16271,16 @@ html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;o
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
-html[data-bt-mobile] .bt-peers-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The two lines a row reads in: the name, then the description under it. The pair takes what the
+   chevron leaves, and each line cuts its own text short rather than pushing the row wider. */
+html[data-bt-mobile] .bt-peers-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+html[data-bt-mobile] .bt-peers-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The description line: the second level of the two, in the skin's own small second-level colour,
+   and one line whatever it holds -- a tag for what is a label, plain text for what is a value. */
+html[data-bt-mobile] .bt-peers-desc{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+/* A value is the part that gives way: the two labels and the chevron keep their width, and the
+   model and the folder ellipsise -- the folder last, since it is the one that can be longest. */
+html[data-bt-mobile] .bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-bt-mobile] .bt-peers-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
 html[data-bt-mobile] .bt-peers-empty{padding:24px 12px;font-size:14px;line-height:21px;color:var(--bt-ink-3)}
 /* The page carries its own title, and the pill belongs to the conversation behind it. */
@@ -16331,7 +16379,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "f3853f67" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "5477aeba" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

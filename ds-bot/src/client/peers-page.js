@@ -14,8 +14,10 @@
 import { createElement as h, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BotMark, RoomAvatar } from './mark.js'
+import { modelOf } from './model-ref.js'
 import { ChevronRightIcon, PlusIcon, SearchIcon } from './icons.js'
 import { useMobile } from './mobile.js'
+import { isMainOf } from './sources.js'
 import { t } from './i18n.js'
 
 // The list the page draws: every Bot by name, narrowed by what is typed. Exported so the
@@ -34,6 +36,22 @@ export function peersRooms(rooms, query) {
   const wanted = query.trim().toLowerCase()
   const byName = [...(rooms ?? [])].filter(room => room?.hidden !== true).sort((a, b) => (a?.name ?? '').localeCompare(b?.name ?? ''))
   return wanted === '' ? byName : byName.filter(room => (room?.name ?? '').toLowerCase().includes(wanted))
+}
+
+// The two values a row's description line carries as text, exported for the same reason the two
+// lists are: what a line says should be checkable without a DOM.
+//
+// The model is read the way 我的 -> Bot settings reads it (modelOf): the served model's own name,
+// falling back to the id's last segment, and nothing at all when the Bot has no model yet.
+export function peersModel(bot, roster) {
+  return modelOf(bot, roster)?.name ?? null
+}
+
+// The folder keeps only its last segment -- a workspace is a path, and the path is a sentence
+// where the name wants a word (the settings page shows the whole one, with room to read it).
+export function peersFolder(workDir) {
+  const tail = (workDir ?? '').replace(/\/+$/, '').split('/').filter(Boolean).pop()
+  return tail ?? null
 }
 
 export function PeersPage({ useRoster, useUi, actions }) {
@@ -86,6 +104,10 @@ export function PeersPage({ useRoster, useUi, actions }) {
     // Both sections live in the page's one scroller, in that order: the group chats, then the
     // people. The wrapper carries the list item, the way the members list does: a button that
     // declared itself a list item would stop being announced as a button.
+    //
+    // A row is two lines: the name, and the line of description under it. What is a label is drawn
+    // as one (the skin's own .bt-tag: a Bot's role, and the Main Bot badge -- which only a Main Bot
+    // has); what is a value is small plain text (the model it runs on, the folder it works in).
     h('div', { className: 'bt-peers-list' },
       groups.length > 0 ? section(t('Groups'), groups.map(room => h('div', {
         key: room.id, className: 'bt-peers-item', role: 'listitem',
@@ -94,18 +116,32 @@ export function PeersPage({ useRoster, useUi, actions }) {
         type: 'button', className: 'bt-peers-row', 'data-room-id': room.id, onClick: () => openChat(room.id),
       },
       h(RoomAvatar, { room, roster, size: 36 }),
-      h('span', { className: 'bt-peers-name' }, room.name),
+      h('span', { className: 'bt-peers-body' },
+        h('span', { className: 'bt-peers-name' }, room.name),
+        // A group has no model and no folder -- it is not one Bot's conversation -- but it does
+        // have members, which is the one thing worth a line under its name.
+        h('span', { className: 'bt-peers-desc' },
+          h('span', { className: 'bt-peers-text' }, t('{count} members', { count: (room.members ?? []).length })))),
       h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))))) : null,
-      shown.length > 0 ? section(t('Peers'), shown.map(bot => h('div', {
-        key: bot.id, className: 'bt-peers-item', role: 'listitem',
-      },
-      h('button', {
-        type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openChat(bot.id),
-      },
-      h(BotMark, { bot, size: 36 }),
-      h('span', { className: 'bt-peers-name' }, bot.name),
-      bot.role ? h('span', { className: 'bt-tag' }, bot.role) : null,
-      h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))))) : null,
+      shown.length > 0 ? section(t('Peers'), shown.map(bot => {
+        const model = peersModel(bot, roster)
+        const folder = peersFolder(bot.workDir)
+        return h('div', {
+          key: bot.id, className: 'bt-peers-item', role: 'listitem',
+        },
+        h('button', {
+          type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openChat(bot.id),
+        },
+        h(BotMark, { bot, size: 36 }),
+        h('span', { className: 'bt-peers-body' },
+          h('span', { className: 'bt-peers-name' }, bot.name),
+          h('span', { className: 'bt-peers-desc' },
+            bot.role ? h('span', { className: 'bt-tag' }, bot.role) : null,
+            model ? h('span', { className: 'bt-peers-text' }, model) : null,
+            folder ? h('span', { className: 'bt-peers-text' }, folder) : null,
+            isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null))),
+        h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))
+      })) : null,
       groups.length === 0 && shown.length === 0
         ? h('div', { className: 'bt-peers-empty', role: 'status' }, t('Nothing matches'))
         : null)), document.body)
@@ -133,7 +169,16 @@ html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;o
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
-html[data-bt-mobile] .bt-peers-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The two lines a row reads in: the name, then the description under it. The pair takes what the
+   chevron leaves, and each line cuts its own text short rather than pushing the row wider. */
+html[data-bt-mobile] .bt-peers-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+html[data-bt-mobile] .bt-peers-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The description line: the second level of the two, in the skin's own small second-level colour,
+   and one line whatever it holds -- a tag for what is a label, plain text for what is a value. */
+html[data-bt-mobile] .bt-peers-desc{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+/* A value is the part that gives way: the two labels and the chevron keep their width, and the
+   model and the folder ellipsise -- the folder last, since it is the one that can be longest. */
+html[data-bt-mobile] .bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-bt-mobile] .bt-peers-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
 html[data-bt-mobile] .bt-peers-empty{padding:24px 12px;font-size:14px;line-height:21px;color:var(--bt-ink-3)}
 /* The page carries its own title, and the pill belongs to the conversation behind it. */

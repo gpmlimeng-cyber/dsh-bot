@@ -6,6 +6,12 @@ import { BotMark } from './mark.js'
 import { openHarnessOnboarding, openHarnessSettings } from './sidebar.js'
 import { SPRING_POP, SPRING_SHAPE, spring, useLinger } from './motion.js'
 import { t } from './i18n.js'
+// The picker's one leaf, in a module of its own so a surface that only names a model (the 伙伴
+// page) does not carry the picker's furniture: it is re-exported here for the pages that already
+// read it from this module.
+import { servedOf, modelOf } from './model-ref.js'
+
+export { modelOf }
 
 const MENU_EXIT_MS = 120
 
@@ -31,16 +37,8 @@ export function groupModels(models) {
   })
 }
 
-const servedOf = (roster, ref) => (roster.models ?? []).find(model => model.ref === ref)
-
-// What a Bot runs on, for display: the chosen model, else the one it last ran on.
-export function modelOf(bot, roster) {
-  const ref = bot.model ?? bot.appliedModel
-  if (!ref) return undefined
-  const served = servedOf(roster, ref)
-  const [provider, ...rest] = ref.split('/')
-  return { ref, name: served?.name ?? rest.join('/'), provider: served?.providerName ?? provider, served: served !== undefined }
-}
+// What a Bot runs on, for display, and the catalog lookup behind it: both live in model-ref.js,
+// where a page can reach the rule without reaching this module's dependencies.
 
 // The thinking levels of one model, `{efforts, defaultEffort?}` or undefined when it
 // has none. The catalog carries them for models Bots use; any other ref asks the host.

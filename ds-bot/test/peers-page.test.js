@@ -26,7 +26,7 @@ const nav = code('nav-bar.js')
 const sidebar = code('sidebar.js')
 const header = code('header.js')
 
-const { peersList, peersRooms } = await (async () => {
+const { peersList, peersRooms, peersModel, peersFolder } = await (async () => {
   const bundle = await build({
     entryPoints: [fileURLToPath(new URL('../src/client/peers-page.js', import.meta.url))],
     bundle: true, format: 'cjs', platform: 'node', write: false,
@@ -69,6 +69,45 @@ test('the same book holds the group chats, read the same way', () => {
   assert.deepEqual(plain(peersRooms(rooms, 'zzz')), [], 'no match, no rows')
   assert.deepEqual(plain(peersRooms(undefined, '')), [], 'an empty roster is not a crash')
   assert.deepEqual(rooms.map(room => room.id), ['z', 'a', 'h'], 'and nothing is reordered in place')
+})
+
+test('the description line is a label when it is a label and a value when it is a value', () => {
+  // The name and the description are the two lines of one body, and the body takes what the
+  // chevron leaves: a row is the avatar, the body, the chevron -- nothing floats between them.
+  assert.ok(peers.includes("className: 'bt-peers-body' }"), 'the row has a two-line body')
+  assert.ok(peers.includes("className: 'bt-peers-desc' }"), 'whose second line is the description')
+  // What is a label is drawn as one, in the skin's own tag: the role, and the Main Bot badge --
+  // which only a Main Bot gets, read from the roster's own list of Main Bots.
+  assert.ok(peers.includes("h('span', { className: 'bt-tag' }, bot.role)"), 'the role is a tag')
+  assert.ok(peers.includes("isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null"), 'and Main Bot is a tag, only on a Main Bot')
+  assert.ok(peers.includes("import { isMainOf } from './sources.js'"), 'read from the roster\'s own rule')
+  // What is a value is small text: the model, and the folder.
+  assert.ok(peers.includes("model ? h('span', { className: 'bt-peers-text' }, model) : null"), 'the model is text')
+  assert.ok(peers.includes("folder ? h('span', { className: 'bt-peers-text' }, folder) : null"), 'and so is the folder')
+  // The model is read the way the settings page reads it -- one rule, in the leaf both reach --
+  // rather than a second copy of the catalog lookup here.
+  assert.ok(peers.includes("import { modelOf } from './model-ref.js'"), 'the model comes from the shared rule')
+  assert.ok(code('model-menu.js').includes("export { modelOf }"), 'which the picker re-exports for its own callers')
+  assert.ok(!peers.includes("bot.model.split"), 'and nothing here re-derives it')
+  // A group is not one Bot's conversation, so it has no model and no folder; the one thing its
+  // line can say is how many members it has.
+  assert.ok(peers.includes("h('span', { className: 'bt-peers-text' }, t('{count} members', { count: (room.members ?? []).length }))"), 'a group says its members')
+  // Two lines of one row, so the row is taller than the one line it was: the skin says how tall.
+  const sheet = code('peers-page.js')
+  assert.ok(sheet.includes('.bt-peers-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}'), 'the body stacks them')
+  assert.ok(sheet.includes('.bt-peers-desc{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}'), 'the description is one small second-level line')
+  assert.ok(sheet.includes('.bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'and a value gives way rather than widening the row')
+})
+
+test('the model and the folder are read as names, not as the raw roster', () => {
+  assert.equal(peersModel({ model: 'deepseek/deepseek-chat' }, { models: [] }), 'deepseek-chat', 'the ref\'s last segment when the catalog has no entry')
+  assert.equal(peersModel({ model: 'deepseek/deepseek-chat' }, { models: [{ ref: 'deepseek/deepseek-chat', name: 'DeepSeek Chat' }] }), 'DeepSeek Chat', 'the catalog\'s own name when it is served')
+  assert.equal(peersModel({ appliedModel: 'a/b' }, { models: [] }), 'b', 'and the model it last ran on counts')
+  assert.equal(peersModel({}, { models: [] }), null, 'no model, no text')
+  assert.equal(peersFolder('/data/user/0/home/repos/dsh-bot/'), 'dsh-bot', 'the folder keeps its last segment, trailing slashes and all')
+  assert.equal(peersFolder('dsh-bot'), 'dsh-bot', 'a bare name is already one')
+  assert.equal(peersFolder('/'), null, 'a path with no folder in it says nothing')
+  assert.equal(peersFolder(undefined), null, 'and a Bot with no folder says nothing')
 })
 
 test('a row is a Bot with its role and a chevron, not a conversation', () => {
