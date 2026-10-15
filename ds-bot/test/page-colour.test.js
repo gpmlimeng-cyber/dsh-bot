@@ -128,7 +128,7 @@ test('the page is painted where the platform painted its own, and only in the li
 // sampling it once and drifting the next time the band moves (it moved once already today).
 test('the page colour is read from the shell, in the light theme, with the sample as fallback', () => {
   const styles = read('styles.js')
-  const reader = styles.slice(styles.indexOf('export function publishShellBackground'), styles.indexOf('export function publishThemeColor'))
+  const reader = styles.slice(styles.indexOf('export function publishShellBackground'), styles.indexOf('export function installStyles'))
   assert.ok(reader.includes("root.style.getPropertyValue('background-color')"), 'the inline declaration, read from the element')
   assert.ok(reader.includes("root.style.getPropertyValue('background')"), 'including the shorthand form')
   assert.ok(!reader.includes('getComputedStyle'), 'never the computed value, which would be our own paint')
@@ -138,9 +138,11 @@ test('the page colour is read from the shell, in the light theme, with the sampl
   // --bt-main / --bt-sidebar follows in one step; the palette's sample stands as the fallback.
   assert.ok(styles.includes('html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])) body{--bt-main:var(--bt-shell-bg);--bt-sidebar:var(--bt-shell-bg)}'), 'the shell colour becomes the page colour')
   assert.ok(read('themes.js').includes("light: { bg: '#f1f3f1', sidebar: '#f1f3f1'"), 'with the sampled value behind it')
-  // Wired before the meta tag is published, since that reads the resolved token.
+  // Wired where the theme is applied, and watched: the platform rewrites that declaration on
+  // its own, and the watch lives on <html> where the declaration is.
   const index = read('index.js')
-  assert.ok(index.includes('publishShellBackground()\n      publishThemeColor()'), 'read first, then told to the shell')
+  assert.ok(index.includes('      publishShellBackground()\n'), 'applied with the theme')
+  assert.ok(index.includes('new MutationObserver(() => { publishShellBackground() })') && index.includes("attributeFilter: ['data-ds-dark-theme']"), 'and re-applied when the platform flips dark')
   assert.ok(index.includes("themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })"), 'and watched, because the platform rewrites it')
 })
 
@@ -156,23 +158,20 @@ test('the platform base token is overridden exactly once, on the light theme', (
   assert.ok(rule.includes('!important'), 'an inline declaration needs the flag to be beaten')
 })
 
-// The shell reads the page colour from <meta name="theme-color">, and the platform's own
-// presenter had already written the old one before this skin's colour took effect. Ours goes
-// first in <head> (a consumer reads the first matching tag), and it is removed in dark so the
-// platform's value stands there.
-test('the page colour reaches the shell through the meta tag, light theme only', () => {
+// One <meta name="theme-color"> has to be enough. The skin used to add its own ahead of the
+// platform's presenter's, so that a consumer reading the first match saw the page's colour --
+// and it left two tags behind. Measured on the device: the shell ignores that tag entirely
+// (changing it to #00ff00 moved nothing, at load or later), so the override bought nothing and
+// the duplicate stayed. The skin adds none now, and this is what keeps it from coming back.
+test('the skin adds no theme-color tag of its own', () => {
   const styles = read('styles.js')
-  const helper = styles.slice(styles.indexOf('export function publishThemeColor'))
-  assert.ok(helper.includes("document.head.prepend(meta)"), 'ours leads the platform\'s tag')
-  assert.ok(helper.includes("meta.dataset.btThemeColor = ''"), 'and is marked as ours, so the presenter keeps its own')
-  assert.ok(helper.includes("getPropertyValue('--bt-main')"), 'the value is the page token, not a second copy of the colour')
-  assert.ok(helper.includes("hasAttribute('data-ds-dark-theme')") && helper.includes('own.remove()'), 'dark removes ours and leaves the platform\'s')
-  // Wired where the theme is applied, and watched, because the platform flips the flag itself.
   const index = read('index.js')
-  assert.ok(index.includes('import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles, publishShellBackground, publishThemeColor }'), 'imported')
-  assert.ok(index.includes('      publishThemeColor()\n'), 'applied with the theme')
-  assert.ok(index.includes('new MutationObserver(() => { publishShellBackground(); publishThemeColor() })') && index.includes("attributeFilter: ['data-ds-dark-theme']"), 'and re-applied when the platform flips dark')
-  assert.ok(index.includes("document.head.querySelector('meta[data-bt-theme-color]')?.remove()"), 'removed when the surface withdraws')
+  assert.ok(!styles.includes('publishThemeColor'), 'no helper')
+  assert.ok(!styles.includes("meta.name = 'theme-color'") && !styles.includes('bt-theme-color'), 'and nothing that writes one')
+  assert.ok(!index.includes('bt-theme-color') && !index.includes('publishThemeColor'), 'not wired in either')
+  // The platform's presenter owns the tag; the skin's page colour reaches the surfaces through
+  // the base token it overrides, which is the one route the device proved works.
+  assert.ok(styles.includes('--dsw-alias-bg-base:var(--bt-main)'), 'the working route is still the base token')
 })
 
 test('the bar wears the page colour, opaque', () => {

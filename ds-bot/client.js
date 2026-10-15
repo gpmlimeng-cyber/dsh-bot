@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: f9e9983c
+// Source fingerprint: 67ac9274
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3714,24 +3714,6 @@ function publishShellBackground() {
     if (root.style.getPropertyValue("--bt-shell-bg") !== "") root.style.removeProperty("--bt-shell-bg");
     if (root.dataset.btShellBg !== void 0) delete root.dataset.btShellBg;
   }
-}
-function publishThemeColor() {
-  if (typeof document === "undefined") return;
-  const own = document.head.querySelector("meta[data-bt-theme-color]");
-  const page = getComputedStyle(document.body).getPropertyValue("--bt-main").trim();
-  if (page === "" || document.body.hasAttribute("data-ds-dark-theme")) {
-    if (own) own.remove();
-    return;
-  }
-  if (!own) {
-    const meta = document.createElement("meta");
-    meta.name = "theme-color";
-    meta.dataset.btThemeColor = "";
-    document.head.prepend(meta);
-    meta.content = page;
-    return;
-  }
-  if (own.content !== page) own.content = page;
 }
 function installStyles(text, tag) {
   for (const old of document.head.querySelectorAll("style[data-dsh-bot]")) {
@@ -16110,7 +16092,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "f9e9983c" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "67ac9274" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16402,7 +16384,6 @@ function apply(ctx) {
       const motion = prefs.motion === "quiet" || prefs.motion === "lively" ? prefs.motion : "normal";
       document.body.dataset.btMotion = motion;
       publishShellBackground();
-      publishThemeColor();
       const next = `${id}|${accent ?? ""}|${motion}|${registry.getSnapshot()}`;
       if (next === key) return;
       key = next;
@@ -16422,7 +16403,6 @@ function apply(ctx) {
     const offRegistry = registry.subscribe(render);
     const themeWatch = new MutationObserver(() => {
       publishShellBackground();
-      publishThemeColor();
     });
     themeWatch.observe(document.body, { attributes: true, attributeFilter: ["data-ds-dark-theme"] });
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
@@ -16434,7 +16414,6 @@ function apply(ctx) {
         if (typeof releaseTokens === "function") releaseTokens();
       } finally {
         delete document.body.dataset.btMotion;
-        document.head.querySelector("meta[data-bt-theme-color]")?.remove();
         document.documentElement.style.removeProperty("--bt-shell-bg");
         delete document.documentElement.dataset.btShellBg;
         style.remove();

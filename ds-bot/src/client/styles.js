@@ -1742,33 +1742,6 @@ export function publishShellBackground() {
   }
 }
 
-// The page colour, told to the shell the one way a page has: a meta[name="theme-color"] of
-// our own, kept FIRST in <head>. The platform's own presenter writes the same tag from the
-// body's computed background, and on this device it had already written the old colour
-// before this skin's page colour took effect -- a consumer reads the first matching tag, so
-// ours leads. Light theme only: in dark the node is removed and the platform's value stands,
-// which is the one the shell should see there. Idempotent, and it only ever touches its own
-// node (marked data-bt-theme-color) so the platform's presenter keeps ownership of its one.
-// Reads the resolved token, so it follows the shell's colour on its own.
-export function publishThemeColor() {
-  if (typeof document === 'undefined') return
-  const own = document.head.querySelector('meta[data-bt-theme-color]')
-  const page = getComputedStyle(document.body).getPropertyValue('--bt-main').trim()
-  if (page === '' || document.body.hasAttribute('data-ds-dark-theme')) {
-    if (own) own.remove()
-    return
-  }
-  if (!own) {
-    const meta = document.createElement('meta')
-    meta.name = 'theme-color'
-    meta.dataset.btThemeColor = ''
-    document.head.prepend(meta)
-    meta.content = page
-    return
-  }
-  if (own.content !== page) own.content = page
-}
-
 export function installStyles(text, tag) {
   // One sheet per name. This runs again every time the plugin is applied -- an HMR push, a
   // surface toggle back to Bot mode -- and appending a second copy each time leaves several

@@ -4,7 +4,7 @@ import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
 import { countCards, createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
 import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
-import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles, publishShellBackground, publishThemeColor } from './styles.js'
+import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles, publishShellBackground } from './styles.js'
 import { lookOf } from './mark.js'
 import { TeamSidebar, ConnectPlugins, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts } from './sidebar.js'
 import { HeaderPill } from './header.js'
@@ -327,10 +327,8 @@ export function apply(ctx) {
       const motion = prefs.motion === 'quiet' || prefs.motion === 'lively' ? prefs.motion : 'normal'
       document.body.dataset.btMotion = motion
       // The page's base colour is the shell's own: read it from the inline declaration the
-      // platform leaves on <html>, then tell the shell the page's colour from the meta tag.
-      // Both are watched, because the platform rewrites first one and then the other on its own.
+      // platform leaves on <html>. Watched below, because the platform rewrites it on its own.
       publishShellBackground()
-      publishThemeColor()
       const next = `${id}|${accent ?? ''}|${motion}|${registry.getSnapshot()}`
       if (next === key) return
       key = next
@@ -345,7 +343,7 @@ export function apply(ctx) {
     render()
     const offRoster = roster.subscribe(render)
     const offRegistry = registry.subscribe(render)
-    const themeWatch = new MutationObserver(() => { publishShellBackground(); publishThemeColor() })
+    const themeWatch = new MutationObserver(() => { publishShellBackground() })
     themeWatch.observe(document.body, { attributes: true, attributeFilter: ['data-ds-dark-theme'] })
     // The platform writes <html>'s background itself, and re-writes it when the shell's colour
     // changes; that attribute is the one source this skin follows rather than samples.
@@ -358,7 +356,6 @@ export function apply(ctx) {
         if (typeof releaseTokens === 'function') releaseTokens()
       } finally {
         delete document.body.dataset.btMotion
-        document.head.querySelector('meta[data-bt-theme-color]')?.remove()
         document.documentElement.style.removeProperty('--bt-shell-bg')
         delete document.documentElement.dataset.btShellBg
         style.remove()
