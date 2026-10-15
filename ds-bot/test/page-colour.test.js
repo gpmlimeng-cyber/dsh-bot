@@ -105,7 +105,7 @@ test('the page is painted where the platform painted its own, and only in the li
   // html cannot be a descendant of body, so it is gated with :has; everything else is.
   const paint = read('styles.js')
   const painted = [
-    'html:not(:has(body[data-ds-dark-theme])){background:var(--bt-main)}',
+    'html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])){background:var(--bt-shell-bg)}',
     'body:not([data-ds-dark-theme]){background:var(--bt-main)!important}',
     'body:not([data-ds-dark-theme]) [data-dsh-frame],',
     'body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-main)}',

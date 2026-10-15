@@ -326,3 +326,27 @@ test('the keyboard decision reads the phone\'s own numbers', () => {
   assert.equal(keyboardUpWith({ ime: '', visual: { height: 600 } }), false, 'a short toolbar is not a keyboard')
   assert.equal(keyboardUpWith({ ime: '', visual: null }), false, 'and no visual viewport is not a keyboard')
 })
+
+// The join at the status bar's own lower edge. The page takes the shell's colour, so the join
+// is already one colour -- but the shell can move that colour on its own (it did once today),
+// and a join that moves under the page is a hard line rather than a soft one. This band is the
+// insurance: ten pixels of the page's colour fading to nothing, blurred, and it never takes a
+// tap. It is a sibling of the bar rather than a child, so the keyboard (which takes the bar
+// away) and the pages the bar steps aside for both leave it in place.
+test('the status bar\'s join is softened by a band that takes no taps', () => {
+  const band = css.find(line => line.includes('.bt-topfade{'))
+  assert.ok(band, 'the band has a rule')
+  assert.ok(band.includes('position:fixed'), band)
+  assert.ok(band.includes('top:var(--bt-top-inset'), 'at the status bar\'s own lower edge')
+  assert.ok(band.includes('height:10px'), 'narrow')
+  assert.ok(band.includes('linear-gradient(to bottom,var(--bt-main),transparent)'), 'from the page colour to nothing')
+  assert.ok(band.includes('backdrop-filter:blur(6px)'), 'blurred')
+  assert.ok(band.includes('pointer-events:none'), 'and it takes no tap')
+  const bar = css.find(line => line.includes('.bt-nav{'))
+  const z = line => Number(/z-index:(\d+)/.exec(line)[1])
+  assert.ok(z(band) < z(bar), `under the bar\'s own controls: ${z(band)} < ${z(bar)}`)
+  // Rendered with the bar, not inside it: `display:none` on the bar must not take the band too.
+  assert.ok(nav.includes("h('div', { className: 'bt-topfade', 'aria-hidden': true })"), 'rendered as the bar\'s sibling')
+  assert.ok(nav.includes('createPortal(h(Fragment, null,'), 'in the same portal')
+  assert.ok(nav.includes("import { Fragment, createElement as h } from 'react'"), 'and Fragment is what wraps them')
+})

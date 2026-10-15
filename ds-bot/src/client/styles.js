@@ -45,12 +45,16 @@ body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;
    on it inline (measured rgb(241,243,241), and it is NOT the platform's own base token, which
    is #fcfcfc -- it is the colour the shell paints behind the status bar), so instead of
    fighting that declaration the skin READS it (publishShellBackground) and takes the surface
-   it paints as the page's own colour. This rule is only the fallback for the case where no
-   inline declaration is there to read: it paints the very colour the reader would have read,
-   so the two can never disagree, and the inline declaration outranks it. That is the
-   difference between matching the band today and matching it the next time it moves -- it
-   moved once already, from near-black in the morning to this light green-grey. */
-html:not(:has(body[data-ds-dark-theme])){background:var(--bt-main)}
+   it paints as the page's own colour. This rule is the guard for the case where no inline
+   declaration is there to read: it paints the very colour the reader would have read, so the
+   two can never disagree, and the inline declaration outranks it.
+
+   It reads --bt-shell-bg, not --bt-main, because --bt-main is declared on <body>: a custom
+   property only inherits downwards, so var(--bt-main) on <html> is invalid at computed-value
+   time and the declaration would be a no-op that still outranked the platform's own paint.
+   With the attribute absent the rule does not apply at all and <html> keeps what the platform
+   gave it. */
+html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])){background:var(--bt-shell-bg)}
 /* The one !important below is for the base token the platform writes inline on <body>, which
    no normal rule of ours can outrank. */
 body:not([data-ds-dark-theme]){background:var(--bt-main)!important}

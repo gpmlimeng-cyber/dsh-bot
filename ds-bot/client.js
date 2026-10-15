@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: cf25cb53
+// Source fingerprint: db8842c7
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2041,12 +2041,16 @@ body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;
    on it inline (measured rgb(241,243,241), and it is NOT the platform's own base token, which
    is #fcfcfc -- it is the colour the shell paints behind the status bar), so instead of
    fighting that declaration the skin READS it (publishShellBackground) and takes the surface
-   it paints as the page's own colour. This rule is only the fallback for the case where no
-   inline declaration is there to read: it paints the very colour the reader would have read,
-   so the two can never disagree, and the inline declaration outranks it. That is the
-   difference between matching the band today and matching it the next time it moves -- it
-   moved once already, from near-black in the morning to this light green-grey. */
-html:not(:has(body[data-ds-dark-theme])){background:var(--bt-main)}
+   it paints as the page's own colour. This rule is the guard for the case where no inline
+   declaration is there to read: it paints the very colour the reader would have read, so the
+   two can never disagree, and the inline declaration outranks it.
+
+   It reads --bt-shell-bg, not --bt-main, because --bt-main is declared on <body>: a custom
+   property only inherits downwards, so var(--bt-main) on <html> is invalid at computed-value
+   time and the declaration would be a no-op that still outranked the platform's own paint.
+   With the attribute absent the rule does not apply at all and <html> keeps what the platform
+   gave it. */
+html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])){background:var(--bt-shell-bg)}
 /* The one !important below is for the base token the platform writes inline on <body>, which
    no normal rule of ours can outrank. */
 body:not([data-ds-dark-theme]){background:var(--bt-main)!important}
@@ -15894,25 +15898,33 @@ function BottomNav({ useUi, useNav, actions }) {
     actions.openSettings("general");
   };
   return (0, import_react_dom12.createPortal)((0, import_react39.createElement)(
-    "nav",
-    { className: "bt-nav", "aria-label": t("Pages") },
-    TABS.filter(([id]) => id !== "plugins" || nav.plugins).map(([id, label, Icon, IconFilled]) => (0, import_react39.createElement)(
-      "button",
-      {
-        key: id,
-        type: "button",
-        className: "bt-nav-tab",
-        "data-active": active === id || void 0,
-        // Which drawing is on screen, for a real-device dump: the two states differ in the
-        // path, and a reader of the tree should not have to parse the SVG to tell them apart.
-        "data-icon": active === id ? "filled" : "outline",
-        "aria-label": t(label),
-        "aria-current": active === id ? "page" : void 0,
-        onClick: () => go(id)
-      },
-      (0, import_react39.createElement)(active === id ? IconFilled : Icon),
-      (0, import_react39.createElement)("span", { className: "bt-nav-tab-text", "aria-hidden": true }, t(label))
-    ))
+    import_react39.Fragment,
+    null,
+    // The softened join at the status bar's own lower edge. It belongs to the phone's frame
+    // rather than to the bar, so it is a sibling: it stays up when the keyboard takes the bar
+    // away, and when the bar steps aside for a page that is not one of the four.
+    (0, import_react39.createElement)("div", { className: "bt-topfade", "aria-hidden": true }),
+    (0, import_react39.createElement)(
+      "nav",
+      { className: "bt-nav", "aria-label": t("Pages") },
+      TABS.filter(([id]) => id !== "plugins" || nav.plugins).map(([id, label, Icon, IconFilled]) => (0, import_react39.createElement)(
+        "button",
+        {
+          key: id,
+          type: "button",
+          className: "bt-nav-tab",
+          "data-active": active === id || void 0,
+          // Which drawing is on screen, for a real-device dump: the two states differ in the
+          // path, and a reader of the tree should not have to parse the SVG to tell them apart.
+          "data-icon": active === id ? "filled" : "outline",
+          "aria-label": t(label),
+          "aria-current": active === id ? "page" : void 0,
+          onClick: () => go(id)
+        },
+        (0, import_react39.createElement)(active === id ? IconFilled : Icon),
+        (0, import_react39.createElement)("span", { className: "bt-nav-tab-text", "aria-hidden": true }, t(label))
+      ))
+    )
   ), document.body);
 }
 var NAV_CSS = `
@@ -15924,6 +15936,16 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe
    anyway: the conversation column, the peers page and the Settings screen all give it its
    56px back, so there is nothing for a frost to show through. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-main);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+/* The last 10px of the status bar's own edge, softened. The page takes the shell's colour now
+   (publishShellBackground), so the join is already the same colour -- but the shell can move
+   that colour on its own, and it did once today, and a join that moves under the page is a
+   hard line rather than a soft one. A 10px fade from the page's colour to nothing, blurred,
+   makes the difference hard to see whatever the shell does next.
+
+   It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
+   while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
+   (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;height:10px;z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main),transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
@@ -16078,7 +16100,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "cf25cb53" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "db8842c7" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
