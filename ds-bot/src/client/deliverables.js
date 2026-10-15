@@ -16,7 +16,7 @@
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { CardCheckIcon, CardCopyIcon, CardExternalIcon, CheckIcon, ChevronLeftIcon, CopyIcon, DotsBoldIcon, SwitchIcon } from './icons.js'
+import { BackChevronIcon, CardCheckIcon, CardCopyIcon, CardExternalIcon, CheckIcon, CopyIcon, DotsBoldIcon, SwitchIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { t } from './i18n.js'
 
@@ -397,7 +397,7 @@ export function DeliveredPreview({ file, actions, onClose }) {
  */
 function PreviewHead({ name, onClose, children }) {
   return h('div', { className: 'bt-preview-head' },
-    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(ChevronLeftIcon)),
+    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(BackChevronIcon)),
     h('span', { className: 'bt-preview-name' }, name),
     children)
 }
@@ -406,10 +406,10 @@ function PreviewHead({ name, onClose, children }) {
  * Everything the team's Bots have handed over, newest first, in the panel a preview opens
  * in -- full screen on a phone, the right column on a desktop. It is a view of the same
  * host record the cards were registered from, so it lists what was really delivered, and
- * it is drawn with the very cards the messages end with: same tile, same type icon, same
- * two exits, one tap to the preview. Only the second line differs -- a message's card
- * says what the file is, this one says when it arrived and where it sits. Read-only: it
- * lists and opens.
+ * it is drawn with the very cards the messages end with: same tile, same type icon, one tap
+ * to the preview, and the exits behind one control rather than the message grid's two, so
+ * the name keeps the width. Only the second line differs -- a message's card says what the
+ * file is, this one names its kind and how big it is. Read-only: it lists and opens.
  */
 export function DeliveredList({ actions, onClose }) {
   const [state, setState] = useState('reading') // reading | shown | failed

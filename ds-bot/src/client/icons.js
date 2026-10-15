@@ -37,7 +37,8 @@ export function CloseIcon() {
   return h('svg', { width: 16, height: 16, viewBox: '0 0 20 20', 'aria-hidden': true }, h('path', { d: 'M5 5l10 10M15 5L5 15', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round' }))
 }
 
-export const ChevronLeftIcon = () => h('svg', { width: 16, height: 16, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }, h('path', { d: 'M12.5 4.5L7 10l5.5 5.5' }))
+const CHEVRON_LEFT = 'M12.5 4.5L7 10l5.5 5.5'
+export const ChevronLeftIcon = () => h('svg', { width: 16, height: 16, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }, h('path', { d: CHEVRON_LEFT }))
 export const ChevronRightIcon = () => h('svg', { width: 14, height: 14, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }, h('path', { d: 'M7.5 4.5L13 10l-5.5 5.5' }))
 
 const lineIcon = paths => function LineIcon() {
@@ -48,13 +49,14 @@ const lineIcon = paths => function LineIcon() {
 // The same drawing, in a box cropped to the drawing itself: `viewBox` carries the glyph's
 // own extent plus one unit of stroke room on every side, so the ink fills the 25px box
 // evenly instead of hanging small in the middle of a 20-unit one. Only the drawing is
-// scaled -- `vectorEffect: non-scaling-stroke` holds the stroke at a flat 2px -- so every
-// one of these lands at the same 22-24px of ink, whatever shape it draws. The card's exits
+// scaled -- `vectorEffect: non-scaling-stroke` holds the stroke at a flat 2px, where a
+// scaled stroke would render at 1.8x -- so every one of these lands at the same 22-24px of
+// ink, whatever shape it draws. The delivered card's exits and the preview bar's back arrow
 // use these; every other caller keeps the shared 20-unit glyph, untouched.
-const CARD_ICON_SIZE = 25
-function cardIcon(paths, viewBox) {
-  return function CardIcon() {
-    return h('svg', { width: CARD_ICON_SIZE, height: CARD_ICON_SIZE, viewBox, fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
+const TIGHT_ICON_SIZE = 25
+function tightIcon(paths, viewBox) {
+  return function TightIcon() {
+    return h('svg', { width: TIGHT_ICON_SIZE, height: TIGHT_ICON_SIZE, viewBox, fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
       paths.map((d, index) => h('path', { key: index, d, vectorEffect: 'non-scaling-stroke' })))
   }
 }
@@ -126,6 +128,10 @@ export const SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: Cha
 // each glyph's own extent plus one unit of stroke room: the sheets span 12x12 units, so
 // 3 3 14 14; the arrow 13x13.5, so 2.5 2.5 15 15.5; the tick 11x8, so 3.5 5 13 10 (a tick
 // is wide and flat, so it is judged by its longest edge like the preview bar's close).
-export const CardExternalIcon = cardIcon(EXTERNAL_PATHS, '2.5 2.5 15 15.5')
-export const CardCopyIcon = cardIcon(COPY_PATHS, '3 3 14 14')
-export const CardCheckIcon = cardIcon(CHECK_PATHS, '3.5 5 13 10')
+export const CardExternalIcon = tightIcon(EXTERNAL_PATHS, '2.5 2.5 15 15.5')
+export const CardCopyIcon = tightIcon(COPY_PATHS, '3 3 14 14')
+export const CardCheckIcon = tightIcon(CHECK_PATHS, '3.5 5 13 10')
+// The preview (and panel) title bar's back arrow: the same chevron, in a box cropped to its
+// own 5.5x11 units, so it lands at 12.6x23.2 of ink in the bar's 48px control -- over the
+// 22px asked for -- with the stroke a true 2px instead of the 3.6px the 36px box rendered.
+export const BackChevronIcon = tightIcon([CHEVRON_LEFT], '6 3.5 7.5 13')

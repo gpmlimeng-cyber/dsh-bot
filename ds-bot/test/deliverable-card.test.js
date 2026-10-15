@@ -84,11 +84,11 @@ test('the card’s exits are two named icons, each a 44px target with the ink of
   //   arrow 13x13.5 units, box 15x15.5 -> 23.0x23.8
   //   tick 11x8 units, box 13x10 -> 23.2x17.4, judged by its longest edge: a tick is flat
   assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn svg')), 'the sheet does not size the card’s glyphs')
-  assert.ok(icons.includes('const CARD_ICON_SIZE = 25'), 'the card’s box is 25px')
+  assert.ok(icons.includes('const TIGHT_ICON_SIZE = 25'), 'the cropped box is 25px')
   assert.ok(icons.includes('strokeWidth: 2'), 'drawn at the 2px the preview bar paints')
   assert.ok(icons.includes("vectorEffect: 'non-scaling-stroke'"), 'and the stroke stays 2px while the drawing scales')
   for (const [name, box] of [['CardExternalIcon', "'2.5 2.5 15 15.5'"], ['CardCopyIcon', "'3 3 14 14'"], ['CardCheckIcon', "'3.5 5 13 10'"]]) {
-    assert.ok(icons.includes(`export const ${name} = cardIcon(`), `${name} is a card glyph`)
+    assert.ok(icons.includes(`export const ${name} = tightIcon(`), `${name} is a card glyph`)
     assert.ok(icons.includes(box), `${name} is cropped to its own drawing (${box})`)
   }
   assert.ok(rule('.bt-dcard-ico{').includes('width:40px'), 'the tile it matches stays 40px')
@@ -271,9 +271,9 @@ test('the card hands a file to another app, and keeps the shell from taking the 
 // bar stays three parts and a page's source toggle joins them instead of crowding it.
 test('the preview page’s title bar is back, the name, and one more menu', () => {
   const source = card.join('\n')
-  assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(ChevronLeftIcon))"), 'the left control is a back button, named for a reader')
+  assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(BackChevronIcon))"), 'the left control is a back button, named for a reader')
   assert.ok(source.includes("h('span', { className: 'bt-preview-name' }, name)"), 'the name is the middle part')
-  assert.ok(source.includes('import { CardCheckIcon, CardCopyIcon, CardExternalIcon, CheckIcon, ChevronLeftIcon, CopyIcon, DotsBoldIcon, SwitchIcon }'), 'a back arrow, the menu’s own icons and the card’s two are imported')
+  assert.ok(source.includes('import { BackChevronIcon, CardCheckIcon, CardCopyIcon, CardExternalIcon, CheckIcon, CopyIcon, DotsBoldIcon, SwitchIcon }'), 'a back arrow, the menu’s own icons and the card’s two are imported')
   // The "···" draws the filled dots: the hairline ones paint 1.5-unit dots that land at
   // 2.6px in the 48px control, which is why it looked empty. The 34px box matches the rule
   // in file-preview.js that sizes it, so the two never drift apart.
@@ -359,15 +359,18 @@ test('the title bar is 56px, its controls 48px, and their drawings 22px of ink',
   for (const prefix of ['.bt-preview-back{', '.bt-preview-more{']) {
     assert.ok(previewRule(prefix).includes('width:48px') && previewRule(prefix).includes('height:48px'), `${prefix} is a 48px touch target`)
   }
-  const back = previewRule('.bt-preview-back svg{')
-  assert.ok(back.includes('width:36px') && back.includes('height:36px'), 'the chevron’s box is 36px, which paints its 13/20 as 23.4px')
-  assert.ok(back.includes('stroke-width:2'), 'and it is stroked at 2, not the 1.6 the shared chevron keeps elsewhere')
-  const dots = previewRule('.bt-preview-more svg{')
-  assert.ok(dots.includes('width:34px') && dots.includes('height:34px'), 'the dots’ box is 34px, which paints their 15/20 as a 25.5px row')
-  // The dots are judged as a diameter as well as a row: three marks of a hairline's weight are
-  // what made this control look empty, so the arithmetic is tied to the glyph itself -- the
-  // filled dots are 4 units across, and 4 units of a 34px box is 6.8px.
-  assert.ok(read('icons.js').includes('cy: 10, r: 2 }'), 'the filled dots are 4 units across')
+  // Neither glyph is sized by the bar: each arrives with its own box, so the stroke is not
+  // scaled with the drawing (a 36px box around a 2-unit stroke painted 3.6px).
+  const icons = read('icons.js')
+  assert.ok(!read('file-preview.js').includes('.bt-preview-back svg'), 'the bar does not size the chevron')
+  assert.ok(!read('file-preview.js').includes('.bt-preview-more svg'), 'nor the dots')
+  assert.ok(icons.includes("export const BackChevronIcon = tightIcon([CHEVRON_LEFT], '6 3.5 7.5 13')"), 'the chevron arrives in a box cropped to its own 5.5x11 units')
+  assert.ok(11 * 25 / 13 + 2 >= 22, 'which paints 23.2px of ink, over the 22 the bar asks for')
+  assert.ok(card.join('\n').includes('h(DotsBoldIcon, { size: 34 })'), 'the dots arrive at 34px')
+  // The dots are judged as a diameter as well as a row: three hairline marks are what made
+  // this control look empty, so the arithmetic is tied to the glyph itself -- the filled dots
+  // are 4 units across, and 4 units of a 34px box is 6.8px.
+  assert.ok(icons.includes('cy: 10, r: 2 }'), 'the filled dots are 4 units across')
   assert.ok(4 * 34 / 20 >= 6, 'which lands over the 6px the bar asks for')
   assert.ok(!read('file-preview.js').includes('html[data-bt-pc] .bt-preview'), 'and no band gets a smaller control back')
   // The reserve for the centred name is the two controls, their padding and their gaps, so a

@@ -3894,7 +3894,8 @@ function ShareIcon() {
 function CloseIcon() {
   return (0, import_react3.createElement)("svg", { width: 16, height: 16, viewBox: "0 0 20 20", "aria-hidden": true }, (0, import_react3.createElement)("path", { d: "M5 5l10 10M15 5L5 15", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" }));
 }
-var ChevronLeftIcon = () => (0, import_react3.createElement)("svg", { width: 16, height: 16, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true }, (0, import_react3.createElement)("path", { d: "M12.5 4.5L7 10l5.5 5.5" }));
+var CHEVRON_LEFT = "M12.5 4.5L7 10l5.5 5.5";
+var ChevronLeftIcon = () => (0, import_react3.createElement)("svg", { width: 16, height: 16, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true }, (0, import_react3.createElement)("path", { d: CHEVRON_LEFT }));
 var ChevronRightIcon = () => (0, import_react3.createElement)("svg", { width: 14, height: 14, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true }, (0, import_react3.createElement)("path", { d: "M7.5 4.5L13 10l-5.5 5.5" }));
 var lineIcon = (paths) => function LineIcon() {
   return (0, import_react3.createElement)(
@@ -3903,12 +3904,12 @@ var lineIcon = (paths) => function LineIcon() {
     paths.map((d, index) => (0, import_react3.createElement)("path", { key: index, d }))
   );
 };
-var CARD_ICON_SIZE = 25;
-function cardIcon(paths, viewBox) {
-  return function CardIcon() {
+var TIGHT_ICON_SIZE = 25;
+function tightIcon(paths, viewBox) {
+  return function TightIcon() {
     return (0, import_react3.createElement)(
       "svg",
-      { width: CARD_ICON_SIZE, height: CARD_ICON_SIZE, viewBox, fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
+      { width: TIGHT_ICON_SIZE, height: TIGHT_ICON_SIZE, viewBox, fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
       paths.map((d, index) => (0, import_react3.createElement)("path", { key: index, d, vectorEffect: "non-scaling-stroke" }))
     );
   };
@@ -3973,9 +3974,10 @@ var MemoryIcon = lineIcon(["M5.5 3.5h8A1.5 1.5 0 0 1 15 5v10a1.5 1.5 0 0 1-1.5 1
 var FolderIcon = lineIcon(["M3 6A1.5 1.5 0 0 1 4.5 4.5h3.2l1.8 2h6A1.5 1.5 0 0 1 17 8v6.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5z"]);
 var ChatsIcon = lineIcon(["M3.5 5.5A1.5 1.5 0 0 1 5 4h7a1.5 1.5 0 0 1 1.5 1.5V10A1.5 1.5 0 0 1 12 11.5H8L5 14v-2.5A1.5 1.5 0 0 1 3.5 10z", "M13.5 7.5H15A1.5 1.5 0 0 1 16.5 9v4.5A1.5 1.5 0 0 1 15 15v2l-2.5-2h-3A1.5 1.5 0 0 1 8 13.5V13"]);
 var SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: ChatsIcon, usage: GaugeIcon };
-var CardExternalIcon = cardIcon(EXTERNAL_PATHS, "2.5 2.5 15 15.5");
-var CardCopyIcon = cardIcon(COPY_PATHS, "3 3 14 14");
-var CardCheckIcon = cardIcon(CHECK_PATHS, "3.5 5 13 10");
+var CardExternalIcon = tightIcon(EXTERNAL_PATHS, "2.5 2.5 15 15.5");
+var CardCopyIcon = tightIcon(COPY_PATHS, "3 3 14 14");
+var CardCheckIcon = tightIcon(CHECK_PATHS, "3.5 5 13 10");
+var BackChevronIcon = tightIcon([CHEVRON_LEFT], "6 3.5 7.5 13");
 
 // src/client/questions.js
 var import_react4 = require("react");
@@ -4811,12 +4813,11 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* 36px box: the chevron's 11 units of geometry plus its 2 units of stroke are 13/20 of the
-   box, so it lands at 23.4px tall. The stroke is set here, not in the shared icon: the same
-   chevron heads half the shell's pages, where 1.6 is the weight they were drawn for. It
-   keeps 1.4px over the 22px asked for on purpose -- a device measures a drawing a little
-   under the arithmetic, and an ink sitting exactly on the line rounds whichever way. */
-.bt-preview-back svg{width:36px;height:36px;stroke-width:2}
+/* The bar does not size the back arrow: it arrives as BackChevronIcon, the shared chevron
+   in a box cropped to its own 5.5x11 units (icons.js), which lands at 12.6x23.2 of ink with
+   a true 2px stroke. Sizing a plain box here would scale the stroke with it -- the 36px box
+   this replaced painted the 2 units as 3.6px -- and the shared chevron heads half the
+   shell's other pages, where 1.6 stays its own weight. */
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -4824,11 +4825,10 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* 34px box around the three filled dots: they paint 15/20 of it, so the row is 25.5px wide
-   with 6.8px dots, over the 22px row and 6px dot the bar asks for. A row of dots has no
-   height to grow -- its ink is the dot diameter -- so it is the width that carries the size
-   here. The plain DotsIcon paints 1.5-unit dots, 2.6px here: still a pinprick. */
-.bt-preview-more svg{width:34px;height:34px}
+/* Nor the dots, which arrive sized: DotsBoldIcon at 34px paints three 4-unit circles as a
+   25.5px row of 6.8px dots, over the 22px row and 6px dot the bar asks for. A row of dots
+   has no height to grow -- its ink is the dot diameter -- so the width carries the size.
+   The plain DotsIcon paints 1.5-unit dots, 2.6px here: still a pinprick. */
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
@@ -5194,7 +5194,7 @@ function PreviewHead({ name, onClose, children }) {
   return (0, import_react7.createElement)(
     "div",
     { className: "bt-preview-head" },
-    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react7.createElement)(ChevronLeftIcon)),
+    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react7.createElement)(BackChevronIcon)),
     (0, import_react7.createElement)("span", { className: "bt-preview-name" }, name),
     children
   );
