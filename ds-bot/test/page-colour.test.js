@@ -1,6 +1,8 @@
 // The page colour is the one value the user asked us to take from their screenshot rather
-// than from the platform: page #f8f8f8, white cards on top of it, the frozen #eee bubbles,
-// and the phone's bottom bar wearing the page colour. The dark theme paints nothing with it,
+// than from the platform, and it has since been re-pointed: it is now the colour the shell
+// paints behind the status bar (#f1f3f1), so the interface matches the band instead of the
+// band having to be reached for. White cards on top of it, the frozen #eee bubbles, and the
+// phone's bottom bar wearing the page colour. The dark theme paints nothing with it,
 // so the only thing keeping dark untouched is that the paint is gated on the light theme --
 // which is what these two assertions are for.
 import assert from 'node:assert/strict'
@@ -62,20 +64,22 @@ const dark = styles.find(line => line.startsWith('body[data-ds-dark-theme]{--bt-
 // block is its pre-theme fallback and the two must carry the same numbers.
 test('the page colour lives in the palette, and the base sheet agrees with it', () => {
   const themes = read('themes.js')
-  assert.ok(themes.includes("light: { bg: '#f8f8f8', sidebar: '#f8f8f8', bubble: '#eeeeee'"), 'the default light palette carries the sampled page, the list base and the frozen bubbles')
+  assert.ok(themes.includes("light: { bg: '#f1f3f1', sidebar: '#f1f3f1', bubble: '#eeeeee'"), "the default light palette carries the band colour, the list base and the frozen bubbles")
   assert.ok(themes.includes("'--bt-bubble': mode.bubble, '--bt-sidebar': mode.sidebar, '--bt-main': mode.bg"), 'and the palette reaches the tokens the skin uses')
   // The base sheet is that palette's pre-theme fallback, so the two agree token for token.
-  for (const token of ['--bt-main:#f8f8f8', '--bt-sidebar:#f8f8f8', '--bt-bubble:#eeeeee']) {
+  for (const token of ['--bt-main:#f1f3f1', '--bt-sidebar:#f1f3f1', '--bt-bubble:#eeeeee']) {
     assert.ok(styles.find(line => line.startsWith('body{')).includes(token), `the fallback carries ${token}`)
   }
 })
 
-test('the light page is the sampled #f8f8f8, with white cards on it', () => {
+test('the light page is the status band colour, with white cards on it', () => {
   assert.ok(light, 'the light theme declares the page colour')
-  assert.ok(light.includes('--bt-main:#f8f8f8'), light)
+  assert.ok(light.includes('--bt-main:#f1f3f1'), light)
   assert.ok(light.includes('--bt-card:#ffffff'), 'cards stay white -- the layering the screenshot draws')
-  assert.ok(light.includes('--bt-sidebar:#f8f8f8'), 'the lists that are pages too')
-  assert.ok(!light.includes('#f1f3f1'), 'the platform base colour is not written here')
+  assert.ok(light.includes('--bt-sidebar:#f1f3f1'), 'the lists that are pages too')
+  // The band's colour is the page's colour now, by the user's own call: #f1f3f1 used to be
+  // the platform's, waiting to be overwritten. Asserted positively so a re-sample shows up.
+  assert.ok(light.includes('#f1f3f1'), 'the page carries the colour of the band itself')
   // The bubbles are the frozen #eee: one round made them white for the grey page and was
   // withdrawn before the user ever ran that build, so the freeze is what ships.
   assert.ok(light.includes('--bt-bubble:#eeeeee'), 'the bubbles keep the frozen grey')
