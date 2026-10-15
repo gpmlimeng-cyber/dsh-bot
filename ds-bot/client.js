@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 6792efa8
+// Source fingerprint: 6b1903ac
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16055,6 +16055,7 @@ function PeersPage({ useRoster, useUi, actions }) {
   const openBot = (id) => {
     actions.closePeers();
     actions.selectPanel(null);
+    actions.closePanel();
     actions.openSession(id);
   };
   return (0, import_react_dom13.createPortal)((0, import_react40.createElement)(
@@ -16147,7 +16148,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "6792efa8" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "6b1903ac" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

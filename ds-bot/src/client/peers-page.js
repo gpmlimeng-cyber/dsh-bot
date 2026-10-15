@@ -29,10 +29,13 @@ export function PeersPage({ useRoster, useUi, actions }) {
   if (!open || !mobile) return null
   const shown = peersList(roster.bots, query)
   // Back to the conversation first, then the Bot's chat: one tap leaves this page, it does
-  // not stack a second one on it.
+  // not stack a second one on it. A details pane goes with it: a row opens a conversation, not a
+  // settings screen, and openSession does not close one that was already up -- on the phone that
+  // pane is full-screen (z 96, over the bar), so it is what the user sees instead of the chat.
   const openBot = (id) => {
     actions.closePeers()
     actions.selectPanel(null)
+    actions.closePanel()
     actions.openSession(id)
   }
   return createPortal(h('div', { className: 'bt-peers', role: 'region', 'aria-label': t('Peers') },

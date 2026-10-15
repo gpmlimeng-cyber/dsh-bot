@@ -84,7 +84,11 @@ test('a row is a Bot with its role and a chevron, not a conversation', () => {
 
 test('a row opens that Bot\'s chat and lands back on the conversation', () => {
   const open = peers.slice(peers.indexOf('const openBot ='), peers.indexOf('return createPortal'))
-  assert.match(open, /actions\.closePeers\(\)[\s\S]*actions\.selectPanel\(null\)[\s\S]*actions\.openSession\(id\)/, open)
+  assert.match(open, /actions\.closePeers\(\)[\s\S]*actions\.selectPanel\(null\)[\s\S]*actions\.closePanel\(\)[\s\S]*actions\.openSession\(id\)/, open)
+  // The details pane is closed on the way: it is full-screen on the phone (z 96, over the bar), so a
+  // settings screen left open is what the user arrives at instead of the chat. openSession keeps one.
+  assert.ok(open.includes('actions.closePanel()'), 'no settings pane survives the tap')
+  assert.ok(open.includes('openSession(id)'), 'and the tap ends in the conversation')
 })
 
 test('the header\'s new button opens the real create-Bot form, not a dead end', () => {
