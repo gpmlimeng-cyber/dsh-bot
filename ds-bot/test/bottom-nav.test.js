@@ -148,7 +148,11 @@ test('the selected page is the sampled ink and heavier, not the accent', () => {
 test('each tab reads the page it belongs to, and never keeps a selection of its own', () => {
   // The main panel is the shell's; the two overlays are ours. Both are read.
   assert.ok(nav.includes("const active = ui.settings ? 'me'"), 'Settings wins')
-  assert.ok(nav.includes(": ui.mobileNav ? 'peers'"), 'the peers page wins next')
+  // 伙伴 is a page of its own now: it is lit by its own state, not by the conversation's
+  // drawer, which stays the drawer's (and would otherwise light the tab from any chat).
+  const chain = nav.slice(nav.indexOf('const active = ui.settings'), nav.indexOf('const go ='))
+  assert.match(chain, /ui\.peers \? 'peers'/, 'the peers page wins next')
+  assert.ok(!chain.includes('mobileNav'), 'the drawer no longer stands in for the peers page')
   assert.ok(nav.includes(": nav.panel === 'plugins' ? 'plugins'"), 'then the shell panel')
   assert.ok(nav.includes(": nav.panel === null ? 'tasks' : null"), 'and a foreign panel lights nothing')
 })
@@ -162,8 +166,13 @@ test('a tab closes the other pages before it acts', () => {
   assert.match(tasks, /actions\.closeMobileNav\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.selectPanel\(null\)/, tasks)
   const plugins = branch('plugins', null)
   assert.match(plugins, /actions\.closeMobileNav\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.selectPanel\('plugins'\)/, plugins)
-  // 伙伴 is a page, and the settings screen goes before it opens.
-  assert.match(branch('peers', 'plugins'), /actions\.closeSettings\(\)[\s\S]*actions\.openMobileNav\(\)/, 'the settings screen goes first')
+  // 伙伴 is a page of its own: the settings screen and the conversation's drawer both go
+  // before it opens, and the tab opens the page rather than the drawer.
+  assert.match(branch('peers', 'plugins'), /actions\.closeSettings\(\)[\s\S]*actions\.closeMobileNav\(\)[\s\S]*actions\.openPeers\(\)/, 'the other surfaces go first')
+  // The drawer is not a page of the bar: a tab that leaves the conversation still closes it.
+  assert.match(tasks, /actions\.closePeers\(\)[\s\S]*actions\.closeMobileNav\(\)/, tasks)
+  assert.match(plugins, /actions\.closePeers\(\)[\s\S]*actions\.closeMobileNav\(\)/, plugins)
+  assert.match(go, /actions\.closePeers\(\)\n\s*actions\.closeMobileNav\(\)\n\s*actions\.openSettings\('general'\)/, '我的 closes the page on its way to Settings')
   // A tab bar picks a page: the page already on screen is left where it is, which is what
   // the app the user copied does (and the exits for a page are the other three tabs).
   assert.match(go, /if \(active === id\) return/, 'the current page is not re-opened or closed')
@@ -190,7 +199,7 @@ test('the keyboard takes the bar and the room it reserved', () => {
   const rules = css.filter(line => line.includes('[data-bt-keyboard]'))
   assert.ok(rules.some(line => line.includes('.bt-nav{display:none}')), 'the bar goes while the keyboard is up')
   assert.ok(rules.some(line => line.includes('[class*="centerCol"]{padding-bottom:0!important}')), 'and the conversation gets its 56px back')
-  assert.ok(rules.some(line => line.includes('.bt-side.bt-rail{padding-bottom:12px}')), 'the peers page too')
+  assert.ok(rules.some(line => line.includes('.bt-side.bt-rail{padding-bottom:12px}')), 'the conversation drawer too')
   assert.ok(rules.some(line => line.includes('.bt-settings-layer{bottom:0}')), 'and the Settings screen')
   // A short transition, so the composer does not jump when the flag flips.
   const reserved = css.find(line => line.includes('[class*="centerCol"]') && line.includes('var(--bt-nav-h)'))
@@ -220,27 +229,30 @@ test('the bar has no frame at all, and wears the page colour', () => {
   assert.ok(!/box-shadow:(?!none)/.test(rule), rule)
 })
 
-test('the peers page starts at the top edge of the screen and carries the inset itself', () => {
-  // With the floating bar hidden on this page, a page that started below the status bar's
-  // inset left that band showing the conversation behind it -- the seam the user reported.
+// The conversation's drawer, which the hamburger opens. It is not the 伙伴 page any more --
+// that one is its own full-screen surface (peers-page.js), and the bar stays on it, so the
+// drawer keeps covering the screen from the top edge and giving the bar's height back.
+test('the conversation\'s drawer starts at the top edge and carries the inset itself', () => {
+  // A drawer that started below the status bar's inset left that band showing the page behind
+  // it -- the seam the user reported while the drawer was the 伙伴 page.
   const page = css.find(line => line.startsWith(GATE + ' .bt-side.bt-rail{'))
-  assert.ok(page, 'the peers page rule')
+  assert.ok(page, 'the drawer rule')
   assert.ok(page.includes('top:0'), page)
-  assert.ok(page.includes('padding-top:calc(var(--bt-top-inset'), 'the inset is the page\'s own padding')
+  assert.ok(page.includes('padding-top:calc(var(--bt-top-inset'), 'the inset is the drawer\'s own padding')
   assert.ok(page.includes(' + 10px)'), 'plus the base rule\'s own 10px, so the top row does not move')
-  // The bar's own height is still given back at the foot of the same page.
+  // The bar's own height is still given back at the foot of the same surface.
   assert.ok(page.includes('padding-bottom:calc(var(--bt-nav-h)'), page)
 })
 
-// The user asked for the conversation's hamburger back. It toggles the same ui.mobileNav the
-// 伙伴 tab sets, so the two entries open one peers page rather than a drawer of its own.
-test('the hamburger stays, and opens the same peers page as the tab', () => {
+// The user asked for the conversation's hamburger back. It toggles the conversation's own
+// drawer (`ui.mobileNav`), which is what it did before; the 伙伴 tab has its own page now.
+test('the hamburger stays, and still opens the conversation drawer', () => {
   assert.ok(!nav.includes('.bt-mobile-nav{opacity:0'), 'the hamburger is not hidden any more')
-  assert.ok(css.some(line => line.includes('body:has(.bt-side.bt-rail[data-mobile-open]) .bt-mobile-bar{display:none}')), 'the peers page still carries no bar of its own')
+  assert.ok(css.some(line => line.includes('body:has(.bt-side.bt-rail[data-mobile-open]) .bt-mobile-bar{display:none}')), 'the drawer carries no bar of its own')
   const header = read('header.js')
   assert.ok(header.includes('onToggle: () => actions.toggleMobileNav()'), 'the hamburger toggles the nav state')
   const sidebar = read('sidebar.js')
-  assert.ok(sidebar.includes('const mobileOpen = useUi(value => value.mobileNav === true)'), 'and that state is what renders the peers page')
+  assert.ok(sidebar.includes('const mobileOpen = useUi(value => value.mobileNav === true)'), 'and that state is what renders the drawer')
 })
 
 test('a popup menu is drawn over the bar', () => {

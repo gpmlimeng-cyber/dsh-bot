@@ -38,6 +38,7 @@ import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-m
 import { watchMobile, isPortraitNav } from './mobile.js'
 import { noticeApprovals } from './approval-notices.js'
 import { BottomNav, NAV_CSS } from './nav-bar.js'
+import { PeersPage, PEERS_CSS } from './peers-page.js'
 
 export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
 
@@ -60,7 +61,7 @@ export function apply(ctx) {
   try { seenAt = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '{}') ?? {} } catch { seenAt = {} }
   // `details` is the panel's subject (a Session id); `view` picks details or the
   // subject Bot's browser inside it.
-  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false })
+  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, peers: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false })
   // Bot mode paints the whole team surface; Agent mode withdraws every slot and
   // style so the shell's own interface returns. `plain` stays false until a Bot-mode
   // view hosts a plain session, which drops only the conversation replacements.
@@ -387,7 +388,7 @@ export function apply(ctx) {
     openSession: (id) => {
       // A DSH Agent Session id lands on the plain surface, not the Bot skin.
       if (isAgentSessionId(id)) return actions.openAgentSession(id)
-      ui.set(state => (state.newChat || state.exchange || state.menu || state.palette || state.mobileNav ? { ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false } : state))
+      ui.set(state => (state.newChat || state.exchange || state.menu || state.palette || state.mobileNav || state.peers ? { ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false } : state))
       setPlain(false)
       const target = partFor(id)
       expected = target
@@ -396,7 +397,7 @@ export function apply(ctx) {
     // The conversation replacements withdraw for a plain Session; set the surface
     // before the navigation so the Bot skin never flashes.
     openAgentSession: (sessionId) => {
-      ui.set(state => ({ ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, details: null, view: 'details', renaming: false, tab: null }))
+      ui.set(state => ({ ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false, details: null, view: 'details', renaming: false, tab: null }))
       setPlain(true)
       expected = sessionId
       ctx.uiWorkspace.openSession(sessionId)
@@ -464,8 +465,8 @@ export function apply(ctx) {
     // The sidebar opens itself through the slot's own `expandSidebar`; the same service closes
     // it, and that is the only handle on the closing direction (sidebar.js pairs the two).
     collapseSidebar: () => { ctx.layout.toggleSidebar() },
-    openNewChat: (mode) => { ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null, mobileNav: false })) },
-    openPalette: (query = '') => { ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null, mobileNav: false })) },
+    openNewChat: (mode) => { ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null, mobileNav: false, peers: false })) },
+    openPalette: (query = '') => { ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null, mobileNav: false, peers: false })) },
     // The token keeps a late exit timer from closing a palette opened again since.
     closePalette: (token) => { ui.set(state => (state.palette && (token === undefined || state.palette.token === token) ? { ...state, palette: null } : state)) },
     openExchange: (a, b) => { if (a && b) ui.set(state => ({ ...state, exchange: [a, b] })) },
@@ -499,7 +500,7 @@ export function apply(ctx) {
     // Opening the conversation would move focus to its composer and blur the name field.
     renameBot: (id) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: true, tab: null })) },
     // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
-    openSettings: (page = 'general', id = null) => { ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null, mobileNav: false })) },
+    openSettings: (page = 'general', id = null) => { ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false })) },
     // On an upright phone the four pages of the bottom bar are peers of each other, so
     // closing one lands on the conversation rather than on whatever page was behind it:
     // the bar is the only navigator there and must never come back to a page the user has
@@ -513,7 +514,7 @@ export function apply(ctx) {
     },
     openMemory: (botId) => { ui.set(state => ({ ...state, memory: botId, menu: null, palette: null })) },
     closeMemory: () => { ui.set(state => (state.memory ? { ...state, memory: null } : state)) },
-    openConnectors: () => { ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null, mobileNav: false })) },
+    openConnectors: () => { ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false })) },
     // Agent mode hands the surface back to the shell; everything open on the Bot
     // surface closes first so nothing stale reopens on the way back.
     setSurface: (mode) => {
@@ -579,12 +580,17 @@ export function apply(ctx) {
     deleteRoom: id => after(call('delete-room', { id })),
     openMenu: (menu) => { ui.set(state => ({ ...state, menu })) },
     closeMenu: () => { ui.set(state => (state.menu ? { ...state, menu: null } : state)) },
-    // The mobile drawer: on other bands the hamburger in the conversation header toggles
-    // it, on an upright phone the 伙伴 tab of the bottom bar does (nav-bar.js), and every
-    // full-pane action (session, new chat, palette, settings) closes it first.
+    // The mobile drawer: the hamburger in the conversation header toggles it on every
+    // band, and every full-pane action (session, new chat, palette, settings, the 伙伴
+    // page) closes it first. The 伙伴 tab has its own page and state since the user asked
+    // for a contacts page, so the two entries no longer open the same surface.
     toggleMobileNav: () => { ui.set(state => ({ ...state, mobileNav: !state.mobileNav, menu: null, palette: null })) },
-    openMobileNav: () => { ui.set(state => (state.mobileNav ? state : { ...state, mobileNav: true, menu: null, palette: null })) },
-    // Leaving the peers page on the phone is leaving a page: back to the conversation, for
+    openMobileNav: () => { ui.set(state => (state.mobileNav ? state : { ...state, mobileNav: true, peers: false, menu: null, palette: null })) },
+    // 伙伴: the contacts page, a page of its own. The hamburger keeps the conversation's
+    // drawer, so the two entries no longer share one state.
+    openPeers: () => { ui.set(state => (state.peers ? state : { ...state, peers: true, mobileNav: false, settings: null, menu: null, palette: null, newChat: null })) },
+    closePeers: () => { ui.set(state => (state.peers ? { ...state, peers: false } : state)) },
+    // Closing the drawer on the phone is leaving a page: back to the conversation, for
     // the same reason closeSettings does it (and read there for why it is gated).
     closeMobileNav: () => {
       if (!ui.getSnapshot().mobileNav) return
@@ -947,6 +953,7 @@ export function apply(ctx) {
     installCompiledStyles(FILE_PREVIEW_CSS, 'file-preview'),
     installCompiledStyles(ATTENTION_CSS, 'attention'),
     installCompiledStyles(NAV_CSS, 'bottom-nav'),
+    installCompiledStyles(PEERS_CSS, 'peers'),
     installTheme(),
     shadow('sidebar.workspaces', { priority: -10, inject: face }, TeamSidebar),
     shadow('sidebar.brand.mark', { priority: -10 }, BrandMark),
@@ -958,6 +965,7 @@ export function apply(ctx) {
     // launcher (the Desktop's "··· More"), which comes back in Agent mode.
     shadow('settings.launcher', { priority: -10, inject: face }, AccountLauncher),
     shadow('shell.overlay', { id: 'bot-nav', order: 45, inject: face }, BottomNav),
+    shadow('shell.overlay', { id: 'bot-peers', order: 44, inject: face }, PeersPage),
     shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
     shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
     shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),

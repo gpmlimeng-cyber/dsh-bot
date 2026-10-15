@@ -6,10 +6,9 @@
 //
 //   任务 (Tasks)    the conversation. It is the shell's main slot with no panel selected,
 //                   so `layout.selectPanel(null)` is the whole of it.
-//   伙伴 (Peers)    the Bot list — the sidebar's own wide list, which on an upright phone
-//                   is the full-page form of the drawer the hamburger used to open. Same
-//                   component, same state (`ui.mobileNav`); only its box differs, and the
-//                   stylesheet below is that difference.
+//   伙伴 (Peers)    the team's contacts, a page of its own (peers-page.js): a title, a
+//                   search field and one row per Bot. It is NOT the conversation's sidebar —
+//                   that one keeps its own state (`ui.mobileNav`) and its hamburger.
 //   发现 (Discover) the plugin manager's main panel, id "plugins" (dsh-client-ui-plugin-
 //                   manager). It is not drawn when the shell has no such panel registered:
 //                   `layout.selectPanel` throws on an unknown id, so the tab may not exist
@@ -62,7 +61,7 @@ export function BottomNav({ useUi, useNav, actions }) {
   // "plugins" (the shell's scheduled-tasks page, opened from its own list) leaves every
   // tab unlit rather than claiming the conversation is on screen.
   const active = ui.settings ? 'me'
-    : ui.mobileNav ? 'peers'
+    : ui.peers ? 'peers'
       : nav.panel === 'plugins' ? 'plugins'
         : nav.panel === null ? 'tasks' : null
   const go = (id) => {
@@ -71,6 +70,7 @@ export function BottomNav({ useUi, useNav, actions }) {
     // the exits for a page are the other three tabs).
     if (active === id) return
     if (id === 'tasks') {
+      actions.closePeers()
       actions.closeMobileNav()
       actions.closeSettings()
       actions.selectPanel(null)
@@ -78,15 +78,18 @@ export function BottomNav({ useUi, useNav, actions }) {
     }
     if (id === 'peers') {
       actions.closeSettings()
-      actions.openMobileNav()
+      actions.closeMobileNav()
+      actions.openPeers()
       return
     }
     if (id === 'plugins') {
+      actions.closePeers()
       actions.closeMobileNav()
       actions.closeSettings()
       actions.selectPanel('plugins')
       return
     }
+    actions.closePeers()
     actions.closeMobileNav()
     actions.openSettings('general')
   }
@@ -169,10 +172,11 @@ html[data-bt-mobile][data-bt-portrait] body:has(.bt-palette-layer) .bt-nav{displ
 html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail{top:0;padding-top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);width:100%;padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap));border-right:0;box-shadow:none}
 html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-left:0}
 html[data-bt-mobile][data-bt-portrait] .bt-mobile-scrim{display:none}
-/* The hamburger stays on the conversation (the user asked for it back): it toggles the same
-   ui.mobileNav the 伙伴 tab sets, so both open the one peers page rather than a drawer of
-   their own. The peers page itself carries no hamburger — the whole bar goes while it is up,
-   because that page has its own top row and the pill belongs to the conversation behind it. */
+/* The hamburger stays on the conversation (the user asked for it back): it toggles the
+   conversation's own drawer, ui.mobileNav, which is a state of its own -- the 伙伴 tab
+   opens its own full page instead, and the drawer is closed on the way (nav-bar.js go()).
+   The page carries no hamburger either: the whole bar goes while it is up, because that
+   page has its own top row and the pill belongs to the conversation behind it. */
 html[data-bt-mobile][data-bt-portrait] body:has(.bt-side.bt-rail[data-mobile-open]) .bt-mobile-bar{display:none}
 /* While the keyboard is up the bar goes and the 56px it reserved goes with it, so the
    composer sits on the keyboard's top edge instead of floating a bar's height above it --

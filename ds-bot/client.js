@@ -1298,8 +1298,8 @@ function bodyOf(def, paint, flat = false) {
     return "";
   }
 }
-var eyeMarkup = ([cx, cy, w, h38, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h38 / 2}" width="${w}" height="${h38}" rx="${w / 2}"/></g>`;
-var happyEyeMarkup = ([cx, cy, w, h38, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h38 * 0.14}Q0 ${-h38 * 0.42} ${w * 0.62} ${h38 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
+var eyeMarkup = ([cx, cy, w, h39, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h39 / 2}" width="${w}" height="${h39}" rx="${w / 2}"/></g>`;
+var happyEyeMarkup = ([cx, cy, w, h39, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h39 * 0.14}Q0 ${-h39 * 0.42} ${w * 0.62} ${h39 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
 var maskBox = (size) => `maskUnits="userSpaceOnUse" x="${-size}" y="${-size}" width="${size * 3}" height="${size * 3}"`;
 var holes = (def, eyes) => `<rect x="${-def.size}" y="${-def.size}" width="${def.size * 3}" height="${def.size * 3}" fill="#fff"/>${eyes}`;
 var MASK_ID = "%MASK%";
@@ -1836,12 +1836,12 @@ function liveSprings(apply2) {
     const dt = Math.min(0.5, Math.max(1e-3, (now - last) / 1e3));
     last = now;
     const steps = Math.ceil(dt * 240);
-    const h38 = dt / steps;
+    const h39 = dt / steps;
     let moving = false;
     for (const value of values.values()) {
       for (let index = 0; index < steps; index += 1) {
-        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h38;
-        value.x += value.v * h38;
+        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h39;
+        value.x += value.v * h39;
       }
       if (Math.abs(value.x - value.to) < 0.05 && Math.abs(value.v) < 1) {
         value.x = value.to;
@@ -15823,10 +15823,11 @@ function BottomNav({ useUi, useNav, actions }) {
   const mobile = useMobile();
   const portrait = usePortrait();
   if (!mobile || !portrait) return null;
-  const active = ui2.settings ? "me" : ui2.mobileNav ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
+  const active = ui2.settings ? "me" : ui2.peers ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
   const go = (id) => {
     if (active === id) return;
     if (id === "tasks") {
+      actions.closePeers();
       actions.closeMobileNav();
       actions.closeSettings();
       actions.selectPanel(null);
@@ -15834,15 +15835,18 @@ function BottomNav({ useUi, useNav, actions }) {
     }
     if (id === "peers") {
       actions.closeSettings();
-      actions.openMobileNav();
+      actions.closeMobileNav();
+      actions.openPeers();
       return;
     }
     if (id === "plugins") {
+      actions.closePeers();
       actions.closeMobileNav();
       actions.closeSettings();
       actions.selectPanel("plugins");
       return;
     }
+    actions.closePeers();
     actions.closeMobileNav();
     actions.openSettings("general");
   };
@@ -15917,10 +15921,11 @@ html[data-bt-mobile][data-bt-portrait] body:has(.bt-palette-layer) .bt-nav{displ
 html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail{top:0;padding-top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);width:100%;padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap));border-right:0;box-shadow:none}
 html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-left:0}
 html[data-bt-mobile][data-bt-portrait] .bt-mobile-scrim{display:none}
-/* The hamburger stays on the conversation (the user asked for it back): it toggles the same
-   ui.mobileNav the 伙伴 tab sets, so both open the one peers page rather than a drawer of
-   their own. The peers page itself carries no hamburger — the whole bar goes while it is up,
-   because that page has its own top row and the pill belongs to the conversation behind it. */
+/* The hamburger stays on the conversation (the user asked for it back): it toggles the
+   conversation's own drawer, ui.mobileNav, which is a state of its own -- the 伙伴 tab
+   opens its own full page instead, and the drawer is closed on the way (nav-bar.js go()).
+   The page carries no hamburger either: the whole bar goes while it is up, because that
+   page has its own top row and the pill belongs to the conversation behind it. */
 html[data-bt-mobile][data-bt-portrait] body:has(.bt-side.bt-rail[data-mobile-open]) .bt-mobile-bar{display:none}
 /* While the keyboard is up the bar goes and the 56px it reserved goes with it, so the
    composer sits on the keyboard's top edge instead of floating a bar's height above it --
@@ -15939,6 +15944,92 @@ html[data-bt-mobile][data-bt-portrait][data-bt-keyboard] .bt-settings-layer{bott
    95 over the pages it belongs to (the peers page 79, Settings 60) and only the transient
    menu outranks it. */
 html[data-bt-mobile][data-bt-portrait] .bt-menu{z-index:96}
+`;
+
+// src/client/peers-page.js
+var import_react40 = require("react");
+var import_react_dom13 = require("react-dom");
+function peersList(bots, query2) {
+  const wanted = query2.trim().toLowerCase();
+  const byName = [...bots ?? []].sort((a, b) => (a?.name ?? "").localeCompare(b?.name ?? ""));
+  return wanted === "" ? byName : byName.filter((bot) => (bot?.name ?? "").toLowerCase().includes(wanted));
+}
+function PeersPage({ useRoster, useUi, actions }) {
+  const roster = useRoster((value) => value);
+  const open = useUi((value) => value.peers === true);
+  const [query2, setQuery] = (0, import_react40.useState)("");
+  const mobile = useMobile();
+  if (!open || !mobile) return null;
+  const shown = peersList(roster.bots, query2);
+  const openBot = (id) => {
+    actions.closePeers();
+    actions.selectPanel(null);
+    actions.openSession(id);
+  };
+  return (0, import_react_dom13.createPortal)((0, import_react40.createElement)(
+    "div",
+    { className: "bt-peers", role: "region", "aria-label": t("Peers") },
+    (0, import_react40.createElement)(
+      "div",
+      { className: "bt-peers-top" },
+      (0, import_react40.createElement)("h2", { className: "bt-peers-title" }, t("Peers")),
+      (0, import_react40.createElement)(
+        "div",
+        { className: "bt-side-search" },
+        (0, import_react40.createElement)(SearchIcon),
+        (0, import_react40.createElement)("input", {
+          type: "search",
+          enterKeyHint: "search",
+          autoComplete: "off",
+          spellCheck: false,
+          placeholder: t("Search"),
+          value: query2,
+          "aria-label": t("Search"),
+          onChange: (event) => setQuery(event.target.value)
+        })
+      )
+    ),
+    shown.length === 0 ? (0, import_react40.createElement)("div", { className: "bt-peers-empty", role: "status" }, t("No Bots match")) : (0, import_react40.createElement)("div", { className: "bt-peers-list", role: "list" }, shown.map((bot) => (0, import_react40.createElement)(
+      "div",
+      {
+        key: bot.id,
+        className: "bt-peers-item",
+        role: "listitem"
+      },
+      (0, import_react40.createElement)(
+        "button",
+        {
+          type: "button",
+          className: "bt-peers-row",
+          "data-bot-id": bot.id,
+          onClick: () => openBot(bot.id)
+        },
+        (0, import_react40.createElement)(BotMark, { bot, size: 36 }),
+        (0, import_react40.createElement)("span", { className: "bt-peers-name" }, bot.name),
+        bot.role ? (0, import_react40.createElement)("span", { className: "bt-tag" }, bot.role) : null,
+        (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
+      )
+    )))
+  ), document.body);
+}
+var PEERS_CSS = `
+html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+/* Typing in the search box raises the keyboard, and the bar (hidden underneath it, but still
+   reserving its height) would leave the same dead band the user reported under the composer:
+   give the room back while the flag is up. The flag is mobile.js's; the bar's own rule hides
+   the bar itself. */
+html[data-bt-mobile][data-bt-keyboard] .bt-peers{padding-bottom:12px}
+html[data-bt-mobile] .bt-peers-top{flex:none;display:flex;flex-direction:column;gap:10px;padding-bottom:8px}
+html[data-bt-mobile] .bt-peers-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
+html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
+html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
+html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
+html[data-bt-mobile] .bt-peers-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-bt-mobile] .bt-peers-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-peers-empty{padding:24px 12px;font-size:14px;line-height:21px;color:var(--bt-ink-3)}
+/* The page carries its own title, and the pill belongs to the conversation behind it. */
+html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 `;
 
 // src/client/index.js
@@ -15971,7 +16062,7 @@ function apply(ctx) {
   } catch {
     seenAt = {};
   }
-  const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false });
+  const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, peers: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false });
   const surface = createSource({ mode: readMode(), plain: false });
   const nav = createSource({ panel: null, plugins: false });
   let agentSessionCache = /* @__PURE__ */ new Set();
@@ -16308,7 +16399,7 @@ function apply(ctx) {
     isAgentSession: (id) => isAgentSessionId(id),
     openSession: (id) => {
       if (isAgentSessionId(id)) return actions.openAgentSession(id);
-      ui2.set((state) => state.newChat || state.exchange || state.menu || state.palette || state.mobileNav ? { ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false } : state);
+      ui2.set((state) => state.newChat || state.exchange || state.menu || state.palette || state.mobileNav || state.peers ? { ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false } : state);
       setPlain(false);
       const target = partFor(id);
       expected = target;
@@ -16317,7 +16408,7 @@ function apply(ctx) {
     // The conversation replacements withdraw for a plain Session; set the surface
     // before the navigation so the Bot skin never flashes.
     openAgentSession: (sessionId) => {
-      ui2.set((state) => ({ ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, details: null, view: "details", renaming: false, tab: null }));
+      ui2.set((state) => ({ ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false, details: null, view: "details", renaming: false, tab: null }));
       setPlain(true);
       expected = sessionId;
       ctx.uiWorkspace.openSession(sessionId);
@@ -16390,10 +16481,10 @@ function apply(ctx) {
       ctx.layout.toggleSidebar();
     },
     openNewChat: (mode) => {
-      ui2.set((state) => ({ ...state, newChat: mode, menu: null, palette: null, mobileNav: false }));
+      ui2.set((state) => ({ ...state, newChat: mode, menu: null, palette: null, mobileNav: false, peers: false }));
     },
     openPalette: (query2 = "") => {
-      ui2.set((state) => ({ ...state, palette: { query: query2, token: Date.now() }, newChat: null, menu: null, mobileNav: false }));
+      ui2.set((state) => ({ ...state, palette: { query: query2, token: Date.now() }, newChat: null, menu: null, mobileNav: false, peers: false }));
     },
     // The token keeps a late exit timer from closing a palette opened again since.
     closePalette: (token) => {
@@ -16436,7 +16527,7 @@ function apply(ctx) {
     },
     // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
     openSettings: (page = "general", id = null) => {
-      ui2.set((state) => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null, mobileNav: false }));
+      ui2.set((state) => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false }));
     },
     // On an upright phone the four pages of the bottom bar are peers of each other, so
     // closing one lands on the conversation rather than on whatever page was behind it:
@@ -16456,7 +16547,7 @@ function apply(ctx) {
       ui2.set((state) => state.memory ? { ...state, memory: null } : state);
     },
     openConnectors: () => {
-      ui2.set((state) => ({ ...state, settings: { page: "connectors", id: null }, menu: null, palette: null, newChat: null, mobileNav: false }));
+      ui2.set((state) => ({ ...state, settings: { page: "connectors", id: null }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false }));
     },
     // Agent mode hands the surface back to the shell; everything open on the Bot
     // surface closes first so nothing stale reopens on the way back.
@@ -16527,16 +16618,25 @@ function apply(ctx) {
     closeMenu: () => {
       ui2.set((state) => state.menu ? { ...state, menu: null } : state);
     },
-    // The mobile drawer: on other bands the hamburger in the conversation header toggles
-    // it, on an upright phone the 伙伴 tab of the bottom bar does (nav-bar.js), and every
-    // full-pane action (session, new chat, palette, settings) closes it first.
+    // The mobile drawer: the hamburger in the conversation header toggles it on every
+    // band, and every full-pane action (session, new chat, palette, settings, the 伙伴
+    // page) closes it first. The 伙伴 tab has its own page and state since the user asked
+    // for a contacts page, so the two entries no longer open the same surface.
     toggleMobileNav: () => {
       ui2.set((state) => ({ ...state, mobileNav: !state.mobileNav, menu: null, palette: null }));
     },
     openMobileNav: () => {
-      ui2.set((state) => state.mobileNav ? state : { ...state, mobileNav: true, menu: null, palette: null });
+      ui2.set((state) => state.mobileNav ? state : { ...state, mobileNav: true, peers: false, menu: null, palette: null });
     },
-    // Leaving the peers page on the phone is leaving a page: back to the conversation, for
+    // 伙伴: the contacts page, a page of its own. The hamburger keeps the conversation's
+    // drawer, so the two entries no longer share one state.
+    openPeers: () => {
+      ui2.set((state) => state.peers ? state : { ...state, peers: true, mobileNav: false, settings: null, menu: null, palette: null, newChat: null });
+    },
+    closePeers: () => {
+      ui2.set((state) => state.peers ? { ...state, peers: false } : state);
+    },
+    // Closing the drawer on the phone is leaving a page: back to the conversation, for
     // the same reason closeSettings does it (and read there for why it is gated).
     closeMobileNav: () => {
       if (!ui2.getSnapshot().mobileNav) return;
@@ -16862,6 +16962,7 @@ function apply(ctx) {
     installCompiledStyles(FILE_PREVIEW_CSS, "file-preview"),
     installCompiledStyles(ATTENTION_CSS, "attention"),
     installCompiledStyles(NAV_CSS, "bottom-nav"),
+    installCompiledStyles(PEERS_CSS, "peers"),
     installTheme(),
     shadow("sidebar.workspaces", { priority: -10, inject: face }, TeamSidebar),
     shadow("sidebar.brand.mark", { priority: -10 }, BrandMark),
@@ -16873,6 +16974,7 @@ function apply(ctx) {
     // launcher (the Desktop's "··· More"), which comes back in Agent mode.
     shadow("settings.launcher", { priority: -10, inject: face }, AccountLauncher),
     shadow("shell.overlay", { id: "bot-nav", order: 45, inject: face }, BottomNav),
+    shadow("shell.overlay", { id: "bot-peers", order: 44, inject: face }, PeersPage),
     shadow("shell.overlay", { id: "bot", order: 50, inject: face }, Overlays),
     shadow("shell.overlay", { id: "bot-signin", order: 55, inject: face }, DeepSeekSignIn),
     shadow("shell.overlay", { id: "bot-toast", order: 60, inject: face }, ErrorToast)
