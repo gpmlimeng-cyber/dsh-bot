@@ -165,7 +165,6 @@ function GroupsPage({ roster, actions, run }) {
 export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false }) {
   const [error, setError] = useState('')
   const close = useCallback(() => actions.closeSettings(), [])
-  useEscape(close)
   const run = promise => Promise.resolve(promise)
     .then(() => { setError(''); return true })
     .catch(failure => { setError(failure?.message ?? String(failure)); return false })
@@ -202,6 +201,10 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
   // the list hands over to a page. Back goes up one level; from the list, which is the
   // top level, it leaves Settings. The wide dialog keeps its own head inside the column.
   const stepBack = () => { if (back === null) setScreen('list'); else actions.openSettings(shown) }
+  // Escape goes up one level, exactly as the back arrow does: a page inside Settings returns to
+  // Settings' own list rather than leaving it, and only the list itself leaves. Opened from 发现,
+  // that leave is what lands back on 发现's own list (closeSettings reads the row it came from).
+  useEscape(() => { if (screen === 'list') close(); else stepBack() })
   const pageTitle = bot?.name ?? room?.name ?? label
   const backLabel = screen === 'list' ? t('Close settings') : back ?? t('All settings')
   return h('div', { className: 'bt-settings-layer', 'data-leaving': leaving || undefined },

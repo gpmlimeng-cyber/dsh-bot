@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 68f18195
+// Source fingerprint: 68e2f510
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -14570,7 +14570,6 @@ function GroupsPage({ roster, actions, run }) {
 function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false }) {
   const [error, setError] = (0, import_react35.useState)("");
   const close = (0, import_react35.useCallback)(() => actions.closeSettings(), []);
-  useEscape(close);
   const run = (promise) => Promise.resolve(promise).then(() => {
     setError("");
     return true;
@@ -14600,6 +14599,10 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
     if (back === null) setScreen("list");
     else actions.openSettings(shown);
   };
+  useEscape(() => {
+    if (screen === "list") close();
+    else stepBack();
+  });
   const pageTitle = bot?.name ?? room2?.name ?? label;
   const backLabel = screen === "list" ? t("Close settings") : back ?? t("All settings");
   return (0, import_react35.createElement)(
@@ -16268,7 +16271,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "68f18195" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "68e2f510" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

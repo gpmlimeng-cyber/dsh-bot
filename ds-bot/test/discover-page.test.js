@@ -106,8 +106,12 @@ test('the second level carries the strip a shell panel does not draw', () => {
   assert.ok(!back.includes('useEscape'), 'the strip registers no Escape of its own')
   assert.ok(!index.includes('closeDiscoverPage'), 'and there is no action left that skips a level')
   assert.match(index, /closeDiscoverRow: \(\) => \{[\s\S]*actions\.selectPanel\(null\)[\s\S]*discoverPanel: null, discover: true/, 'back: the panel goes and the list returns')
-  // A settings page opened from this list steps back to the list too, not past it: its own Escape
-  // and its back both land on closeSettings, which reads the row it came from.
+  // A settings page opened from this list steps back one level at a time, the way its own back
+  // arrow does: Escape inside a page returns to Settings' own list first, and leaving that list is
+  // what comes back here (closeSettings reads the row the page was opened from).
+  const settingsPage = read('settings.js')
+  assert.match(settingsPage, /useEscape\(\(\) => \{ if \(screen === 'list'\) close\(\); else stepBack\(\) \}\)/, 'Escape steps up inside Settings')
+  assert.ok(settingsPage.includes("onClick: () => { if (screen === 'list') close(); else stepBack() }"), 'the same rule its back arrow uses')
   const close = index.slice(index.indexOf('closeSettings: () =>'), index.indexOf('openMemory:'))
   assert.ok(close.includes('state.discoverPanel !== null'), 'closing a page this list opened comes back here')
   assert.ok(close.includes('discover: true, discoverPanel: null'), 'to the list it came from')
