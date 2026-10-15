@@ -1550,6 +1550,15 @@ html[data-bt-mobile][data-bt-size=compact] .bt-tools::after{display:none}
    the same 16px padding on each side and the same width cap. */
 [class*="_root"]:has(> [data-composer-card]){padding:0 16px 16px 16px!important}
 [class*="_root"]:has(> [data-composer-card])>[data-composer-card]{max-width:var(--dsh-chat-content-width,1200px)!important;margin-inline:auto}
+/* On an upright phone the composer sat 16px clear of the bar, which reads as a gap rather than
+   a dock; the user asked for it closer. Only the composer's own breathing room shrinks -- the
+   column's 56px reservation (--bt-nav-h + --bt-nav-gap) is what keeps the bar off the content
+   and is not touched here, so the gap is exactly the 8px below and nothing can be covered.
+
+   Gated off while the keyboard is up: that state has its own measured geometry (the bar hidden,
+   the column's reservation given back, the card landing on the keyboard's top edge) and it is
+   not the state the user was looking at. */
+html[data-bt-mobile][data-bt-portrait]:not([data-bt-keyboard]) [class*="_root"]:has(> [data-composer-card]){padding-bottom:8px!important}
 [data-composer-card]>[class*="_row"]{display:contents!important}
 [data-composer-card] [class*="_tools"]{order:1;flex:none;align-self:flex-end;margin:0}
 [data-composer-card]>[data-input-scroll]{order:2;flex:1 1 0;min-width:0;padding:0 8px!important;margin:0!important}

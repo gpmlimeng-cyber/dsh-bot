@@ -36,3 +36,17 @@ test('and it is still the button that opens the add menu', () => {
   // skin removed, and the sampling above is about OUR button.
   assert.ok(styles.includes('[data-composer-card] button[class*="_add"]{display:none!important}'), 'no second plus sign')
 })
+
+// The composer's gap to the bar. It was 16px -- the composer's own bottom padding -- and read
+// as a gap rather than a dock; the user asked for it closer. What must not move is the
+// column's 56px reservation, which is what keeps the bar from covering anything.
+test('the composer docks 8px above the bar, and only in the state the user was looking at', () => {
+  const dock = styles.split('\n').find(line => line.includes('data-bt-keyboard]) [class*="_root"]'))
+  assert.ok(dock, 'the tighter dock has a rule')
+  assert.ok(dock.startsWith('html[data-bt-mobile][data-bt-portrait]:not([data-bt-keyboard]) '), dock)
+  assert.ok(dock.includes('padding-bottom:8px!important'), dock)
+  // The reservation the bar relies on is untouched: it is the nav's own tokens, and no rule
+  // in this file changes them.
+  assert.ok(!styles.includes('--bt-nav-h:8px') && !styles.includes('--bt-nav-gap:8px'), 'the bar reservation is not what shrank')
+  assert.ok(read('nav-bar.js').includes('--bt-nav-h:56px'), 'and it is still 56px, declared once')
+})
