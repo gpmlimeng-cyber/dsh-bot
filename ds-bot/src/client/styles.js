@@ -1045,6 +1045,10 @@ html[data-bt-mobile][data-bt-portrait] [class*="_scroll"]:has(> [class*="_column
    at y=0 and slides under the system row. The marker is the transcript's own scroll element,
    which only the conversation has (mobile.js reads the same one for the inset). */
 html[data-bt-mobile][data-bt-portrait] [data-dsh-frame]>[class*="centerCol"]:not(:has([data-conversation-scroll])){padding-top:var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))!important}
+/* A panel opened from 发现 carries our own back strip above it (discover-page.js), so its column
+   reserves the strip's height as well: the panel's own head then starts below the strip instead
+   of under it. Only while the strip is up -- the attribute is published with it. */
+html[data-bt-mobile][data-bt-portrait][data-bt-subpage] [data-dsh-frame]>[class*="centerCol"]{padding-top:calc(var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)) + 56px)!important}
 /* One definition, every consumer: the shell's own --dsh-frame-chrome-top is set only under
    html[data-windows-titlebar] (and the darwin frame), never on Android, so every fixed
    layer that reads it — ours and the shell's own masks alike — fell through to 0 and

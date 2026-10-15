@@ -40,6 +40,7 @@ import { watchMobile, isPortraitNav } from './mobile.js'
 import { noticeApprovals } from './approval-notices.js'
 import { BottomNav, NAV_CSS } from './nav-bar.js'
 import { PeersPage, PEERS_CSS } from './peers-page.js'
+import { DiscoverBack, DiscoverPage, DISCOVER_CSS, PANEL_ROWS } from './discover-page.js'
 
 export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
 
@@ -66,7 +67,7 @@ export function apply(ctx) {
   try { seenAt = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '{}') ?? {} } catch { seenAt = {} }
   // `details` is the panel's subject (a Session id); `view` picks details or the
   // subject Bot's browser inside it.
-  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, peers: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false })
+  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, peers: false, discover: false, discoverPanel: null, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false })
   // Bot mode paints the whole team surface; Agent mode withdraws every slot and
   // style so the shell's own interface returns. `plain` stays false until a Bot-mode
   // view hosts a plain session, which drops only the conversation replacements.
@@ -392,7 +393,7 @@ export function apply(ctx) {
     openSession: (id) => {
       // A DSH Agent Session id lands on the plain surface, not the Bot skin.
       if (isAgentSessionId(id)) return actions.openAgentSession(id)
-      ui.set(state => (state.newChat || state.exchange || state.menu || state.palette || state.mobileNav || state.peers ? { ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false } : state))
+      ui.set(state => (state.newChat || state.exchange || state.menu || state.palette || state.mobileNav || state.peers || state.discover || state.discoverPanel !== null ? { ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false, discover: false, discoverPanel: null } : state))
       setPlain(false)
       const target = partFor(id)
       expected = target
@@ -401,7 +402,7 @@ export function apply(ctx) {
     // The conversation replacements withdraw for a plain Session; set the surface
     // before the navigation so the Bot skin never flashes.
     openAgentSession: (sessionId) => {
-      ui.set(state => ({ ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false, details: null, view: 'details', renaming: false, tab: null }))
+      ui.set(state => ({ ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false, discover: false, discoverPanel: null, details: null, view: 'details', renaming: false, tab: null }))
       setPlain(true)
       expected = sessionId
       ctx.uiWorkspace.openSession(sessionId)
@@ -469,8 +470,8 @@ export function apply(ctx) {
     // The sidebar opens itself through the slot's own `expandSidebar`; the same service closes
     // it, and that is the only handle on the closing direction (sidebar.js pairs the two).
     collapseSidebar: () => { ctx.layout.toggleSidebar() },
-    openNewChat: (mode) => { ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null, mobileNav: false, peers: false })) },
-    openPalette: (query = '') => { ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null, mobileNav: false, peers: false })) },
+    openNewChat: (mode) => { ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null, mobileNav: false, peers: false, discover: false, discoverPanel: null })) },
+    openPalette: (query = '') => { ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null, mobileNav: false, peers: false, discover: false, discoverPanel: null })) },
     // The token keeps a late exit timer from closing a palette opened again since.
     closePalette: (token) => { ui.set(state => (state.palette && (token === undefined || state.palette.token === token) ? { ...state, palette: null } : state)) },
     openExchange: (a, b) => { if (a && b) ui.set(state => ({ ...state, exchange: [a, b] })) },
@@ -589,11 +590,35 @@ export function apply(ctx) {
     // page) closes it first. The 伙伴 tab has its own page and state since the user asked
     // for a contacts page, so the two entries no longer open the same surface.
     toggleMobileNav: () => { ui.set(state => ({ ...state, mobileNav: !state.mobileNav, menu: null, palette: null })) },
-    openMobileNav: () => { ui.set(state => (state.mobileNav ? state : { ...state, mobileNav: true, peers: false, menu: null, palette: null })) },
+    openMobileNav: () => { ui.set(state => (state.mobileNav ? state : { ...state, mobileNav: true, peers: false, discover: false, discoverPanel: null, menu: null, palette: null })) },
     // 伙伴: the contacts page, a page of its own. The hamburger keeps the conversation's
     // drawer, so the two entries no longer share one state.
-    openPeers: () => { ui.set(state => (state.peers ? state : { ...state, peers: true, mobileNav: false, settings: null, menu: null, palette: null, newChat: null })) },
+    openPeers: () => { ui.set(state => (state.peers ? state : { ...state, peers: true, mobileNav: false, settings: null, menu: null, palette: null, newChat: null, discover: false, discoverPanel: null })) },
     closePeers: () => { ui.set(state => (state.peers ? { ...state, peers: false } : state)) },
+    // 发现 is a page of its own (discover-page.js): a list whose rows are doors that already
+    // exist. The panel rows are the shell's own panels, which draw no back, so the page carries
+    // the second-level state for them and its own strip; the settings rows are the screens 我的
+    // opens, with a back already.
+    openDiscover: () => { ui.set(state => (state.discover ? state : { ...state, discover: true, discoverPanel: null, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null })) },
+    closeDiscover: () => { ui.set(state => (state.discover || state.discoverPanel !== null ? { ...state, discover: false, discoverPanel: null } : state)) },
+    openDiscoverRow: (key) => {
+      if (PANEL_ROWS.includes(key)) {
+        ui.set(state => ({ ...state, discover: false, discoverPanel: key, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null }))
+        actions.selectPanel(key)
+        return
+      }
+      ui.set(state => ({ ...state, discover: false, discoverPanel: null, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }))
+    },
+    // The strip's back: the panel goes and the list comes back.
+    closeDiscoverRow: () => {
+      actions.selectPanel(null)
+      ui.set(state => (state.discoverPanel !== null ? { ...state, discoverPanel: null, discover: true } : state))
+    },
+    // Escape on the second level leaves the page altogether, the way the tab's other exits do.
+    closeDiscoverPage: () => {
+      actions.selectPanel(null)
+      ui.set(state => (state.discover || state.discoverPanel !== null ? { ...state, discover: false, discoverPanel: null } : state))
+    },
     // Closing the drawer on the phone is leaving a page: back to the conversation, for
     // the same reason closeSettings does it (and read there for why it is gated).
     closeMobileNav: () => {
@@ -958,6 +983,7 @@ export function apply(ctx) {
     installCompiledStyles(ATTENTION_CSS, 'attention'),
     installCompiledStyles(NAV_CSS, 'bottom-nav'),
     installCompiledStyles(PEERS_CSS, 'peers'),
+    installCompiledStyles(DISCOVER_CSS, 'discover'),
     installTheme(),
     shadow('sidebar.workspaces', { priority: -10, inject: face }, TeamSidebar),
     shadow('sidebar.brand.mark', { priority: -10 }, BrandMark),
@@ -970,6 +996,8 @@ export function apply(ctx) {
     shadow('settings.launcher', { priority: -10, inject: face }, AccountLauncher),
     shadow('shell.overlay', { id: 'bot-nav', order: 45, inject: face }, BottomNav),
     shadow('shell.overlay', { id: 'bot-peers', order: 44, inject: face }, PeersPage),
+    shadow('shell.overlay', { id: 'bot-discover', order: 44, inject: face }, DiscoverPage),
+    shadow('shell.overlay', { id: 'bot-discover-back', order: 46, inject: face }, DiscoverBack),
     shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
     shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
     shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),

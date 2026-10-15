@@ -62,6 +62,7 @@ export function BottomNav({ useUi, useNav, actions }) {
   // tab unlit rather than claiming the conversation is on screen.
   const active = ui.settings ? 'me'
     : ui.peers ? 'peers'
+      : ui.discover || ui.discoverPanel !== null ? 'plugins'
       : nav.panel === 'plugins' ? 'plugins'
         : nav.panel === null ? 'tasks' : null
   const go = (id) => {
@@ -73,12 +74,14 @@ export function BottomNav({ useUi, useNav, actions }) {
       actions.closePeers()
       actions.closeMobileNav()
       actions.closeSettings()
+      actions.closeDiscover()
       actions.selectPanel(null)
       return
     }
     if (id === 'peers') {
       actions.closeSettings()
       actions.closeMobileNav()
+      actions.closeDiscover()
       actions.openPeers()
       return
     }
@@ -86,11 +89,12 @@ export function BottomNav({ useUi, useNav, actions }) {
       actions.closePeers()
       actions.closeMobileNav()
       actions.closeSettings()
-      actions.selectPanel('plugins')
+      actions.openDiscover()
       return
     }
     actions.closePeers()
     actions.closeMobileNav()
+    actions.closeDiscover()
     actions.openSettings('general')
   }
   return createPortal(h(Fragment, null,

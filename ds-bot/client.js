@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 91eb7abd
+// Source fingerprint: d6379009
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -64,6 +64,7 @@ var ZH = {
   Chats: "任务",
   Peers: "伙伴",
   Plugins: "发现",
+  "Plugin manager": "插件",
   Me: "我的",
   Pages: "页面",
   // The member list above a phone's composer: one row until it is opened.
@@ -425,6 +426,7 @@ var ZH = {
   "Models, providers, and the rest of DeepSeek Harness": "模型、服务商和 DeepSeek Harness 的其他设置",
   "Harness settings": "Harness 设置",
   "Back to Bots": "返回 Bot 列表",
+  "Back to the list": "返回列表",
   "Close settings": "关闭设置",
   // Context menu
   Unpin: "取消置顶",
@@ -1299,8 +1301,8 @@ function bodyOf(def, paint, flat = false) {
     return "";
   }
 }
-var eyeMarkup = ([cx, cy, w, h39, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h39 / 2}" width="${w}" height="${h39}" rx="${w / 2}"/></g>`;
-var happyEyeMarkup = ([cx, cy, w, h39, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h39 * 0.14}Q0 ${-h39 * 0.42} ${w * 0.62} ${h39 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
+var eyeMarkup = ([cx, cy, w, h40, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h40 / 2}" width="${w}" height="${h40}" rx="${w / 2}"/></g>`;
+var happyEyeMarkup = ([cx, cy, w, h40, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h40 * 0.14}Q0 ${-h40 * 0.42} ${w * 0.62} ${h40 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
 var maskBox = (size) => `maskUnits="userSpaceOnUse" x="${-size}" y="${-size}" width="${size * 3}" height="${size * 3}"`;
 var holes = (def, eyes) => `<rect x="${-def.size}" y="${-def.size}" width="${def.size * 3}" height="${def.size * 3}" fill="#fff"/>${eyes}`;
 var MASK_ID = "%MASK%";
@@ -1837,12 +1839,12 @@ function liveSprings(apply2) {
     const dt = Math.min(0.5, Math.max(1e-3, (now - last) / 1e3));
     last = now;
     const steps = Math.ceil(dt * 240);
-    const h39 = dt / steps;
+    const h40 = dt / steps;
     let moving = false;
     for (const value of values.values()) {
       for (let index = 0; index < steps; index += 1) {
-        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h39;
-        value.x += value.v * h39;
+        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h40;
+        value.x += value.v * h40;
       }
       if (Math.abs(value.x - value.to) < 0.05 && Math.abs(value.v) < 1) {
         value.x = value.to;
@@ -3040,6 +3042,10 @@ html[data-bt-mobile][data-bt-portrait] [class*="_scroll"]:has(> [class*="_column
    at y=0 and slides under the system row. The marker is the transcript's own scroll element,
    which only the conversation has (mobile.js reads the same one for the inset). */
 html[data-bt-mobile][data-bt-portrait] [data-dsh-frame]>[class*="centerCol"]:not(:has([data-conversation-scroll])){padding-top:var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))!important}
+/* A panel opened from 发现 carries our own back strip above it (discover-page.js), so its column
+   reserves the strip's height as well: the panel's own head then starts below the strip instead
+   of under it. Only while the strip is up -- the attribute is published with it. */
+html[data-bt-mobile][data-bt-portrait][data-bt-subpage] [data-dsh-frame]>[class*="centerCol"]{padding-top:calc(var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)) + 56px)!important}
 /* One definition, every consumer: the shell's own --dsh-frame-chrome-top is set only under
    html[data-windows-titlebar] (and the darwin frame), never on Android, so every fixed
    layer that reads it — ours and the shell's own masks alike — fell through to 0 and
@@ -15872,19 +15878,21 @@ function BottomNav({ useUi, useNav, actions }) {
   const mobile = useMobile();
   const portrait = usePortrait();
   if (!mobile || !portrait) return null;
-  const active = ui2.settings ? "me" : ui2.peers ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
+  const active = ui2.settings ? "me" : ui2.peers ? "peers" : ui2.discover || ui2.discoverPanel !== null ? "plugins" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
   const go = (id) => {
     if (active === id) return;
     if (id === "tasks") {
       actions.closePeers();
       actions.closeMobileNav();
       actions.closeSettings();
+      actions.closeDiscover();
       actions.selectPanel(null);
       return;
     }
     if (id === "peers") {
       actions.closeSettings();
       actions.closeMobileNav();
+      actions.closeDiscover();
       actions.openPeers();
       return;
     }
@@ -15892,11 +15900,12 @@ function BottomNav({ useUi, useNav, actions }) {
       actions.closePeers();
       actions.closeMobileNav();
       actions.closeSettings();
-      actions.selectPanel("plugins");
+      actions.openDiscover();
       return;
     }
     actions.closePeers();
     actions.closeMobileNav();
+    actions.closeDiscover();
     actions.openSettings("general");
   };
   return (0, import_react_dom12.createPortal)((0, import_react39.createElement)(
@@ -16147,10 +16156,93 @@ html[data-bt-mobile] .bt-peers-empty{padding:24px 12px;font-size:14px;line-heigh
 html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 `;
 
+// src/client/discover-page.js
+var import_react41 = require("react");
+var import_react_dom14 = require("react-dom");
+var DISCOVER_ROWS = [
+  ["plugins", "Plugin manager", PlugIcon],
+  ["connectors", "Connectors", ConnectorIcon],
+  ["schedules", "Automation tasks", ClockIcon],
+  ["usage", "Usage", GaugeIcon]
+];
+var PANEL_ROWS = ["plugins", "schedules"];
+function DiscoverPage({ useUi, actions }) {
+  const open = useUi((value) => value.discover === true);
+  const mobile = useMobile();
+  const paneLeft = usePaneLeft();
+  useEscape(() => actions.closeDiscover());
+  if (!open || !mobile) return null;
+  return (0, import_react_dom14.createPortal)((0, import_react41.createElement)(
+    "div",
+    { className: "bt-discover", role: "region", "aria-label": t("Plugins"), style: { left: paneLeft } },
+    (0, import_react41.createElement)("div", { className: "bt-discover-head" }, (0, import_react41.createElement)("h2", { className: "bt-discover-title" }, t("Plugins"))),
+    (0, import_react41.createElement)("div", { className: "bt-discover-list", role: "list" }, DISCOVER_ROWS.map(([key, label, Icon]) => (0, import_react41.createElement)(
+      "div",
+      {
+        key,
+        className: "bt-discover-item",
+        role: "listitem"
+      },
+      (0, import_react41.createElement)(
+        "button",
+        {
+          type: "button",
+          className: "bt-discover-row",
+          "data-row": key,
+          onClick: () => actions.openDiscoverRow(key)
+        },
+        (0, import_react41.createElement)("span", { className: "bt-discover-icon", "aria-hidden": true }, (0, import_react41.createElement)(Icon)),
+        (0, import_react41.createElement)("span", { className: "bt-discover-name" }, t(label)),
+        (0, import_react41.createElement)("span", { className: "bt-discover-go", "aria-hidden": true }, (0, import_react41.createElement)(ChevronRightIcon))
+      )
+    )))
+  ), document.body);
+}
+function DiscoverBack({ useUi, actions }) {
+  const panel = useUi((value) => PANEL_ROWS.includes(value.discoverPanel) ? value.discoverPanel : null);
+  const mobile = useMobile();
+  useEscape(() => actions.closeDiscoverPage());
+  (0, import_react41.useEffect)(() => {
+    if (panel === null) return void 0;
+    document.documentElement.dataset.btSubpage = "1";
+    return () => {
+      delete document.documentElement.dataset.btSubpage;
+    };
+  }, [panel]);
+  if (panel === null || !mobile) return null;
+  return (0, import_react_dom14.createPortal)((0, import_react41.createElement)(
+    "div",
+    { className: "bt-subback" },
+    (0, import_react41.createElement)("button", {
+      type: "button",
+      className: "bt-subback-btn",
+      "aria-label": t("Back to the list"),
+      onClick: () => actions.closeDiscoverRow()
+    }, (0, import_react41.createElement)(ChevronLeftIcon))
+  ), document.body);
+}
+var DISCOVER_CSS = `
+html[data-bt-mobile] .bt-discover{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
+html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}
+html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
+html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain}
+html[data-bt-mobile] .bt-discover-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:12px;background:var(--bt-card);color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
+html[data-bt-mobile] .bt-discover-row:hover{background:var(--bt-hover)}
+html[data-bt-mobile] .bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink-2)}
+html[data-bt-mobile] .bt-discover-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-bt-mobile] .bt-discover-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
+/* The second-level strip: the height the panel's column reserves for it. */
+html[data-bt-mobile] .bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px 0;z-index:96;display:flex;align-items:center;background:var(--bt-main);pointer-events:none}
+html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+html[data-bt-mobile] .bt-subback-btn:hover{background:var(--bt-hover)}
+html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
+`;
+
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "91eb7abd" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "d6379009" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16178,7 +16270,7 @@ function apply(ctx) {
   } catch {
     seenAt = {};
   }
-  const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, peers: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false });
+  const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, peers: false, discover: false, discoverPanel: null, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false });
   const surface = createSource({ mode: readMode(), plain: false });
   const nav = createSource({ panel: null, plugins: false });
   let agentSessionCache = /* @__PURE__ */ new Set();
@@ -16511,7 +16603,7 @@ function apply(ctx) {
     isAgentSession: (id) => isAgentSessionId(id),
     openSession: (id) => {
       if (isAgentSessionId(id)) return actions.openAgentSession(id);
-      ui2.set((state) => state.newChat || state.exchange || state.menu || state.palette || state.mobileNav || state.peers ? { ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false } : state);
+      ui2.set((state) => state.newChat || state.exchange || state.menu || state.palette || state.mobileNav || state.peers || state.discover || state.discoverPanel !== null ? { ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false, discover: false, discoverPanel: null } : state);
       setPlain(false);
       const target = partFor(id);
       expected = target;
@@ -16520,7 +16612,7 @@ function apply(ctx) {
     // The conversation replacements withdraw for a plain Session; set the surface
     // before the navigation so the Bot skin never flashes.
     openAgentSession: (sessionId) => {
-      ui2.set((state) => ({ ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false, details: null, view: "details", renaming: false, tab: null }));
+      ui2.set((state) => ({ ...state, newChat: null, exchange: null, menu: null, palette: null, mobileNav: false, peers: false, discover: false, discoverPanel: null, details: null, view: "details", renaming: false, tab: null }));
       setPlain(true);
       expected = sessionId;
       ctx.uiWorkspace.openSession(sessionId);
@@ -16593,10 +16685,10 @@ function apply(ctx) {
       ctx.layout.toggleSidebar();
     },
     openNewChat: (mode) => {
-      ui2.set((state) => ({ ...state, newChat: mode, menu: null, palette: null, mobileNav: false, peers: false }));
+      ui2.set((state) => ({ ...state, newChat: mode, menu: null, palette: null, mobileNav: false, peers: false, discover: false, discoverPanel: null }));
     },
     openPalette: (query2 = "") => {
-      ui2.set((state) => ({ ...state, palette: { query: query2, token: Date.now() }, newChat: null, menu: null, mobileNav: false, peers: false }));
+      ui2.set((state) => ({ ...state, palette: { query: query2, token: Date.now() }, newChat: null, menu: null, mobileNav: false, peers: false, discover: false, discoverPanel: null }));
     },
     // The token keeps a late exit timer from closing a palette opened again since.
     closePalette: (token) => {
@@ -16738,15 +16830,43 @@ function apply(ctx) {
       ui2.set((state) => ({ ...state, mobileNav: !state.mobileNav, menu: null, palette: null }));
     },
     openMobileNav: () => {
-      ui2.set((state) => state.mobileNav ? state : { ...state, mobileNav: true, peers: false, menu: null, palette: null });
+      ui2.set((state) => state.mobileNav ? state : { ...state, mobileNav: true, peers: false, discover: false, discoverPanel: null, menu: null, palette: null });
     },
     // 伙伴: the contacts page, a page of its own. The hamburger keeps the conversation's
     // drawer, so the two entries no longer share one state.
     openPeers: () => {
-      ui2.set((state) => state.peers ? state : { ...state, peers: true, mobileNav: false, settings: null, menu: null, palette: null, newChat: null });
+      ui2.set((state) => state.peers ? state : { ...state, peers: true, mobileNav: false, settings: null, menu: null, palette: null, newChat: null, discover: false, discoverPanel: null });
     },
     closePeers: () => {
       ui2.set((state) => state.peers ? { ...state, peers: false } : state);
+    },
+    // 发现 is a page of its own (discover-page.js): a list whose rows are doors that already
+    // exist. The panel rows are the shell's own panels, which draw no back, so the page carries
+    // the second-level state for them and its own strip; the settings rows are the screens 我的
+    // opens, with a back already.
+    openDiscover: () => {
+      ui2.set((state) => state.discover ? state : { ...state, discover: true, discoverPanel: null, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null });
+    },
+    closeDiscover: () => {
+      ui2.set((state) => state.discover || state.discoverPanel !== null ? { ...state, discover: false, discoverPanel: null } : state);
+    },
+    openDiscoverRow: (key) => {
+      if (PANEL_ROWS.includes(key)) {
+        ui2.set((state) => ({ ...state, discover: false, discoverPanel: key, peers: false, mobileNav: false, settings: null, menu: null, palette: null, newChat: null }));
+        actions.selectPanel(key);
+        return;
+      }
+      ui2.set((state) => ({ ...state, discover: false, discoverPanel: null, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }));
+    },
+    // The strip's back: the panel goes and the list comes back.
+    closeDiscoverRow: () => {
+      actions.selectPanel(null);
+      ui2.set((state) => state.discoverPanel !== null ? { ...state, discoverPanel: null, discover: true } : state);
+    },
+    // Escape on the second level leaves the page altogether, the way the tab's other exits do.
+    closeDiscoverPage: () => {
+      actions.selectPanel(null);
+      ui2.set((state) => state.discover || state.discoverPanel !== null ? { ...state, discover: false, discoverPanel: null } : state);
     },
     // Closing the drawer on the phone is leaving a page: back to the conversation, for
     // the same reason closeSettings does it (and read there for why it is gated).
@@ -17075,6 +17195,7 @@ function apply(ctx) {
     installCompiledStyles(ATTENTION_CSS, "attention"),
     installCompiledStyles(NAV_CSS, "bottom-nav"),
     installCompiledStyles(PEERS_CSS, "peers"),
+    installCompiledStyles(DISCOVER_CSS, "discover"),
     installTheme(),
     shadow("sidebar.workspaces", { priority: -10, inject: face }, TeamSidebar),
     shadow("sidebar.brand.mark", { priority: -10 }, BrandMark),
@@ -17087,6 +17208,8 @@ function apply(ctx) {
     shadow("settings.launcher", { priority: -10, inject: face }, AccountLauncher),
     shadow("shell.overlay", { id: "bot-nav", order: 45, inject: face }, BottomNav),
     shadow("shell.overlay", { id: "bot-peers", order: 44, inject: face }, PeersPage),
+    shadow("shell.overlay", { id: "bot-discover", order: 44, inject: face }, DiscoverPage),
+    shadow("shell.overlay", { id: "bot-discover-back", order: 46, inject: face }, DiscoverBack),
     shadow("shell.overlay", { id: "bot", order: 50, inject: face }, Overlays),
     shadow("shell.overlay", { id: "bot-signin", order: 55, inject: face }, DeepSeekSignIn),
     shadow("shell.overlay", { id: "bot-toast", order: 60, inject: face }, ErrorToast)

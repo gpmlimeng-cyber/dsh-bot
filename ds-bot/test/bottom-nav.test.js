@@ -167,23 +167,25 @@ test('a tab closes the other pages before it acts', () => {
   // order, so neither can be left standing over the page that replaces it.
   const branch = (from, to) => go.slice(go.indexOf(`id === '${from}'`), to === null ? go.length : go.indexOf(`id === '${to}'`))
   const tasks = branch('tasks', 'peers')
-  assert.match(tasks, /actions\.closeMobileNav\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.selectPanel\(null\)/, tasks)
+  assert.match(tasks, /actions\.closeMobileNav\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.closeDiscover\(\)[\s\S]*actions\.selectPanel\(null\)/, tasks)
+  // 发现 is our own page now (discover-page.js), not the plugin manager opened straight away:
+  // the tab opens the list, and the list's own row is what opens the panel.
   const plugins = branch('plugins', null)
-  assert.match(plugins, /actions\.closeMobileNav\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.selectPanel\('plugins'\)/, plugins)
+  assert.match(plugins, /actions\.closeMobileNav\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.openDiscover\(\)/, plugins)
   // 伙伴 is a page of its own: the settings screen and the conversation's drawer both go
   // before it opens, and the tab opens the page rather than the drawer.
   assert.match(branch('peers', 'plugins'), /actions\.closeSettings\(\)[\s\S]*actions\.closeMobileNav\(\)[\s\S]*actions\.openPeers\(\)/, 'the other surfaces go first')
   // The drawer is not a page of the bar: a tab that leaves the conversation still closes it.
   assert.match(tasks, /actions\.closePeers\(\)[\s\S]*actions\.closeMobileNav\(\)/, tasks)
   assert.match(plugins, /actions\.closePeers\(\)[\s\S]*actions\.closeMobileNav\(\)/, plugins)
-  assert.match(go, /actions\.closePeers\(\)\n\s*actions\.closeMobileNav\(\)\n\s*actions\.openSettings\('general'\)/, '我的 closes the page on its way to Settings')
+  assert.match(go, /actions\.closePeers\(\)\n\s*actions\.closeMobileNav\(\)\n\s*actions\.closeDiscover\(\)\n\s*actions\.openSettings\('general'\)/, '我的 closes the page on its way to Settings')
   // A tab bar picks a page: the page already on screen is left where it is, which is what
   // the app the user copied does (and the exits for a page are the other three tabs).
   assert.match(go, /if \(active === id\) return/, 'the current page is not re-opened or closed')
   assert.ok(!go.includes('closeMobileNav()\n        actions.selectPanel(null)'), 'a second tap does not navigate')
-  // 我的 is the fallthrough: the peers page is closed and Settings opens over the
-  // conversation.
-  assert.match(plugins, /actions\.closeMobileNav\(\)\n\s*actions\.openSettings\('general'\)/, plugins)
+  // 我的 is the fallthrough: the peers page and our own page are closed, and Settings
+  // opens over the conversation the moment the drawer is out of the way.
+  assert.match(plugins, /actions\.closeDiscover\(\)\n\s*actions\.openSettings\('general'\)/, plugins)
 })
 
 test('发现 is not drawn without the shell panel, and is never selected without it', () => {

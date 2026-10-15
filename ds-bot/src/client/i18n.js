@@ -26,6 +26,7 @@ const ZH = {
   Chats: '任务',
   Peers: '伙伴',
   Plugins: '发现',
+  'Plugin manager': '插件',
   Me: '我的',
   Pages: '页面',
   // The member list above a phone's composer: one row until it is opened.
@@ -363,6 +364,7 @@ const ZH = {
   'Models, providers, and the rest of DeepSeek Harness': '模型、服务商和 DeepSeek Harness 的其他设置',
   'Harness settings': 'Harness 设置',
   'Back to Bots': '返回 Bot 列表',
+  'Back to the list': '返回列表',
   'Close settings': '关闭设置',
 
   // Context menu
