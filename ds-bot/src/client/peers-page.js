@@ -1,14 +1,19 @@
 // 伙伴: the team's contacts, as a page of its own rather than as the conversation's
 // sidebar. The user pointed at WeChat's address book -- a title, a search field, one row per
 // person -- and this keeps only the parts that pay for themselves: no A-Z rail (that needs a
-// pinyin table), no collapsible groups, no add-a-friend actions. Whoever is on the team is
+// pinyin table), no collapsible sections, no add-a-friend actions. Whoever is on the team is
 // whoever the roster says, so nothing here fetches anything.
 //
-// A row opens that Bot's own chat and lands back on the conversation; the page closes first,
-// so the bar and the main view agree on which of the four pages is on screen.
+// The same book holds the group chats, under their own heading, because a group is a
+// conversation the user starts from the same place a 1:1 chat is: whoever the roster lists is
+// listed here, and a row opens that conversation -- a group and a Bot are the same kind of
+// Session, so one door serves both.
+//
+// A row opens that chat and lands back on the conversation; the page closes first, so the bar
+// and the main view agree on which of the four pages is on screen.
 import { createElement as h, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { BotMark } from './mark.js'
+import { BotMark, RoomAvatar } from './mark.js'
 import { ChevronRightIcon, PlusIcon, SearchIcon } from './icons.js'
 import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
@@ -21,23 +26,40 @@ export function peersList(bots, query) {
   return wanted === '' ? byName : byName.filter(bot => (bot?.name ?? '').toLowerCase().includes(wanted))
 }
 
+// The other half of that list, read the same way: the group chats by name, narrowed by the same
+// query -- the box filters both sections at once. The ones the user hid from the sidebar stay
+// hidden, with one difference: the sidebar keeps a hidden conversation visible while it is the one
+// on screen, and this page is not a conversation, so there is nothing to keep.
+export function peersRooms(rooms, query) {
+  const wanted = query.trim().toLowerCase()
+  const byName = [...(rooms ?? [])].filter(room => room?.hidden !== true).sort((a, b) => (a?.name ?? '').localeCompare(b?.name ?? ''))
+  return wanted === '' ? byName : byName.filter(room => (room?.name ?? '').toLowerCase().includes(wanted))
+}
+
 export function PeersPage({ useRoster, useUi, actions }) {
   const roster = useRoster(value => value)
   const open = useUi(value => value.peers === true)
   const [query, setQuery] = useState('')
   const mobile = useMobile()
   if (!open || !mobile) return null
+  const groups = peersRooms(roster.rooms, query)
   const shown = peersList(roster.bots, query)
-  // Back to the conversation first, then the Bot's chat: one tap leaves this page, it does
+  // Back to the conversation first, then the chat: one tap leaves this page, it does
   // not stack a second one on it. A details pane goes with it: a row opens a conversation, not a
   // settings screen, and openSession does not close one that was already up -- on the phone that
   // pane is full-screen (z 96, over the bar), so it is what the user sees instead of the chat.
-  const openBot = (id) => {
+  const openChat = (id) => {
     actions.closePeers()
     actions.selectPanel(null)
     actions.closePanel()
     actions.openSession(id)
   }
+  // One section per kind of contact, in 我的 -> 全部设置's own shape: the heading over the card, the
+  // rows inside it (styles.js, the phone's group rules). A section with no rows is not drawn at all,
+  // so a search that matches one side shows that side rather than a heading over nothing.
+  const section = (label, rows) => h('section', { className: 'bt-settings-group' },
+    h('h3', { className: 'bt-settings-group-head' }, label),
+    h('div', { className: 'bt-settings-group-card', role: 'list' }, rows))
   return createPortal(h('div', { className: 'bt-peers', role: 'region', 'aria-label': t('Peers') },
     h('div', { className: 'bt-peers-top' },
       // 新建, and it is the drawer's own entry rather than a second door of its own: the same label
@@ -61,20 +83,32 @@ export function PeersPage({ useRoster, useUi, actions }) {
           placeholder: t('Search'), value: query, 'aria-label': t('Search'),
           onChange: event => setQuery(event.target.value),
         }))),
-    shown.length === 0
-      ? h('div', { className: 'bt-peers-empty', role: 'status' }, t('No Bots match'))
-      // The wrapper carries the list item, the way the members list does: a button that
-      // declared itself a list item would stop being announced as a button.
-      : h('div', { className: 'bt-peers-list', role: 'list' }, shown.map(bot => h('div', {
+    // Both sections live in the page's one scroller, in that order: the group chats, then the
+    // people. The wrapper carries the list item, the way the members list does: a button that
+    // declared itself a list item would stop being announced as a button.
+    h('div', { className: 'bt-peers-list' },
+      groups.length > 0 ? section(t('Groups'), groups.map(room => h('div', {
+        key: room.id, className: 'bt-peers-item', role: 'listitem',
+      },
+      h('button', {
+        type: 'button', className: 'bt-peers-row', 'data-room-id': room.id, onClick: () => openChat(room.id),
+      },
+      h(RoomAvatar, { room, roster, size: 36 }),
+      h('span', { className: 'bt-peers-name' }, room.name),
+      h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))))) : null,
+      shown.length > 0 ? section(t('Peers'), shown.map(bot => h('div', {
         key: bot.id, className: 'bt-peers-item', role: 'listitem',
       },
       h('button', {
-        type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openBot(bot.id),
+        type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openChat(bot.id),
       },
       h(BotMark, { bot, size: 36 }),
       h('span', { className: 'bt-peers-name' }, bot.name),
       bot.role ? h('span', { className: 'bt-tag' }, bot.role) : null,
-      h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))))), document.body)
+      h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))))) : null,
+      groups.length === 0 && shown.length === 0
+        ? h('div', { className: 'bt-peers-empty', role: 'status' }, t('Nothing matches'))
+        : null)), document.body)
 }
 
 // The page covers the screen and carries the status bar's inset itself, from the status bar's own

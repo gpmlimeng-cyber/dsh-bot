@@ -26,7 +26,7 @@ const nav = code('nav-bar.js')
 const sidebar = code('sidebar.js')
 const header = code('header.js')
 
-const { peersList } = await (async () => {
+const { peersList, peersRooms } = await (async () => {
   const bundle = await build({
     entryPoints: [fileURLToPath(new URL('../src/client/peers-page.js', import.meta.url))],
     bundle: true, format: 'cjs', platform: 'node', write: false,
@@ -62,12 +62,21 @@ test('the list is Bots by name, narrowed by what is typed', () => {
   assert.deepEqual(bots.map(bot => bot.id), ['b', 'a', 'c'], 'and sorting does not reorder the roster in place')
 })
 
+test('the same book holds the group chats, read the same way', () => {
+  const rooms = [{ id: 'z', name: 'Zulu' }, { id: 'a', name: 'alpha' }, { id: 'h', name: 'Hidden', hidden: true }]
+  assert.deepEqual(plain(peersRooms(rooms, '').map(room => room.id)), ['a', 'z'], 'by name, and a room the user hid from the sidebar stays hidden')
+  assert.deepEqual(plain(peersRooms(rooms, 'LU').map(room => room.id)), ['z'], 'the same substring match, trimmed and case-folded')
+  assert.deepEqual(plain(peersRooms(rooms, 'zzz')), [], 'no match, no rows')
+  assert.deepEqual(plain(peersRooms(undefined, '')), [], 'an empty roster is not a crash')
+  assert.deepEqual(rooms.map(room => room.id), ['z', 'a', 'h'], 'and nothing is reordered in place')
+})
+
 test('a row is a Bot with its role and a chevron, not a conversation', () => {
   // The wrapper is the list item and the row inside it stays a button, the way the members
   // list does it: a button that called itself a list item stops being announced as a button.
   assert.ok(peers.includes("className: 'bt-peers-item', role: 'listitem'"), 'the list item is the wrapper')
   assert.ok(peers.includes("className: 'bt-peers-row', 'data-bot-id': bot.id"), 'the row is a button')
-  const row = peers.slice(peers.indexOf("className: 'bt-peers-row'"), peers.indexOf('h(BotMark'))
+  const row = peers.slice(peers.indexOf("className: 'bt-peers-row', 'data-bot-id'"), peers.indexOf('h(BotMark'))
   assert.ok(!row.includes('role:'), `the button keeps the button role: ${row}`)
   assert.ok(peers.includes('h(BotMark, { bot, size: 36 })'), 'its avatar is the Bot\'s mark')
   assert.ok(peers.includes("h('span', { className: 'bt-peers-name' }, bot.name)"), 'its name')
@@ -79,16 +88,44 @@ test('a row is a Bot with its role and a chevron, not a conversation', () => {
   }
   // The data is the roster the rest of the skin reads, and the filter is the only transform.
   assert.ok(peers.includes('peersList(roster.bots, query)'), 'the roster, filtered')
+  assert.ok(peers.includes('peersRooms(roster.rooms, query)'), 'both rosters, by the one box')
   assert.ok(!peers.includes('fetch(') && !peers.includes('call('), 'nothing new is fetched')
 })
 
-test('a row opens that Bot\'s chat and lands back on the conversation', () => {
-  const open = peers.slice(peers.indexOf('const openBot ='), peers.indexOf('return createPortal'))
+test('a group is a row of its own kind, under its own heading', () => {
+  // A group row is the same row shape as a Bot's -- wrapper, button, name, chevron -- with the
+  // group's own mark and id, and without a role tag (a group has no role to carry).
+  const group = peers.slice(peers.indexOf("className: 'bt-peers-row', 'data-room-id': room.id"), peers.indexOf("className: 'bt-peers-row', 'data-bot-id'"))
+  assert.ok(group.includes('h(RoomAvatar, { room, roster, size: 36 })'), 'the group\'s own avatar')
+  assert.ok(group.includes("h('span', { className: 'bt-peers-name' }, room.name)"), 'and its name')
+  assert.ok(!group.includes('bt-tag'), 'with no role beside it')
+  assert.ok(group.includes('h(ChevronRightIcon)'), 'and the same chevron')
+  // Two sections, in 我的 -> 全部设置's own shape: a heading over a card, the rows inside it. The
+  // list role sits on the card, so one section is one list rather than a list of everything.
+  assert.ok(peers.includes("h('section', { className: 'bt-settings-group' },"), 'the section is the skin\'s group')
+  assert.ok(peers.includes("h('h3', { className: 'bt-settings-group-head' }, label)"), 'with its heading')
+  assert.ok(peers.includes("h('div', { className: 'bt-settings-group-card', role: 'list' }, rows)"), 'and its card carrying the list')
+  assert.ok(peers.includes("section(t('Groups'), groups.map"), 'the group chats come first')
+  assert.ok(peers.includes("section(t('Peers'), shown.map"), 'then the people')
+  assert.ok(!peers.includes("className: 'bt-peers-list', role: 'list'"), 'the page is no longer one flat list')
+  // A section with nothing in it is not drawn, and the empty line covers both: a heading over an
+  // empty card reads as a fault, and a search that matches one side should not draw the other.
+  assert.ok(peers.includes('groups.length > 0 ? section(') && peers.includes('shown.length > 0 ? section('), 'each section is drawn only when it has rows')
+  const empty = peers.slice(peers.indexOf("className: 'bt-peers-empty'"))
+  assert.ok(empty.startsWith("className: 'bt-peers-empty', role: 'status' }, t('Nothing matches')"), 'one empty line for both kinds of contact')
+})
+
+test('a row opens that chat and lands back on the conversation', () => {
+  const open = peers.slice(peers.indexOf('const openChat ='), peers.indexOf('return createPortal'))
   assert.match(open, /actions\.closePeers\(\)[\s\S]*actions\.selectPanel\(null\)[\s\S]*actions\.closePanel\(\)[\s\S]*actions\.openSession\(id\)/, open)
   // The details pane is closed on the way: it is full-screen on the phone (z 96, over the bar), so a
   // settings screen left open is what the user arrives at instead of the chat. openSession keeps one.
   assert.ok(open.includes('actions.closePanel()'), 'no settings pane survives the tap')
   assert.ok(open.includes('openSession(id)'), 'and the tap ends in the conversation')
+  // A group is the same kind of Session a Bot is, and the sidebar's own group row opens it through
+  // the same call (RoomRow, sidebar.js): one door, whichever row was tapped.
+  assert.ok(peers.includes('onClick: () => openChat(room.id)') && peers.includes('onClick: () => openChat(bot.id)'), 'both rows take the one door')
+  assert.ok(sidebar.includes("'data-room-id': id, onClick: () => actions.openSession(id)"), 'which is the door the sidebar\'s group row uses')
 })
 
 test('the header\'s new button is the drawer\'s own entry, not a second door', () => {
@@ -146,7 +183,9 @@ test('the conversation\'s own sidebar and hamburger are left alone', () => {
 })
 
 test('the parts of the address book the ask left out stay out', () => {
-  for (const out of ['alphabet', 'pinyin', 'collapsible', 'Add friend', 'section', 'group']) {
+  // The sections the user did ask for (group chats, then people) are read in the test above; what
+  // stays out is the rest of WeChat's address book.
+  for (const out of ['alphabet', 'pinyin', 'collapsible', 'Add friend']) {
     assert.ok(!peers.includes(out), `${out} was explicitly not asked for`)
   }
   // One title and one search field, nothing else in the head -- and the title is the settings

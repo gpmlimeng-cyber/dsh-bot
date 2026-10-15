@@ -25,6 +25,9 @@ const ZH = {
   // The phone's bottom bar (nav-bar.js). Four page names and the bar's own label.
   Chats: '任务',
   Peers: '伙伴',
+  // The 伙伴 page's own two sections (peers-page.js), in the words the rest of the skin already
+  // uses for a group chat and for the people on the team.
+  Groups: '群聊',
   // The 发现 page and the tab that opens it (nav-bar.js, discover-page.js) are one page, so they
   // carry one name: "Discover". 插件 is the first row of that page's list, never the page itself.
   Discover: '发现',
@@ -153,6 +156,8 @@ const ZH = {
   'Start a chat with…': '和谁聊…',
   'Close new chat': '关闭新对话',
   'No Bots match': '没有匹配的 Bot',
+  // The 伙伴 page's search covers its group chats as well, so its empty line cannot name one kind.
+  'Nothing matches': '没有匹配项',
   'Type a name to create a Bot': '输入名字来新建 Bot',
   'Send message': '发送',
 

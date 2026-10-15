@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: d0849005
+// Source fingerprint: f3853f67
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -63,6 +63,9 @@ var ZH = {
   // The phone's bottom bar (nav-bar.js). Four page names and the bar's own label.
   Chats: "任务",
   Peers: "伙伴",
+  // The 伙伴 page's own two sections (peers-page.js), in the words the rest of the skin already
+  // uses for a group chat and for the people on the team.
+  Groups: "群聊",
   // The 发现 page and the tab that opens it (nav-bar.js, discover-page.js) are one page, so they
   // carry one name: "Discover". 插件 is the first row of that page's list, never the page itself.
   Discover: "发现",
@@ -188,6 +191,8 @@ var ZH = {
   "Start a chat with…": "和谁聊…",
   "Close new chat": "关闭新对话",
   "No Bots match": "没有匹配的 Bot",
+  // The 伙伴 page's search covers its group chats as well, so its empty line cannot name one kind.
+  "Nothing matches": "没有匹配项",
   "Type a name to create a Bot": "输入名字来新建 Bot",
   "Send message": "发送",
   // Details drawer
@@ -16092,19 +16097,31 @@ function peersList(bots, query2) {
   const byName = [...bots ?? []].sort((a, b) => (a?.name ?? "").localeCompare(b?.name ?? ""));
   return wanted === "" ? byName : byName.filter((bot) => (bot?.name ?? "").toLowerCase().includes(wanted));
 }
+function peersRooms(rooms, query2) {
+  const wanted = query2.trim().toLowerCase();
+  const byName = [...rooms ?? []].filter((room2) => room2?.hidden !== true).sort((a, b) => (a?.name ?? "").localeCompare(b?.name ?? ""));
+  return wanted === "" ? byName : byName.filter((room2) => (room2?.name ?? "").toLowerCase().includes(wanted));
+}
 function PeersPage({ useRoster, useUi, actions }) {
   const roster = useRoster((value) => value);
   const open = useUi((value) => value.peers === true);
   const [query2, setQuery] = (0, import_react40.useState)("");
   const mobile = useMobile();
   if (!open || !mobile) return null;
+  const groups = peersRooms(roster.rooms, query2);
   const shown = peersList(roster.bots, query2);
-  const openBot = (id) => {
+  const openChat = (id) => {
     actions.closePeers();
     actions.selectPanel(null);
     actions.closePanel();
     actions.openSession(id);
   };
+  const section = (label, rows) => (0, import_react40.createElement)(
+    "section",
+    { className: "bt-settings-group" },
+    (0, import_react40.createElement)("h3", { className: "bt-settings-group-head" }, label),
+    (0, import_react40.createElement)("div", { className: "bt-settings-group-card", role: "list" }, rows)
+  );
   return (0, import_react_dom13.createPortal)((0, import_react40.createElement)(
     "div",
     { className: "bt-peers", role: "region", "aria-label": t("Peers") },
@@ -16146,27 +16163,55 @@ function PeersPage({ useRoster, useUi, actions }) {
         })
       )
     ),
-    shown.length === 0 ? (0, import_react40.createElement)("div", { className: "bt-peers-empty", role: "status" }, t("No Bots match")) : (0, import_react40.createElement)("div", { className: "bt-peers-list", role: "list" }, shown.map((bot) => (0, import_react40.createElement)(
+    // Both sections live in the page's one scroller, in that order: the group chats, then the
+    // people. The wrapper carries the list item, the way the members list does: a button that
+    // declared itself a list item would stop being announced as a button.
+    (0, import_react40.createElement)(
       "div",
-      {
-        key: bot.id,
-        className: "bt-peers-item",
-        role: "listitem"
-      },
-      (0, import_react40.createElement)(
-        "button",
+      { className: "bt-peers-list" },
+      groups.length > 0 ? section(t("Groups"), groups.map((room2) => (0, import_react40.createElement)(
+        "div",
         {
-          type: "button",
-          className: "bt-peers-row",
-          "data-bot-id": bot.id,
-          onClick: () => openBot(bot.id)
+          key: room2.id,
+          className: "bt-peers-item",
+          role: "listitem"
         },
-        (0, import_react40.createElement)(BotMark, { bot, size: 36 }),
-        (0, import_react40.createElement)("span", { className: "bt-peers-name" }, bot.name),
-        bot.role ? (0, import_react40.createElement)("span", { className: "bt-tag" }, bot.role) : null,
-        (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
-      )
-    )))
+        (0, import_react40.createElement)(
+          "button",
+          {
+            type: "button",
+            className: "bt-peers-row",
+            "data-room-id": room2.id,
+            onClick: () => openChat(room2.id)
+          },
+          (0, import_react40.createElement)(RoomAvatar, { room: room2, roster, size: 36 }),
+          (0, import_react40.createElement)("span", { className: "bt-peers-name" }, room2.name),
+          (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
+        )
+      ))) : null,
+      shown.length > 0 ? section(t("Peers"), shown.map((bot) => (0, import_react40.createElement)(
+        "div",
+        {
+          key: bot.id,
+          className: "bt-peers-item",
+          role: "listitem"
+        },
+        (0, import_react40.createElement)(
+          "button",
+          {
+            type: "button",
+            className: "bt-peers-row",
+            "data-bot-id": bot.id,
+            onClick: () => openChat(bot.id)
+          },
+          (0, import_react40.createElement)(BotMark, { bot, size: 36 }),
+          (0, import_react40.createElement)("span", { className: "bt-peers-name" }, bot.name),
+          bot.role ? (0, import_react40.createElement)("span", { className: "bt-tag" }, bot.role) : null,
+          (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
+        )
+      ))) : null,
+      groups.length === 0 && shown.length === 0 ? (0, import_react40.createElement)("div", { className: "bt-peers-empty", role: "status" }, t("Nothing matches")) : null
+    )
   ), document.body);
 }
 var PEERS_CSS = `
@@ -16286,7 +16331,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "d0849005" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "f3853f67" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
