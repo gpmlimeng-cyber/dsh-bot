@@ -41,18 +41,27 @@ export const SHELL_CSS = `
    computes it from the accent's luminance, so the fallback does not carry it. */
 body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f1f3f1;--bt-main:#f1f3f1;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58)}
 body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(242,242,242,.08);--bt-line-2:rgba(242,242,242,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(242,242,242,.09);--bt-tag-ink:rgba(242,242,242,.58)}
-/* The page, on both layers and where the platform paints its own base: html itself (which
-   cannot be a descendant of body, hence :has), body, the frame the whole app sits in, and
-   the column the conversation lives in. Gated on the light theme, so the dark one keeps the
-   platform's base exactly as it was.
-
-   The first two carry !important because the platform writes its own colour where a rule
-   cannot reach it: an inline background on <html> (measured rgb(241,243,241)) and the base
-   token as an inline custom property on <body>. */
-html:not(:has(body[data-ds-dark-theme])){background:var(--bt-main)!important}
+/* <html> is deliberately NOT painted with !important. The platform writes its own background
+   on it inline (measured rgb(241,243,241), and it is NOT the platform's own base token, which
+   is #fcfcfc -- it is the colour the shell paints behind the status bar), so instead of
+   fighting that declaration the skin READS it (publishShellBackground) and takes the surface
+   it paints as the page's own colour. This rule is only the fallback for the case where no
+   inline declaration is there to read: it paints the very colour the reader would have read,
+   so the two can never disagree, and the inline declaration outranks it. That is the
+   difference between matching the band today and matching it the next time it moves -- it
+   moved once already, from near-black in the morning to this light green-grey. */
+html:not(:has(body[data-ds-dark-theme])){background:var(--bt-main)}
+/* The one !important below is for the base token the platform writes inline on <body>, which
+   no normal rule of ours can outrank. */
 body:not([data-ds-dark-theme]){background:var(--bt-main)!important}
 body:not([data-ds-dark-theme]) [data-dsh-frame],
 body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-main)}
+/* The shell's colour, once the reader above has found one: it becomes the page's --bt-main and
+   --bt-sidebar, so everything that already reads those tokens -- the page, the frame, the
+   conversation column, the bar, the drawer, the peers page, both fade bands and the composer's
+   fade -- follows in one step. Without the attribute the sheet keeps the palette's own
+   sampled #f1f3f1. Light theme only, like the paints above. */
+html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])) body{--bt-main:var(--bt-shell-bg);--bt-sidebar:var(--bt-shell-bg)}
 /* The ONE --dsw-* override in this whole skin, and it is here for a measured reason: the
    platform sets --dsw-alias-bg-base inline on <body> (#fcfcfc), and three things read it --
    the frame's background, the body's own, and the composer's 36px fade. An inline
@@ -1692,6 +1701,32 @@ div:has(> nav [class*="_marks"]){display:none!important}
 
 // -------------------------------------------------------------------------
 
+// The page's base colour is the shell's own, and the shell tells the page about it: the
+// platform writes a background on <html> inline, and that declaration is not the platform's
+// base token (#fcfcfc) but the colour the band behind the status bar is painted with. The
+// skin reads it -- INLINE only, never the computed value, which would be our own paint as soon
+// as the stylesheet has one -- and republishes it as --bt-shell-bg, which the sheet takes as
+// --bt-main / --bt-sidebar while it is there. When there is nothing to read, the property is
+// dropped and the palette's sampled #f1f3f1 stands. That is the whole point: the band moved
+// once already today, and the page is meant to move with it instead of waiting for a new
+// sample and a new round of measuring.
+const COLOUR = /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|color\(|transparent$|currentcolor$)/i
+export function publishShellBackground() {
+  if (typeof document === 'undefined') return
+  const root = document.documentElement
+  const declared = (root.style.getPropertyValue('background-color') || root.style.getPropertyValue('background') || '').trim()
+  if (COLOUR.test(declared)) {
+    // Only write when it differs: this element's style attribute is what the watch below
+    // observes, so writing the same value back would be a change with nothing in it.
+    if (root.style.getPropertyValue('--bt-shell-bg') !== declared) root.style.setProperty('--bt-shell-bg', declared)
+    if (root.dataset.btShellBg === undefined) root.dataset.btShellBg = ''
+  } else {
+    // Including the case where it is already gone: the sheet never frees a property it set.
+    if (root.style.getPropertyValue('--bt-shell-bg') !== '') root.style.removeProperty('--bt-shell-bg')
+    if (root.dataset.btShellBg !== undefined) delete root.dataset.btShellBg
+  }
+}
+
 // The page colour, told to the shell the one way a page has: a meta[name="theme-color"] of
 // our own, kept FIRST in <head>. The platform's own presenter writes the same tag from the
 // body's computed background, and on this device it had already written the old colour
@@ -1699,6 +1734,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 // ours leads. Light theme only: in dark the node is removed and the platform's value stands,
 // which is the one the shell should see there. Idempotent, and it only ever touches its own
 // node (marked data-bt-theme-color) so the platform's presenter keeps ownership of its one.
+// Reads the resolved token, so it follows the shell's colour on its own.
 export function publishThemeColor() {
   if (typeof document === 'undefined') return
   const own = document.head.querySelector('meta[data-bt-theme-color]')

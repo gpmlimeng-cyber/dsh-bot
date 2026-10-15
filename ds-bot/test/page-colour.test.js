@@ -7,6 +7,9 @@
 // which is what these two assertions are for.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { runInNewContext } from 'node:vm'
+import { build } from 'esbuild'
 import { test } from 'node:test'
 import { THEMES, themeVars } from '../src/client/themes.js'
 
@@ -100,13 +103,43 @@ test('the bar wears the sampled pair, and the input is white like the cards', ()
 
 test('the page is painted where the platform painted its own, and only in the light theme', () => {
   // html cannot be a descendant of body, so it is gated with :has; everything else is.
-  const paint = 'html:not(:has(body[data-ds-dark-theme])){background:var(--bt-main)!important}\nbody:not([data-ds-dark-theme]){background:var(--bt-main)!important}\nbody:not([data-ds-dark-theme]) [data-dsh-frame],\nbody:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-main)}'
-  assert.ok(read('styles.js').includes(paint), 'html, body, the frame and the conversation column are painted, all gated on the light theme')
-  // html and body fight the platform's own inline colour, so they carry the flag; the frame
-  // is ours to paint and does not need it.
-  assert.equal((paint.match(/!important/g) ?? []).length, 2, 'only the two the platform writes inline carry the flag')
+  const paint = read('styles.js')
+  const painted = [
+    'html:not(:has(body[data-ds-dark-theme])){background:var(--bt-main)}',
+    'body:not([data-ds-dark-theme]){background:var(--bt-main)!important}',
+    'body:not([data-ds-dark-theme]) [data-dsh-frame],',
+    'body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-main)}',
+  ]
+  for (const rule of painted) assert.ok(paint.includes(rule), `html, body, the frame and the conversation column are painted: ${rule}`)
+  const flags = painted.join('\n').match(/!important/g) ?? []
+  // Only <body> carries the flag: the platform writes the base TOKEN inline there and a normal
+  // rule cannot outrank it. <html> needs none, because its own inline declaration is the colour
+  // this skin reads and adopts -- the rule under it only covers the case where there is none.
+  assert.equal(flags.length, 1, 'only where an inline declaration has to be beaten')
   // Dark keeps the platform's own base: the token is declared for the bar, not for a paint.
   assert.ok(dark.includes('--bt-main:#141414'), dark)
+})
+
+// The band behind the status bar is painted by the shell, and the page cannot reach it -- but
+// the shell puts its colour where the page CAN read it: a background on <html>, written inline
+// and not the platform's own base token. So the page takes its colour from there instead of
+// sampling it once and drifting the next time the band moves (it moved once already today).
+test('the page colour is read from the shell, in the light theme, with the sample as fallback', () => {
+  const styles = read('styles.js')
+  const reader = styles.slice(styles.indexOf('export function publishShellBackground'), styles.indexOf('export function publishThemeColor'))
+  assert.ok(reader.includes("root.style.getPropertyValue('background-color')"), 'the inline declaration, read from the element')
+  assert.ok(reader.includes("root.style.getPropertyValue('background')"), 'including the shorthand form')
+  assert.ok(!reader.includes('getComputedStyle'), 'never the computed value, which would be our own paint')
+  assert.ok(reader.includes("setProperty('--bt-shell-bg', declared)"), 'published as the token the sheet reads')
+  assert.ok(reader.includes("dataset.btShellBg = ''") && reader.includes('removeProperty'), 'and dropped again when there is nothing to read')
+  // The sheet takes it as the page's own colour, so every surface that already reads
+  // --bt-main / --bt-sidebar follows in one step; the palette's sample stands as the fallback.
+  assert.ok(styles.includes('html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])) body{--bt-main:var(--bt-shell-bg);--bt-sidebar:var(--bt-shell-bg)}'), 'the shell colour becomes the page colour')
+  assert.ok(read('themes.js').includes("light: { bg: '#f1f3f1', sidebar: '#f1f3f1'"), 'with the sampled value behind it')
+  // Wired before the meta tag is published, since that reads the resolved token.
+  const index = read('index.js')
+  assert.ok(index.includes('publishShellBackground()\n      publishThemeColor()'), 'read first, then told to the shell')
+  assert.ok(index.includes("themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })"), 'and watched, because the platform rewrites it')
 })
 
 // The platform writes the base token inline on <body>, and three surfaces read it: the
@@ -134,9 +167,9 @@ test('the page colour reaches the shell through the meta tag, light theme only',
   assert.ok(helper.includes("hasAttribute('data-ds-dark-theme')") && helper.includes('own.remove()'), 'dark removes ours and leaves the platform\'s')
   // Wired where the theme is applied, and watched, because the platform flips the flag itself.
   const index = read('index.js')
-  assert.ok(index.includes('import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles, publishThemeColor }'), 'imported')
+  assert.ok(index.includes('import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles, publishShellBackground, publishThemeColor }'), 'imported')
   assert.ok(index.includes('      publishThemeColor()\n'), 'applied with the theme')
-  assert.ok(index.includes("new MutationObserver(publishThemeColor)") && index.includes("attributeFilter: ['data-ds-dark-theme']"), 'and re-applied when the platform flips dark')
+  assert.ok(index.includes('new MutationObserver(() => { publishShellBackground(); publishThemeColor() })') && index.includes("attributeFilter: ['data-ds-dark-theme']"), 'and re-applied when the platform flips dark')
   assert.ok(index.includes("document.head.querySelector('meta[data-bt-theme-color]')?.remove()"), 'removed when the surface withdraws')
 })
 
@@ -144,4 +177,63 @@ test('the bar wears the page colour, opaque', () => {
   const bar = nav.split('\n').find(line => line.includes('.bt-nav{'))
   assert.ok(bar.includes('background:var(--bt-main)'), bar)
   assert.ok(!bar.includes('color-mix') && !bar.includes('transparent'), 'no mix, no see-through')
+})
+
+// The reader runs for real against a stand-in for the platform's inline declaration, because
+// its one hard rule -- read the INLINE value, never the computed one -- is what keeps it from
+// reading its own paint back and looping.
+const bundle = await build({
+  entryPoints: [fileURLToPath(new URL('../src/client/styles.js', import.meta.url))],
+  bundle: true, format: 'cjs', platform: 'node', write: false,
+  external: ['react', 'react-dom'],
+})
+const loadReader = (inline) => {
+  const declared = new Map(Object.entries(inline))
+  let writes = 0
+  const style = {
+    getPropertyValue: (name) => declared.get(name) ?? '',
+    setProperty: (name, value) => { writes += 1; declared.set(name, value) },
+    removeProperty: (name) => { writes += 1; declared.delete(name) },
+  }
+  const root = { style, dataset: {} }
+  const document = { documentElement: root, head: { querySelector: () => null, prepend: () => {} } }
+  const module = { exports: {} }
+  runInNewContext(bundle.outputFiles[0].text, {
+    module, exports: module.exports, document,
+    require: (name) => {
+      if (name === 'react') return { createElement: () => null, useState: v => [v, () => {}], useEffect: () => {}, useLayoutEffect: () => {}, useRef: v => ({ current: v }), Fragment: 'fragment' }
+      if (name === 'react-dom') return { createPortal: () => null }
+      throw new Error(`no platform module ${name}`)
+    },
+  })
+  return { read: module.exports.publishShellBackground, declared, root, writes: () => writes }
+}
+
+test('the shell colour is read from the inline declaration and published', () => {
+  const shorthand = loadReader({ background: 'rgb(241, 243, 241)' })
+  shorthand.read()
+  assert.equal(shorthand.declared.get('--bt-shell-bg'), 'rgb(241, 243, 241)')
+  assert.ok('btShellBg' in shorthand.root.dataset, 'and the sheet is told there is one')
+  // Reading again writes nothing: the reader's own write is on the attribute it watches, so a
+  // repeated write would be a change with nothing in it, and a watch loop with it.
+  shorthand.read()
+  shorthand.read()
+  assert.equal(shorthand.writes(), 1, 'the same value is written once and left alone')
+
+  const longhand = loadReader({ 'background-color': '#f1f3f1' })
+  longhand.read()
+  assert.equal(longhand.declared.get('--bt-shell-bg'), '#f1f3f1', 'the long form too')
+
+  // Nothing readable, or something that is not a colour: the palette's sample stands.
+  for (const inline of [{}, { background: 'url(bg.png) center' }, { background: 'none' }]) {
+    const empty = loadReader(inline)
+    empty.read()
+    assert.equal(empty.declared.get('--bt-shell-bg'), undefined, `nothing published for ${JSON.stringify(inline)}`)
+    assert.ok(!('btShellBg' in empty.root.dataset), 'and the attribute is gone with it')
+  }
+  const stale = loadReader({ 'background-color': '#123456' })
+  stale.read()
+  stale.declared.set('background-color', 'none')
+  stale.read()
+  assert.equal(stale.declared.get('--bt-shell-bg'), undefined, 'a colour taken away is unpublished')
 })
