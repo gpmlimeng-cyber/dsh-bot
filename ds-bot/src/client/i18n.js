@@ -493,6 +493,10 @@ const ZH = {
   // A kind of file, beside the Archive action above -- hence the longer key.
   'Archive file': '压缩包',
   'Code file': '代码文件',
+  // The workspaces a delivered file's second line can name. A file that matches none of
+  // them falls back to the folder it sits in, or to the plain "Workspace" above.
+  'DSH workspace': 'DSH 工作区',
+  DSBot: 'DSBot',
   Preview: '预览',
   'Opening…': '正在打开…',
   'Could not open it here. Copy the path and open the copy under {folder}': '这里打不开。复制路径，在手机文件管理的 {folder} 里打开副本',

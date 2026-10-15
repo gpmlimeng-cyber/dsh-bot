@@ -548,6 +548,10 @@ var ZH = {
   // A kind of file, beside the Archive action above -- hence the longer key.
   "Archive file": "压缩包",
   "Code file": "代码文件",
+  // The workspaces a delivered file's second line can name. A file that matches none of
+  // them falls back to the folder it sits in, or to the plain "Workspace" above.
+  "DSH workspace": "DSH 工作区",
+  DSBot: "DSBot",
   Preview: "预览",
   "Opening…": "正在打开…",
   "Could not open it here. Copy the path and open the copy under {folder}": "这里打不开。复制路径，在手机文件管理的 {folder} 里打开副本",
@@ -4914,11 +4918,27 @@ var TYPE_WORDS = {
   xml: "Code file"
 };
 var wordFor = (path) => t(TYPE_WORDS[(0, import_dsh_client_ui_primitives2.fileExtension)(basename(path))] ?? "File");
+var WORKSPACES = [
+  [".dsh/bot/workspace", "DSH workspace"],
+  ["repos/dsh-bot/ds-bot", "DSBot"],
+  ["repos/dsh-bot", "DSBot"],
+  ["repos/DeepSeek-Bot", "DSBot"]
+];
+var workspaceOf = (path) => {
+  for (const [root, name] of WORKSPACES) {
+    if (path.includes(`${root}/`)) return t(name);
+  }
+  const at = path.lastIndexOf("/");
+  const folder = at === -1 ? "" : basename(path.slice(0, at));
+  return folder === "" ? t("Workspace") : folder;
+};
 var sizesOf = /* @__PURE__ */ new Map();
 var metaOf = (file) => {
-  const word = wordFor(file.path);
+  const parts = [wordFor(file.path)];
   const size = sizesOf.get(file.path);
-  return Number.isFinite(size) ? `${word} · ${(0, import_dsh_client_ui_primitives2.fileSizeText)(size)}` : word;
+  if (Number.isFinite(size)) parts.push((0, import_dsh_client_ui_primitives2.fileSizeText)(size));
+  parts.push(workspaceOf(file.path));
+  return parts.join(" · ");
 };
 var exitsSentence = (shared2) => shared2 !== null && shared2 !== void 0 ? t("Could not open it here. The copy is at {path}", { path: shared2 }) : t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT });
 function useDeliverableExits(file, actions, onFailed) {
@@ -15610,7 +15630,7 @@ function apply(ctx) {
   const isAgentSessionId = (id) => isAgentSession(roster.getSnapshot(), agentSessionCache, id) || pendingAdopt.has(id);
   const agentOfSession = (id) => roster.getSnapshot().agentOf[id] ?? pendingAdopt.get(id);
   const workspaces = ctx.get("workspaces");
-  const workspaceOf = (sessionId) => {
+  const workspaceOf2 = (sessionId) => {
     const items = workspaces?.list?.getSnapshot()?.items ?? [];
     return items.find((item) => item.sessionIds?.includes(sessionId))?.workspaceId;
   };
@@ -15965,7 +15985,7 @@ function apply(ctx) {
         actions.openAgentSession(recent[0]);
         return recent[0];
       }
-      const { sessionId } = await after(call("agent-session", { agentId, workspaceId: workspaceOf(recent[0]) }));
+      const { sessionId } = await after(call("agent-session", { agentId, workspaceId: workspaceOf2(recent[0]) }));
       actions.openAgentSession(sessionId);
       return sessionId;
     },
@@ -16535,8 +16555,8 @@ function apply(ctx) {
         sync();
         actions.reportError(error, "agent-adopt");
       });
-      const next = workspaceOf(main);
-      if (list.byId[before]?.blank === true && next !== void 0 && workspaceOf(before) !== next) {
+      const next = workspaceOf2(main);
+      if (list.byId[before]?.blank === true && next !== void 0 && workspaceOf2(before) !== next) {
         void call("agent-archive", { agentId, sessionId: before }).then(() => pull()).catch(() => {
         });
       }

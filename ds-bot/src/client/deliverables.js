@@ -76,6 +76,26 @@ const TYPE_WORDS = {
 }
 const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')
 
+// The workspace a delivered file came out of, named the way a reader asks about it rather
+// than spelled out as an absolute path -- the path is what a reader cannot act on. A root is
+// matched on its tail, so both the /data/user/0/... and the /data/data/... spelling of one
+// machine answer the same, and the longest row wins. A file from anywhere else falls back to
+// the folder it sits in, which is short and at least says which pile it belongs to.
+const WORKSPACES = [
+  ['.dsh/bot/workspace', 'DSH workspace'],
+  ['repos/dsh-bot/ds-bot', 'DSBot'],
+  ['repos/dsh-bot', 'DSBot'],
+  ['repos/DeepSeek-Bot', 'DSBot'],
+]
+const workspaceOf = (path) => {
+  for (const [root, name] of WORKSPACES) {
+    if (path.includes(`${root}/`)) return t(name)
+  }
+  const at = path.lastIndexOf('/')
+  const folder = at === -1 ? '' : basename(path.slice(0, at))
+  return folder === '' ? t('Workspace') : folder
+}
+
 // Sizes the list has learned, by path: a delivered file's size is the host's to know, and
 // the only read path this client already has is the one a preview opens a file with. No
 // new host action, so nothing here waits on a restart. A path that comes back unreadable
@@ -83,12 +103,15 @@ const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')
 const sizesOf = new Map()
 
 // What the panel's list says under the name where a message's card says what the file is:
-// what kind of file it is, and how big -- the second line of the list the user pointed at.
-// The kind is in the name and shows at once; the size joins it when the host answers.
+// what kind of file it is, how big it is, and which workspace it came out of -- the second
+// line the user asked for. The kind and the workspace are in the path and show at once; the
+// size joins them when the host answers, so the line is never blank and never a bare path.
 const metaOf = (file) => {
-  const word = wordFor(file.path)
+  const parts = [wordFor(file.path)]
   const size = sizesOf.get(file.path)
-  return Number.isFinite(size) ? `${word} · ${fileSizeText(size)}` : word
+  if (Number.isFinite(size)) parts.push(fileSizeText(size))
+  parts.push(workspaceOf(file.path))
+  return parts.join(' · ')
 }
 
 /**

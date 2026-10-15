@@ -46,10 +46,14 @@ test('the list keeps the message cards, and changes only their second line', () 
   assert.ok(!list.includes("className: 'bt-prod-row'"), 'and there is no row of its own')
   assert.ok(!preview.includes('.bt-prod-row'), 'nor a row style of its own')
   assert.ok(!list.includes('const open = (file) =>'), 'the panel no longer opens files itself')
-  // The second line is the one thing the panel changes: a message says what the file is,
-  // the list names its kind and how big it is, the way the reference list does.
+  // The second line is the one thing the panel changes: a message says what the file is, the
+  // list names its kind, how big it is and which workspace it came from, naming the workspace
+  // rather than spelling its absolute path out.
   assert.ok(list.includes('const metaOf = (file) => {'), 'the list’s line is its own shape')
-  assert.ok(list.includes('return Number.isFinite(size) ? `${word} · ${fileSizeText(size)}` : word'), 'kind and size, joined the reference way')
+  assert.ok(list.includes("const parts = [wordFor(file.path)]"), 'it opens with the kind')
+  assert.ok(list.includes('if (Number.isFinite(size)) parts.push(fileSizeText(size))'), 'the size joins it when the read answers')
+  assert.ok(list.includes('parts.push(workspaceOf(file.path))'), 'and the workspace closes it')
+  assert.ok(list.includes("return parts.join(' · ')"), 'joined the reference way')
   assert.ok(list.includes("const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')"), 'the kind is a translated word, not the extension')
   assert.ok(list.includes("import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu }"), 'and the size is the platform’s own formatter')
   assert.ok(list.includes('meta: metaOf?.(file)'), 'and the card is handed it')
@@ -59,6 +63,10 @@ test('the list keeps the message cards, and changes only their second line', () 
   assert.ok(list.includes('sizesOf.set(entry.path, Number.isFinite(answer?.size) ? answer.size : null)'), 'the answer is kept, a refusal included')
   assert.ok(list.includes('if (sizesOf.has(entry.path)) continue'), 'so a path is asked once')
   assert.ok(!list.includes('folderOf') && !list.includes('atText'), 'the time and the path left the line')
+  // The workspace is named, never drawn as the path it came from: a reader cannot act on
+  // /data/user/0/..., which is exactly what the user rejected in the second line.
+  const line = list.slice(list.indexOf('const WORKSPACES = ['))
+  assert.ok(!line.includes('/data/user/0') && !line.includes('/data/data'), 'and no absolute path is written anywhere in the line')
   assert.ok(preview.includes('.bt-products .bt-dcards{'), 'the panel gives the shared cards their width')
   // The rows of a stack sit closer than the rows of the message's two-column grid: the
   // reference list the user pointed at reads as a stack of tiles, not as a grid.
@@ -105,6 +113,21 @@ test('every kind of file the list can name is translated', () => {
     assert.ok(i18n.includes(`'${word}':`) || i18n.includes(`\n  ${word}:`), `${word} has a translation`)
   }
   assert.ok(i18n.includes("'Markdown file': 'Markdown 文件'") && i18n.includes("Image: '图片'"), 'and the two the reference shows read the reference’s way')
+})
+
+test('the second line names the workspace the file came out of, not its path', () => {
+  const table = list.slice(list.indexOf('const WORKSPACES = ['), list.indexOf('const workspaceOf'))
+  assert.ok(table.includes("['.dsh/bot/workspace', 'DSH workspace']"), 'a Bot’s own working folder is named')
+  assert.ok(table.includes("['repos/dsh-bot/ds-bot', 'DSBot']") && table.includes("['repos/dsh-bot', 'DSBot']"), 'the team’s repo is named, longest root first so it wins')
+  assert.ok(table.indexOf("'repos/dsh-bot/ds-bot'") < table.indexOf("['repos/dsh-bot', 'DSBot']"), 'the more specific root is tried first')
+  assert.ok(list.includes('if (path.includes(`${root}/`)) return t(name)'), 'a root is matched on its tail, so one machine’s two path spellings answer the same')
+  assert.ok(list.includes("return folder === '' ? t('Workspace') : folder"), 'and a file from anywhere else falls back to the folder it sits in')
+  assert.ok(list.includes("const at = path.lastIndexOf('/')") && list.includes('basename(path.slice(0, at))'), 'which is the folder above the file, not the whole path')
+  // Every name the table can print has a translation, the fallback included.
+  for (const name of ['DSH workspace', 'DSBot', 'Workspace']) {
+    assert.ok(i18n.includes(`'${name}':`) || i18n.includes(`\n  ${name}:`), `${name} has a translation`)
+  }
+  assert.ok(i18n.includes("'DSH workspace': 'DSH 工作区'"), 'the default workspace reads in Chinese')
 })
 
 test('a leaving panel is inert, so a browser can both hide it and let its focus go', () => {
