@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: ec10c336
+// Source fingerprint: bba802c5
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3014,6 +3014,19 @@ html[data-bt-mobile] [data-dsh-mobile-topbar]{display:none!important}
    started at 90px). Give the column back the status-bar inset only, and never let the
    measured --bt-top-inset feed back in here — that loop is what kept it at 90px. */
 html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))!important}
+/* On an upright phone the status bar is the shell's to hand over and the page's to paint: the
+   page asks for it transparent (status-bar.js) and frosts it itself (.bt-topfade, as tall as
+   the status bar plus the 10px it fades over). For any of that to be visible the column has to
+   let content reach the top of the screen -- otherwise the transcript starts below the inset
+   and there is nothing under the frost to see, which is how the first version looked.
+
+   So here the column gives the inset up and the transcript's own scroll box takes it back as
+   padding: the first line still arrives clear of the strip (its pill-row clearance was 60px for
+   a 50px bar; the strip is --bt-top-inset + 10), while everything scrolled past it passes
+   underneath -- which is the whole effect. Portrait only, like the strip itself: a phone held
+   sideways has no strip, so it keeps the inset exactly as it was. */
+html[data-bt-mobile][data-bt-portrait] [data-dsh-frame]>[class*="centerCol"]{padding-top:0!important}
+html[data-bt-mobile][data-bt-portrait] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)!important}
 /* One definition, every consumer: the shell's own --dsh-frame-chrome-top is set only under
    html[data-windows-titlebar] (and the darwin frame), never on Android, so every fixed
    layer that reads it — ours and the shell's own masks alike — fell through to 0 and
@@ -16102,7 +16115,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "ec10c336" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "bba802c5" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

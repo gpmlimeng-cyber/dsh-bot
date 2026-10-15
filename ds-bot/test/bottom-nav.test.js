@@ -19,6 +19,7 @@ const read = (name) => readFileSync(new URL(`../src/client/${name}`, import.meta
 const nav = read('nav-bar.js')
 const index = read('index.js')
 const mobile = read('mobile.js')
+const styles = read('styles.js')
 
 const GATE = 'html[data-bt-mobile][data-bt-portrait]'
 const css = nav.split('\n').filter(line => line.startsWith(GATE))
@@ -364,4 +365,25 @@ test('a tab answers a press by dimming, not by filling', () => {
   assert.ok(tab.includes('background:none'), `the tab has no fill at all: ${tab}`)
   assert.ok(tab.includes('transition:color .12s ease,opacity .12s ease'), `and transitions colour and dim only: ${tab}`)
   assert.ok(!tab.includes('transition:background'), tab)
+})
+
+// The strip is only worth drawing if something scrolls under it. The column used to keep the
+// status bar's inset as its top padding, so the transcript began below the strip and there was
+// nothing behind the frost; on an upright phone the column now gives that inset up and the
+// transcript's own scroll box takes it back, so the first line still arrives clear of the strip
+// (and of the pill row, which was the 60px it reserved) while scrolled content passes under it.
+test('the transcript scrolls under the strip, and still arrives clear of it', () => {
+  const gate = 'html[data-bt-mobile][data-bt-portrait] '
+  const lines = read('styles.js').split('\n')
+  const column = lines.find(line => line.startsWith(`${gate}[data-dsh-frame]>[class*="centerCol"]`))
+  assert.ok(column && column.includes('padding-top:0!important'), `the column lets content reach the top: ${column}`)
+  const scroll = lines.find(line => line.startsWith(`${gate}[class*="_scroll"]`))
+  assert.ok(scroll, 'the transcript scroll box has a rule')
+  assert.ok(scroll.includes('padding-top:calc(var(--bt-top-inset'), scroll)
+  assert.ok(scroll.includes('+ 10px)'), `as tall as the strip, so the first line clears it: ${scroll}`)
+  // The phone held sideways has no strip, so its inset is untouched -- the two rules above are
+  // the only ones that give it up, and both carry the portrait gate.
+  const ungated = lines.filter(line => line.startsWith('html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]'))
+  assert.equal(ungated.length, 1, 'one rule, the original one, without the portrait gate')
+  assert.ok(ungated[0].includes('padding-top:var(--dsh-mobile-top-inset'), ungated[0])
 })
