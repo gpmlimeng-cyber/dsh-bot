@@ -3966,11 +3966,10 @@ var FolderIcon = lineIcon(["M3 6A1.5 1.5 0 0 1 4.5 4.5h3.2l1.8 2h6A1.5 1.5 0 0 1
 var ChatsIcon = lineIcon(["M3.5 5.5A1.5 1.5 0 0 1 5 4h7a1.5 1.5 0 0 1 1.5 1.5V10A1.5 1.5 0 0 1 12 11.5H8L5 14v-2.5A1.5 1.5 0 0 1 3.5 10z", "M13.5 7.5H15A1.5 1.5 0 0 1 16.5 9v4.5A1.5 1.5 0 0 1 15 15v2l-2.5-2h-3A1.5 1.5 0 0 1 8 13.5V13"]);
 var SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: ChatsIcon, usage: GaugeIcon };
 var LUCIDE_STROKE = 1.5;
-var LUCIDE_DOT_STROKE = 2;
-var LUCIDE_CHEVRON_BOX = 33;
-var LUCIDE_ELLIPSIS_BOX = 33;
+var LUCIDE_CHEVRON_BOX = 23;
+var LUCIDE_ELLIPSIS_BOX = 17;
 var LUCIDE_MENU_BOX = 15;
-var lucideIcon = (children, box, stroke = LUCIDE_STROKE, pinned = true) => function LucideIcon() {
+var lucideIcon = (children, box, stroke = LUCIDE_STROKE) => function LucideIcon() {
   return (0, import_react3.createElement)("svg", {
     width: box,
     height: box,
@@ -3981,14 +3980,14 @@ var lucideIcon = (children, box, stroke = LUCIDE_STROKE, pinned = true) => funct
     strokeLinecap: "round",
     strokeLinejoin: "round",
     "aria-hidden": true
-  }, children.map(([tag, attributes], index) => (0, import_react3.createElement)(tag, { key: index, ...pinned ? { vectorEffect: "non-scaling-stroke" } : {}, ...attributes })));
+  }, children.map(([tag, attributes], index) => (0, import_react3.createElement)(tag, { key: index, vectorEffect: "non-scaling-stroke", ...attributes })));
 };
 var LucideChevronLeftIcon = lucideIcon([["path", { d: "m15 18-6-6 6-6" }]], LUCIDE_CHEVRON_BOX);
 var LucideEllipsisIcon = lucideIcon([
   ["circle", { cx: 12, cy: 12, r: 1 }],
   ["circle", { cx: 19, cy: 12, r: 1 }],
   ["circle", { cx: 5, cy: 12, r: 1 }]
-], LUCIDE_ELLIPSIS_BOX, LUCIDE_DOT_STROKE, false);
+], LUCIDE_ELLIPSIS_BOX);
 var LucideExternalLinkIcon = lucideIcon([
   ["path", { d: "M15 3h6v6" }],
   ["path", { d: "M10 14 21 3" }],
