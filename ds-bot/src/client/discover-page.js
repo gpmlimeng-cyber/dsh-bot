@@ -92,6 +92,12 @@ export function DiscoverBack({ useUi, actions }) {
 // The page and the strip. Every rule is gated on the phone layout, the same gate the component
 // reads, so nothing here can reach the desktop.
 export const DISCOVER_CSS = `
+/* The conversation's own top row steps aside for this page, the way it does for the peers page:
+   the pill carries that conversation's title, and this page is not it. The strip covers the second
+   level of the two shell panels (.bt-subback); a settings screen opened from the list carries the
+   skin's own rule (styles.js, body:has(.bt-settings-layer)), so both levels lose the bar. */
+html[data-bt-mobile] body:has(.bt-discover) .bt-mobile-bar,
+html[data-bt-mobile] body:has(.bt-subback) .bt-mobile-bar{display:none}
 html[data-bt-mobile] .bt-discover{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
 html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}

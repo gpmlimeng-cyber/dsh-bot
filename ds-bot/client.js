@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 920f5820
+// Source fingerprint: e1d13693
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16240,6 +16240,12 @@ function DiscoverBack({ useUi, actions }) {
   ), document.body);
 }
 var DISCOVER_CSS = `
+/* The conversation's own top row steps aside for this page, the way it does for the peers page:
+   the pill carries that conversation's title, and this page is not it. The strip covers the second
+   level of the two shell panels (.bt-subback); a settings screen opened from the list carries the
+   skin's own rule (styles.js, body:has(.bt-settings-layer)), so both levels lose the bar. */
+html[data-bt-mobile] body:has(.bt-discover) .bt-mobile-bar,
+html[data-bt-mobile] body:has(.bt-subback) .bt-mobile-bar{display:none}
 html[data-bt-mobile] .bt-discover{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
 html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}
@@ -16270,7 +16276,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "920f5820" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "e1d13693" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

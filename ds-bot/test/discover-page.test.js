@@ -157,6 +157,13 @@ test('the page is a surface of its own, one at a time', () => {
   assert.ok(active.startsWith('const active = ui.discover || ui.discoverPanel !== null ? \'plugins\''), '发现 is read first, so a settings page under it does not move the light')
   assert.ok(active.indexOf('ui.discover') < active.indexOf('ui.settings'), 'and before Settings')
   assert.ok(nav.includes('actions.openDiscover()'), 'and opens the list')
+  // The conversation's own top row carries that conversation's title, so it steps aside for this
+  // page -- and for the strip of its second level -- the same way 伙伴 hides it. A settings screen
+  // opened from the list is covered by the skin's own rule for that layer.
+  assert.ok(discover.includes('body:has(.bt-discover) .bt-mobile-bar,'), 'the top pill goes while the page is up')
+  assert.ok(discover.includes('body:has(.bt-subback) .bt-mobile-bar{display:none}'), 'and while the strip of a second level is up')
+  assert.ok(read('peers-page.js').includes('body:has(.bt-peers) .bt-mobile-bar{display:none}'), 'the same rule 伙伴 uses, in its own sheet')
+  assert.ok(styles.includes('body:has(.bt-settings-layer) :is(.bt-mobile-bar,.bt-topfade)'), 'a settings screen from this list carries the skin\'s own')
   // Every opener that puts another full-pane surface over the conversation takes this page down
   // with it. Two deliberate exceptions: openSettings/openConnectors are the doors this page's own
   // rows use (the row clears the page before it calls them) and closePeers only closes something.
