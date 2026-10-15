@@ -211,10 +211,12 @@ test('the keyboard takes the bar and the room it reserved', () => {
   // The flag itself: read from the platform's IME inset and the visual viewport, never guessed.
   const mobile = read('mobile.js')
   assert.ok(mobile.includes("getPropertyValue('--dsh-android-ime-bottom')"), 'the platform\'s IME inset is read')
-  assert.ok(mobile.includes('window.innerHeight - view.height > KEYBOARD_MIN_PX'), 'and the layout-vs-visual gap, since innerHeight stays put here')
+  assert.ok(mobile.includes('window.innerHeight - window.visualViewport.height > KEYBOARD_MIN_PX'), 'and the layout-vs-visual gap, since innerHeight stays put here')
+  assert.ok(mobile.includes("document.hasFocus()"), 'and only while this page is the one in use')
   assert.ok(mobile.includes("document.documentElement.dataset.btKeyboard = '1'"), 'published on the root')
   assert.ok(mobile.includes("delete document.documentElement.dataset.btKeyboard"), 'and taken back when it closes')
   assert.ok(mobile.includes("window.visualViewport?.addEventListener?.('resize'"), 'watched where the keyboard shows up')
+  assert.ok(mobile.includes("window.addEventListener('focus', onViewport)") && mobile.includes("window.addEventListener('blur', onViewport)") && mobile.includes("document.addEventListener?.('visibilitychange', onViewport)"), 'and re-decided when the window is gained or lost, not only on a resize')
 })
 
 test('the bar has no frame at all, and wears the page colour', () => {
@@ -299,11 +301,11 @@ const mobileBundle = await build({
   external: ['react'],
 })
 
-const keyboardUpWith = ({ ime = '', visual = null, innerHeight = 622 }) => {
+const keyboardUpWith = ({ ime = '', visual = null, innerHeight = 622, focus = true }) => {
   const module = { exports: {} }
   runInNewContext(mobileBundle.outputFiles[0].text, {
     module, exports: module.exports,
-    document: { documentElement: { style: {}, dataset: {} }, querySelector: () => null },
+    document: { documentElement: { style: {}, dataset: {} }, querySelector: () => null, hasFocus: () => focus },
     getComputedStyle: () => ({ getPropertyValue: (name) => (name === '--dsh-android-ime-bottom' ? ime : '') }),
     window: { innerHeight, visualViewport: visual },
     require: (name) => {
@@ -321,8 +323,16 @@ test('the keyboard decision reads the phone\'s own numbers', () => {
   // The platform has been seen to hand out a token string rather than a length; the largest px
   // in it is the one that counts, and this is the case that would otherwise silently read 0.
   assert.equal(keyboardUpWith({ ime: 'max(267px, 46px)', visual: { height: 356.4 } }), true, 'up, even as a token string')
+  // Neither signal counts while this page is not the one in use: a keyboard raised in the other
+  // window of a split screen must not take the bar off the page the user is looking at.
+  assert.equal(keyboardUpWith({ ime: '267px', visual: { height: 356.4 }, focus: false }), false, 'up, but in another window')
+  assert.equal(keyboardUpWith({ ime: '', visual: { height: 356.4 }, focus: false }), false, 'the gap alone, in another window')
   // And the second signal, for a platform that leaves the inset alone: the visual viewport
   // shrinks while the layout viewport does not (265.6px here, over the 80px threshold).
+  // The shell's zero is final, and this is the case that cost the user the bar: a keyboard in
+  // the other half of a split screen shrank this page's visual viewport (measured 608 -> 320,
+  // the IME's own 288dp) while the shell's inset for this window stayed 0. The gap is a guess.
+  assert.equal(keyboardUpWith({ ime: '0px', visual: { height: 320 } }), false, 'another window\'s keyboard is not this one\'s')
   assert.equal(keyboardUpWith({ ime: '', visual: { height: 356.4 } }), true, 'up by the viewport gap alone')
   assert.equal(keyboardUpWith({ ime: '', visual: { height: 600 } }), false, 'a short toolbar is not a keyboard')
   assert.equal(keyboardUpWith({ ime: '', visual: null }), false, 'and no visual viewport is not a keyboard')

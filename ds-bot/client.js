@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: a225dc97
+// Source fingerprint: 3d13471d
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -6566,10 +6566,9 @@ var publishInset = () => {
 };
 var KEYBOARD_MIN_PX = 80;
 var keyboardUp = () => {
-  const ime = largestPx(getComputedStyle(document.documentElement).getPropertyValue("--dsh-android-ime-bottom"));
-  if (ime > 0) return true;
-  const view = window.visualViewport;
-  return view !== null && view !== void 0 && window.innerHeight - view.height > KEYBOARD_MIN_PX;
+  const declared = getComputedStyle(document.documentElement).getPropertyValue("--dsh-android-ime-bottom");
+  const raised = declared.trim() !== "" ? largestPx(declared) > 0 : window.visualViewport !== null && window.visualViewport !== void 0 && window.innerHeight - window.visualViewport.height > KEYBOARD_MIN_PX;
+  return raised && document.hasFocus();
 };
 var publishKeyboard = () => {
   if (typeof document === "undefined") return;
@@ -6602,6 +6601,9 @@ function watchMobile() {
       window.addEventListener("resize", onViewport);
       window.visualViewport?.addEventListener?.("resize", onViewport);
       window.visualViewport?.addEventListener?.("scroll", onViewport);
+      window.addEventListener("focus", onViewport);
+      window.addEventListener("blur", onViewport);
+      document.addEventListener?.("visibilitychange", onViewport);
     }
   }
   return mql?.matches === true;
@@ -16115,7 +16117,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "a225dc97" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "3d13471d" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

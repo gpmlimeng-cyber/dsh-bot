@@ -171,11 +171,22 @@ const KEYBOARD_MIN_PX = 80
 // Exported so the decision can be run against a real device's numbers (test/bottom-nav.test.js)
 // instead of only read as source: both signals belong to the platform, and a parse that quietly
 // gives 0 leaves the bar reserving its 56px under the keyboard.
+//
+// Two things keep this from taking the bar off a page nobody is typing on. The shell's inset
+// decides wherever it is published, and its zero is final: that variable is written for this
+// window (composer-insets.css lifts the composer with it). The visual-viewport gap is only a
+// guess at the same thing and is not scoped to this window -- on the device a keyboard raised
+// in the other half of a split screen shrank this page's viewport by exactly the keyboard's
+// 288dp (608 -> 320) while the page itself stayed whole. And either signal only counts while
+// this page is the one in use: that is what the tab bar serves, and the bar belongs to the
+// half of the screen the user is looking at. The gap stays as the fallback for a host that
+// publishes no inset at all (a plain browser).
 export const keyboardUp = () => {
-  const ime = largestPx(getComputedStyle(document.documentElement).getPropertyValue('--dsh-android-ime-bottom'))
-  if (ime > 0) return true
-  const view = window.visualViewport
-  return view !== null && view !== undefined && window.innerHeight - view.height > KEYBOARD_MIN_PX
+  const declared = getComputedStyle(document.documentElement).getPropertyValue('--dsh-android-ime-bottom')
+  const raised = declared.trim() !== ''
+    ? largestPx(declared) > 0
+    : window.visualViewport !== null && window.visualViewport !== undefined && window.innerHeight - window.visualViewport.height > KEYBOARD_MIN_PX
+  return raised && document.hasFocus()
 }
 
 const publishKeyboard = () => {
@@ -213,6 +224,12 @@ export function watchMobile() {
       // The keyboard moves the visual viewport without resizing the window on this platform.
       window.visualViewport?.addEventListener?.('resize', onViewport)
       window.visualViewport?.addEventListener?.('scroll', onViewport)
+      // The decision now includes whether this page is the one in use (keyboardUp), and gaining
+      // or losing the window is not a resize: without these, a page that came back from another
+      // window would keep whatever the flag was when it left.
+      window.addEventListener('focus', onViewport)
+      window.addEventListener('blur', onViewport)
+      document.addEventListener?.('visibilitychange', onViewport)
     }
   }
   return mql?.matches === true
