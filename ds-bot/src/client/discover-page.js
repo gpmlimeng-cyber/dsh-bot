@@ -48,9 +48,14 @@ export const PANEL_ROWS = ['plugins', 'schedules']
 
 export function DiscoverPage({ useUi, actions }) {
   const open = useUi(value => value.discover === true)
+  // One Escape handler for both levels, and the state decides what it means: the strip used to
+  // register its own, which put it on top of the stack for the page's whole life (the layers are
+  // read newest-first), so on the list it swallowed the key and did nothing. The second level is
+  // already in this source, so no order or ranking has to be relied on.
+  const panel = useUi(value => value.discoverPanel ?? null)
   const mobile = useMobile()
   const paneLeft = usePaneLeft()
-  useEscape(() => actions.closeDiscover())
+  useEscape(() => (panel !== null ? actions.closeDiscoverRow() : actions.closeDiscover()))
   if (!open || !mobile) return null
   // The whole page is 我的 -> 全部设置's own structure: the same layer, dialog, centred 52px head,
   // scrolling body, group cards and item rows, so the two pages are one design rather than two that
@@ -79,9 +84,9 @@ export function DiscoverPage({ useUi, actions }) {
 export function DiscoverBack({ useUi, actions }) {
   const panel = useUi(value => (PANEL_ROWS.includes(value.discoverPanel) ? value.discoverPanel : null))
   const mobile = useMobile()
-  // One layer at a time: this strip and Escape both go back to the list, and the list's own
-  // Escape is what leaves the page (the page, above).
-  useEscape(() => actions.closeDiscoverRow())
+  // Escape is the page's own handler (above), which reads the same second-level state this strip is
+  // drawn from: registering one here as well would put this component's layer on top of the page's
+  // for good, and the list would then answer the key with a no-op.
   useEffect(() => {
     if (panel === null) return undefined
     document.documentElement.dataset.btSubpage = '1'

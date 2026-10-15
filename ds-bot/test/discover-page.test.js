@@ -97,13 +97,15 @@ test('the second level carries the strip a shell panel does not draw', () => {
   assert.ok(back.includes('delete document.documentElement.dataset.btSubpage'), 'and withdrawn')
   assert.ok(styles.includes('html[data-bt-mobile][data-bt-portrait][data-bt-subpage] [data-dsh-frame]>[class*="centerCol"]{padding-top:calc(var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)) + 56px)!important}'), 'the panel\'s column reserves it')
   assert.ok(!discover.includes('dataset.btSubpage') || back.includes('dataset.btSubpage'), 'published from the strip alone')
-  // One layer at a time: the strip and Escape both go back to the list, and the list's own Escape
-  // is what leaves the page. The strip used to jump straight out of the page.
-  assert.match(discover, /useEscape\(\(\) => actions\.closeDiscover\(\)\)/, 'Escape closes the list')
-  assert.match(back, /useEscape\(\(\) => actions\.closeDiscoverRow\(\)\)/, 'and steps back one level from the second')
-  assert.ok(!back.includes('closeDiscoverPage'), 'the strip never skips the list')
+  // One Escape handler, on the page, and the state decides which level it leaves: the strip used to
+  // register a second one, and because the layers are read newest-first that layer sat on top of the
+  // page's for the page's whole life -- so on the list the key hit a no-op and did nothing. There is
+  // no separate "leave the page altogether" action any more; nothing calls one.
+  assert.match(discover, /const panel = useUi\(value => value\.discoverPanel \?\? null\)/, 'the page reads the second level')
+  assert.match(discover, /useEscape\(\(\) => \(panel !== null \? actions\.closeDiscoverRow\(\) : actions\.closeDiscover\(\)\)\)/, 'and one handler leaves the level the state says is up')
+  assert.ok(!back.includes('useEscape'), 'the strip registers no Escape of its own')
+  assert.ok(!index.includes('closeDiscoverPage'), 'and there is no action left that skips a level')
   assert.match(index, /closeDiscoverRow: \(\) => \{[\s\S]*actions\.selectPanel\(null\)[\s\S]*discoverPanel: null, discover: true/, 'back: the panel goes and the list returns')
-  assert.match(index, /closeDiscoverPage: \(\) => \{[\s\S]*actions\.selectPanel\(null\)[\s\S]*discover: false, discoverPanel: null/, 'the page still has a way out altogether')
   // A settings page opened from this list steps back to the list too, not past it: its own Escape
   // and its back both land on closeSettings, which reads the row it came from.
   const close = index.slice(index.indexOf('closeSettings: () =>'), index.indexOf('openMemory:'))
@@ -138,7 +140,7 @@ test('the page is 全部设置\'s own look, and declares none of it', () => {
 
 test('the page is a surface of its own, one at a time', () => {
   assert.ok(index.includes('discover: false, discoverPanel: null'), 'a state of its own')
-  for (const action of ['openDiscover: () =>', 'closeDiscover: () =>', 'openDiscoverRow: (key) =>', 'closeDiscoverRow: () =>', 'closeDiscoverPage: () =>']) {
+  for (const action of ['openDiscover: () =>', 'closeDiscover: () =>', 'openDiscoverRow: (key) =>', 'closeDiscoverRow: () =>']) {
     assert.ok(index.includes(action), `${action} exists`)
   }
   assert.ok(index.includes("shadow('shell.overlay', { id: 'bot-discover', order: 44, inject: face }, DiscoverPage)"), 'drawn on an overlay entry of its own')

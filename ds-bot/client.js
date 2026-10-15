@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 5c75554e
+// Source fingerprint: 6629639b
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16185,9 +16185,10 @@ var DISCOVER_ROWS = DISCOVER_CARDS.flat();
 var PANEL_ROWS = ["plugins", "schedules"];
 function DiscoverPage({ useUi, actions }) {
   const open = useUi((value) => value.discover === true);
+  const panel = useUi((value) => value.discoverPanel ?? null);
   const mobile = useMobile();
   const paneLeft = usePaneLeft();
-  useEscape(() => actions.closeDiscover());
+  useEscape(() => panel !== null ? actions.closeDiscoverRow() : actions.closeDiscover());
   if (!open || !mobile) return null;
   return (0, import_react_dom14.createPortal)((0, import_react41.createElement)(
     "div",
@@ -16223,7 +16224,6 @@ function DiscoverPage({ useUi, actions }) {
 function DiscoverBack({ useUi, actions }) {
   const panel = useUi((value) => PANEL_ROWS.includes(value.discoverPanel) ? value.discoverPanel : null);
   const mobile = useMobile();
-  useEscape(() => actions.closeDiscoverRow());
   (0, import_react41.useEffect)(() => {
     if (panel === null) return void 0;
     document.documentElement.dataset.btSubpage = "1";
@@ -16259,7 +16259,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "5c75554e" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "6629639b" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16881,15 +16881,12 @@ function apply(ctx) {
       }
       ui2.set((state) => ({ ...state, discover: false, discoverPanel: key, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }));
     },
-    // The strip's back: the panel goes and the list comes back.
+    // The strip's back: the panel goes and the list comes back. Escape lands here too while a
+    // second level is up -- the page's own handler reads that state (discover-page.js) -- so there
+    // is no separate "leave the page altogether" action left to call.
     closeDiscoverRow: () => {
       actions.selectPanel(null);
       ui2.set((state) => state.discoverPanel !== null ? { ...state, discoverPanel: null, discover: true } : state);
-    },
-    // Escape on the second level leaves the page altogether, the way the tab's other exits do.
-    closeDiscoverPage: () => {
-      actions.selectPanel(null);
-      ui2.set((state) => state.discover || state.discoverPanel !== null ? { ...state, discover: false, discoverPanel: null } : state);
     },
     // Closing the drawer on the phone is leaving a page: back to the conversation, for
     // the same reason closeSettings does it (and read there for why it is gated).
