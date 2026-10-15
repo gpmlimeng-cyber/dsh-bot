@@ -126,6 +126,11 @@ test('the four names are dictionary copy, shared with the accessible name', () =
 test('the selected page is ink and heavier, not the accent', () => {
   const active = css.find(line => line.includes('.bt-nav-tab[data-active]') && line.includes('color'))
   assert.ok(active.includes('color:var(--bt-ink)'), active)
+  // The label follows its icon: nothing gives the text a colour of its own, so the two are
+  // one colour by construction, selected or not -- which is what the user's screenshot shows.
+  const text = css.find(line => line.includes('.bt-nav-tab-text{'))
+  assert.ok(!text.includes('color'), `the label inherits the tab's colour: ${text}`)
+  assert.ok(css.some(line => line.includes('.bt-nav-tab[data-active] .bt-nav-tab-text') && line.includes('font-weight:600')), 'and only the selected one is heavier')
   const rest = css.find(line => line.includes('.bt-nav-tab{'))
   assert.ok(rest.includes('color:var(--bt-ink-3)'), 'the unselected pages are the light grey')
   const bold = css.find(line => line.includes('.bt-nav-tab[data-active] .bt-nav-tab-text'))
