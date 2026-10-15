@@ -10,6 +10,9 @@
 // two would reach the desktop or a phone held sideways, where nothing draws the bar.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { runInNewContext } from 'node:vm'
+import { build } from 'esbuild'
 import { test } from 'node:test'
 
 const read = (name) => readFileSync(new URL(`../src/client/${name}`, import.meta.url), 'utf8')
@@ -282,4 +285,44 @@ test('the bar is installed with the shell group and the bar state rides the face
   // desktop the settings dialog is a popup over a panel the user opened on purpose.
   assert.ok(index.includes('if (isPortraitNav()) ctx.layout.selectPanel(null)'), 'closing a page goes home')
   assert.ok(index.includes('openMobileNav: () =>'), 'the bar can open the peers page')
+})
+
+// The phone's own numbers, run through the real decision: while the keyboard is up the skin
+// hides the bar and gives its 56px back, and the only thing standing between the user and that
+// behaviour is whether this function notices. Both signals belong to the platform -- one is a
+// custom property whose value is a token string, not a number -- so a parse that quietly gives
+// 0 is a bar that keeps the reservation the user can see under the keyboard.
+const mobileBundle = await build({
+  entryPoints: [fileURLToPath(new URL('../src/client/mobile.js', import.meta.url))],
+  bundle: true, format: 'cjs', platform: 'node', write: false,
+  external: ['react'],
+})
+
+const keyboardUpWith = ({ ime = '', visual = null, innerHeight = 622 }) => {
+  const module = { exports: {} }
+  runInNewContext(mobileBundle.outputFiles[0].text, {
+    module, exports: module.exports,
+    document: { documentElement: { style: {}, dataset: {} }, querySelector: () => null },
+    getComputedStyle: () => ({ getPropertyValue: (name) => (name === '--dsh-android-ime-bottom' ? ime : '') }),
+    window: { innerHeight, visualViewport: visual },
+    require: (name) => {
+      if (name === 'react') return { createElement: () => null, useState: v => [v, () => {}], useEffect: () => {}, useRef: v => ({ current: v }) }
+      throw new Error(`no platform module ${name}`)
+    },
+  })
+  return module.exports.keyboardUp()
+}
+
+test('the keyboard decision reads the phone\'s own numbers', () => {
+  // Measured on the device: --dsh-android-ime-bottom 0 → 267px, visualViewport 622.5 → 356.4.
+  assert.equal(keyboardUpWith({ ime: '0px', visual: { height: 622.5 } }), false, 'down: the inset is zero')
+  assert.equal(keyboardUpWith({ ime: '267px', visual: { height: 356.4 } }), true, 'up: the inset says so')
+  // The platform has been seen to hand out a token string rather than a length; the largest px
+  // in it is the one that counts, and this is the case that would otherwise silently read 0.
+  assert.equal(keyboardUpWith({ ime: 'max(267px, 46px)', visual: { height: 356.4 } }), true, 'up, even as a token string')
+  // And the second signal, for a platform that leaves the inset alone: the visual viewport
+  // shrinks while the layout viewport does not (265.6px here, over the 80px threshold).
+  assert.equal(keyboardUpWith({ ime: '', visual: { height: 356.4 } }), true, 'up by the viewport gap alone')
+  assert.equal(keyboardUpWith({ ime: '', visual: { height: 600 } }), false, 'a short toolbar is not a keyboard')
+  assert.equal(keyboardUpWith({ ime: '', visual: null }), false, 'and no visual viewport is not a keyboard')
 })

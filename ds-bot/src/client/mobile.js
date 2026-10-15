@@ -168,7 +168,10 @@ const publishInset = () => {
 // -- and the stylesheet hides the bar and gives back the room it reserved.
 const KEYBOARD_MIN_PX = 80
 
-const keyboardUp = () => {
+// Exported so the decision can be run against a real device's numbers (test/bottom-nav.test.js)
+// instead of only read as source: both signals belong to the platform, and a parse that quietly
+// gives 0 leaves the bar reserving its 56px under the keyboard.
+export const keyboardUp = () => {
   const ime = largestPx(getComputedStyle(document.documentElement).getPropertyValue('--dsh-android-ime-bottom'))
   if (ime > 0) return true
   const view = window.visualViewport
