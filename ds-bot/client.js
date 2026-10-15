@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 01403678
+// Source fingerprint: 6792efa8
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2236,16 +2236,18 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
 @media (prefers-reduced-motion:reduce){.bt-connect-tip{animation:none}}
 
 .bt-head{position:relative;display:flex;justify-content:center;align-items:center;height:40px;flex:none;pointer-events:none}
-/* One skin for every floating control in the chrome: the conversation pill and the phone
-   bar's two controls read this single declaration, so a value changed here cannot drift
-   between them; the panel's mobile back button and the drawer's search field are the same
-   control again, so they read it too. Keep the skin properties here and only here — the
-   selectors below must not repeat border, radius, fill or shadow, or the two would be free
-   to disagree. */
+/* One skin for every floating control in the chrome -- the conversation pill, the phone bar's
+   two controls, the drawer's search field and its round buttons, the 伙伴 page's own round
+   button, and the composer's card ([data-composer-card], further down): white, no edge at all,
+   the shell's one floating shadow, and no blur. The user asked for the top row to look like the
+   input card they type in, and a value copied into a second place is a value free to drift --
+   so the properties live here and only here, and every one of those selectors reads this one
+   declaration. (The round buttons inside the details panel are deliberately not in this list:
+   they sit on a white panel, where a white, edgeless circle would have nothing to read as.) */
 .bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-side-search,
 html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round,
 html[data-bt-mobile] .bt-peers-head .bt-round,
-html[data-bt-pc] .bt-side .bt-side-top .bt-round{background:var(--bt-main);border:.5px solid var(--bt-line-2);border-radius:999px;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
+html[data-bt-pc] .bt-side .bt-side-top .bt-round{background:var(--bt-card);border:0;border-radius:999px;box-shadow:var(--bt-float-shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
 .bt-pill:active{transform:scale(.965)}
@@ -3272,9 +3274,6 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width
    of the bar, so the bar's own stacking context (95) still holds it above the conversation.
    The scroll box reserves --bt-fade-h at the top (the rule above), which clears this bar, so
    the first line is not covered on arrival. */
-html[data-bt-mobile] .bt-pill,
-html[data-bt-mobile] .bt-mobile-nav,
-html[data-bt-mobile] .bt-mobile-acts{border:0;background:var(--bt-card);box-shadow:var(--bt-float-shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
 html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 80%,transparent),transparent)}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open]::after,
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar::after,
@@ -16148,7 +16147,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "01403678" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "6792efa8" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

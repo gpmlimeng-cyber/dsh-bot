@@ -108,19 +108,33 @@ test('the bar wears the sampled pair, and the input is white like the cards', ()
   assert.ok(!composer.includes('border-color'), 'and nothing left for a hover border to colour')
 })
 
-// One floating object, one shadow: the composer's card and the phone's three controls at the top
-// are told to match, and a copied value drifts the moment either is touched. Both read
-// --bt-float-shadow, it is declared once, and this is what keeps it that way.
-test('every floating card reads one shared shadow token', () => {
+// One floating object, one surface: the composer's card and every floating control in the chrome
+// -- the pill, the phone bar's two controls, the drawer's search field and round buttons -- are
+// told to match, and a copied value drifts the moment either is touched. They read one fill and
+// one shadow, both declared once, and this is what keeps it that way.
+test('every floating control reads the composer card\'s skin', () => {
   const sheet = read('styles.js')
   const declared = sheet.split('\n').filter(line => line.includes('--bt-float-shadow:'))
   assert.equal(declared.length, 1, `declared once, found ${declared.length}`)
   assert.ok(declared[0].startsWith('body{'), 'in the skin\'s own token block, so both bands and both themes see it')
   assert.ok(declared[0].includes('0 2px 8px rgba(20,20,20,.08),0 1px 2px rgba(20,20,20,.04)'), 'two soft layers, no ring')
   const readers = sheet.split('\n').filter(line => line.includes('box-shadow:var(--bt-float-shadow'))
-  assert.equal(readers.length, 2, `two readers -- the composer card and the top controls -- found ${readers.length}`)
+  assert.equal(readers.length, 2, `two readers -- the chrome's controls and the composer card -- found ${readers.length}`)
   assert.ok(readers.some(line => line.startsWith('[data-composer-card]{')), 'the composer card')
-  assert.ok(readers.some(line => line.startsWith('html[data-bt-mobile] .bt-mobile-acts{')), 'and the phone\'s three controls')
+  // The chrome's own declaration, carrying every floating control in one selector list (which
+  // spans several lines, so take the block rather than the one line the shadow sits on).
+  const lines = sheet.split('\n')
+  const start = lines.findIndex(line => line.includes('.bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-side-search'))
+  const skin = lines.slice(start, start + 4).join('\n')
+  for (const control of ['.bt-pill', '.bt-mobile-nav', '.bt-mobile-acts', '.bt-side-search']) {
+    assert.ok(skin.includes(control), `${control} reads the skin: ${skin.slice(0, 120)}`)
+  }
+  assert.ok(skin.includes('html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round'), 'the drawer\'s round buttons too')
+  assert.ok(skin.includes('html[data-bt-mobile] .bt-peers-head .bt-round'), 'and the 伙伴 page\'s')
+  // The user asked for the top row to look like the input card: white, no edge, no blur.
+  assert.ok(skin.includes('background:var(--bt-card)') && skin.includes('border:0'), 'white and edgeless')
+  assert.ok(skin.includes('border-radius:999px'), 'still a full round')
+  assert.ok(skin.includes('backdrop-filter:none') && !skin.includes('blur('), 'and no blur')
   // Nothing carries the values a second time outside the declaration itself.
   const copies = sheet.split('\n').filter(line => !line.includes('--bt-float-shadow:') && line.includes('rgba(20,20,20,.08) 0 2px 8px'))
   assert.equal(copies.length, 0, `one copy of the value, in the token: found ${copies.length}`)
