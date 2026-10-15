@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: c694b364
+// Source fingerprint: 54b45722
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16216,7 +16216,7 @@ function PeersPage({ useRoster, useUi, actions }) {
       ))) : null,
       shown.length > 0 ? section(t("Peers"), shown.map((bot) => {
         const model = peersModel(bot, roster);
-        const folder = peersFolder(bot.workDir);
+        const folder = peersFolder(bot.workDir) ?? t("Team workspace");
         return (0, import_react40.createElement)(
           "div",
           {
@@ -16247,7 +16247,7 @@ function PeersPage({ useRoster, useUi, actions }) {
                 "span",
                 { className: "bt-peers-desc" },
                 model ? (0, import_react40.createElement)("span", { className: "bt-peers-text" }, model) : null,
-                folder ? (0, import_react40.createElement)("span", { className: "bt-peers-text" }, folder) : null
+                (0, import_react40.createElement)("span", { className: "bt-peers-text" }, folder)
               )
             )
           ),
@@ -16392,7 +16392,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "c694b364" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "54b45722" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

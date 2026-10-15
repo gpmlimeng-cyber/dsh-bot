@@ -90,7 +90,13 @@ test('a label sits on the name\'s line and a value on the line below it', () => 
   assert.ok(!secondLine.includes('bt-tag'), 'and none is left down on the description')
   // What is a value is small text on the line below, and only values: the model, and the folder.
   assert.ok(secondLine.includes("model ? h('span', { className: 'bt-peers-text' }, model) : null"), 'the model is text')
-  assert.ok(secondLine.includes("folder ? h('span', { className: 'bt-peers-text' }, folder) : null"), 'and so is the folder')
+  // The folder is always said: the Bot's own last segment when it has one, and the team workspace's
+  // own word from 我的 -> Bot settings when it has none -- which is the usual case, and what the
+  // settings row shows, so the two read the same line.
+  assert.ok(peers.includes("peersFolder(bot.workDir) ?? t('Team workspace')"), 'the folder falls back to the settings row\'s own word')
+  assert.ok(secondLine.includes("h('span', { className: 'bt-peers-text' }, folder)"), 'and is always drawn')
+  assert.ok(!secondLine.includes('folder ?'), 'with no gap where it has nothing of its own')
+  assert.ok(code('folder-menu.js').includes("t('Team workspace')"), 'which is the word that settings row uses')
   // The model is read the way the settings page reads it -- one rule, in the leaf both reach --
   // rather than a second copy of the catalog lookup here.
   assert.ok(peers.includes("import { modelOf } from './model-ref.js'"), 'the model comes from the shared rule')

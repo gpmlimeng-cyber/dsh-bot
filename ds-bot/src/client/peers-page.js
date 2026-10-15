@@ -126,7 +126,11 @@ export function PeersPage({ useRoster, useUi, actions }) {
       h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))))) : null,
       shown.length > 0 ? section(t('Peers'), shown.map(bot => {
         const model = peersModel(bot, roster)
-        const folder = peersFolder(bot.workDir)
+        // The folder it works in: its own when it has one, and the team workspace's own word when
+        // it has none (which is the usual case -- a Bot works in the team's folder unless someone
+        // gave it another). That word is the settings row's own (folder-menu.js), so the two read
+        // the same; the real path behind it is a host call, and a list line does not make one.
+        const folder = peersFolder(bot.workDir) ?? t('Team workspace')
         return h('div', {
           key: bot.id, className: 'bt-peers-item', role: 'listitem',
         },
@@ -141,7 +145,7 @@ export function PeersPage({ useRoster, useUi, actions }) {
             isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null),
           h('span', { className: 'bt-peers-desc' },
             model ? h('span', { className: 'bt-peers-text' }, model) : null,
-            folder ? h('span', { className: 'bt-peers-text' }, folder) : null))),
+            h('span', { className: 'bt-peers-text' }, folder)))),
         h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))
       })) : null,
       groups.length === 0 && shown.length === 0
