@@ -16,7 +16,7 @@
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { BackChevronIcon, CardCheckIcon, CardCopyIcon, CardExternalIcon, CheckIcon, CopyIcon, DotsBoldIcon, SwitchIcon } from './icons.js'
+import { BackChevronIcon, CheckIcon, CopyIcon, DotsBoldIcon, SwitchIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { t } from './i18n.js'
 
@@ -101,8 +101,8 @@ export const exitsSentence = (shared) => (shared !== null && shared !== undefine
 
 /**
  * The two ways a phone reaches a delivered file it cannot show in place, as behaviour
- * only -- the card draws them as a row of buttons, the preview page as its "···" menu,
- * and both go through this one definition so they cannot drift apart.
+ * only -- the card and the preview page each open their own "···" onto them, and both go
+ * through this one definition so they cannot drift apart.
  *
  * The first asks the shell's own chooser (window.__dshOpenPath, a system chooser that
  * hands an absolute device path to an app that can read it). A delivered file sits in
@@ -164,52 +164,31 @@ export function useDeliverableExits(file, actions, onFailed) {
 }
 
 /**
- * The exits as the card's own row of buttons, which is the shape DSH's card has. They are
- * icons, not words: word pills need more width than the card has to spare, and the name is
- * what the card is for. Each one is named for a reader in `aria-label` -- the word pill
- * said it before, so a button that only draws an icon has to carry its own name -- and the
- * name of the file is not repeated: the card already writes it. The same words stay written
- * out in the preview page's menu.
+ * The card's exits: one "···" in the card's own 44px control, opening the file's two exits
+ * by name -- hand it to another app, copy its path. Not a row of icon buttons, and not the
+ * copy path beside "preview" as if the two were equals: copying the path is what a reader
+ * reaches for when nothing else can open the file, so it belongs behind a menu, and the
+ * card's own face is for the file. A tap anywhere on the card opens the preview -- the whole
+ * card is the hit target and announces itself with "Preview <name>".
  *
- * There is no eye here. Looking at the file is what a tap anywhere on the card does, and it
- * already announces itself -- the whole-card hit target carries "Preview <name>" -- so a
- * second button for it only took 44px away from the name, which is the one thing on the
- * card a reader has to read.
- *
- * `menu` is the panel's shape of the same row: one "···" in the card's own control, opening
- * the same two exits by name. A message's card is one of a grid two rows wide and the icons
- * are what a thumb reaches for; the panel's rows are a stack the whole width of the phone,
- * one file each, and there the two icons cost the name 92px of the width it needs to be
- * readable. Same exits, same names, one chrome each -- and a tap on the row still opens the
- * preview either way.
+ * The panel's rows draw this same control: one file to a row, and the name takes every pixel
+ * the exits do not. Same exits, same words, same control in both -- which is why nothing here
+ * is parameterized by which list is drawing it.
  */
-export function DeliverableActions({ file, actions, onFailed, menu = false }) {
+export function DeliverableActions({ file, actions, onFailed }) {
   const exits = useDeliverableExits(file, actions, onFailed)
   const [shown, setShown] = useState(false)
-  const { state, open, copy } = exits
-  // The panel's row: the same exits behind one control, so the name keeps the width the two
-  // icons would take from it.
-  if (menu) {
-    return h(ExitsMenu, {
-      exits, shown, setShown, className: 'bt-dcard-menu',
-      anchor: h('button', {
-        type: 'button', className: 'bt-dcard-btn', 'data-act': 'more',
-        'aria-haspopup': 'menu', 'aria-expanded': shown,
-        'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
-      }, h(DotsBoldIcon, { size: 34 })),
-    })
-  }
-  return h(Fragment, null,
-    h('button', {
-      type: 'button', className: 'bt-dcard-btn', 'data-act': 'open', disabled: state === 'opening',
-      onClick: open, title: state === 'opening' ? t('Opening…') : t('Open with another app'),
-      'aria-label': state === 'opening' ? t('Opening…') : t('Open with another app'),
-    }, h(CardExternalIcon)),
-    h('button', {
-      type: 'button', className: 'bt-dcard-btn', 'data-act': 'copy', onClick: copy,
-      title: state === 'copied' ? t('Copied') : t('Copy path'),
-      'aria-label': state === 'copied' ? t('Copied') : t('Copy path'),
-    }, state === 'copied' ? h(CardCheckIcon) : h(CardCopyIcon)))
+  return h(ExitsMenu, {
+    exits, shown, setShown, className: 'bt-dcard-menu',
+    anchor: h('button', {
+      type: 'button', className: 'bt-dcard-btn', 'data-act': 'more',
+      'aria-haspopup': 'menu', 'aria-expanded': shown,
+      'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
+      // The filled dots, not the hairline ones: DotsIcon paints 1.5-unit dots that land at
+      // 2.6px here, which is why a control this size looked empty. 34px is the box the
+      // preview bar's own "···" draws, so the two pages' menus read as one.
+    }, h(DotsBoldIcon, { size: 34 })),
+  })
 }
 
 /** What this file's exits can do, as menu items. Written here once: both menus show them. */
@@ -261,7 +240,7 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
  * panel's list of everything -- so the two cannot drift apart; only what the second line
  * says and where the coordinates come from differ.
  */
-function DeliverableCard({ file, actions, meta, role, menu = false }) {
+function DeliverableCard({ file, actions, meta, role }) {
   const name = basename(file.path)
   // A refusal writes its sentence under the tile, not in it: the tile is 60px and clips.
   const [failure, setFailure] = useState(null)
@@ -285,7 +264,7 @@ function DeliverableCard({ file, actions, meta, role, menu = false }) {
       h('span', { className: 'bt-dcard-copy' },
         h('span', { className: 'bt-dcard-name' }, name),
         h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name))),
-      h('span', { className: 'bt-dcard-acts' }, h(DeliverableActions, { file, actions, menu, onFailed: setFailure }))),
+      h('span', { className: 'bt-dcard-acts' }, h(DeliverableActions, { file, actions, onFailed: setFailure }))),
     failure ? h('span', { className: 'bt-dcard-hint', role: 'status' }, exitsSentence(failure.shared)) : null)
 }
 
@@ -318,8 +297,6 @@ export function DeliverableCards({ deliverables, actions, metaOf = null, list = 
       actions,
       meta: metaOf?.(file),
       role: list ? 'listitem' : undefined,
-      // The panel's rows give their width to the name: one "···" instead of the two icons.
-      menu: list,
     })))
 }
 
@@ -406,10 +383,10 @@ function PreviewHead({ name, onClose, children }) {
  * Everything the team's Bots have handed over, newest first, in the panel a preview opens
  * in -- full screen on a phone, the right column on a desktop. It is a view of the same
  * host record the cards were registered from, so it lists what was really delivered, and
- * it is drawn with the very cards the messages end with: same tile, same type icon, one tap
- * to the preview, and the exits behind one control rather than the message grid's two, so
- * the name keeps the width. Only the second line differs -- a message's card says what the
- * file is, this one names its kind and how big it is. Read-only: it lists and opens.
+ * it is drawn with the very cards the messages end with: same tile, same type icon, the same
+ * one "···" for the exits, one tap to the preview -- there is no panel shape of the card at
+ * all. Only the second line differs: a message's card says what the file is, this one names
+ * its kind and how big it is. Read-only: it lists and opens.
  */
 export function DeliveredList({ actions, onClose }) {
   const [state, setState] = useState('reading') // reading | shown | failed

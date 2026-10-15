@@ -50,9 +50,9 @@ const lineIcon = paths => function LineIcon() {
 // own extent plus one unit of stroke room on every side, so the ink fills the 25px box
 // evenly instead of hanging small in the middle of a 20-unit one. Only the drawing is
 // scaled -- `vectorEffect: non-scaling-stroke` holds the stroke at a flat 2px, where a
-// scaled stroke would render at 1.8x -- so every one of these lands at the same 22-24px of
-// ink, whatever shape it draws. The delivered card's exits and the preview bar's back arrow
-// use these; every other caller keeps the shared 20-unit glyph, untouched.
+// scaled stroke would render at 1.8x -- so the ink lands at 22px or more whatever shape the
+// glyph draws. The preview bar's back arrow uses this; every other caller keeps the shared
+// 20-unit glyph, untouched.
 const TIGHT_ICON_SIZE = 25
 function tightIcon(paths, viewBox) {
   return function TightIcon() {
@@ -108,9 +108,6 @@ export const StarLineIcon = lineIcon(['M10 3l2.1 4.3 4.7.7-3.4 3.3.8 4.7L10 13.8
 const COPY_PATHS = ['M8.5 7h6A1.5 1.5 0 0 1 16 8.5v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 7 14.5v-6A1.5 1.5 0 0 1 8.5 7z', 'M4 12.5V5.5A1.5 1.5 0 0 1 5.5 4H13']
 export const CopyIcon = lineIcon(COPY_PATHS)
 export const HideIcon = lineIcon(['M3 3l14 14', 'M8.6 5.2A7.6 7.6 0 0 1 10 5c4.5 0 7 5 7 5a12.6 12.6 0 0 1-2 2.6M12.2 14.5A6.8 6.8 0 0 1 10 15c-4.5 0-7-5-7-5a12.4 12.4 0 0 1 3-3.4', 'M8.5 8.5a2 2 0 0 0 3 3'])
-// An arrow leaving its box: the file goes to an app that is not this one.
-const EXTERNAL_PATHS = ['M16.5 12v3.5A1.5 1.5 0 0 1 15 17H5a1.5 1.5 0 0 1-1.5-1.5v-10A1.5 1.5 0 0 1 5 4h3.5', 'M11 3.5h5.5V9', 'M16.5 3.5L9.5 10.5']
-export const ExternalIcon = lineIcon(EXTERNAL_PATHS)
 export const TrashIcon = lineIcon(['M3.5 5.5h13', 'M8 5.5V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.5', 'M5 5.5l.7 10A1.5 1.5 0 0 0 7.2 17h5.6a1.5 1.5 0 0 0 1.5-1.5l.7-10', 'M8.5 9v4.5M11.5 9v4.5'])
 export const DuplicateIcon = lineIcon(['M7 7h8.5v9.5H7z', 'M4.5 13V3.5H13', 'M11.25 9.5v4.5M9 11.75h4.5'])
 export const SlidersIcon = lineIcon(['M4 6.5h5M12.5 6.5H16M4 13.5h4M11.5 13.5H16', 'M10.5 4.5v4M9.5 11.5v4'])
@@ -122,16 +119,9 @@ export const FolderIcon = lineIcon(['M3 6A1.5 1.5 0 0 1 4.5 4.5h3.2l1.8 2h6A1.5 
 export const ChatsIcon = lineIcon(['M3.5 5.5A1.5 1.5 0 0 1 5 4h7a1.5 1.5 0 0 1 1.5 1.5V10A1.5 1.5 0 0 1 12 11.5H8L5 14v-2.5A1.5 1.5 0 0 1 3.5 10z', 'M13.5 7.5H15A1.5 1.5 0 0 1 16.5 9v4.5A1.5 1.5 0 0 1 15 15v2l-2.5-2h-3A1.5 1.5 0 0 1 8 13.5V13'])
 export const SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: ChatsIcon, usage: GaugeIcon }
 
-// The delivered card's two exits and the tick that stands in for one of them while it
-// confirms. The card is a 60px tile, so a 44px control around a 16px drawing reads as a
-// small button; these draw the shared glyphs big enough to fill that control. The boxes are
-// each glyph's own extent plus one unit of stroke room: the sheets span 12x12 units, so
-// 3 3 14 14; the arrow 13x13.5, so 2.5 2.5 15 15.5; the tick 11x8, so 3.5 5 13 10 (a tick
-// is wide and flat, so it is judged by its longest edge like the preview bar's close).
-export const CardExternalIcon = tightIcon(EXTERNAL_PATHS, '2.5 2.5 15 15.5')
-export const CardCopyIcon = tightIcon(COPY_PATHS, '3 3 14 14')
-export const CardCheckIcon = tightIcon(CHECK_PATHS, '3.5 5 13 10')
-// The preview (and panel) title bar's back arrow: the same chevron, in a box cropped to its
+// The preview (and panel) title bar's back arrow: the shared chevron in a box cropped to its
 // own 5.5x11 units, so it lands at 12.6x23.2 of ink in the bar's 48px control -- over the
-// 22px asked for -- with the stroke a true 2px instead of the 3.6px the 36px box rendered.
+// 22px asked for -- with the stroke a true 2px instead of the 3.6px a plain 36px box
+// rendered. (The delivered card's exits used to come from this factory too; they are one
+// "···" on the card now, and the platform Menu draws the two items at its own size.)
 export const BackChevronIcon = tightIcon([CHEVRON_LEFT], '6 3.5 7.5 13')

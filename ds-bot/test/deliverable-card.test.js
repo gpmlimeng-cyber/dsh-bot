@@ -66,62 +66,54 @@ test('the name and its metadata keep their two sizes, and nothing swaps places o
   assert.ok(!styles.includes('.bt-dcard:hover .bt-dcard-desc'), 'and the second line no longer gives way')
 })
 
-// The card's two exits are icons, not words: word pills take more width than the card has
-// to spare. The words stay in aria-label (a reader still hears them) and in the preview
-// page's menu, and the target is the 44px the preview page's own controls take. A third
-// button for "look at it" is gone: the whole-card hit target already does that and already
-// says so, so it was 44px of the name column spent on one action twice.
-test('the card’s exits are two named icons, each a 44px target with the ink of a big one', () => {
+// Copying the path is the fallback a reader reaches for when nothing can open the file, so
+// it is not a button on the card's face beside "preview": the card's face is the file, and one
+// "···" at its right end opens the two exits by name. The panel's rows draw this same control
+// with the same menu and the same words, which is why nothing here is parameterized by which
+// list is drawing it -- and why the panel's name column has 285px where three icon buttons
+// used to leave it 189px.
+test('the card’s exits are one "···", the same control in every list', () => {
   const source = card.join('\n')
   const btn = rule('.bt-dcard-btn{')
   assert.ok(btn.includes('width:44px') && btn.includes('height:44px'), 'a 44px touch target')
-  // The drawing is what the eye judges -- a 44px target around a small glyph still reads as
-  // a small button -- so each glyph carries its own box: the shared drawing inside a viewBox
-  // cropped to that drawing plus one unit of stroke room, at a flat 2px stroke. The sheet no
-  // longer sizes glyphs: one box for all of them is what made them read uneven, since each
-  // glyph fills a different fraction of its own 20-unit box. What lands:
-  //   sheets 12x12 units, box 14 -> 25/14 at 12 units + 2px of stroke = 23.4x23.4
-  //   arrow 13x13.5 units, box 15x15.5 -> 23.0x23.8
-  //   tick 11x8 units, box 13x10 -> 23.2x17.4, judged by its longest edge: a tick is flat
-  assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn svg')), 'the sheet does not size the card’s glyphs')
-  assert.ok(icons.includes('const TIGHT_ICON_SIZE = 25'), 'the cropped box is 25px')
-  assert.ok(icons.includes('strokeWidth: 2'), 'drawn at the 2px the preview bar paints')
-  assert.ok(icons.includes("vectorEffect: 'non-scaling-stroke'"), 'and the stroke stays 2px while the drawing scales')
-  for (const [name, box] of [['CardExternalIcon', "'2.5 2.5 15 15.5'"], ['CardCopyIcon', "'3 3 14 14'"], ['CardCheckIcon', "'3.5 5 13 10'"]]) {
-    assert.ok(icons.includes(`export const ${name} = tightIcon(`), `${name} is a card glyph`)
-    assert.ok(icons.includes(box), `${name} is cropped to its own drawing (${box})`)
+  // The drawing is what the eye judges, and it is the filled dots at the size the preview
+  // bar's own "···" draws them: three 4-unit circles in a 34px box, landing at 6.8px dots in a
+  // 25.5px row -- over the 6px a dot needs and the 22px the row needs together. The sheet does
+  // not size the glyph; the control passes the box, exactly as the bar's control does.
+  assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn svg')), 'the sheet does not size the control’s glyph')
+  assert.ok(source.includes('h(DotsBoldIcon, { size: 34 })'), 'it draws the filled dots at the bar’s own 34px')
+  assert.ok(icons.includes('cy: 10, r: 2 }'), 'which are three 4-unit circles')
+  assert.equal(4 * 34 / 20, 6.8, 'landing at 6.8px dots')
+  assert.equal(15 * 34 / 20, 25.5, 'in a 25.5px row')
+  assert.ok(source.includes("'data-act': 'more'"), 'the control is marked')
+  assert.ok(source.includes("'aria-haspopup': 'menu'"), 'and announces the menu it opens')
+  assert.ok(source.includes("'aria-label': t('More'), title: t('More')"), 'named for a reader')
+  // Nothing else is a button on the card: the two exits are behind the one control, and a tap
+  // on the card opens the preview, so no third button repeats it.
+  for (const act of ['open', 'copy', 'preview']) {
+    assert.ok(!source.includes(`'data-act': '${act}'`), `no ${act} button on the card`)
   }
-  assert.ok(rule('.bt-dcard-ico{').includes('width:40px'), 'the tile it matches stays 40px')
-  assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the two never wrap into a second row the 60px tile would clip')
-  // The row is held at the card's right end, with the 4px gap it has always had: the gap is
-  // not what makes the row read tight -- a 44px control around 23px of ink leaves the glyphs
-  // about 20px apart, and 2px of box space moves them by 2px across the whole row, which the
-  // eye does not see. The ink is the lever, and it is sized in the glyphs now.
-  assert.ok(rule('.bt-dcard-acts{').includes('gap:4px'), 'the two keep their 4px gap')
-  assert.ok(rule('.bt-dcard-acts{').includes('justify-content:flex-end'), 'and the row stays at the card’s right end')
-  for (const [act, shape] of [['open', '}, h(CardExternalIcon))'], ['copy', "}, state === 'copied' ? h(CardCheckIcon) : h(CardCopyIcon)))"]]) {
-    assert.ok(source.includes(`'data-act': '${act}'`), `the ${act} exit is marked`)
-    assert.ok(source.includes(shape), `and draws its own icon (${act})`)
-  }
-  assert.ok(!source.includes("'data-act': 'preview'"), 'no third button: a tap on the card is the preview')
-  // The panel's rows spend that width on the name instead: the same two exits behind one
-  // "···" in the card's own 44px control, and a tap anywhere on the row still opens the
-  // preview. The exits' words are written once for both menus.
-  assert.ok(source.includes('export function DeliverableActions({ file, actions, onFailed, menu = false })'), 'the card’s exits carry the panel’s shape as well')
-  assert.ok(source.includes("className: 'bt-dcard-menu'"), 'and the panel gets one "···" in the card’s own control')
-  assert.ok(source.includes("'data-act': 'more'"), 'marked like the buttons it replaces')
-  assert.equal(source.split('exitItems(exits.state)').length - 1, 1, 'the two exits are written once for both menus')
-  assert.ok(source.includes('menu: list,'), 'the panel is what asks for that shape')
-  assert.ok(rule('.bt-dcard-menu{').includes('flex:none'), 'the one control neither shrinks nor wraps')
-  assert.ok(!icons.includes('EyeIcon'), 'and the eye went with it')
-  // Each button carries its own name -- the word pill used to be that name -- and none of
-  // them repeats the file name, which the card itself already writes.
-  assert.ok(source.includes("'aria-label': state === 'opening' ? t('Opening…') : t('Open with another app')"), 'the arrow is named for the other app')
-  assert.ok(source.includes("'aria-label': state === 'copied' ? t('Copied') : t('Copy path')"), 'the copy icon is named for the path')
   assert.equal(source.split("`${t('Preview')} ${name}`").length - 1, 1, 'only the card-wide hit target repeats the file name')
-  // No word is left painted on a button: the label that used to be its child would be one.
+  // The exits' words are written once for both menus, and both are named.
+  assert.equal(source.split('exitItems(exits.state)').length - 1, 1, 'the two exits are written once for both menus')
+  assert.ok(source.includes("{ id: 'open', icon: h(SwitchIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') }"), 'the first hands the file to another app')
+  assert.ok(source.includes("{ id: 'copy', icon: state === 'copied' ? h(CheckIcon) : h(CopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') }"), 'the second copies the path')
+  // One control for both lists: no list can ask for a shape of its own.
+  assert.ok(source.includes('export function DeliverableActions({ file, actions, onFailed })'), 'the control takes nothing that depends on the list drawing it')
+  assert.ok(!source.includes('menu = false') && !source.includes('menu: list'), 'and no list asks for another one')
+  assert.ok(source.includes("className: 'bt-dcard-menu'"), 'the card’s own menu class')
+  assert.ok(rule('.bt-dcard-menu{').includes('flex:none'), 'the one control neither shrinks nor wraps')
+  assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the row never wraps into a second row the 60px tile would clip')
+  assert.ok(rule('.bt-dcard-acts{').includes('justify-content:flex-end'), 'and is held at the card’s right end')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:40px'), 'the 40px type tile it sits beside is unchanged')
+  // No word is painted on the card: a label that used to be a button's child would be one.
   for (const painted of [": t('Open with another app'))", ": t('Copy path'))", "t('Path')"]) {
-    assert.ok(!source.includes(painted), `${painted} is no longer painted on a card button`)
+    assert.ok(!source.includes(painted), `${painted} is not painted on the card`)
+  }
+  // The card's own glyphs went with the buttons that drew them, and so did the eye: looking at
+  // the file is what a tap anywhere on the card already does.
+  for (const gone of ['CardCopyIcon', 'CardExternalIcon', 'CardCheckIcon', 'EyeIcon']) {
+    assert.ok(!icons.includes(gone), `${gone} is gone`)
   }
 })
 
@@ -273,7 +265,7 @@ test('the preview page’s title bar is back, the name, and one more menu', () =
   const source = card.join('\n')
   assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(BackChevronIcon))"), 'the left control is a back button, named for a reader')
   assert.ok(source.includes("h('span', { className: 'bt-preview-name' }, name)"), 'the name is the middle part')
-  assert.ok(source.includes('import { BackChevronIcon, CardCheckIcon, CardCopyIcon, CardExternalIcon, CheckIcon, CopyIcon, DotsBoldIcon, SwitchIcon }'), 'a back arrow, the menu’s own icons and the card’s two are imported')
+  assert.ok(source.includes('import { BackChevronIcon, CheckIcon, CopyIcon, DotsBoldIcon, SwitchIcon } from \'./icons.js\''), 'a back arrow, the dots the two menus share, and the menu’s own icons are imported')
   // The "···" draws the filled dots: the hairline ones paint 1.5-unit dots that land at
   // 2.6px in the 48px control, which is why it looked empty. The 34px box matches the rule
   // in file-preview.js that sizes it, so the two never drift apart.

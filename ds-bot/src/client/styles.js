@@ -256,33 +256,20 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-name{font-size:15px;line-height:21px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-dcard-desc{font-size:12px;line-height:17px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-dcard-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
-/* The exits sit in one row inside the card, and the sentence that explains a refusal
+/* The card's exits are one "···" at its right end, and the sentence that explains a refusal
    is written by the card itself -- outside the tile -- since the tile clips at 60px. The
-   preview page renders the same acts row at its foot. Two controls go in one row and
-   never wrap: the tile is a fixed 60px, so a second row would be clipped, and the name
-   column is the one that gives way instead. Two rather than three: looking at the file is
-   what a tap anywhere on the card already does, so the eye was a second button spending
-   44px of the name's width on the same action. The panel's rows go one step further and keep
-   a single "···" -- the same two exits, by name -- because there the two icons cost the name
-   92px: in the panel's 409px row the name column is 189px behind them and 285px behind the
-   one control, which is what the name of a file needs to be read whole.
-
-   The row keeps a 4px gap and is held at the card's right end. The gap is not the lever on
-   how tight the row reads -- a 44px control holds 22-24px of ink, so the glyphs stand about
-   20px apart and squeezing the gap to 2px would move them by 2px across the whole row, which
-   the eye does not see. What the row reads as is the ink; the ink is sized in the glyphs
-   themselves, not here. */
-.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:nowrap;align-items:center;gap:4px;justify-content:flex-end}
+   whole row is one control, so it never wraps and the name column takes everything else: in
+   the panel's 409px row the name has 285px, against the 189px the three icon buttons used to
+   leave it, and a message's 349px card has 177px. Copying the path is what a reader reaches
+   for when nothing can open the file, so it lives behind this control rather than on the
+   card's face beside the preview. */
+.bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
-/* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
-   is the touch target the card's own 60px tile can hold exactly (8px of padding above and
-   below) and it does not grow -- a 48px control would break the tile the user has already
-   approved -- so the drawing is what grew. The glyphs are not sized here at all: each one is
-   the shared drawing inside a box cropped to that drawing (icons.js, CardCopyIcon and its two
-   neighbours), painting 22-24px of ink at the flat 2px stroke it sets. One box for all of
-   them is what read uneven -- the eye landed at 30.6x23.4 beside the sheets at 25.2x25.2 --
-   because each glyph fills a different fraction of its own 20-unit box. Cropping the box to
-   the glyph makes them land together whatever shape they draw. */
+/* One "···", no words: the words live in the menu and in aria-label. 44x44 is the touch
+   target the card's own 60px tile can hold exactly (8px of padding above and below) and it
+   does not grow -- a 48px control would break the tile the user has already approved. The
+   drawing is not sized here: the control passes DotsBoldIcon 34px, the same box the preview
+   bar's own "···" draws, so the two menus read as one. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
