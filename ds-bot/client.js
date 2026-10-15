@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 9b708bdd
+// Source fingerprint: bbf9834a
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3308,17 +3308,21 @@ html[data-bt-mobile] body:has(.bt-subback) :is(.bt-mobile-bar,.bt-topfade){displ
    179px, which is what made the whole thing read as broken. The two columns become two
    screens instead: the list, then the page it opens, under an arrow that goes back up. */
 html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;border-radius:0;border:0;box-shadow:none}
-/* And being the screen rather than a card over one, it is drawn rather than summoned: the entrance
-   the wide dialog plays (bt-veil-in's fade and 6px blur, over the veil's own fade) belongs to a
-   surface that arrives on top of something already there, and here the only thing under it is the
-   tab it replaces -- so for 220ms that entrance showed the previous page through the new one,
-   which is the ghost the user reported on the tab bar. The exit tells the same story: the 160ms
-   sink, and the linger that holds the layer on screen for it (overlays.js), leave the page just
-   left standing over the one just chosen. Both belong to the wide dialog; on a phone the page
-   simply appears and simply goes. The layer is named rather than the dialog's class so the memory
-   dialog's shell, which is a card on this layout too, keeps its own entrance. */
+/* And being the screen rather than a card over one, this layer is drawn rather than summoned, on
+   every door that opens it -- the four tabs, the drawer, a long press, the palette: they are all
+   this one full-screen layer here, so one rule answers for all of them. The entrance the wide
+   dialog plays (bt-veil-in's fade and 6px blur, over the veil's own fade) belongs to a surface that
+   arrives on top of something already there, and on a phone there is nothing under it but the tab
+   it replaces -- so that entrance showed the previous page through the new one for 220ms, the ghost
+   the user reported on the tab bar. The exit tells the same story: the 160ms sink, and the linger
+   that holds the layer on screen for it (overlays.js), leave the page just left standing over the
+   one just chosen. The veil goes with them: it is the tap-to-close of a floating dialog, and here
+   the dialog is the layer's whole box, so it lies behind it and can never be tapped. Every one of
+   these is the settings layer only -- the memory dialog is a card on this layout too and keeps its
+   own entrance, veil and exit, and the wide dialog keeps all three. */
 html[data-bt-mobile] .bt-settings{animation:none}
 html[data-bt-mobile] .bt-settings-layer[data-leaving]{opacity:0;transition:none}
+html[data-bt-mobile] .bt-settings-layer>.bt-scrim{display:none}
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
 /* The title bar spans both screens, so it stays put when the list opens a page: back on
@@ -16212,7 +16216,7 @@ function DiscoverPage({ useUi, actions }) {
   if (!open || !mobile) return null;
   return (0, import_react_dom14.createPortal)((0, import_react41.createElement)(
     "div",
-    { className: "bt-settings-layer bt-discover", "data-page": "discover", style: { left: paneLeft } },
+    { className: "bt-settings-layer bt-discover", style: { left: paneLeft } },
     (0, import_react41.createElement)("div", { className: "bt-scrim", onMouseDown: () => actions.closeDiscover() }),
     (0, import_react41.createElement)(
       "div",
@@ -16264,12 +16268,6 @@ function DiscoverBack({ useUi, actions }) {
   ), document.body);
 }
 var DISCOVER_CSS = `
-/* This page wears the settings page's shell, and that shell carries the dialog's veil: a 32% scrim
-   across the layer, drawn to catch the tap that closes a floating dialog. There is nothing to catch
-   here -- the page's own card fills the layer on a phone -- and a page has no veil. The entrance
-   and the exit are the skin's business: it takes the modal's animation off the phone's settings
-   layer (styles.js), which this layer is, so both pages appear and go at once. */
-html[data-bt-mobile] .bt-settings-layer[data-page=discover]>.bt-scrim{display:none}
 /* The strip over a shell panel's second level, sitting where the page's own head sits. Which layers
    hide the conversation's top row is the skin's business, not
    this page's: the discover page and this strip are both named in the list in styles.js. */
@@ -16282,7 +16280,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "9b708bdd" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "bbf9834a" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
