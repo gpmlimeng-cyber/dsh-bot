@@ -2022,11 +2022,25 @@ body[data-ds-dark-theme]{--bt-page:#1f1f1f;--bt-nav-ink:rgba(242,242,242,.36);--
 /* The page, on both layers and where the platform paints its own base: html itself (which
    cannot be a descendant of body, hence :has), body, the frame the whole app sits in, and
    the column the conversation lives in. Gated on the light theme, so the dark one keeps the
-   platform's base exactly as it was. */
-html:not(:has(body[data-ds-dark-theme])){background:var(--bt-page)}
-body:not([data-ds-dark-theme]){background:var(--bt-page)}
+   platform's base exactly as it was.
+
+   The first two carry !important because the platform writes its own colour where a rule
+   cannot reach it: an inline background on <html> (measured rgb(241,243,241)) and the base
+   token as an inline custom property on <body>. */
+html:not(:has(body[data-ds-dark-theme])){background:var(--bt-page)!important}
+body:not([data-ds-dark-theme]){background:var(--bt-page)!important}
 body:not([data-ds-dark-theme]) [data-dsh-frame],
 body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-page)}
+/* The ONE --dsw-* override in this whole skin, and it is here for a measured reason: the
+   platform sets --dsw-alias-bg-base inline on <body> (#fcfcfc), and three things read it --
+   the frame's background, the body's own, and the composer's 36px fade. An inline
+   declaration beats any normal rule of ours, and a normal rule on html does nothing at all
+   (the variable is not set there). Overriding the variable once makes all three the page's
+   colour, and it degrades safely: if the platform ever renames it, this line stops applying
+   and the rules above still paint the page. Light theme only -- the dark theme keeps the
+   platform's base untouched. Anything else that wants to touch a --dsw-* token gets its own
+   review first. */
+body:not([data-ds-dark-theme]){--dsw-alias-bg-base:var(--bt-page)!important}
 ${Object.entries(INKS).map(([name, [light]]) => `body{--bt-ink-${name}:${light}}`).join("")}
 ${Object.entries(INKS).map(([name, [, dark]]) => `body[data-ds-dark-theme]{--bt-ink-${name}:${dark}}`).join("")}
 .bt-mark{display:inline-block;flex:none;position:relative;line-height:0}

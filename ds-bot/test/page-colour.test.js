@@ -40,11 +40,25 @@ test('the bar wears the sampled pair, and the input is white like the cards', ()
 
 test('the page is painted where the platform painted its own, and only in the light theme', () => {
   // html cannot be a descendant of body, so it is gated with :has; everything else is.
-  const paint = 'html:not(:has(body[data-ds-dark-theme])){background:var(--bt-page)}\nbody:not([data-ds-dark-theme]){background:var(--bt-page)}\nbody:not([data-ds-dark-theme]) [data-dsh-frame],\nbody:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-page)}'
+  const paint = 'html:not(:has(body[data-ds-dark-theme])){background:var(--bt-page)!important}\nbody:not([data-ds-dark-theme]){background:var(--bt-page)!important}\nbody:not([data-ds-dark-theme]) [data-dsh-frame],\nbody:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-page)}'
   assert.ok(read('styles.js').includes(paint), 'html, body, the frame and the conversation column are painted, all gated on the light theme')
-  assert.ok(!paint.includes('!important'), 'nothing here has to fight the platform')
+  // html and body fight the platform's own inline colour, so they carry the flag; the frame
+  // is ours to paint and does not need it.
+  assert.equal((paint.match(/!important/g) ?? []).length, 2, 'only the two the platform writes inline carry the flag')
   // Dark keeps the platform's own base: the token is declared for the bar, not for a paint.
   assert.ok(dark.includes('--bt-page:#1f1f1f'), dark)
+})
+
+// The platform writes the base token inline on <body>, and three surfaces read it: the
+// frame, the body itself and the composer's fade. An inline declaration beats a normal rule,
+// so the skin overrides the token exactly once -- and this test is what keeps it at once.
+test('the platform base token is overridden exactly once, on the light theme', () => {
+  const overrides = styles.filter(line => /\{--dsw-[\w-]+:/.test(line))
+  assert.equal(overrides.length, 1, `one --dsw-* override in the whole skin, found ${overrides.length}`)
+  const [rule] = overrides
+  assert.ok(rule.startsWith('body:not([data-ds-dark-theme]){'), `light theme only: ${rule}`)
+  assert.ok(rule.includes('--dsw-alias-bg-base:var(--bt-page)'), rule)
+  assert.ok(rule.includes('!important'), 'an inline declaration needs the flag to be beaten')
 })
 
 test('the bar wears the page colour, opaque', () => {
