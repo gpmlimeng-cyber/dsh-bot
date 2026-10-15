@@ -14,18 +14,21 @@ const nav = read('nav-bar.js')
 const light = styles.find(line => line.startsWith('body{--bt-page:'))
 const dark = styles.find(line => line.startsWith('body[data-ds-dark-theme]{--bt-page:'))
 
-test('the light page is the sampled #f8f8f8, with white cards and bubbles on it', () => {
+test('the light page is the sampled #f8f8f8, with white cards on it', () => {
   assert.ok(light, 'the light theme declares the page colour')
   assert.ok(light.includes('--bt-page:#f8f8f8'), light)
   assert.ok(light.includes('--bt-card:#ffffff'), 'cards stay white -- the layering the screenshot draws')
-  assert.ok(light.includes('--bt-bubble:#ffffff'), 'and so do the bubbles')
   assert.ok(light.includes('--bt-sidebar:#f8f8f8'), 'the lists that are pages too')
   assert.ok(!light.includes('#f1f3f1'), 'the platform base colour is not written here')
+  // The bubbles are deliberately not part of this: that app draws them the same colour as
+  // its page, and copying that would flatten ours into it.
+  assert.ok(light.includes('--bt-bubble:#eeeeee'), 'the bubbles keep the grey they had')
 })
 
 test('the page is painted where the platform painted its own, and only in the light theme', () => {
-  const paint = 'body:not([data-ds-dark-theme]) [data-dsh-frame],\nbody:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-page)}'
-  assert.ok(read('styles.js').includes(paint), 'the frame and the conversation column are painted, in one gated rule')
+  // html cannot be a descendant of body, so it is gated with :has; everything else is.
+  const paint = 'html:not(:has(body[data-ds-dark-theme])){background:var(--bt-page)}\nbody:not([data-ds-dark-theme]){background:var(--bt-page)}\nbody:not([data-ds-dark-theme]) [data-dsh-frame],\nbody:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-page)}'
+  assert.ok(read('styles.js').includes(paint), 'html, body, the frame and the conversation column are painted, all gated on the light theme')
   assert.ok(!paint.includes('!important'), 'nothing here has to fight the platform')
   // Dark keeps the platform's own base: the token is declared for the bar, not for a paint.
   assert.ok(dark.includes('--bt-page:#1f1f1f'), dark)

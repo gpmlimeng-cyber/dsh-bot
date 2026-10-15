@@ -14,18 +14,22 @@ import { SPRING_SHAPE, SPRING_TAP, SPRING_STRETCH, SPRING_POP, spring } from './
 // the conversation renders.
 export const SHELL_CSS = `
 /* The page the content sits on, taken from the user's own screenshot: #f8f8f8, with the
-   cards and bubbles left white on top of it (the two colours they sampled as one were the
-   page and the bubble, which that app separates with a hairline instead of a fill). The
-   shell paints its frame from the platform's base token, which the skin does not otherwise
-   touch, so this is the one place the page colour is ours -- and the phone's bottom bar
-   wears it too, which is why it is declared in both themes. The dark theme paints nothing
-   with it (see the rule below): there its value is only the bar's, the card colour the bar
-   has always worn. */
-body{--bt-page:#f8f8f8;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#f8f8f8;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56)}
+   cards left white on top of it. The bubbles are deliberately NOT taken from it: that app
+   draws them the same colour as its page and separates them with a hairline, and copying
+   that here would flatten this skin's bubbles into the page, so they keep the #eee they
+   have. html and body are two different surfaces on this device (measured rgb(241,243,241)
+   and rgb(252,252,252)), so the page is painted on both -- a page painted only on body
+   leaves the band above it showing the platform's own base, which is where the peers page's
+   seam came from. Dark paints neither: see the rule below, where its value is only the
+   bottom bar's, the card colour it has always worn. */
+body{--bt-page:#f8f8f8;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f8f8f8;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56)}
 body[data-ds-dark-theme]{--bt-page:#1f1f1f;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(255,255,255,.08);--bt-line-2:rgba(255,255,255,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(255,255,255,.09);--bt-tag-ink:rgba(242,242,242,.62)}
-/* The page, painted where the platform would paint its own base: the frame the whole app
-   sits in, and the column the conversation lives in. Gated on the light theme, so the dark
-   one keeps the platform's base exactly as it was. */
+/* The page, on both layers and where the platform paints its own base: html itself (which
+   cannot be a descendant of body, hence :has), body, the frame the whole app sits in, and
+   the column the conversation lives in. Gated on the light theme, so the dark one keeps the
+   platform's base exactly as it was. */
+html:not(:has(body[data-ds-dark-theme])){background:var(--bt-page)}
+body:not([data-ds-dark-theme]){background:var(--bt-page)}
 body:not([data-ds-dark-theme]) [data-dsh-frame],
 body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-page)}
 ${Object.entries(INKS).map(([name, [light]]) => `body{--bt-ink-${name}:${light}}`).join('')}
