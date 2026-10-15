@@ -62,11 +62,14 @@ export function DiscoverPage({ useUi, actions }) {
   if (!open || !mobile) return null
   // The whole page is 我的 -> 全部设置's own structure: the same layer, dialog, centred 52px head,
   // scrolling body, group cards and item rows, so the two pages are one design rather than two that
-  // resemble each other. The list only brings its own rows, because the rest of that page's spec
-  // already answers for a page: on a phone the settings layer is the screen, so the skin draws it
-  // as one -- no veil, no entrance, no lingering exit (styles.js) -- and this page inherits that by
-  // wearing the same layer rather than restating it.
-  return createPortal(h('div', { className: 'bt-settings-layer bt-discover', style: { left: paneLeft } },
+  // resemble each other. The list only brings its own rows and the one marker below; how a page
+  // appears is the skin's rule for the layer both pages wear (styles.js).
+  //
+  // The layer carries `data-tabpage`: this page is one of the four pages of the bottom bar, so on a
+  // phone the skin draws it as one -- no veil, no entrance, no lingering exit (styles.js). 我的's own
+  // settings screen is the other page that wears this layer, and it carries the same marker when a
+  // tab opened it (settings.js, `tab`), so the two are drawn alike without either restating the rule.
+  return createPortal(h('div', { className: 'bt-settings-layer bt-discover', 'data-tabpage': '', style: { left: paneLeft } },
     h('div', { className: 'bt-scrim', onMouseDown: () => actions.closeDiscover() }),
     h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('Discover'), 'data-screen': 'list' },
       h('div', { className: 'bt-settings-top' }, h('h2', null, t('Discover'))),

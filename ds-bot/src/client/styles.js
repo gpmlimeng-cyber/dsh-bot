@@ -1309,21 +1309,20 @@ html[data-bt-mobile] body:has(.bt-subback) :is(.bt-mobile-bar,.bt-topfade){displ
    179px, which is what made the whole thing read as broken. The two columns become two
    screens instead: the list, then the page it opens, under an arrow that goes back up. */
 html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;border-radius:0;border:0;box-shadow:none}
-/* And being the screen rather than a card over one, this layer is drawn rather than summoned, on
-   every door that opens it -- the four tabs, the drawer, a long press, the palette: they are all
-   this one full-screen layer here, so one rule answers for all of them. The entrance the wide
-   dialog plays (bt-veil-in's fade and 6px blur, over the veil's own fade) belongs to a surface that
-   arrives on top of something already there, and on a phone there is nothing under it but the tab
-   it replaces -- so that entrance showed the previous page through the new one for 220ms, the ghost
-   the user reported on the tab bar. The exit tells the same story: the 160ms sink, and the linger
-   that holds the layer on screen for it (overlays.js), leave the page just left standing over the
-   one just chosen. The veil goes with them: it is the tap-to-close of a floating dialog, and here
-   the dialog is the layer's whole box, so it lies behind it and can never be tapped. Every one of
-   these is the settings layer only -- the memory dialog is a card on this layout too and keeps its
-   own entrance, veil and exit, and the wide dialog keeps all three. */
-html[data-bt-mobile] .bt-settings{animation:none}
-html[data-bt-mobile] .bt-settings-layer[data-leaving]{opacity:0;transition:none}
-html[data-bt-mobile] .bt-settings-layer>.bt-scrim{display:none}
+/* And a page is drawn rather than summoned. A layer that is one of the four pages -- 发现, and the
+   settings screen when a tab opened it; both carry data-tabpage (discover-page.js, settings.js) --
+   does not play the dialog's entrance (bt-veil-in's fade and 6px blur, over the veil's own fade),
+   which belongs to a surface that arrives on top of something already there: on a phone the only
+   thing under a page is the tab it replaces, so that entrance showed the previous page through the
+   new one for 220ms, the ghost the user reported on the tab bar. It does not draw the veil either:
+   that is a floating dialog's tap-to-close, and the page fills the layer's whole box, so the veil
+   lies behind it and takes no tap. Nor does it linger out: the 160ms sink, and the 160ms the layer
+   is held on screen for it (overlays.js), would leave the page just left standing over the one just
+   chosen. A dialog over the conversation -- a long press, the drawer, the palette, a toast -- keeps
+   all three, and so does the memory dialog, which is a card on this layout rather than the screen. */
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none}
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}
+html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
 /* The title bar spans both screens, so it stays put when the list opens a page: back on

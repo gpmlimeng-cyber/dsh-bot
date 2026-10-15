@@ -162,7 +162,14 @@ function GroupsPage({ roster, actions, run }) {
 }
 
 // While `leaving`, the dialog plays its exit and takes no input.
-export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false }) {
+//
+// `tab` says which kind of surface this is on a phone, where the layer is the whole screen either
+// way: true when one of the four pages opened it (我的, and 发现's own rows -- index.js, openSettings'
+// `door`), false when it is a dialog over the conversation. The layer carries it as `data-tabpage`,
+// and the skin draws the two differently (styles.js): a page appears, a dialog fades in over the
+// conversation it covers. Every step inside Settings is still that same surface, so the rows and the
+// back arrow keep whichever door the layer came in through.
+export function SettingsDialog({ page, id, tab = false, roster, actions, useUpdate, leaving = false }) {
   const [error, setError] = useState('')
   const close = useCallback(() => actions.closeSettings(), [])
   const run = promise => Promise.resolve(promise)
@@ -207,7 +214,7 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
   useEscape(() => { if (screen === 'list') close(); else stepBack() })
   const pageTitle = bot?.name ?? room?.name ?? label
   const backLabel = screen === 'list' ? t('Close settings') : back ?? t('All settings')
-  return h('div', { className: 'bt-settings-layer', 'data-leaving': leaving || undefined },
+  return h('div', { className: 'bt-settings-layer', 'data-tabpage': tab ? '' : undefined, 'data-leaving': leaving || undefined },
     h('div', { className: 'bt-scrim', onMouseDown: close }),
     h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('DS Bot settings'), 'data-wide': shown === 'usage' ? '' : undefined, 'data-screen': mobile ? screen : undefined },
       // Phone only: back, the title centred on the dialog rather than on the space left

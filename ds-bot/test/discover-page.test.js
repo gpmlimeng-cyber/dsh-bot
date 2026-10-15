@@ -95,7 +95,7 @@ test('the row that opens a shell panel is the only one that needs a back of ours
   for (const key of ['connectors', 'capabilities', 'schedules', 'secrets', 'usage']) {
     assert.ok(read('settings.js').includes(`['${key}', `), `${key} is a settings page the dialog already draws`)
   }
-  assert.ok(index.includes('settings: { page: key, id: null }'), 'and every one of this page\'s rows uses the row key as that page')
+  assert.ok(index.includes('settings: { page: key, id: null, tab: true }'), 'and every one of this page\'s rows uses the row key as that page, through the tab door')
 })
 
 test('the second level carries the strip a shell panel does not draw', () => {
@@ -244,15 +244,22 @@ test('every rule is a phone rule, and the page hands the shell nothing but the s
     assert.ok(after.startsWith(' ') || after.startsWith('{') || after.startsWith('[data-bt-keyboard]'), line)
   }
   assert.ok(rules.every(line => line.includes('.bt-subback')), 'and every one is the strip\'s')
-  // How this page appears is the skin's, declared once for the layer both it and 我的 wear: on a
-  // phone that layer is the screen, so it is drawn rather than summoned -- no 220ms veil fade over
-  // the tab it replaces, no veil at all, and no 160ms lingering sink over the tab chosen next.
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings{animation:none}'), 'the phone plays no entrance')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-leaving]{opacity:0;transition:none}'), 'and no exit')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer>.bt-scrim{display:none}'), 'and draws no veil')
-  assert.ok(styles.includes('animation:bt-dialog-rise'), 'while the wide dialog keeps all three')
+  // How this page appears is the skin's, declared once for the layer it shares with 我的: a layer a
+  // tab opened is a page, and a page is drawn rather than summoned -- no 220ms veil fade over the tab
+  // it replaces, no veil at all, and no 160ms lingering sink over the tab chosen next. The marker is
+  // what says so, and it is what keeps a dialog over the conversation a dialog.
+  assert.ok(discover.includes("className: 'bt-settings-layer bt-discover', 'data-tabpage': ''"), 'this page is one of the four pages, and says so')
+  assert.ok(read('settings.js').includes("'data-tabpage': tab ? '' : undefined"), '我的 carries the marker when a tab opened it')
+  assert.ok(index.includes('settings: { page, id, tab: door === null ? (state.settings?.tab ?? false) : door === \'tab\' }'), 'the door is remembered, and kept by every step inside Settings')
+  assert.ok(nav.includes("actions.openSettings('general', null, 'tab')"), 'the 我的 tab comes through the tab door')
+  assert.ok(index.includes("settings: { page: key, id: null, tab: true }"), 'and so does every row of this list')
+  assert.ok(read('overlays.js').includes('tab: settings.tab === true'), 'which the layer is handed')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none}'), 'the phone plays no entrance for it')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}'), 'and no exit')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}'), 'and draws no veil')
+  assert.ok(styles.includes('animation:bt-dialog-rise'), 'while the dialog keeps all three')
   assert.ok(styles.includes('.bt-mem{position:relative;width:min(680px,calc(100vw - 48px))'), 'and the memory dialog is still a card on this layout, so it keeps its own entrance')
-  assert.ok(!read('discover-page.js').includes("'data-page'"), 'the page states none of this itself, and wears no marker to have it stated by')
+  assert.ok(!styles.includes('.bt-settings-layer>.bt-settings{animation:none}'), 'and none of it reaches a layer without the marker')
   // The head, the body's scrolling, the card's corners, the row's height and type, the gap between
   // two cards, the icon's size and colour and the chevron's: all of that is the settings page's,
   // declared once there, so there is nothing here to read back. 伙伴 borrows that head too, and

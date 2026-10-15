@@ -99,7 +99,9 @@ export function BottomNav({ useUi, useNav, actions }) {
     actions.closePeers()
     actions.closeMobileNav()
     actions.closeDiscover()
-    actions.openSettings('general')
+    // 'tab': 我的 is one of the four pages, so this layer is drawn as a page rather than summoned
+    // as a dialog -- the same door 发现's own rows come through (index.js, openDiscoverRow).
+    actions.openSettings('general', null, 'tab')
   }
   return createPortal(h(Fragment, null,
     // The softened join at the status bar's own lower edge, drawn only over the conversation:

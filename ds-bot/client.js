@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: bbf9834a
+// Source fingerprint: 8409f8b9
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3308,21 +3308,20 @@ html[data-bt-mobile] body:has(.bt-subback) :is(.bt-mobile-bar,.bt-topfade){displ
    179px, which is what made the whole thing read as broken. The two columns become two
    screens instead: the list, then the page it opens, under an arrow that goes back up. */
 html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;border-radius:0;border:0;box-shadow:none}
-/* And being the screen rather than a card over one, this layer is drawn rather than summoned, on
-   every door that opens it -- the four tabs, the drawer, a long press, the palette: they are all
-   this one full-screen layer here, so one rule answers for all of them. The entrance the wide
-   dialog plays (bt-veil-in's fade and 6px blur, over the veil's own fade) belongs to a surface that
-   arrives on top of something already there, and on a phone there is nothing under it but the tab
-   it replaces -- so that entrance showed the previous page through the new one for 220ms, the ghost
-   the user reported on the tab bar. The exit tells the same story: the 160ms sink, and the linger
-   that holds the layer on screen for it (overlays.js), leave the page just left standing over the
-   one just chosen. The veil goes with them: it is the tap-to-close of a floating dialog, and here
-   the dialog is the layer's whole box, so it lies behind it and can never be tapped. Every one of
-   these is the settings layer only -- the memory dialog is a card on this layout too and keeps its
-   own entrance, veil and exit, and the wide dialog keeps all three. */
-html[data-bt-mobile] .bt-settings{animation:none}
-html[data-bt-mobile] .bt-settings-layer[data-leaving]{opacity:0;transition:none}
-html[data-bt-mobile] .bt-settings-layer>.bt-scrim{display:none}
+/* And a page is drawn rather than summoned. A layer that is one of the four pages -- 发现, and the
+   settings screen when a tab opened it; both carry data-tabpage (discover-page.js, settings.js) --
+   does not play the dialog's entrance (bt-veil-in's fade and 6px blur, over the veil's own fade),
+   which belongs to a surface that arrives on top of something already there: on a phone the only
+   thing under a page is the tab it replaces, so that entrance showed the previous page through the
+   new one for 220ms, the ghost the user reported on the tab bar. It does not draw the veil either:
+   that is a floating dialog's tap-to-close, and the page fills the layer's whole box, so the veil
+   lies behind it and takes no tap. Nor does it linger out: the 160ms sink, and the 160ms the layer
+   is held on screen for it (overlays.js), would leave the page just left standing over the one just
+   chosen. A dialog over the conversation -- a long press, the drawer, the palette, a toast -- keeps
+   all three, and so does the memory dialog, which is a card on this layout rather than the screen. */
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none}
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}
+html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
 /* The title bar spans both screens, so it stays put when the list opens a page: back on
@@ -14582,7 +14581,7 @@ function GroupsPage({ roster, actions, run }) {
     )
   ];
 }
-function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false }) {
+function SettingsDialog({ page, id, tab = false, roster, actions, useUpdate, leaving = false }) {
   const [error, setError] = (0, import_react35.useState)("");
   const close = (0, import_react35.useCallback)(() => actions.closeSettings(), []);
   const run = (promise) => Promise.resolve(promise).then(() => {
@@ -14622,7 +14621,7 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
   const backLabel = screen === "list" ? t("Close settings") : back ?? t("All settings");
   return (0, import_react35.createElement)(
     "div",
-    { className: "bt-settings-layer", "data-leaving": leaving || void 0 },
+    { className: "bt-settings-layer", "data-tabpage": tab ? "" : void 0, "data-leaving": leaving || void 0 },
     (0, import_react35.createElement)("div", { className: "bt-scrim", onMouseDown: close }),
     (0, import_react35.createElement)(
       "div",
@@ -14894,7 +14893,7 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
     ui2.exchange ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(ExchangeDialog, { pair: ui2.exchange, roster, actions }), document.body) : null,
     ui2.voice ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(VoiceMode, { key: ui2.voice, sessionId: ui2.voice, roster, actions, useSessions, useSessionStatus }), document.body) : null,
     menu ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(ContextMenu, { key: `${menu.kind ?? ""}:${menu.id}:${menu.x}:${menu.y}`, menu, roster, actions, leaving: menuLeaving }), document.body) : null,
-    settings ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(SettingsDialog, { page: settings.page, id: settings.id, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
+    settings ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(SettingsDialog, { page: settings.page, id: settings.id, tab: settings.tab === true, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
     memory && roster.byId[memory] ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(MemoryDialog, { key: memory, bot: roster.byId[memory], actions, leaving: memoryLeaving }), document.body) : null,
     // A delivered picture reads its bytes first, then opens the platform's own image
     // preview. A read that cannot show it as a picture hands over to the preview page,
@@ -15937,7 +15936,7 @@ function BottomNav({ useUi, useNav, actions }) {
     actions.closePeers();
     actions.closeMobileNav();
     actions.closeDiscover();
-    actions.openSettings("general");
+    actions.openSettings("general", null, "tab");
   };
   return (0, import_react_dom12.createPortal)((0, import_react39.createElement)(
     import_react39.Fragment,
@@ -16216,7 +16215,7 @@ function DiscoverPage({ useUi, actions }) {
   if (!open || !mobile) return null;
   return (0, import_react_dom14.createPortal)((0, import_react41.createElement)(
     "div",
-    { className: "bt-settings-layer bt-discover", style: { left: paneLeft } },
+    { className: "bt-settings-layer bt-discover", "data-tabpage": "", style: { left: paneLeft } },
     (0, import_react41.createElement)("div", { className: "bt-scrim", onMouseDown: () => actions.closeDiscover() }),
     (0, import_react41.createElement)(
       "div",
@@ -16280,7 +16279,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "bbf9834a" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "8409f8b9" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16767,9 +16766,16 @@ function apply(ctx) {
     renameBot: (id) => {
       ui2.set((state) => ({ ...state, details: id, view: "details", renaming: true, tab: null }));
     },
-    // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
-    openSettings: (page = "general", id = null) => {
-      ui2.set((state) => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false }));
+    // `id` opens one Bot (page 'bots') or one group chat (page 'groups'). `door` says which door the
+    // user came through: 'tab' is a page of the bottom bar (我的, and 发现's own rows), and anything
+    // else -- a long press, the drawer, the palette, a toast -- is a dialog over the conversation.
+    // Leaving `door` out keeps the door already open, which is what every step inside Settings is:
+    // a row opens the page below it (settings.js) and Escape comes back up, and neither may turn a
+    // page into a dialog mid-flow, where the entrance would replay over the page being read. The two
+    // are drawn differently on a phone (styles.js, [data-tabpage]), and the difference is the one the
+    // user reported: a dialog fades in over what it covers, and what it covers is the tab it replaces.
+    openSettings: (page = "general", id = null, door = null) => {
+      ui2.set((state) => ({ ...state, settings: { page, id, tab: door === null ? state.settings?.tab ?? false : door === "tab" }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false }));
     },
     // On an upright phone the four pages of the bottom bar are peers of each other, so
     // closing one lands on the conversation rather than on whatever page was behind it:
@@ -16904,7 +16910,7 @@ function apply(ctx) {
           if (key !== "schedules") return;
         }
       }
-      ui2.set((state) => ({ ...state, discover: false, discoverPanel: key, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }));
+      ui2.set((state) => ({ ...state, discover: false, discoverPanel: key, settings: { page: key, id: null, tab: true }, menu: null, palette: null, mobileNav: false, newChat: null }));
     },
     // The strip's back: the panel goes and the list comes back. Escape lands here too while a
     // second level is up -- the page's own handler reads that state (discover-page.js) -- so there

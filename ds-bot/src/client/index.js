@@ -504,8 +504,15 @@ export function apply(ctx) {
     showDetails: (id, tab = null) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: false, tab, preview: null })) },
     // Opening the conversation would move focus to its composer and blur the name field.
     renameBot: (id) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: true, tab: null })) },
-    // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
-    openSettings: (page = 'general', id = null) => { ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false })) },
+    // `id` opens one Bot (page 'bots') or one group chat (page 'groups'). `door` says which door the
+    // user came through: 'tab' is a page of the bottom bar (我的, and 发现's own rows), and anything
+    // else -- a long press, the drawer, the palette, a toast -- is a dialog over the conversation.
+    // Leaving `door` out keeps the door already open, which is what every step inside Settings is:
+    // a row opens the page below it (settings.js) and Escape comes back up, and neither may turn a
+    // page into a dialog mid-flow, where the entrance would replay over the page being read. The two
+    // are drawn differently on a phone (styles.js, [data-tabpage]), and the difference is the one the
+    // user reported: a dialog fades in over what it covers, and what it covers is the tab it replaces.
+    openSettings: (page = 'general', id = null, door = null) => { ui.set(state => ({ ...state, settings: { page, id, tab: door === null ? (state.settings?.tab ?? false) : door === 'tab' }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false })) },
     // On an upright phone the four pages of the bottom bar are peers of each other, so
     // closing one lands on the conversation rather than on whatever page was behind it:
     // the bar is the only navigator there and must never come back to a page the user has
@@ -629,8 +636,9 @@ export function apply(ctx) {
       // A settings row is a second level too, so `discoverPanel` remembers which row opened it
       // even though the list itself steps aside: the tab stays on 发现 while the page is up,
       // and closing it comes back to the list (closeSettings, above) instead of jumping past
-      // it to the conversation.
-      ui.set(state => ({ ...state, discover: false, discoverPanel: key, settings: { page: key, id: null }, menu: null, palette: null, mobileNav: false, newChat: null }))
+      // it to the conversation. `tab: true` says the same thing to the layer's own drawing:
+      // this screen is one of the four pages, not a dialog over the conversation.
+      ui.set(state => ({ ...state, discover: false, discoverPanel: key, settings: { page: key, id: null, tab: true }, menu: null, palette: null, mobileNav: false, newChat: null }))
     },
     // The strip's back: the panel goes and the list comes back. Escape lands here too while a
     // second level is up -- the page's own handler reads that state (discover-page.js) -- so there
