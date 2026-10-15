@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 24385ca9
+// Source fingerprint: 68f18195
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16146,7 +16146,7 @@ function PeersPage({ useRoster, useUi, actions }) {
   ), document.body);
 }
 var PEERS_CSS = `
-html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* Typing in the search box raises the keyboard, and the bar (hidden underneath it, but still
    reserving its height) would leave the same dead band the user reported under the composer:
    give the room back while the flag is up. The flag is mobile.js's; the bar's own rule hides
@@ -16268,7 +16268,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "24385ca9" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "68f18195" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

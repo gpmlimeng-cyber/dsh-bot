@@ -410,15 +410,21 @@ test('the transcript scrolls under the strip, and still arrives clear of it', ()
   assert.ok(scroll, 'the transcript scroll box has a rule')
   assert.ok(scroll.includes('padding-top:var(--bt-fade-h'), scroll)
   assert.ok(scroll.includes('+ 10px)'), `with the strip-less phone's old inset as the fallback: ${scroll}`)
-  // One definition for the strip's height, read by every surface that reserves it: the frost,
-  // this scroll box, the phone drawer and the 伙伴 page. A second copy is how they drift.
+  // One definition for the strip's height, read by the surfaces that actually carry a veil: the
+  // frost itself and the transcript it dims. 伙伴 and 发现 have no veil over them, so their heads
+  // start at the status bar's own inset instead -- a second copy of the strip's height is how the
+  // two drift apart.
   const declared = css.filter(line => line.includes('--bt-fade-h:'))
   assert.equal(declared.length, 1, `declared once, found ${declared.length}`)
   assert.ok(declared[0].includes('--bt-fade-h:calc(var(--bt-top-inset') && declared[0].includes('+ 56px)'), declared[0])
-  const readers = ['nav-bar.js', 'peers-page.js', 'styles.js']
+  const readers = ['nav-bar.js', 'styles.js']
     .flatMap(name => read(name).split('\n').filter(line => line.includes('var(--bt-fade-h')))
-  assert.ok(readers.length >= 4, `four readers, found ${readers.length}`)
+  assert.ok(readers.length >= 3, `the veil and the transcript read it, found ${readers.length}`)
   for (const line of readers) assert.ok(line.includes('var(--bt-fade-h'), line)
+  for (const page of ['peers-page.js']) {
+    assert.ok(read(page).includes('padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px'), `${page} starts at the status bar's own inset`)
+    assert.ok(!read(page).includes('var(--bt-fade-h'), `${page} reserves no veil height`)
+  }
   // The phone held sideways has no strip, so its inset is untouched -- the two rules above are
   // the only ones that give it up, and both carry the portrait gate.
   // The conversation is the only panel with a veil over it: every other panel in the same

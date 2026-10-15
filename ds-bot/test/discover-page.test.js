@@ -170,6 +170,11 @@ test('the page is a surface of its own, one at a time', () => {
   // (styles.js), and 发现 and its strip are both named in it -- the list page also carries the
   // settings layer, which that list already had. 伙伴 keeps its own copy: it is not that layer.
   assert.ok(styles.includes('body:has(.bt-settings-layer) :is(.bt-mobile-bar,.bt-topfade)'), 'the page is the settings layer, so the bar steps aside by the skin\'s own rule')
+  // And its head starts at the status bar's own lower edge, not under the strip's height: the skin
+  // maps --dsh-frame-chrome-top to --bt-top-inset on a phone, and the layer's inset reads it.
+  assert.ok(styles.includes('.bt-settings-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;'), 'the layer starts at the chrome top')
+  assert.ok(styles.includes('html[data-bt-mobile]{--dsh-frame-chrome-top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)))}'), 'which is the status bar\'s inset on a phone')
+  assert.ok(!read('discover-page.js').includes('var(--bt-fade-h'), 'so this page reserves no veil height')
   assert.ok(styles.includes('body:has(.bt-discover) :is(.bt-mobile-bar,.bt-topfade)'), 'and 发现 is named in the list as well')
   assert.ok(styles.includes('body:has(.bt-subback) :is(.bt-mobile-bar,.bt-topfade)'), 'and so is the strip, which is no layer of the skin\'s')
   assert.ok(!discover.includes('bt-mobile-bar'), 'the page leaves that list to the skin')

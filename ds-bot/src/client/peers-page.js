@@ -76,11 +76,12 @@ export function PeersPage({ useRoster, useUi, actions }) {
       h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))))), document.body)
 }
 
-// The page covers the screen and carries the status bar's inset itself -- the floating bar
-// above the conversation is hidden while it is up, so nothing has to clear it. Its foot
-// stops where the phone's bottom bar begins. Every rule is gated on the phone layout.
+// The page covers the screen and carries the status bar's inset itself, from the status bar's own
+// lower edge: this page has no veil over the conversation to clear, so the head starts right there
+// rather than under the strip's height (--bt-fade-h, which only the conversation reserves). Its
+// foot stops where the phone's bottom bar begins. Every rule is gated on the phone layout.
 export const PEERS_CSS = `
-html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* Typing in the search box raises the keyboard, and the bar (hidden underneath it, but still
    reserving its height) would leave the same dead band the user reported under the composer:
    give the room back while the flag is up. The flag is mobile.js's; the bar's own rule hides
