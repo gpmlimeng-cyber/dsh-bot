@@ -134,12 +134,13 @@ export function BottomNav({ useUi, useNav, actions }) {
 export const NAV_CSS = `
 /* The strip's height, declared once here for the same reason --bt-nav-h is: the frost, the
    conversation's first row, the phone drawer's top row and the 伙伴 page's title all reserve
-   it, so a later change to the strip cannot move one and leave the others behind. It ends
-   exactly at the pill row's own lower edge -- inset + 10 (the bar's top padding) + 40 (the
-   pill) = inset + 50 -- because the user asked for the veil to run from the screen edge down
-   to the controls and no further. The fallback on each reader is the 10px these pages had
+   it, so a later change to the strip cannot move one and leave the others behind. It reaches
+   the pill row's own lower edge plus a 6px margin -- inset + 10 (the bar's top padding) + 40
+   (the pill) + 6 = inset + 56, measured on the device as 107 against the row's 101 -- because
+   the user asked for the veil to run from the screen edge down past the controls. The fallback
+   on each reader is the 10px these pages had
    before it: a phone held sideways draws no strip at all. */
-html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-fade-h:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 50px);--bt-nav-gap:max(env(safe-area-inset-bottom,0px),var(--dsh-android-system-bottom,0px))}
+html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-fade-h:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);--bt-nav-gap:max(env(safe-area-inset-bottom,0px),var(--dsh-android-system-bottom,0px))}
 /* The bar. 56px of page plus the gesture bar, and no line and no shadow above it: the
    user asked for the bar the screenshot draws, which separates itself with its surface
    alone -- and that surface is the page's own colour (--bt-main, the same value the page,
@@ -153,9 +154,9 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
    read the words through it at the status bar too ("在状态栏也能看到半透明的字"), so it is
    translucent from y=0 rather than opaque over the system band -- the version that went solid
    through the status bar hid exactly what he wanted to see.
-   The height is --bt-fade-h: it reaches exactly the pill row's lower edge, so the veil stops
-   where the controls stop rather than running past them. The bar draws over it (95 against 94),
-   so the controls themselves are never tinted -- only what scrolls under them.
+   The height is --bt-fade-h: the pill row's lower edge plus a 6px margin, so the veil covers
+   the controls' own band and ends just past it. The bar draws over it (95 against 94), so the
+   controls themselves are never tinted -- only what scrolls under them.
 
    No blur: the user asked for the text under it to be read through, not smeared ("不要模糊").
    It is drawn only where a conversation is under it (the component, below): the four pages and

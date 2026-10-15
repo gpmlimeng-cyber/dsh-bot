@@ -352,7 +352,7 @@ test('the status bar\'s join is softened by a band that takes no taps', () => {
   assert.ok(band.includes('position:fixed'), band)
   assert.ok(band.includes('top:0'), 'the strip starts at the screen edge, over the status bar')
   assert.ok(band.includes('height:var(--bt-fade-h'), 'as tall as the token, which reaches the pill row')
-  assert.ok(!band.includes('+ 50px'), 'the number lives in the one definition, not here')
+  assert.ok(!band.includes('+ 56px'), 'the number lives in the one definition, not here')
   assert.ok(band.includes('background:linear-gradient(to bottom,var(--bt-main),transparent)'), 'one gradient, see-through from y=0: the user asked to read the words through it at the status bar')
   assert.ok(!band.includes('calc(100% - 10px)'), 'with no solid part and no step inside it')
   // The tint is all of it: the user asked to read the text under the strip, not to see it smeared.
@@ -403,7 +403,7 @@ test('the transcript scrolls under the strip, and still arrives clear of it', ()
   // this scroll box, the phone drawer and the 伙伴 page. A second copy is how they drift.
   const declared = css.filter(line => line.includes('--bt-fade-h:'))
   assert.equal(declared.length, 1, `declared once, found ${declared.length}`)
-  assert.ok(declared[0].includes('--bt-fade-h:calc(var(--bt-top-inset') && declared[0].includes('+ 50px)'), declared[0])
+  assert.ok(declared[0].includes('--bt-fade-h:calc(var(--bt-top-inset') && declared[0].includes('+ 56px)'), declared[0])
   const readers = ['nav-bar.js', 'peers-page.js', 'styles.js']
     .flatMap(name => read(name).split('\n').filter(line => line.includes('var(--bt-fade-h')))
   assert.ok(readers.length >= 4, `four readers, found ${readers.length}`)
