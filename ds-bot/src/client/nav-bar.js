@@ -44,9 +44,9 @@ import { t } from './i18n.js'
 // the lower left, 伙伴 the robot head the user asked for on that page, 发现 a compass, and
 // 我的 a round-headed figure.
 const TABS = [
-  ['tasks', 'Tasks', PhosphorChatIcon, PhosphorChatFilledIcon],
+  ['tasks', 'Chats', PhosphorChatIcon, PhosphorChatFilledIcon],
   ['peers', 'Peers', PhosphorRobotIcon, PhosphorRobotFilledIcon],
-  ['plugins', 'Discover', PhosphorCompassIcon, PhosphorCompassFilledIcon],
+  ['plugins', 'Plugins', PhosphorCompassIcon, PhosphorCompassFilledIcon],
   ['me', 'Me', PhosphorUserIcon, PhosphorUserFilledIcon],
 ]
 

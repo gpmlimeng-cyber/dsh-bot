@@ -23,9 +23,9 @@ const ZH = {
   Usage: '用量',
   Account: '账户',
   // The phone's bottom bar (nav-bar.js). Four page names and the bar's own label.
-  Tasks: '任务',
+  Chats: '任务',
   Peers: '伙伴',
-  Discover: '发现',
+  Plugins: '发现',
   Me: '我的',
   Pages: '页面',
   // The member list above a phone's composer: one row until it is opened.

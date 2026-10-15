@@ -60,9 +60,9 @@ var ZH = {
   Usage: "用量",
   Account: "账户",
   // The phone's bottom bar (nav-bar.js). Four page names and the bar's own label.
-  Tasks: "任务",
+  Chats: "任务",
   Peers: "伙伴",
-  Discover: "发现",
+  Plugins: "发现",
   Me: "我的",
   Pages: "页面",
   // The member list above a phone's composer: one row until it is opened.
@@ -15759,9 +15759,9 @@ function noticeApprovals({ work, roster, shownSession, openSession, since: since
 var import_react39 = require("react");
 var import_react_dom12 = require("react-dom");
 var TABS = [
-  ["tasks", "Tasks", PhosphorChatIcon, PhosphorChatFilledIcon],
+  ["tasks", "Chats", PhosphorChatIcon, PhosphorChatFilledIcon],
   ["peers", "Peers", PhosphorRobotIcon, PhosphorRobotFilledIcon],
-  ["plugins", "Discover", PhosphorCompassIcon, PhosphorCompassFilledIcon],
+  ["plugins", "Plugins", PhosphorCompassIcon, PhosphorCompassFilledIcon],
   ["me", "Me", PhosphorUserIcon, PhosphorUserFilledIcon]
 ];
 function BottomNav({ useUi, useNav, actions }) {
