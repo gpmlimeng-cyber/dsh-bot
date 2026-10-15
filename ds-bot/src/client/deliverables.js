@@ -16,7 +16,7 @@
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsBoldIcon, ExternalIcon, EyeIcon, SwitchIcon } from './icons.js'
+import { CardCheckIcon, CardCopyIcon, CardExternalIcon, CheckIcon, ChevronLeftIcon, CopyIcon, DotsBoldIcon, SwitchIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { t } from './i18n.js'
 
@@ -166,30 +166,30 @@ export function useDeliverableExits(file, actions, onFailed) {
 /** The exits as the card's own row of buttons, which is the shape DSH's card has. */
 /**
  * The exits as the card's own row of buttons, which is the shape DSH's card has. They are
- * icons, not words: three word pills need more width than the card has to spare, and the
- * name is what the card is for. Each one is named for a reader in `aria-label` -- the word
- * pill said it before, so a button that only draws an icon has to carry its own name -- and
- * the name of the file is not repeated: the card already writes it. The same three words
- * stay written out in the preview page's menu. `preview` comes in rather than being rebuilt
- * here, so the eye and a tap on the card are one action with one name.
+ * icons, not words: word pills need more width than the card has to spare, and the name is
+ * what the card is for. Each one is named for a reader in `aria-label` -- the word pill
+ * said it before, so a button that only draws an icon has to carry its own name -- and the
+ * name of the file is not repeated: the card already writes it. The same words stay written
+ * out in the preview page's menu.
+ *
+ * There is no eye here. Looking at the file is what a tap anywhere on the card does, and it
+ * already announces itself -- the whole-card hit target carries "Preview <name>" -- so a
+ * second button for it only took 44px away from the name, which is the one thing on the
+ * card a reader has to read.
  */
-export function DeliverableActions({ file, actions, preview, onFailed }) {
+export function DeliverableActions({ file, actions, onFailed }) {
   const { state, open, copy } = useDeliverableExits(file, actions, onFailed)
   return h(Fragment, null,
-    h('button', {
-      type: 'button', className: 'bt-dcard-btn', 'data-act': 'preview',
-      'aria-label': t('Preview'), title: t('Preview'), onClick: preview,
-    }, h(EyeIcon)),
     h('button', {
       type: 'button', className: 'bt-dcard-btn', 'data-act': 'open', disabled: state === 'opening',
       onClick: open, title: state === 'opening' ? t('Opening…') : t('Open with another app'),
       'aria-label': state === 'opening' ? t('Opening…') : t('Open with another app'),
-    }, h(ExternalIcon)),
+    }, h(CardExternalIcon)),
     h('button', {
       type: 'button', className: 'bt-dcard-btn', 'data-act': 'copy', onClick: copy,
       title: state === 'copied' ? t('Copied') : t('Copy path'),
       'aria-label': state === 'copied' ? t('Copied') : t('Copy path'),
-    }, state === 'copied' ? h(CheckIcon) : h(CopyIcon)))
+    }, state === 'copied' ? h(CardCheckIcon) : h(CardCopyIcon)))
 }
 
 /**
@@ -256,7 +256,7 @@ function DeliverableCard({ file, actions, meta, role }) {
       h('span', { className: 'bt-dcard-copy' },
         h('span', { className: 'bt-dcard-name' }, name),
         h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name))),
-      h('span', { className: 'bt-dcard-acts' }, h(DeliverableActions, { file, actions, preview, onFailed: setFailure }))),
+      h('span', { className: 'bt-dcard-acts' }, h(DeliverableActions, { file, actions, onFailed: setFailure }))),
     failure ? h('span', { className: 'bt-dcard-hint', role: 'status' }, exitsSentence(failure.shared)) : null)
 }
 

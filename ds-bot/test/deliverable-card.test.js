@@ -18,6 +18,7 @@ import { test } from 'node:test'
 const read = (name) => readFileSync(new URL(`../src/client/${name}`, import.meta.url), 'utf8')
 const styles = read('styles.js').split('\n')
 const card = read('deliverables.js').split('\n')
+const icons = read('icons.js')
 const i18n = read('i18n.js')
 
 const rule = (prefix) => {
@@ -57,45 +58,55 @@ test('the name and its metadata keep their two sizes, and nothing swaps places o
   assert.ok(rule('.bt-dcard{').includes('height:60px'), 'the tile does not grow with the type')
   // The type mark is sized against the exit icons rather than left at the platform's own
   // 28px default or the 20px it had: the platform's document glyph fills 24.8x28 of its own
-  // 28-unit box, so 24px paints 21.2x24px of ink beside 23-31px of exit ink.
+  // 28-unit box, so 24px paints 21.2x24px of ink beside the 23px an exit paints.
   assert.ok(card.join('\n').includes('h(FileTypeIcon, { path: file.path, size: 24 })'), 'the type mark is 24px')
   // The second line used to be replaced by the word "Preview" while the pointer was on the
-  // card. The eye in the acts row says that now, so the line stays where it is.
+  // card. A tap anywhere on the card says that now, so the line stays where it is.
   assert.ok(!styles.includes('.bt-dcard-peek'), 'the hover-only word is gone')
   assert.ok(!styles.includes('.bt-dcard:hover .bt-dcard-desc'), 'and the second line no longer gives way')
 })
 
-// The card's three exits are icons, not words: three word pills take more width than the
-// card has to spare. The words stay in aria-label (a reader still hears them) and in the
-// preview page's menu, and the target is the 44px the preview page's own controls take.
-test('the card’s exits are three named icons, each a 44px target', () => {
+// The card's two exits are icons, not words: word pills take more width than the card has
+// to spare. The words stay in aria-label (a reader still hears them) and in the preview
+// page's menu, and the target is the 44px the preview page's own controls take. A third
+// button for "look at it" is gone: the whole-card hit target already does that and already
+// says so, so it was 44px of the name column spent on one action twice.
+test('the card’s exits are two named icons, each a 44px target with the ink of a big one', () => {
   const source = card.join('\n')
   const btn = rule('.bt-dcard-btn{')
   assert.ok(btn.includes('width:44px') && btn.includes('height:44px'), 'a 44px touch target')
   // The drawing is what the eye judges -- a 44px target around a small glyph still reads as
-  // a small button -- so the box is sized for the ink these glyphs paint out of their 20x20
-  // box at the 2-unit stroke set here: at 36px the eye lands at 30.6x23.4, the arrow at
-  // 27x27.9, the sheets at 25.2x25.2 and the tick at 23.4x18, which clears the 22px the
-  // preview bar's own controls paint. The 44px control does not grow with it: the card is a
-  // 60px tile with 8px of padding, so a 48px control would break the tile the user approved.
-  const glyph = rule('.bt-dcard-btn svg{')
-  assert.ok(glyph.includes('width:36px') && glyph.includes('height:36px'), 'and the glyph box is 36px')
-  assert.ok(glyph.includes('stroke-width:2'), 'drawn at the 2-unit stroke the preview bar uses')
+  // a small button -- so each glyph carries its own box: the shared drawing inside a viewBox
+  // cropped to that drawing plus one unit of stroke room, at a flat 2px stroke. The sheet no
+  // longer sizes glyphs: one box for all of them is what made them read uneven, since each
+  // glyph fills a different fraction of its own 20-unit box. What lands:
+  //   sheets 12x12 units, box 14 -> 25/14 at 12 units + 2px of stroke = 23.4x23.4
+  //   arrow 13x13.5 units, box 15x15.5 -> 23.0x23.8
+  //   tick 11x8 units, box 13x10 -> 23.2x17.4, judged by its longest edge: a tick is flat
+  assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn svg')), 'the sheet does not size the card’s glyphs')
+  assert.ok(icons.includes('const CARD_ICON_SIZE = 25'), 'the card’s box is 25px')
+  assert.ok(icons.includes('strokeWidth: 2'), 'drawn at the 2px the preview bar paints')
+  assert.ok(icons.includes("vectorEffect: 'non-scaling-stroke'"), 'and the stroke stays 2px while the drawing scales')
+  for (const [name, box] of [['CardExternalIcon', "'2.5 2.5 15 15.5'"], ['CardCopyIcon', "'3 3 14 14'"], ['CardCheckIcon', "'3.5 5 13 10'"]]) {
+    assert.ok(icons.includes(`export const ${name} = cardIcon(`), `${name} is a card glyph`)
+    assert.ok(icons.includes(box), `${name} is cropped to its own drawing (${box})`)
+  }
   assert.ok(rule('.bt-dcard-ico{').includes('width:40px'), 'the tile it matches stays 40px')
-  assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the three never wrap into a second row the 60px tile would clip')
+  assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the two never wrap into a second row the 60px tile would clip')
   // The row is held at the card's right end, with the 4px gap it has always had: the gap is
-  // not what makes the row read tight -- a 44px control around 23-31px of ink leaves the
-  // glyphs 19-22px apart, and 2px of box space moves them by 4px across the whole row, which
-  // the eye does not see. The ink is the lever, and it is pinned separately below.
-  assert.ok(rule('.bt-dcard-acts{').includes('gap:4px'), 'the three keep their 4px gap')
+  // not what makes the row read tight -- a 44px control around 23px of ink leaves the glyphs
+  // about 20px apart, and 2px of box space moves them by 2px across the whole row, which the
+  // eye does not see. The ink is the lever, and it is sized in the glyphs now.
+  assert.ok(rule('.bt-dcard-acts{').includes('gap:4px'), 'the two keep their 4px gap')
   assert.ok(rule('.bt-dcard-acts{').includes('justify-content:flex-end'), 'and the row stays at the card’s right end')
-  for (const [act, shape] of [['preview', '}, h(EyeIcon))'], ['open', '}, h(ExternalIcon))'], ['copy', "}, state === 'copied' ? h(CheckIcon) : h(CopyIcon)))"]]) {
+  for (const [act, shape] of [['open', '}, h(CardExternalIcon))'], ['copy', "}, state === 'copied' ? h(CardCheckIcon) : h(CardCopyIcon)))"]]) {
     assert.ok(source.includes(`'data-act': '${act}'`), `the ${act} exit is marked`)
     assert.ok(source.includes(shape), `and draws its own icon (${act})`)
   }
+  assert.ok(!source.includes("'data-act': 'preview'"), 'no third button: a tap on the card is the preview')
+  assert.ok(!icons.includes('EyeIcon'), 'and the eye went with it')
   // Each button carries its own name -- the word pill used to be that name -- and none of
   // them repeats the file name, which the card itself already writes.
-  assert.ok(source.includes("'aria-label': t('Preview'), title: t('Preview')"), 'the eye is named for what it does')
   assert.ok(source.includes("'aria-label': state === 'opening' ? t('Opening…') : t('Open with another app')"), 'the arrow is named for the other app')
   assert.ok(source.includes("'aria-label': state === 'copied' ? t('Copied') : t('Copy path')"), 'the copy icon is named for the path')
   assert.equal(source.split("`${t('Preview')} ${name}`").length - 1, 1, 'only the card-wide hit target repeats the file name')
@@ -115,7 +126,7 @@ test('two columns fold to one when the card column is narrow', () => {
 test('the icon is DSH’s FileTypeIcon, sized against the row it sits in', () => {
   assert.ok(card.some(line => line.includes("import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'")), 'the card imports the host icon, the host image preview, the host size format and the host menu')
   // 24px, not the platform's 28px default and not the 20px it had: the document glyph fills
-  // 24.8x28 of its own box, so 24px paints 21.2x24px beside the 23-31px the exits paint.
+  // 24.8x28 of its own box, so 24px paints 21.2x24px beside the 23px the exits paint.
   assert.ok(card.some(line => line.includes('h(FileTypeIcon, { path: file.path, size: 24 })')), 'the icon follows the file path, at the row’s size')
   assert.ok(!card.some(line => line.includes('PaperclipIcon')), 'the placeholder paperclip is gone')
 })
@@ -253,7 +264,7 @@ test('the preview page’s title bar is back, the name, and one more menu', () =
   const source = card.join('\n')
   assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(ChevronLeftIcon))"), 'the left control is a back button, named for a reader')
   assert.ok(source.includes("h('span', { className: 'bt-preview-name' }, name)"), 'the name is the middle part')
-  assert.ok(source.includes('import { CheckIcon, ChevronLeftIcon, CopyIcon, DotsBoldIcon, ExternalIcon, EyeIcon, SwitchIcon }'), 'a back arrow, the menu’s own icons and the card’s three are imported')
+  assert.ok(source.includes('import { CardCheckIcon, CardCopyIcon, CardExternalIcon, CheckIcon, ChevronLeftIcon, CopyIcon, DotsBoldIcon, SwitchIcon }'), 'a back arrow, the menu’s own icons and the card’s two are imported')
   // The "···" draws the filled dots: the hairline ones paint 1.5-unit dots that land at
   // 2.6px in the 48px control, which is why it looked empty. The 34px box matches the rule
   // in file-preview.js that sizes it, so the two never drift apart.

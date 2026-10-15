@@ -44,6 +44,20 @@ const lineIcon = paths => function LineIcon() {
   return h('svg', { width: 15, height: 15, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
     paths.map((d, index) => h('path', { key: index, d })))
 }
+
+// The same drawing, in a box cropped to the drawing itself: `viewBox` carries the glyph's
+// own extent plus one unit of stroke room on every side, so the ink fills the 25px box
+// evenly instead of hanging small in the middle of a 20-unit one. Only the drawing is
+// scaled -- `vectorEffect: non-scaling-stroke` holds the stroke at a flat 2px -- so every
+// one of these lands at the same 22-24px of ink, whatever shape it draws. The card's exits
+// use these; every other caller keeps the shared 20-unit glyph, untouched.
+const CARD_ICON_SIZE = 25
+function cardIcon(paths, viewBox) {
+  return function CardIcon() {
+    return h('svg', { width: CARD_ICON_SIZE, height: CARD_ICON_SIZE, viewBox, fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
+      paths.map((d, index) => h('path', { key: index, d, vectorEffect: 'non-scaling-stroke' })))
+  }
+}
 // The classic cloud with a down arrow; `done` swaps the arrow for a check. The arrow
 // is its own group so it can move while an update installs.
 const CLOUD = 'M6.5 15.25H5.75a3.25 3.25 0 0 1-.55-6.45 4.75 4.75 0 0 1 9.2-1.1 3.75 3.75 0 0 1 .1 7.55H13.5'
@@ -64,7 +78,8 @@ export function DotsBoldIcon({ size = 18 }) {
   return h('svg', { width: size, height: size, viewBox: '0 0 20 20', fill: 'currentColor', 'aria-hidden': true },
     [4.5, 10, 15.5].map(cx => h('circle', { key: cx, cx, cy: 10, r: 2 })))
 }
-export const CheckIcon = lineIcon(['M4.5 10.5l3.5 3.5 7.5-8'])
+const CHECK_PATHS = ['M4.5 10.5l3.5 3.5 7.5-8']
+export const CheckIcon = lineIcon(CHECK_PATHS)
 export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 export const DownloadIcon = lineIcon(['M10 3.5v9', 'M6.5 9.5L10 13l3.5-3.5', 'M4 16h12'])
 export const GaugeIcon = lineIcon(['M3.5 13.5a6.5 6.5 0 1 1 13 0', 'M10 13.5l3-4', 'M10 13.5h.01'])
@@ -88,12 +103,12 @@ export const UnreadIcon = lineIcon(['M10 3.5a4.5 4.5 0 0 0-4.5 4.5v3L4 13.5h12L1
 export const PencilIcon = lineIcon(['M9 4H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3', 'M14.3 3.7a1.6 1.6 0 0 1 2.3 2.3L10.5 12l-3 .8.8-3z'])
 export const InfoIcon = lineIcon(['M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z', 'M10 9.25v4', 'M10 6.6h.01'])
 export const StarLineIcon = lineIcon(['M10 3l2.1 4.3 4.7.7-3.4 3.3.8 4.7L10 13.8 5.8 16l.8-4.7L3.2 8l4.7-.7z'])
-export const CopyIcon = lineIcon(['M8.5 7h6A1.5 1.5 0 0 1 16 8.5v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 7 14.5v-6A1.5 1.5 0 0 1 8.5 7z', 'M4 12.5V5.5A1.5 1.5 0 0 1 5.5 4H13'])
+const COPY_PATHS = ['M8.5 7h6A1.5 1.5 0 0 1 16 8.5v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 7 14.5v-6A1.5 1.5 0 0 1 8.5 7z', 'M4 12.5V5.5A1.5 1.5 0 0 1 5.5 4H13']
+export const CopyIcon = lineIcon(COPY_PATHS)
 export const HideIcon = lineIcon(['M3 3l14 14', 'M8.6 5.2A7.6 7.6 0 0 1 10 5c4.5 0 7 5 7 5a12.6 12.6 0 0 1-2 2.6M12.2 14.5A6.8 6.8 0 0 1 10 15c-4.5 0-7-5-7-5a12.4 12.4 0 0 1 3-3.4', 'M8.5 8.5a2 2 0 0 0 3 3'])
-// HideIcon's own eye, whole: what a delivered card's "look at it" control draws.
-export const EyeIcon = lineIcon(['M10 4.5c4.3 0 7 3.4 7.5 5.5-.5 2.1-3.2 5.5-7.5 5.5S3 12.1 2.5 10C3 7.9 5.7 4.5 10 4.5z', 'M10 7.7a2.3 2.3 0 1 1 0 4.6 2.3 2.3 0 0 1 0-4.6z'])
 // An arrow leaving its box: the file goes to an app that is not this one.
-export const ExternalIcon = lineIcon(['M16.5 12v3.5A1.5 1.5 0 0 1 15 17H5a1.5 1.5 0 0 1-1.5-1.5v-10A1.5 1.5 0 0 1 5 4h3.5', 'M11 3.5h5.5V9', 'M16.5 3.5L9.5 10.5'])
+const EXTERNAL_PATHS = ['M16.5 12v3.5A1.5 1.5 0 0 1 15 17H5a1.5 1.5 0 0 1-1.5-1.5v-10A1.5 1.5 0 0 1 5 4h3.5', 'M11 3.5h5.5V9', 'M16.5 3.5L9.5 10.5']
+export const ExternalIcon = lineIcon(EXTERNAL_PATHS)
 export const TrashIcon = lineIcon(['M3.5 5.5h13', 'M8 5.5V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.5', 'M5 5.5l.7 10A1.5 1.5 0 0 0 7.2 17h5.6a1.5 1.5 0 0 0 1.5-1.5l.7-10', 'M8.5 9v4.5M11.5 9v4.5'])
 export const DuplicateIcon = lineIcon(['M7 7h8.5v9.5H7z', 'M4.5 13V3.5H13', 'M11.25 9.5v4.5M9 11.75h4.5'])
 export const SlidersIcon = lineIcon(['M4 6.5h5M12.5 6.5H16M4 13.5h4M11.5 13.5H16', 'M10.5 4.5v4M9.5 11.5v4'])
@@ -104,3 +119,13 @@ export const FolderIcon = lineIcon(['M3 6A1.5 1.5 0 0 1 4.5 4.5h3.2l1.8 2h6A1.5 
 // Two speech bubbles, the back one peeking out: a group chat.
 export const ChatsIcon = lineIcon(['M3.5 5.5A1.5 1.5 0 0 1 5 4h7a1.5 1.5 0 0 1 1.5 1.5V10A1.5 1.5 0 0 1 12 11.5H8L5 14v-2.5A1.5 1.5 0 0 1 3.5 10z', 'M13.5 7.5H15A1.5 1.5 0 0 1 16.5 9v4.5A1.5 1.5 0 0 1 15 15v2l-2.5-2h-3A1.5 1.5 0 0 1 8 13.5V13'])
 export const SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: ChatsIcon, usage: GaugeIcon }
+
+// The delivered card's two exits and the tick that stands in for one of them while it
+// confirms. The card is a 60px tile, so a 44px control around a 16px drawing reads as a
+// small button; these draw the shared glyphs big enough to fill that control. The boxes are
+// each glyph's own extent plus one unit of stroke room: the sheets span 12x12 units, so
+// 3 3 14 14; the arrow 13x13.5, so 2.5 2.5 15 15.5; the tick 11x8, so 3.5 5 13 10 (a tick
+// is wide and flat, so it is judged by its longest edge like the preview bar's close).
+export const CardExternalIcon = cardIcon(EXTERNAL_PATHS, '2.5 2.5 15 15.5')
+export const CardCopyIcon = cardIcon(COPY_PATHS, '3 3 14 14')
+export const CardCheckIcon = cardIcon(CHECK_PATHS, '3.5 5 13 10')

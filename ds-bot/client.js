@@ -2240,30 +2240,33 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3);word-break:break-all}
 /* The exits sit in one row inside the card, and the sentence that explains a refusal
    is written by the card itself -- outside the tile -- since the tile clips at 60px. The
-   preview page renders the same acts row at its foot. Three controls go in one row and
+   preview page renders the same acts row at its foot. Two controls go in one row and
    never wrap: the tile is a fixed 60px, so a second row would be clipped, and the name
-   column is the one that gives way instead.
+   column is the one that gives way instead. Two rather than three: looking at the file is
+   what a tap anywhere on the card already does, so the eye was a second button spending
+   44px of the name's width on the same action. That 48px goes back to the name -- in the
+   panel's 409px row the name column goes from 189px to 237px, which is what the name of a
+   file needs to be read whole.
 
    The row keeps a 4px gap and is held at the card's right end. The gap is not the lever on
-   how tight the row reads -- a 44px control holds 23-31px of ink, so the glyphs stand 19-22px
-   apart and squeezing the gap to 2px would move them by 4px across the whole row, which the
-   eye does not see. What the row reads as is the ink; the ink is sized in the rule below. */
+   how tight the row reads -- a 44px control holds 22-24px of ink, so the glyphs stand about
+   20px apart and squeezing the gap to 2px would move them by 2px across the whole row, which
+   the eye does not see. What the row reads as is the ink; the ink is sized in the glyphs
+   themselves, not here. */
 .bt-dcard-acts{position:relative;z-index:2;pointer-events:auto;flex:none;display:flex;flex-wrap:nowrap;align-items:center;gap:4px;justify-content:flex-end}
 @container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}
 /* One icon, no words: the words live in aria-label and in the preview page's menu. 44x44
    is the touch target the card's own 60px tile can hold exactly (8px of padding above and
    below) and it does not grow -- a 48px control would break the tile the user has already
-   approved -- so the drawing is what grows. The box is sized to paint 22px of ink at the
-   2-unit stroke set here, the same ink the preview bar's own controls paint, and it keeps a
-   little over it: a device measures a drawing a little under the arithmetic, and an ink
-   sitting exactly on the line rounds whichever way. The three glyphs are drawn to different
-   fractions of their box (the eye widest, the sheets narrowest), and 36px is the one box
-   that clears 22px for all of them, the tick included: eye 30.6x23.4, arrow 27x27.9,
-   sheets 25.2x25.2, tick 23.4x18. */
+   approved -- so the drawing is what grew. The glyphs are not sized here at all: each one is
+   the shared drawing inside a box cropped to that drawing (icons.js, CardCopyIcon and its two
+   neighbours), painting 22-24px of ink at the flat 2px stroke it sets. One box for all of
+   them is what read uneven -- the eye landed at 30.6x23.4 beside the sheets at 25.2x25.2 --
+   because each glyph fills a different fraction of its own 20-unit box. Cropping the box to
+   the glyph makes them land together whatever shape they draw. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
-.bt-dcard-btn svg{width:36px;height:36px;stroke-width:2}
 .bt-x{border:0;background:none;color:var(--bt-ink-2);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:24px;padding:0;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, "scale")}}
 .bt-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
 
@@ -3895,6 +3898,16 @@ var lineIcon = (paths) => function LineIcon() {
     paths.map((d, index) => (0, import_react3.createElement)("path", { key: index, d }))
   );
 };
+var CARD_ICON_SIZE = 25;
+function cardIcon(paths, viewBox) {
+  return function CardIcon() {
+    return (0, import_react3.createElement)(
+      "svg",
+      { width: CARD_ICON_SIZE, height: CARD_ICON_SIZE, viewBox, fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
+      paths.map((d, index) => (0, import_react3.createElement)("path", { key: index, d, vectorEffect: "non-scaling-stroke" }))
+    );
+  };
+}
 var CLOUD = "M6.5 15.25H5.75a3.25 3.25 0 0 1-.55-6.45 4.75 4.75 0 0 1 9.2-1.1 3.75 3.75 0 0 1 .1 7.55H13.5";
 function CloudDownloadIcon({ done = false }) {
   return (0, import_react3.createElement)(
@@ -3914,7 +3927,8 @@ function DotsBoldIcon({ size = 18 }) {
     [4.5, 10, 15.5].map((cx) => (0, import_react3.createElement)("circle", { key: cx, cx, cy: 10, r: 2 }))
   );
 }
-var CheckIcon = lineIcon(["M4.5 10.5l3.5 3.5 7.5-8"]);
+var CHECK_PATHS = ["M4.5 10.5l3.5 3.5 7.5-8"];
+var CheckIcon = lineIcon(CHECK_PATHS);
 var ArrowDownIcon = lineIcon(["M10 4v12", "M5 11l5 5 5-5"]);
 var DownloadIcon = lineIcon(["M10 3.5v9", "M6.5 9.5L10 13l3.5-3.5", "M4 16h12"]);
 var GaugeIcon = lineIcon(["M3.5 13.5a6.5 6.5 0 1 1 13 0", "M10 13.5l3-4", "M10 13.5h.01"]);
@@ -3942,10 +3956,11 @@ var UnreadIcon = lineIcon(["M10 3.5a4.5 4.5 0 0 0-4.5 4.5v3L4 13.5h12L14.5 11V8"
 var PencilIcon = lineIcon(["M9 4H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3", "M14.3 3.7a1.6 1.6 0 0 1 2.3 2.3L10.5 12l-3 .8.8-3z"]);
 var InfoIcon = lineIcon(["M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z", "M10 9.25v4", "M10 6.6h.01"]);
 var StarLineIcon = lineIcon(["M10 3l2.1 4.3 4.7.7-3.4 3.3.8 4.7L10 13.8 5.8 16l.8-4.7L3.2 8l4.7-.7z"]);
-var CopyIcon = lineIcon(["M8.5 7h6A1.5 1.5 0 0 1 16 8.5v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 7 14.5v-6A1.5 1.5 0 0 1 8.5 7z", "M4 12.5V5.5A1.5 1.5 0 0 1 5.5 4H13"]);
+var COPY_PATHS = ["M8.5 7h6A1.5 1.5 0 0 1 16 8.5v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 7 14.5v-6A1.5 1.5 0 0 1 8.5 7z", "M4 12.5V5.5A1.5 1.5 0 0 1 5.5 4H13"];
+var CopyIcon = lineIcon(COPY_PATHS);
 var HideIcon = lineIcon(["M3 3l14 14", "M8.6 5.2A7.6 7.6 0 0 1 10 5c4.5 0 7 5 7 5a12.6 12.6 0 0 1-2 2.6M12.2 14.5A6.8 6.8 0 0 1 10 15c-4.5 0-7-5-7-5a12.4 12.4 0 0 1 3-3.4", "M8.5 8.5a2 2 0 0 0 3 3"]);
-var EyeIcon = lineIcon(["M10 4.5c4.3 0 7 3.4 7.5 5.5-.5 2.1-3.2 5.5-7.5 5.5S3 12.1 2.5 10C3 7.9 5.7 4.5 10 4.5z", "M10 7.7a2.3 2.3 0 1 1 0 4.6 2.3 2.3 0 0 1 0-4.6z"]);
-var ExternalIcon = lineIcon(["M16.5 12v3.5A1.5 1.5 0 0 1 15 17H5a1.5 1.5 0 0 1-1.5-1.5v-10A1.5 1.5 0 0 1 5 4h3.5", "M11 3.5h5.5V9", "M16.5 3.5L9.5 10.5"]);
+var EXTERNAL_PATHS = ["M16.5 12v3.5A1.5 1.5 0 0 1 15 17H5a1.5 1.5 0 0 1-1.5-1.5v-10A1.5 1.5 0 0 1 5 4h3.5", "M11 3.5h5.5V9", "M16.5 3.5L9.5 10.5"];
+var ExternalIcon = lineIcon(EXTERNAL_PATHS);
 var TrashIcon = lineIcon(["M3.5 5.5h13", "M8 5.5V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.5", "M5 5.5l.7 10A1.5 1.5 0 0 0 7.2 17h5.6a1.5 1.5 0 0 0 1.5-1.5l.7-10", "M8.5 9v4.5M11.5 9v4.5"]);
 var DuplicateIcon = lineIcon(["M7 7h8.5v9.5H7z", "M4.5 13V3.5H13", "M11.25 9.5v4.5M9 11.75h4.5"]);
 var SlidersIcon = lineIcon(["M4 6.5h5M12.5 6.5H16M4 13.5h4M11.5 13.5H16", "M10.5 4.5v4M9.5 11.5v4"]);
@@ -3953,6 +3968,9 @@ var MemoryIcon = lineIcon(["M5.5 3.5h8A1.5 1.5 0 0 1 15 5v10a1.5 1.5 0 0 1-1.5 1
 var FolderIcon = lineIcon(["M3 6A1.5 1.5 0 0 1 4.5 4.5h3.2l1.8 2h6A1.5 1.5 0 0 1 17 8v6.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5z"]);
 var ChatsIcon = lineIcon(["M3.5 5.5A1.5 1.5 0 0 1 5 4h7a1.5 1.5 0 0 1 1.5 1.5V10A1.5 1.5 0 0 1 12 11.5H8L5 14v-2.5A1.5 1.5 0 0 1 3.5 10z", "M13.5 7.5H15A1.5 1.5 0 0 1 16.5 9v4.5A1.5 1.5 0 0 1 15 15v2l-2.5-2h-3A1.5 1.5 0 0 1 8 13.5V13"]);
 var SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: ChatsIcon, usage: GaugeIcon };
+var CardExternalIcon = cardIcon(EXTERNAL_PATHS, "2.5 2.5 15 15.5");
+var CardCopyIcon = cardIcon(COPY_PATHS, "3 3 14 14");
+var CardCheckIcon = cardIcon(CHECK_PATHS, "3.5 5 13 10");
 
 // src/client/questions.js
 var import_react4 = require("react");
@@ -4961,19 +4979,11 @@ function useDeliverableExits(file, actions, onFailed) {
   };
   return { state, open, copy: copy2 };
 }
-function DeliverableActions({ file, actions, preview, onFailed }) {
+function DeliverableActions({ file, actions, onFailed }) {
   const { state, open, copy: copy2 } = useDeliverableExits(file, actions, onFailed);
   return (0, import_react7.createElement)(
     import_react7.Fragment,
     null,
-    (0, import_react7.createElement)("button", {
-      type: "button",
-      className: "bt-dcard-btn",
-      "data-act": "preview",
-      "aria-label": t("Preview"),
-      title: t("Preview"),
-      onClick: preview
-    }, (0, import_react7.createElement)(EyeIcon)),
     (0, import_react7.createElement)("button", {
       type: "button",
       className: "bt-dcard-btn",
@@ -4982,7 +4992,7 @@ function DeliverableActions({ file, actions, preview, onFailed }) {
       onClick: open,
       title: state === "opening" ? t("Opening…") : t("Open with another app"),
       "aria-label": state === "opening" ? t("Opening…") : t("Open with another app")
-    }, (0, import_react7.createElement)(ExternalIcon)),
+    }, (0, import_react7.createElement)(CardExternalIcon)),
     (0, import_react7.createElement)("button", {
       type: "button",
       className: "bt-dcard-btn",
@@ -4990,7 +5000,7 @@ function DeliverableActions({ file, actions, preview, onFailed }) {
       onClick: copy2,
       title: state === "copied" ? t("Copied") : t("Copy path"),
       "aria-label": state === "copied" ? t("Copied") : t("Copy path")
-    }, state === "copied" ? (0, import_react7.createElement)(CheckIcon) : (0, import_react7.createElement)(CopyIcon))
+    }, state === "copied" ? (0, import_react7.createElement)(CardCheckIcon) : (0, import_react7.createElement)(CardCopyIcon))
   );
 }
 function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
@@ -5055,7 +5065,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         (0, import_react7.createElement)("span", { className: "bt-dcard-name" }, name),
         (0, import_react7.createElement)("span", { className: "bt-dcard-desc" }, meta ?? metaText(file, name))
       ),
-      (0, import_react7.createElement)("span", { className: "bt-dcard-acts" }, (0, import_react7.createElement)(DeliverableActions, { file, actions, preview, onFailed: setFailure }))
+      (0, import_react7.createElement)("span", { className: "bt-dcard-acts" }, (0, import_react7.createElement)(DeliverableActions, { file, actions, onFailed: setFailure }))
     ),
     failure ? (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
   );
