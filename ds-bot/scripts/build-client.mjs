@@ -7,14 +7,38 @@
 // a classic script; the wrapper mirrors packages/client/tsdown.client.ts in
 // deepseek-harness: `require` resolves the shell-seeded platform modules (react,
 // react-dom, ui-primitives, ...), which therefore stay external.
-import { readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { createHash } from 'node:crypto'
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
 
 const PLUGIN = dirname(dirname(fileURLToPath(import.meta.url)))
 const OUTPUT = join(PLUGIN, 'client.js')
 const PLATFORM_MODULES = ['react', 'react-dom', '@deepseek-ai/dsh-client-ui-primitives']
+
+// Which sources this bundle was made from, as eight hex digits. A page has no other way to say
+// which build it is running, and "is the screen on the current bundle?" has cost this project
+// more than one round of measuring the wrong thing: the answer here is the same for everyone
+// who rebuilds the same sources -- no clock, no commit, nothing that changes between two builds
+// -- because `--check` compares whole files.
+function sourceFingerprint() {
+  const files = []
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name)
+      if (entry.isDirectory()) walk(path)
+      else files.push(path)
+    }
+  }
+  walk(join(PLUGIN, 'src', 'client'))
+  const hash = createHash('sha256')
+  for (const path of files.sort()) {
+    hash.update(relative(PLUGIN, path))
+    hash.update(readFileSync(path))
+  }
+  return hash.digest('hex').slice(0, 8)
+}
 
 export async function bundleClient() {
   const result = await build({
@@ -32,10 +56,13 @@ export async function bundleClient() {
     charset: 'utf8',
     write: false,
     logLevel: 'silent',
+    // The stamp the running page publishes, so a device reading can name the build it saw.
+    define: { __DS_BOT_SRC__: JSON.stringify(sourceFingerprint()) },
   })
   if (result.warnings.length > 0) throw new Error(`esbuild warnings:\n${result.warnings.map(warning => warning.text).join('\n')}`)
   return [
     '// Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.',
+    `// Source fingerprint: ${sourceFingerprint()}`,
     'window.__ModuleLoader__.load({',
     '  id: \'ds-bot\',',
     '  factory: (require) => {',

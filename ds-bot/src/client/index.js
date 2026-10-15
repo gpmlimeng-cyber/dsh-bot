@@ -43,6 +43,10 @@ import { PeersPage, PEERS_CSS } from './peers-page.js'
 export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
 
 export function apply(ctx) {
+  // Which build this page is running, on <html>, so a device reading can name it rather than
+  // compare features one by one. The build stamps it (scripts/build-client.mjs); sources loaded
+  // without that step say so instead of claiming a fingerprint they do not have.
+  document.documentElement.dataset.btSrc = typeof __DS_BOT_SRC__ === 'string' ? __DS_BOT_SRC__ : 'unbuilt'
   // The mobile layout flag (<html data-bt-mobile>) has to exist before the first paint,
   // so it is armed here rather than inside a component effect.
   ctx.effect(() => { watchMobile() }, 'ds-bot: mobile layout flag')

@@ -1,4 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
+// Source fingerprint: cf25cb53
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16077,6 +16078,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
+  document.documentElement.dataset.btSrc = true ? "cf25cb53" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
