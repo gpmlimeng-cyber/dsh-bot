@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 3d13471d
+// Source fingerprint: 08a4213b
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -15952,12 +15952,15 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
    the page's own colour at 40% at the very top, fading to nothing across the whole strip --
    not a solid band with a fade tacked onto its last 10px, which reads as a step rather than a
    gradient, which is what the user pointed at. The height is the status bar plus the 10px it
-   needs to land on nothing, and the blur covers all of it.
+   needs to land on nothing.
+
+   No blur: the user asked for the text under it to be read through, not smeared ("不要模糊").
+   The tint is the whole of it -- what passes under stays legible exactly as it was drawn.
 
    It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
    while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
    (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
-html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);z-index:94;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 40%,transparent),transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);z-index:94;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 40%,transparent),transparent)}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}
@@ -16117,7 +16120,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "3d13471d" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "08a4213b" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

@@ -341,8 +341,8 @@ test('the keyboard decision reads the phone\'s own numbers', () => {
 // The join at the status bar's own lower edge. The page takes the shell's colour, so the join
 // is already one colour -- but the shell can move that colour on its own (it did once today),
 // and a join that moves under the page is a hard line rather than a soft one. This band is the
-// insurance: ten pixels of the page's colour fading to nothing, blurred, and it never takes a
-// tap. It is a sibling of the bar rather than a child, so the keyboard (which takes the bar
+// insurance: the page's colour fading to nothing over the status bar's own height, and it never
+// takes a tap. It is a sibling of the bar rather than a child, so the keyboard (which takes the bar
 // away) and the pages the bar steps aside for both leave it in place.
 test('the status bar\'s join is softened by a band that takes no taps', () => {
   const band = css.find(line => line.includes('.bt-topfade{'))
@@ -353,7 +353,8 @@ test('the status bar\'s join is softened by a band that takes no taps', () => {
   assert.ok(band.includes('+ 10px)'), 'plus the 10px it fades over')
   assert.ok(band.includes('background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 40%,transparent),transparent)'), 'one gradient: 40% of the page colour at the top, nothing at the bottom')
   assert.ok(!band.includes('calc(100% - 10px)'), 'with no solid part and no step inside it')
-  assert.ok(band.includes('backdrop-filter:blur(12px)'), 'frosted')
+  // The tint is all of it: the user asked to read the text under the strip, not to see it smeared.
+  assert.ok(!band.includes('backdrop-filter'), 'no blur, so what passes under stays legible')
   assert.ok(band.includes('pointer-events:none'), 'and it takes no tap')
   const bar = css.find(line => line.includes('.bt-nav{'))
   const z = line => Number(/z-index:(\d+)/.exec(line)[1])
