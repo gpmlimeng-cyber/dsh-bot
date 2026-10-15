@@ -2017,8 +2017,19 @@ var SHELL_CSS = `
    leaves the band above it showing the platform's own base, which is where the peers page's
    seam came from. Dark paints neither: see the rule below, where its value is only the
    bottom bar's, the card colour it has always worn. */
-body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#f8f8f8;--bt-main:#f8f8f8;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56)}
-body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(255,255,255,.08);--bt-line-2:rgba(255,255,255,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(255,255,255,.09);--bt-tag-ink:rgba(242,242,242,.62)}
+/* The two rules below are this skin's tokens: the light one and the dark one. They are the
+   PRE-THEME FALLBACK, because themes.js emits "html body{...}" (0,0,2) and that outranks a
+   plain "body{...}" (0,0,1) -- so every token the palette also names must carry the same
+   value here, or the sheet is either holding a value nothing reads or one that changes the
+   moment the palette does. A test holds the two layers to each other (page-colour.test.js);
+   keep them in step when you touch either.
+
+   Five tokens live only here, deliberately, and the palette has no counterpart for them:
+   --bt-nav-ink / --bt-nav-on (the bottom bar's own sampled pair), --bt-green, --bt-star, and
+   --bt-line-weak (the lightest hairline). --bt-accent-ink is the mirror case: the palette
+   computes it from the accent's luminance, so the fallback does not carry it. */
+body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#f8f8f8;--bt-main:#f8f8f8;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58)}
+body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(242,242,242,.08);--bt-line-2:rgba(242,242,242,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(242,242,242,.09);--bt-tag-ink:rgba(242,242,242,.58)}
 /* The page, on both layers and where the platform paints its own base: html itself (which
    cannot be a descendant of body, hence :has), body, the frame the whole app sits in, and
    the column the conversation lives in. Gated on the light theme, so the dark one keeps the

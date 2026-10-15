@@ -6,10 +6,53 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
+import { THEMES, themeVars } from '../src/client/themes.js'
 
 const read = (name) => readFileSync(new URL(`../src/client/${name}`, import.meta.url), 'utf8')
 const styles = read('styles.js').split('\n')
 const nav = read('nav-bar.js')
+
+// `rgba(20,20,20,.6)` and `rgba(20,20,20,0.6)` are the same colour written two ways, and the
+// two layers are written by hand in different files, so compare the colours, not the text.
+const norm = (value) => {
+  const call = /^rgba?\(([^)]*)\)$/i.exec(value.replace(/\s+/g, ''))
+  if (!call) return value.trim().toLowerCase()
+  return `rgba(${call[1].split(',').map(Number).join(',')})`
+}
+const declarations = (rule) => new Map(rule.slice(rule.indexOf('{') + 1, rule.lastIndexOf('}'))
+  .split(';').filter(Boolean).map(pair => [pair.slice(0, pair.indexOf(':')), pair.slice(pair.indexOf(':') + 1)]))
+
+// The two layers carry one value per token. themeCss emits `html body{...}`, which outranks
+// the base sheet's `body{...}`, so the base sheet is the palette's pre-theme fallback: it
+// must agree with it token for token, or it is holding a value nothing reads -- or, worse, a
+// value that changes the moment somebody edits the palette. That is the bug this catches:
+// --bt-tag-ink sat at .56 against the palette's .58 for a while, and the dark hairlines at
+// white against the palette's ink-coloured ones.
+test('both layers carry the same value for every token they share', () => {
+  for (const [rule, mode, dark] of [
+    [styles.find(line => line.startsWith('body{--bt-nav-ink:')), THEMES.deepseek.light, false],
+    [styles.find(line => line.startsWith('body[data-ds-dark-theme]{')), THEMES.deepseek.dark, true],
+  ]) {
+    const base = declarations(rule)
+    const theme = themeVars(mode, dark)
+    const shared = [...base.keys()].filter(token => token in theme)
+    assert.ok(shared.length >= 12, `the two layers overlap on ${shared.length} tokens`)
+    for (const token of shared) {
+      assert.equal(norm(base.get(token)), norm(theme[token]), `${token}: the fallback says ${base.get(token)}, the palette says ${theme[token]}`)
+    }
+  }
+})
+
+// The exceptions, named rather than assumed: these live in the base sheet alone, so there is
+// no second value anywhere to disagree with. A token that quietly drops out of the palette,
+// or a new one added only here, shows up as a change to this list.
+test('the tokens that live in one layer only are the documented ones', () => {
+  const light = declarations(styles.find(line => line.startsWith('body{--bt-nav-ink:')))
+  const theme = themeVars(THEMES.deepseek.light, false)
+  assert.deepEqual([...light.keys()].filter(token => !(token in theme)).sort(),
+    ['--bt-green', '--bt-line-weak', '--bt-nav-ink', '--bt-nav-on', '--bt-star'], 'fallback only')
+  assert.deepEqual(Object.keys(theme).filter(token => !light.has(token)), ['--bt-accent-ink'], 'palette only')
+})
 
 const light = styles.find(line => line.startsWith('body{--bt-nav-ink:'))
 const dark = styles.find(line => line.startsWith('body[data-ds-dark-theme]{--bt-nav-ink:'))

@@ -7,7 +7,11 @@ import { createSource } from './sources.js'
 // tokens derive from them, so a registered theme recolors the whole team UI.
 
 const THEME_KEYS = ['bg', 'sidebar', 'bubble', 'card', 'text', 'user', 'userText', 'accent']
-const THEMES = {
+// Exported with `themeVars` so the base sheet's pre-theme fallback can be held to the live
+// values token by token (test/page-colour.test.js): themeCss emits `html body{...}`, which
+// outranks that fallback, so a fallback that disagrees is either a value nothing reads or a
+// value that changes the moment the palette does. One token, one value, in both layers.
+export const THEMES = {
   deepseek: {
     label: 'DeepSeek',
     light: { bg: '#f8f8f8', sidebar: '#f8f8f8', bubble: '#ffffff', card: '#ffffff', text: '#141414', user: '#070707', userText: '#fcfcfc', accent: '#4d6bfe' },
@@ -30,7 +34,7 @@ const THEMES = {
   },
 }
 const rgba = (hex, alpha) => `rgba(${[1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16)).join(',')},${alpha})`
-function themeVars(mode, dark, accent = mode.accent) {
+export function themeVars(mode, dark, accent = mode.accent) {
   return {
     '--bt-ink': mode.text, '--bt-ink-2': rgba(mode.text, 0.6), '--bt-ink-3': rgba(mode.text, 0.36),
     '--bt-bubble': mode.bubble, '--bt-sidebar': mode.sidebar, '--bt-main': mode.bg, '--bt-card': mode.card,
