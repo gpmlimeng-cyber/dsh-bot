@@ -1309,6 +1309,17 @@ html[data-bt-mobile] body:has(.bt-subback) :is(.bt-mobile-bar,.bt-topfade){displ
    179px, which is what made the whole thing read as broken. The two columns become two
    screens instead: the list, then the page it opens, under an arrow that goes back up. */
 html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;border-radius:0;border:0;box-shadow:none}
+/* And being the screen rather than a card over one, it is drawn rather than summoned: the entrance
+   the wide dialog plays (bt-veil-in's fade and 6px blur, over the veil's own fade) belongs to a
+   surface that arrives on top of something already there, and here the only thing under it is the
+   tab it replaces -- so for 220ms that entrance showed the previous page through the new one,
+   which is the ghost the user reported on the tab bar. The exit tells the same story: the 160ms
+   sink, and the linger that holds the layer on screen for it (overlays.js), leave the page just
+   left standing over the one just chosen. Both belong to the wide dialog; on a phone the page
+   simply appears and simply goes. The layer is named rather than the dialog's class so the memory
+   dialog's shell, which is a card on this layout too, keeps its own entrance. */
+html[data-bt-mobile] .bt-settings{animation:none}
+html[data-bt-mobile] .bt-settings-layer[data-leaving]{opacity:0;transition:none}
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
 /* The title bar spans both screens, so it stays put when the list opens a page: back on

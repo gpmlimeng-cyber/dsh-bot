@@ -154,13 +154,13 @@ test('the page is 全部设置\'s own look, to the letter', () => {
   ]) {
     assert.ok(settings.includes(rule), `the skin declares it: ${rule.slice(0, 48)}…`)
   }
-  // Which leaves the strip: four rules, and no look of the page's own beside them. The two above
-  // them are not a look either: they take the dialog's entrance off this layer (the test below).
+  // Which leaves the strip: four rules, and no look of the page's own beside them. The one above
+  // them is not a look either: it takes the dialog's veil off this page (the test below).
   const own = sheet.split('\n').filter(line => line.startsWith('html['))
   const strip = own.filter(line => line.includes('.bt-subback'))
   assert.equal(strip.length, 4, `expected the strip's four rules, found ${strip.length}`)
-  assert.equal(own.length, 6, `expected the strip's four rules and the page's two, found ${own.length}`)
-  assert.ok(own.every(line => line.includes('.bt-subback') || line.includes('[data-page=discover]')), 'and every one is the strip\'s or names this page\'s layer')
+  assert.equal(own.length, 5, `expected the strip's four rules and the page's one, found ${own.length}`)
+  assert.ok(own.every(line => line.includes('.bt-subback') || line.includes('.bt-settings-layer[data-page=discover]>.bt-scrim{display:none}')), 'and every one is the strip\'s or the veil\'s')
 })
 
 test('the page is a surface of its own, one at a time', () => {
@@ -238,9 +238,9 @@ test('the page and its tab carry one name, and the copy is in the dictionary', (
 test('every rule is a phone rule, and the page hands the shell nothing but the strip', () => {
   const rules = read('discover-page.js').split('\n').filter(line => line.startsWith('html['))
   // The page has no look of its own at all -- it is the settings page's, and the sheet is the
-  // strip's own four rules plus the two that take the modal's entrance off a page. Which layers
-  // hide the top row is the skin's list in styles.js.
-  assert.equal(rules.length, 6, `expected the strip's four rules and the page's two, found ${rules.length}`)
+  // strip's own four rules plus the one that takes the dialog's veil off this page. Which layers
+  // hide the top row, and when the phone's pages appear, is the skin's business (styles.js).
+  assert.equal(rules.length, 5, `expected the strip's four rules and the page's one, found ${rules.length}`)
   for (const line of rules) {
     const after = line.slice('html[data-bt-mobile]'.length)
     assert.ok(after.startsWith(' ') || after.startsWith('{') || after.startsWith('[data-bt-keyboard]'), line)
@@ -248,14 +248,17 @@ test('every rule is a phone rule, and the page hands the shell nothing but the s
   const strip = rules.filter(line => line.includes('.bt-subback'))
   assert.equal(strip.length, 4, 'four of them are the strip\'s')
   const page = rules.filter(line => !line.includes('.bt-subback'))
-  assert.equal(page.length, 2, 'and two name this page\'s layer')
-  assert.ok(page.every(line => line.includes('.bt-settings-layer[data-page=discover]>')), 'each on that layer')
-  assert.ok(page.some(line => line.includes('.bt-scrim{display:none}')), 'the veil is not drawn')
-  assert.ok(page.some(line => line.includes('.bt-settings{animation:none}')), 'and nothing fades in')
-  // The dialog keeps both, or every modal in the skin would land flat: the rules name the layer
-  // by its marker rather than the shell's class, which is what the settings dialog itself wears.
+  assert.deepEqual(page, ['html[data-bt-mobile] .bt-settings-layer[data-page=discover]>.bt-scrim{display:none}'], 'and the fifth is this page\'s own veil')
+  // The marker is on the layer, and no rule widens to every user of the shell: the settings dialog
+  // itself is the other one, and it keeps its veil.
   assert.ok(read('discover-page.js').includes("'data-page': 'discover'"), 'the marker is on the layer')
   assert.ok(!read('discover-page.js').includes('.bt-settings-layer{'), 'and no rule widens to every user of the shell')
+  // The entrance and the exit are the skin's, because the phone's settings layer is a page: it is
+  // drawn rather than summoned, so no 220ms veil fade and no 160ms lingering sink over the tab the
+  // user just chose. The dialog's own declaration is left alone for the wide layout.
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings{animation:none}'), 'the phone plays no entrance')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-leaving]{opacity:0;transition:none}'), 'and no exit')
+  assert.ok(styles.includes('animation:bt-dialog-rise'), 'while the wide dialog keeps both')
   // The head, the body's scrolling, the card's corners, the row's height and type, the gap between
   // two cards, the icon's size and colour and the chevron's: all of that is the settings page's,
   // declared once there, so there is nothing here to read back. 伙伴 borrows that head too, and

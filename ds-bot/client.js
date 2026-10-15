@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: e90a97d7
+// Source fingerprint: 9b708bdd
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3308,6 +3308,17 @@ html[data-bt-mobile] body:has(.bt-subback) :is(.bt-mobile-bar,.bt-topfade){displ
    179px, which is what made the whole thing read as broken. The two columns become two
    screens instead: the list, then the page it opens, under an arrow that goes back up. */
 html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;border-radius:0;border:0;box-shadow:none}
+/* And being the screen rather than a card over one, it is drawn rather than summoned: the entrance
+   the wide dialog plays (bt-veil-in's fade and 6px blur, over the veil's own fade) belongs to a
+   surface that arrives on top of something already there, and here the only thing under it is the
+   tab it replaces -- so for 220ms that entrance showed the previous page through the new one,
+   which is the ghost the user reported on the tab bar. The exit tells the same story: the 160ms
+   sink, and the linger that holds the layer on screen for it (overlays.js), leave the page just
+   left standing over the one just chosen. Both belong to the wide dialog; on a phone the page
+   simply appears and simply goes. The layer is named rather than the dialog's class so the memory
+   dialog's shell, which is a card on this layout too, keeps its own entrance. */
+html[data-bt-mobile] .bt-settings{animation:none}
+html[data-bt-mobile] .bt-settings-layer[data-leaving]{opacity:0;transition:none}
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
 /* The title bar spans both screens, so it stays put when the list opens a page: back on
@@ -16253,17 +16264,12 @@ function DiscoverBack({ useUi, actions }) {
   ), document.body);
 }
 var DISCOVER_CSS = `
-/* The page is not the dialog, even though it wears the dialog's shell. The settings page arrives
-   as a modal over the conversation: a 32% veil to catch the tap that closes it, and an entrance
-   (bt-fade on the veil, bt-veil-in/bt-dialog-rise on the dialog) that says a surface has been
-   summoned over what was already there. On a phone that dialog is full screen, so the same pair
-   over this page reads as the last page showing through the new one for 220ms -- the ghost the
-   user reported when switching tabs. A page is drawn, not summoned: the veil is not drawn at all
-   (it lies behind a full-screen dialog, so it takes no tap anyway) and nothing fades in -- the
-   first frame is the finished page. Only this layer is named, so the settings dialog keeps both.
-   The marker is on the layer, the rules read it, and the look above it is untouched. */
+/* This page wears the settings page's shell, and that shell carries the dialog's veil: a 32% scrim
+   across the layer, drawn to catch the tap that closes a floating dialog. There is nothing to catch
+   here -- the page's own card fills the layer on a phone -- and a page has no veil. The entrance
+   and the exit are the skin's business: it takes the modal's animation off the phone's settings
+   layer (styles.js), which this layer is, so both pages appear and go at once. */
 html[data-bt-mobile] .bt-settings-layer[data-page=discover]>.bt-scrim{display:none}
-html[data-bt-mobile] .bt-settings-layer[data-page=discover]>.bt-settings{animation:none}
 /* The strip over a shell panel's second level, sitting where the page's own head sits. Which layers
    hide the conversation's top row is the skin's business, not
    this page's: the discover page and this strip are both named in the list in styles.js. */
@@ -16276,7 +16282,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "e90a97d7" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "9b708bdd" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

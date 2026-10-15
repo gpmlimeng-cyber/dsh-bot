@@ -65,11 +65,11 @@ export function DiscoverPage({ useUi, actions }) {
   // resemble each other. The list only brings its own rows and the two things the user asked for on
   // top of that page's spec (DISCOVER_CSS, below).
   //
-  // The layer wears the marker `data-page="discover"` so the sheet below can tell this use of the
-  // settings shell from the dialog's own: the two look alike, but a page is drawn where a dialog is
-  // summoned, so the modal's entrance belongs to one of them and not the other. It is an attribute
-  // rather than a class because the classes are the settings page's own, and `bt-discover` already
-  // names the element rather than its role.
+  // The layer wears the marker `data-page="discover"` so a rule can tell this page's use of the
+  // settings shell from the dialog's own: the two look alike, but a page has no veil to catch a tap
+  // and no modal entrance, so one of the two uses is named and the other is left alone. It is an
+  // attribute rather than a class because the classes are the settings page's own, and `bt-discover`
+  // already names the element rather than what it is here.
   return createPortal(h('div', { className: 'bt-settings-layer bt-discover', 'data-page': 'discover', style: { left: paneLeft } },
     h('div', { className: 'bt-scrim', onMouseDown: () => actions.closeDiscover() }),
     h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('Discover'), 'data-screen': 'list' },
@@ -113,22 +113,17 @@ export function DiscoverBack({ useUi, actions }) {
 // the 52px head with its centred title, the scrolling body, the group cards with their 1px border
 // and corners and no shadow, the rows' height and type, the icons' size and colour, the chevrons
 // and the spacing between two cards all come from styles.js, and nothing about that look is
-// restated or adjusted here -- what this sheet does is take the modal's entrance off the shell
-// this page borrows (the two rules below) and draw the strip a shell panel needs, since a panel
-// draws no back of its own. Every rule is gated on the phone layout, the same gate the component
-// reads, and names either this layer or that strip.
+// restated or adjusted here -- what this sheet does is say that this use of the shell has no veil
+// (the rule below) and draw the strip a shell panel needs, since a panel draws no back of its own.
+// Every rule is gated on the phone layout, the same gate the component reads, and names either
+// this layer or that strip.
 export const DISCOVER_CSS = `
-/* The page is not the dialog, even though it wears the dialog's shell. The settings page arrives
-   as a modal over the conversation: a 32% veil to catch the tap that closes it, and an entrance
-   (bt-fade on the veil, bt-veil-in/bt-dialog-rise on the dialog) that says a surface has been
-   summoned over what was already there. On a phone that dialog is full screen, so the same pair
-   over this page reads as the last page showing through the new one for 220ms -- the ghost the
-   user reported when switching tabs. A page is drawn, not summoned: the veil is not drawn at all
-   (it lies behind a full-screen dialog, so it takes no tap anyway) and nothing fades in -- the
-   first frame is the finished page. Only this layer is named, so the settings dialog keeps both.
-   The marker is on the layer, the rules read it, and the look above it is untouched. */
+/* This page wears the settings page's shell, and that shell carries the dialog's veil: a 32% scrim
+   across the layer, drawn to catch the tap that closes a floating dialog. There is nothing to catch
+   here -- the page's own card fills the layer on a phone -- and a page has no veil. The entrance
+   and the exit are the skin's business: it takes the modal's animation off the phone's settings
+   layer (styles.js), which this layer is, so both pages appear and go at once. */
 html[data-bt-mobile] .bt-settings-layer[data-page=discover]>.bt-scrim{display:none}
-html[data-bt-mobile] .bt-settings-layer[data-page=discover]>.bt-settings{animation:none}
 /* The strip over a shell panel's second level, sitting where the page's own head sits. Which layers
    hide the conversation's top row is the skin's business, not
    this page's: the discover page and this strip are both named in the list in styles.js. */
