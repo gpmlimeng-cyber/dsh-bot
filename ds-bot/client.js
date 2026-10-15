@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: eae1edd0
+// Source fingerprint: 373ca941
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16253,14 +16253,8 @@ function DiscoverBack({ useUi, actions }) {
   ), document.body);
 }
 var DISCOVER_CSS = `
-/* The two things the user asked for on top of that page: the card's outline in the faintest line
-   the skin draws (its width and style are the settings page's own border; only the colour is
-   named here, and the card carries no shadow of any kind), and 8px between two cards where that
-   page uses its own --bt-set-gap. Nothing separates the rows of a card. */
-html[data-bt-mobile] .bt-discover .bt-settings-group-card{border-color:var(--bt-line-weak)}
-html[data-bt-mobile] .bt-discover .bt-settings-group+.bt-settings-group{margin-top:8px}
-/* The strip over a shell panel's second level (a panel draws no back of its own), sitting where the
-   page's own head sits. Which layers hide the conversation's top row is the skin's business, not
+/* The strip over a shell panel's second level, sitting where the page's own head sits. Which layers
+   hide the conversation's top row is the skin's business, not
    this page's: the discover page and this strip are both named in the list in styles.js. */
 html[data-bt-mobile] .bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px 0;z-index:96;display:flex;align-items:center;background:var(--bt-main);pointer-events:none}
 html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
@@ -16271,7 +16265,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "eae1edd0" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "373ca941" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

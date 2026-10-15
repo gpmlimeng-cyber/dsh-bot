@@ -131,36 +131,28 @@ test('the second level carries the strip a shell panel does not draw', () => {
   assert.ok(discover.includes('.bt-subback-btn>svg{width:22px;height:22px}'), 'and its glyph 22px')
 })
 
-test('the page is 全部设置\'s own look, plus the two things the user asked for', () => {
-  // The card, the row, the head, the icon's size and colour, the chevron's and the corners: all of
-  // it is the settings page's, from styles.js, and this sheet does not restate it. What it adds is
-  // the two things the user asked for on top of that page.
+test('the page is 全部设置\'s own look, to the letter', () => {
+  // The card, its 1px border and corners, the row's height and type, the icon's size and colour,
+  // the chevron, the spacing between two cards, the head and the body: all of it is the settings
+  // page's, declared once in styles.js, and this sheet restates none of it -- nor adjusts it.
   const sheet = read('discover-page.js').slice(read('discover-page.js').indexOf('export const DISCOVER_CSS'))
-  assert.ok(!sheet.includes('box-shadow'), 'no shadow of any kind is added to the card')
-  // The rules that do the work are the settings page's, and they are all still there.
+  assert.ok(!sheet.includes('.bt-discover '), 'the page declares no rule of its own')
+  assert.ok(!sheet.includes('box-shadow'), 'no shadow is added')
+  assert.ok(!sheet.includes('::before'), 'and no line is drawn between two rows')
   const settings = read('styles.js')
-  for (const rule of ['.bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:16px;background:var(--bt-card);overflow:hidden}', '.bt-settings-item{min-height:var(--bt-set-row-h,48px)', '.bt-settings-item>svg{flex:none;width:24px;height:24px;color:var(--bt-ink-2)}', '.bt-settings-top h2{position:absolute']) {
-    assert.ok(settings.includes(rule), `the skin still declares ${rule.slice(0, 40)}…`)
+  for (const rule of [
+    '.bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:16px;background:var(--bt-card);overflow:hidden}',
+    '.bt-settings-group+.bt-settings-group{margin-top:var(--bt-set-gap,14px)}',
+    '.bt-settings-item{min-height:var(--bt-set-row-h,48px);padding:0 12px;border-radius:0;font-size:14px',
+    '.bt-settings-item>svg{flex:none;width:24px;height:24px;color:var(--bt-ink-2)}',
+    '.bt-settings-top h2{position:absolute',
+  ]) {
+    assert.ok(settings.includes(rule), `the skin declares it: ${rule.slice(0, 48)}…`)
   }
-  const own = sheet.split('\n').filter(line => line.includes('.bt-discover '))
-  assert.equal(own.length, 2, `expected the user's two additions, found ${own.length}`)
-  // One: the card's outline in the faintest line the skin draws -- the width and style stay the
-  // settings page's border, only the colour is named here.
-  const outline = own.find(entry => entry.includes('.bt-settings-group-card'))
-  assert.ok(outline, 'the card\'s outline has its rule')
-  assert.ok(outline.includes('border-color:var(--bt-line-weak)'), 'in the faintest line token the skin declares')
-  assert.ok(!outline.includes('border:') && !outline.includes('border-radius') && !outline.includes('background'), 'and nothing else of that border is restated')
-  for (const restated of ['border-radius', 'background:', 'padding:', 'min-height:', 'font-size:']) {
-    assert.ok(!own.some(line => line.includes(restated)), `the page restates no ${restated} of the settings page's own`)
-  }
-  // Nothing separates the rows of a card: the user asked for the line between them to go.
-  assert.ok(!sheet.includes('::before'), 'no line is drawn between two rows')
-  assert.ok(!sheet.includes('.bt-settings-item+.bt-settings-item'), 'and no rule for one is left')
-  // And the other: two cards 8px apart, where the settings page uses its own --bt-set-gap.
-  const gap = own.find(entry => entry.includes('.bt-settings-group+'))
-  assert.ok(gap, 'the spacing between two cards has its rule')
-  assert.ok(gap.includes('margin-top:8px'), '8px between two cards')
-  assert.ok(!/border-radius|min-height|font-size|padding/.test(own.join('\n')), 'and nothing else of that page restated')
+  // Which leaves the strip: four rules, and no look of the page's own beside them.
+  const own = sheet.split('\n').filter(line => line.startsWith('html['))
+  assert.equal(own.length, 4, `expected the strip's four rules, found ${own.length}`)
+  assert.ok(own.every(line => line.includes('.bt-subback')), 'every one of them the strip\'s')
 })
 
 test('the page is a surface of its own, one at a time', () => {
@@ -237,15 +229,14 @@ test('the page and its tab carry one name, and the copy is in the dictionary', (
 
 test('every rule is a phone rule, and the page hands the shell nothing but the strip', () => {
   const rules = read('discover-page.js').split('\n').filter(line => line.startsWith('html['))
-  // The page's own look is two rules (the hairline between the rows of a card, the 8px between two
-  // cards) over the settings page's, and the sheet is the strip's four. Which layers hide the top
-  // row is the skin's list in styles.js, not a rule of this page's.
-  assert.equal(rules.length, 6, `expected the page's two and the strip's four, found ${rules.length}`)
+  // The page has no look of its own at all -- it is the settings page's, and the sheet is the
+  // strip's own four rules. Which layers hide the top row is the skin's list in styles.js.
+  assert.equal(rules.length, 4, `expected the strip's four rules, found ${rules.length}`)
   for (const line of rules) {
     const after = line.slice('html[data-bt-mobile]'.length)
     assert.ok(after.startsWith(' ') || after.startsWith('{') || after.startsWith('[data-bt-keyboard]'), line)
   }
-  assert.ok(rules.every(line => line.includes('.bt-discover ') || line.includes('.bt-subback')), 'and every one is the page\'s or the strip\'s')
+  assert.ok(rules.every(line => line.includes('.bt-subback')), 'and every one is the strip\'s')
   // The head, the body's scrolling, the card's corners, the row's height and type, the gap between
   // two cards, the icon's size and colour and the chevron's: all of that is the settings page's,
   // declared once there, so there is nothing here to read back. 伙伴 borrows that head too, and
