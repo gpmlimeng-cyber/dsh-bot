@@ -22,8 +22,8 @@ export const SHELL_CSS = `
    leaves the band above it showing the platform's own base, which is where the peers page's
    seam came from. Dark paints neither: see the rule below, where its value is only the
    bottom bar's, the card colour it has always worn. */
-body{--bt-page:#f8f8f8;--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#f8f8f8;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56)}
-body[data-ds-dark-theme]{--bt-page:#1f1f1f;--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(255,255,255,.08);--bt-line-2:rgba(255,255,255,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(255,255,255,.09);--bt-tag-ink:rgba(242,242,242,.62)}
+body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#f8f8f8;--bt-main:#f8f8f8;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56)}
+body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(255,255,255,.08);--bt-line-2:rgba(255,255,255,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(255,255,255,.09);--bt-tag-ink:rgba(242,242,242,.62)}
 /* The page, on both layers and where the platform paints its own base: html itself (which
    cannot be a descendant of body, hence :has), body, the frame the whole app sits in, and
    the column the conversation lives in. Gated on the light theme, so the dark one keeps the
@@ -32,10 +32,10 @@ body[data-ds-dark-theme]{--bt-page:#1f1f1f;--bt-nav-ink:rgba(242,242,242,.36);--
    The first two carry !important because the platform writes its own colour where a rule
    cannot reach it: an inline background on <html> (measured rgb(241,243,241)) and the base
    token as an inline custom property on <body>. */
-html:not(:has(body[data-ds-dark-theme])){background:var(--bt-page)!important}
-body:not([data-ds-dark-theme]){background:var(--bt-page)!important}
+html:not(:has(body[data-ds-dark-theme])){background:var(--bt-main)!important}
+body:not([data-ds-dark-theme]){background:var(--bt-main)!important}
 body:not([data-ds-dark-theme]) [data-dsh-frame],
-body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-page)}
+body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-main)}
 /* The ONE --dsw-* override in this whole skin, and it is here for a measured reason: the
    platform sets --dsw-alias-bg-base inline on <body> (#fcfcfc), and three things read it --
    the frame's background, the body's own, and the composer's 36px fade. An inline
@@ -45,7 +45,7 @@ body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:
    and the rules above still paint the page. Light theme only -- the dark theme keeps the
    platform's base untouched. Anything else that wants to touch a --dsw-* token gets its own
    review first. */
-body:not([data-ds-dark-theme]){--dsw-alias-bg-base:var(--bt-page)!important}
+body:not([data-ds-dark-theme]){--dsw-alias-bg-base:var(--bt-main)!important}
 ${Object.entries(INKS).map(([name, [light]]) => `body{--bt-ink-${name}:${light}}`).join('')}
 ${Object.entries(INKS).map(([name, [, dark]]) => `body[data-ds-dark-theme]{--bt-ink-${name}:${dark}}`).join('')}
 .bt-mark{display:inline-block;flex:none;position:relative;line-height:0}
@@ -983,7 +983,7 @@ export const CONVERSATION_CSS = `
 [class*="_header"]:has(.bt-head){border-bottom-color:transparent!important;box-shadow:none!important}
 /* The transcript runs under a floating header pill. */
 header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;right:0;z-index:8;display:flex!important;padding:10px 0 0!important;background:transparent!important;pointer-events:none;justify-content:center}
-header[class*="_header"]:has(.bt-head)::before{content:"";position:absolute;inset:0 0 auto;height:60px;background:linear-gradient(to bottom,var(--bt-page),color-mix(in srgb,var(--bt-page) 0%,transparent));pointer-events:none;z-index:-1}
+header[class*="_header"]:has(.bt-head)::before{content:"";position:absolute;inset:0 0 auto;height:60px;background:linear-gradient(to bottom,var(--bt-main),color-mix(in srgb,var(--bt-main) 0%,transparent));pointer-events:none;z-index:-1}
 header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolute;left:12px;top:10px;pointer-events:auto}
 /* Below the shell's own narrow line the header row leaves the screen for good: the
    pill now floats from <body> (mobile.js), so display:none takes nothing of ours with
@@ -1258,7 +1258,7 @@ html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-m
 html[data-bt-mobile] .bt-pill,
 html[data-bt-mobile] .bt-mobile-nav,
 html[data-bt-mobile] .bt-mobile-acts{background:var(--bt-frost-fill,var(--bt-main));-webkit-backdrop-filter:var(--bt-frost-blur,none);backdrop-filter:var(--bt-frost-blur,none)}
-html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-page) 80%,transparent),transparent)}
+html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 80%,transparent),transparent)}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open],
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar,
@@ -1685,7 +1685,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 export function publishThemeColor() {
   if (typeof document === 'undefined') return
   const own = document.head.querySelector('meta[data-bt-theme-color]')
-  const page = getComputedStyle(document.body).getPropertyValue('--bt-page').trim()
+  const page = getComputedStyle(document.body).getPropertyValue('--bt-main').trim()
   if (page === '' || document.body.hasAttribute('data-ds-dark-theme')) {
     if (own) own.remove()
     return

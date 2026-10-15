@@ -213,7 +213,7 @@ test('the bar has no frame at all, and wears the page colour', () => {
   assert.ok(rule.includes('border:0'), `no edge on any side: ${rule}`)
   assert.ok(rule.includes('outline:0'), `nothing outlines it: ${rule}`)
   assert.ok(rule.includes('box-shadow:none'), `nothing shadows it: ${rule}`)
-  assert.ok(rule.includes('background:var(--bt-page)'), `the surface is the page's colour: ${rule}`)
+  assert.ok(rule.includes('background:var(--bt-main)'), `the surface is the page's colour: ${rule}`)
   assert.ok(!rule.includes('backdrop-filter'), 'nothing scrolls under it, so no frost is needed')
   // A coloured border or shadow anywhere in the rule would be a line by another name.
   assert.ok(!/border-(top|right|bottom|left)\s*:/.test(rule), rule)
