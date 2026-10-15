@@ -173,7 +173,7 @@ test('the bar is a surface, not a line: no edge and no shadow', () => {
   const bar = css.find(line => line.includes('.bt-nav{'))
   assert.ok(!bar.includes('border-top'), `no rule draws a line: ${bar}`)
   assert.ok(!bar.includes('box-shadow'), `and none casts a shadow: ${bar}`)
-  assert.ok(bar.includes('background:var(--bt-card)'), `the surface is its own colour: ${bar}`)
+  assert.ok(bar.includes('background:var(--bt-page)'), `the surface is the page's colour: ${bar}`)
   assert.ok(!bar.includes('backdrop-filter'), 'nothing scrolls under it, so no frost is needed')
   // The body of the rule only: the comment above it is allowed to say the words.
   const rule = bar.slice(bar.indexOf('.bt-nav{'))
