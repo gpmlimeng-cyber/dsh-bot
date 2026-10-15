@@ -100,19 +100,22 @@ export function DiscoverBack({ useUi, actions }) {
     }, h(ChevronLeftIcon))), document.body)
 }
 
-// The page and the strip. Every rule is gated on the phone layout, the same gate the component
-// reads, so nothing here can reach the desktop.
 // The page and the strip. The page itself is 我的 -> 全部设置's own structure and sheet (the layer,
-// the dialog, the 52px head with its centred title, the scrolling body, the group cards and the item
-// rows all come from styles.js), so nothing about its look is restated here: what is left is the two
-// things the user asked for on top of that page, and the strip a shell panel needs. Every rule is
-// gated on the phone layout, the same gate the component reads.
+// the dialog, the 52px head with its centred title, the scrolling body, the group cards, their
+// corners and border, the rows' height and type, the icons' size and colour and the chevrons all
+// come from styles.js): what is left here is the two things the user asked for on top of that page,
+// and the strip a shell panel needs. Every rule is gated on the phone layout, the same gate the
+// component reads.
 export const DISCOVER_CSS = `
-/* Nothing of the page's own look is declared here: the layer, the dialog, the head and its centred
-   title, the scrolling body, the group cards, their corners and border, the rows' height and type,
-   the icons' size and colour, the chevrons and the spacing all come from the settings page's own
-   rules in styles.js. What is left is the strip a shell panel's second level needs -- that level is
-   not the settings layer, so it also needs its own line to keep the conversation's top row out. */
+/* The two things the user asked for on top of that page. The rows of one card are separated by one
+   hairline -- drawn, not a border, because it starts at the icon's own edge and stops short of the
+   card's, where a border would run the full width and meet both edges -- and two cards sit 8px
+   apart rather than the settings page's own --bt-set-gap. */
+html[data-bt-mobile] .bt-discover .bt-settings-item+.bt-settings-item::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
+html[data-bt-mobile] .bt-discover .bt-settings-group+.bt-settings-group{margin-top:8px}
+/* The strip over a shell panel's second level (a panel draws no back of its own), sitting where the
+   page's own head sits. That level is not the settings layer, so it also needs its own line to keep
+   the conversation's top row out. */
 html[data-bt-mobile] body:has(.bt-subback) .bt-mobile-bar{display:none}
 html[data-bt-mobile] .bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px 0;z-index:96;display:flex;align-items:center;background:var(--bt-main);pointer-events:none}
 html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
