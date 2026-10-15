@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: d607c3d1
+// Source fingerprint: 35a91e28
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16277,14 +16277,16 @@ html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;widt
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
 /* The two lines a row reads in: the name with its labels, then the description under it. The pair
-   takes what the chevron leaves, and each line cuts its own text short rather than pushing the row
-   wider -- the labels keep their width and the name gives way. */
+   takes what the chevron leaves, and neither line ever wraps: a line that runs out of room cuts its
+   own text with an ellipsis instead of becoming two. The name gives way first (it is the flexible
+   one); the labels keep their width and the chevron keeps its box, and what is left over is clipped
+   rather than pushed into the row's neighbours. */
 html[data-bt-mobile] .bt-peers-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
-html[data-bt-mobile] .bt-peers-name-row{display:flex;align-items:center;gap:6px;min-width:0}
-html[data-bt-mobile] .bt-peers-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-bt-mobile] .bt-peers-name-row{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden}
+html[data-bt-mobile] .bt-peers-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* The description line: the second level of the two, in the skin's own small second-level colour,
    and one line of values whatever it holds. */
-html[data-bt-mobile] .bt-peers-desc{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-peers-desc{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
 /* A value is the part that gives way: the labels and the chevron keep their width, and the model
    and the folder ellipsise -- the folder last, since it is the one that can be longest. */
 html[data-bt-mobile] .bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -16386,7 +16388,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "d607c3d1" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "35a91e28" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

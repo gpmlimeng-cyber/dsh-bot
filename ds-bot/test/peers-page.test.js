@@ -103,9 +103,15 @@ test('a label sits on the name\'s line and a value on the line below it', () => 
   // Two lines of one row, so the row is taller than the one line it was: the skin says how tall.
   const sheet = code('peers-page.js')
   assert.ok(sheet.includes('.bt-peers-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}'), 'the body stacks them')
-  assert.ok(sheet.includes('.bt-peers-name-row{display:flex;align-items:center;gap:6px;min-width:0}'), 'the name line keeps the name and its labels in one row')
-  assert.ok(sheet.includes('.bt-peers-desc{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}'), 'the description is one small second-level line')
+  assert.ok(sheet.includes('.bt-peers-name-row{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden}'), 'the name line keeps the name and its labels in one row, whatever the room')
+  assert.ok(sheet.includes('.bt-peers-desc{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}'), 'the description is one small second-level line')
   assert.ok(sheet.includes('.bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'and a value gives way rather than widening the row')
+  // Neither line wraps and neither line overflows: every text in them is nowrap with its own
+  // ellipsis, the labels keep their width (the skin's .bt-tag is flex:none), and the one flexible
+  // item -- the name -- is the one that is cut short first.
+  assert.ok(sheet.includes('.bt-peers-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'the name is the item that gives way')
+  const tags = code('styles.js').match(/\.bt-tag\{[^}]*\}/)[0]
+  assert.ok(tags.includes('flex:none') && tags.includes('white-space:nowrap'), 'and the skin\'s own tag never shrinks and never wraps')
 })
 
 test('the model and the folder are read as names, not as the raw roster', () => {
