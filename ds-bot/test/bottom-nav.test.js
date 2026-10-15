@@ -341,7 +341,7 @@ test('the status bar\'s join is softened by a band that takes no taps', () => {
   assert.ok(band.includes('top:0'), 'the strip starts at the screen edge, over the status bar')
   assert.ok(band.includes('height:calc(var(--bt-top-inset'), 'as tall as the status bar')
   assert.ok(band.includes('+ 10px)'), 'plus the 10px it fades over')
-  assert.ok(band.includes('background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 72%,transparent),transparent)'), 'one gradient: 72% of the page colour at the top, nothing at the bottom')
+  assert.ok(band.includes('background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 40%,transparent),transparent)'), 'one gradient: 40% of the page colour at the top, nothing at the bottom')
   assert.ok(!band.includes('calc(100% - 10px)'), 'with no solid part and no step inside it')
   assert.ok(band.includes('backdrop-filter:blur(12px)'), 'frosted')
   assert.ok(band.includes('pointer-events:none'), 'and it takes no tap')
