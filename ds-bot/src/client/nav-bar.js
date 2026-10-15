@@ -160,8 +160,13 @@ html[data-bt-mobile][data-bt-portrait] body:has(.bt-mem-layer) .bt-nav,
 html[data-bt-mobile][data-bt-portrait] body:has(.bt-palette-layer) .bt-nav{display:none}
 /* 伙伴 is a page: the same list fills the screen — no scrim to tap, no shadow, no border
    — and it leaves the bar's height at its own foot. The top row starts at the page's own
-   edge: the 52px that used to clear the floating hamburger has nothing to clear now. */
-html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail{width:100%;padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap));border-right:0;box-shadow:none}
+   edge: the 52px that used to clear the floating hamburger has nothing to clear now.
+   The page also starts at the screen's top edge (top:0) and carries the status bar's inset
+   in its own padding, rather than starting below it: with the floating bar hidden on this
+   page, the band above the page showed the conversation behind it — the seam the user
+   reported — and the inset plus the base rule's own 10px puts the top row exactly where it
+   was. The 12px side padding comes from the base rule and is left alone. */
+html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail{top:0;padding-top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);width:100%;padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap));border-right:0;box-shadow:none}
 html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-left:0}
 html[data-bt-mobile][data-bt-portrait] .bt-mobile-scrim{display:none}
 /* The hamburger goes with the drawer: the 伙伴 tab is what opens the list now, and two
