@@ -110,46 +110,55 @@ export const SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: Cha
 
 // --- Lucide (ISC) · path data from lucide-static v1.57.0 -------------------
 // Copied glyph data, not drawings of ours. Lucide's grid is the reason to take it: one
-// 24x24 viewBox, one 2-unit stroke, one round cap and join, so five different glyphs share
-// a weight and a corner instead of each being a shape somebody eyeballed. The data below is
-// byte-for-byte what lucide-static ships -- the box and the stroke are ours, and both are
-// measured off the pill in the top bar, the one control held up as the shell's own scale: its
-// arrow is a 14px box on 24 units at 2.2 (1.28px of stroke on screen), its memory icon a 15px
-// box on 20 units at 1.5 (1.13px), the composer's plus a 14px box on 20 units at 1.6 (1.12px).
-// So every glyph here is a 15px box -- the box the shell draws inside that pill -- and one
-// 1.2px stroke is pinned across all of them, instead of Lucide's 2 units, which would paint
-// 1.25px in a 15px box and 2.5px in a 30px one. The pin rides on each shape: vector-effect is
-// not an inherited property, so putting it on the frame around the glyph would do nothing.
+// 24x24 viewBox, one round cap and join, so five different glyphs share a corner and a set of
+// proportions instead of each being a shape somebody eyeballed. The data below is byte-for-
+// byte what lucide-static ships; the boxes and the stroke are ours.
+//
+// One stroke, in pixels: the exits were measured against 1.5px on screen, and Lucide's own 2
+// units would scale with the box (3.2px in a 38px box, 1.25px in a 15px one). So it is pinned
+// per shape -- vector-effect is not an inherited property, and putting it on the frame around
+// the glyph would do nothing.
+//
+// One box, derived the same way for each glyph: a glyph's longest run of ink lands on the 18px
+// these controls were measured to. ink = units * box / 24 + stroke, so the boxes differ where
+// the glyphs do -- the chevron's 12 units of height want 33px, the ellipsis' 16-unit row 25px.
+// That row is why the dots cannot be 5.5px: Lucide draws them 8x closer together than they are
+// fat, so a 5.5px dot means a 44px row, and a 2.5px hole in each dot at this 1.5px stroke --
+// three rings, not the solid dots these controls have always had.
 //
 // Lucide is ISC-licensed; its notice travels with its path data, in the form a bundler keeps:
 /*! Lucide (ISC) · path data from lucide-static v1.57.0 */
-const LUCIDE_BOX = 15
-const LUCIDE_STROKE = 1.2
-const lucideIcon = children => function LucideIcon() {
+const LUCIDE_STROKE = 1.5
+const LUCIDE_CHEVRON_BOX = 33
+const LUCIDE_ELLIPSIS_BOX = 25
+const LUCIDE_MENU_BOX = 15
+const lucideIcon = (children, box) => function LucideIcon() {
   return h('svg', {
-    width: LUCIDE_BOX, height: LUCIDE_BOX, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+    width: box, height: box, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
     strokeWidth: LUCIDE_STROKE, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true,
   }, children.map(([tag, attributes], index) => h(tag, { key: index, vectorEffect: 'non-scaling-stroke', ...attributes })))
 }
 
-// m15 18-6-6 6-6 -- 6x12 units, so the 15px box paints 5.0x8.7 of ink. The bar's back arrow.
-export const LucideChevronLeftIcon = lucideIcon([['path', { d: 'm15 18-6-6 6-6' }]])
-// Three r=1 circles: 16x2 units, so the 15px box paints 2.5px dots in an 11.2px row -- the same
-// weight the platform's own "···" keeps at its 15px box. Both the bar and the card open their
-// menu with this one glyph.
+// m15 18-6-6 6-6 -- 6x12 units, so a 33px box paints 9.8x18.0 of ink. The bar's back arrow.
+export const LucideChevronLeftIcon = lucideIcon([['path', { d: 'm15 18-6-6 6-6' }]], LUCIDE_CHEVRON_BOX)
+// Three r=1 circles, 16x2 units: a 25px box paints an 18.2px row of 3.58px dots, whose 0.58px
+// hole keeps them solid. Both the bar and the card open their menu with this one glyph.
 export const LucideEllipsisIcon = lucideIcon([
   ['circle', { cx: 12, cy: 12, r: 1 }],
   ['circle', { cx: 19, cy: 12, r: 1 }],
   ['circle', { cx: 5, cy: 12, r: 1 }],
-])
-// The three the exits menu draws, in the same box and at the same weight as the rest.
+], LUCIDE_ELLIPSIS_BOX)
+// The three the exits menu draws, at the box the shell's menus draw their own icons in. The
+// platform's Menu then pins every icon it is handed to its own 14px (Menu.module.css,
+// .itemIcon svg), so these three are the platform's size to set -- the one thing still ours is
+// the 1.5px stroke, which travels on the glyph.
 export const LucideExternalLinkIcon = lucideIcon([
   ['path', { d: 'M15 3h6v6' }],
   ['path', { d: 'M10 14 21 3' }],
   ['path', { d: 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6' }],
-])
+], LUCIDE_MENU_BOX)
 export const LucideCopyIcon = lucideIcon([
   ['rect', { width: 14, height: 14, x: 8, y: 8, rx: 2, ry: 2 }],
   ['path', { d: 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2' }],
-])
-export const LucideCheckIcon = lucideIcon([['path', { d: 'M20 6 9 17l-5-5' }]])
+], LUCIDE_MENU_BOX)
+export const LucideCheckIcon = lucideIcon([['path', { d: 'M20 6 9 17l-5-5' }]], LUCIDE_MENU_BOX)

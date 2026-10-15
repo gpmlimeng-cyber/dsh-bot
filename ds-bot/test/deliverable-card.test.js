@@ -78,17 +78,18 @@ test('the card’s exits are one "···", the same control in every list', () =
   const btn = rule('.bt-dcard-btn{')
   assert.ok(btn.includes('width:44px') && btn.includes('height:44px'), 'a 44px touch target')
   // The drawing is what the eye judges, and it is the same glyph the preview bar's own "···"
-  // draws: a 15px box, the one the shell's pill draws inside, with the stroke pinned at 1.2px
-  // -- 2.45px dots in an 11.2px row, well inside this 44px control. The sheet does not size the
-  // glyph and neither does the control: the glyph brings its own box.
+  // draws, in the one box that glyph carries. The sheet does not size it and neither does the
+  // control: the glyph brings both its box and its stroke.
   assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn svg')), 'the sheet does not size the control’s glyph')
   assert.ok(source.includes('}, h(LucideEllipsisIcon)),'), 'it draws Lucide’s three dots')
   assert.ok(!source.includes('{ size: 36 }'), 'and no call site sizes a Lucide glyph by hand')
   assert.ok(icons.includes('export function DotsBoldIcon'), 'though our own dot glyph stays where the phone bar uses it')
-  // Lucide's ellipsis is three r=1 circles, 16x2 units of outline: the 15px box paints a
-  // 2.45px dot in an 11.2px row, with the stroke pinned rather than scaled by the box.
-  assert.equal((2 * 15 / 24 + 1.2).toFixed(2), '2.45', 'landing at 2.45px dots')
-  assert.equal((16 * 15 / 24 + 1.2).toFixed(1), '11.2', 'in an 11.2px row')
+  // Lucide's ellipsis is three r=1 circles on a 16-unit row, so the box is the row's: 25px paints
+  // an 18.2px row with 3.58px dots, and at a 1.5px stroke the hole in each dot is 0.58px -- the
+  // dots read solid. A 5.5px dot would need a 44px row and would leave a 2.5px hole: three rings.
+  assert.equal((2 * 25 / 24 + 1.5).toFixed(2), '3.58', 'landing at 3.58px dots')
+  assert.equal((16 * 25 / 24 + 1.5).toFixed(2), '18.17', 'in an 18.2px row')
+  assert.ok((2 * 25 / 24) - 1.5 < 1, 'and the hole stays under a pixel, so the dots are solid')
   // Lucide's data is copied, so its notice travels with it -- and the strings are theirs.
   assert.ok(icons.includes('Lucide (ISC) · path data from lucide-static v1.57.0'), 'the ISC notice is written where the data is')
   assert.ok(icons.includes("['circle', { cx: 12, cy: 12, r: 1 }]") && icons.includes("['circle', { cx: 19, cy: 12, r: 1 }]") && icons.includes("['circle', { cx: 5, cy: 12, r: 1 }]"), 'with the glyph’s own three circles, in lucide-static’s order')
@@ -144,19 +145,22 @@ test('every glyph is Lucide’s copied data, credited where it lives', () => {
   for (const [data, what] of glyphs) {
     assert.ok(icons.includes(data), `${what} is lucide-static’s own data`)
   }
-  // One grid for all of them, and one weight. Lucide's own 2-unit stroke would scale with the
-  // box, so the box is the pill's -- the 15px box the shell draws inside it -- and the stroke
-  // is 1.2px pinned onto every shape, since vector-effect is not inherited and so cannot sit
-  // on the frame around the glyph.
+  // One grid for every glyph, one stroke, and a box per glyph. Lucide's own 2-unit stroke would
+  // scale with the box, so the 1.5px the exits were measured at is pinned onto every shape --
+  // vector-effect is not inherited, so it cannot sit on the frame around the glyph -- and each
+  // box is derived from the one rule: the glyph's longest run of ink lands on 18px.
   assert.equal(icons.split("viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',").length - 1, 1, 'one glyph factory, one grid')
-  assert.ok(icons.includes('const LUCIDE_BOX = 15') && icons.includes('const LUCIDE_STROKE = 1.2'), 'the box and one stroke, both ours')
+  assert.ok(icons.includes('const LUCIDE_STROKE = 1.5'), 'one 1.5px stroke, the number these controls were measured to')
   assert.ok(icons.includes("{ key: index, vectorEffect: 'non-scaling-stroke'"), 'pinned per shape, so a bigger box cannot thicken it')
   assert.ok(!read('file-preview.js').includes('stroke-width:2'), 'and nothing pins a stroke afterwards')
-  // The pill's three icons paint 1.28px, 1.13px and 1.12px of stroke on screen (2.2 of 24 units
-  // in a 14px box, 1.5 of 20 in a 15px box, 1.6 of 20 in a 14px box). One number for every glyph
-  // of ours has to sit inside that band rather than on one end of it.
-  const pillStrokes = [2.2 * 14 / 24, 1.5 * 15 / 20, 1.6 * 14 / 20]
-  assert.ok(pillStrokes.every(px => Math.abs(px - 1.2) <= 0.09), '1.2px is the band the pill itself draws in')
+  const ink = (units, box) => units * box / 24 + 1.5
+  assert.ok(Math.abs(ink(12, 33) - 18) < 0.05, 'the chevron’s 12 units of height land on 18px of ink')
+  assert.ok(Math.abs(ink(16, 25) - 18) < 0.2, 'and the dots’ 16-unit row lands on it too')
+  assert.ok(icons.includes('const LUCIDE_MENU_BOX = 15'), 'while the menu’s three keep the box the shell’s menus draw in (the platform pins them to 14)')
+  // The three the menu draws cannot be judged here: the platform's Menu sets .itemIcon svg to
+  // its own 14px, so their box is the platform's to choose. What stays ours is the stroke, which
+  // rides on the glyph and survives that box.
+  assert.ok(!read('file-preview.js').includes('itemIcon') && !styles.some(line => line.includes('itemIcon')), 'and no sheet of ours overrides the platform’s menu icon box')
 })
 
 test('two columns fold to one when the card column is narrow', () => {
