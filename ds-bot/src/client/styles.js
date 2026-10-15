@@ -1590,7 +1590,11 @@ html[data-bt-mobile] [data-slot="conversation.input.attachments"] [class*="_remo
 [data-composer-placeholder]::after{content:var(--bt-placeholder,"Message");display:block;font-size:14px;line-height:24px;color:color-mix(in srgb,var(--bt-ink) 36%,transparent)}
 /* The team's "+" (ComposerPlus) takes the seat of the shell's command-menu button. */
 [data-composer-card] button[class*="_add"]{display:none!important}
-.bt-plus{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bt-ink) 5%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink-2);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
+/* The add button is a bare glyph, as the reference app the user pointed at draws it: no fill of
+   its own and no hairline, so only the icon reads. What is left is feedback -- a light tint
+   while it is held or while its menu is open -- and the press tint every other control in the
+   skin answers with. Size and ink are the device-sampled pair. */
+.bt-plus{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:none;box-shadow:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
 .bt-plus:active{scale:.9}
 .bt-plus svg{width:14px;height:14px;transition:${spring(SPRING_POP, 'rotate')}}
