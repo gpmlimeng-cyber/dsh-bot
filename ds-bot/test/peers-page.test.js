@@ -71,30 +71,39 @@ test('the same book holds the group chats, read the same way', () => {
   assert.deepEqual(rooms.map(room => room.id), ['z', 'a', 'h'], 'and nothing is reordered in place')
 })
 
-test('the description line is a label when it is a label and a value when it is a value', () => {
+test('a label sits on the name\'s line and a value on the line below it', () => {
   // The name and the description are the two lines of one body, and the body takes what the
   // chevron leaves: a row is the avatar, the body, the chevron -- nothing floats between them.
   assert.ok(peers.includes("className: 'bt-peers-body' }"), 'the row has a two-line body')
-  assert.ok(peers.includes("className: 'bt-peers-desc' }"), 'whose second line is the description')
-  // What is a label is drawn as one, in the skin's own tag: the role, and the Main Bot badge --
-  // which only a Main Bot gets, read from the roster's own list of Main Bots.
+  assert.ok(peers.includes("className: 'bt-peers-name-row' }"), 'whose first line holds the name and its labels')
+  assert.ok(peers.includes("className: 'bt-peers-desc' }"), 'and whose second is the description')
+  // What is a label is drawn as one, in the skin's own tag, and it belongs beside the name: the
+  // role, and the Main Bot badge -- which only a Main Bot gets, read from the roster's own list.
   assert.ok(peers.includes("h('span', { className: 'bt-tag' }, bot.role)"), 'the role is a tag')
   assert.ok(peers.includes("isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null"), 'and Main Bot is a tag, only on a Main Bot')
   assert.ok(peers.includes("import { isMainOf } from './sources.js'"), 'read from the roster\'s own rule')
-  // What is a value is small text: the model, and the folder.
-  assert.ok(peers.includes("model ? h('span', { className: 'bt-peers-text' }, model) : null"), 'the model is text')
-  assert.ok(peers.includes("folder ? h('span', { className: 'bt-peers-text' }, folder) : null"), 'and so is the folder')
+  const from = peers.indexOf("className: 'bt-peers-row', 'data-bot-id'")
+  const botRow = peers.slice(from, peers.indexOf("h('span', { className: 'bt-peers-go'", from))
+  const firstLine = botRow.slice(0, botRow.indexOf("className: 'bt-peers-desc'"))
+  const secondLine = botRow.slice(botRow.indexOf("className: 'bt-peers-desc'"))
+  assert.ok(firstLine.includes("bt-tag' }, bot.role") && firstLine.includes("t('Main Bot')"), 'both tags are on the name\'s line')
+  assert.ok(!secondLine.includes('bt-tag'), 'and none is left down on the description')
+  // What is a value is small text on the line below, and only values: the model, and the folder.
+  assert.ok(secondLine.includes("model ? h('span', { className: 'bt-peers-text' }, model) : null"), 'the model is text')
+  assert.ok(secondLine.includes("folder ? h('span', { className: 'bt-peers-text' }, folder) : null"), 'and so is the folder')
   // The model is read the way the settings page reads it -- one rule, in the leaf both reach --
   // rather than a second copy of the catalog lookup here.
   assert.ok(peers.includes("import { modelOf } from './model-ref.js'"), 'the model comes from the shared rule')
   assert.ok(code('model-menu.js').includes("export { modelOf }"), 'which the picker re-exports for its own callers')
-  assert.ok(!peers.includes("bot.model.split"), 'and nothing here re-derives it')
-  // A group is not one Bot's conversation, so it has no model and no folder; the one thing its
-  // line can say is how many members it has.
+  assert.ok(!peers.includes('bot.model.split'), 'and nothing here re-derives it')
+  // A group is not one Bot's conversation, so it has no model, no folder and no role: its second
+  // line says how many members it has, and its first is the name alone.
   assert.ok(peers.includes("h('span', { className: 'bt-peers-text' }, t('{count} members', { count: (room.members ?? []).length }))"), 'a group says its members')
+  assert.ok(peers.includes("className: 'bt-peers-name-row' }, h('span', { className: 'bt-peers-name' }, room.name)"), 'and the group\'s name line carries no label')
   // Two lines of one row, so the row is taller than the one line it was: the skin says how tall.
   const sheet = code('peers-page.js')
   assert.ok(sheet.includes('.bt-peers-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}'), 'the body stacks them')
+  assert.ok(sheet.includes('.bt-peers-name-row{display:flex;align-items:center;gap:6px;min-width:0}'), 'the name line keeps the name and its labels in one row')
   assert.ok(sheet.includes('.bt-peers-desc{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}'), 'the description is one small second-level line')
   assert.ok(sheet.includes('.bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'and a value gives way rather than widening the row')
 })

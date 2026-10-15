@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 5477aeba
+// Source fingerprint: d607c3d1
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16176,9 +16176,10 @@ function PeersPage({ useRoster, useUi, actions }) {
     // people. The wrapper carries the list item, the way the members list does: a button that
     // declared itself a list item would stop being announced as a button.
     //
-    // A row is two lines: the name, and the line of description under it. What is a label is drawn
-    // as one (the skin's own .bt-tag: a Bot's role, and the Main Bot badge -- which only a Main Bot
-    // has); what is a value is small plain text (the model it runs on, the folder it works in).
+    // A row is two lines: the name with its labels beside it, and the line of description under
+    // it. What is a label is drawn as one (the skin's own .bt-tag: a Bot's role, and the Main Bot
+    // badge -- which only a Main Bot has), and it belongs on the name's own line; what is a value
+    // is small plain text (the model it runs on, the folder it works in) and belongs below.
     (0, import_react40.createElement)(
       "div",
       { className: "bt-peers-list" },
@@ -16201,7 +16202,7 @@ function PeersPage({ useRoster, useUi, actions }) {
           (0, import_react40.createElement)(
             "span",
             { className: "bt-peers-body" },
-            (0, import_react40.createElement)("span", { className: "bt-peers-name" }, room2.name),
+            (0, import_react40.createElement)("span", { className: "bt-peers-name-row" }, (0, import_react40.createElement)("span", { className: "bt-peers-name" }, room2.name)),
             // A group has no model and no folder -- it is not one Bot's conversation -- but it does
             // have members, which is the one thing worth a line under its name.
             (0, import_react40.createElement)(
@@ -16235,14 +16236,18 @@ function PeersPage({ useRoster, useUi, actions }) {
             (0, import_react40.createElement)(
               "span",
               { className: "bt-peers-body" },
-              (0, import_react40.createElement)("span", { className: "bt-peers-name" }, bot.name),
+              (0, import_react40.createElement)(
+                "span",
+                { className: "bt-peers-name-row" },
+                (0, import_react40.createElement)("span", { className: "bt-peers-name" }, bot.name),
+                bot.role ? (0, import_react40.createElement)("span", { className: "bt-tag" }, bot.role) : null,
+                isMainOf(roster, bot.id) ? (0, import_react40.createElement)("span", { className: "bt-tag" }, t("Main Bot")) : null
+              ),
               (0, import_react40.createElement)(
                 "span",
                 { className: "bt-peers-desc" },
-                bot.role ? (0, import_react40.createElement)("span", { className: "bt-tag" }, bot.role) : null,
                 model ? (0, import_react40.createElement)("span", { className: "bt-peers-text" }, model) : null,
-                folder ? (0, import_react40.createElement)("span", { className: "bt-peers-text" }, folder) : null,
-                isMainOf(roster, bot.id) ? (0, import_react40.createElement)("span", { className: "bt-tag" }, t("Main Bot")) : null
+                folder ? (0, import_react40.createElement)("span", { className: "bt-peers-text" }, folder) : null
               )
             )
           ),
@@ -16271,15 +16276,17 @@ html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;o
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
-/* The two lines a row reads in: the name, then the description under it. The pair takes what the
-   chevron leaves, and each line cuts its own text short rather than pushing the row wider. */
+/* The two lines a row reads in: the name with its labels, then the description under it. The pair
+   takes what the chevron leaves, and each line cuts its own text short rather than pushing the row
+   wider -- the labels keep their width and the name gives way. */
 html[data-bt-mobile] .bt-peers-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+html[data-bt-mobile] .bt-peers-name-row{display:flex;align-items:center;gap:6px;min-width:0}
 html[data-bt-mobile] .bt-peers-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* The description line: the second level of the two, in the skin's own small second-level colour,
-   and one line whatever it holds -- a tag for what is a label, plain text for what is a value. */
+   and one line of values whatever it holds. */
 html[data-bt-mobile] .bt-peers-desc{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
-/* A value is the part that gives way: the two labels and the chevron keep their width, and the
-   model and the folder ellipsise -- the folder last, since it is the one that can be longest. */
+/* A value is the part that gives way: the labels and the chevron keep their width, and the model
+   and the folder ellipsise -- the folder last, since it is the one that can be longest. */
 html[data-bt-mobile] .bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-bt-mobile] .bt-peers-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
 html[data-bt-mobile] .bt-peers-empty{padding:24px 12px;font-size:14px;line-height:21px;color:var(--bt-ink-3)}
@@ -16379,7 +16386,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "5477aeba" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "d607c3d1" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
