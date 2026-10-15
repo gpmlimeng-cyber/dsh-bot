@@ -319,6 +319,31 @@ const keyboardUpWith = ({ ime = '', visual = null, innerHeight = 622, focus = tr
   return module.exports.keyboardUp()
 }
 
+// The bar drops the caret on its way to a page. Bundled the same way, so the rule is run rather
+// than read: a composer left focused behind 伙伴/发现/我的 kept the keyboard, and the keyboard is
+// what takes the bar away -- the defect the user reported as "the bar is missing on the peers page".
+const navBundle = await build({
+  entryPoints: [fileURLToPath(new URL('../src/client/nav-bar.js', import.meta.url))],
+  bundle: true, format: 'cjs', platform: 'node', write: false,
+  external: ['react', 'react-dom'],
+})
+
+const dropCaretWith = (activeElement) => {
+  const module = { exports: {} }
+  runInNewContext(navBundle.outputFiles[0].text, {
+    module, exports: module.exports,
+    document: { activeElement },
+    window: {},
+    require: (name) => {
+      if (name === 'react' || name === 'react-dom') {
+        return { createElement: () => null, createPortal: () => null, Fragment: null, useState: v => [v, () => {}], useEffect: () => {}, useRef: v => ({ current: v }) }
+      }
+      throw new Error(`no platform module ${name}`)
+    },
+  })
+  return module.exports.dropCaret()
+}
+
 test('the keyboard decision reads the phone\'s own numbers', () => {
   // Measured on the device: --dsh-android-ime-bottom 0 → 267px, visualViewport 622.5 → 356.4.
   assert.equal(keyboardUpWith({ ime: '0px', visual: { height: 622.5 } }), false, 'down: the inset is zero')
@@ -339,6 +364,22 @@ test('the keyboard decision reads the phone\'s own numbers', () => {
   assert.equal(keyboardUpWith({ ime: '', visual: { height: 356.4 } }), true, 'up by the viewport gap alone')
   assert.equal(keyboardUpWith({ ime: '', visual: { height: 600 } }), false, 'a short toolbar is not a keyboard')
   assert.equal(keyboardUpWith({ ime: '', visual: null }), false, 'and no visual viewport is not a keyboard')
+})
+
+test('the bar drops the caret on the way to a page with nothing to type into', () => {
+  const calls = []
+  const composer = { blur: () => calls.push('blur') }
+  assert.equal(dropCaretWith(composer), true, 'the focused control is dropped')
+  assert.deepEqual(calls, ['blur'], 'and dropped once')
+  // Nothing focused, or something that cannot blur at all: nothing claimed, nothing thrown.
+  assert.equal(dropCaretWith(null), false, 'no focus, no change')
+  assert.equal(dropCaretWith({}), false, 'and a control without blur is left alone')
+  // Wired inside the bar's own navigation: after the page-already-up guard (so the page you are
+  // on keeps its caret) and before any of the four pages is opened.
+  const go = nav.slice(nav.indexOf('const go = (id) =>'), nav.indexOf('return createPortal'))
+  assert.ok(go.includes('dropCaret()'), `the caret is dropped in go(): ${go.slice(0, 120)}`)
+  assert.ok(go.indexOf('dropCaret()') > go.indexOf('if (active === id) return'), 'but not for the page already on screen')
+  assert.ok(go.indexOf('dropCaret()') < go.indexOf("if (id === 'tasks')"), 'and before every page is opened')
 })
 
 // The join at the status bar's own lower edge. The page takes the shell's colour, so the join

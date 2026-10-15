@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: b13ddad9
+// Source fingerprint: 8867907c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -15897,6 +15897,12 @@ var TABS = [
   ["plugins", "Plugins", FluentCompassIcon, FluentCompassFilledIcon],
   ["me", "Me", FluentPersonIcon, FluentPersonFilledIcon]
 ];
+function dropCaret(target = typeof document === "undefined" ? null : document) {
+  const focused = target?.activeElement;
+  if (focused === null || focused === void 0 || typeof focused.blur !== "function") return false;
+  focused.blur();
+  return true;
+}
 function BottomNav({ useUi, useNav, actions }) {
   const ui2 = useUi((value) => value);
   const nav = useNav((value) => value);
@@ -15906,6 +15912,7 @@ function BottomNav({ useUi, useNav, actions }) {
   const active = ui2.settings ? "me" : ui2.peers ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
   const go = (id) => {
     if (active === id) return;
+    dropCaret();
     if (id === "tasks") {
       actions.closePeers();
       actions.closeMobileNav();
@@ -16163,7 +16170,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "b13ddad9" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "8867907c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

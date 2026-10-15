@@ -49,8 +49,18 @@ const TABS = [
   ['me', 'Me', FluentPersonIcon, FluentPersonFilledIcon],
 ]
 
-export function BottomNav({ useUi, useNav, actions }) {
-  const ui = useUi(value => value)
+// Drop the caret, and with it the phone's keyboard. Exported so the rule can be run in a test
+// rather than only read: three of the bar's four pages have nothing to type into, and a composer
+// left focused behind one of them kept the keyboard up -- and the keyboard is what takes the bar
+// away (mobile.js publishes the flag, the sheet hides the bar on it).
+export function dropCaret(target = typeof document === 'undefined' ? null : document) {
+  const focused = target?.activeElement
+  if (focused === null || focused === undefined || typeof focused.blur !== 'function') return false
+  focused.blur()
+  return true
+}
+
+export function BottomNav({ useUi, useNav, actions }) {  const ui = useUi(value => value)
   const nav = useNav(value => value)
   const mobile = useMobile()
   const portrait = usePortrait()
@@ -69,6 +79,13 @@ export function BottomNav({ useUi, useNav, actions }) {
     // the one you are on does not navigate (the app the user copied behaves that way, and
     // the exits for a page are the other three tabs).
     if (active === id) return
+    // The caret is dropped on the way to any page. The phone's keyboard belongs to whatever was
+    // typing, and three of these four pages have nothing to type into (伙伴, 发现, 我的): a
+    // composer left focused behind them kept the keyboard up, and the keyboard is what takes the
+    // bar away (mobile.js publishes the flag the sheet hides it on) -- which is how the bar went
+    // missing on the peers page, with a keyboard nothing on that page could use. The chat's own
+    // rule is untouched: a keyboard raised *in* the conversation still takes the bar.
+    dropCaret()
     if (id === 'tasks') {
       actions.closePeers()
       actions.closeMobileNav()
