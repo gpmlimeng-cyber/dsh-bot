@@ -4800,11 +4800,13 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back svg{stroke-width:2}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The bar's back arrow is the platform's chevron in a 40px box: its 16-unit grid then paints
-   the 8-unit arrow as 20px of ink, and the stroke is pinned to 2px here, since the platform
-   draws it at 1 unit -- which would grow with the box rather than stay the weight the shell
-   uses. A stroke-width set on the svg inherits down to the paths; they set no width of their
-   own. */
+/* The bar's back arrow is the platform's chevron in a 42px box: its 16-unit grid then paints
+   the 8-unit arrow as 21px of ink, 23px with the stroke, and the stroke is pinned to 2px
+   here, since the platform draws it at 1 unit -- which would grow with the box rather than
+   stay the weight the shell uses. A stroke-width set on the svg inherits down to the paths;
+   they set no width of their own. The box is a little over the 22px the bar asks for on
+   purpose: a stroke measured off a screen loses its antialiased edge, about half a pixel,
+   so a glyph that only just reaches 22 reads as short. */
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -5020,12 +5022,12 @@ function DeliverableActions({ file, actions, onFailed }) {
       "aria-label": t("More"),
       title: t("More"),
       onClick: () => setShown((value) => !value)
-      // The platform's own three filled dots, at the size this 44px control can hold: its
-      // dots are 2 of 16 units, so the box that leaves 6px of dot is 48 -- one dot's
-      // diameter under the 6px the bar asks for, and the same row the bar draws, which is
-      // worth more than the half pixel. A glyph nobody has to draw is one nobody can draw
-      // badly: this replaced a hairline "···" our own hand made.
-    }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconEllipsisOutlineRegular, { size: 44 }))
+      // The platform's own three filled dots: 2 units of its 16-unit box, so 48px is the box
+      // that paints 6px dots in a 36px row -- the same box the bar's "···" takes, and the
+      // same dots. The box is 4px wider than this control, which is only its transparent
+      // frame: the drawing is a 36px row of dots centred in it, and the tile's own padding
+      // has room to spare. A glyph nobody has to draw is one nobody can draw badly.
+    }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconEllipsisOutlineRegular, { size: 48 }))
   });
 }
 var exitItems = (state) => [
@@ -5191,7 +5193,7 @@ function PreviewHead({ name, onClose, children }) {
   return (0, import_react7.createElement)(
     "div",
     { className: "bt-preview-head" },
-    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconChevronLeftOutlineRegular, { size: 40 })),
+    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconChevronLeftOutlineRegular, { size: 42 })),
     (0, import_react7.createElement)("span", { className: "bt-preview-name" }, name),
     children
   );

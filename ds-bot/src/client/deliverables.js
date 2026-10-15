@@ -230,12 +230,12 @@ export function DeliverableActions({ file, actions, onFailed }) {
       type: 'button', className: 'bt-dcard-btn', 'data-act': 'more',
       'aria-haspopup': 'menu', 'aria-expanded': shown,
       'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
-      // The platform's own three filled dots, at the size this 44px control can hold: its
-      // dots are 2 of 16 units, so the box that leaves 6px of dot is 48 -- one dot's
-      // diameter under the 6px the bar asks for, and the same row the bar draws, which is
-      // worth more than the half pixel. A glyph nobody has to draw is one nobody can draw
-      // badly: this replaced a hairline "···" our own hand made.
-    }, h(IconEllipsisOutlineRegular, { size: 44 })),
+      // The platform's own three filled dots: 2 units of its 16-unit box, so 48px is the box
+      // that paints 6px dots in a 36px row -- the same box the bar's "···" takes, and the
+      // same dots. The box is 4px wider than this control, which is only its transparent
+      // frame: the drawing is a 36px row of dots centred in it, and the tile's own padding
+      // has room to spare. A glyph nobody has to draw is one nobody can draw badly.
+    }, h(IconEllipsisOutlineRegular, { size: 48 })),
   })
 }
 
@@ -421,7 +421,7 @@ export function DeliveredPreview({ file, actions, onClose }) {
  */
 function PreviewHead({ name, onClose, children }) {
   return h('div', { className: 'bt-preview-head' },
-    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(IconChevronLeftOutlineRegular, { size: 40 })),
+    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(IconChevronLeftOutlineRegular, { size: 42 })),
     h('span', { className: 'bt-preview-name' }, name),
     children)
 }

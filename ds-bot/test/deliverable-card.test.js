@@ -82,12 +82,14 @@ test('the card’s exits are one "···", the same control in every list', () =
   // 25.5px row -- over the 6px a dot needs and the 22px the row needs together. The sheet does
   // not size the glyph; the control passes the box, exactly as the bar's control does.
   assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn svg')), 'the sheet does not size the control’s glyph')
-  assert.ok(source.includes('h(IconEllipsisOutlineRegular, { size: 44 })'), 'it draws the platform’s own three dots')
+  assert.ok(source.includes('h(IconEllipsisOutlineRegular, { size: 48 })'), 'it draws the platform’s own three dots')
   assert.ok(icons.includes('export function DotsBoldIcon'), 'though our own dot glyph stays where the phone bar uses it')
-  // The platform glyph's dots are 2 of its 16 units, so a 44px box paints 5.5px dots in a
-  // 33px row: over the 22px row, half a pixel under the 6px the card asks of a dot.
-  assert.equal(2 * 44 / 16, 5.5, 'landing at 5.5px dots')
-  assert.equal(12 * 44 / 16, 33, 'in a 33px row')
+  // The platform glyph's dots are 2 of its 16 units, so a 48px box paints 6px dots in a
+  // 36px row: over the 22px row and exactly the 6px the card asks of a dot. That box is 4px
+  // wider than the 44px control, which is its transparent frame -- the row of dots inside is
+  // centred and narrower than the control, so nothing reaches the neighbour or the edge.
+  assert.equal(2 * 48 / 16, 6, 'landing at 6px dots')
+  assert.equal(12 * 48 / 16, 36, 'in a 36px row, inside the 44px control')
   assert.ok(source.includes("'data-act': 'more'"), 'the control is marked')
   assert.ok(source.includes("'aria-haspopup': 'menu'"), 'and announces the menu it opens')
   assert.ok(source.includes("'aria-label': t('More'), title: t('More')"), 'named for a reader')
@@ -279,7 +281,7 @@ test('the card hands a file to another app, and keeps the shell from taking the 
 // bar stays three parts and a page's source toggle joins them instead of crowding it.
 test('the preview page’s title bar is back, the name, and one more menu', () => {
   const source = card.join('\n')
-  assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(IconChevronLeftOutlineRegular, { size: 40 }))"), 'the left control is a back button, named for a reader, drawing the platform’s chevron')
+  assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(IconChevronLeftOutlineRegular, { size: 42 }))"), 'the left control is a back button, named for a reader, drawing the platform’s chevron')
   assert.ok(source.includes("h('span', { className: 'bt-preview-name' }, name)"), 'the name is the middle part')
   assert.ok(!source.includes("from './icons.js'"), 'and no glyph of ours is imported any more')
   // Every glyph in this page is the shell's own: a page that hand-draws its chevron and its
@@ -370,8 +372,8 @@ test('the title bar is 56px, its controls 48px, and their drawings 22px of ink',
   // the chevron is pinned to the shell's 2px here, since the platform draws it at 1 unit of
   // a 16-unit box, which would otherwise grow with the box.
   const source = card.join('\n')
-  assert.ok(source.includes('h(IconChevronLeftOutlineRegular, { size: 40 })'), 'the chevron arrives in a 40px box')
-  assert.ok(8 * 40 / 16 + 2 >= 22, 'which paints 22px of ink, over the 22 the bar asks for')
+  assert.ok(source.includes('h(IconChevronLeftOutlineRegular, { size: 42 })'), 'the chevron arrives in a 42px box')
+  assert.ok(8 * 42 / 16 + 2 >= 22, 'which paints 23px of ink, over the 22 the bar asks for -- the box is a little over on purpose, since a stroke measured off a screen loses half a pixel of antialiasing and a glyph that only just reaches 22 reads as short')
   assert.ok(read('file-preview.js').includes('.bt-preview-back svg{stroke-width:2}'), 'with the platform’s 1-unit stroke pinned to 2px')
   assert.ok(source.includes('h(IconEllipsisOutlineRegular, { size: 48 })'), 'and the dots arrive in a 48px box')
   // The dots are judged as a diameter as well as a row: three hairline marks are what made

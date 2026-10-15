@@ -181,11 +181,13 @@ export const FILE_PREVIEW_CSS = `
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-back svg{stroke-width:2}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The bar's back arrow is the platform's chevron in a 40px box: its 16-unit grid then paints
-   the 8-unit arrow as 20px of ink, and the stroke is pinned to 2px here, since the platform
-   draws it at 1 unit -- which would grow with the box rather than stay the weight the shell
-   uses. A stroke-width set on the svg inherits down to the paths; they set no width of their
-   own. */
+/* The bar's back arrow is the platform's chevron in a 42px box: its 16-unit grid then paints
+   the 8-unit arrow as 21px of ink, 23px with the stroke, and the stroke is pinned to 2px
+   here, since the platform draws it at 1 unit -- which would grow with the box rather than
+   stay the weight the shell uses. A stroke-width set on the svg inherits down to the paths;
+   they set no width of their own. The box is a little over the 22px the bar asks for on
+   purpose: a stroke measured off a screen loses its antialiased edge, about half a pixel,
+   so a glyph that only just reaches 22 reads as short. */
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
