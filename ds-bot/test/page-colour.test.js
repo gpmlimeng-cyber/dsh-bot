@@ -25,6 +25,19 @@ test('the light page is the sampled #f8f8f8, with white cards on it', () => {
   assert.ok(light.includes('--bt-bubble:#eeeeee'), 'the bubbles keep the grey they had')
 })
 
+// The bar's two colours are not ours to choose: they were sampled off the user's
+// screenshots, one per state, and both the glyph and its label wear the same one.
+test('the bar wears the sampled pair, and the input is white like the cards', () => {
+  assert.ok(light.includes('--bt-nav-ink:#949494'), light)
+  assert.ok(light.includes('--bt-nav-on:#171717'), light)
+  // The dark theme keeps the skin's own ink pair: nothing there changes.
+  assert.ok(dark.includes('--bt-nav-ink:rgba(242,242,242,.36)') && dark.includes('--bt-nav-on:#f2f2f2'), dark)
+  // The input the user types in is a card: the sampled #ffffff, not the page's near-white main.
+  const composer = styles.find(line => line.startsWith('[data-composer-card]{'))
+  assert.ok(composer.includes('background:var(--bt-card)!important'), composer.slice(0, 200))
+  assert.ok(!composer.includes('background:var(--bt-main)'), 'and not the main surface colour')
+})
+
 test('the page is painted where the platform painted its own, and only in the light theme', () => {
   // html cannot be a descendant of body, so it is gated with :has; everything else is.
   const paint = 'html:not(:has(body[data-ds-dark-theme])){background:var(--bt-page)}\nbody:not([data-ds-dark-theme]){background:var(--bt-page)}\nbody:not([data-ds-dark-theme]) [data-dsh-frame],\nbody:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-page)}'

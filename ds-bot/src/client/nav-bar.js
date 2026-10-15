@@ -131,15 +131,16 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-page);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
-html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
 /* The drawings carry their own 24px box (their grid is Phosphor's 256, icons.js), so nothing
    here sizes them; only the flex row's power to squeeze them is taken away. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
-html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-ink)}
-/* The selected page is the ink of the tab bar's own text at its heavier weight, not the
-   accent: the screenshot the user asked for draws its selected page in black and its
-   unselected ones in a light grey, and an accent-blue tab beside a black one would read as
-   two different states. --bt-ink is that black, and follows the theme in the dark one. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-nav-on)}
+/* The two colours are the ones sampled off the user's screenshots -- #949494 for the page
+   you are not on and #171717 for the one you are (--bt-nav-ink / --bt-nav-on, light theme;
+   in the dark theme they fall back to the skin's own ink pair, so nothing there changes).
+   They are the bar's own tokens rather than the shared --bt-ink, which every other surface
+   needs at full strength. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active] .bt-nav-tab-text{font-weight:600}
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab-text{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* The conversation column gives the bar its height back. centerCol is a stretched grid

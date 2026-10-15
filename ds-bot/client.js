@@ -2017,8 +2017,8 @@ var SHELL_CSS = `
    leaves the band above it showing the platform's own base, which is where the peers page's
    seam came from. Dark paints neither: see the rule below, where its value is only the
    bottom bar's, the card colour it has always worn. */
-body{--bt-page:#f8f8f8;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f8f8f8;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56)}
-body[data-ds-dark-theme]{--bt-page:#1f1f1f;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(255,255,255,.08);--bt-line-2:rgba(255,255,255,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(255,255,255,.09);--bt-tag-ink:rgba(242,242,242,.62)}
+body{--bt-page:#f8f8f8;--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f8f8f8;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56)}
+body[data-ds-dark-theme]{--bt-page:#1f1f1f;--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(255,255,255,.08);--bt-line-2:rgba(255,255,255,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(255,255,255,.09);--bt-tag-ink:rgba(242,242,242,.62)}
 /* The page, on both layers and where the platform paints its own base: html itself (which
    cannot be a descendant of body, hence :has), body, the frame the whole app sits in, and
    the column the conversation lives in. Gated on the light theme, so the dark one keeps the
@@ -3508,7 +3508,7 @@ html[data-bt-mobile][data-bt-size=compact] .bt-tools::after{display:none}
 }
 @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
 @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
-[data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:var(--bt-main)!important;border:.5px solid var(--bt-line-2)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
+[data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:var(--bt-card)!important;border:.5px solid var(--bt-line-2)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
 [data-composer-card]:hover,[data-composer-card]:focus-within{border-color:color-mix(in srgb,var(--bt-ink) 30%,transparent)!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
 /* The composer takes the same measure as the conversation column, so both edges line up:
@@ -15826,15 +15826,16 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-page);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
-html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
 /* The drawings carry their own 24px box (their grid is Phosphor's 256, icons.js), so nothing
    here sizes them; only the flex row's power to squeeze them is taken away. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
-html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-ink)}
-/* The selected page is the ink of the tab bar's own text at its heavier weight, not the
-   accent: the screenshot the user asked for draws its selected page in black and its
-   unselected ones in a light grey, and an accent-blue tab beside a black one would read as
-   two different states. --bt-ink is that black, and follows the theme in the dark one. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-nav-on)}
+/* The two colours are the ones sampled off the user's screenshots -- #949494 for the page
+   you are not on and #171717 for the one you are (--bt-nav-ink / --bt-nav-on, light theme;
+   in the dark theme they fall back to the skin's own ink pair, so nothing there changes).
+   They are the bar's own tokens rather than the shared --bt-ink, which every other surface
+   needs at full strength. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active] .bt-nav-tab-text{font-weight:600}
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab-text{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* The conversation column gives the bar its height back. centerCol is a stretched grid
