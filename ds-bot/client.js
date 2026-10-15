@@ -65,6 +65,9 @@ var ZH = {
   Discover: "发现",
   Me: "我的",
   Pages: "页面",
+  // The member list above a phone's composer: one row until it is opened.
+  "Expand {count}": "展开 {count}",
+  Collapse: "收起",
   Cancel: "取消",
   Delete: "删除",
   Duplicate: "复制一份",
@@ -10764,6 +10767,21 @@ function SummaryLine({ busy, onOpen }) {
     )
   );
 }
+function dockPlan(rows, rest, expanded, phone) {
+  const total = rows.length + rest.length;
+  const more = total > 1 ? total - 1 : 0;
+  if (!phone || expanded) return { first: rows[0] ?? null, others: rows.slice(1), summary: rest, more: phone ? more : 0 };
+  const first = rows[0] ?? null;
+  return { first, others: [], summary: first ? [] : rest, more: first ? more : 0 };
+}
+function MoreButton({ expanded, count, onClick }) {
+  return (0, import_react23.createElement)("button", {
+    type: "button",
+    className: "bt-mw-more",
+    "aria-expanded": expanded,
+    onClick
+  }, expanded ? t("Collapse") : t("Expand {count}", { count }));
+}
 function MemberDock({ sessionId, useRoster, useWork, actions }) {
   const roster = useRoster((value) => value);
   const work = useWork((value) => value);
@@ -10773,21 +10791,33 @@ function MemberDock({ sessionId, useRoster, useWork, actions }) {
   const busy = room2 ? busyMembers(room2, work, roster) : [];
   const groups = bot !== void 0 && !ownChat ? botGroupWork(bot.id, work, roster) : [];
   const shown = busy.length > 0 || groups.length > 0;
+  const phone = usePortrait();
+  const [open, setOpen] = (0, import_react23.useState)(false);
+  const count = busy.length + groups.length;
+  (0, import_react23.useEffect)(() => {
+    if (open && count <= 1) setOpen(false);
+  }, [open, count]);
   const now = useNow2(shown);
   const ref = (0, import_react23.useRef)(null);
   useFlowColumn(ref, shown, sessionId);
   if (!shown) return null;
   if (room2) {
-    const { rows, rest } = splitBusy(busy);
-    const open = () => actions.showDetails(sessionId);
-    return (0, import_react23.createElement)(
-      "div",
-      { ref, className: "bt-mw-dock-stack" },
-      rows.map((entry) => (0, import_react23.createElement)(WorkRow, { key: entry.id, bot: entry.bot, tool: entry.doing.tool, label: entry.bot.name, at: entry.doing.since, now, onOpen: open })),
-      rest.length > 0 ? (0, import_react23.createElement)(SummaryLine, { busy: rest, onOpen: open }) : null
-    );
+    const { rows: rows2, rest } = splitBusy(busy);
+    const onOpen = () => actions.showDetails(sessionId);
+    const plan2 = dockPlan(rows2, rest, open, phone);
+    const row2 = (entry) => (0, import_react23.createElement)(WorkRow, { key: entry.id, bot: entry.bot, tool: entry.doing.tool, label: entry.bot.name, at: entry.doing.since, now, onOpen });
+    const first2 = plan2.first ? row2(plan2.first) : null;
+    const toggle2 = plan2.more > 0 ? (0, import_react23.createElement)(MoreButton, { expanded: open, count: plan2.more, onClick: () => setOpen((value) => !value) }) : null;
+    const children = [];
+    if (first2) children.push(toggle2 ? (0, import_react23.createElement)("div", { className: "bt-mw-dock-first" }, first2, toggle2) : first2);
+    else if (plan2.summary.length > 0) children.push((0, import_react23.createElement)(SummaryLine, { busy: plan2.summary, onOpen }));
+    for (const entry of plan2.others) children.push(row2(entry));
+    if (first2 && plan2.summary.length > 0) children.push((0, import_react23.createElement)(SummaryLine, { busy: plan2.summary, onOpen }));
+    return (0, import_react23.createElement)("div", { ref, className: "bt-mw-dock-stack" }, children);
   }
-  return (0, import_react23.createElement)("div", { ref, className: "bt-mw-dock-stack" }, groups.slice(0, ROWS_MAX).map((item) => (0, import_react23.createElement)(WorkRow, {
+  const rows = groups.slice(0, ROWS_MAX);
+  const plan = dockPlan(rows, [], open, phone);
+  const row = (item) => (0, import_react23.createElement)(WorkRow, {
     key: item.room.id,
     bot,
     tool: item.tool,
@@ -10795,7 +10825,15 @@ function MemberDock({ sessionId, useRoster, useWork, actions }) {
     at: item.since,
     now,
     onOpen: () => actions.openSession(item.room.id)
-  })));
+  });
+  const first = plan.first ? row(plan.first) : null;
+  const toggle = plan.more > 0 ? (0, import_react23.createElement)(MoreButton, { expanded: open, count: plan.more, onClick: () => setOpen((value) => !value) }) : null;
+  return (0, import_react23.createElement)(
+    "div",
+    { ref, className: "bt-mw-dock-stack" },
+    first && toggle ? (0, import_react23.createElement)("div", { className: "bt-mw-dock-first" }, first, toggle) : first,
+    plan.others.map(row)
+  );
 }
 function useFlowColumn(ref, active, key) {
   (0, import_react23.useLayoutEffect)(() => {
@@ -10890,6 +10928,15 @@ var MEMBER_CSS = `
 .bt-mw-row>.bt-mark{flex:none}
 .bt-mw-row-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-mw-row-time{flex:none;font-size:12px;color:var(--bt-ink-3);white-space:nowrap}
+/* The phone's one row and its count (member-status.js, dockPlan). The row keeps its own
+   width and the control takes the right end, so the two never fight over the label's
+   ellipsis; the line is the 32px row, so the closed stack is 38px with its 6px margin --
+   one line, which is what was asked for. Gated on the phone flag like every other rule
+   that only a phone can use. */
+html[data-bt-mobile] .bt-mw-dock-first{display:flex;align-items:center;gap:4px;max-width:100%;pointer-events:none}
+html[data-bt-mobile] .bt-mw-dock-first>.bt-mw-row{flex:0 1 auto;min-width:0;max-width:none}
+html[data-bt-mobile] .bt-mw-more{pointer-events:auto;flex:none;margin-inline-start:auto;height:24px;padding:0 8px;border:0;border-radius:12px;background:none;color:var(--bt-ink-3);font:inherit;font-size:12px;line-height:18px;white-space:nowrap;cursor:pointer}
+html[data-bt-mobile] .bt-mw-more:hover{background:var(--bt-hover)}
 .bt-mw-work{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .bt-mw-stop{flex:none;height:22px;padding:0 10px;border:1px solid var(--bt-line,rgba(0,0,0,.12));border-radius:11px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12px;cursor:pointer}
 .bt-mw-stop:hover{background:var(--bt-hover)}

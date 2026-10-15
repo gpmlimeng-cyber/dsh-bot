@@ -2,6 +2,7 @@ import { createElement as h, useEffect, useLayoutEffect, useRef, useState } from
 import { BotMark, toolState } from './mark.js'
 import { Shimmer, workPhrase } from './cells.js'
 import { elapsedLabel } from './activity-row.js'
+import { usePortrait } from './mobile.js'
 import { t } from './i18n.js'
 
 // -------------------------------------------------------------------------
@@ -86,6 +87,30 @@ function SummaryLine({ busy, onOpen }) {
       doing ? h('span', { className: 'bt-event-name' }, h(Shimmer, null, doing)) : null))
 }
 
+// What the dock draws: `rows` are the members at work here, one row each, and `rest` is
+// everything the summary line stands for. An upright phone has no room for four rows of who
+// is doing what above its composer -- measured on the phone the user reported, the stack was
+// eating a third of the conversation -- so there the list is one row and a count until it is
+// opened. The desktop, and a phone held sideways, keep every row they had.
+export function dockPlan(rows, rest, expanded, phone) {
+  const total = rows.length + rest.length
+  const more = total > 1 ? total - 1 : 0
+  if (!phone || expanded) return { first: rows[0] ?? null, others: rows.slice(1), summary: rest, more: phone ? more : 0 }
+  // Closed on a phone: the first row, and the count of the ones behind it. With no row to
+  // show there is nothing to open -- the summary line already stands for everyone.
+  const first = rows[0] ?? null
+  return { first, others: [], summary: first ? [] : rest, more: first ? more : 0 }
+}
+
+// The control that opens the list. It is a sibling of the row rather than a child of it:
+// the row is a button of its own and opens the conversation's details.
+function MoreButton({ expanded, count, onClick }) {
+  return h('button', {
+    type: 'button', className: 'bt-mw-more', 'aria-expanded': expanded,
+    onClick,
+  }, expanded ? t('Collapse') : t('Expand {count}', { count }))
+}
+
 // Above a group's composer: who is at work here, and a line for the rest; both open the
 // details panel. Above a Bot's own composer: the groups it is at work in, while its own
 // chat is idle (a running own chat has its activity row).
@@ -98,20 +123,40 @@ export function MemberDock({ sessionId, useRoster, useWork, actions }) {
   const busy = room ? busyMembers(room, work, roster) : []
   const groups = bot !== undefined && !ownChat ? botGroupWork(bot.id, work, roster) : []
   const shown = busy.length > 0 || groups.length > 0
+  // The one row the phone shows until it is opened. A run that ends closes it again: the
+  // rows are about work in flight, and a list left open would wait there for the next one.
+  const phone = usePortrait()
+  const [open, setOpen] = useState(false)
+  const count = busy.length + groups.length
+  useEffect(() => { if (open && count <= 1) setOpen(false) }, [open, count])
   const now = useNow(shown)
   const ref = useRef(null)
   useFlowColumn(ref, shown, sessionId)
   if (!shown) return null
   if (room) {
     const { rows, rest } = splitBusy(busy)
-    const open = () => actions.showDetails(sessionId)
-    return h('div', { ref, className: 'bt-mw-dock-stack' },
-      rows.map(entry => h(WorkRow, { key: entry.id, bot: entry.bot, tool: entry.doing.tool, label: entry.bot.name, at: entry.doing.since, now, onOpen: open })),
-      rest.length > 0 ? h(SummaryLine, { busy: rest, onOpen: open }) : null)
+    const onOpen = () => actions.showDetails(sessionId)
+    const plan = dockPlan(rows, rest, open, phone)
+    const row = entry => h(WorkRow, { key: entry.id, bot: entry.bot, tool: entry.doing.tool, label: entry.bot.name, at: entry.doing.since, now, onOpen })
+    const first = plan.first ? row(plan.first) : null
+    const toggle = plan.more > 0 ? h(MoreButton, { expanded: open, count: plan.more, onClick: () => setOpen(value => !value) }) : null
+    const children = []
+    if (first) children.push(toggle ? h('div', { className: 'bt-mw-dock-first' }, first, toggle) : first)
+    else if (plan.summary.length > 0) children.push(h(SummaryLine, { busy: plan.summary, onOpen }))
+    for (const entry of plan.others) children.push(row(entry))
+    if (first && plan.summary.length > 0) children.push(h(SummaryLine, { busy: plan.summary, onOpen }))
+    return h('div', { ref, className: 'bt-mw-dock-stack' }, children)
   }
-  return h('div', { ref, className: 'bt-mw-dock-stack' }, groups.slice(0, ROWS_MAX).map(item => h(WorkRow, {
+  const rows = groups.slice(0, ROWS_MAX)
+  const plan = dockPlan(rows, [], open, phone)
+  const row = item => h(WorkRow, {
     key: item.room.id, bot, tool: item.tool, label: t('in {name}', { name: item.room.name }), at: item.since, now, onOpen: () => actions.openSession(item.room.id),
-  })))
+  })
+  const first = plan.first ? row(plan.first) : null
+  const toggle = plan.more > 0 ? h(MoreButton, { expanded: open, count: plan.more, onClick: () => setOpen(value => !value) }) : null
+  return h('div', { ref, className: 'bt-mw-dock-stack' },
+    first && toggle ? h('div', { className: 'bt-mw-dock-first' }, first, toggle) : first,
+    plan.others.map(row))
 }
 
 // The rows line up with the transcript's column, whose width and gutters are the shell's.
@@ -209,6 +254,15 @@ export const MEMBER_CSS = `
 .bt-mw-row>.bt-mark{flex:none}
 .bt-mw-row-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-mw-row-time{flex:none;font-size:12px;color:var(--bt-ink-3);white-space:nowrap}
+/* The phone's one row and its count (member-status.js, dockPlan). The row keeps its own
+   width and the control takes the right end, so the two never fight over the label's
+   ellipsis; the line is the 32px row, so the closed stack is 38px with its 6px margin --
+   one line, which is what was asked for. Gated on the phone flag like every other rule
+   that only a phone can use. */
+html[data-bt-mobile] .bt-mw-dock-first{display:flex;align-items:center;gap:4px;max-width:100%;pointer-events:none}
+html[data-bt-mobile] .bt-mw-dock-first>.bt-mw-row{flex:0 1 auto;min-width:0;max-width:none}
+html[data-bt-mobile] .bt-mw-more{pointer-events:auto;flex:none;margin-inline-start:auto;height:24px;padding:0 8px;border:0;border-radius:12px;background:none;color:var(--bt-ink-3);font:inherit;font-size:12px;line-height:18px;white-space:nowrap;cursor:pointer}
+html[data-bt-mobile] .bt-mw-more:hover{background:var(--bt-hover)}
 .bt-mw-work{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .bt-mw-stop{flex:none;height:22px;padding:0 10px;border:1px solid var(--bt-line,rgba(0,0,0,.12));border-radius:11px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12px;cursor:pointer}
 .bt-mw-stop:hover{background:var(--bt-hover)}

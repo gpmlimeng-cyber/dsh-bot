@@ -28,6 +28,9 @@ const ZH = {
   Discover: '发现',
   Me: '我的',
   Pages: '页面',
+  // The member list above a phone's composer: one row until it is opened.
+  'Expand {count}': '展开 {count}',
+  Collapse: '收起',
   Cancel: '取消',
   Delete: '删除',
   Duplicate: '复制一份',
