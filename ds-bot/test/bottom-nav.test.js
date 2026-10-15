@@ -63,34 +63,36 @@ test('the four pages are named for a UI dump, tasks first', () => {
   assert.ok(nav.includes("h('span', { className: 'bt-nav-tab-text', 'aria-hidden': true }, t(label))"), 'the drawn label is translated too')
 })
 
-// The two states are two drawings of one shape, copied from Phosphor -- not one drawing with
-// a heavier stroke, which is what the user ruled out. One family for all four pages, so the
-// bar cannot read as a mix, and the artwork is byte-for-byte what the package ships.
-test('each page is Phosphor’s regular and Phosphor’s fill, credited where they live', () => {
+// The two states are two drawings of one shape, copied from Fluent -- not one drawing with a
+// heavier stroke, which is what the user ruled out. One family for all four pages, and it is
+// the platform's own product family, so the bar cannot read as a mix. Each string below is
+// the whole path data of one file, which is what "byte for byte" means.
+test('each page is Fluent\u2019s regular and Fluent\u2019s fill, credited where they live', () => {
   const icons = read('icons.js')
-  assert.ok(icons.includes('Phosphor Icons (MIT) · Copyright (c) 2023 Phosphor Icons · @phosphor-icons/core v2.1.1'), 'the MIT notice sits with the artwork')
+  assert.ok(icons.includes('Fluent System Icons (MIT) \u00b7 Copyright (c) 2020 Microsoft Corporation \u00b7 @fluentui/svg-icons v1.1.344'), 'the MIT notice sits with the artwork')
   const glyphs = [
-    ['M216,48H40A16,16,0,0,0,24,64V224', 'chat, the regular one'],
-    ['M232,64V192a16,16,0,0,1-16,16H83', 'chat, the solid one'],
-    ['M200,48H136V16a8,8,0,0,0-16,0V48', 'robot, the regular one'],
-    ['M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48ZM172,96', 'robot, the solid one'],
-    ['M128,24A104,104,0,1,0,232,128', 'compass, the regular one'],
-    ['M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm51.58,57.79', 'compass, the solid one'],
-    ['M230.92,212c-15.23-26.33', 'user, the regular one'],
-    ['M230.93,220a8,8,0,0,1-6.93,4H32', 'user, the solid one'],
+    ['M12 2a10 10 0 1 1-4.59 18.89L3.6 21.96a1.25 1.25 0 0 1-1.54-1.54l1.06-3.83A10 10 0 0 1 12 2m0 1.5a8.5 8.5 0 0 0-7.43 12.64l.15.27-1.1 3.98 3.98-1.11.27.15A8.5 8.5 0 1 0 12 3.5M8.75 13h4.5a.75.75 0 0 1 .1 1.5h-4.6a.75.75 0 0 1-.1-1.5zh4.5zm0-3.5h6.5a.75.75 0 0 1 .1 1.5h-6.6a.75.75 0 0 1-.1-1.5zh6.5z', 'chat, the regular one'],
+    ['M12 2a10 10 0 1 1-4.64 18.86l-4.3 1.12a.85.85 0 0 1-1.03-1.04l1.11-4.29A10 10 0 0 1 12 2m1.25 11h-4.6a.75.75 0 0 0 0 1.5h4.7a.75.75 0 0 0 0-1.5zm2-3.5h-6.6a.75.75 0 0 0 0 1.5h6.7a.75.75 0 0 0 0-1.5z', 'chat, the solid one'],
+    ['M17.75 14C19 14 20 15 20 16.25v.9c0 1.1-.47 2.14-1.3 2.85q-2.36 2-6.7 2t-6.7-2A3.8 3.8 0 0 1 4 17.16v-.91C4 15 5.01 14 6.25 14zm0 1.5H6.25a.75.75 0 0 0-.75.75v.9c0 .66.29 1.29.79 1.71Q8.17 20.5 12 20.5q3.83-.01 5.72-1.64c.5-.43.78-1.05.78-1.7v-.91a.75.75 0 0 0-.75-.75M11.9 2h.1c.38 0 .7.28.74.65l.01.1v.75h3.5c1.24 0 2.25 1 2.25 2.25v4.5c0 1.25-1 2.25-2.25 2.25h-8.5c-1.24 0-2.25-1-2.25-2.25v-4.5c0-1.24 1-2.25 2.25-2.25h3.5v-.75c0-.38.28-.7.65-.74L12 2zm4.35 3h-8.5a.75.75 0 0 0-.75.75v4.5c0 .42.34.75.75.75h8.5c.41 0 .75-.33.75-.75v-4.5a.75.75 0 0 0-.75-.75m-6.5 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5m4.5 0a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5', 'bot, the regular one'],
+    ['M17.75 14C19 14 20 15 20 16.25v.9c0 1.1-.47 2.14-1.3 2.85q-2.36 2-6.7 2t-6.7-2A3.8 3.8 0 0 1 4 17.16v-.91C4 15 5.01 14 6.25 14zM11.9 2h.1c.38 0 .7.28.74.65l.01.1v.75h3.5c1.24 0 2.25 1 2.25 2.25v4.5c0 1.25-1 2.25-2.25 2.25h-8.5c-1.24 0-2.25-1-2.25-2.25v-4.5c0-1.24 1-2.25 2.25-2.25h3.5v-.75c0-.38.28-.7.65-.74L12 2zM9.75 6.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5m4.5 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5', 'bot, the solid one'],
+    ['M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17M7.08 8.7c-.4-1.01.6-2.02 1.63-1.62l.2.09 3.75 1.42a4.8 4.8 0 0 1 2.75 2.75l.16.43 1.63 3.79a1.25 1.25 0 0 1-1.64 1.64l-3.76-1.61-.46-.18a4.8 4.8 0 0 1-2.75-2.75L7.21 9.03zm3 3.48c.32.8.95 1.44 1.74 1.78l.52.23 2.98 1.13-1.14-3-.22-.5a3.3 3.3 0 0 0-1.78-1.74L8.7 8.7z', 'compass, the regular one'],
+    ['M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20M8.56 7.43a.88.88 0 0 0-1.13 1.13l1.5 3.97a4.4 4.4 0 0 0 2.54 2.53l3.97 1.5a.88.88 0 0 0 1.13-1.12l-1.51-3.96a4.4 4.4 0 0 0-2.53-2.54z', 'compass, the solid one'],
+    ['M17.75 14C19 14 20 15 20 16.25v.57c0 .9-.32 1.76-.9 2.44Q16.74 22.01 12 22q-4.74.01-7.1-2.74a3.8 3.8 0 0 1-.9-2.43v-.58C4 15 5.01 14 6.25 14zm0 1.5H6.25a.75.75 0 0 0-.75.75v.58c0 .53.2 1.05.54 1.46C7.3 19.76 9.26 20.5 12 20.5q4.09 0 5.96-2.21c.35-.41.54-.93.54-1.47v-.57a.75.75 0 0 0-.75-.75M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10m0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7', 'person, the regular one'],
+    ['M17.75 14C19 14 20 15 20 16.25v.92q-.01.88-.5 1.6Q17.13 22 12 22q-5.15 0-7.49-3.24a2.8 2.8 0 0 1-.5-1.6v-.91C4 15 5 14 6.24 14zM12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10', 'person, the solid one'],
   ]
-  for (const [data, what] of glyphs) assert.ok(icons.includes(data), `${what} is @phosphor-icons/core's own artwork`)
-  // One factory for this family, declared once, on Phosphor's own 256 grid -- and the
-  // families that stood in before it are gone, each with its notice.
-  assert.equal(icons.split('const phosphorIcon = (d, box = PHOSPHOR_BOX)').length - 1, 1, 'one Phosphor factory')
-  assert.ok(icons.includes("viewBox: '0 0 256 256'"), 'on Phosphor\'s 256 grid')
-  assert.equal((icons.match(/export const Phosphor\w+/g) ?? []).length, 8, 'four pairs')
-  for (const dead of ['ionicon(', 'Ionicons (MIT)', 'IonChatbubbleIcon', 'fluentIcon', 'FLUENT_NAV_BOX', 'FluentBotIcon', 'FluentSystem', '@fluentui/svg-icons', 'IonPeopleIcon']) {
+  for (const [data, what] of glyphs) assert.ok(icons.includes(data), `${what} is @fluentui/svg-icons' own artwork`)
+  // One factory for this family, declared once, on Fluent's own 24 grid -- and the families
+  // that stood in before this one are gone, each with its notice.
+  assert.equal(icons.split('const fluentNavIcon = (d, box = FLUENT_NAV_BOX)').length - 1, 1, 'one Fluent factory')
+  assert.ok(icons.includes("viewBox: '0 0 24 24'"), 'on Fluent\u2019s 24 grid')
+  assert.equal((icons.match(/export const Fluent\w+/g) ?? []).length, 8, 'four pairs')
+  for (const dead of ['Phosphor Icons (MIT)', 'phosphorIcon', 'PHOSPHOR_BOX', 'ionicon(', 'Ionicons (MIT)', 'IonChatbubbleIcon', 'IonPeopleIcon', 'fluentIcon']) {
     assert.ok(!icons.includes(dead), `${dead} is gone with the family it belonged to`)
   }
-  // Nothing is pinned: Phosphor's 16 units of ring on a 256 grid are 1.5px at this box.
-  assert.ok(!icons.includes('non-scaling-stroke"...attributes'), 'the Lucide pinning is not copied here')
-  assert.ok(Math.abs(16 * 24 / 256 - 1.5) < 0.001, 'the regular weight lands on the skin\'s own 1.5px')
+  // Nothing is pinned here either: Fluent draws both weights as filled artwork, so there is
+  // no line for the Lucide trick to hold steady.
+  const factory = icons.slice(icons.indexOf('const fluentNavIcon'), icons.indexOf('// 任务: the rounded bubble'))
+  assert.ok(factory.length > 0 && !factory.includes('vectorEffect'), factory)
 })
 
 test('the tab on screen draws the filled one, and says so in the tree', () => {
@@ -176,18 +178,20 @@ test('发现 is not drawn without the shell panel, and is never selected without
   assert.ok(index.includes("ctx.slots.subscribe?.('main', readPlugins)"), 'and watched, so a late plugin manager still gets its tab')
 })
 
-test('the bar is a surface, not a line: no edge and no shadow', () => {
-  // The screenshot the user asked for draws no line above its bar; the surface is what
-  // separates it, so it has to be a surface of its own -- the page's own colour would have
-  // taken the bar with the line.
+test('the bar has no frame at all, and wears the page colour', () => {
+  // The user asked for the frame gone -- all four sides, an outline and a shadow -- and for
+  // the bar to be the same colour as the page it sits on. Written out rather than merely
+  // absent, so nothing upstream can put a line back.
   const bar = css.find(line => line.includes('.bt-nav{'))
-  assert.ok(!bar.includes('border-top'), `no rule draws a line: ${bar}`)
-  assert.ok(!bar.includes('box-shadow'), `and none casts a shadow: ${bar}`)
-  assert.ok(bar.includes('background:var(--bt-page)'), `the surface is the page's colour: ${bar}`)
-  assert.ok(!bar.includes('backdrop-filter'), 'nothing scrolls under it, so no frost is needed')
-  // The body of the rule only: the comment above it is allowed to say the words.
   const rule = bar.slice(bar.indexOf('.bt-nav{'))
-  assert.ok(!/border-top|box-shadow/.test(rule), rule)
+  assert.ok(rule.includes('border:0'), `no edge on any side: ${rule}`)
+  assert.ok(rule.includes('outline:0'), `nothing outlines it: ${rule}`)
+  assert.ok(rule.includes('box-shadow:none'), `nothing shadows it: ${rule}`)
+  assert.ok(rule.includes('background:var(--bt-page)'), `the surface is the page's colour: ${rule}`)
+  assert.ok(!rule.includes('backdrop-filter'), 'nothing scrolls under it, so no frost is needed')
+  // A coloured border or shadow anywhere in the rule would be a line by another name.
+  assert.ok(!/border-(top|right|bottom|left)\s*:/.test(rule), rule)
+  assert.ok(!/box-shadow:(?!none)/.test(rule), rule)
 })
 
 test('the peers page starts at the top edge of the screen and carries the inset itself', () => {

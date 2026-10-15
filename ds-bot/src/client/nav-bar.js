@@ -24,10 +24,10 @@
 import { createElement as h } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  PhosphorChatFilledIcon, PhosphorChatIcon,
-  PhosphorCompassFilledIcon, PhosphorCompassIcon,
-  PhosphorRobotFilledIcon, PhosphorRobotIcon,
-  PhosphorUserFilledIcon, PhosphorUserIcon,
+  FluentBotFilledIcon, FluentBotIcon,
+  FluentChatFilledIcon, FluentChatIcon,
+  FluentCompassFilledIcon, FluentCompassIcon,
+  FluentPersonFilledIcon, FluentPersonIcon,
 } from './icons.js'
 import { useMobile, usePortrait } from './mobile.js'
 import { t } from './i18n.js'
@@ -37,17 +37,17 @@ import { t } from './i18n.js'
 // at render time like every other string here, so the bar names its pages in the language
 // the rest of the interface is in (Chinese must not be hard-coded into the labels).
 //
-// Each page carries two drawings of one shape, from Phosphor (icons.js): the outlined one
+// Each page carries two drawings of one shape, from Fluent (icons.js): the outlined one
 // while the page is not the current one and the solid one while it is, which is the state
-// the user asked for and the reason the bar never thickens a stroke to fake it. All four
-// come from one family, so the bar reads as one set: 任务 a rounded bubble with its tail at
-// the lower left, 伙伴 the robot head the user asked for on that page, 发现 a compass, and
+// the user asked for and the reason the bar never thickens a stroke to fake it. One family
+// for all four pages, and it is the platform's own: 任务 a rounded bubble with its tail at
+// the lower left, 伙伴 the robot head the user asked that page for, 发现 a compass, and
 // 我的 a round-headed figure.
 const TABS = [
-  ['tasks', 'Chats', PhosphorChatIcon, PhosphorChatFilledIcon],
-  ['peers', 'Peers', PhosphorRobotIcon, PhosphorRobotFilledIcon],
-  ['plugins', 'Plugins', PhosphorCompassIcon, PhosphorCompassFilledIcon],
-  ['me', 'Me', PhosphorUserIcon, PhosphorUserFilledIcon],
+  ['tasks', 'Chats', FluentChatIcon, FluentChatFilledIcon],
+  ['peers', 'Peers', FluentBotIcon, FluentBotFilledIcon],
+  ['plugins', 'Plugins', FluentCompassIcon, FluentCompassFilledIcon],
+  ['me', 'Me', FluentPersonIcon, FluentPersonFilledIcon],
 ]
 
 export function BottomNav({ useUi, useNav, actions }) {
@@ -128,11 +128,11 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe
    screenshot: page #f8f8f8, bar #f8f8f8, cards white). Nothing scrolls under this bar
    anyway: the conversation column, the peers page and the Settings screen all give it its
    56px back, so there is nothing for a frost to show through. */
-html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-page);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-page);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
-/* The drawings carry their own 24px box (their grid is Phosphor's 256, icons.js), so nothing
+/* The drawings carry their own 24px box (their grid is Fluent's 24, icons.js), so nothing
    here sizes them; only the flex row's power to squeeze them is taken away. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-nav-on)}
