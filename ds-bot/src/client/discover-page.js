@@ -52,18 +52,24 @@ export function DiscoverPage({ useUi, actions }) {
   const paneLeft = usePaneLeft()
   useEscape(() => actions.closeDiscover())
   if (!open || !mobile) return null
-  return createPortal(h('div', { className: 'bt-discover', role: 'region', 'aria-label': t('Discover'), style: { left: paneLeft } },
-    h('div', { className: 'bt-discover-head' }, h('h2', { className: 'bt-discover-title' }, t('Discover'))),
-    h('div', { className: 'bt-discover-list', role: 'list' }, DISCOVER_CARDS.map((rows, card) => h('div', {
-      key: `card:${card}`, className: 'bt-discover-card', role: 'presentation',
-    },
-    rows.map(([key, label, Icon]) => h('button', {
-      key, type: 'button', className: 'bt-discover-row', 'data-row': key,
-      onClick: () => actions.openDiscoverRow(key),
-    },
-    h('span', { className: 'bt-discover-icon', 'aria-hidden': true }, h(Icon)),
-    h('span', { className: 'bt-discover-name' }, t(label)),
-    h('span', { className: 'bt-discover-go', 'aria-hidden': true }, h(ChevronRightIcon)))))))), document.body)
+  // The whole page is 我的 -> 全部设置's own structure: the same layer, dialog, centred 52px head,
+  // scrolling body, group cards and item rows, so the two pages are one design rather than two that
+  // resemble each other. The list only brings its own rows and the two things the user asked for on
+  // top of that page's spec (DISCOVER_CSS, below).
+  return createPortal(h('div', { className: 'bt-settings-layer bt-discover', style: { left: paneLeft } },
+    h('div', { className: 'bt-scrim', onMouseDown: () => actions.closeDiscover() }),
+    h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('Discover'), 'data-screen': 'list' },
+      h('div', { className: 'bt-settings-top' }, h('h2', null, t('Discover'))),
+      h('div', { className: 'bt-settings-scroll' }, DISCOVER_CARDS.map((rows, card) => h('section', {
+        key: `card:${card}`, className: 'bt-settings-group',
+      },
+      h('div', { className: 'bt-settings-group-card' }, rows.map(([key, label, Icon]) => h('button', {
+        key, type: 'button', className: 'bt-settings-item', 'data-row': key,
+        onClick: () => actions.openDiscoverRow(key),
+      },
+      h(Icon),
+      h('span', { className: 'bt-settings-name' }, t(label)),
+      h('span', { className: 'bt-set-go', 'aria-hidden': true }, h(ChevronRightIcon)))))))))), document.body)
 }
 
 // The strip a second-level panel carries. The plugin manager and the automation tasks page are
@@ -91,36 +97,23 @@ export function DiscoverBack({ useUi, actions }) {
 
 // The page and the strip. Every rule is gated on the phone layout, the same gate the component
 // reads, so nothing here can reach the desktop.
+// The page and the strip. The page itself is 我的 -> 全部设置's own structure and sheet (the layer,
+// the dialog, the 52px head with its centred title, the scrolling body, the group cards and the item
+// rows all come from styles.js), so nothing about its look is restated here: what is left is the two
+// things the user asked for on top of that page, and the strip a shell panel needs. Every rule is
+// gated on the phone layout, the same gate the component reads.
 export const DISCOVER_CSS = `
-/* The conversation's own top row steps aside for this page, the way it does for the peers page:
-   the pill carries that conversation's title, and this page is not it. The strip covers the second
-   level of the two shell panels (.bt-subback); a settings screen opened from the list carries the
-   skin's own rule (styles.js, body:has(.bt-settings-layer)), so both levels lose the bar. */
-html[data-bt-mobile] body:has(.bt-discover) .bt-mobile-bar,
+/* The two things this page adds to the settings page's own spec. The card wears the skin's floating
+   shadow -- the same token the composer's card and the floating controls read -- and the rows of one
+   card are separated by one hairline: drawn, not a border, because it starts at the icon's own edge
+   and stops short of the card's, where a border would run the full width and meet both edges. No new
+   grey lives here either: the line is the skin's own faintest. */
+html[data-bt-mobile] .bt-discover .bt-settings-group-card{box-shadow:var(--bt-float-shadow)}
+html[data-bt-mobile] .bt-discover .bt-settings-item+.bt-settings-item::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
+/* The strip over a shell panel's second level (a panel draws no back of its own), sitting where the
+   page's own head sits: page colour, the inset's height plus the row the back control needs. That
+   level is no longer the settings layer, so the conversation's top row needs its own line here. */
 html[data-bt-mobile] body:has(.bt-subback) .bt-mobile-bar{display:none}
-html[data-bt-mobile] .bt-discover{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
-html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
-/* The head holds one thing, the page's name, and the user asked for it centred -- no control sits
-   beside it, so the row is the title's own line rather than two ends pushed apart. */
-html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:center;gap:12px;padding-bottom:8px}
-html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600;text-align:center}
-html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain}
-/* A card is one group of rows: the same surface the composer's card and the floating controls wear,
-   from the one shadow token, and the list's 8px gap is the space between two cards. It clips its
-   rows so the first and last follow its corners, which is also what keeps a row's own tint off the
-   radius. No heading: the grouping is the card, and the rows inside it share the surface. */
-html[data-bt-mobile] .bt-discover-card{flex:none;overflow:hidden;border-radius:16px;background:var(--bt-card);box-shadow:var(--bt-float-shadow)}
-html[data-bt-mobile] .bt-discover-row{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:0;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
-html[data-bt-mobile] .bt-discover-row:hover{background:var(--bt-hover)}
-/* The hairline between two rows of one card. It is drawn, not a border, because it must start at
-   the icon's own edge and stop short of the card's: a border would run the full width and meet
-   both edges. The colour is the skin's lightest line token -- no new grey lives here. */
-html[data-bt-mobile] .bt-discover-row+.bt-discover-row::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
-html[data-bt-mobile] .bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}
-html[data-bt-mobile] .bt-discover-icon svg{width:20px;height:20px}
-html[data-bt-mobile] .bt-discover-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-html[data-bt-mobile] .bt-discover-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
-/* The second-level strip: the height the panel's column reserves for it. */
 html[data-bt-mobile] .bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px 0;z-index:96;display:flex;align-items:center;background:var(--bt-main);pointer-events:none}
 html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 html[data-bt-mobile] .bt-subback-btn:hover{background:var(--bt-hover)}

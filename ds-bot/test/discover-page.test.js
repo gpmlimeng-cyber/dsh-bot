@@ -40,9 +40,15 @@ test('the list is three cards of doors that already exist, with no headings', ()
   assert.deepEqual(rows.map(row => row[1]), ['Plugin manager', 'Connectors', 'Capabilities', 'Automation tasks', 'Secrets', 'Usage'], 'named by the screens they open')
   // No heading anywhere: the grouping is the card, so the page draws no heading element of its own
   // and keeps no heading copy in the dictionary.
-  assert.ok(!discover.includes('grouphead'), 'no heading is drawn')
-  assert.ok(!discover.includes("'Models & usage'") && !discover.includes('Models & usage'), 'and no heading copy is left in the page')
+  assert.ok(!discover.includes('bt-settings-group-head'), 'no heading is drawn, though the settings page has one')
+  assert.ok(!discover.includes('Models & usage'), 'and no heading copy is left in the page')
   assert.ok(!('Models & usage' in DICTIONARY.zh), 'nor in the dictionary')
+  // The look is 我的 -> 全部设置's: the page wears that page's own layer, dialog, head, scrolling
+  // body, group card and item row, so there is one design rather than two that resemble each other.
+  for (const borrowed of ["className: 'bt-settings-layer bt-discover'", "className: 'bt-settings'", "className: 'bt-settings-top'", "className: 'bt-settings-scroll'", "className: 'bt-settings-group'", "className: 'bt-settings-group-card'", "className: 'bt-settings-item'", "className: 'bt-settings-name'"]) {
+    assert.ok(discover.includes(borrowed), `the page borrows ${borrowed}`)
+  }
+  assert.ok(!discover.includes('bt-discover-card') && !discover.includes('bt-discover-row'), 'and restates none of it under its own name')
   // 模型 and Agent 预设 are the two the user asked for that have no door of ours: the model chooser
   // is per Bot (and per Session), inside a Bot's own menu, and the only preset in the skin is that
   // Bot's permission preset, inside its settings. They are left out rather than drawn as buttons
@@ -112,40 +118,36 @@ test('the second level carries the strip a shell panel does not draw', () => {
   assert.ok(discover.includes('.bt-subback-btn>svg{width:22px;height:22px}'), 'and its glyph 22px')
 })
 
-test('a card is one surface, and one hairline separates its rows', () => {
-  // The card, not the row, carries the skin: the same card surface the composer and the floating
-  // controls wear, and the one shadow token they both read.
-  const card = discover.slice(discover.indexOf('.bt-discover-card{'), discover.indexOf('.bt-discover-row{'))
-  assert.ok(card.includes('border-radius:16px'), 'rounded like the reference')
-  // The head holds the page's name alone, and the user asked for it centred: nothing sits at the
-  // other end, so the row centres its one child rather than pushing two ends apart.
-  const head = discover.slice(discover.indexOf('.bt-discover-head{'), discover.indexOf('.bt-discover-title{'))
-  assert.ok(head.includes('justify-content:center'), 'the title is centred')
-  assert.ok(!head.includes('space-between'), 'with nothing to push to the far end')
-  assert.ok(discover.includes('.bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600;text-align:center}'), 'and the text centred inside its own line')
-  assert.ok(card.includes('background:var(--bt-card)'), 'on the card colour')
+test('the page is 全部设置\'s own look, plus the two things the user asked for', () => {
+  // The card, the row, the head, the spacing, the icon's size and colour, the chevron's: all of it
+  // is the settings page's, from styles.js, and this sheet restates none of it. What is left here
+  // is the shadow the user asked for on the card, the hairline between the rows of one card, and
+  // the strip a shell panel's second level needs.
+  const sheet = read('discover-page.js').slice(read('discover-page.js').indexOf('export const DISCOVER_CSS'))
+  // Only the page's own two rules are checked here: the strip is its own component and declares its
+  // own box.
+  const own = sheet.split('\n').filter(line => line.includes('.bt-discover '))
+  assert.equal(own.length, 2, `expected the page's two rules, found ${own.length}`)
+  for (const restated of ['border-radius:', 'min-height:', 'font-size:', 'padding:', 'justify-content:', 'text-align:', 'gap:']) {
+    assert.ok(!own.some(line => line.includes(restated)), `the page restates no ${restated} of the settings page's own`)
+  }
+  const card = sheet.split('\n').find(line => line.includes('.bt-discover .bt-settings-group-card{'))
+  assert.ok(card, 'the card gets one rule of its own')
   assert.ok(card.includes('box-shadow:var(--bt-float-shadow)'), 'the one shared shadow, not a value of its own')
-  assert.ok(card.includes('overflow:hidden'), 'and it clips its rows, so the ends follow its corners')
-  const row = discover.slice(discover.indexOf('.bt-discover-row{'), discover.indexOf('.bt-discover-row:hover'))
-  assert.ok(row.includes('min-height:56px'), 'a row is 56px')
-  assert.ok(row.includes('background:none'), 'the row adds no surface of its own')
-  assert.ok(row.includes('position:relative'), 'and it is the hairline\'s origin')
+  assert.ok(!card.includes('border-radius') && !card.includes('background:'), 'and nothing else: the rest is that page\'s')
   // The hairline is drawn rather than a border: a border would run the card's whole width and meet
   // both edges, and it must start at the icon and stop short of them. Colour: the skin's own
   // lightest line token -- no new grey is written here.
-  const line = discover.split('\n').find(entry => entry.includes('.bt-discover-row+.bt-discover-row::before'))
+  const line = sheet.split('\n').find(entry => entry.includes('.bt-discover .bt-settings-item+.bt-settings-item::before'))
   assert.ok(line, 'the hairline between two rows has its rule')
   assert.ok(line.includes('left:12px') && line.includes('right:12px'), 'inset from both edges, starting at the icon')
   assert.ok(!line.includes('left:0') && !line.includes('right:0'), 'and never reaching them')
   assert.ok(line.includes('background:var(--bt-line-weak)'), 'in the shared faint-line token')
   assert.ok(read('styles.js').includes('--bt-line-weak:'), 'which the skin declares')
   assert.ok(!/#[0-9a-f]{3,8}|rgba?\(/i.test(line), 'with no colour of its own')
-  // The grouping is the card and nothing else: 8px between two cards, no heading, no wrapper.
-  assert.ok(discover.includes('.bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px'), '8px between cards')
-  assert.ok(!discover.includes('.bt-discover-group'), 'and no group wrapper or heading to carry the grouping')
-  assert.ok(discover.includes('.bt-discover-icon svg{width:20px;height:20px}'), 'the icon is 20px')
-  assert.ok(discover.includes('.bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}'), 'drawn in the ink, not the muted one')
-  assert.ok(discover.includes('.bt-discover-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}'), 'the chevron a shade lighter, at the row\'s far end')
+  // And the row it draws on is the settings page's own, which already carries the position the
+  // pseudo-element needs.
+  assert.ok(read('styles.js').includes('.bt-settings-item{position:relative;'), 'the row is already a positioned box')
 })
 
 test('the page is a surface of its own, one at a time', () => {
@@ -164,12 +166,12 @@ test('the page is a surface of its own, one at a time', () => {
   assert.ok(active.indexOf('ui.discover') < active.indexOf('ui.settings'), 'and before Settings')
   assert.ok(nav.includes('actions.openDiscover()'), 'and opens the list')
   // The conversation's own top row carries that conversation's title, so it steps aside for this
-  // page -- and for the strip of its second level -- the same way 伙伴 hides it. A settings screen
-  // opened from the list is covered by the skin's own rule for that layer.
-  assert.ok(discover.includes('body:has(.bt-discover) .bt-mobile-bar,'), 'the top pill goes while the page is up')
-  assert.ok(discover.includes('body:has(.bt-subback) .bt-mobile-bar{display:none}'), 'and while the strip of a second level is up')
+  // page and for a settings screen opened from it: both are the settings layer, and the skin
+  // already hides the bar for that layer. The strip of a shell panel's second level needs its own
+  // line -- it is not that layer -- and 伙伴 keeps its copy.
+  assert.ok(styles.includes('body:has(.bt-settings-layer) :is(.bt-mobile-bar,.bt-topfade)'), 'the page is the settings layer, so the bar steps aside by the skin\'s own rule')
+  assert.ok(discover.includes('body:has(.bt-subback) .bt-mobile-bar{display:none}'), 'and the strip hides it too')
   assert.ok(read('peers-page.js').includes('body:has(.bt-peers) .bt-mobile-bar{display:none}'), 'the same rule 伙伴 uses, in its own sheet')
-  assert.ok(styles.includes('body:has(.bt-settings-layer) :is(.bt-mobile-bar,.bt-topfade)'), 'a settings screen from this list carries the skin\'s own')
   // Every opener that puts another full-pane surface over the conversation takes this page down
   // with it. Two deliberate exceptions: openSettings/openConnectors are the doors this page's own
   // rows use (the row clears the page before it calls them) and closePeers only closes something.
@@ -197,8 +199,12 @@ test('the page and its tab carry one name, and the copy is in the dictionary', (
   // same name rather than a second one -- and that name is "Discover", not "Plugins" (插件 is
   // only the first row of this page's list).
   assert.ok(nav.includes("['plugins', 'Discover', FluentCompassIcon, FluentCompassFilledIcon]"), 'the tab is the 发现 tab')
-  assert.ok(discover.includes("h('h2', { className: 'bt-discover-title' }, t('Discover'))"), 'the page title is that tab\'s label')
-  assert.ok(discover.includes("'aria-label': t('Discover')"), 'and so is the region it is announced as')
+  // The page's name sits in the settings page's own head, whose one rule centres it (styles.js):
+  // the title is absolutely placed across the bar's whole width, so the two side buttons cannot
+  // pull it off centre and this page needs no rule of its own for that.
+  assert.ok(discover.includes("h('div', { className: 'bt-settings-top' }, h('h2', null, t('Discover')))"), 'the page title is that tab\'s label, in the settings page\'s own head')
+  assert.ok(styles.includes('.bt-settings-top h2{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0 60px;text-align:center;'), 'which centres whatever it holds')
+  assert.ok(discover.includes("'aria-label': t('Discover')"), 'and so is the dialog it is announced as')
   assert.ok(!/t\('Plugins'\)/.test(discover), 'the page never calls itself 插件')
   // Every string is a key the dictionary has, in the language the rest of the skin is in.
   const keys = [...discover.matchAll(/t\('([^']+)'\)/g)].map(match => match[1])
@@ -209,26 +215,24 @@ test('the page and its tab carry one name, and the copy is in the dictionary', (
   assert.ok(!/[\u4e00-\u9fff]/.test(discover), 'and no Chinese is hard-coded here')
 })
 
-test('every rule is a phone rule, and the floor stays the bar\'s', () => {
+test('every rule is a phone rule, and the page hands the shell nothing but the strip', () => {
   const rules = read('discover-page.js').split('\n').filter(line => line.startsWith('html['))
-  assert.ok(rules.length >= 10, `expected the page's rules, found ${rules.length}`)
+  // Two rules for what the user asked on top of 全部设置's spec (the card's shadow, the hairline
+  // between its rows) and the strip's four: the page has no look of its own beyond those.
+  assert.equal(rules.length, 7, `expected the page's own rules, found ${rules.length}`)
   for (const line of rules) {
     const after = line.slice('html[data-bt-mobile]'.length)
     assert.ok(after.startsWith(' ') || after.startsWith('{') || after.startsWith('[data-bt-keyboard]'), line)
   }
-  // The top is the page's own reservation, read from the one declaration 伙伴 reads, so the two
-  // pages cannot drift apart.
-  assert.ok(rules.some(line => line.includes('.bt-discover{position:fixed') && line.includes('var(--bt-fade-h,')), 'the top is the shared reservation')
-  assert.ok(read('peers-page.js').includes('var(--bt-fade-h,'), 'declared once, for both pages')
-  // The bar keeps its 56px at the foot, and the keyboard takes that reservation back -- the same
-  // defect the user reported under the composer.
-  assert.ok(rules.some(line => line.includes('padding:') && line.includes('var(--bt-nav-h) + var(--bt-nav-gap)')), 'the bar\'s height is given back')
-  assert.ok(rules.some(line => line.includes('[data-bt-keyboard] .bt-discover{padding-bottom:12px}')), 'and given back to the keyboard')
-  // The card is the group and the row inside stays a button: a group announces nothing, and a
-  // button that called itself a list item stops being announced as a button.
-  assert.ok(discover.includes("className: 'bt-discover-card', role: 'presentation'"), 'the card is the wrapper')
-  assert.ok(!discover.includes('bt-discover-item'), 'and the per-row wrapper is gone with the per-row card')
-  const row = discover.slice(discover.indexOf("className: 'bt-discover-row'"), discover.indexOf("className: 'bt-discover-name'"))
+  assert.ok(rules.every(line => line.includes('.bt-discover') || line.includes('.bt-subback')), 'and every one is scoped to this page or to its strip')
+  // The head, the body's scrolling, the card's corners, the row's height and type, the gap between
+  // two cards, the icon's size and colour and the chevron's: all of that is the settings page's,
+  // declared once there, so there is nothing here to read back.
+  assert.ok(!read('peers-page.js').includes('bt-settings-'), 'and the peers page is left where it is')
+  // The row stays a button and the card is not announced: a button that called itself a list item
+  // stops being announced as a button.
+  assert.ok(discover.includes("className: 'bt-settings-group-card' }"), 'the card is the wrapper')
+  const row = discover.slice(discover.indexOf("className: 'bt-settings-item'"), discover.indexOf("className: 'bt-settings-name'"))
   assert.ok(!row.includes('role:'), `the row keeps the button role: ${row}`)
   for (const borrowed of ['bt-row-body', 'bt-row-meta', 'RowMeta', 'unread']) {
     assert.ok(!discover.includes(borrowed), `${borrowed} belongs to the conversation rows`)

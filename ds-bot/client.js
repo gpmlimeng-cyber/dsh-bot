@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 6c2fbfae
+// Source fingerprint: 071233d5
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16191,29 +16191,33 @@ function DiscoverPage({ useUi, actions }) {
   if (!open || !mobile) return null;
   return (0, import_react_dom14.createPortal)((0, import_react41.createElement)(
     "div",
-    { className: "bt-discover", role: "region", "aria-label": t("Discover"), style: { left: paneLeft } },
-    (0, import_react41.createElement)("div", { className: "bt-discover-head" }, (0, import_react41.createElement)("h2", { className: "bt-discover-title" }, t("Discover"))),
-    (0, import_react41.createElement)("div", { className: "bt-discover-list", role: "list" }, DISCOVER_CARDS.map((rows, card) => (0, import_react41.createElement)(
+    { className: "bt-settings-layer bt-discover", style: { left: paneLeft } },
+    (0, import_react41.createElement)("div", { className: "bt-scrim", onMouseDown: () => actions.closeDiscover() }),
+    (0, import_react41.createElement)(
       "div",
-      {
-        key: `card:${card}`,
-        className: "bt-discover-card",
-        role: "presentation"
-      },
-      rows.map(([key, label, Icon]) => (0, import_react41.createElement)(
-        "button",
+      { className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("Discover"), "data-screen": "list" },
+      (0, import_react41.createElement)("div", { className: "bt-settings-top" }, (0, import_react41.createElement)("h2", null, t("Discover"))),
+      (0, import_react41.createElement)("div", { className: "bt-settings-scroll" }, DISCOVER_CARDS.map((rows, card) => (0, import_react41.createElement)(
+        "section",
         {
-          key,
-          type: "button",
-          className: "bt-discover-row",
-          "data-row": key,
-          onClick: () => actions.openDiscoverRow(key)
+          key: `card:${card}`,
+          className: "bt-settings-group"
         },
-        (0, import_react41.createElement)("span", { className: "bt-discover-icon", "aria-hidden": true }, (0, import_react41.createElement)(Icon)),
-        (0, import_react41.createElement)("span", { className: "bt-discover-name" }, t(label)),
-        (0, import_react41.createElement)("span", { className: "bt-discover-go", "aria-hidden": true }, (0, import_react41.createElement)(ChevronRightIcon))
-      ))
-    )))
+        (0, import_react41.createElement)("div", { className: "bt-settings-group-card" }, rows.map(([key, label, Icon]) => (0, import_react41.createElement)(
+          "button",
+          {
+            key,
+            type: "button",
+            className: "bt-settings-item",
+            "data-row": key,
+            onClick: () => actions.openDiscoverRow(key)
+          },
+          (0, import_react41.createElement)(Icon),
+          (0, import_react41.createElement)("span", { className: "bt-settings-name" }, t(label)),
+          (0, import_react41.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react41.createElement)(ChevronRightIcon))
+        )))
+      )))
+    )
   ), document.body);
 }
 function DiscoverBack({ useUi, actions }) {
@@ -16240,35 +16244,17 @@ function DiscoverBack({ useUi, actions }) {
   ), document.body);
 }
 var DISCOVER_CSS = `
-/* The conversation's own top row steps aside for this page, the way it does for the peers page:
-   the pill carries that conversation's title, and this page is not it. The strip covers the second
-   level of the two shell panels (.bt-subback); a settings screen opened from the list carries the
-   skin's own rule (styles.js, body:has(.bt-settings-layer)), so both levels lose the bar. */
-html[data-bt-mobile] body:has(.bt-discover) .bt-mobile-bar,
+/* The two things this page adds to the settings page's own spec. The card wears the skin's floating
+   shadow -- the same token the composer's card and the floating controls read -- and the rows of one
+   card are separated by one hairline: drawn, not a border, because it starts at the icon's own edge
+   and stops short of the card's, where a border would run the full width and meet both edges. No new
+   grey lives here either: the line is the skin's own faintest. */
+html[data-bt-mobile] .bt-discover .bt-settings-group-card{box-shadow:var(--bt-float-shadow)}
+html[data-bt-mobile] .bt-discover .bt-settings-item+.bt-settings-item::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
+/* The strip over a shell panel's second level (a panel draws no back of its own), sitting where the
+   page's own head sits: page colour, the inset's height plus the row the back control needs. That
+   level is no longer the settings layer, so the conversation's top row needs its own line here. */
 html[data-bt-mobile] body:has(.bt-subback) .bt-mobile-bar{display:none}
-html[data-bt-mobile] .bt-discover{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
-html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
-/* The head holds one thing, the page's name, and the user asked for it centred -- no control sits
-   beside it, so the row is the title's own line rather than two ends pushed apart. */
-html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:center;gap:12px;padding-bottom:8px}
-html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600;text-align:center}
-html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain}
-/* A card is one group of rows: the same surface the composer's card and the floating controls wear,
-   from the one shadow token, and the list's 8px gap is the space between two cards. It clips its
-   rows so the first and last follow its corners, which is also what keeps a row's own tint off the
-   radius. No heading: the grouping is the card, and the rows inside it share the surface. */
-html[data-bt-mobile] .bt-discover-card{flex:none;overflow:hidden;border-radius:16px;background:var(--bt-card);box-shadow:var(--bt-float-shadow)}
-html[data-bt-mobile] .bt-discover-row{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:0;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
-html[data-bt-mobile] .bt-discover-row:hover{background:var(--bt-hover)}
-/* The hairline between two rows of one card. It is drawn, not a border, because it must start at
-   the icon's own edge and stop short of the card's: a border would run the full width and meet
-   both edges. The colour is the skin's lightest line token -- no new grey lives here. */
-html[data-bt-mobile] .bt-discover-row+.bt-discover-row::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
-html[data-bt-mobile] .bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}
-html[data-bt-mobile] .bt-discover-icon svg{width:20px;height:20px}
-html[data-bt-mobile] .bt-discover-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-html[data-bt-mobile] .bt-discover-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
-/* The second-level strip: the height the panel's column reserves for it. */
 html[data-bt-mobile] .bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px 0;z-index:96;display:flex;align-items:center;background:var(--bt-main);pointer-events:none}
 html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 html[data-bt-mobile] .bt-subback-btn:hover{background:var(--bt-hover)}
@@ -16278,7 +16264,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "6c2fbfae" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "071233d5" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
