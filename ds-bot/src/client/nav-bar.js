@@ -137,7 +137,7 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe
    anyway: the conversation column, the peers page and the Settings screen all give it its
    56px back, so there is nothing for a frost to show through. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-main);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
-/* The first 10px of the page, softened. The page keeps the skin's own colour (#f8f8f8) and the
+/* The first 10px of the page, softened. The page keeps the skin's own colour (#fcfcfc) and the
    shell paints the band above it itself, in a colour it owns and can change between sessions
    (it has changed once already). The two meet at the status bar's lower edge, so the fade
    starts from the colour the shell is painting -- read from the page by

@@ -14,7 +14,7 @@ const THEME_KEYS = ['bg', 'sidebar', 'bubble', 'card', 'text', 'user', 'userText
 export const THEMES = {
   deepseek: {
     label: 'DeepSeek',
-    light: { bg: '#f8f8f8', sidebar: '#f8f8f8', bubble: '#ffffff', card: '#ffffff', text: '#141414', user: '#070707', userText: '#fcfcfc', accent: '#4d6bfe' },
+    light: { bg: '#fcfcfc', sidebar: '#fcfcfc', bubble: '#ffffff', card: '#ffffff', text: '#141414', user: '#070707', userText: '#fcfcfc', accent: '#4d6bfe' },
     dark: { bg: '#141414', sidebar: '#1b1b1b', bubble: '#262626', card: '#1f1f1f', text: '#f2f2f2', user: '#f2f2f2', userText: '#141414', accent: '#5b7bff' },
   },
   mono: {

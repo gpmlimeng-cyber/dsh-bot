@@ -67,25 +67,25 @@ const dark = styles.find(line => line.startsWith('body[data-ds-dark-theme]{--bt-
 // block is its pre-theme fallback and the two must carry the same numbers.
 test('the page colour lives in the palette, and the base sheet agrees with it', () => {
   const themes = read('themes.js')
-  assert.ok(themes.includes("light: { bg: '#f8f8f8', sidebar: '#f8f8f8', bubble: '#ffffff'"), "the default light palette carries the design colour, the list base and the white bubbles")
+  assert.ok(themes.includes("light: { bg: '#fcfcfc', sidebar: '#fcfcfc', bubble: '#ffffff'"), "the default light palette carries the design colour, the list base and the white bubbles")
   assert.ok(themes.includes("'--bt-bubble': mode.bubble, '--bt-sidebar': mode.sidebar, '--bt-main': mode.bg"), 'and the palette reaches the tokens the skin uses')
   // The base sheet is that palette's pre-theme fallback, so the two agree token for token.
-  for (const token of ['--bt-main:#f8f8f8', '--bt-sidebar:#f8f8f8', '--bt-bubble:#ffffff']) {
+  for (const token of ['--bt-main:#fcfcfc', '--bt-sidebar:#fcfcfc', '--bt-bubble:#ffffff']) {
     assert.ok(styles.find(line => line.startsWith('body{')).includes(token), `the fallback carries ${token}`)
   }
 })
 
 test('the light page is the skin design colour, with white cards on it', () => {
   assert.ok(light, 'the light theme declares the page colour')
-  assert.ok(light.includes('--bt-main:#f8f8f8'), light)
+  assert.ok(light.includes('--bt-main:#fcfcfc'), light)
   assert.ok(light.includes('--bt-card:#ffffff'), 'cards stay white -- the layering the screenshot draws')
-  assert.ok(light.includes('--bt-sidebar:#f8f8f8'), 'the lists that are pages too')
+  assert.ok(light.includes('--bt-sidebar:#fcfcfc'), 'the lists that are pages too')
   // The shell's band is a fixed colour the page cannot paint (measured: forcing the page's
   // surfaces magenta moved nothing above CSS 46). The page keeps its own design colour and the
   // 10px fade covers the join; this is what the user asked for, twice.
   assert.ok(!light.includes('#f1f3f1'), 'the shell band colour is not the page colour')
-  // White bubbles: the page went to the band's #f1f3f1, a shade deeper than the #f8f8f8 they
-  // were first drawn against, and on it the white bubble is the layering that holds up. The
+  // White bubbles: the page is DS Bot's own #fcfcfc, a shade deeper than the #f8f8f8 they were
+  // first drawn against, and on it the white bubble is the layering that holds up. The
   // freeze said #eee for a while and this is the third call on the same token -- which is why
   // both layers are pinned together here and neither can move alone.
   assert.ok(light.includes('--bt-bubble:#ffffff'), 'the bubbles are white on the band colour')
@@ -139,7 +139,7 @@ test('the page colour is read from the shell, in the light theme, with the sampl
   // The shell colour feeds the top fade and nothing else: the page's own colour is the design's.
   assert.ok(!styles.includes('--bt-main:var(--bt-shell-bg)'), 'the shell colour does not decide the page colour')
   assert.ok(nav.includes('linear-gradient(to bottom,var(--bt-shell-bg,var(--bt-main)),transparent)'), 'it is the fade\'s starting colour')
-  assert.ok(read('themes.js').includes("light: { bg: '#f8f8f8', sidebar: '#f8f8f8'"), 'and the page keeps the design colour')
+  assert.ok(read('themes.js').includes("light: { bg: '#fcfcfc', sidebar: '#fcfcfc'"), 'and the page keeps the design colour')
   // Wired where the theme is applied, and watched: the platform rewrites that declaration on
   // its own, and the watch lives on <html> where the declaration is.
   const index = read('index.js')
