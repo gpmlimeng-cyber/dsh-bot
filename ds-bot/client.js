@@ -15794,6 +15794,7 @@ function BottomNav({ useUi, useNav, actions }) {
   if (!mobile || !portrait) return null;
   const active = ui2.settings ? "me" : ui2.mobileNav ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
   const go = (id) => {
+    if (active === id) return;
     if (id === "tasks") {
       actions.closeMobileNav();
       actions.closeSettings();
@@ -15802,10 +15803,7 @@ function BottomNav({ useUi, useNav, actions }) {
     }
     if (id === "peers") {
       actions.closeSettings();
-      if (ui2.mobileNav) {
-        actions.closeMobileNav();
-        actions.selectPanel(null);
-      } else actions.openMobileNav();
+      actions.openMobileNav();
       return;
     }
     if (id === "plugins") {

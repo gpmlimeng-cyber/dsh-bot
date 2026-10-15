@@ -150,10 +150,12 @@ test('a tab closes the other pages before it acts', () => {
   assert.match(tasks, /actions\.closeMobileNav\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.selectPanel\(null\)/, tasks)
   const plugins = branch('plugins', null)
   assert.match(plugins, /actions\.closeMobileNav\(\)[\s\S]*actions\.closeSettings\(\)[\s\S]*actions\.selectPanel\('plugins'\)/, plugins)
-  // 伙伴 is a page and the tab is its own way back: the second tap returns to the
-  // conversation rather than leaving the list behind the plugin page.
-  assert.match(branch('peers', 'plugins'), /if \(ui\.mobileNav\) \{[\s\S]*actions\.closeMobileNav\(\)[\s\S]*actions\.selectPanel\(null\)/)
-  assert.match(branch('peers', 'plugins'), /actions\.closeSettings\(\)/, 'the settings screen goes first')
+  // 伙伴 is a page, and the settings screen goes before it opens.
+  assert.match(branch('peers', 'plugins'), /actions\.closeSettings\(\)[\s\S]*actions\.openMobileNav\(\)/, 'the settings screen goes first')
+  // A tab bar picks a page: the page already on screen is left where it is, which is what
+  // the app the user copied does (and the exits for a page are the other three tabs).
+  assert.match(go, /if \(active === id\) return/, 'the current page is not re-opened or closed')
+  assert.ok(!go.includes('closeMobileNav()\n        actions.selectPanel(null)'), 'a second tap does not navigate')
   // 我的 is the fallthrough: the peers page is closed and Settings opens over the
   // conversation.
   assert.match(plugins, /actions\.closeMobileNav\(\)\n\s*actions\.openSettings\('general'\)/, plugins)

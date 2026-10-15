@@ -67,6 +67,10 @@ export function BottomNav({ useUi, useNav, actions }) {
       : nav.panel === 'plugins' ? 'plugins'
         : nav.panel === null ? 'tasks' : null
   const go = (id) => {
+    // The page already on screen is left where it is: a tab bar picks a page, and tapping
+    // the one you are on does not navigate (the app the user copied behaves that way, and
+    // the exits for a page are the other three tabs).
+    if (active === id) return
     if (id === 'tasks') {
       actions.closeMobileNav()
       actions.closeSettings()
@@ -75,12 +79,7 @@ export function BottomNav({ useUi, useNav, actions }) {
     }
     if (id === 'peers') {
       actions.closeSettings()
-      // 伙伴 is a page, not a popup: a second tap on the tab already on screen means
-      // "back", exactly like tapping 任务.
-      if (ui.mobileNav) {
-        actions.closeMobileNav()
-        actions.selectPanel(null)
-      } else actions.openMobileNav()
+      actions.openMobileNav()
       return
     }
     if (id === 'plugins') {
