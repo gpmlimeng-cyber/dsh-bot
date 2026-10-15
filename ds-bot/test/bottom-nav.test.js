@@ -166,6 +166,20 @@ test('发现 is not drawn without the shell panel, and is never selected without
   assert.ok(index.includes("ctx.slots.subscribe?.('main', readPlugins)"), 'and watched, so a late plugin manager still gets its tab')
 })
 
+test('the bar is a surface, not a line: no edge and no shadow', () => {
+  // The screenshot the user asked for draws no line above its bar; the surface is what
+  // separates it, so it has to be a surface of its own -- the page's own colour would have
+  // taken the bar with the line.
+  const bar = css.find(line => line.includes('.bt-nav{'))
+  assert.ok(!bar.includes('border-top'), `no rule draws a line: ${bar}`)
+  assert.ok(!bar.includes('box-shadow'), `and none casts a shadow: ${bar}`)
+  assert.ok(bar.includes('background:var(--bt-card)'), `the surface is its own colour: ${bar}`)
+  assert.ok(!bar.includes('backdrop-filter'), 'nothing scrolls under it, so no frost is needed')
+  // The body of the rule only: the comment above it is allowed to say the words.
+  const rule = bar.slice(bar.indexOf('.bt-nav{'))
+  assert.ok(!/border-top|box-shadow/.test(rule), rule)
+})
+
 test('a popup menu is drawn over the bar', () => {
   // The menus clamp to the viewport bottom (context-menu.js), so a long-press on one of
   // the last rows lands under a 56px bar that takes the taps there.

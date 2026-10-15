@@ -15755,10 +15755,13 @@ function BottomNav({ useUi, useNav, actions }) {
 }
 var NAV_CSS = `
 html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe-area-inset-bottom,0px),var(--dsh-android-system-bottom,0px))}
-/* The bar. 56px of page plus the gesture bar; the fill is the top bar's own frost
-   treatment (styles.js, .bt-mobile-bar), mixed heavier because this bar carries labels
-   as well as glyphs and they have to stay legible over whatever scrolls behind it. */
-html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:color-mix(in srgb,var(--bt-main) 88%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:.5px solid var(--bt-line-2);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+/* The bar. 56px of page plus the gesture bar, and no line and no shadow above it: the
+   user asked for the bar the screenshot draws, which separates itself with its surface
+   alone. That surface is --bt-card rather than the page's own --bt-main: nothing scrolls
+   under this bar (the conversation column, the peers page and the Settings screen all give
+   it its 56px back, below), so a frost would have nothing to show through, and an 88% mix
+   of the page's own colour would have made the bar disappear the moment the line went. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-card);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
