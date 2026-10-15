@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 09a822fc
+// Source fingerprint: c8fd4890
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -15978,19 +15978,20 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-fade-h:calc(var(--bt
    56px back, so there is nothing for a frost to show through. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-main);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* The strip over the status bar. Once the shell hands the surface over (status-bar.js asks it
-   to), content scrolls under the system bars, and this is what keeps it legible. The tint is
-   the page's own colour at 55% at the very top, fading to nothing across the whole strip --
-   not a solid band with a fade tacked onto its last 10px, which reads as a step rather than a
-   gradient, which is what the user pointed at. The height is --bt-fade-h: down past the pill
+   to), content scrolls under the system bars, and this is what keeps it legible. The page's own
+   colour is solid at the top edge and fades to nothing across the whole strip -- the user asked
+   for the top to be painted outright and the fade to start below it ("到顶部直接不透明，渐变"),
+   and for one continuous veil rather than a solid band with a fade tacked onto its last 10px,
+   which reads as a step rather than a gradient. The height is --bt-fade-h: down past the pill
    row, so the veil and the chrome it covers are one surface with no edge between them.
 
    No blur: the user asked for the text under it to be read through, not smeared ("不要模糊").
-   The tint is the whole of it -- what passes under stays legible exactly as it was drawn.
+   What passes under is covered by the solid top and then emerges as the veil thins.
 
    It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
    while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
    (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
-html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 55%,transparent),transparent)}
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main),transparent)}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}
@@ -16171,7 +16172,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "09a822fc" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "c8fd4890" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
