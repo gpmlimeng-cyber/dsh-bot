@@ -63,48 +63,34 @@ test('the four pages are named for a UI dump, tasks first', () => {
   assert.ok(nav.includes("h('span', { className: 'bt-nav-tab-text', 'aria-hidden': true }, t(label))"), 'the drawn label is translated too')
 })
 
-// The two states are two drawings of one shape, copied from Ionicons -- not one drawing with
-// a heavier stroke, which is what the user ruled out. The data is byte-for-byte what the
-// package ships, so it can be diffed against it, and its licence travels with it.
-test('each page is Ionicons’ outline and Ionicons’ fill, credited where they live', () => {
+// The two states are two drawings of one shape, copied from Phosphor -- not one drawing with
+// a heavier stroke, which is what the user ruled out. One family for all four pages, so the
+// bar cannot read as a mix, and the artwork is byte-for-byte what the package ships.
+test('each page is Phosphor’s regular and Phosphor’s fill, credited where they live', () => {
   const icons = read('icons.js')
-  assert.ok(icons.includes('Ionicons (MIT) · Copyright (c) 2015-present Ionic (http://ionic.io/) · ionicons v8.1.0'), 'the MIT notice sits with the artwork')
+  assert.ok(icons.includes('Phosphor Icons (MIT) · Copyright (c) 2023 Phosphor Icons · @phosphor-icons/core v2.1.1'), 'the MIT notice sits with the artwork')
   const glyphs = [
-    ['M87.49 380c1.19-4.38-1.44-10.47', 'chatbubble, the outline'],
-    ['M76.83 480a25.69 25.69 0 0 1-25.57-25.74', 'chatbubble, the solid one'],
-    ['M448 256c0-106-86-192-192-192', 'compass, the outline'],
-    ['M256 48C141.31 48 48 141.31 48 256', 'compass, the solid one'],
-    ['M344 144c-3.92 52.87-44 96-88 96', 'person, the outline'],
-    ['M332.64 64.58C313.18 43.57 286 32 256 32', 'person, the solid one'],
+    ['M216,48H40A16,16,0,0,0,24,64V224', 'chat, the regular one'],
+    ['M232,64V192a16,16,0,0,1-16,16H83', 'chat, the solid one'],
+    ['M200,48H136V16a8,8,0,0,0-16,0V48', 'robot, the regular one'],
+    ['M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48ZM172,96', 'robot, the solid one'],
+    ['M128,24A104,104,0,1,0,232,128', 'compass, the regular one'],
+    ['M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm51.58,57.79', 'compass, the solid one'],
+    ['M230.92,212c-15.23-26.33', 'user, the regular one'],
+    ['M230.93,220a8,8,0,0,1-6.93,4H32', 'user, the solid one'],
   ]
-  for (const [data, what] of glyphs) assert.ok(icons.includes(data), `${what} is ionicons' own artwork`)
-  // One factory for this family, declared once, on the grid Ionicons draws on -- and the
-  // family that stood in for it one round is gone, with its notice.
-  assert.equal(icons.split('const ionicon = (children, box = IONICON_BOX, grid = ').length - 1, 1, 'one Ionicons factory')
-  assert.ok(icons.includes("grid = '0 0 512 512'"), 'on Ionicons\' own 512 grid by default')
-  for (const dead of ['FLUENT_NAV_BOX', 'FluentChatIcon', 'FluentCompassIcon', 'FluentPersonIcon', 'IonPeopleIcon']) {
+  for (const [data, what] of glyphs) assert.ok(icons.includes(data), `${what} is @phosphor-icons/core's own artwork`)
+  // One factory for this family, declared once, on Phosphor's own 256 grid -- and the
+  // families that stood in before it are gone, each with its notice.
+  assert.equal(icons.split('const phosphorIcon = (d, box = PHOSPHOR_BOX)').length - 1, 1, 'one Phosphor factory')
+  assert.ok(icons.includes("viewBox: '0 0 256 256'"), 'on Phosphor\'s 256 grid')
+  assert.equal((icons.match(/export const Phosphor\w+/g) ?? []).length, 8, 'four pairs')
+  for (const dead of ['ionicon(', 'Ionicons (MIT)', 'IonChatbubbleIcon', 'fluentIcon', 'FLUENT_NAV_BOX', 'FluentBotIcon', 'FluentSystem', '@fluentui/svg-icons', 'IonPeopleIcon']) {
     assert.ok(!icons.includes(dead), `${dead} is gone with the family it belonged to`)
   }
-  // Nothing is pinned here: Ionicons' 32-unit stroke on a 512 grid is 1.5px at this box.
+  // Nothing is pinned: Phosphor's 16 units of ring on a 256 grid are 1.5px at this box.
   assert.ok(!icons.includes('non-scaling-stroke"...attributes'), 'the Lucide pinning is not copied here')
-  assert.ok(Math.abs(32 * 24 / 512 - 1.5) < 0.001, 'the outline weight lands on the skin\'s own 1.5px')
-})
-
-// 伙伴 is the one page the user's screenshots do not draw: their second tab is a scheduled-
-// tasks page. They asked for the icon their app uses for an agent, and the platform's own
-// agent glyph has no filled sibling, so Fluent's Bot head stands in -- with the reason
-// written where the artwork is, and the pair still one shape at two weights.
-test('伙伴 is the Bot head, and the file says why it is a second family', () => {
-  const icons = read('icons.js')
-  assert.ok(icons.includes('Fluent System Icons (MIT) · Copyright (c) 2020 Microsoft Corporation · @fluentui/svg-icons v1.1.344'), 'its own notice')
-  assert.ok(icons.includes("['path', { d: 'M17.75 14C19 14 20 15 20 16.25v.9"), 'the outline head')
-  assert.ok(icons.includes("['path', { d: 'M17.75 14C19 14 20 15 20 16.25v.9") && icons.includes('v-.91C4 15 5.01 14 6.25 14z'), 'and the solid one')
-  assert.ok(icons.includes("export const FluentBotIcon = ionicon([['path', { d: '"), 'on the same factory')
-  assert.ok(icons.includes("'0 0 24 24')"), 'on Fluent\'s own grid, which the factory takes as an argument')
-  // The reason is recorded, not just the artwork: the platform's agent glyph has no fill.
-  assert.ok(icons.includes('IconAgentPresetOutlineRegular'), 'the platform glyph it stands in for is named')
-  assert.ok(icons.includes('outlines only, with no Filled sibling'), 'and the reason it could not be used')
-  assert.ok(nav.includes("['peers', 'Peers', FluentBotIcon, FluentBotFilledIcon]"), 'the 伙伴 row draws it')
+  assert.ok(Math.abs(16 * 24 / 256 - 1.5) < 0.001, 'the regular weight lands on the skin\'s own 1.5px')
 })
 
 test('the tab on screen draws the filled one, and says so in the tree', () => {

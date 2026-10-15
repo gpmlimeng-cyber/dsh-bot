@@ -4035,37 +4035,18 @@ var LucideCopyIcon = lucideIcon([
   ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" }]
 ], LUCIDE_MENU_BOX);
 var LucideCheckIcon = lucideIcon([["path", { d: "M20 6 9 17l-5-5" }]], LUCIDE_MENU_BOX);
-var IONICON_BOX = 24;
-var ionicon = (children, box = IONICON_BOX, grid = "0 0 512 512") => function Ionicon() {
-  return (0, import_react3.createElement)(
-    "svg",
-    { width: box, height: box, viewBox: grid, fill: "currentColor", "aria-hidden": true },
-    children.map(([tag, attributes], index) => (0, import_react3.createElement)(tag, { key: index, ...attributes }))
-  );
+var PHOSPHOR_BOX = 24;
+var phosphorIcon = (d, box = PHOSPHOR_BOX) => function PhosphorIcon() {
+  return (0, import_react3.createElement)("svg", { width: box, height: box, viewBox: "0 0 256 256", fill: "currentColor", "aria-hidden": true }, (0, import_react3.createElement)("path", { d }));
 };
-var IonChatbubbleIcon = ionicon([
-  ["path", { d: "M87.49 380c1.19-4.38-1.44-10.47-3.95-14.86a45 45 0 0 0-2.54-3.8 199.8 199.8 0 0 1-33-110C47.65 139.09 140.73 48 255.83 48 356.21 48 440 117.54 459.58 209.85a199 199 0 0 1 4.42 41.64c0 112.41-89.49 204.93-204.59 204.93-18.3 0-43-4.6-56.47-8.37s-26.92-8.77-30.39-10.11a31.1 31.1 0 0 0-11.12-2.07 30.7 30.7 0 0 0-12.09 2.43l-67.83 24.48a16 16 0 0 1-4.67 1.22 9.6 9.6 0 0 1-9.57-9.74 16 16 0 0 1 .6-3.29Z", fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeMiterlimit: 10, strokeWidth: "32px" }]
-]);
-var IonChatbubbleFilledIcon = ionicon([
-  ["path", { d: "M76.83 480a25.69 25.69 0 0 1-25.57-25.74 29.1 29.1 0 0 1 1.2-7.63L70.88 380c.77-2.46-.1-4.94-1.23-6.9l-.22-.4c-.08-.13-.46-.66-.73-1.05s-.58-.81-.86-1.22l-.19-.27A215.66 215.66 0 0 1 32 251.37c-.18-57.59 22.35-112 63.46-153.28C138 55.47 194.9 32 255.82 32A227.4 227.4 0 0 1 398 81.84c39.45 31.75 66.87 76 77.21 124.68a213.5 213.5 0 0 1 4.78 45c0 58.93-22.64 114.28-63.76 155.87-41.48 42-97.18 65.06-156.83 65.06-21 0-47.87-5.36-60.77-9-15.52-4.34-30.23-10-31.85-10.6a15.1 15.1 0 0 0-5.37-1 14.75 14.75 0 0 0-5.8 1.15l-.85.33-67.48 24.38A29.4 29.4 0 0 1 76.83 480m10.65-100" }]
-]);
-var IonCompassIcon = ionicon([
-  ["path", { d: "M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192Z", fill: "none", stroke: "currentColor", strokeMiterlimit: 10, strokeWidth: "32px" }],
-  ["path", { d: "m350.67 150.93-117.2 46.88a64 64 0 0 0-35.66 35.66l-46.88 117.2a8 8 0 0 0 10.4 10.4l117.2-46.88a64 64 0 0 0 35.66-35.66l46.88-117.2a8 8 0 0 0-10.4-10.4M256 280a24 24 0 1 1 24-24 24 24 0 0 1-24 24" }]
-]);
-var IonCompassFilledIcon = ionicon([
-  ["circle", { cx: 256, cy: 256, r: 24 }],
-  ["path", { d: "M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208 208-93.31 208-208S370.69 48 256 48m105.07 113.33-46.88 117.2a64 64 0 0 1-35.66 35.66l-117.2 46.88a8 8 0 0 1-10.4-10.4l46.88-117.2a64 64 0 0 1 35.66-35.66l117.2-46.88a8 8 0 0 1 10.4 10.4" }]
-]);
-var IonPersonIcon = ionicon([
-  ["path", { d: "M344 144c-3.92 52.87-44 96-88 96s-84.15-43.12-88-96c-4-55 35-96 88-96s92 42 88 96", fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "32px" }],
-  ["path", { d: "M256 304c-87 0-175.3 48-191.64 138.6C62.39 453.52 68.57 464 80 464h352c11.44 0 17.62-10.48 15.65-21.4C431.3 352 343 304 256 304Z", fill: "none", stroke: "currentColor", strokeMiterlimit: 10, strokeWidth: "32px" }]
-]);
-var IonPersonFilledIcon = ionicon([
-  ["path", { d: "M332.64 64.58C313.18 43.57 286 32 256 32c-30.16 0-57.43 11.5-76.8 32.38-19.58 21.11-29.12 49.8-26.88 80.78C156.76 206.28 203.27 256 256 256s99.16-49.71 103.67-110.82c2.27-30.7-7.33-59.33-27.03-80.6M432 480H80a31 31 0 0 1-24.2-11.13c-6.5-7.77-9.12-18.38-7.18-29.11C57.06 392.94 83.4 353.61 124.8 326c36.78-24.51 83.37-38 131.2-38s94.42 13.5 131.2 38c41.4 27.6 67.74 66.93 76.18 113.75 1.94 10.73-.68 21.34-7.18 29.11A31 31 0 0 1 432 480" }]
-]);
-var FluentBotIcon = ionicon([["path", { d: "M17.75 14C19 14 20 15 20 16.25v.9c0 1.1-.47 2.14-1.3 2.85q-2.36 2-6.7 2t-6.7-2A3.8 3.8 0 0 1 4 17.16v-.91C4 15 5.01 14 6.25 14zm0 1.5H6.25a.75.75 0 0 0-.75.75v.9c0 .66.29 1.29.79 1.71Q8.17 20.5 12 20.5q3.83-.01 5.72-1.64c.5-.43.78-1.05.78-1.7v-.91a.75.75 0 0 0-.75-.75M11.9 2h.1c.38 0 .7.28.74.65l.01.1v.75h3.5c1.24 0 2.25 1 2.25 2.25v4.5c0 1.25-1 2.25-2.25 2.25h-8.5c-1.24 0-2.25-1-2.25-2.25v-4.5c0-1.24 1-2.25 2.25-2.25h3.5v-.75c0-.38.28-.7.65-.74L12 2zm4.35 3h-8.5a.75.75 0 0 0-.75.75v4.5c0 .42.34.75.75.75h8.5c.41 0 .75-.33.75-.75v-4.5a.75.75 0 0 0-.75-.75m-6.5 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5m4.5 0a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5" }]], 24, "0 0 24 24");
-var FluentBotFilledIcon = ionicon([["path", { d: "M17.75 14C19 14 20 15 20 16.25v.9c0 1.1-.47 2.14-1.3 2.85q-2.36 2-6.7 2t-6.7-2A3.8 3.8 0 0 1 4 17.16v-.91C4 15 5.01 14 6.25 14zM11.9 2h.1c.38 0 .7.28.74.65l.01.1v.75h3.5c1.24 0 2.25 1 2.25 2.25v4.5c0 1.25-1 2.25-2.25 2.25h-8.5c-1.24 0-2.25-1-2.25-2.25v-4.5c0-1.24 1-2.25 2.25-2.25h3.5v-.75c0-.38.28-.7.65-.74L12 2zM9.75 6.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5m4.5 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5" }]], 24, "0 0 24 24");
+var PhosphorChatIcon = phosphorIcon("M216,48H40A16,16,0,0,0,24,64V224a15.84,15.84,0,0,0,9.25,14.5A16.05,16.05,0,0,0,40,240a15.89,15.89,0,0,0,10.25-3.78l.09-.07L83,208H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM40,224h0ZM216,192H80a8,8,0,0,0-5.23,1.95L40,224V64H216Z");
+var PhosphorChatFilledIcon = phosphorIcon("M232,64V192a16,16,0,0,1-16,16H83l-32.6,28.16-.09.07A15.89,15.89,0,0,1,40,240a16.05,16.05,0,0,1-6.79-1.52A15.84,15.84,0,0,1,24,224V64A16,16,0,0,1,40,48H216A16,16,0,0,1,232,64Z");
+var PhosphorRobotIcon = phosphorIcon("M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48Zm16,144a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V80A16,16,0,0,1,56,64H200a16,16,0,0,1,16,16Zm-52-56H92a28,28,0,0,0,0,56h72a28,28,0,0,0,0-56Zm-24,16v24H116V152ZM80,164a12,12,0,0,1,12-12h8v24H92A12,12,0,0,1,80,164Zm84,12h-8V152h8a12,12,0,0,1,0,24ZM72,108a12,12,0,1,1,12,12A12,12,0,0,1,72,108Zm88,0a12,12,0,1,1,12,12A12,12,0,0,1,160,108Z");
+var PhosphorRobotFilledIcon = phosphorIcon("M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48ZM172,96a12,12,0,1,1-12,12A12,12,0,0,1,172,96ZM96,184H80a16,16,0,0,1,0-32H96ZM84,120a12,12,0,1,1,12-12A12,12,0,0,1,84,120Zm60,64H112V152h32Zm32,0H160V152h16a16,16,0,0,1,0,32Z");
+var PhosphorCompassIcon = phosphorIcon("M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z");
+var PhosphorCompassFilledIcon = phosphorIcon("M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm51.58,57.79-32,64a4.08,4.08,0,0,1-1.79,1.79l-64,32a4,4,0,0,1-5.37-5.37l32-64a4.08,4.08,0,0,1,1.79-1.79l64-32A4,4,0,0,1,179.58,81.79Z");
+var PhosphorUserIcon = phosphorIcon("M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z");
+var PhosphorUserFilledIcon = phosphorIcon("M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z");
 
 // src/client/questions.js
 var import_react4 = require("react");
@@ -15778,10 +15759,10 @@ function noticeApprovals({ work, roster, shownSession, openSession, since: since
 var import_react39 = require("react");
 var import_react_dom12 = require("react-dom");
 var TABS = [
-  ["tasks", "Tasks", IonChatbubbleIcon, IonChatbubbleFilledIcon],
-  ["peers", "Peers", FluentBotIcon, FluentBotFilledIcon],
-  ["plugins", "Discover", IonCompassIcon, IonCompassFilledIcon],
-  ["me", "Me", IonPersonIcon, IonPersonFilledIcon]
+  ["tasks", "Tasks", PhosphorChatIcon, PhosphorChatFilledIcon],
+  ["peers", "Peers", PhosphorRobotIcon, PhosphorRobotFilledIcon],
+  ["plugins", "Discover", PhosphorCompassIcon, PhosphorCompassFilledIcon],
+  ["me", "Me", PhosphorUserIcon, PhosphorUserFilledIcon]
 ];
 function BottomNav({ useUi, useNav, actions }) {
   const ui2 = useUi((value) => value);
@@ -15846,7 +15827,7 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
-/* The drawings carry their own 24px box (their grid is Ionicons' 512, icons.js), so nothing
+/* The drawings carry their own 24px box (their grid is Phosphor's 256, icons.js), so nothing
    here sizes them; only the flex row's power to squeeze them is taken away. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-ink)}
@@ -16929,8 +16910,7 @@ function apply(ctx) {
   }, "ds-bot: surface");
 }
 /*! Lucide (ISC) · path data from lucide-static v1.57.0 */
-/*! Ionicons (MIT) · Copyright (c) 2015-present Ionic (http://ionic.io/) · ionicons v8.1.0 */
-/*! Fluent System Icons (MIT) · Copyright (c) 2020 Microsoft Corporation · @fluentui/svg-icons v1.1.344 */
+/*! Phosphor Icons (MIT) · Copyright (c) 2023 Phosphor Icons · @phosphor-icons/core v2.1.1 */
 return Object.defineProperty({ ...module.exports }, Symbol.toStringTag, { value: 'Module' })
   },
 })

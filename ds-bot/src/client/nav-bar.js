@@ -24,10 +24,10 @@
 import { createElement as h } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  FluentBotFilledIcon, FluentBotIcon,
-  IonChatbubbleFilledIcon, IonChatbubbleIcon,
-  IonCompassFilledIcon, IonCompassIcon,
-  IonPersonFilledIcon, IonPersonIcon,
+  PhosphorChatFilledIcon, PhosphorChatIcon,
+  PhosphorCompassFilledIcon, PhosphorCompassIcon,
+  PhosphorRobotFilledIcon, PhosphorRobotIcon,
+  PhosphorUserFilledIcon, PhosphorUserIcon,
 } from './icons.js'
 import { useMobile, usePortrait } from './mobile.js'
 import { t } from './i18n.js'
@@ -37,19 +37,17 @@ import { t } from './i18n.js'
 // at render time like every other string here, so the bar names its pages in the language
 // the rest of the interface is in (Chinese must not be hard-coded into the labels).
 //
-// Each page carries two drawings of one shape, from Ionicons (icons.js): the outline while
-// the page is not the current one and the solid one while it is, which is the state the user
-// asked for and the reason the bar never thickens a stroke to fake it. 任务 takes its
-// chatbubble (a round bubble whose tail leaves at the lower left -- the shape the user's
-// screenshots draw), 发现 its compass and 我的 its round-headed person, both also from those
-// screenshots; 伙伴 is the one page the screenshot does not draw, and it takes the Bot head
-// Fluent publishes, because the platform's own agent glyph has no Filled sibling and the
-// user asked that page for the agent's icon (icons.js records the whole trade).
+// Each page carries two drawings of one shape, from Phosphor (icons.js): the outlined one
+// while the page is not the current one and the solid one while it is, which is the state
+// the user asked for and the reason the bar never thickens a stroke to fake it. All four
+// come from one family, so the bar reads as one set: 任务 a rounded bubble with its tail at
+// the lower left, 伙伴 the robot head the user asked for on that page, 发现 a compass, and
+// 我的 a round-headed figure.
 const TABS = [
-  ['tasks', 'Tasks', IonChatbubbleIcon, IonChatbubbleFilledIcon],
-  ['peers', 'Peers', FluentBotIcon, FluentBotFilledIcon],
-  ['plugins', 'Discover', IonCompassIcon, IonCompassFilledIcon],
-  ['me', 'Me', IonPersonIcon, IonPersonFilledIcon],
+  ['tasks', 'Tasks', PhosphorChatIcon, PhosphorChatFilledIcon],
+  ['peers', 'Peers', PhosphorRobotIcon, PhosphorRobotFilledIcon],
+  ['plugins', 'Discover', PhosphorCompassIcon, PhosphorCompassFilledIcon],
+  ['me', 'Me', PhosphorUserIcon, PhosphorUserFilledIcon],
 ]
 
 export function BottomNav({ useUi, useNav, actions }) {
@@ -134,7 +132,7 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
-/* The drawings carry their own 24px box (their grid is Ionicons' 512, icons.js), so nothing
+/* The drawings carry their own 24px box (their grid is Phosphor's 256, icons.js), so nothing
    here sizes them; only the flex row's power to squeeze them is taken away. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-ink)}
