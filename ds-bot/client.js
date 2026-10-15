@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: e1d13693
+// Source fingerprint: 6c2fbfae
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16248,8 +16248,10 @@ html[data-bt-mobile] body:has(.bt-discover) .bt-mobile-bar,
 html[data-bt-mobile] body:has(.bt-subback) .bt-mobile-bar{display:none}
 html[data-bt-mobile] .bt-discover{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
-html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}
-html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
+/* The head holds one thing, the page's name, and the user asked for it centred -- no control sits
+   beside it, so the row is the title's own line rather than two ends pushed apart. */
+html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:center;gap:12px;padding-bottom:8px}
+html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600;text-align:center}
 html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain}
 /* A card is one group of rows: the same surface the composer's card and the floating controls wear,
    from the one shadow token, and the list's 8px gap is the space between two cards. It clips its
@@ -16276,7 +16278,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "e1d13693" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "6c2fbfae" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

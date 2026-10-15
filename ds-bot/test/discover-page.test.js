@@ -117,6 +117,12 @@ test('a card is one surface, and one hairline separates its rows', () => {
   // controls wear, and the one shadow token they both read.
   const card = discover.slice(discover.indexOf('.bt-discover-card{'), discover.indexOf('.bt-discover-row{'))
   assert.ok(card.includes('border-radius:16px'), 'rounded like the reference')
+  // The head holds the page's name alone, and the user asked for it centred: nothing sits at the
+  // other end, so the row centres its one child rather than pushing two ends apart.
+  const head = discover.slice(discover.indexOf('.bt-discover-head{'), discover.indexOf('.bt-discover-title{'))
+  assert.ok(head.includes('justify-content:center'), 'the title is centred')
+  assert.ok(!head.includes('space-between'), 'with nothing to push to the far end')
+  assert.ok(discover.includes('.bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600;text-align:center}'), 'and the text centred inside its own line')
   assert.ok(card.includes('background:var(--bt-card)'), 'on the card colour')
   assert.ok(card.includes('box-shadow:var(--bt-float-shadow)'), 'the one shared shadow, not a value of its own')
   assert.ok(card.includes('overflow:hidden'), 'and it clips its rows, so the ends follow its corners')
