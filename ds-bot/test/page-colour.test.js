@@ -106,7 +106,7 @@ test('the bar wears the sampled pair, and the input is white like the cards', ()
   // one light shadow. The half-pixel border is paid back into the padding (7.5 + 0.5 = 8), so
   // the card's box -- and the 8px above the bar measured on the device -- do not move.
   assert.ok(composer.includes('border:0!important'), 'no frame, on any side')
-  assert.ok(composer.includes('box-shadow:0 2px 8px rgba(20,20,20,.06)!important'), 'and one light shadow so it floats')
+  assert.ok(composer.includes('box-shadow:0 2px 8px rgba(20,20,20,.08),0 1px 2px rgba(20,20,20,.04)!important'), 'two soft layers, the float the user copied, and no ring')
   assert.ok(composer.includes('padding:8px!important'), 'with the border\'s half-pixel paid back')
   assert.ok(!composer.includes('border-color'), 'and nothing left for a hover border to colour')
 })

@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: ba619fdb
+// Source fingerprint: 0334ca90
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3551,12 +3551,13 @@ html[data-bt-mobile][data-bt-size=compact] .bt-tools::after{display:none}
 }
 @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
 @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
-/* The input card: a full round (22 = half of its 46), an invisible frame and one light shadow
-   so it floats on the page's own colour -- the user asked for the border gone and the float
-   kept. The 0.5px border it used to wear is paid back into the padding (7.5 + 0.5 = 8), so the
-   card's own box, the 8px it sits above the bar and every measured gap stay exactly as they
-   were. Nothing colours an edge here any more, so no hover border colour is left either. */
-[data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:8px!important;box-sizing:border-box;background:var(--bt-card)!important;border:0!important;box-shadow:0 2px 8px rgba(20,20,20,.06)!important;transition:background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
+/* The input card: a full round (22 = half of its 46), an invisible frame and the light shadow
+   the field the user copied floats on -- white, no border, one soft lift, and no ring (the
+   1px ring it used to carry read as the very edge being removed). The 0.5px border it also used
+   to wear is paid back into the padding (7.5 + 0.5 = 8), so the card's own box, the 8px it sits
+   above the bar and every measured gap stay exactly as they were. Nothing colours an edge here
+   any more, so no hover border colour is left either. */
+[data-composer-card]{display:flex!important;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0!important;min-height:44px;border-radius:22px!important;padding:8px!important;box-sizing:border-box;background:var(--bt-card)!important;border:0!important;box-shadow:0 2px 8px rgba(20,20,20,.08),0 1px 2px rgba(20,20,20,.04)!important;transition:background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
 /* The composer takes the same measure as the conversation column, so both edges line up:
    the same 16px padding on each side and the same width cap. */
@@ -16140,7 +16141,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "ba619fdb" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "0334ca90" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
