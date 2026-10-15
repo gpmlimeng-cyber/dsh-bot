@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: c8fd4890
+// Source fingerprint: 091ee7a3
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3245,10 +3245,10 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width
    12 + 89 = 101), so nothing can overlap on a 425px screen, and the pill's own
    70% cap plus the name's ellipsis keeps long titles inside the middle track. */
 .bt-mobile-bar{--bt-mobile-clear:104px;position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px var(--bt-mobile-clear) 0;pointer-events:none}
-/* The three floating controls at the top are frosted: a message scrolling up shows
-   through them instead of being hidden by them. The bar itself stays a plain container —
-   no fill, no filter — so what is behind the *gaps* between the controls is untouched; the
-   frost belongs to the pill, the hamburger and the right frame, edit each.
+/* The three floating controls at the top are solid cards. The bar itself stays a plain
+   container — no fill, no filter — so what is behind the *gaps* between the controls is
+   untouched; the skin belongs to the pill, the hamburger and the right frame, and is
+   declared once, below, edit each.
    The fade band is the mirror of the one the exchange dialog already puts above its own
    footer (.bt-exchange .bt-dialog-foot::before: 40px, opaque var(--bt-main) at the edge it
    hugs fading to nothing), so the top of the screen fades by the same 40px the bottom does,
@@ -3260,35 +3260,20 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width
    saw when it reported no translucency at all. The cost is stated rather than hidden: 20% of
    a bright message can ghost through the very first row at the status bar, and the band is
    no longer an exact match for the footer's, only a perceptually even one.
-   The controls' own fill carries the rest: 30% with a 16px blur, so what is behind them
-   reads as a soft shape rather than as letters. That is thin enough that their labels are
-   carried by the blur, not by the fill: over the transcript's own dark backdrop the white
-   ink keeps a contrast ratio of roughly 13:1, but a full-bleed bright image behind a control
-   can flatten it to about 1.8:1. The remedy there is more blur or a text-shadow in the
-   control's own colour — not fill, which is what this whole thread was about removing.
-   To trade the other way — fade clear of the controls, frost at full strength — move this
-   rule to top:100%; height:32px and put the fill back to 72%.
+   The controls are opaque cards, not windows: --bt-card, no border, no filter, and the two
+   soft shadows the composer's card already carries. The half-pixel border they used to wear
+   read on the device as one divider line straight across the whole top row, and the 30% fill
+   behind a 16px blur let the transcript show through as a haze the user named "not the same
+   colour at the top" — so the frost went rather than got tuned. Their labels are carried by
+   the card, which is opaque; the contrast question the blur used to answer does not arise.
    It keeps z-index -1 so it paints under the controls rather than over them; it is a child
    of the bar, so the bar's own stacking context (95) still holds it above the conversation.
-   The transcript already reserves 60px at the top of its scroll box for the floating pill
-   row, which clears this 50px bar, so the first line is not covered on arrival.
-   Two variables, set on the bar and inherited by its children, switch both the fill and the
-   filter off together for every full-screen layer this skin opens: there the bar floats
-   over a surface whose own first row sits in exactly this band and would be blurred out —
-   the drawer (its top row is the bar's y), the New…/exchange/voice panes (their To: row),
-   the settings page, the memory dialog and the palette.
-   If the blur costs frames on this WebView, the fallback is to raise --bt-frost-fill to 92%
-   and leave --bt-frost-blur at none — same two properties, no rule to hunt for. */
-html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 30%,transparent);--bt-frost-blur:blur(16px)}
+   The scroll box reserves --bt-fade-h at the top (the rule above), which clears this bar, so
+   the first line is not covered on arrival. */
 html[data-bt-mobile] .bt-pill,
 html[data-bt-mobile] .bt-mobile-nav,
-html[data-bt-mobile] .bt-mobile-acts{background:var(--bt-frost-fill,var(--bt-main));-webkit-backdrop-filter:var(--bt-frost-blur,none);backdrop-filter:var(--bt-frost-blur,none)}
+html[data-bt-mobile] .bt-mobile-acts{border:0;background:var(--bt-card);box-shadow:rgba(20,20,20,.08) 0 2px 8px,rgba(20,20,20,.04) 0 1px 2px;-webkit-backdrop-filter:none;backdrop-filter:none}
 html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 80%,transparent),transparent)}
-html[data-bt-mobile] .bt-mobile-bar[data-nav-open],
-html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar{--bt-frost-fill:var(--bt-main);--bt-frost-blur:none}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open]::after,
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar::after,
@@ -3716,19 +3701,6 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-part-line{display:flex;align-items:center;gap:10px;margin:10px 0 6px;font-size:11px;line-height:14px;color:var(--bt-ink-3)}
 .bt-part-line::before,.bt-part-line::after{content:"";flex:1;height:1px;background:var(--bt-line)}
 `;
-var COLOUR = /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|color\()/i;
-function publishShellBackground() {
-  if (typeof document === "undefined") return;
-  const root = document.documentElement;
-  const declared = (root.style.getPropertyValue("background-color") || root.style.getPropertyValue("background") || "").trim();
-  if (COLOUR.test(declared)) {
-    if (root.style.getPropertyValue("--bt-shell-bg") !== declared) root.style.setProperty("--bt-shell-bg", declared);
-    if (root.dataset.btShellBg === void 0) root.dataset.btShellBg = "";
-  } else {
-    if (root.style.getPropertyValue("--bt-shell-bg") !== "") root.style.removeProperty("--bt-shell-bg");
-    if (root.dataset.btShellBg !== void 0) delete root.dataset.btShellBg;
-  }
-}
 function installStyles(text, tag) {
   for (const old of document.head.querySelectorAll("style[data-dsh-bot]")) {
     if (old.dataset.dshBot === tag) old.remove();
@@ -16099,8 +16071,8 @@ function PeersPage({ useRoster, useUi, actions }) {
         (0, import_react40.createElement)("button", {
           type: "button",
           className: "bt-round bt-peers-new",
-          "aria-label": t("Create Bot"),
-          title: t("Create Bot"),
+          "aria-label": t("New…"),
+          title: t("New…"),
           onClick: () => actions.openNewChat("create")
         }, (0, import_react40.createElement)(PlusIcon))
       ),
@@ -16172,7 +16144,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "c8fd4890" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "091ee7a3" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16464,7 +16436,6 @@ function apply(ctx) {
       const motion = prefs.motion === "quiet" || prefs.motion === "lively" ? prefs.motion : "normal";
       document.body.dataset.btMotion = motion;
       askForStatusBar(quietly("status bar"));
-      publishShellBackground();
       const next = `${id}|${accent ?? ""}|${motion}|${registry.getSnapshot()}`;
       if (next === key) return;
       key = next;
@@ -16482,21 +16453,13 @@ function apply(ctx) {
     render();
     const offRoster = roster.subscribe(render);
     const offRegistry = registry.subscribe(render);
-    const themeWatch = new MutationObserver(() => {
-      publishShellBackground();
-    });
-    themeWatch.observe(document.body, { attributes: true, attributeFilter: ["data-ds-dark-theme"] });
-    themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
     return () => {
       offRoster();
       offRegistry();
-      themeWatch.disconnect();
       try {
         if (typeof releaseTokens === "function") releaseTokens();
       } finally {
         delete document.body.dataset.btMotion;
-        document.documentElement.style.removeProperty("--bt-shell-bg");
-        delete document.documentElement.dataset.btShellBg;
         style.remove();
       }
     };

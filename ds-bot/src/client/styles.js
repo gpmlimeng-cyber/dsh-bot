@@ -1250,10 +1250,10 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width
    12 + 89 = 101), so nothing can overlap on a 425px screen, and the pill's own
    70% cap plus the name's ellipsis keeps long titles inside the middle track. */
 .bt-mobile-bar{--bt-mobile-clear:104px;position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;z-index:95;display:flex;justify-content:center;padding:10px var(--bt-mobile-clear) 0;pointer-events:none}
-/* The three floating controls at the top are frosted: a message scrolling up shows
-   through them instead of being hidden by them. The bar itself stays a plain container —
-   no fill, no filter — so what is behind the *gaps* between the controls is untouched; the
-   frost belongs to the pill, the hamburger and the right frame, edit each.
+/* The three floating controls at the top are solid cards. The bar itself stays a plain
+   container — no fill, no filter — so what is behind the *gaps* between the controls is
+   untouched; the skin belongs to the pill, the hamburger and the right frame, and is
+   declared once, below, edit each.
    The fade band is the mirror of the one the exchange dialog already puts above its own
    footer (.bt-exchange .bt-dialog-foot::before: 40px, opaque var(--bt-main) at the edge it
    hugs fading to nothing), so the top of the screen fades by the same 40px the bottom does,
@@ -1265,35 +1265,20 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width
    saw when it reported no translucency at all. The cost is stated rather than hidden: 20% of
    a bright message can ghost through the very first row at the status bar, and the band is
    no longer an exact match for the footer's, only a perceptually even one.
-   The controls' own fill carries the rest: 30% with a 16px blur, so what is behind them
-   reads as a soft shape rather than as letters. That is thin enough that their labels are
-   carried by the blur, not by the fill: over the transcript's own dark backdrop the white
-   ink keeps a contrast ratio of roughly 13:1, but a full-bleed bright image behind a control
-   can flatten it to about 1.8:1. The remedy there is more blur or a text-shadow in the
-   control's own colour — not fill, which is what this whole thread was about removing.
-   To trade the other way — fade clear of the controls, frost at full strength — move this
-   rule to top:100%; height:32px and put the fill back to 72%.
+   The controls are opaque cards, not windows: --bt-card, no border, no filter, and the two
+   soft shadows the composer's card already carries. The half-pixel border they used to wear
+   read on the device as one divider line straight across the whole top row, and the 30% fill
+   behind a 16px blur let the transcript show through as a haze the user named "not the same
+   colour at the top" — so the frost went rather than got tuned. Their labels are carried by
+   the card, which is opaque; the contrast question the blur used to answer does not arise.
    It keeps z-index -1 so it paints under the controls rather than over them; it is a child
    of the bar, so the bar's own stacking context (95) still holds it above the conversation.
-   The transcript already reserves 60px at the top of its scroll box for the floating pill
-   row, which clears this 50px bar, so the first line is not covered on arrival.
-   Two variables, set on the bar and inherited by its children, switch both the fill and the
-   filter off together for every full-screen layer this skin opens: there the bar floats
-   over a surface whose own first row sits in exactly this band and would be blurred out —
-   the drawer (its top row is the bar's y), the New…/exchange/voice panes (their To: row),
-   the settings page, the memory dialog and the palette.
-   If the blur costs frames on this WebView, the fallback is to raise --bt-frost-fill to 92%
-   and leave --bt-frost-blur at none — same two properties, no rule to hunt for. */
-html[data-bt-mobile] .bt-mobile-bar{--bt-frost-fill:color-mix(in srgb,var(--bt-main) 30%,transparent);--bt-frost-blur:blur(16px)}
+   The scroll box reserves --bt-fade-h at the top (the rule above), which clears this bar, so
+   the first line is not covered on arrival. */
 html[data-bt-mobile] .bt-pill,
 html[data-bt-mobile] .bt-mobile-nav,
-html[data-bt-mobile] .bt-mobile-acts{background:var(--bt-frost-fill,var(--bt-main));-webkit-backdrop-filter:var(--bt-frost-blur,none);backdrop-filter:var(--bt-frost-blur,none)}
+html[data-bt-mobile] .bt-mobile-acts{border:0;background:var(--bt-card);box-shadow:rgba(20,20,20,.08) 0 2px 8px,rgba(20,20,20,.04) 0 1px 2px;-webkit-backdrop-filter:none;backdrop-filter:none}
 html[data-bt-mobile] .bt-mobile-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:40px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 80%,transparent),transparent)}
-html[data-bt-mobile] .bt-mobile-bar[data-nav-open],
-html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar{--bt-frost-fill:var(--bt-main);--bt-frost-blur:none}
 html[data-bt-mobile] .bt-mobile-bar[data-nav-open]::after,
 html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar::after,
 html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar::after,
@@ -1723,40 +1708,6 @@ div:has(> nav [class*="_marks"]){display:none!important}
 `
 
 // -------------------------------------------------------------------------
-
-// What colour the shell is painting behind the status bar, read from the page: the platform
-// writes a background on <html> inline, and that declaration is not the platform's own base
-// token (#fcfcfc) -- it is the colour of the band the shell draws. The reader takes it from the
-// INLINE declaration only, never the computed value, which would be our own paint as soon as
-// the stylesheet has one, and republishes it as --bt-shell-bg.
-//
-// The page's own colour does NOT follow it. That was tried and withdrawn: the page keeps the
-// skin's design colour (#fcfcfc), and the shell's colour is used for one thing only -- the
-// first 10px of the page, where the top fade starts from it and dissolves into the page, so
-// the join between a fixed shell band and our colour is a gradient rather than an edge
-// (nav-bar.js). If the shell ever goes edge-to-edge that band simply starts from the page's own
-// colour and disappears; nothing here has to change.
-//
-// `transparent` and `currentcolor` are deliberately NOT read: they say the shell is not
-// painting its own surface there, and a page painted `transparent` would let the view behind
-// it through. A shell that stops painting leaves the property unset, and the fade falls back to
-// the page's colour, which is the no-op we want.
-const COLOUR = /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|color\()/i
-export function publishShellBackground() {
-  if (typeof document === 'undefined') return
-  const root = document.documentElement
-  const declared = (root.style.getPropertyValue('background-color') || root.style.getPropertyValue('background') || '').trim()
-  if (COLOUR.test(declared)) {
-    // Only write when it differs: this element's style attribute is what the watch below
-    // observes, so writing the same value back would be a change with nothing in it.
-    if (root.style.getPropertyValue('--bt-shell-bg') !== declared) root.style.setProperty('--bt-shell-bg', declared)
-    if (root.dataset.btShellBg === undefined) root.dataset.btShellBg = ''
-  } else {
-    // Including the case where it is already gone: the sheet never frees a property it set.
-    if (root.style.getPropertyValue('--bt-shell-bg') !== '') root.style.removeProperty('--bt-shell-bg')
-    if (root.dataset.btShellBg !== undefined) delete root.dataset.btShellBg
-  }
-}
 
 export function installStyles(text, tag) {
   // One sheet per name. This runs again every time the plugin is applied -- an HMR push, a

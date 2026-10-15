@@ -7,9 +7,6 @@
 // which is what these two assertions are for.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { runInNewContext } from 'node:vm'
-import { build } from 'esbuild'
 import { test } from 'node:test'
 import { THEMES, themeVars } from '../src/client/themes.js'
 
@@ -129,32 +126,21 @@ test('the page is painted where the platform painted its own, and only in the li
   assert.ok(dark.includes('--bt-main:#141414'), dark)
 })
 
-// The band behind the status bar is painted by the shell, and the page cannot reach it -- but
-// the shell puts its colour where the page CAN read it: a background on <html>, written inline
-// and not the platform's own base token. So the page takes its colour from there instead of
-// sampling it once and drifting the next time the band moves (it moved once already today).
-test('the page colour is read from the shell, in the light theme, with the sample as fallback', () => {
-  const styles = read('styles.js')
-  const reader = styles.slice(styles.indexOf('export function publishShellBackground'), styles.indexOf('export function installStyles'))
-  assert.ok(reader.includes("root.style.getPropertyValue('background-color')"), 'the inline declaration, read from the element')
-  assert.ok(reader.includes("root.style.getPropertyValue('background')"), 'including the shorthand form')
-  assert.ok(!reader.includes('getComputedStyle'), 'never the computed value, which would be our own paint')
-  assert.ok(reader.includes("setProperty('--bt-shell-bg', declared)"), 'published as the token the sheet reads')
-  assert.ok(reader.includes("dataset.btShellBg = ''") && reader.includes('removeProperty'), 'and dropped again when there is nothing to read')
-  // The sheet takes it as the page's own colour, so every surface that already reads
-  // --bt-main / --bt-sidebar follows in one step; the palette's sample stands as the fallback.
-  // The shell colour feeds the top fade and nothing else: the page's own colour is the design's.
-  assert.ok(!styles.includes('--bt-main:var(--bt-shell-bg)'), 'the shell colour does not decide the page colour')
-  // The strip starts from the page's own colour -- solid at the top edge, thinning to nothing -- and
-  // never from the shell's: the page's design colour is the one it fades out of.
+// The band behind the status bar is painted by the shell, and the page cannot reach it. The
+// skin no longer tries to read the shell's colour back: it asks for the surface
+// (status-bar.js) and draws its own strip, which starts from the page's own design colour --
+// solid at the top edge, thinning to nothing -- so the join between a fixed shell band and our
+// paint is a gradient rather than an edge (nav-bar.js). The reader that sampled <html>'s
+// inline background went with its last consumer, and this keeps it from creeping back.
+test('the strip fades out of the page\'s own colour, and the shell\'s is never read', () => {
+  const sheet = read('styles.js')
+  assert.ok(!sheet.includes('--bt-shell-bg') && !sheet.includes('publishShellBackground'), 'no reader, no token')
+  const index = read('index.js')
+  assert.ok(!index.includes('--bt-shell-bg') && !index.includes('publishShellBackground'), 'and nothing wires one')
+  // The strip starts from the page's own colour -- solid at the top edge, thinning to nothing --
+  // and never from the shell's: the page's design colour is the one it fades out of.
   assert.ok(nav.includes('linear-gradient(to bottom,var(--bt-main),transparent)'), 'the strip fades out of the page\'s own colour')
   assert.ok(read('themes.js').includes("light: { bg: '#fcfcfc', sidebar: '#fcfcfc'"), 'and the page keeps the design colour')
-  // Wired where the theme is applied, and watched: the platform rewrites that declaration on
-  // its own, and the watch lives on <html> where the declaration is.
-  const index = read('index.js')
-  assert.ok(index.includes('      publishShellBackground()\n'), 'applied with the theme')
-  assert.ok(index.includes('new MutationObserver(() => { publishShellBackground() })') && index.includes("attributeFilter: ['data-ds-dark-theme']"), 'and re-applied when the platform flips dark')
-  assert.ok(index.includes("themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })"), 'and watched, because the platform rewrites it')
 })
 
 // The platform writes the base token inline on <body>, and three surfaces read it: the
@@ -191,67 +177,4 @@ test('the bar wears the page colour, opaque', () => {
   assert.ok(!bar.includes('color-mix') && !bar.includes('transparent'), 'no mix, no see-through')
 })
 
-// The reader runs for real against a stand-in for the platform's inline declaration, because
-// its one hard rule -- read the INLINE value, never the computed one -- is what keeps it from
-// reading its own paint back and looping.
-const bundle = await build({
-  entryPoints: [fileURLToPath(new URL('../src/client/styles.js', import.meta.url))],
-  bundle: true, format: 'cjs', platform: 'node', write: false,
-  external: ['react', 'react-dom'],
-})
-const loadReader = (inline) => {
-  const declared = new Map(Object.entries(inline))
-  let writes = 0
-  const style = {
-    getPropertyValue: (name) => declared.get(name) ?? '',
-    setProperty: (name, value) => { writes += 1; declared.set(name, value) },
-    removeProperty: (name) => { writes += 1; declared.delete(name) },
-  }
-  const root = { style, dataset: {} }
-  const document = { documentElement: root, head: { querySelector: () => null, prepend: () => {} } }
-  const module = { exports: {} }
-  runInNewContext(bundle.outputFiles[0].text, {
-    module, exports: module.exports, document,
-    require: (name) => {
-      if (name === 'react') return { createElement: () => null, useState: v => [v, () => {}], useEffect: () => {}, useLayoutEffect: () => {}, useRef: v => ({ current: v }), Fragment: 'fragment' }
-      if (name === 'react-dom') return { createPortal: () => null }
-      throw new Error(`no platform module ${name}`)
-    },
-  })
-  return { read: module.exports.publishShellBackground, declared, root, writes: () => writes }
-}
 
-test('the shell colour is read from the inline declaration and published', () => {
-  const shorthand = loadReader({ background: 'rgb(241, 243, 241)' })
-  shorthand.read()
-  assert.equal(shorthand.declared.get('--bt-shell-bg'), 'rgb(241, 243, 241)')
-  assert.ok('btShellBg' in shorthand.root.dataset, 'and the sheet is told there is one')
-  // Reading again writes nothing: the reader's own write is on the attribute it watches, so a
-  // repeated write would be a change with nothing in it, and a watch loop with it.
-  shorthand.read()
-  shorthand.read()
-  assert.equal(shorthand.writes(), 1, 'the same value is written once and left alone')
-
-  const longhand = loadReader({ 'background-color': '#f1f3f1' })
-  longhand.read()
-  assert.equal(longhand.declared.get('--bt-shell-bg'), '#f1f3f1', 'the long form too')
-
-  // Nothing readable, or something that is not a colour: the palette's sample stands. The
-  // two keywords matter most -- an edge-to-edge shell says `transparent` about the surface it
-  // has stopped painting, and treating that as the page's colour would take the page's own
-  // background away.
-  for (const inline of [
-    {}, { background: 'url(bg.png) center' }, { background: 'none' },
-    { background: 'transparent' }, { 'background-color': 'transparent' },
-  ]) {
-    const empty = loadReader(inline)
-    empty.read()
-    assert.equal(empty.declared.get('--bt-shell-bg'), undefined, `nothing published for ${JSON.stringify(inline)}`)
-    assert.ok(!('btShellBg' in empty.root.dataset), 'and the attribute is gone with it')
-  }
-  const stale = loadReader({ 'background-color': '#123456' })
-  stale.read()
-  stale.declared.set('background-color', 'none')
-  stale.read()
-  assert.equal(stale.declared.get('--bt-shell-bg'), undefined, 'a colour taken away is unpublished')
-})

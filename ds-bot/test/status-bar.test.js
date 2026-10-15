@@ -44,11 +44,11 @@ test('a shell without the bridge is left alone, and is never asked twice about i
   assert.equal(withWindow(angry, () => publishStatusBarMode()), false, 'no reporter is still no throw')
 })
 
-test('and the writer wires it, with the reader still feeding the frosted strip', () => {
+test('and the writer wires it, as the only thing the strip needs from the shell', () => {
   const index = readFileSync(new URL('../src/client/index.js', import.meta.url), 'utf8')
   assert.ok(index.includes("import { askForStatusBar } from './status-bar.js'"), 'imported')
   assert.ok(index.includes("askForStatusBar(quietly('status bar'))"), 'called where the theme is applied')
-  assert.ok(index.includes("askForStatusBar(quietly('status bar'))\n      publishShellBackground()"), 'before the reader, which stays for the strip\'s tint')
+  assert.ok(!index.includes('publishShellBackground'), 'and nothing reads the shell\'s colour back')
 })
 
 // The shell injects the bridge into the page's own context, and on a cold start an ask that does

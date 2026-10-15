@@ -4,7 +4,7 @@ import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
 import { countCards, createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
 import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
-import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles, publishShellBackground } from './styles.js'
+import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
 import { askForStatusBar } from './status-bar.js'
 import { lookOf } from './mark.js'
 import { TeamSidebar, ConnectPlugins, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts } from './sidebar.js'
@@ -327,13 +327,12 @@ export function apply(ctx) {
       const accent = isHex(prefs.accent) ? prefs.accent : undefined
       const motion = prefs.motion === 'quiet' || prefs.motion === 'lively' ? prefs.motion : 'normal'
       document.body.dataset.btMotion = motion
-      // The status bar is the shell's to paint; ask it to hand the surface over, then read what
-      // it was painting in case it keeps doing so -- the frosted strip uses that colour while an
-      // older shell owns the strip, and the page's own once this one stops. The ask is repeated
-      // while the bridge is missing, because the theme renders as the plugin applies and the
-      // shell may inject the object after that (status-bar.js).
+      // The status bar is the shell's to paint, and the page's top strip is drawn from the
+      // page's own colour (nav-bar.js), so the ask is the whole of it: the band is handed over
+      // and nothing is read back. The ask is repeated while the bridge is missing, because the
+      // theme renders as the plugin applies and the shell may inject the object after that
+      // (status-bar.js).
       askForStatusBar(quietly('status bar'))
-      publishShellBackground()
       const next = `${id}|${accent ?? ''}|${motion}|${registry.getSnapshot()}`
       if (next === key) return
       key = next
@@ -348,21 +347,13 @@ export function apply(ctx) {
     render()
     const offRoster = roster.subscribe(render)
     const offRegistry = registry.subscribe(render)
-    const themeWatch = new MutationObserver(() => { publishShellBackground() })
-    themeWatch.observe(document.body, { attributes: true, attributeFilter: ['data-ds-dark-theme'] })
-    // The platform writes <html>'s background itself, and re-writes it when the shell's colour
-    // changes; that attribute is the one source this skin follows rather than samples.
-    themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] })
     return () => {
       offRoster()
       offRegistry()
-      themeWatch.disconnect()
       try {
         if (typeof releaseTokens === 'function') releaseTokens()
       } finally {
         delete document.body.dataset.btMotion
-        document.documentElement.style.removeProperty('--bt-shell-bg')
-        delete document.documentElement.dataset.btShellBg
         style.remove()
       }
     }
