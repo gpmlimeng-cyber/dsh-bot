@@ -110,20 +110,21 @@ export function PeersPage({ useRoster, useUi, actions }) {
     // badge -- which only a Main Bot has), and it belongs on the name's own line; what is a value
     // is small plain text (the model it runs on, the folder it works in) and belongs below.
     h('div', { className: 'bt-peers-list' },
-      groups.length > 0 ? section(t('Groups'), groups.map(room => h('div', {
-        key: room.id, className: 'bt-peers-item', role: 'listitem',
-      },
-      h('button', {
-        type: 'button', className: 'bt-peers-row', 'data-room-id': room.id, onClick: () => openChat(room.id),
-      },
-      h(RoomAvatar, { room, roster, size: 36 }),
-      h('span', { className: 'bt-peers-body' },
-        h('span', { className: 'bt-peers-name-row' }, h('span', { className: 'bt-peers-name' }, room.name)),
-        // A group has no model and no folder -- it is not one Bot's conversation -- but it does
-        // have members, which is the one thing worth a line under its name.
-        h('span', { className: 'bt-peers-desc' },
-          h('span', { className: 'bt-peers-text' }, t('{count} members', { count: (room.members ?? []).length })))),
-      h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))))) : null,
+      groups.length > 0 ? section(t('Groups'), groups.map(room => {
+        const count = (room.members ?? []).length
+        return h('div', { key: room.id, className: 'bt-peers-item', role: 'listitem' },
+          h('button', {
+            type: 'button', className: 'bt-peers-row', 'data-room-id': room.id, onClick: () => openChat(room.id),
+          },
+          h(RoomAvatar, { room, roster, size: 36 }),
+          h('span', { className: 'bt-peers-body' },
+            h('span', { className: 'bt-peers-name-row' }, h('span', { className: 'bt-peers-name' }, room.name)),
+            // A group has no model and no folder -- it is not one Bot's conversation -- but it does
+            // have members, which is the one thing worth a line under its name.
+            h('span', { className: 'bt-peers-desc' },
+              h('span', { className: 'bt-peers-text' }, t('{count} members', { count })))),
+          h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))
+      })) : null,
       shown.length > 0 ? section(t('Peers'), shown.map(bot => {
         const model = peersModel(bot, roster)
         // The folder it works in: its own when it has one, and the team workspace's own word when
@@ -131,22 +132,20 @@ export function PeersPage({ useRoster, useUi, actions }) {
         // gave it another). That word is the settings row's own (folder-menu.js), so the two read
         // the same; the real path behind it is a host call, and a list line does not make one.
         const folder = peersFolder(bot.workDir) ?? t('Team workspace')
-        return h('div', {
-          key: bot.id, className: 'bt-peers-item', role: 'listitem',
-        },
-        h('button', {
-          type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openChat(bot.id),
-        },
-        h(BotMark, { bot, size: 36 }),
-        h('span', { className: 'bt-peers-body' },
-          h('span', { className: 'bt-peers-name-row' },
-            h('span', { className: 'bt-peers-name' }, bot.name),
-            bot.role ? h('span', { className: 'bt-tag' }, bot.role) : null,
-            isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null),
-          h('span', { className: 'bt-peers-desc' },
-            model ? h('span', { className: 'bt-peers-text' }, model) : null,
-            h('span', { className: 'bt-peers-text' }, folder)))),
-        h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))
+        return h('div', { key: bot.id, className: 'bt-peers-item', role: 'listitem' },
+          h('button', {
+            type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openChat(bot.id),
+          },
+          h(BotMark, { bot, size: 36 }),
+          h('span', { className: 'bt-peers-body' },
+            h('span', { className: 'bt-peers-name-row' },
+              h('span', { className: 'bt-peers-name' }, bot.name),
+              bot.role ? h('span', { className: 'bt-tag' }, bot.role) : null,
+              isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null),
+            h('span', { className: 'bt-peers-desc' },
+              model ? h('span', { className: 'bt-peers-text' }, model) : null,
+              h('span', { className: 'bt-peers-text' }, folder))),
+          h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))
       })) : null,
       groups.length === 0 && shown.length === 0
         ? h('div', { className: 'bt-peers-empty', role: 'status' }, t('Nothing matches'))

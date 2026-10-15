@@ -26,7 +26,7 @@ const nav = code('nav-bar.js')
 const sidebar = code('sidebar.js')
 const header = code('header.js')
 
-const { peersList, peersRooms, peersModel, peersFolder } = await (async () => {
+const { peersList, peersRooms, peersModel, peersFolder, PeersPage } = await (async () => {
   const bundle = await build({
     entryPoints: [fileURLToPath(new URL('../src/client/peers-page.js', import.meta.url))],
     bundle: true, format: 'cjs', platform: 'node', write: false,
@@ -40,9 +40,13 @@ const { peersList, peersRooms, peersModel, peersFolder } = await (async () => {
   }
   runInNewContext(bundle.outputFiles[0].text, {
     module, exports: module.exports,
+    // The page is drawn for a phone, and the portal has to hand its node back: this is a render
+    // without a DOM, so the element tree IS the thing under test.
+    document: { body: 'body' },
+    window: { matchMedia: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }) },
     require: (name) => {
       if (name === 'react') return react
-      if (name === 'react-dom') return { createPortal: () => null }
+      if (name === 'react-dom') return { createPortal: node => node }
       throw new Error(`no platform module ${name}`)
     },
   })
@@ -51,6 +55,26 @@ const { peersList, peersRooms, peersModel, peersFolder } = await (async () => {
 
 // Values out of the bundle's realm compare by content only.
 const plain = (value) => JSON.parse(JSON.stringify(value))
+
+// The page's own tree, as the component draws it: a roster in, one element out. Node values from
+// the bundle's realm are read with plain(), for the same reason the lists are.
+const render = (roster, ui = { peers: true }) => PeersPage({ useRoster: selector => selector(roster), useUi: selector => selector(ui), actions: {} })
+const classList = (node) => String(node?.props?.className ?? '').split(' ').filter(Boolean)
+const findAll = (node, className, out = []) => {
+  if (node === null || node === undefined || typeof node !== 'object') return out
+  if (Array.isArray(node)) { for (const child of node) findAll(child, className, out); return out }
+  if (classList(node).includes(className)) out.push(node)
+  for (const child of node.children ?? []) findAll(child, className, out)
+  return out
+}
+const ROSTER = {
+  bots: [
+    { id: 'b1', name: 'Alpha', role: 'all', model: 'deepseek/deepseek-chat' },
+    { id: 'b2', name: 'Main', role: 'lead', workDir: '/x/repos/dsh-bot' },
+  ],
+  rooms: [{ id: 'r1', name: 'Room', members: ['b1', 'b2'] }],
+  mainBotIds: ['b2'], models: [],
+}
 
 test('the list is Bots by name, narrowed by what is typed', () => {
   const bots = [{ id: 'b', name: 'Bravo' }, { id: 'a', name: 'alpha' }, { id: 'c', name: 'Charlie' }]
@@ -69,6 +93,31 @@ test('the same book holds the group chats, read the same way', () => {
   assert.deepEqual(plain(peersRooms(rooms, 'zzz')), [], 'no match, no rows')
   assert.deepEqual(plain(peersRooms(undefined, '')), [], 'an empty roster is not a crash')
   assert.deepEqual(rooms.map(room => room.id), ['z', 'a', 'h'], 'and nothing is reordered in place')
+})
+
+test('the page is a header row and one scroller of labelled cards', () => {
+  // The tree the component draws, read as a tree: the header row is the first child of the page
+  // and NOTHING of the list lives inside it -- a list inside the header would be content under the
+  // search field, which is what a card crossing that seam looks like.
+  const tree = render(ROSTER)
+  assert.deepEqual(plain(tree.children.map(classList)), [['bt-peers-top'], ['bt-peers-list']], 'the header, then the scroller')
+  const top = findAll(tree, 'bt-peers-top')[0]
+  assert.deepEqual(plain(findAll(top, 'bt-peers-list')), [], 'no list inside the header row')
+  assert.equal(findAll(top, 'bt-settings-top').length, 1, 'the header holds the title row')
+  assert.equal(findAll(top, 'bt-side-search').length, 1, 'and the search field')
+  // Three cards, one per section of contacts: the group chats, then the people.
+  const cards = findAll(tree, 'bt-settings-group-card')
+  assert.equal(cards.length, 2, 'one card per section')
+  assert.deepEqual(plain(cards.map(card => card.children.length)), [1, 2], 'one group row, two Bot rows')
+  // And one button per contact, with the chevron INSIDE it, after the body: a chevron outside the
+  // button is a chevron on a line of its own, under the row it belongs to.
+  const rows = findAll(tree, 'bt-peers-row')
+  assert.equal(rows.length, 3, 'one row per contact')
+  for (const row of rows) {
+    const kids = plain(row.children.map(node => classList(node)[0] ?? '(mark)'))
+    assert.deepEqual(kids, ['(mark)', 'bt-peers-body', 'bt-peers-go'], 'mark, the two lines, the chevron -- all inside the button')
+  }
+  assert.deepEqual(plain(findAll(tree, 'bt-peers-go').map(node => classList(node))), [['bt-peers-go'], ['bt-peers-go'], ['bt-peers-go']], 'three of them, one per row')
 })
 
 test('a label sits on the name\'s line and a value on the line below it', () => {
@@ -104,7 +153,7 @@ test('a label sits on the name\'s line and a value on the line below it', () => 
   assert.ok(!peers.includes('bot.model.split'), 'and nothing here re-derives it')
   // A group is not one Bot's conversation, so it has no model, no folder and no role: its second
   // line says how many members it has, and its first is the name alone.
-  assert.ok(peers.includes("h('span', { className: 'bt-peers-text' }, t('{count} members', { count: (room.members ?? []).length }))"), 'a group says its members')
+  assert.ok(peers.includes('const count = (room.members ?? []).length') && peers.includes("t('{count} members', { count })"), 'a group says its members')
   assert.ok(peers.includes("className: 'bt-peers-name-row' }, h('span', { className: 'bt-peers-name' }, room.name)"), 'and the group\'s name line carries no label')
   // Two lines of one row, so the row is taller than the one line it was: the skin says how tall.
   const sheet = code('peers-page.js')

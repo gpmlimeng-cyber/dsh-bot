@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 54b45722
+// Source fingerprint: 4d29ed10
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16183,47 +16183,42 @@ function PeersPage({ useRoster, useUi, actions }) {
     (0, import_react40.createElement)(
       "div",
       { className: "bt-peers-list" },
-      groups.length > 0 ? section(t("Groups"), groups.map((room2) => (0, import_react40.createElement)(
-        "div",
-        {
-          key: room2.id,
-          className: "bt-peers-item",
-          role: "listitem"
-        },
-        (0, import_react40.createElement)(
-          "button",
-          {
-            type: "button",
-            className: "bt-peers-row",
-            "data-room-id": room2.id,
-            onClick: () => openChat(room2.id)
-          },
-          (0, import_react40.createElement)(RoomAvatar, { room: room2, roster, size: 36 }),
+      groups.length > 0 ? section(t("Groups"), groups.map((room2) => {
+        const count = (room2.members ?? []).length;
+        return (0, import_react40.createElement)(
+          "div",
+          { key: room2.id, className: "bt-peers-item", role: "listitem" },
           (0, import_react40.createElement)(
-            "span",
-            { className: "bt-peers-body" },
-            (0, import_react40.createElement)("span", { className: "bt-peers-name-row" }, (0, import_react40.createElement)("span", { className: "bt-peers-name" }, room2.name)),
-            // A group has no model and no folder -- it is not one Bot's conversation -- but it does
-            // have members, which is the one thing worth a line under its name.
+            "button",
+            {
+              type: "button",
+              className: "bt-peers-row",
+              "data-room-id": room2.id,
+              onClick: () => openChat(room2.id)
+            },
+            (0, import_react40.createElement)(RoomAvatar, { room: room2, roster, size: 36 }),
             (0, import_react40.createElement)(
               "span",
-              { className: "bt-peers-desc" },
-              (0, import_react40.createElement)("span", { className: "bt-peers-text" }, t("{count} members", { count: (room2.members ?? []).length }))
-            )
-          ),
-          (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
-        )
-      ))) : null,
+              { className: "bt-peers-body" },
+              (0, import_react40.createElement)("span", { className: "bt-peers-name-row" }, (0, import_react40.createElement)("span", { className: "bt-peers-name" }, room2.name)),
+              // A group has no model and no folder -- it is not one Bot's conversation -- but it does
+              // have members, which is the one thing worth a line under its name.
+              (0, import_react40.createElement)(
+                "span",
+                { className: "bt-peers-desc" },
+                (0, import_react40.createElement)("span", { className: "bt-peers-text" }, t("{count} members", { count }))
+              )
+            ),
+            (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
+          )
+        );
+      })) : null,
       shown.length > 0 ? section(t("Peers"), shown.map((bot) => {
         const model = peersModel(bot, roster);
         const folder = peersFolder(bot.workDir) ?? t("Team workspace");
         return (0, import_react40.createElement)(
           "div",
-          {
-            key: bot.id,
-            className: "bt-peers-item",
-            role: "listitem"
-          },
+          { key: bot.id, className: "bt-peers-item", role: "listitem" },
           (0, import_react40.createElement)(
             "button",
             {
@@ -16249,9 +16244,9 @@ function PeersPage({ useRoster, useUi, actions }) {
                 model ? (0, import_react40.createElement)("span", { className: "bt-peers-text" }, model) : null,
                 (0, import_react40.createElement)("span", { className: "bt-peers-text" }, folder)
               )
-            )
-          ),
-          (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
+            ),
+            (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
+          )
         );
       })) : null,
       groups.length === 0 && shown.length === 0 ? (0, import_react40.createElement)("div", { className: "bt-peers-empty", role: "status" }, t("Nothing matches")) : null
@@ -16392,7 +16387,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "54b45722" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "4d29ed10" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
