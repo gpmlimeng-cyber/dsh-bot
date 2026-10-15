@@ -247,7 +247,19 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard:hover{background:var(--bt-hover)}
 .bt-dcard-hit{position:absolute;inset:0;z-index:1;width:100%;padding:0;border:0;border-radius:inherit;background:0 0;cursor:pointer}
 .bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);outline:none}
-.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;box-sizing:border-box;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;border:.5px solid var(--bt-line);background:var(--bt-card);color:var(--bt-accent);overflow:hidden}
+/* The file's badge: a rounded square in the kind's own tint with the extension written in
+   it, the way the delivery list the user pointed at does it. A drawn glyph of a page is a
+   shape every reader has to decode and none of them read as this file; four letters do not
+   need decoding, and the tint says document / picture / recording before either line under
+   it is read. The box stays the 40px it has always been, so the two lines beside it keep
+   their room; the tones come from the palette the rest of the app is drawn with, and each
+   one mixes its hue into the ink so it stays legible on both themes. */
+.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;box-sizing:border-box;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--bt-type-ink) 12%,transparent);color:var(--bt-type-ink);--bt-type-ink:var(--bt-ink-2)}
+.bt-dcard-ico-doc{--bt-type-ink:var(--bt-accent)}
+.bt-dcard-ico-image{--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))}
+.bt-dcard-ico-media{--bt-type-ink:color-mix(in srgb,var(--bt-star) 88%,var(--bt-ink))}
+.bt-dcard-ico-plain{--bt-type-ink:var(--bt-ink-2)}
+.bt-dcard-type{font-size:11px;line-height:1;font-weight:700;letter-spacing:.02em;font-family:inherit;text-transform:uppercase}
 /* The two lines take the weight and the sizes of the delivery list the user pointed at: the
    name is a step larger and carries medium weight, the second line a step down in the
    quiet grey, and the two sit tight against each other -- 21 + 1 + 17 = 39px of the tile's
@@ -268,8 +280,8 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* One "···", no words: the words live in the menu and in aria-label. 44x44 is the touch
    target the card's own 60px tile can hold exactly (8px of padding above and below) and it
    does not grow -- a 48px control would break the tile the user has already approved. The
-   drawing is not sized here: the control passes DotsBoldIcon 34px, the same box the preview
-   bar's own "···" draws, so the two menus read as one. */
+   drawing is not sized here: it is the platform's own three-dot glyph, passed its box by the
+   control, so the card's "···" and the bar's are one shape at two sizes. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}

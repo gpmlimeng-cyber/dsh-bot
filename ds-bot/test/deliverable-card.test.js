@@ -8,9 +8,11 @@
 //   12/17 metadata), one hit target covering the whole card, and the metadata line giving
 //   way to the hint while the card is hovered or focused.
 //
-// Two things are ours and must survive the port: the copy-path button (the only thing a
-// phone can actually do with a delivered file) and the sentence that tells the reader
-// where the copy lives. The icon is DSH's own FileTypeIcon, so its glyph follows the file.
+// Two things are ours and must survive the port: the copy-path control (behind the card's
+// one "···", since copying a path is what a reader reaches for when nothing can open the
+// file) and the sentence that tells the reader where the copy lives. Every glyph the card
+// and the preview bar draw is the platform's own, and the type mark is a tinted badge with
+// the file's extension in it rather than a drawn glyph of a page.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
@@ -56,10 +58,9 @@ test('the name and its metadata keep their two sizes, and nothing swaps places o
   assert.ok(rule('.bt-dcard-copy{').includes('gap:1px'), 'and the second line sits tight under the first')
   // 21 + 1 + 17 = 39 of the tile's 44px of content room, so the tile is still 60px.
   assert.ok(rule('.bt-dcard{').includes('height:60px'), 'the tile does not grow with the type')
-  // The type mark is sized against the exit icons rather than left at the platform's own
-  // 28px default or the 20px it had: the platform's document glyph fills 24.8x28 of its own
-  // 28-unit box, so 24px paints 21.2x24px of ink beside the 23px an exit paints.
-  assert.ok(card.join('\n').includes('h(FileTypeIcon, { path: file.path, size: 24 })'), 'the type mark is 24px')
+  // The type mark is a 40px tinted square with the extension in it: the name and the line
+  // under it keep their room, since the square has not grown.
+  assert.ok(rule('.bt-dcard-ico{').includes('width:40px') && rule('.bt-dcard-ico{').includes('height:40px'), 'the type mark is the same 40px square')
   // The second line used to be replaced by the word "Preview" while the pointer was on the
   // card. A tap anywhere on the card says that now, so the line stays where it is.
   assert.ok(!styles.includes('.bt-dcard-peek'), 'the hover-only word is gone')
@@ -81,10 +82,12 @@ test('the card’s exits are one "···", the same control in every list', () =
   // 25.5px row -- over the 6px a dot needs and the 22px the row needs together. The sheet does
   // not size the glyph; the control passes the box, exactly as the bar's control does.
   assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn svg')), 'the sheet does not size the control’s glyph')
-  assert.ok(source.includes('h(DotsBoldIcon, { size: 34 })'), 'it draws the filled dots at the bar’s own 34px')
-  assert.ok(icons.includes('cy: 10, r: 2 }'), 'which are three 4-unit circles')
-  assert.equal(4 * 34 / 20, 6.8, 'landing at 6.8px dots')
-  assert.equal(15 * 34 / 20, 25.5, 'in a 25.5px row')
+  assert.ok(source.includes('h(IconEllipsisOutlineRegular, { size: 44 })'), 'it draws the platform’s own three dots')
+  assert.ok(icons.includes('export function DotsBoldIcon'), 'though our own dot glyph stays where the phone bar uses it')
+  // The platform glyph's dots are 2 of its 16 units, so a 44px box paints 5.5px dots in a
+  // 33px row: over the 22px row, half a pixel under the 6px the card asks of a dot.
+  assert.equal(2 * 44 / 16, 5.5, 'landing at 5.5px dots')
+  assert.equal(12 * 44 / 16, 33, 'in a 33px row')
   assert.ok(source.includes("'data-act': 'more'"), 'the control is marked')
   assert.ok(source.includes("'aria-haspopup': 'menu'"), 'and announces the menu it opens')
   assert.ok(source.includes("'aria-label': t('More'), title: t('More')"), 'named for a reader')
@@ -96,8 +99,8 @@ test('the card’s exits are one "···", the same control in every list', () =
   assert.equal(source.split("`${t('Preview')} ${name}`").length - 1, 1, 'only the card-wide hit target repeats the file name')
   // The exits' words are written once for both menus, and both are named.
   assert.equal(source.split('exitItems(exits.state)').length - 1, 1, 'the two exits are written once for both menus')
-  assert.ok(source.includes("{ id: 'open', icon: h(SwitchIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') }"), 'the first hands the file to another app')
-  assert.ok(source.includes("{ id: 'copy', icon: state === 'copied' ? h(CheckIcon) : h(CopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') }"), 'the second copies the path')
+  assert.ok(source.includes("{ id: 'open', icon: h(IconRightUpOutlineRegular), label: state === 'opening' ? t('Opening…') : t('Open with another app') }"), 'the first hands the file to another app')
+  assert.ok(source.includes("{ id: 'copy', icon: state === 'copied' ? h(IconCheckOutlineRegular) : h(IconCopyOutlineRegular), label: state === 'copied' ? t('Copied') : t('Copy path') }"), 'the second copies the path')
   // One control for both lists: no list can ask for a shape of its own.
   assert.ok(source.includes('export function DeliverableActions({ file, actions, onFailed })'), 'the control takes nothing that depends on the list drawing it')
   assert.ok(!source.includes('menu = false') && !source.includes('menu: list'), 'and no list asks for another one')
@@ -124,12 +127,25 @@ test('two columns fold to one when the card column is narrow', () => {
   assert.ok(styles.includes('@container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}'))
 })
 
-test('the icon is DSH’s FileTypeIcon, sized against the row it sits in', () => {
-  assert.ok(card.some(line => line.includes("import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'")), 'the card imports the host icon, the host image preview, the host size format and the host menu')
-  // 24px, not the platform's 28px default and not the 20px it had: the document glyph fills
-  // 24.8x28 of its own box, so 24px paints 21.2x24px beside the 23px the exits paint.
-  assert.ok(card.some(line => line.includes('h(FileTypeIcon, { path: file.path, size: 24 })')), 'the icon follows the file path, at the row’s size')
+test('the type mark is a tinted badge with the file’s extension, not a drawn glyph', () => {
+  const source = card.join('\n')
+  assert.ok(source.includes("h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h('span', { className: 'bt-dcard-type' }, badgeOf(name)))"), 'the badge is the extension in a tinted square')
+  assert.ok(!card.some(line => line.includes('FileTypeIcon')), 'and no drawn file glyph is left')
   assert.ok(!card.some(line => line.includes('PaperclipIcon')), 'the placeholder paperclip is gone')
+  // What the badge writes: the extension short, the way a file manager writes it.
+  assert.ok(source.includes("const EXT_ALIASES = { markdown: 'MD', mdx: 'MD', jpeg: 'JPG', tiff: 'TIF', '7z': '7Z' }"), 'long extensions are written short')
+  assert.ok(source.includes("return EXT_ALIASES[extension] ?? extension.toUpperCase().slice(0, 4)"), 'and every other one in at most four letters, which is what fits the square')
+  assert.ok(source.includes("if (extension === '') return (name.slice(0, 1) || '?').toUpperCase()"), 'a file with no extension keeps its initial rather than an empty square')
+  // The tint says what kind of thing it is, before either line under it is read.
+  assert.ok(source.includes("const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'tif', 'tiff'])"), 'pictures are their own tone')
+  assert.ok(source.includes("const MEDIA_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv', 'avi', 'mp3', 'wav', 'm4a', 'ogg', 'flac'])"), 'and recordings')
+  assert.ok(source.includes("if (IMAGE_EXTENSIONS.has(extension)) return 'image'") && source.includes("return 'doc'"), 'with documents as the default')
+  assert.ok(rule('.bt-dcard-ico-image{').includes('--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))'), 'the picture tone is the palette’s green, mixed into the ink so it reads on both themes')
+  assert.ok(rule('.bt-dcard-ico-doc{').includes('--bt-type-ink:var(--bt-accent)'), 'and a document is the shell’s accent')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:40px') && rule('.bt-dcard-ico{').includes('height:40px'), 'the square stays the 40px the row was built around')
+  assert.ok(rule('.bt-dcard-ico{').includes('background:color-mix(in srgb,var(--bt-type-ink) 12%,transparent)'), 'and carries the tint, not a border')
+  assert.ok(!rule('.bt-dcard-ico{').includes('border:'), 'with no outline around it')
+  assert.ok(rule('.bt-dcard-type{').includes('font-size:11px') && rule('.bt-dcard-type{').includes('font-weight:700'), 'the letters are small and bold')
 })
 
 test('the metadata reads description, then the extension, then the word for a file', () => {
@@ -263,22 +279,21 @@ test('the card hands a file to another app, and keeps the shell from taking the 
 // bar stays three parts and a page's source toggle joins them instead of crowding it.
 test('the preview page’s title bar is back, the name, and one more menu', () => {
   const source = card.join('\n')
-  assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(BackChevronIcon))"), 'the left control is a back button, named for a reader')
+  assert.ok(source.includes("h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(IconChevronLeftOutlineRegular, { size: 40 }))"), 'the left control is a back button, named for a reader, drawing the platform’s chevron')
   assert.ok(source.includes("h('span', { className: 'bt-preview-name' }, name)"), 'the name is the middle part')
-  assert.ok(source.includes('import { BackChevronIcon, CheckIcon, CopyIcon, DotsBoldIcon, SwitchIcon } from \'./icons.js\''), 'a back arrow, the dots the two menus share, and the menu’s own icons are imported')
-  // The "···" draws the filled dots: the hairline ones paint 1.5-unit dots that land at
-  // 2.6px in the 48px control, which is why it looked empty. The 34px box matches the rule
-  // in file-preview.js that sizes it, so the two never drift apart.
-  assert.ok(source.includes('}, h(DotsBoldIcon, { size: 34 })),'), 'the menu’s anchor draws the filled dots')
+  assert.ok(!source.includes("from './icons.js'"), 'and no glyph of ours is imported any more')
+  // Every glyph in this page is the shell's own: a page that hand-draws its chevron and its
+  // dots is what read as cheap.
+  assert.ok(source.includes('}, h(IconEllipsisOutlineRegular, { size: 48 })),'), 'the menu’s anchor draws the platform’s three dots')
   // The menu is the platform’s own component and carries both exits, which are the same
   // behaviour the card’s row of buttons runs: one definition, two chromes.
-  assert.ok(source.includes("import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu }"), 'the menu is the platform’s, not one of ours')
+  assert.ok(source.includes("import { fileExtension, fileSizeText, IconCheckOutlineRegular, IconChevronLeftOutlineRegular, IconCopyOutlineRegular, IconEllipsisOutlineRegular, IconRightUpOutlineRegular, ImageLightbox, Menu }"), 'the menu and the glyphs around it are all the platform’s')
   assert.ok(source.includes('export function useDeliverableExits(file, actions, onFailed)'), 'the exits are defined once')
   assert.equal(source.split('useDeliverableExits(file, actions, onFailed)').length - 1, 3, 'and used by both chromes')
   assert.ok(source.includes("h(Menu, {"), 'the page’s exits are a menu')
   assert.ok(source.includes("align: 'end'"), 'aligned to the bar’s end')
-  assert.ok(source.includes("{ id: 'open', icon: h(SwitchIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') }"), 'the first item opens in another app')
-  assert.ok(source.includes("{ id: 'copy', icon: state === 'copied' ? h(CheckIcon) : h(CopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') }"), 'the second copies the path')
+  assert.ok(source.includes("{ id: 'open', icon: h(IconRightUpOutlineRegular), label: state === 'opening' ? t('Opening…') : t('Open with another app') }"), 'the first item opens in another app, with the platform’s arrow')
+  assert.ok(source.includes("{ id: 'copy', icon: state === 'copied' ? h(IconCheckOutlineRegular) : h(IconCopyOutlineRegular), label: state === 'copied' ? t('Copied') : t('Copy path') }"), 'the second copies the path, and ticks with the platform’s check')
   assert.ok(source.includes("'aria-label': t('More'), title: t('More')"), 'the menu button is named')
   assert.ok(i18n.includes("Back: '后退'") && i18n.includes("More: '更多'"), 'both names are translated')
   // A page’s source toggle rides in the same menu rather than in the bar.
@@ -351,19 +366,19 @@ test('the title bar is 56px, its controls 48px, and their drawings 22px of ink',
   for (const prefix of ['.bt-preview-back{', '.bt-preview-more{']) {
     assert.ok(previewRule(prefix).includes('width:48px') && previewRule(prefix).includes('height:48px'), `${prefix} is a 48px touch target`)
   }
-  // Neither glyph is sized by the bar: each arrives with its own box, so the stroke is not
-  // scaled with the drawing (a 36px box around a 2-unit stroke painted 3.6px).
-  const icons = read('icons.js')
-  assert.ok(!read('file-preview.js').includes('.bt-preview-back svg'), 'the bar does not size the chevron')
-  assert.ok(!read('file-preview.js').includes('.bt-preview-more svg'), 'nor the dots')
-  assert.ok(icons.includes("export const BackChevronIcon = tightIcon([CHEVRON_LEFT], '6 3.5 7.5 13')"), 'the chevron arrives in a box cropped to its own 5.5x11 units')
-  assert.ok(11 * 25 / 13 + 2 >= 22, 'which paints 23.2px of ink, over the 22 the bar asks for')
-  assert.ok(card.join('\n').includes('h(DotsBoldIcon, { size: 34 })'), 'the dots arrive at 34px')
+  // Both glyphs are the platform's own now, and each arrives with its box and its stroke:
+  // the chevron is pinned to the shell's 2px here, since the platform draws it at 1 unit of
+  // a 16-unit box, which would otherwise grow with the box.
+  const source = card.join('\n')
+  assert.ok(source.includes('h(IconChevronLeftOutlineRegular, { size: 40 })'), 'the chevron arrives in a 40px box')
+  assert.ok(8 * 40 / 16 + 2 >= 22, 'which paints 22px of ink, over the 22 the bar asks for')
+  assert.ok(read('file-preview.js').includes('.bt-preview-back svg{stroke-width:2}'), 'with the platform’s 1-unit stroke pinned to 2px')
+  assert.ok(source.includes('h(IconEllipsisOutlineRegular, { size: 48 })'), 'and the dots arrive in a 48px box')
   // The dots are judged as a diameter as well as a row: three hairline marks are what made
-  // this control look empty, so the arithmetic is tied to the glyph itself -- the filled dots
-  // are 4 units across, and 4 units of a 34px box is 6.8px.
-  assert.ok(icons.includes('cy: 10, r: 2 }'), 'the filled dots are 4 units across')
-  assert.ok(4 * 34 / 20 >= 6, 'which lands over the 6px the bar asks for')
+  // this control look empty. The platform's dots are 2 units of 16, so 48px paints 6px of
+  // dot in a 36px row.
+  assert.ok(2 * 48 / 16 >= 6, 'which lands 6px of dot')
+  assert.ok(12 * 48 / 16 >= 22, 'in a 36px row')
   assert.ok(!read('file-preview.js').includes('html[data-bt-pc] .bt-preview'), 'and no band gets a smaller control back')
   // The reserve for the centred name is the two controls, their padding and their gaps, so a
   // long name never slides under one.

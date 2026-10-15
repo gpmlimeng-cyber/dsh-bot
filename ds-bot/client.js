@@ -2233,7 +2233,19 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard:hover{background:var(--bt-hover)}
 .bt-dcard-hit{position:absolute;inset:0;z-index:1;width:100%;padding:0;border:0;border-radius:inherit;background:0 0;cursor:pointer}
 .bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);outline:none}
-.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;box-sizing:border-box;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;border:.5px solid var(--bt-line);background:var(--bt-card);color:var(--bt-accent);overflow:hidden}
+/* The file's badge: a rounded square in the kind's own tint with the extension written in
+   it, the way the delivery list the user pointed at does it. A drawn glyph of a page is a
+   shape every reader has to decode and none of them read as this file; four letters do not
+   need decoding, and the tint says document / picture / recording before either line under
+   it is read. The box stays the 40px it has always been, so the two lines beside it keep
+   their room; the tones come from the palette the rest of the app is drawn with, and each
+   one mixes its hue into the ink so it stays legible on both themes. */
+.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;box-sizing:border-box;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--bt-type-ink) 12%,transparent);color:var(--bt-type-ink);--bt-type-ink:var(--bt-ink-2)}
+.bt-dcard-ico-doc{--bt-type-ink:var(--bt-accent)}
+.bt-dcard-ico-image{--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))}
+.bt-dcard-ico-media{--bt-type-ink:color-mix(in srgb,var(--bt-star) 88%,var(--bt-ink))}
+.bt-dcard-ico-plain{--bt-type-ink:var(--bt-ink-2)}
+.bt-dcard-type{font-size:11px;line-height:1;font-weight:700;letter-spacing:.02em;font-family:inherit;text-transform:uppercase}
 /* The two lines take the weight and the sizes of the delivery list the user pointed at: the
    name is a step larger and carries medium weight, the second line a step down in the
    quiet grey, and the two sit tight against each other -- 21 + 1 + 17 = 39px of the tile's
@@ -2254,8 +2266,8 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* One "···", no words: the words live in the menu and in aria-label. 44x44 is the touch
    target the card's own 60px tile can hold exactly (8px of padding above and below) and it
    does not grow -- a 48px control would break the tile the user has already approved. The
-   drawing is not sized here: the control passes DotsBoldIcon 34px, the same box the preview
-   bar's own "···" draws, so the two menus read as one. */
+   drawing is not sized here: it is the platform's own three-dot glyph, passed its box by the
+   control, so the card's "···" and the bar's are one shape at two sizes. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
@@ -3895,16 +3907,6 @@ var lineIcon = (paths) => function LineIcon() {
     paths.map((d, index) => (0, import_react3.createElement)("path", { key: index, d }))
   );
 };
-var TIGHT_ICON_SIZE = 25;
-function tightIcon(paths, viewBox) {
-  return function TightIcon() {
-    return (0, import_react3.createElement)(
-      "svg",
-      { width: TIGHT_ICON_SIZE, height: TIGHT_ICON_SIZE, viewBox, fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
-      paths.map((d, index) => (0, import_react3.createElement)("path", { key: index, d, vectorEffect: "non-scaling-stroke" }))
-    );
-  };
-}
 var CLOUD = "M6.5 15.25H5.75a3.25 3.25 0 0 1-.55-6.45 4.75 4.75 0 0 1 9.2-1.1 3.75 3.75 0 0 1 .1 7.55H13.5";
 function CloudDownloadIcon({ done = false }) {
   return (0, import_react3.createElement)(
@@ -3924,6 +3926,7 @@ function DotsBoldIcon({ size = 18 }) {
     [4.5, 10, 15.5].map((cx) => (0, import_react3.createElement)("circle", { key: cx, cx, cy: 10, r: 2 }))
   );
 }
+var SwitchIcon = lineIcon(["M4 7h9.5M10.5 3.5L14 7l-3.5 3.5", "M16 13H6.5M9.5 9.5L6 13l3.5 3.5"]);
 var CHECK_PATHS = ["M4.5 10.5l3.5 3.5 7.5-8"];
 var CheckIcon = lineIcon(CHECK_PATHS);
 var ArrowDownIcon = lineIcon(["M10 4v12", "M5 11l5 5 5-5"]);
@@ -3932,7 +3935,6 @@ var GaugeIcon = lineIcon(["M3.5 13.5a6.5 6.5 0 1 1 13 0", "M10 13.5l3-4", "M10 1
 var PlugIcon = lineIcon(["M7 3v4M13 3v4", "M5 7h10v2.5a5 5 0 0 1-10 0z", "M10 14.5V17"]);
 var CalendarIcon = lineIcon(["M5.5 5h9A1.5 1.5 0 0 1 16 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 4 14.5v-8A1.5 1.5 0 0 1 5.5 5z", "M4 8.75h12", "M7.25 3.5v3M12.75 3.5v3"]);
 var ConnectorIcon = lineIcon(["M7 10a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z", "M18 10a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z", "M7 10h6"]);
-var SwitchIcon = lineIcon(["M4 7h9.5M10.5 3.5L14 7l-3.5 3.5", "M16 13H6.5M9.5 9.5L6 13l3.5 3.5"]);
 var PaperclipIcon = lineIcon(["M15.5 9.5l-5.6 5.6a3.4 3.4 0 0 1-4.8-4.8l6.1-6.1a2.25 2.25 0 0 1 3.2 3.2l-6 6a1.1 1.1 0 0 1-1.6-1.6l5.5-5.5"]);
 var ClockIcon = lineIcon(["M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z", "M10 6.5V10l2.5 1.5"]);
 var GearIcon = lineIcon(["M10 7.4a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2z", "M7.85 4.4l.29-1.87a7.7 7.7 0 0 1 3.72 0l.29 1.87a6 6 0 0 1 1.63.94l1.76-.69a7.7 7.7 0 0 1 1.86 3.23l-1.47 1.18a6 6 0 0 1 0 1.88l1.47 1.18a7.7 7.7 0 0 1-1.86 3.23l-1.76-.69a6 6 0 0 1-1.63.94l-.29 1.87a7.7 7.7 0 0 1-3.72 0l-.29-1.87a6 6 0 0 1-1.63-.94l-1.76.69a7.7 7.7 0 0 1-1.86-3.23l1.47-1.18a6 6 0 0 1 0-1.88L2.6 7.88a7.7 7.7 0 0 1 1.86-3.23l1.76.69a6 6 0 0 1 1.63-.94z"]);
@@ -3963,7 +3965,6 @@ var MemoryIcon = lineIcon(["M5.5 3.5h8A1.5 1.5 0 0 1 15 5v10a1.5 1.5 0 0 1-1.5 1
 var FolderIcon = lineIcon(["M3 6A1.5 1.5 0 0 1 4.5 4.5h3.2l1.8 2h6A1.5 1.5 0 0 1 17 8v6.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5z"]);
 var ChatsIcon = lineIcon(["M3.5 5.5A1.5 1.5 0 0 1 5 4h7a1.5 1.5 0 0 1 1.5 1.5V10A1.5 1.5 0 0 1 12 11.5H8L5 14v-2.5A1.5 1.5 0 0 1 3.5 10z", "M13.5 7.5H15A1.5 1.5 0 0 1 16.5 9v4.5A1.5 1.5 0 0 1 15 15v2l-2.5-2h-3A1.5 1.5 0 0 1 8 13.5V13"]);
 var SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: ChatsIcon, usage: GaugeIcon };
-var BackChevronIcon = tightIcon([CHEVRON_LEFT], "6 3.5 7.5 13");
 
 // src/client/questions.js
 var import_react4 = require("react");
@@ -4790,20 +4791,20 @@ var FILE_PREVIEW_CSS = `
    page the user actually taps, and the bar is 56px, which leaves that control 4px at either
    end rather than touching the edges.
 
-   The drawing inside a control is what the eye judges, and the icons are drawn small in
-   their own 20x20 box: the back chevron paints 12.6 of the 20 units at the 1.6 stroke it
-   was drawn with, the dots only 15. The box is therefore sized for the ink, not the other
-   way round -- a 20px box would paint a 12.6px chevron, which is what made a 48px control
-   look small -- and the size asked for is 22px of ink, with the stroke thickened to 2 so a
-   bigger glyph does not read as a bigger hairline. Every control in this bar carries it. */
+   The drawing inside a control is what the eye judges, and both of them are the platform's
+   own glyphs now -- the icons the shell draws everywhere else -- instead of shapes we drew
+   ourselves, which is what read as cheap. Their box is still sized for the ink and not the
+   other way round (a 20px box would paint a 10px chevron in a 48px control), and the stroke
+   stays a flat 2px. */
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-preview-back svg{stroke-width:2}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The bar does not size the back arrow: it arrives as BackChevronIcon, the shared chevron
-   in a box cropped to its own 5.5x11 units (icons.js), which lands at 12.6x23.2 of ink with
-   a true 2px stroke. Sizing a plain box here would scale the stroke with it -- the 36px box
-   this replaced painted the 2 units as 3.6px -- and the shared chevron heads half the
-   shell's other pages, where 1.6 stays its own weight. */
+/* The bar's back arrow is the platform's chevron in a 40px box: its 16-unit grid then paints
+   the 8-unit arrow as 20px of ink, and the stroke is pinned to 2px here, since the platform
+   draws it at 1 unit -- which would grow with the box rather than stay the weight the shell
+   uses. A stroke-width set on the svg inherits down to the paths; they set no width of their
+   own. */
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -4811,10 +4812,10 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* Nor the dots, which arrive sized: DotsBoldIcon at 34px paints three 4-unit circles as a
-   25.5px row of 6.8px dots, over the 22px row and 6px dot the bar asks for. A row of dots
-   has no height to grow -- its ink is the dot diameter -- so the width carries the size.
-   The plain DotsIcon paints 1.5-unit dots, 2.6px here: still a pinprick. */
+/* The dots are the platform's own three-dot glyph in a 48px box, which paints its 2-unit
+   dots as 6px in a 36px row. A row of dots has no height to grow -- its ink is the dot
+   diameter -- so the width carries the size, and the glyph is filled, so no stroke width
+   enters into it. */
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
@@ -4918,6 +4919,22 @@ var TYPE_WORDS = {
   xml: "Code file"
 };
 var wordFor = (path) => t(TYPE_WORDS[(0, import_dsh_client_ui_primitives2.fileExtension)(basename(path))] ?? "File");
+var EXT_ALIASES = { markdown: "MD", mdx: "MD", jpeg: "JPG", tiff: "TIF", "7z": "7Z" };
+var badgeOf = (name) => {
+  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toLowerCase();
+  if (extension === "") return (name.slice(0, 1) || "?").toUpperCase();
+  return EXT_ALIASES[extension] ?? extension.toUpperCase().slice(0, 4);
+};
+var IMAGE_EXTENSIONS = /* @__PURE__ */ new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "bmp", "ico", "svg", "tif", "tiff"]);
+var MEDIA_EXTENSIONS = /* @__PURE__ */ new Set(["mp4", "mov", "webm", "mkv", "avi", "mp3", "wav", "m4a", "ogg", "flac"]);
+var ARCHIVE_EXTENSIONS = /* @__PURE__ */ new Set(["zip", "tar", "gz", "tgz", "7z", "rar"]);
+var toneOf = (name) => {
+  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toLowerCase();
+  if (IMAGE_EXTENSIONS.has(extension)) return "image";
+  if (MEDIA_EXTENSIONS.has(extension)) return "media";
+  if (ARCHIVE_EXTENSIONS.has(extension) || extension === "") return "plain";
+  return "doc";
+};
 var WORKSPACES = [
   [".dsh/bot/workspace", "DSH workspace"],
   ["repos/dsh-bot/ds-bot", "DSBot"],
@@ -5003,15 +5020,17 @@ function DeliverableActions({ file, actions, onFailed }) {
       "aria-label": t("More"),
       title: t("More"),
       onClick: () => setShown((value) => !value)
-      // The filled dots, not the hairline ones: DotsIcon paints 1.5-unit dots that land at
-      // 2.6px here, which is why a control this size looked empty. 34px is the box the
-      // preview bar's own "···" draws, so the two pages' menus read as one.
-    }, (0, import_react7.createElement)(DotsBoldIcon, { size: 34 }))
+      // The platform's own three filled dots, at the size this 44px control can hold: its
+      // dots are 2 of 16 units, so the box that leaves 6px of dot is 48 -- one dot's
+      // diameter under the 6px the bar asks for, and the same row the bar draws, which is
+      // worth more than the half pixel. A glyph nobody has to draw is one nobody can draw
+      // badly: this replaced a hairline "···" our own hand made.
+    }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconEllipsisOutlineRegular, { size: 44 }))
   });
 }
 var exitItems = (state) => [
-  { id: "open", icon: (0, import_react7.createElement)(SwitchIcon), label: state === "opening" ? t("Opening…") : t("Open with another app") },
-  { id: "copy", icon: state === "copied" ? (0, import_react7.createElement)(CheckIcon) : (0, import_react7.createElement)(CopyIcon), label: state === "copied" ? t("Copied") : t("Copy path") }
+  { id: "open", icon: (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconRightUpOutlineRegular), label: state === "opening" ? t("Opening…") : t("Open with another app") },
+  { id: "copy", icon: state === "copied" ? (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconCheckOutlineRegular) : (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconCopyOutlineRegular), label: state === "copied" ? t("Copied") : t("Copy path") }
 ];
 function ExitsMenu({ exits, shown, setShown, className, anchor, extra = null, onExtra }) {
   return (0, import_react7.createElement)(import_dsh_client_ui_primitives2.Menu, {
@@ -5049,10 +5068,9 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
       "aria-label": t("More"),
       title: t("More"),
       onClick: () => setShown((value) => !value)
-      // The filled dots, not the hairline ones: DotsIcon paints 1.5-unit dots that land at
-      // 2.6px in this control, which is why a 48px button still looks empty. 34px is the box
-      // the bar's rule sizes it to as well, so the two agree.
-    }, (0, import_react7.createElement)(DotsBoldIcon, { size: 34 }))
+      // The same platform dots as the card's control, one step larger because this control
+      // is: 48px of box paints 6px dots in a 36px row.
+    }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconEllipsisOutlineRegular, { size: 48 }))
   });
 }
 function DeliverableCard({ file, actions, meta, role }) {
@@ -5074,7 +5092,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         "aria-label": `${t("Preview")} ${name}`,
         onClick: preview
       }),
-      (0, import_react7.createElement)("span", { className: "bt-dcard-ico", "aria-hidden": true }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.FileTypeIcon, { path: file.path, size: 24 })),
+      (0, import_react7.createElement)("span", { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, "aria-hidden": true }, (0, import_react7.createElement)("span", { className: "bt-dcard-type" }, badgeOf(name))),
       (0, import_react7.createElement)(
         "span",
         { className: "bt-dcard-copy" },
@@ -5173,7 +5191,7 @@ function PreviewHead({ name, onClose, children }) {
   return (0, import_react7.createElement)(
     "div",
     { className: "bt-preview-head" },
-    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react7.createElement)(BackChevronIcon)),
+    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react7.createElement)(import_dsh_client_ui_primitives2.IconChevronLeftOutlineRegular, { size: 40 })),
     (0, import_react7.createElement)("span", { className: "bt-preview-name" }, name),
     children
   );

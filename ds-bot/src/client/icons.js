@@ -46,20 +46,6 @@ const lineIcon = paths => function LineIcon() {
     paths.map((d, index) => h('path', { key: index, d })))
 }
 
-// The same drawing, in a box cropped to the drawing itself: `viewBox` carries the glyph's
-// own extent plus one unit of stroke room on every side, so the ink fills the 25px box
-// evenly instead of hanging small in the middle of a 20-unit one. Only the drawing is
-// scaled -- `vectorEffect: non-scaling-stroke` holds the stroke at a flat 2px, where a
-// scaled stroke would render at 1.8x -- so the ink lands at 22px or more whatever shape the
-// glyph draws. The preview bar's back arrow uses this; every other caller keeps the shared
-// 20-unit glyph, untouched.
-const TIGHT_ICON_SIZE = 25
-function tightIcon(paths, viewBox) {
-  return function TightIcon() {
-    return h('svg', { width: TIGHT_ICON_SIZE, height: TIGHT_ICON_SIZE, viewBox, fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
-      paths.map((d, index) => h('path', { key: index, d, vectorEffect: 'non-scaling-stroke' })))
-  }
-}
 // The classic cloud with a down arrow; `done` swaps the arrow for a check. The arrow
 // is its own group so it can move while an update installs.
 const CLOUD = 'M6.5 15.25H5.75a3.25 3.25 0 0 1-.55-6.45 4.75 4.75 0 0 1 9.2-1.1 3.75 3.75 0 0 1 .1 7.55H13.5'
@@ -80,6 +66,7 @@ export function DotsBoldIcon({ size = 18 }) {
   return h('svg', { width: size, height: size, viewBox: '0 0 20 20', fill: 'currentColor', 'aria-hidden': true },
     [4.5, 10, 15.5].map(cx => h('circle', { key: cx, cx, cy: 10, r: 2 })))
 }
+export const SwitchIcon = lineIcon(['M4 7h9.5M10.5 3.5L14 7l-3.5 3.5', 'M16 13H6.5M9.5 9.5L6 13l3.5 3.5'])
 const CHECK_PATHS = ['M4.5 10.5l3.5 3.5 7.5-8']
 export const CheckIcon = lineIcon(CHECK_PATHS)
 export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
@@ -88,7 +75,6 @@ export const GaugeIcon = lineIcon(['M3.5 13.5a6.5 6.5 0 1 1 13 0', 'M10 13.5l3-4
 export const PlugIcon = lineIcon(['M7 3v4M13 3v4', 'M5 7h10v2.5a5 5 0 0 1-10 0z', 'M10 14.5V17'])
 export const CalendarIcon = lineIcon(['M5.5 5h9A1.5 1.5 0 0 1 16 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 4 14.5v-8A1.5 1.5 0 0 1 5.5 5z', 'M4 8.75h12', 'M7.25 3.5v3M12.75 3.5v3'])
 export const ConnectorIcon = lineIcon(['M7 10a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z', 'M18 10a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z', 'M7 10h6'])
-export const SwitchIcon = lineIcon(['M4 7h9.5M10.5 3.5L14 7l-3.5 3.5', 'M16 13H6.5M9.5 9.5L6 13l3.5 3.5'])
 export const PaperclipIcon = lineIcon(['M15.5 9.5l-5.6 5.6a3.4 3.4 0 0 1-4.8-4.8l6.1-6.1a2.25 2.25 0 0 1 3.2 3.2l-6 6a1.1 1.1 0 0 1-1.6-1.6l5.5-5.5'])
 export const ClockIcon = lineIcon(['M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z', 'M10 6.5V10l2.5 1.5'])
 // Six broad, shallow teeth around a wide hub: it reads as a gear even at 15px.
@@ -124,4 +110,4 @@ export const SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: Cha
 // 22px asked for -- with the stroke a true 2px instead of the 3.6px a plain 36px box
 // rendered. (The delivered card's exits used to come from this factory too; they are one
 // "···" on the card now, and the platform Menu draws the two items at its own size.)
-export const BackChevronIcon = tightIcon([CHEVRON_LEFT], '6 3.5 7.5 13')
+

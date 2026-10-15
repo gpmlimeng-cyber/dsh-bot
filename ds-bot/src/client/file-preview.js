@@ -172,20 +172,20 @@ export const FILE_PREVIEW_CSS = `
    page the user actually taps, and the bar is 56px, which leaves that control 4px at either
    end rather than touching the edges.
 
-   The drawing inside a control is what the eye judges, and the icons are drawn small in
-   their own 20x20 box: the back chevron paints 12.6 of the 20 units at the 1.6 stroke it
-   was drawn with, the dots only 15. The box is therefore sized for the ink, not the other
-   way round -- a 20px box would paint a 12.6px chevron, which is what made a 48px control
-   look small -- and the size asked for is 22px of ink, with the stroke thickened to 2 so a
-   bigger glyph does not read as a bigger hairline. Every control in this bar carries it. */
+   The drawing inside a control is what the eye judges, and both of them are the platform's
+   own glyphs now -- the icons the shell draws everywhere else -- instead of shapes we drew
+   ourselves, which is what read as cheap. Their box is still sized for the ink and not the
+   other way round (a 20px box would paint a 10px chevron in a 48px control), and the stroke
+   stays a flat 2px. */
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-preview-back svg{stroke-width:2}
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The bar does not size the back arrow: it arrives as BackChevronIcon, the shared chevron
-   in a box cropped to its own 5.5x11 units (icons.js), which lands at 12.6x23.2 of ink with
-   a true 2px stroke. Sizing a plain box here would scale the stroke with it -- the 36px box
-   this replaced painted the 2 units as 3.6px -- and the shared chevron heads half the
-   shell's other pages, where 1.6 stays its own weight. */
+/* The bar's back arrow is the platform's chevron in a 40px box: its 16-unit grid then paints
+   the 8-unit arrow as 20px of ink, and the stroke is pinned to 2px here, since the platform
+   draws it at 1 unit -- which would grow with the box rather than stay the weight the shell
+   uses. A stroke-width set on the svg inherits down to the paths; they set no width of their
+   own. */
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
    The reserve is the two controls, their padding and their gaps, so a long name never
    slides under one: 48 + 48 + 20 of padding + 20 of slack. */
@@ -193,10 +193,10 @@ export const FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* Nor the dots, which arrive sized: DotsBoldIcon at 34px paints three 4-unit circles as a
-   25.5px row of 6.8px dots, over the 22px row and 6px dot the bar asks for. A row of dots
-   has no height to grow -- its ink is the dot diameter -- so the width carries the size.
-   The plain DotsIcon paints 1.5-unit dots, 2.6px here: still a pinprick. */
+/* The dots are the platform's own three-dot glyph in a 48px box, which paints its 2-unit
+   dots as 6px in a 36px row. A row of dots has no height to grow -- its ink is the dot
+   diameter -- so the width carries the size, and the glyph is filled, so no stroke width
+   enters into it. */
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}

@@ -15,8 +15,7 @@
 // goes to shared storage first, since no other app can read the app's own), or copy the
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
-import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { BackChevronIcon, CheckIcon, CopyIcon, DotsBoldIcon, SwitchIcon } from './icons.js'
+import { fileExtension, fileSizeText, IconCheckOutlineRegular, IconChevronLeftOutlineRegular, IconCopyOutlineRegular, IconEllipsisOutlineRegular, IconRightUpOutlineRegular, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
 import { FileView } from './file-preview.js'
 import { t } from './i18n.js'
 
@@ -75,6 +74,30 @@ const TYPE_WORDS = {
   toml: 'Code file', sh: 'Code file', sql: 'Code file', xml: 'Code file',
 }
 const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')
+
+// The badge the list stands the file in with: a rounded square in the kind's own tint with
+// the file's extension written in it, which is the shape the reference list uses. Its point
+// is that a reader never has to decode it -- "MD" says markdown where a drawn page with a
+// folded corner says "some kind of document", and the tint says whether it is a document, a
+// picture, a recording or code before the word under the name is read. Long extensions are
+// written the short way a file manager writes them; a file with no extension at all keeps
+// its initial rather than an empty square.
+const EXT_ALIASES = { markdown: 'MD', mdx: 'MD', jpeg: 'JPG', tiff: 'TIF', '7z': '7Z' }
+const badgeOf = (name) => {
+  const extension = fileExtension(name).toLowerCase()
+  if (extension === '') return (name.slice(0, 1) || '?').toUpperCase()
+  return EXT_ALIASES[extension] ?? extension.toUpperCase().slice(0, 4)
+}
+const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'tif', 'tiff'])
+const MEDIA_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv', 'avi', 'mp3', 'wav', 'm4a', 'ogg', 'flac'])
+const ARCHIVE_EXTENSIONS = new Set(['zip', 'tar', 'gz', 'tgz', '7z', 'rar'])
+const toneOf = (name) => {
+  const extension = fileExtension(name).toLowerCase()
+  if (IMAGE_EXTENSIONS.has(extension)) return 'image'
+  if (MEDIA_EXTENSIONS.has(extension)) return 'media'
+  if (ARCHIVE_EXTENSIONS.has(extension) || extension === '') return 'plain'
+  return 'doc'
+}
 
 // The workspace a delivered file came out of, named the way a reader asks about it rather
 // than spelled out as an absolute path -- the path is what a reader cannot act on. A root is
@@ -207,17 +230,19 @@ export function DeliverableActions({ file, actions, onFailed }) {
       type: 'button', className: 'bt-dcard-btn', 'data-act': 'more',
       'aria-haspopup': 'menu', 'aria-expanded': shown,
       'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
-      // The filled dots, not the hairline ones: DotsIcon paints 1.5-unit dots that land at
-      // 2.6px here, which is why a control this size looked empty. 34px is the box the
-      // preview bar's own "···" draws, so the two pages' menus read as one.
-    }, h(DotsBoldIcon, { size: 34 })),
+      // The platform's own three filled dots, at the size this 44px control can hold: its
+      // dots are 2 of 16 units, so the box that leaves 6px of dot is 48 -- one dot's
+      // diameter under the 6px the bar asks for, and the same row the bar draws, which is
+      // worth more than the half pixel. A glyph nobody has to draw is one nobody can draw
+      // badly: this replaced a hairline "···" our own hand made.
+    }, h(IconEllipsisOutlineRegular, { size: 44 })),
   })
 }
 
 /** What this file's exits can do, as menu items. Written here once: both menus show them. */
 const exitItems = (state) => [
-  { id: 'open', icon: h(SwitchIcon), label: state === 'opening' ? t('Opening…') : t('Open with another app') },
-  { id: 'copy', icon: state === 'copied' ? h(CheckIcon) : h(CopyIcon), label: state === 'copied' ? t('Copied') : t('Copy path') },
+  { id: 'open', icon: h(IconRightUpOutlineRegular), label: state === 'opening' ? t('Opening…') : t('Open with another app') },
+  { id: 'copy', icon: state === 'copied' ? h(IconCheckOutlineRegular) : h(IconCopyOutlineRegular), label: state === 'copied' ? t('Copied') : t('Copy path') },
 ]
 
 /**
@@ -250,10 +275,9 @@ function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
     anchor: h('button', {
       type: 'button', className: 'bt-preview-more', 'aria-haspopup': 'menu', 'aria-expanded': shown,
       'aria-label': t('More'), title: t('More'), onClick: () => setShown(value => !value),
-      // The filled dots, not the hairline ones: DotsIcon paints 1.5-unit dots that land at
-      // 2.6px in this control, which is why a 48px button still looks empty. 34px is the box
-      // the bar's rule sizes it to as well, so the two agree.
-    }, h(DotsBoldIcon, { size: 34 })),
+      // The same platform dots as the card's control, one step larger because this control
+      // is: 48px of box paints 6px dots in a 36px row.
+    }, h(IconEllipsisOutlineRegular, { size: 48 })),
   })
 }
 
@@ -283,7 +307,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         'aria-label': `${t('Preview')} ${name}`,
         onClick: preview,
       }),
-      h('span', { className: 'bt-dcard-ico', 'aria-hidden': true }, h(FileTypeIcon, { path: file.path, size: 24 })),
+      h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h('span', { className: 'bt-dcard-type' }, badgeOf(name))),
       h('span', { className: 'bt-dcard-copy' },
         h('span', { className: 'bt-dcard-name' }, name),
         h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name))),
@@ -397,7 +421,7 @@ export function DeliveredPreview({ file, actions, onClose }) {
  */
 function PreviewHead({ name, onClose, children }) {
   return h('div', { className: 'bt-preview-head' },
-    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(BackChevronIcon)),
+    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(IconChevronLeftOutlineRegular, { size: 40 })),
     h('span', { className: 'bt-preview-name' }, name),
     children)
 }
