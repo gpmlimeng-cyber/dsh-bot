@@ -72,8 +72,6 @@ test('each page is Ionicons’ outline and Ionicons’ fill, credited where they
   const glyphs = [
     ['M87.49 380c1.19-4.38-1.44-10.47', 'chatbubble, the outline'],
     ['M76.83 480a25.69 25.69 0 0 1-25.57-25.74', 'chatbubble, the solid one'],
-    ['M402 168c-2.93 40.67-33.1 72-66 72', 'people, the outline'],
-    ['M336 256c-20.56 0-40.44-9.18-56-25.84', 'people, the solid one'],
     ['M448 256c0-106-86-192-192-192', 'compass, the outline'],
     ['M256 48C141.31 48 48 141.31 48 256', 'compass, the solid one'],
     ['M344 144c-3.92 52.87-44 96-88 96', 'person, the outline'],
@@ -82,14 +80,31 @@ test('each page is Ionicons’ outline and Ionicons’ fill, credited where they
   for (const [data, what] of glyphs) assert.ok(icons.includes(data), `${what} is ionicons' own artwork`)
   // One factory for this family, declared once, on the grid Ionicons draws on -- and the
   // family that stood in for it one round is gone, with its notice.
-  assert.equal(icons.split('const ionicon = (children, box = IONICON_BOX)').length - 1, 1, 'one Ionicons factory')
-  assert.ok(icons.includes("viewBox: '0 0 512 512', fill: 'currentColor'"), 'on Ionicons\' own 512 grid')
-  for (const dead of ['fluentIcon', 'FLUENT_NAV_BOX', 'FluentChatIcon', 'Fluent System Icons (MIT)', '@fluentui/svg-icons']) {
+  assert.equal(icons.split('const ionicon = (children, box = IONICON_BOX, grid = ').length - 1, 1, 'one Ionicons factory')
+  assert.ok(icons.includes("grid = '0 0 512 512'"), 'on Ionicons\' own 512 grid by default')
+  for (const dead of ['FLUENT_NAV_BOX', 'FluentChatIcon', 'FluentCompassIcon', 'FluentPersonIcon', 'IonPeopleIcon']) {
     assert.ok(!icons.includes(dead), `${dead} is gone with the family it belonged to`)
   }
   // Nothing is pinned here: Ionicons' 32-unit stroke on a 512 grid is 1.5px at this box.
   assert.ok(!icons.includes('non-scaling-stroke"...attributes'), 'the Lucide pinning is not copied here')
   assert.ok(Math.abs(32 * 24 / 512 - 1.5) < 0.001, 'the outline weight lands on the skin\'s own 1.5px')
+})
+
+// 伙伴 is the one page the user's screenshots do not draw: their second tab is a scheduled-
+// tasks page. They asked for the icon their app uses for an agent, and the platform's own
+// agent glyph has no filled sibling, so Fluent's Bot head stands in -- with the reason
+// written where the artwork is, and the pair still one shape at two weights.
+test('伙伴 is the Bot head, and the file says why it is a second family', () => {
+  const icons = read('icons.js')
+  assert.ok(icons.includes('Fluent System Icons (MIT) · Copyright (c) 2020 Microsoft Corporation · @fluentui/svg-icons v1.1.344'), 'its own notice')
+  assert.ok(icons.includes("['path', { d: 'M17.75 14C19 14 20 15 20 16.25v.9"), 'the outline head')
+  assert.ok(icons.includes("['path', { d: 'M17.75 14C19 14 20 15 20 16.25v.9") && icons.includes('v-.91C4 15 5.01 14 6.25 14z'), 'and the solid one')
+  assert.ok(icons.includes("export const FluentBotIcon = ionicon([['path', { d: '"), 'on the same factory')
+  assert.ok(icons.includes("'0 0 24 24')"), 'on Fluent\'s own grid, which the factory takes as an argument')
+  // The reason is recorded, not just the artwork: the platform's agent glyph has no fill.
+  assert.ok(icons.includes('IconAgentPresetOutlineRegular'), 'the platform glyph it stands in for is named')
+  assert.ok(icons.includes('outlines only, with no Filled sibling'), 'and the reason it could not be used')
+  assert.ok(nav.includes("['peers', 'Peers', FluentBotIcon, FluentBotFilledIcon]"), 'the 伙伴 row draws it')
 })
 
 test('the tab on screen draws the filled one, and says so in the tree', () => {

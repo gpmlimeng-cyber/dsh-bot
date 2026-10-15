@@ -24,9 +24,9 @@
 import { createElement as h } from 'react'
 import { createPortal } from 'react-dom'
 import {
+  FluentBotFilledIcon, FluentBotIcon,
   IonChatbubbleFilledIcon, IonChatbubbleIcon,
   IonCompassFilledIcon, IonCompassIcon,
-  IonPeopleFilledIcon, IonPeopleIcon,
   IonPersonFilledIcon, IonPersonIcon,
 } from './icons.js'
 import { useMobile, usePortrait } from './mobile.js'
@@ -42,11 +42,12 @@ import { t } from './i18n.js'
 // asked for and the reason the bar never thickens a stroke to fake it. 任务 takes its
 // chatbubble (a round bubble whose tail leaves at the lower left -- the shape the user's
 // screenshots draw), 发现 its compass and 我的 its round-headed person, both also from those
-// screenshots; 伙伴 takes the same set's people, since that screenshot's second tab is a
-// scheduled-tasks page with no shape of its own to copy.
+// screenshots; 伙伴 is the one page the screenshot does not draw, and it takes the Bot head
+// Fluent publishes, because the platform's own agent glyph has no Filled sibling and the
+// user asked that page for the agent's icon (icons.js records the whole trade).
 const TABS = [
   ['tasks', 'Tasks', IonChatbubbleIcon, IonChatbubbleFilledIcon],
-  ['peers', 'Peers', IonPeopleIcon, IonPeopleFilledIcon],
+  ['peers', 'Peers', FluentBotIcon, FluentBotFilledIcon],
   ['plugins', 'Discover', IonCompassIcon, IonCompassFilledIcon],
   ['me', 'Me', IonPersonIcon, IonPersonFilledIcon],
 ]
