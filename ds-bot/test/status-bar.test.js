@@ -51,10 +51,11 @@ test('and the writer wires it, with the reader still feeding the frosted strip',
   assert.ok(index.includes("askForStatusBar(quietly('status bar'))\n      publishShellBackground()"), 'before the reader, which stays for the strip\'s tint')
 })
 
-// The shell injects the bridge into the page's own context, and the theme renders as the plugin
-// applies: an ask that arrives before the object exists must not be the last one. Only the
-// missing case is retried -- once the bridge has answered, nothing here repeats the mode.
-test('a bridge that arrives late is still asked, and only until it answers', () => {
+// The shell injects the bridge into the page's own context, and on a cold start an ask that does
+// arrive can still be too early to take effect (the strip stayed solid until a reload). So the
+// page asks again over the next seconds whether or not the first one was answered -- idempotent
+// per the shell's protocol -- and the ladder is laid down once per page, not once per render.
+test('the ask is repeated over the next seconds, from one ladder per page', () => {
   const calls = []
   const timers = []
   let bridge = null
@@ -64,10 +65,15 @@ test('a bridge that arrives late is still asked, and only until it answers', () 
   globalThis.setTimeout = (fn, ms) => { timers.push(fn); return 0 }
   try {
     assert.equal(askForStatusBar(), false, 'nothing to ask yet')
-    assert.ok(timers.length > 0, 'but the page keeps a way back')
+    assert.ok(timers.length >= 3, `the page keeps several ways back: ${timers.length}`)
     bridge = { set: (...args) => calls.push(args) }
     for (const fire of timers) fire()
-    assert.deepEqual(calls, [['transparent', '', 'auto']], 'asked the moment it appeared, and only once')
+    assert.ok(calls.length >= 1, 'asked the moment it appeared')
+    for (const call of calls) assert.deepEqual(call, ['transparent', '', 'auto'], 'and always the same ask')
+    // A later theme render asks directly but does not stack a second ladder of timers.
+    const laid = timers.length
+    assert.equal(askForStatusBar(), true, 'a later render asks')
+    assert.equal(timers.length, laid, 'and schedules nothing further')
   } finally {
     globalThis.setTimeout = previousTimer
     if (previousWindow === undefined) delete globalThis.window

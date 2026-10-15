@@ -25,24 +25,22 @@ export function publishStatusBarMode(report) {
   }
 }
 
-// The shell injects that object into the page's own context, and it can arrive after this plugin
-// has applied -- the theme render below runs as the plugin comes up, which is why one unanswered
-// ask cannot be the last word. So the page asks again for a few seconds while the bridge is
-// missing, stopping at the first answer; a call that lands is idempotent, and a shell that never
-// grows a bridge is left alone just as before. (Only the missing case is retried: once the bridge
-// has answered, the mode is the theme's business and nothing here repeats it.)
+// The shell injects that object into the page's own context, and on a cold start the ask that
+// happens as this plugin applies can be answered without taking effect: measured on the device,
+// the strip stayed solid until the page was reloaded, and a direct call from the page then moved
+// it in both directions. So the page does not stop at its first answer -- it asks once, then
+// again a few times over the next seconds. The call is idempotent by the shell's own protocol, so
+// the repeats cost nothing, and the ladder belongs to the page rather than to a theme render:
+// it is laid down once, and every later render simply asks again.
 const ASK_AGAIN_MS = [250, 750, 2000, 4000]
+let ladderScheduled = false
 
-/** Ask for the surface, and keep asking while the shell has not injected its bridge yet. */
+/** Ask for the surface, and ask again over the next seconds in case the first one was too early. */
 export function askForStatusBar(report) {
-  let waiting = true
-  const ask = () => {
-    if (!waiting) return false
-    if (!publishStatusBarMode(report)) return false
-    waiting = false
-    return true
+  const landed = publishStatusBarMode(report)
+  if (!ladderScheduled) {
+    ladderScheduled = true
+    for (const delay of ASK_AGAIN_MS) setTimeout(() => { publishStatusBarMode(report) }, delay)
   }
-  const landed = ask()
-  for (const delay of ASK_AGAIN_MS) setTimeout(ask, delay)
   return landed
 }

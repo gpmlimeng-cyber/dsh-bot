@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 3f93fe10
+// Source fingerprint: 09a822fc
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3818,16 +3818,15 @@ function publishStatusBarMode(report) {
   }
 }
 var ASK_AGAIN_MS = [250, 750, 2e3, 4e3];
+var ladderScheduled = false;
 function askForStatusBar(report) {
-  let waiting = true;
-  const ask = () => {
-    if (!waiting) return false;
-    if (!publishStatusBarMode(report)) return false;
-    waiting = false;
-    return true;
-  };
-  const landed = ask();
-  for (const delay of ASK_AGAIN_MS) setTimeout(ask, delay);
+  const landed = publishStatusBarMode(report);
+  if (!ladderScheduled) {
+    ladderScheduled = true;
+    for (const delay of ASK_AGAIN_MS) setTimeout(() => {
+      publishStatusBarMode(report);
+    }, delay);
+  }
   return landed;
 }
 
@@ -16172,7 +16171,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "3f93fe10" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "09a822fc" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
