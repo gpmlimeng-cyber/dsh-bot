@@ -188,10 +188,10 @@ export const FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The dots are Lucide's ellipsis: three r=1 circles on a 16-unit row, so its 25px box lands
-   3.58px of dot in an 18.2px row at the glyph's pinned 1.5px stroke -- a hole under a pixel in
-   each dot, which is what keeps them reading solid. A row of dots has no height to grow -- its
-   ink is the dot diameter -- so the glyph's own box carries the size. */
+/* The dots are Lucide's ellipsis: three r=1 circles, the one glyph here that keeps Lucide's own
+   stroke -- pinned at 1.5px its 5.5px dots would each carry a 2.5px hole. Its 33px box lands
+   5.5px dots in a 24.8px row. A row of dots has no height to grow -- its ink is the dot diameter
+   -- so the glyph's own box carries the size. */
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}

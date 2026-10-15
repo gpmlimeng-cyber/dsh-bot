@@ -84,12 +84,14 @@ test('the card’s exits are one "···", the same control in every list', () =
   assert.ok(source.includes('}, h(LucideEllipsisIcon)),'), 'it draws Lucide’s three dots')
   assert.ok(!source.includes('{ size: 36 }'), 'and no call site sizes a Lucide glyph by hand')
   assert.ok(icons.includes('export function DotsBoldIcon'), 'though our own dot glyph stays where the phone bar uses it')
-  // Lucide's ellipsis is three r=1 circles on a 16-unit row, so the box is the row's: 25px paints
-  // an 18.2px row with 3.58px dots, and at a 1.5px stroke the hole in each dot is 0.58px -- the
-  // dots read solid. A 5.5px dot would need a 44px row and would leave a 2.5px hole: three rings.
-  assert.equal((2 * 25 / 24 + 1.5).toFixed(2), '3.58', 'landing at 3.58px dots')
-  assert.equal((16 * 25 / 24 + 1.5).toFixed(2), '18.17', 'in an 18.2px row')
-  assert.ok((2 * 25 / 24) - 1.5 < 1, 'and the hole stays under a pixel, so the dots are solid')
+  // Lucide's ellipsis is three r=1 circles, and it is the one glyph that keeps Lucide's own
+  // stroke: pinned at 1.5px, a 5.5px dot would carry a 2.5px hole -- three rings. Scaled, the
+  // hole stays closed, so a 33px box paints 5.5px dots in a 24.8px row: one notch down from the
+  // 6px in a 27px row these controls used to draw, and still solid.
+  const k = 33 / 24
+  assert.equal((2 + 2) * k, 5.5, 'landing at 5.5px dots')
+  assert.equal((16 + 2) * k, 24.75, 'in a 24.8px row')
+  assert.equal((2 - 2) * k, 0, 'with the hole closed, so they read solid rather than as rings')
   // Lucide's data is copied, so its notice travels with it -- and the strings are theirs.
   assert.ok(icons.includes('Lucide (ISC) · path data from lucide-static v1.57.0'), 'the ISC notice is written where the data is')
   assert.ok(icons.includes("['circle', { cx: 12, cy: 12, r: 1 }]") && icons.includes("['circle', { cx: 19, cy: 12, r: 1 }]") && icons.includes("['circle', { cx: 5, cy: 12, r: 1 }]"), 'with the glyph’s own three circles, in lucide-static’s order')
@@ -151,11 +153,14 @@ test('every glyph is Lucide’s copied data, credited where it lives', () => {
   // box is derived from the one rule: the glyph's longest run of ink lands on 18px.
   assert.equal(icons.split("viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',").length - 1, 1, 'one glyph factory, one grid')
   assert.ok(icons.includes('const LUCIDE_STROKE = 1.5'), 'one 1.5px stroke, the number these controls were measured to')
-  assert.ok(icons.includes("{ key: index, vectorEffect: 'non-scaling-stroke'"), 'pinned per shape, so a bigger box cannot thicken it')
+  assert.ok(icons.includes("{ key: index, ...(pinned ? { vectorEffect: 'non-scaling-stroke' } : {}), ...attributes }"), 'pinned per shape, so a bigger box cannot thicken it')
   assert.ok(!read('file-preview.js').includes('stroke-width:2'), 'and nothing pins a stroke afterwards')
   const ink = (units, box) => units * box / 24 + 1.5
   assert.ok(Math.abs(ink(12, 33) - 18) < 0.05, 'the chevron’s 12 units of height land on 18px of ink')
-  assert.ok(Math.abs(ink(16, 25) - 18) < 0.2, 'and the dots’ 16-unit row lands on it too')
+  // The one glyph that is not pinned, and the reason: its dots are outlined circles, so a pinned
+  // 1.5px stroke would leave a hole in each of them instead of a dot.
+  assert.ok(icons.includes('const LUCIDE_DOT_STROKE = 2'), 'the dots keep Lucide’s own stroke')
+  assert.ok(icons.includes('], LUCIDE_ELLIPSIS_BOX, LUCIDE_DOT_STROKE, false)'), 'unpinned, so their hole closes at any box')
   assert.ok(icons.includes('const LUCIDE_MENU_BOX = 15'), 'while the menu’s three keep the box the shell’s menus draw in (the platform pins them to 14)')
   // The three the menu draws cannot be judged here: the platform's Menu sets .itemIcon svg to
   // its own 14px, so their box is the platform's to choose. What stays ours is the stroke, which

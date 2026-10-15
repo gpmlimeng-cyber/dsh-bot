@@ -2266,8 +2266,8 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 /* One "···", no words: the words live in the menu and in aria-label. 44x44 is the touch
    target the card's own 60px tile can hold exactly (8px of padding above and below) and it
    does not grow -- a 48px control would break the tile the user has already approved. The
-   drawing is not sized here: it is Lucide's ellipsis, which brings the same 25px box and the
-   same 1.5px stroke the bar's own "···" does, so the card's and the bar's are one glyph. */
+   drawing is not sized here: it is Lucide's ellipsis, which brings the same 33px box the bar's
+   own "···" does, so the card's and the bar's are one glyph. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
 .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
@@ -3966,28 +3966,29 @@ var FolderIcon = lineIcon(["M3 6A1.5 1.5 0 0 1 4.5 4.5h3.2l1.8 2h6A1.5 1.5 0 0 1
 var ChatsIcon = lineIcon(["M3.5 5.5A1.5 1.5 0 0 1 5 4h7a1.5 1.5 0 0 1 1.5 1.5V10A1.5 1.5 0 0 1 12 11.5H8L5 14v-2.5A1.5 1.5 0 0 1 3.5 10z", "M13.5 7.5H15A1.5 1.5 0 0 1 16.5 9v4.5A1.5 1.5 0 0 1 15 15v2l-2.5-2h-3A1.5 1.5 0 0 1 8 13.5V13"]);
 var SETTINGS_ICONS = { general: GearIcon, bots: PeopleIcon, groups: ChatsIcon, usage: GaugeIcon };
 var LUCIDE_STROKE = 1.5;
+var LUCIDE_DOT_STROKE = 2;
 var LUCIDE_CHEVRON_BOX = 33;
-var LUCIDE_ELLIPSIS_BOX = 25;
+var LUCIDE_ELLIPSIS_BOX = 33;
 var LUCIDE_MENU_BOX = 15;
-var lucideIcon = (children, box) => function LucideIcon() {
+var lucideIcon = (children, box, stroke = LUCIDE_STROKE, pinned = true) => function LucideIcon() {
   return (0, import_react3.createElement)("svg", {
     width: box,
     height: box,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
-    strokeWidth: LUCIDE_STROKE,
+    strokeWidth: stroke,
     strokeLinecap: "round",
     strokeLinejoin: "round",
     "aria-hidden": true
-  }, children.map(([tag, attributes], index) => (0, import_react3.createElement)(tag, { key: index, vectorEffect: "non-scaling-stroke", ...attributes })));
+  }, children.map(([tag, attributes], index) => (0, import_react3.createElement)(tag, { key: index, ...pinned ? { vectorEffect: "non-scaling-stroke" } : {}, ...attributes })));
 };
 var LucideChevronLeftIcon = lucideIcon([["path", { d: "m15 18-6-6 6-6" }]], LUCIDE_CHEVRON_BOX);
 var LucideEllipsisIcon = lucideIcon([
   ["circle", { cx: 12, cy: 12, r: 1 }],
   ["circle", { cx: 19, cy: 12, r: 1 }],
   ["circle", { cx: 5, cy: 12, r: 1 }]
-], LUCIDE_ELLIPSIS_BOX);
+], LUCIDE_ELLIPSIS_BOX, LUCIDE_DOT_STROKE, false);
 var LucideExternalLinkIcon = lucideIcon([
   ["path", { d: "M15 3h6v6" }],
   ["path", { d: "M10 14 21 3" }],
@@ -4840,10 +4841,10 @@ var FILE_PREVIEW_CSS = `
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
-/* The dots are Lucide's ellipsis: three r=1 circles on a 16-unit row, so its 25px box lands
-   3.58px of dot in an 18.2px row at the glyph's pinned 1.5px stroke -- a hole under a pixel in
-   each dot, which is what keeps them reading solid. A row of dots has no height to grow -- its
-   ink is the dot diameter -- so the glyph's own box carries the size. */
+/* The dots are Lucide's ellipsis: three r=1 circles, the one glyph here that keeps Lucide's own
+   stroke -- pinned at 1.5px its 5.5px dots would each carry a 2.5px hole. Its 33px box lands
+   5.5px dots in a 24.8px row. A row of dots has no height to grow -- its ink is the dot diameter
+   -- so the glyph's own box carries the size. */
 .bt-preview-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto}
 .bt-preview-body>.bt-fp-body{flex:1}
 .bt-preview-frame{flex:1;min-height:0;width:100%;border:0;background:#fff}
