@@ -20,9 +20,9 @@ test('the light page is the sampled #f8f8f8, with white cards on it', () => {
   assert.ok(light.includes('--bt-card:#ffffff'), 'cards stay white -- the layering the screenshot draws')
   assert.ok(light.includes('--bt-sidebar:#f8f8f8'), 'the lists that are pages too')
   assert.ok(!light.includes('#f1f3f1'), 'the platform base colour is not written here')
-  // The bubbles are deliberately not part of this: that app draws them the same colour as
-  // its page, and copying that would flatten ours into it.
-  assert.ok(light.includes('--bt-bubble:#eeeeee'), 'the bubbles keep the grey they had')
+  // The bubbles were #eee until the page went grey: on #f8f8f8 a white bubble carries the
+  // layering the screenshots show.
+  assert.ok(light.includes('--bt-bubble:#ffffff'), 'the bubbles are white on the grey page')
 })
 
 // The bar's two colours are not ours to choose: they were sampled off the user's
