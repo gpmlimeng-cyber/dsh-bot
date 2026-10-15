@@ -1028,11 +1028,12 @@ html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh
 
    So here the column gives the inset up and the transcript's own scroll box takes it back as
    padding: the first line still arrives clear of the strip (its pill-row clearance was 60px for
-   a 50px bar; the strip is --bt-top-inset + 10), while everything scrolled past it passes
-   underneath -- which is the whole effect. Portrait only, like the strip itself: a phone held
-   sideways has no strip, so it keeps the inset exactly as it was. */
+   a 50px bar; the strip's height is --bt-fade-h, nav-bar.js, declared once there), while
+   everything scrolled past it passes underneath -- which is the whole effect. Portrait only,
+   like the strip itself: a phone held sideways has no strip, so it keeps the inset exactly as
+   it was (the 10px fallback). */
 html[data-bt-mobile][data-bt-portrait] [data-dsh-frame]>[class*="centerCol"]{padding-top:0!important}
-html[data-bt-mobile][data-bt-portrait] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)!important}
+html[data-bt-mobile][data-bt-portrait] [class*="_scroll"]:has(> [class*="_column"]){padding-top:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px))!important}
 /* One definition, every consumer: the shell's own --dsh-frame-chrome-top is set only under
    html[data-windows-titlebar] (and the darwin frame), never on Android, so every fixed
    layer that reads it — ours and the shell's own masks alike — fell through to 0 and

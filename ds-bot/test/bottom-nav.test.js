@@ -247,8 +247,7 @@ test('the conversation\'s drawer starts at the top edge and carries the inset it
   const page = css.find(line => line.startsWith(GATE + ' .bt-side.bt-rail{'))
   assert.ok(page, 'the drawer rule')
   assert.ok(page.includes('top:0'), page)
-  assert.ok(page.includes('padding-top:calc(var(--bt-top-inset'), 'the inset is the drawer\'s own padding')
-  assert.ok(page.includes(' + 10px)'), 'plus the base rule\'s own 10px, so the top row does not move')
+  assert.ok(page.includes('padding-top:var(--bt-fade-h,calc(var(--bt-top-inset'), 'the strip\'s own height, from its one definition, with the strip-less fallback')
   // The bar's own height is still given back at the foot of the same surface.
   assert.ok(page.includes('padding-bottom:calc(var(--bt-nav-h)'), page)
 })
@@ -352,8 +351,8 @@ test('the status bar\'s join is softened by a band that takes no taps', () => {
   assert.ok(band, 'the band has a rule')
   assert.ok(band.includes('position:fixed'), band)
   assert.ok(band.includes('top:0'), 'the strip starts at the screen edge, over the status bar')
-  assert.ok(band.includes('height:calc(var(--bt-top-inset'), 'as tall as the status bar')
-  assert.ok(band.includes('+ 10px)'), 'plus the 10px it fades over')
+  assert.ok(band.includes('height:var(--bt-fade-h'), 'as tall as the token, which reaches the pill row')
+  assert.ok(!band.includes('+ 56px'), 'the number lives in the one definition, not here')
   assert.ok(band.includes('background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 55%,transparent),transparent)'), 'one gradient: 55% of the page colour at the top, nothing at the bottom')
   assert.ok(!band.includes('calc(100% - 10px)'), 'with no solid part and no step inside it')
   // The tint is all of it: the user asked to read the text under the strip, not to see it smeared.
@@ -394,8 +393,17 @@ test('the transcript scrolls under the strip, and still arrives clear of it', ()
   assert.ok(column && column.includes('padding-top:0!important'), `the column lets content reach the top: ${column}`)
   const scroll = lines.find(line => line.startsWith(`${gate}[class*="_scroll"]`))
   assert.ok(scroll, 'the transcript scroll box has a rule')
-  assert.ok(scroll.includes('padding-top:calc(var(--bt-top-inset'), scroll)
-  assert.ok(scroll.includes('+ 10px)'), `as tall as the strip, so the first line clears it: ${scroll}`)
+  assert.ok(scroll.includes('padding-top:var(--bt-fade-h'), scroll)
+  assert.ok(scroll.includes('+ 10px)'), `with the strip-less phone's old inset as the fallback: ${scroll}`)
+  // One definition for the strip's height, read by every surface that reserves it: the frost,
+  // this scroll box, the phone drawer and the 伙伴 page. A second copy is how they drift.
+  const declared = css.filter(line => line.includes('--bt-fade-h:'))
+  assert.equal(declared.length, 1, `declared once, found ${declared.length}`)
+  assert.ok(declared[0].includes('--bt-fade-h:calc(var(--bt-top-inset') && declared[0].includes('+ 56px)'), declared[0])
+  const readers = ['nav-bar.js', 'peers-page.js', 'styles.js']
+    .flatMap(name => read(name).split('\n').filter(line => line.includes('var(--bt-fade-h')))
+  assert.ok(readers.length >= 4, `four readers, found ${readers.length}`)
+  for (const line of readers) assert.ok(line.includes('var(--bt-fade-h'), line)
   // The phone held sideways has no strip, so its inset is untouched -- the two rules above are
   // the only ones that give it up, and both carry the portrait gate.
   const ungated = lines.filter(line => line.startsWith('html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]'))

@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 33c840a8
+// Source fingerprint: 3f93fe10
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3023,11 +3023,12 @@ html[data-bt-mobile] [data-dsh-frame]>[class*="centerCol"]{padding-top:var(--dsh
 
    So here the column gives the inset up and the transcript's own scroll box takes it back as
    padding: the first line still arrives clear of the strip (its pill-row clearance was 60px for
-   a 50px bar; the strip is --bt-top-inset + 10), while everything scrolled past it passes
-   underneath -- which is the whole effect. Portrait only, like the strip itself: a phone held
-   sideways has no strip, so it keeps the inset exactly as it was. */
+   a 50px bar; the strip's height is --bt-fade-h, nav-bar.js, declared once there), while
+   everything scrolled past it passes underneath -- which is the whole effect. Portrait only,
+   like the strip itself: a phone held sideways has no strip, so it keeps the inset exactly as
+   it was (the 10px fallback). */
 html[data-bt-mobile][data-bt-portrait] [data-dsh-frame]>[class*="centerCol"]{padding-top:0!important}
-html[data-bt-mobile][data-bt-portrait] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)!important}
+html[data-bt-mobile][data-bt-portrait] [class*="_scroll"]:has(> [class*="_column"]){padding-top:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px))!important}
 /* One definition, every consumer: the shell's own --dsh-frame-chrome-top is set only under
    html[data-windows-titlebar] (and the darwin frame), never on Android, so every fixed
    layer that reads it — ours and the shell's own masks alike — fell through to 0 and
@@ -15961,7 +15962,15 @@ function BottomNav({ useUi, useNav, actions }) {
   ), document.body);
 }
 var NAV_CSS = `
-html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe-area-inset-bottom,0px),var(--dsh-android-system-bottom,0px))}
+/* The strip's height, declared once here for the same reason --bt-nav-h is: the frost, the
+   conversation's first row, the phone drawer's top row and the 伙伴 page's title all reserve
+   it, so a later change to the strip cannot move one and leave the others behind. It reaches
+   the pill row's own bottom edge plus a 6px margin -- inset + 10 (the bar's top padding) + 40
+   (the pill) + 6 = inset + 56 -- because the user asked for one continuous veil from the
+   status bar down past the pills; a strip that stopped at the status bar left the edge of it
+   visible as a line across the chrome. The fallback on each reader is the 10px these pages had
+   before it: a phone held sideways draws no strip at all. */
+html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-fade-h:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);--bt-nav-gap:max(env(safe-area-inset-bottom,0px),var(--dsh-android-system-bottom,0px))}
 /* The bar. 56px of page plus the gesture bar, and no line and no shadow above it: the
    user asked for the bar the screenshot draws, which separates itself with its surface
    alone -- and that surface is the page's own colour (--bt-main, the same value the page,
@@ -15973,8 +15982,8 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
    to), content scrolls under the system bars, and this is what keeps it legible. The tint is
    the page's own colour at 55% at the very top, fading to nothing across the whole strip --
    not a solid band with a fade tacked onto its last 10px, which reads as a step rather than a
-   gradient, which is what the user pointed at. The height is the status bar plus the 10px it
-   needs to land on nothing.
+   gradient, which is what the user pointed at. The height is --bt-fade-h: down past the pill
+   row, so the veil and the chrome it covers are one surface with no edge between them.
 
    No blur: the user asked for the text under it to be read through, not smeared ("不要模糊").
    The tint is the whole of it -- what passes under stays legible exactly as it was drawn.
@@ -15982,7 +15991,7 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
    It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
    while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
    (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
-html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);z-index:94;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 55%,transparent),transparent)}
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--bt-main) 55%,transparent),transparent)}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}
@@ -16025,7 +16034,7 @@ html[data-bt-mobile][data-bt-portrait] body:has(.bt-palette-layer) .bt-nav{displ
    page, the band above the page showed the conversation behind it — the seam the user
    reported — and the inset plus the base rule's own 10px puts the top row exactly where it
    was. The 12px side padding comes from the base rule and is left alone. */
-html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail{top:0;padding-top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);width:100%;padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap));border-right:0;box-shadow:none}
+html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail{top:0;padding-top:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));width:100%;padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap));border-right:0;box-shadow:none}
 html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-left:0}
 html[data-bt-mobile][data-bt-portrait] .bt-mobile-scrim{display:none}
 /* The hamburger stays on the conversation (the user asked for it back): it toggles the
@@ -16135,7 +16144,7 @@ function PeersPage({ useRoster, useUi, actions }) {
   ), document.body);
 }
 var PEERS_CSS = `
-html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* Typing in the search box raises the keyboard, and the bar (hidden underneath it, but still
    reserving its height) would leave the same dead band the user reported under the composer:
    give the room back while the flag is up. The flag is mobile.js's; the bar's own rule hides
@@ -16163,7 +16172,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "33c840a8" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "3f93fe10" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
