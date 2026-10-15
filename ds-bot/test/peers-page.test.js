@@ -110,8 +110,13 @@ test('a label sits on the name\'s line and a value on the line below it', () => 
   // ellipsis, the labels keep their width (the skin's .bt-tag is flex:none), and the one flexible
   // item -- the name -- is the one that is cut short first.
   assert.ok(sheet.includes('.bt-peers-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'the name is the item that gives way')
+  // The chevron is the row's right edge: it is pushed there by its own margin, it keeps its own
+  // width, and the text side gives way -- so all five rows show it at one x, and a long model or
+  // folder cannot move it.
   const tags = code('styles.js').match(/\.bt-tag\{[^}]*\}/)[0]
   assert.ok(tags.includes('flex:none') && tags.includes('white-space:nowrap'), 'and the skin\'s own tag never shrinks and never wraps')
+  assert.ok(sheet.includes('.bt-peers-go{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-3)}'), 'the chevron pins itself to the row\'s end')
+  assert.ok(sheet.includes('.bt-peers-row{display:flex;align-items:center;gap:12px;'), 'on a row that centres it vertically')
 })
 
 test('the model and the folder are read as names, not as the raw roster', () => {

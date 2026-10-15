@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 35a91e28
+// Source fingerprint: c694b364
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16290,7 +16290,11 @@ html[data-bt-mobile] .bt-peers-desc{display:flex;flex-wrap:nowrap;align-items:ce
 /* A value is the part that gives way: the labels and the chevron keep their width, and the model
    and the folder ellipsise -- the folder last, since it is the one that can be longest. */
 html[data-bt-mobile] .bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-html[data-bt-mobile] .bt-peers-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
+/* The chevron is the row's edge, not a thing floating at the end of the text: it is pushed to the
+   right end of the row by its own margin, it keeps its own width, and the text side is what gives
+   way. So every row shows it at the same x -- whatever the name, the model or the folder says --
+   and it stays vertically centred on a row of two lines rather than riding the first one. */
+html[data-bt-mobile] .bt-peers-go{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-3)}
 html[data-bt-mobile] .bt-peers-empty{padding:24px 12px;font-size:14px;line-height:21px;color:var(--bt-ink-3)}
 /* The page carries its own title, and the pill belongs to the conversation behind it. */
 html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
@@ -16388,7 +16392,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "35a91e28" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "c694b364" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
