@@ -22,6 +22,12 @@ const ZH = {
   Settings: '设置',
   Usage: '用量',
   Account: '账户',
+  // The phone's bottom bar (nav-bar.js). Four page names and the bar's own label.
+  Tasks: '任务',
+  Peers: '伙伴',
+  Discover: '发现',
+  Me: '我的',
+  Pages: '页面',
   Cancel: '取消',
   Delete: '删除',
   Duplicate: '复制一份',

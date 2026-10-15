@@ -59,6 +59,12 @@ var ZH = {
   Settings: "设置",
   Usage: "用量",
   Account: "账户",
+  // The phone's bottom bar (nav-bar.js). Four page names and the bar's own label.
+  Tasks: "任务",
+  Peers: "伙伴",
+  Discover: "发现",
+  Me: "我的",
+  Pages: "页面",
   Cancel: "取消",
   Delete: "删除",
   Duplicate: "复制一份",
@@ -1289,8 +1295,8 @@ function bodyOf(def, paint, flat = false) {
     return "";
   }
 }
-var eyeMarkup = ([cx, cy, w, h37, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h37 / 2}" width="${w}" height="${h37}" rx="${w / 2}"/></g>`;
-var happyEyeMarkup = ([cx, cy, w, h37, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h37 * 0.14}Q0 ${-h37 * 0.42} ${w * 0.62} ${h37 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
+var eyeMarkup = ([cx, cy, w, h38, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h38 / 2}" width="${w}" height="${h38}" rx="${w / 2}"/></g>`;
+var happyEyeMarkup = ([cx, cy, w, h38, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h38 * 0.14}Q0 ${-h38 * 0.42} ${w * 0.62} ${h38 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
 var maskBox = (size) => `maskUnits="userSpaceOnUse" x="${-size}" y="${-size}" width="${size * 3}" height="${size * 3}"`;
 var holes = (def, eyes) => `<rect x="${-def.size}" y="${-def.size}" width="${def.size * 3}" height="${def.size * 3}" fill="#fff"/>${eyes}`;
 var MASK_ID = "%MASK%";
@@ -1827,12 +1833,12 @@ function liveSprings(apply2) {
     const dt = Math.min(0.5, Math.max(1e-3, (now - last) / 1e3));
     last = now;
     const steps = Math.ceil(dt * 240);
-    const h37 = dt / steps;
+    const h38 = dt / steps;
     let moving = false;
     for (const value of values.values()) {
       for (let index = 0; index < steps; index += 1) {
-        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h37;
-        value.x += value.v * h37;
+        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h38;
+        value.x += value.v * h38;
       }
       if (Math.abs(value.x - value.to) < 0.05 && Math.abs(value.v) < 1) {
         value.x = value.to;
@@ -2144,7 +2150,10 @@ html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;po
    stacked a second inset (46px on this device) on top: every row slid down one bar and the
    last one fell out of view. Height comes from top/bottom — never height:100vh, which would
    overshoot the screen by exactly the inset. The list already scrolls (styles.js:122,
-   overflow-y:auto + min-height:0), so a long roster scrolls inside the drawer. */
+   overflow-y:auto + min-height:0), so a long roster scrolls inside the drawer.
+   On an upright phone this box is the 伙伴 page of the bottom bar instead of a drawer:
+   full width, no scrim, no shadow, its foot lifted by the bar. That variant lives with
+   the bar (nav-bar.js, NAV_CSS) so the two cannot drift apart. */
 html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));bottom:0;left:0;width:var(--bt-drawer-w,min(86vw,320px));box-sizing:border-box;align-items:stretch;gap:0;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden;touch-action:pan-y}
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
 /* The menus a row or the account launcher opens are portalled to body, so they compete
@@ -2152,6 +2161,14 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
    drawer's own panel, and a tap read as nothing happening. Lifted only while the drawer
    is open, and only one step above it, so every menu opened anywhere else keeps its seat. */
 html[data-bt-mobile] body:has(.bt-side.bt-rail[data-mobile-open]) .bt-menu{z-index:80}
+/* The same fault in the details panel, and the reason the model row read as dead on a
+   phone: on the mobile band the panel is full screen and takes 96 (the rule further
+   down), so the model, folder and stats popovers — all of them portalled out of it to
+   body (model-menu.js, folder-menu.js, details-drawer.js) — painted behind it at 60/80.
+   Lifted one step over the panel while it is up, left at their own seats everywhere
+   else. The settings layer and the other overlays still sit below them. */
+html[data-bt-mobile] body:has(.bt-panel) .bt-menu,
+html[data-bt-mobile] body:has(.bt-panel) .bt-stat-pop{z-index:97}
 html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
 /* pan-y on the drawer leaves the vertical drag to the list's own scrolling and keeps the
    horizontal one for the close gesture; contain stops a flick at the end of the list from
@@ -6348,15 +6365,24 @@ var import_react10 = require("react");
 var MOBILE_QUERY = "(max-width:840px), (max-width:1023px) and (orientation:portrait)";
 var SIZE_MEDIUM_QUERY = "(min-width:600px)";
 var SIZE_EXPANDED_QUERY = "(min-width:841px)";
+var PORTRAIT_QUERY = "(orientation: portrait)";
 var query;
 var listeners = /* @__PURE__ */ new Set();
+var portraitListeners = /* @__PURE__ */ new Set();
 var sizes;
 var pcQuery;
+var portraitQuery;
 var media = () => {
   if (query === void 0) {
     query = typeof window === "undefined" || typeof window.matchMedia !== "function" ? null : window.matchMedia(MOBILE_QUERY);
   }
   return query;
+};
+var portraitMedia = () => {
+  if (portraitQuery === void 0) {
+    portraitQuery = typeof window === "undefined" || typeof window.matchMedia !== "function" ? null : window.matchMedia(PORTRAIT_QUERY);
+  }
+  return portraitQuery;
 };
 var pcMedia = () => {
   if (pcQuery === void 0) {
@@ -6387,8 +6413,17 @@ var publish = (matches) => {
     else delete document.documentElement.dataset.btMobile;
   }
   publishSize();
+  publishPortrait();
   for (const listener of listeners) listener(matches === true);
 };
+var publishPortrait = () => {
+  if (typeof document === "undefined") return;
+  const on = document.documentElement.dataset.btMobile === "1" && portraitMedia()?.matches === true;
+  if (on) document.documentElement.dataset.btPortrait = "1";
+  else delete document.documentElement.dataset.btPortrait;
+  for (const listener of portraitListeners) listener(on);
+};
+var isPortraitNav = () => typeof document !== "undefined" && document.documentElement.dataset.btPortrait === "1";
 var publishPc = () => {
   if (typeof document === "undefined") return;
   if (isPcLayout()) document.documentElement.dataset.btPc = "1";
@@ -6419,6 +6454,7 @@ function watchMobile() {
   const bands = sizeMedia();
   bands?.medium.addEventListener?.("change", () => publishSize());
   bands?.expanded.addEventListener?.("change", () => publishSize());
+  portraitMedia()?.addEventListener?.("change", () => publishPortrait());
   const tick = () => {
     if (mql?.matches === true) publishInset();
   };
@@ -6441,6 +6477,17 @@ function useMobile() {
     };
   }, []);
   return mobile;
+}
+function usePortrait() {
+  const [portrait, setPortrait] = (0, import_react10.useState)(() => isPortraitNav());
+  (0, import_react10.useEffect)(() => {
+    portraitListeners.add(setPortrait);
+    setPortrait(isPortraitNav());
+    return () => {
+      portraitListeners.delete(setPortrait);
+    };
+  }, []);
+  return portrait;
 }
 function usePcColumns() {
   const [pc, setPc] = (0, import_react10.useState)(() => isPcLayout());
@@ -7244,6 +7291,7 @@ function TeamSidebar(props) {
   const markedUnread = useUi((value) => value.unread);
   const mobileOpen = useUi((value) => value.mobileNav === true);
   const mobile = useMobile();
+  const portrait = usePortrait();
   const pc = usePcColumns();
   (0, import_react13.useEffect)(() => {
     const call2 = pcSidebarStep(pcSidebarMemory.band, pc, shellCollapsed(document, wide));
@@ -7286,6 +7334,7 @@ function TeamSidebar(props) {
     event.preventDefault();
     actions.openPalette(event.key);
   };
+  const swipeClose = mobile && !portrait;
   const SWIPE_CLOSE_PX = 48;
   const drag = (0, import_react13.useRef)(null);
   const onTouchStart = (event) => {
@@ -7329,10 +7378,10 @@ function TeamSidebar(props) {
       role: wide ? void 0 : "region",
       "data-mobile-open": mobileOpen || void 0,
       onKeyDown: typeToSearch,
-      onTouchStart: mobile ? onTouchStart : void 0,
-      onTouchMove: mobile ? onTouchMove : void 0,
-      onTouchEnd: mobile ? onTouchEnd : void 0,
-      onTouchCancel: mobile ? onTouchEnd : void 0
+      onTouchStart: swipeClose ? onTouchStart : void 0,
+      onTouchMove: swipeClose ? onTouchMove : void 0,
+      onTouchEnd: swipeClose ? onTouchEnd : void 0,
+      onTouchCancel: swipeClose ? onTouchEnd : void 0
     },
     pcNav,
     listWide ? (0, import_react13.createElement)(
@@ -15630,6 +15679,110 @@ function noticeApprovals({ work, roster, shownSession, openSession, since: since
   return work.subscribe(notify);
 }
 
+// src/client/nav-bar.js
+var import_react39 = require("react");
+var import_react_dom12 = require("react-dom");
+var TABS = [
+  ["tasks", "Tasks", ChatsIcon],
+  ["peers", "Peers", PeopleIcon],
+  ["plugins", "Discover", PlugIcon],
+  ["me", "Me", GearIcon]
+];
+function BottomNav({ useUi, useNav, actions }) {
+  const ui2 = useUi((value) => value);
+  const nav = useNav((value) => value);
+  const mobile = useMobile();
+  const portrait = usePortrait();
+  if (!mobile || !portrait) return null;
+  const active = ui2.settings ? "me" : ui2.mobileNav ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
+  const go = (id) => {
+    if (id === "tasks") {
+      actions.closeMobileNav();
+      actions.closeSettings();
+      actions.selectPanel(null);
+      return;
+    }
+    if (id === "peers") {
+      actions.closeSettings();
+      if (ui2.mobileNav) {
+        actions.closeMobileNav();
+        actions.selectPanel(null);
+      } else actions.openMobileNav();
+      return;
+    }
+    if (id === "plugins") {
+      actions.closeMobileNav();
+      actions.closeSettings();
+      actions.selectPanel("plugins");
+      return;
+    }
+    actions.closeMobileNav();
+    actions.openSettings("general");
+  };
+  return (0, import_react_dom12.createPortal)((0, import_react39.createElement)(
+    "nav",
+    { className: "bt-nav", "aria-label": t("Pages") },
+    TABS.filter(([id]) => id !== "plugins" || nav.plugins).map(([id, label, Icon]) => (0, import_react39.createElement)(
+      "button",
+      {
+        key: id,
+        type: "button",
+        className: "bt-nav-tab",
+        "data-active": active === id || void 0,
+        "aria-label": t(label),
+        "aria-current": active === id ? "page" : void 0,
+        onClick: () => go(id)
+      },
+      (0, import_react39.createElement)(Icon),
+      (0, import_react39.createElement)("span", { className: "bt-nav-tab-text", "aria-hidden": true }, t(label))
+    ))
+  ), document.body);
+}
+var NAV_CSS = `
+html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe-area-inset-bottom,0px),var(--dsh-android-system-bottom,0px))}
+/* The bar. 56px of page plus the gesture bar; the fill is the top bar's own frost
+   treatment (styles.js, .bt-mobile-bar), mixed heavier because this bar carries labels
+   as well as glyphs and they have to stay legible over whatever scrolls behind it. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:color-mix(in srgb,var(--bt-main) 88%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:.5px solid var(--bt-line-2);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+/* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
+   it is at least the bar's height wide whatever the label's length. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
+/* The icons this skin already draws are 15px line glyphs (icons.js, lineIcon), so the tab
+   sizes them up; the stroke scales with the box and stays a hairline, the same as the
+   24px settings rows do on a phone. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none;width:22px;height:22px}
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-accent)}
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab-text{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The conversation column gives the bar its height back. centerCol is a stretched grid
+   item with overflow:hidden, so its own padding is what shortens the column: the
+   transcript scroller and the composer ride up together, and nothing sits under the bar.
+   The same selector already carries the status bar's padding-top (styles.js:969). */
+html[data-bt-mobile][data-bt-portrait] [data-dsh-frame]>[class*="centerCol"]{padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap))!important}
+/* Settings is one of the four pages, so the bar stays over it — and the layer stops at
+   the bar's top edge instead, which is what keeps its last rows reachable. */
+html[data-bt-mobile][data-bt-portrait] .bt-settings-layer{bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap))}
+/* Over the pages that are not tabs the bar steps out of the way, the same set the top bar
+   hides over (styles.js, the bt-pane/bt-panel/bt-mem-layer/bt-palette-layer rule) minus
+   the two that ARE tabs. */
+html[data-bt-mobile][data-bt-portrait] body:has(.bt-pane) .bt-nav,
+html[data-bt-mobile][data-bt-portrait] body:has(.bt-panel) .bt-nav,
+html[data-bt-mobile][data-bt-portrait] body:has(.bt-mem-layer) .bt-nav,
+html[data-bt-mobile][data-bt-portrait] body:has(.bt-palette-layer) .bt-nav{display:none}
+/* 伙伴 is a page: the same list fills the screen — no scrim to tap, no shadow, no border
+   — and it leaves the bar's height at its own foot. The top row starts at the page's own
+   edge: the 52px that used to clear the floating hamburger has nothing to clear now. */
+html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail{width:100%;padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap));border-right:0;box-shadow:none}
+html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-left:0}
+html[data-bt-mobile][data-bt-portrait] .bt-mobile-scrim{display:none}
+/* The hamburger goes with the drawer: the 伙伴 tab is what opens the list now, and two
+   entries to one page is the duplication this replaces. It is hidden rather than removed
+   from the flow — the bar centres its three tracks, and taking the box away would slide
+   the pill off the screen's centre. The whole bar goes while the peers page is up: that
+   page carries its own top row, and the pill belongs to the conversation behind it. */
+html[data-bt-mobile][data-bt-portrait] .bt-mobile-nav{opacity:0;visibility:hidden;pointer-events:none}
+html[data-bt-mobile][data-bt-portrait] body:has(.bt-side.bt-rail[data-mobile-open]) .bt-mobile-bar{display:none}
+`;
+
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
@@ -15662,6 +15815,7 @@ function apply(ctx) {
   }
   const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false });
   const surface = createSource({ mode: readMode(), plain: false });
+  const nav = createSource({ panel: null, plugins: false });
   let agentSessionCache = /* @__PURE__ */ new Set();
   try {
     agentSessionCache = new Set(JSON.parse(localStorage.getItem(STORAGE.agentSessions) ?? "[]"));
@@ -16121,8 +16275,16 @@ function apply(ctx) {
     openSettings: (page = "general", id = null) => {
       ui2.set((state) => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null, mobileNav: false }));
     },
+    // On an upright phone the four pages of the bottom bar are peers of each other, so
+    // closing one lands on the conversation rather than on whatever page was behind it:
+    // the bar is the only navigator there and must never come back to a page the user has
+    // already left. The rule is gated on the bar being on screen — on a desktop the
+    // settings dialog is a popup over a panel the user deliberately opened, and closing
+    // it must not take that panel away too.
     closeSettings: () => {
-      ui2.set((state) => state.settings ? { ...state, settings: null } : state);
+      if (ui2.getSnapshot().settings === null) return;
+      ui2.set((state) => ({ ...state, settings: null }));
+      if (isPortraitNav()) ctx.layout.selectPanel(null);
     },
     openMemory: (botId) => {
       ui2.set((state) => ({ ...state, memory: botId, menu: null, palette: null }));
@@ -16202,13 +16364,21 @@ function apply(ctx) {
     closeMenu: () => {
       ui2.set((state) => state.menu ? { ...state, menu: null } : state);
     },
-    // The mobile drawer: the hamburger in the conversation header toggles it, and
-    // every full-pane action (session, new chat, palette, settings) closes it first.
+    // The mobile drawer: on other bands the hamburger in the conversation header toggles
+    // it, on an upright phone the 伙伴 tab of the bottom bar does (nav-bar.js), and every
+    // full-pane action (session, new chat, palette, settings) closes it first.
     toggleMobileNav: () => {
       ui2.set((state) => ({ ...state, mobileNav: !state.mobileNav, menu: null, palette: null }));
     },
+    openMobileNav: () => {
+      ui2.set((state) => state.mobileNav ? state : { ...state, mobileNav: true, menu: null, palette: null });
+    },
+    // Leaving the peers page on the phone is leaving a page: back to the conversation, for
+    // the same reason closeSettings does it (and read there for why it is gated).
     closeMobileNav: () => {
-      ui2.set((state) => state.mobileNav ? { ...state, mobileNav: false } : state);
+      if (!ui2.getSnapshot().mobileNav) return;
+      ui2.set((state) => ({ ...state, mobileNav: false }));
+      if (isPortraitNav()) ctx.layout.selectPanel(null);
     },
     closeOverlay: () => {
       ui2.set((state) => ({ ...state, newChat: null, exchange: null, details: state.newChat || state.exchange ? state.details : null, mobileNav: false }));
@@ -16408,7 +16578,7 @@ function apply(ctx) {
   });
   const browserPages = browsers?.pages ?? createSource({});
   const browserTabs = browsers?.tabs ?? createSource({});
-  const face = () => ({ actions, betterSidebar, hooks: { roster, ui: ui2, activity, work, memoryNews, registry, turnClock, live, cards, browserPages, browserTabs, surface, update } });
+  const face = () => ({ actions, betterSidebar, hooks: { nav, roster, ui: ui2, activity, work, memoryNews, registry, turnClock, live, cards, browserPages, browserTabs, surface, update } });
   ctx.effect(() => noticeApprovals({
     work,
     roster,
@@ -16495,6 +16665,25 @@ function apply(ctx) {
     if (controller === void 0 || span === void 0) return;
     controller.toggleSource(CHATS_SOURCE, { trigger: "@", query: "", quoted: false, position: "inline", span });
   };
+  ctx.effect(() => {
+    const panelInfo = ctx.layout?.panelInfo;
+    const readPanel = () => {
+      const id = panelInfo?.getSnapshot?.()?.activePanelId ?? null;
+      nav.set((state) => state.panel === id ? state : { ...state, panel: id });
+    };
+    const readPlugins = () => {
+      const found = (ctx.slots.entriesOfSlot?.("main") ?? []).some((entry) => entry.options?.key === "plugins");
+      nav.set((state) => state.plugins === found ? state : { ...state, plugins: found });
+    };
+    readPanel();
+    readPlugins();
+    const offPanel = panelInfo?.subscribe?.(readPanel);
+    const offMain = ctx.slots.subscribe?.("main", readPlugins);
+    return () => {
+      offPanel?.();
+      offMain?.();
+    };
+  }, "ds-bot: bottom nav state");
   const installShell = () => [
     installCompiledStyles(SHELL_CSS, "shell"),
     installCompiledStyles(SIDEBAR_CSS, "sidebar"),
@@ -16509,6 +16698,7 @@ function apply(ctx) {
     browsers ? installCompiledStyles(BROWSER_CSS, "browser") : null,
     installCompiledStyles(FILE_PREVIEW_CSS, "file-preview"),
     installCompiledStyles(ATTENTION_CSS, "attention"),
+    installCompiledStyles(NAV_CSS, "bottom-nav"),
     installTheme(),
     shadow("sidebar.workspaces", { priority: -10, inject: face }, TeamSidebar),
     shadow("sidebar.brand.mark", { priority: -10 }, BrandMark),
@@ -16519,6 +16709,7 @@ function apply(ctx) {
     // At priority -10 the whale wins the seat over a shell account plugin's own
     // launcher (the Desktop's "··· More"), which comes back in Agent mode.
     shadow("settings.launcher", { priority: -10, inject: face }, AccountLauncher),
+    shadow("shell.overlay", { id: "bot-nav", order: 45, inject: face }, BottomNav),
     shadow("shell.overlay", { id: "bot", order: 50, inject: face }, Overlays),
     shadow("shell.overlay", { id: "bot-signin", order: 55, inject: face }, DeepSeekSignIn),
     shadow("shell.overlay", { id: "bot-toast", order: 60, inject: face }, ErrorToast)

@@ -22,17 +22,30 @@ import { PC_QUERY } from './pc-layout.js'
 export const MOBILE_QUERY = '(max-width:840px), (max-width:1023px) and (orientation:portrait)'
 export const SIZE_MEDIUM_QUERY = '(min-width:600px)'
 export const SIZE_EXPANDED_QUERY = '(min-width:841px)'
+// The phone's bottom navigation is upright only. MOBILE_QUERY covers a 425px phone in
+// either orientation, and the bar would eat 56 of the ~250px a landscape phone has for
+// the conversation, so the bar reads this second line as well.
+export const PORTRAIT_QUERY = '(orientation: portrait)'
 
 let query
 const listeners = new Set()
+const portraitListeners = new Set()
 let sizes
 let pcQuery
+let portraitQuery
 
 const media = () => {
   if (query === undefined) {
     query = typeof window === 'undefined' || typeof window.matchMedia !== 'function' ? null : window.matchMedia(MOBILE_QUERY)
   }
   return query
+}
+
+const portraitMedia = () => {
+  if (portraitQuery === undefined) {
+    portraitQuery = typeof window === 'undefined' || typeof window.matchMedia !== 'function' ? null : window.matchMedia(PORTRAIT_QUERY)
+  }
+  return portraitQuery
 }
 
 // The desktop window a foldable draws when it is held sideways (see pc-layout.js). It is
@@ -85,8 +98,26 @@ const publish = (matches) => {
     else delete document.documentElement.dataset.btMobile
   }
   publishSize()
+  publishPortrait()
   for (const listener of listeners) listener(matches === true)
 }
+
+// Mirrored onto <html data-bt-portrait>: the mobile layout AND an upright window. Every
+// rule of the bottom bar — the bar itself, the 56px it reserves, the peers page it turns
+// the drawer into, and the hamburger it replaces — hangs on this one attribute, so the
+// sheet, the tree and a UI dump cannot disagree. It is never published outside
+// data-bt-mobile, the same reason data-bt-size is not: a rule for the phone's bar must
+// not be able to reach the desktop.
+const publishPortrait = () => {
+  if (typeof document === 'undefined') return
+  const on = document.documentElement.dataset.btMobile === '1' && portraitMedia()?.matches === true
+  if (on) document.documentElement.dataset.btPortrait = '1'
+  else delete document.documentElement.dataset.btPortrait
+  for (const listener of portraitListeners) listener(on)
+}
+
+/** Whether the phone's bottom navigation is the one on screen right now (read-only). */
+export const isPortraitNav = () => typeof document !== 'undefined' && document.documentElement.dataset.btPortrait === '1'
 
 // Mirrored onto <html data-bt-pc>, the one flag every rule of the PC layout hangs on, so
 // the stylesheet and a real-device dump agree on which layout is on screen. Nothing is
@@ -141,6 +172,9 @@ export function watchMobile() {
   const bands = sizeMedia()
   bands?.medium.addEventListener?.('change', () => publishSize())
   bands?.expanded.addEventListener?.('change', () => publishSize())
+  // Turning the phone changes neither of the widths above, so the bottom bar's own line
+  // is watched on its own too.
+  portraitMedia()?.addEventListener?.('change', () => publishPortrait())
   // The transcript is mounted after this plugin applies, so measure on the next frames
   // rather than once, and again whenever the window changes shape.
   const tick = () => { if (mql?.matches === true) publishInset() }
@@ -163,6 +197,17 @@ export function useMobile() {
     return () => { listeners.delete(setMobile) }
   }, [])
   return mobile
+}
+
+/** Reactive view of the bottom bar's line, for the bar and the page it turns the drawer into. */
+export function usePortrait() {
+  const [portrait, setPortrait] = useState(() => isPortraitNav())
+  useEffect(() => {
+    portraitListeners.add(setPortrait)
+    setPortrait(isPortraitNav())
+    return () => { portraitListeners.delete(setPortrait) }
+  }, [])
+  return portrait
 }
 
 /** Reactive view of the PC layout band, for the sidebar column and the panel's width. */

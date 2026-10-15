@@ -11,7 +11,7 @@ import { Shimmer, workPhrase } from './cells.js'
 import { springEasing, SPRING_SHAPE } from './motion.js'
 import { hostText, t } from './i18n.js'
 import { showsDshRow } from './dsh-offer.js'
-import { useMobile, usePcColumns } from './mobile.js'
+import { useMobile, usePortrait, usePcColumns } from './mobile.js'
 import { pcSidebarMemory, pcSidebarStep, shellCollapsed } from './pc-layout.js'
 import { NavToggle } from './header.js'
 
@@ -290,6 +290,7 @@ export function TeamSidebar(props) {
   // drawer renders the same wide list the desktop sidebar shows, over a scrim.
   const mobileOpen = useUi(value => value.mobileNav === true)
   const mobile = useMobile()
+  const portrait = usePortrait()
   // A foldable held sideways draws the desktop layout (mobile.js), and the desktop layout
   // wants the shell's own sidebar column instead of the 56px rail the shell keeps below its
   // 1024 line. The shell hands this slot the one safe way to open it — `expandSidebar`,
@@ -353,6 +354,12 @@ export function TeamSidebar(props) {
   // vertically can no longer close anything — that is the reported "a swipe closed the
   // drawer" and the rule this forbids. Nothing here listens to scroll, so no amount of
   // scrolling dismisses the drawer.
+  //
+  // On an upright phone the drawer is the 伙伴 page of the bottom bar rather than a popup
+  // beside the conversation (nav-bar.js), so the gesture is off there: a page is left
+  // through the bar, and a swipe that threw it away would take the list with it by
+  // accident. The scrim is off there too, by the same rule.
+  const swipeClose = mobile && !portrait
   const SWIPE_CLOSE_PX = 48
   const drag = useRef(null)
   const onTouchStart = (event) => {
@@ -413,8 +420,8 @@ export function TeamSidebar(props) {
   const drawer = h('div', {
     className: wide ? 'bt-side' : 'bt-side bt-rail', role: wide ? undefined : 'region',
     'data-mobile-open': mobileOpen || undefined, onKeyDown: typeToSearch,
-    onTouchStart: mobile ? onTouchStart : undefined, onTouchMove: mobile ? onTouchMove : undefined,
-    onTouchEnd: mobile ? onTouchEnd : undefined, onTouchCancel: mobile ? onTouchEnd : undefined,
+    onTouchStart: swipeClose ? onTouchStart : undefined, onTouchMove: swipeClose ? onTouchMove : undefined,
+    onTouchEnd: swipeClose ? onTouchEnd : undefined, onTouchCancel: swipeClose ? onTouchEnd : undefined,
   },
     pcNav,
     listWide ? h('div', { className: 'bt-side-top' },

@@ -158,7 +158,10 @@ html[data-bt-mobile] .bt-mobile-scrim[data-open]{opacity:1;visibility:visible;po
    stacked a second inset (46px on this device) on top: every row slid down one bar and the
    last one fell out of view. Height comes from top/bottom — never height:100vh, which would
    overshoot the screen by exactly the inset. The list already scrolls (styles.js:122,
-   overflow-y:auto + min-height:0), so a long roster scrolls inside the drawer. */
+   overflow-y:auto + min-height:0), so a long roster scrolls inside the drawer.
+   On an upright phone this box is the 伙伴 page of the bottom bar instead of a drawer:
+   full width, no scrim, no shadow, its foot lifted by the bar. That variant lives with
+   the bar (nav-bar.js, NAV_CSS) so the two cannot drift apart. */
 html[data-bt-mobile] .bt-side.bt-rail{position:fixed;z-index:79;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));bottom:0;left:0;width:var(--bt-drawer-w,min(86vw,320px));box-sizing:border-box;align-items:stretch;gap:0;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:var(--bt-sidebar);border-right:.5px solid var(--bt-line-2);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing};overflow:hidden;touch-action:pan-y}
 html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
 /* The menus a row or the account launcher opens are portalled to body, so they compete
@@ -166,6 +169,14 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open]{transform:none}
    drawer's own panel, and a tap read as nothing happening. Lifted only while the drawer
    is open, and only one step above it, so every menu opened anywhere else keeps its seat. */
 html[data-bt-mobile] body:has(.bt-side.bt-rail[data-mobile-open]) .bt-menu{z-index:80}
+/* The same fault in the details panel, and the reason the model row read as dead on a
+   phone: on the mobile band the panel is full screen and takes 96 (the rule further
+   down), so the model, folder and stats popovers — all of them portalled out of it to
+   body (model-menu.js, folder-menu.js, details-drawer.js) — painted behind it at 60/80.
+   Lifted one step over the panel while it is up, left at their own seats everywhere
+   else. The settings layer and the other overlays still sit below them. */
+html[data-bt-mobile] body:has(.bt-panel) .bt-menu,
+html[data-bt-mobile] body:has(.bt-panel) .bt-stat-pop{z-index:97}
 html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11px;min-height:52px;padding:8px 10px;border-radius:12px}
 /* pan-y on the drawer leaves the vertical drag to the list's own scrolling and keeps the
    horizontal one for the close gesture; contain stops a flick at the end of the list from

@@ -35,8 +35,9 @@ import { ErrorToast, FEEDBACK_CSS } from './feedback.js'
 import { ABOUT_CSS } from './about.js'
 import { MEMBER_CSS, MemberDock } from './member-status.js'
 import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-message.js'
-import { watchMobile } from './mobile.js'
+import { watchMobile, isPortraitNav } from './mobile.js'
 import { noticeApprovals } from './approval-notices.js'
+import { BottomNav, NAV_CSS } from './nav-bar.js'
 
 export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
 
@@ -64,6 +65,13 @@ export function apply(ctx) {
   // style so the shell's own interface returns. `plain` stays false until a Bot-mode
   // view hosts a plain session, which drops only the conversation replacements.
   const surface = createSource({ mode: readMode(), plain: false })
+  // The phone's bottom bar navigates two different surfaces: the shell's main panel (the
+  // conversation, the plugin manager) and this plugin's own overlays (the Bot list and
+  // Settings). `panel` follows the shell's own selection — the bar keeps no copy of it —
+  // and `plugins` says whether that main panel is registered at all, because
+  // layout.selectPanel throws on an unknown id and the 发现 tab may not be drawn without
+  // it. Both are filled by the effect below.
+  const nav = createSource({ panel: null, plugins: false })
   // DSH Agent Session ids from the last pull, so a reload already knows the main
   // view is a plain Session before the team answers.
   let agentSessionCache = new Set()
@@ -485,7 +493,17 @@ export function apply(ctx) {
     renameBot: (id) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: true, tab: null })) },
     // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
     openSettings: (page = 'general', id = null) => { ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null, mobileNav: false })) },
-    closeSettings: () => { ui.set(state => (state.settings ? { ...state, settings: null } : state)) },
+    // On an upright phone the four pages of the bottom bar are peers of each other, so
+    // closing one lands on the conversation rather than on whatever page was behind it:
+    // the bar is the only navigator there and must never come back to a page the user has
+    // already left. The rule is gated on the bar being on screen — on a desktop the
+    // settings dialog is a popup over a panel the user deliberately opened, and closing
+    // it must not take that panel away too.
+    closeSettings: () => {
+      if (ui.getSnapshot().settings === null) return
+      ui.set(state => ({ ...state, settings: null }))
+      if (isPortraitNav()) ctx.layout.selectPanel(null)
+    },
     openMemory: (botId) => { ui.set(state => ({ ...state, memory: botId, menu: null, palette: null })) },
     closeMemory: () => { ui.set(state => (state.memory ? { ...state, memory: null } : state)) },
     openConnectors: () => { ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null, mobileNav: false })) },
@@ -554,10 +572,18 @@ export function apply(ctx) {
     deleteRoom: id => after(call('delete-room', { id })),
     openMenu: (menu) => { ui.set(state => ({ ...state, menu })) },
     closeMenu: () => { ui.set(state => (state.menu ? { ...state, menu: null } : state)) },
-    // The mobile drawer: the hamburger in the conversation header toggles it, and
-    // every full-pane action (session, new chat, palette, settings) closes it first.
+    // The mobile drawer: on other bands the hamburger in the conversation header toggles
+    // it, on an upright phone the 伙伴 tab of the bottom bar does (nav-bar.js), and every
+    // full-pane action (session, new chat, palette, settings) closes it first.
     toggleMobileNav: () => { ui.set(state => ({ ...state, mobileNav: !state.mobileNav, menu: null, palette: null })) },
-    closeMobileNav: () => { ui.set(state => (state.mobileNav ? { ...state, mobileNav: false } : state)) },
+    openMobileNav: () => { ui.set(state => (state.mobileNav ? state : { ...state, mobileNav: true, menu: null, palette: null })) },
+    // Leaving the peers page on the phone is leaving a page: back to the conversation, for
+    // the same reason closeSettings does it (and read there for why it is gated).
+    closeMobileNav: () => {
+      if (!ui.getSnapshot().mobileNav) return
+      ui.set(state => ({ ...state, mobileNav: false }))
+      if (isPortraitNav()) ctx.layout.selectPanel(null)
+    },
     closeOverlay: () => { ui.set(state => ({ ...state, newChat: null, exchange: null, details: state.newChat || state.exchange ? state.details : null, mobileNav: false })) },
     createBot: payload => after(call('create-bot', payload)),
     createRoom: (members, options = {}) => after(call('create-room', { members, ...options })),
@@ -776,7 +802,7 @@ export function apply(ctx) {
   })
   const browserPages = browsers?.pages ?? createSource({})
   const browserTabs = browsers?.tabs ?? createSource({})
-  const face = () => ({ actions, betterSidebar, hooks: { roster, ui, activity, work, memoryNews, registry, turnClock, live, cards, browserPages, browserTabs, surface, update } })
+  const face = () => ({ actions, betterSidebar, hooks: { nav, roster, ui, activity, work, memoryNews, registry, turnClock, live, cards, browserPages, browserTabs, surface, update } })
   ctx.effect(() => noticeApprovals({
     work,
     roster,
@@ -874,6 +900,28 @@ export function apply(ctx) {
     controller.toggleSource(CHATS_SOURCE, { trigger: '@', query: '', quoted: false, position: 'inline', span })
   }
 
+  // The bottom bar's two readings. The main panel is the shell's own selection and can
+  // change without this plugin doing anything — another plugin's navigation, a restore —
+  // so it is subscribed to rather than mirrored. The registry of main panels is watched
+  // the same way: the plugin manager can be loaded after us, and the 发现 tab has to
+  // appear when it is. Nothing here throws on a host without either service.
+  ctx.effect(() => {
+    const panelInfo = ctx.layout?.panelInfo
+    const readPanel = () => {
+      const id = panelInfo?.getSnapshot?.()?.activePanelId ?? null
+      nav.set(state => (state.panel === id ? state : { ...state, panel: id }))
+    }
+    const readPlugins = () => {
+      const found = (ctx.slots.entriesOfSlot?.('main') ?? []).some(entry => entry.options?.key === 'plugins')
+      nav.set(state => (state.plugins === found ? state : { ...state, plugins: found }))
+    }
+    readPanel()
+    readPlugins()
+    const offPanel = panelInfo?.subscribe?.(readPanel)
+    const offMain = ctx.slots.subscribe?.('main', readPlugins)
+    return () => { offPanel?.(); offMain?.() }
+  }, 'ds-bot: bottom nav state')
+
   // The shell group paints the team surface around the session; the conversation
   // group re-skins the session itself. Every disposer comes from slots.inject, so a
   // surface change withdraws the whole group and the outlets re-render.
@@ -891,6 +939,7 @@ export function apply(ctx) {
     browsers ? installCompiledStyles(BROWSER_CSS, 'browser') : null,
     installCompiledStyles(FILE_PREVIEW_CSS, 'file-preview'),
     installCompiledStyles(ATTENTION_CSS, 'attention'),
+    installCompiledStyles(NAV_CSS, 'bottom-nav'),
     installTheme(),
     shadow('sidebar.workspaces', { priority: -10, inject: face }, TeamSidebar),
     shadow('sidebar.brand.mark', { priority: -10 }, BrandMark),
@@ -901,6 +950,7 @@ export function apply(ctx) {
     // At priority -10 the whale wins the seat over a shell account plugin's own
     // launcher (the Desktop's "··· More"), which comes back in Agent mode.
     shadow('settings.launcher', { priority: -10, inject: face }, AccountLauncher),
+    shadow('shell.overlay', { id: 'bot-nav', order: 45, inject: face }, BottomNav),
     shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
     shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
     shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
