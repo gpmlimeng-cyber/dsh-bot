@@ -94,10 +94,13 @@ export function BottomNav({ useUi, useNav, actions }) {
     actions.openSettings('general')
   }
   return createPortal(h(Fragment, null,
-    // The softened join at the status bar's own lower edge. It belongs to the phone's frame
-    // rather than to the bar, so it is a sibling: it stays up when the keyboard takes the bar
-    // away, and when the bar steps aside for a page that is not one of the four.
-    h('div', { className: 'bt-topfade', 'aria-hidden': true }),
+    // The softened join at the status bar's own lower edge, drawn only over the conversation:
+    // the four pages carry their own top, so a veil over one would be a band over nothing (the
+    // user asked for it to be the chat's). It belongs to the phone's frame rather than to the
+    // bar, so it is a sibling of the bar and stays up when the keyboard takes the bar away.
+    // The full-screen layers that come over the chat without changing the tab are the
+    // stylesheet's business (styles.js, the :is(.bt-mobile-bar,.bt-topfade) rule).
+    active === 'tasks' ? h('div', { className: 'bt-topfade', 'aria-hidden': true }) : null,
     h('nav', { className: 'bt-nav', 'aria-label': t('Pages') },
       TABS.filter(([id]) => id !== 'plugins' || nav.plugins).map(([id, label, Icon, IconFilled]) => h('button', {
         key: id, type: 'button', className: 'bt-nav-tab',
@@ -146,22 +149,23 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-fade-h:calc(var(--bt
    56px back, so there is nothing for a frost to show through. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-main);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* The strip over the status bar. Once the shell hands the surface over (status-bar.js asks it
-   to), content scrolls under the system bars, and this is what keeps it legible. It is solid
-   --bt-main from the screen edge down to the status bar's own height, and only below that does
-   it thin, reaching nothing by --bt-fade-h. The first version ramped from y=0, so by the status
-   bar's lower edge rather less than half of it was left and the clock sat on top of the text
-   scrolling under it (the user's screenshot) -- a band that is opaque where the system draws
-   and one ramp below it, with no step between the two.
-   The height is --bt-fade-h: down past the pill
-   row, so the veil and the chrome it covers are one surface with no edge between them.
+   to), content scrolls under the system bars, and this is the one continuous veil over it: the
+   page's own colour at the screen edge, thinning to nothing by --bt-fade-h. The user asked to
+   read the words through it at the status bar too ("在状态栏也能看到半透明的字"), so it is
+   translucent from y=0 rather than opaque over the system band -- the version that went solid
+   through the status bar hid exactly what he wanted to see.
+   The height is --bt-fade-h: down past the pill row, so the veil and the chrome it covers are
+   one surface with no edge between them.
 
    No blur: the user asked for the text under it to be read through, not smeared ("不要模糊").
-   What passes under is covered outright until the status bar's edge and emerges below it.
+   It is drawn only where a conversation is under it (the component, below): the four pages and
+   the full-screen layers that come over the chat carry their own top, and a veil over them
+   would be a band over nothing.
 
    It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
    while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
    (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
-html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main) 0,var(--bt-main) var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))),transparent var(--bt-fade-h))}
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main),transparent)}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}

@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 6b1903ac
+// Source fingerprint: b20a0d6a
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3288,12 +3288,16 @@ html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar::after{display:n
    used to keep those capsules opaque there. Hiding the bar is the right answer, not a
    solid bar. The two pane classes are separate: .bt-pane is the pane the chat opens and
    .bt-panel is the details column, and both are full screen here.
-   The drawer is deliberately absent: the hamburger in the bar is what opens and closes it. */
-html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-panel) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar{display:none}
+   The drawer is deliberately absent: the hamburger in the bar is what opens and closes it.
+   The veil over the status bar goes wherever the bar goes, and for the same reason: each of
+   these layers carries its own top, so a translucent band across it would cover nothing and
+   belong to nothing. The four pages hide the veil in the component instead (nav-bar.js),
+   where the page on screen is known. */
+html[data-bt-mobile] body:has(.bt-pane) :is(.bt-mobile-bar,.bt-topfade),
+html[data-bt-mobile] body:has(.bt-panel) :is(.bt-mobile-bar,.bt-topfade),
+html[data-bt-mobile] body:has(.bt-mem-layer) :is(.bt-mobile-bar,.bt-topfade),
+html[data-bt-mobile] body:has(.bt-palette-layer) :is(.bt-mobile-bar,.bt-topfade),
+html[data-bt-mobile] body:has(.bt-settings-layer) :is(.bt-mobile-bar,.bt-topfade){display:none}
 /* On a phone the settings dialog is the screen rather than a card floating on it. A 198px
    page column beside a page needs a width a phone has not got -- at 425px it left the page
    179px, which is what made the whole thing read as broken. The two columns become two
@@ -15906,10 +15910,13 @@ function BottomNav({ useUi, useNav, actions }) {
   return (0, import_react_dom12.createPortal)((0, import_react39.createElement)(
     import_react39.Fragment,
     null,
-    // The softened join at the status bar's own lower edge. It belongs to the phone's frame
-    // rather than to the bar, so it is a sibling: it stays up when the keyboard takes the bar
-    // away, and when the bar steps aside for a page that is not one of the four.
-    (0, import_react39.createElement)("div", { className: "bt-topfade", "aria-hidden": true }),
+    // The softened join at the status bar's own lower edge, drawn only over the conversation:
+    // the four pages carry their own top, so a veil over one would be a band over nothing (the
+    // user asked for it to be the chat's). It belongs to the phone's frame rather than to the
+    // bar, so it is a sibling of the bar and stays up when the keyboard takes the bar away.
+    // The full-screen layers that come over the chat without changing the tab are the
+    // stylesheet's business (styles.js, the :is(.bt-mobile-bar,.bt-topfade) rule).
+    active === "tasks" ? (0, import_react39.createElement)("div", { className: "bt-topfade", "aria-hidden": true }) : null,
     (0, import_react39.createElement)(
       "nav",
       { className: "bt-nav", "aria-label": t("Pages") },
@@ -15951,22 +15958,23 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-fade-h:calc(var(--bt
    56px back, so there is nothing for a frost to show through. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-main);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* The strip over the status bar. Once the shell hands the surface over (status-bar.js asks it
-   to), content scrolls under the system bars, and this is what keeps it legible. It is solid
-   --bt-main from the screen edge down to the status bar's own height, and only below that does
-   it thin, reaching nothing by --bt-fade-h. The first version ramped from y=0, so by the status
-   bar's lower edge rather less than half of it was left and the clock sat on top of the text
-   scrolling under it (the user's screenshot) -- a band that is opaque where the system draws
-   and one ramp below it, with no step between the two.
-   The height is --bt-fade-h: down past the pill
-   row, so the veil and the chrome it covers are one surface with no edge between them.
+   to), content scrolls under the system bars, and this is the one continuous veil over it: the
+   page's own colour at the screen edge, thinning to nothing by --bt-fade-h. The user asked to
+   read the words through it at the status bar too ("在状态栏也能看到半透明的字"), so it is
+   translucent from y=0 rather than opaque over the system band -- the version that went solid
+   through the status bar hid exactly what he wanted to see.
+   The height is --bt-fade-h: down past the pill row, so the veil and the chrome it covers are
+   one surface with no edge between them.
 
    No blur: the user asked for the text under it to be read through, not smeared ("不要模糊").
-   What passes under is covered outright until the status bar's edge and emerges below it.
+   It is drawn only where a conversation is under it (the component, below): the four pages and
+   the full-screen layers that come over the chat carry their own top, and a veil over them
+   would be a band over nothing.
 
    It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
    while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
    (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
-html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main) 0,var(--bt-main) var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))),transparent var(--bt-fade-h))}
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:0;left:0;right:0;height:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main),transparent)}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}
@@ -16148,7 +16156,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "6b1903ac" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "b20a0d6a" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

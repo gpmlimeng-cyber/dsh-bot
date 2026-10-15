@@ -1293,12 +1293,16 @@ html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar::after{display:n
    used to keep those capsules opaque there. Hiding the bar is the right answer, not a
    solid bar. The two pane classes are separate: .bt-pane is the pane the chat opens and
    .bt-panel is the details column, and both are full screen here.
-   The drawer is deliberately absent: the hamburger in the bar is what opens and closes it. */
-html[data-bt-mobile] body:has(.bt-pane) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-panel) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-mem-layer) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-palette-layer) .bt-mobile-bar,
-html[data-bt-mobile] body:has(.bt-settings-layer) .bt-mobile-bar{display:none}
+   The drawer is deliberately absent: the hamburger in the bar is what opens and closes it.
+   The veil over the status bar goes wherever the bar goes, and for the same reason: each of
+   these layers carries its own top, so a translucent band across it would cover nothing and
+   belong to nothing. The four pages hide the veil in the component instead (nav-bar.js),
+   where the page on screen is known. */
+html[data-bt-mobile] body:has(.bt-pane) :is(.bt-mobile-bar,.bt-topfade),
+html[data-bt-mobile] body:has(.bt-panel) :is(.bt-mobile-bar,.bt-topfade),
+html[data-bt-mobile] body:has(.bt-mem-layer) :is(.bt-mobile-bar,.bt-topfade),
+html[data-bt-mobile] body:has(.bt-palette-layer) :is(.bt-mobile-bar,.bt-topfade),
+html[data-bt-mobile] body:has(.bt-settings-layer) :is(.bt-mobile-bar,.bt-topfade){display:none}
 /* On a phone the settings dialog is the screen rather than a card floating on it. A 198px
    page column beside a page needs a width a phone has not got -- at 425px it left the page
    179px, which is what made the whole thing read as broken. The two columns become two
