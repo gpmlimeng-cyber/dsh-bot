@@ -1319,8 +1319,14 @@ html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;b
    lies behind it and takes no tap. Nor does it linger out: the 160ms sink, and the 160ms the layer
    is held on screen for it (overlays.js), would leave the page just left standing over the one just
    chosen. A dialog over the conversation -- a long press, the drawer, the palette, a toast -- keeps
-   all three, and so does the memory dialog, which is a card on this layout rather than the screen. */
-html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none}
+   all three, and so does the memory dialog, which is a card on this layout rather than the screen.
+
+   The one carries !important because of a rule further up this sheet: under
+   (prefers-reduced-motion:reduce) -- which this device reports -- every one of these surfaces is
+   given "animation:bt-fade .12s ease-out!important", and a page that must not animate is not a
+   motion to soften, it is a motion that is not played. That media query is also why the fade the
+   user saw was 120ms rather than the base rule's 200ms. */
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,

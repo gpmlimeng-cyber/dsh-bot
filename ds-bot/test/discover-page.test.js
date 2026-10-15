@@ -254,12 +254,15 @@ test('every rule is a phone rule, and the page hands the shell nothing but the s
   assert.ok(nav.includes("actions.openSettings('general', null, 'tab')"), 'the 我的 tab comes through the tab door')
   assert.ok(index.includes("settings: { page: key, id: null, tab: true }"), 'and so does every row of this list')
   assert.ok(read('overlays.js').includes('tab: settings.tab === true'), 'which the layer is handed')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none}'), 'the phone plays no entrance for it')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}'), 'the phone plays no entrance for it, and beats the reduced-motion fade that would otherwise stand in for one')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}'), 'and no exit')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}'), 'and draws no veil')
   assert.ok(styles.includes('animation:bt-dialog-rise'), 'while the dialog keeps all three')
   assert.ok(styles.includes('.bt-mem{position:relative;width:min(680px,calc(100vw - 48px))'), 'and the memory dialog is still a card on this layout, so it keeps its own entrance')
   assert.ok(!styles.includes('.bt-settings-layer>.bt-settings{animation:none}'), 'and none of it reaches a layer without the marker')
+  // A page that must not animate is not a motion to soften: the one reduced-motion rule that would
+  // otherwise stand in for an entrance is an !important, so the "no entrance" carries one too.
+  assert.ok(styles.includes('animation:bt-fade .12s ease-out!important'), 'the reduced-motion fade is still there for the surfaces that do animate')
   // The head, the body's scrolling, the card's corners, the row's height and type, the gap between
   // two cards, the icon's size and colour and the chevron's: all of that is the settings page's,
   // declared once there, so there is nothing here to read back. 伙伴 borrows that head too, and

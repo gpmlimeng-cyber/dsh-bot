@@ -40,18 +40,19 @@ export function PeersPage({ useRoster, useUi, actions }) {
   }
   return createPortal(h('div', { className: 'bt-peers', role: 'region', 'aria-label': t('Peers') },
     h('div', { className: 'bt-peers-top' },
-      // 新建伙伴, and it is the real thing: actions.openNewChat('create') opens the create-Bot
-      // form straight (new-chat.js takes that mode as an initial draft), which is exactly where
-      // the command palette's own "Create Bot" goes -- no button that does nothing. The page is
-      // closed on the way there: openNewChat clears `peers`, so the form never stacks on it.
-      // The title row is 我的's own (styles.js): the same 52px bar with the name centred in it by
-      // that page's own rule, and the one control this page has sitting at its right end.
+      // 新建, and it is the drawer's own entry rather than a second door of its own: the same label
+      // the sidebar and the conversation's header carry, and the same action, which opens the picker
+      // (new-chat.js, mode 'new') with its create-Bot / create-group / pick-a-chat rows. The page is
+      // closed on the way there: openNewChat clears `peers`, so nothing stacks on it.
+      //
+      // The title row it sits in is 我的's own (styles.js): the same 52px bar with the name centred
+      // in it by that page's own rule, and the one control this page has at its right end.
       h('div', { className: 'bt-settings-top' },
         h('h2', null, t('Peers')),
         h('button', {
           type: 'button', className: 'bt-round bt-peers-new',
-          'aria-label': t('Create Bot'), title: t('Create Bot'),
-          onClick: () => actions.openNewChat('create'),
+          'aria-label': t('New…'), title: t('New…'),
+          onClick: () => actions.openNewChat('new'),
         }, h(PlusIcon))),
       h('div', { className: 'bt-side-search' },
         h(SearchIcon),

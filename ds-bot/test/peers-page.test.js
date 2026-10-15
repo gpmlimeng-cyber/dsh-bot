@@ -91,19 +91,22 @@ test('a row opens that Bot\'s chat and lands back on the conversation', () => {
   assert.ok(open.includes('openSession(id)'), 'and the tap ends in the conversation')
 })
 
-test('the header\'s new button opens the real create-Bot form, not a dead end', () => {
-  // The user asked for 新建 in this page's header, and the label the skin carries is the
-  // header's own 「创建 Bot」: what it opens is the platform's create-Bot flow taken straight to
-  // the form (new-chat.js reads mode 'create' as an initial draft, and the command palette's own
-  // "Create Bot" goes to the same door).
-  assert.ok(peers.includes("'aria-label': t('Create Bot')"), 'named for what it does, in the existing string')
-  assert.ok(peers.includes("onClick: () => actions.openNewChat('create')"), 'and it asks for the form')
+test('the header\'s new button is the drawer\'s own entry, not a second door', () => {
+  // The user asked this page's 新建 to be the drawer's 新建: the same label the skin carries there,
+  // and the same action, which opens the picker -- new-chat.js reads mode 'new' as the list of
+  // create-Bot / create-group / pick-a-chat rows -- rather than taking the create-Bot form straight
+  // (which is what mode 'create' does, and what this button used to ask for).
+  assert.ok(peers.includes("'aria-label': t('New…')"), 'the drawer\'s own label')
+  assert.ok(peers.includes("onClick: () => actions.openNewChat('new')"), 'and the drawer\'s own door')
+  for (const drawer of ['sidebar.js', 'header.js']) {
+    const source = code(drawer)
+    assert.ok(source.includes("t('New…')") && source.includes("actions.openNewChat('new')"), `${drawer} opens the same one`)
+  }
   const newChat = code('new-chat.js')
-  assert.ok(newChat.includes("mode === 'create' ? { name: '', fromList: false } : null"), 'which opens the form itself, not the picker')
-  assert.ok(code('palette.js').includes("title: t('Create Bot'), run: () => actions.openNewChat('create')"), 'the same door the command palette uses')
+  assert.ok(newChat.includes("mode === 'create' ? { name: '', fromList: false } : null"), 'which the form is still in the mode that asks for it')
   // It sits in 我的's own title bar, and the page closes on the way: openNewChat clears `peers`.
   assert.ok(peers.includes("className: 'bt-settings-top' }"), 'in the title row')
-  assert.ok(index.includes('openNewChat: (mode) =>') && index.includes('newChat: mode') && index.includes('peers: false'), 'and the form is never stacked on the page')
+  assert.ok(index.includes('openNewChat: (mode) =>') && index.includes('newChat: mode') && index.includes('peers: false'), 'and nothing is stacked on the page')
   // One control, one surface: the skin stays the shared declaration (styles.js), never a copy here.
   assert.ok(code('styles.js').includes('html[data-bt-mobile] .bt-peers-new,'), 'the skin list carries this control')
   assert.ok(!peers.includes('box-shadow:0 2px 8px -1px rgba(0,0,0,.06)'), 'and this sheet does not restate the surface')

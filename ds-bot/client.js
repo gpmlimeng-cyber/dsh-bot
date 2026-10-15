@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 8409f8b9
+// Source fingerprint: d0849005
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3318,8 +3318,14 @@ html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;b
    lies behind it and takes no tap. Nor does it linger out: the 160ms sink, and the 160ms the layer
    is held on screen for it (overlays.js), would leave the page just left standing over the one just
    chosen. A dialog over the conversation -- a long press, the drawer, the palette, a toast -- keeps
-   all three, and so does the memory dialog, which is a card on this layout rather than the screen. */
-html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none}
+   all three, and so does the memory dialog, which is a card on this layout rather than the screen.
+
+   The one carries !important because of a rule further up this sheet: under
+   (prefers-reduced-motion:reduce) -- which this device reports -- every one of these surfaces is
+   given "animation:bt-fade .12s ease-out!important", and a page that must not animate is not a
+   motion to soften, it is a motion that is not played. That media query is also why the fade the
+   user saw was 120ms rather than the base rule's 200ms. */
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
@@ -16105,12 +16111,13 @@ function PeersPage({ useRoster, useUi, actions }) {
     (0, import_react40.createElement)(
       "div",
       { className: "bt-peers-top" },
-      // 新建伙伴, and it is the real thing: actions.openNewChat('create') opens the create-Bot
-      // form straight (new-chat.js takes that mode as an initial draft), which is exactly where
-      // the command palette's own "Create Bot" goes -- no button that does nothing. The page is
-      // closed on the way there: openNewChat clears `peers`, so the form never stacks on it.
-      // The title row is 我的's own (styles.js): the same 52px bar with the name centred in it by
-      // that page's own rule, and the one control this page has sitting at its right end.
+      // 新建, and it is the drawer's own entry rather than a second door of its own: the same label
+      // the sidebar and the conversation's header carry, and the same action, which opens the picker
+      // (new-chat.js, mode 'new') with its create-Bot / create-group / pick-a-chat rows. The page is
+      // closed on the way there: openNewChat clears `peers`, so nothing stacks on it.
+      //
+      // The title row it sits in is 我的's own (styles.js): the same 52px bar with the name centred
+      // in it by that page's own rule, and the one control this page has at its right end.
       (0, import_react40.createElement)(
         "div",
         { className: "bt-settings-top" },
@@ -16118,9 +16125,9 @@ function PeersPage({ useRoster, useUi, actions }) {
         (0, import_react40.createElement)("button", {
           type: "button",
           className: "bt-round bt-peers-new",
-          "aria-label": t("Create Bot"),
-          title: t("Create Bot"),
-          onClick: () => actions.openNewChat("create")
+          "aria-label": t("New…"),
+          title: t("New…"),
+          onClick: () => actions.openNewChat("new")
         }, (0, import_react40.createElement)(PlusIcon))
       ),
       (0, import_react40.createElement)(
@@ -16279,7 +16286,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "8409f8b9" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "d0849005" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
