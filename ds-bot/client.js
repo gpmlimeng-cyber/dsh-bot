@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 68e2f510
+// Source fingerprint: 12905131
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16253,11 +16253,11 @@ function DiscoverBack({ useUi, actions }) {
   ), document.body);
 }
 var DISCOVER_CSS = `
-/* The two things the user asked for on top of that page. The rows of one card are separated by one
-   hairline -- drawn, not a border, because it starts at the icon's own edge and stops short of the
-   card's, where a border would run the full width and meet both edges -- and two cards sit 8px
-   apart rather than the settings page's own --bt-set-gap. */
-html[data-bt-mobile] .bt-discover .bt-settings-item+.bt-settings-item::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
+/* The two things the user asked for on top of that page: the card's outline in the faintest line
+   the skin draws (its width and style are the settings page's own border; only the colour is
+   named here, and the card carries no shadow of any kind), and 8px between two cards where that
+   page uses its own --bt-set-gap. Nothing separates the rows of a card. */
+html[data-bt-mobile] .bt-discover .bt-settings-group-card{border-color:var(--bt-line-weak)}
 html[data-bt-mobile] .bt-discover .bt-settings-group+.bt-settings-group{margin-top:8px}
 /* The strip over a shell panel's second level (a panel draws no back of its own), sitting where the
    page's own head sits. Which layers hide the conversation's top row is the skin's business, not
@@ -16271,7 +16271,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "68e2f510" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "12905131" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
