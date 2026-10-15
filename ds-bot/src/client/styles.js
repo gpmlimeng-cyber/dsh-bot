@@ -1143,9 +1143,14 @@ html[data-bt-pc] .bt-side.bt-rail{margin-top:0}
    The tint is important because a few of the shell's filled buttons pin their background with
    an important shorthand of their own, and the one feedback has to outrank those too; the
    swatch that draws a two-tone preview with its own background image is the one pressable
-   that keeps what it is drawing instead. */
+   that keeps what it is drawing instead.
+
+   The bottom bar's tabs are the other exception, for the opposite reason: a tab is a quarter
+   of the bar wide and the bar is 56px tall, so the tint there is a large block of colour
+   arriving under the thumb -- the "big background change" the user reported against the
+   native feel they expect. They dim their own glyph and label instead (nav-bar.js). */
 :is(html[data-bt-mobile],html[data-bt-pc]){-webkit-tap-highlight-color:transparent}
-:is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active:not(:disabled):not(.bt-swatch-default){background-image:linear-gradient(var(--bt-active),var(--bt-active))!important}
+:is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active:not(:disabled):not(.bt-swatch-default):not(.bt-nav-tab){background-image:linear-gradient(var(--bt-active),var(--bt-active))!important}
 @media (prefers-reduced-motion:reduce){
 :is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active{transform:none;scale:none}
 }

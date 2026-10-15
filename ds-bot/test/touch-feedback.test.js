@@ -44,6 +44,10 @@ test('the press tint covers buttons and the role-based rows, on press only', () 
   // over the accent of every filled button in the skin.
   assert.ok(rule.includes('background-image:'), rule)
   assert.ok(!rule.includes('background-color:'), rule)
+  // The bottom bar's tabs are excluded: a quarter of the bar wide and 56px tall, the tint
+  // there is a block of colour under the thumb, which is the change the user called out.
+  // They dim their own glyph instead (nav-bar.js), so the bar and the page keep their colour.
+  assert.ok(rule.includes(':not(.bt-nav-tab)'), rule)
 })
 
 test('reduced motion drops the press scale and leaves the press colour alone', () => {

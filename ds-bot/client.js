@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: f0b0eb1e
+// Source fingerprint: 0ae3b8e4
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3138,9 +3138,14 @@ html[data-bt-pc] .bt-side.bt-rail{margin-top:0}
    The tint is important because a few of the shell's filled buttons pin their background with
    an important shorthand of their own, and the one feedback has to outrank those too; the
    swatch that draws a two-tone preview with its own background image is the one pressable
-   that keeps what it is drawing instead. */
+   that keeps what it is drawing instead.
+
+   The bottom bar's tabs are the other exception, for the opposite reason: a tab is a quarter
+   of the bar wide and the bar is 56px tall, so the tint there is a large block of colour
+   arriving under the thumb -- the "big background change" the user reported against the
+   native feel they expect. They dim their own glyph and label instead (nav-bar.js). */
 :is(html[data-bt-mobile],html[data-bt-pc]){-webkit-tap-highlight-color:transparent}
-:is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active:not(:disabled):not(.bt-swatch-default){background-image:linear-gradient(var(--bt-active),var(--bt-active))!important}
+:is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active:not(:disabled):not(.bt-swatch-default):not(.bt-nav-tab){background-image:linear-gradient(var(--bt-active),var(--bt-active))!important}
 @media (prefers-reduced-motion:reduce){
 :is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active{transform:none;scale:none}
 }
@@ -15948,7 +15953,12 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
 html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;height:10px;z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main),transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
-html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}
+/* What a tab does when it is held: it dims its own glyph and label. No fill, so neither the
+   bar nor the page under it changes colour -- a quarter-of-the-bar block of tint is the "big
+   background change" the user reported (the skin's one press tint excludes these tabs), and
+   120ms keeps the answer immediate rather than an animation. */
+html[data-bt-mobile][data-bt-portrait] .bt-nav-tab:active{opacity:.72}
 /* The drawings carry their own 24px box (their grid is Fluent's 24, icons.js), so nothing
    here sizes them; only the flex row's power to squeeze them is taken away. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
@@ -16100,7 +16110,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "f0b0eb1e" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "0ae3b8e4" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

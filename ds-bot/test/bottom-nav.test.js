@@ -350,3 +350,17 @@ test('the status bar\'s join is softened by a band that takes no taps', () => {
   assert.ok(nav.includes('createPortal(h(Fragment, null,'), 'in the same portal')
   assert.ok(nav.includes("import { Fragment, createElement as h } from 'react'"), 'and Fragment is what wraps them')
 })
+
+// Tapping a tab must not repaint a block of the screen. The skin's one press tint is excluded
+// from these tabs (styles.js) and the tab dims its own glyph and label instead, which changes
+// neither the bar's colour nor the page's, and answers in 120ms rather than animating.
+test('a tab answers a press by dimming, not by filling', () => {
+  const press = css.find(line => line.includes('.bt-nav-tab:active{'))
+  assert.ok(press, 'the tab has a press state of its own')
+  assert.ok(press.includes('opacity:'), press)
+  assert.ok(!press.includes('background'), `no fill on press: ${press}`)
+  const tab = css.find(line => line.includes('.bt-nav-tab{'))
+  assert.ok(tab.includes('background:none'), `the tab has no fill at all: ${tab}`)
+  assert.ok(tab.includes('transition:color .12s ease,opacity .12s ease'), `and transitions colour and dim only: ${tab}`)
+  assert.ok(!tab.includes('transition:background'), tab)
+})
