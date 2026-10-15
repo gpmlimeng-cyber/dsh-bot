@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 67ac9274
+// Source fingerprint: f4a4bc7c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -1392,7 +1392,7 @@ var THEME_KEYS = ["bg", "sidebar", "bubble", "card", "text", "user", "userText",
 var THEMES = {
   deepseek: {
     label: "DeepSeek",
-    light: { bg: "#f1f3f1", sidebar: "#f1f3f1", bubble: "#ffffff", card: "#ffffff", text: "#141414", user: "#070707", userText: "#fcfcfc", accent: "#4d6bfe" },
+    light: { bg: "#f8f8f8", sidebar: "#f8f8f8", bubble: "#ffffff", card: "#ffffff", text: "#141414", user: "#070707", userText: "#fcfcfc", accent: "#4d6bfe" },
     dark: { bg: "#141414", sidebar: "#1b1b1b", bubble: "#262626", card: "#1f1f1f", text: "#f2f2f2", user: "#f2f2f2", userText: "#141414", accent: "#5b7bff" }
   },
   mono: {
@@ -2035,33 +2035,13 @@ var SHELL_CSS = `
    --bt-nav-ink / --bt-nav-on (the bottom bar's own sampled pair), --bt-green, --bt-star, and
    --bt-line-weak (the lightest hairline). --bt-accent-ink is the mirror case: the palette
    computes it from the accent's luminance, so the fallback does not carry it. */
-body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#f1f3f1;--bt-main:#f1f3f1;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58)}
+body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#f8f8f8;--bt-main:#f8f8f8;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58)}
 body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(242,242,242,.08);--bt-line-2:rgba(242,242,242,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(242,242,242,.09);--bt-tag-ink:rgba(242,242,242,.58)}
-/* <html> is deliberately NOT painted with !important. The platform writes its own background
-   on it inline (measured rgb(241,243,241), and it is NOT the platform's own base token, which
-   is #fcfcfc -- it is the colour the shell paints behind the status bar), so instead of
-   fighting that declaration the skin READS it (publishShellBackground) and takes the surface
-   it paints as the page's own colour. This rule is the guard for the case where no inline
-   declaration is there to read: it paints the very colour the reader would have read, so the
-   two can never disagree, and the inline declaration outranks it.
-
-   It reads --bt-shell-bg, not --bt-main, because --bt-main is declared on <body>: a custom
-   property only inherits downwards, so var(--bt-main) on <html> is invalid at computed-value
-   time and the declaration would be a no-op that still outranked the platform's own paint.
-   With the attribute absent the rule does not apply at all and <html> keeps what the platform
-   gave it. */
-html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])){background:var(--bt-shell-bg)}
 /* The one !important below is for the base token the platform writes inline on <body>, which
    no normal rule of ours can outrank. */
 body:not([data-ds-dark-theme]){background:var(--bt-main)!important}
 body:not([data-ds-dark-theme]) [data-dsh-frame],
 body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-main)}
-/* The shell's colour, once the reader above has found one: it becomes the page's --bt-main and
-   --bt-sidebar, so everything that already reads those tokens -- the page, the frame, the
-   conversation column, the bar, the drawer, the peers page, both fade bands and the composer's
-   fade -- follows in one step. Without the attribute the sheet keeps the palette's own
-   sampled #f1f3f1. Light theme only, like the paints above. */
-html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])) body{--bt-main:var(--bt-shell-bg);--bt-sidebar:var(--bt-shell-bg)}
 /* The ONE --dsw-* override in this whole skin, and it is here for a measured reason: the
    platform sets --dsw-alias-bg-base inline on <body> (#fcfcfc), and three things read it --
    the frame's background, the body's own, and the composer's 36px fade. An inline
@@ -15923,16 +15903,18 @@ html[data-bt-mobile][data-bt-portrait]{--bt-nav-h:56px;--bt-nav-gap:max(env(safe
    anyway: the conversation column, the peers page and the Settings screen all give it its
    56px back, so there is nothing for a frost to show through. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bottom:0;z-index:95;display:flex;box-sizing:border-box;height:calc(var(--bt-nav-h) + var(--bt-nav-gap));padding-bottom:var(--bt-nav-gap);background:var(--bt-main);border:0;outline:0;box-shadow:none;color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
-/* The last 10px of the status bar's own edge, softened. The page takes the shell's colour now
-   (publishShellBackground), so the join is already the same colour -- but the shell can move
-   that colour on its own, and it did once today, and a join that moves under the page is a
-   hard line rather than a soft one. A 10px fade from the page's colour to nothing, blurred,
-   makes the difference hard to see whatever the shell does next.
+/* The first 10px of the page, softened. The page keeps the skin's own colour (#f8f8f8) and the
+   shell paints the band above it itself, in a colour it owns and can change between sessions
+   (it has changed once already). The two meet at the status bar's lower edge, so the fade
+   starts from the colour the shell is painting -- read from the page by
+   publishShellBackground, which is the only thing that token feeds -- and dissolves into the
+   page over 10px. A shell that goes edge-to-edge stops reporting a colour, the property goes
+   unset, the fade starts from the page's own colour and disappears: nothing changes here.
 
    It belongs to the phone's frame, not to the bar: it is a sibling of the bar, so it stays
    while the keyboard takes the bar away. z-index 94 keeps it under the bar's own controls
    (95) and it takes no taps at all -- the gesture and the composer's first row are below it. */
-html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;height:10px;z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-main),transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+html[data-bt-mobile][data-bt-portrait] .bt-topfade{position:fixed;top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)));left:0;right:0;height:10px;z-index:94;pointer-events:none;background:linear-gradient(to bottom,var(--bt-shell-bg,var(--bt-main)),transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-nav-ink);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease,opacity .12s ease}
@@ -16092,7 +16074,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "67ac9274" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "f4a4bc7c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

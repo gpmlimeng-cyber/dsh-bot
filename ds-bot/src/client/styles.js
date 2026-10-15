@@ -39,33 +39,13 @@ export const SHELL_CSS = `
    --bt-nav-ink / --bt-nav-on (the bottom bar's own sampled pair), --bt-green, --bt-star, and
    --bt-line-weak (the lightest hairline). --bt-accent-ink is the mirror case: the palette
    computes it from the accent's luminance, so the fallback does not carry it. */
-body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#f1f3f1;--bt-main:#f1f3f1;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58)}
+body{--bt-nav-ink:#949494;--bt-nav-on:#171717;--bt-ink:#141414;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#ffffff;--bt-sidebar:#f8f8f8;--bt-main:#f8f8f8;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.58)}
 body[data-ds-dark-theme]{--bt-nav-ink:rgba(242,242,242,.36);--bt-nav-on:#f2f2f2;--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(242,242,242,.08);--bt-line-2:rgba(242,242,242,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(242,242,242,.09);--bt-tag-ink:rgba(242,242,242,.58)}
-/* <html> is deliberately NOT painted with !important. The platform writes its own background
-   on it inline (measured rgb(241,243,241), and it is NOT the platform's own base token, which
-   is #fcfcfc -- it is the colour the shell paints behind the status bar), so instead of
-   fighting that declaration the skin READS it (publishShellBackground) and takes the surface
-   it paints as the page's own colour. This rule is the guard for the case where no inline
-   declaration is there to read: it paints the very colour the reader would have read, so the
-   two can never disagree, and the inline declaration outranks it.
-
-   It reads --bt-shell-bg, not --bt-main, because --bt-main is declared on <body>: a custom
-   property only inherits downwards, so var(--bt-main) on <html> is invalid at computed-value
-   time and the declaration would be a no-op that still outranked the platform's own paint.
-   With the attribute absent the rule does not apply at all and <html> keeps what the platform
-   gave it. */
-html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])){background:var(--bt-shell-bg)}
 /* The one !important below is for the base token the platform writes inline on <body>, which
    no normal rule of ours can outrank. */
 body:not([data-ds-dark-theme]){background:var(--bt-main)!important}
 body:not([data-ds-dark-theme]) [data-dsh-frame],
 body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-main)}
-/* The shell's colour, once the reader above has found one: it becomes the page's --bt-main and
-   --bt-sidebar, so everything that already reads those tokens -- the page, the frame, the
-   conversation column, the bar, the drawer, the peers page, both fade bands and the composer's
-   fade -- follows in one step. Without the attribute the sheet keeps the palette's own
-   sampled #f1f3f1. Light theme only, like the paints above. */
-html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])) body{--bt-main:var(--bt-shell-bg);--bt-sidebar:var(--bt-shell-bg)}
 /* The ONE --dsw-* override in this whole skin, and it is here for a measured reason: the
    platform sets --dsw-alias-bg-base inline on <body> (#fcfcfc), and three things read it --
    the frame's background, the body's own, and the composer's 36px fade. An inline
@@ -1710,21 +1690,23 @@ div:has(> nav [class*="_marks"]){display:none!important}
 
 // -------------------------------------------------------------------------
 
-// The page's base colour is the shell's own, and the shell tells the page about it: the
-// platform writes a background on <html> inline, and that declaration is not the platform's
-// base token (#fcfcfc) but the colour the band behind the status bar is painted with. The
-// skin reads it -- INLINE only, never the computed value, which would be our own paint as soon
-// as the stylesheet has one -- and republishes it as --bt-shell-bg, which the sheet takes as
-// --bt-main / --bt-sidebar while it is there. When there is nothing to read, the property is
-// dropped and the palette's sampled #f1f3f1 stands. That is the whole point: the band moved
-// once already today, and the page is meant to move with it instead of waiting for a new
-// sample and a new round of measuring.
+// What colour the shell is painting behind the status bar, read from the page: the platform
+// writes a background on <html> inline, and that declaration is not the platform's own base
+// token (#fcfcfc) -- it is the colour of the band the shell draws. The reader takes it from the
+// INLINE declaration only, never the computed value, which would be our own paint as soon as
+// the stylesheet has one, and republishes it as --bt-shell-bg.
 //
-// `transparent` and `currentcolor` are deliberately NOT read. They say the shell is not
-// painting its own surface there -- which is what an edge-to-edge shell says, and what this
-// shell now does -- and taking one of them as the page's colour would take the page's own
-// background away and let the view behind it through. A shell that stops painting simply
-// leaves the palette's colour standing, which is the fallback below.
+// The page's own colour does NOT follow it. That was tried and withdrawn: the page keeps the
+// skin's design colour (#f8f8f8), and the shell's colour is used for one thing only -- the
+// first 10px of the page, where the top fade starts from it and dissolves into the page, so
+// the join between a fixed shell band and our colour is a gradient rather than an edge
+// (nav-bar.js). If the shell ever goes edge-to-edge that band simply starts from the page's own
+// colour and disappears; nothing here has to change.
+//
+// `transparent` and `currentcolor` are deliberately NOT read: they say the shell is not
+// painting its own surface there, and a page painted `transparent` would let the view behind
+// it through. A shell that stops painting leaves the property unset, and the fade falls back to
+// the page's colour, which is the no-op we want.
 const COLOUR = /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|color\()/i
 export function publishShellBackground() {
   if (typeof document === 'undefined') return

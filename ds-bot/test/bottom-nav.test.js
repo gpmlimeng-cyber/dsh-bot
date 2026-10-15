@@ -339,7 +339,7 @@ test('the status bar\'s join is softened by a band that takes no taps', () => {
   assert.ok(band.includes('position:fixed'), band)
   assert.ok(band.includes('top:var(--bt-top-inset'), 'at the status bar\'s own lower edge')
   assert.ok(band.includes('height:10px'), 'narrow')
-  assert.ok(band.includes('linear-gradient(to bottom,var(--bt-main),transparent)'), 'from the page colour to nothing')
+  assert.ok(band.includes('linear-gradient(to bottom,var(--bt-shell-bg,var(--bt-main)),transparent)'), 'from the shell\'s colour, or the page\'s when there is none, to nothing')
   assert.ok(band.includes('backdrop-filter:blur(6px)'), 'blurred')
   assert.ok(band.includes('pointer-events:none'), 'and it takes no tap')
   const bar = css.find(line => line.includes('.bt-nav{'))

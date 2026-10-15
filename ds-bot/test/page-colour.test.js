@@ -1,7 +1,7 @@
 // The page colour is the one value the user asked us to take from their screenshot rather
 // than from the platform, and it has since been re-pointed: it is now the colour the shell
 // paints behind the status bar (#f1f3f1), so the interface matches the band instead of the
-// band having to be reached for. White cards and white bubbles on top of it, and the
+// band having to be reached for. White cards and white bubbles on top of it, and the shell's
 // phone's bottom bar wearing the page colour. The dark theme paints nothing with it,
 // so the only thing keeping dark untouched is that the paint is gated on the light theme --
 // which is what these two assertions are for.
@@ -67,22 +67,23 @@ const dark = styles.find(line => line.startsWith('body[data-ds-dark-theme]{--bt-
 // block is its pre-theme fallback and the two must carry the same numbers.
 test('the page colour lives in the palette, and the base sheet agrees with it', () => {
   const themes = read('themes.js')
-  assert.ok(themes.includes("light: { bg: '#f1f3f1', sidebar: '#f1f3f1', bubble: '#ffffff'"), "the default light palette carries the band colour, the list base and the white bubbles")
+  assert.ok(themes.includes("light: { bg: '#f8f8f8', sidebar: '#f8f8f8', bubble: '#ffffff'"), "the default light palette carries the design colour, the list base and the white bubbles")
   assert.ok(themes.includes("'--bt-bubble': mode.bubble, '--bt-sidebar': mode.sidebar, '--bt-main': mode.bg"), 'and the palette reaches the tokens the skin uses')
   // The base sheet is that palette's pre-theme fallback, so the two agree token for token.
-  for (const token of ['--bt-main:#f1f3f1', '--bt-sidebar:#f1f3f1', '--bt-bubble:#ffffff']) {
+  for (const token of ['--bt-main:#f8f8f8', '--bt-sidebar:#f8f8f8', '--bt-bubble:#ffffff']) {
     assert.ok(styles.find(line => line.startsWith('body{')).includes(token), `the fallback carries ${token}`)
   }
 })
 
-test('the light page is the status band colour, with white cards on it', () => {
+test('the light page is the skin design colour, with white cards on it', () => {
   assert.ok(light, 'the light theme declares the page colour')
-  assert.ok(light.includes('--bt-main:#f1f3f1'), light)
+  assert.ok(light.includes('--bt-main:#f8f8f8'), light)
   assert.ok(light.includes('--bt-card:#ffffff'), 'cards stay white -- the layering the screenshot draws')
-  assert.ok(light.includes('--bt-sidebar:#f1f3f1'), 'the lists that are pages too')
-  // The band's colour is the page's colour now, by the user's own call: #f1f3f1 used to be
-  // the platform's, waiting to be overwritten. Asserted positively so a re-sample shows up.
-  assert.ok(light.includes('#f1f3f1'), 'the page carries the colour of the band itself')
+  assert.ok(light.includes('--bt-sidebar:#f8f8f8'), 'the lists that are pages too')
+  // The shell's band is a fixed colour the page cannot paint (measured: forcing the page's
+  // surfaces magenta moved nothing above CSS 46). The page keeps its own design colour and the
+  // 10px fade covers the join; this is what the user asked for, twice.
+  assert.ok(!light.includes('#f1f3f1'), 'the shell band colour is not the page colour')
   // White bubbles: the page went to the band's #f1f3f1, a shade deeper than the #f8f8f8 they
   // were first drawn against, and on it the white bubble is the layering that holds up. The
   // freeze said #eee for a while and this is the third call on the same token -- which is why
@@ -107,7 +108,6 @@ test('the page is painted where the platform painted its own, and only in the li
   // html cannot be a descendant of body, so it is gated with :has; everything else is.
   const paint = read('styles.js')
   const painted = [
-    'html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])){background:var(--bt-shell-bg)}',
     'body:not([data-ds-dark-theme]){background:var(--bt-main)!important}',
     'body:not([data-ds-dark-theme]) [data-dsh-frame],',
     'body:not([data-ds-dark-theme]) [data-dsh-frame]>[class*="centerCol"]{background:var(--bt-main)}',
@@ -136,8 +136,10 @@ test('the page colour is read from the shell, in the light theme, with the sampl
   assert.ok(reader.includes("dataset.btShellBg = ''") && reader.includes('removeProperty'), 'and dropped again when there is nothing to read')
   // The sheet takes it as the page's own colour, so every surface that already reads
   // --bt-main / --bt-sidebar follows in one step; the palette's sample stands as the fallback.
-  assert.ok(styles.includes('html[data-bt-shell-bg]:not(:has(body[data-ds-dark-theme])) body{--bt-main:var(--bt-shell-bg);--bt-sidebar:var(--bt-shell-bg)}'), 'the shell colour becomes the page colour')
-  assert.ok(read('themes.js').includes("light: { bg: '#f1f3f1', sidebar: '#f1f3f1'"), 'with the sampled value behind it')
+  // The shell colour feeds the top fade and nothing else: the page's own colour is the design's.
+  assert.ok(!styles.includes('--bt-main:var(--bt-shell-bg)'), 'the shell colour does not decide the page colour')
+  assert.ok(nav.includes('linear-gradient(to bottom,var(--bt-shell-bg,var(--bt-main)),transparent)'), 'it is the fade\'s starting colour')
+  assert.ok(read('themes.js').includes("light: { bg: '#f8f8f8', sidebar: '#f8f8f8'"), 'and the page keeps the design colour')
   // Wired where the theme is applied, and watched: the platform rewrites that declaration on
   // its own, and the watch lives on <html> where the declaration is.
   const index = read('index.js')
