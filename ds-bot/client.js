@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 373ca941
+// Source fingerprint: 99ce645d
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16213,12 +16213,12 @@ function DiscoverPage({ useUi, actions }) {
           key: `card:${card}`,
           className: "bt-settings-group"
         },
-        (0, import_react41.createElement)("div", { className: "bt-settings-group-card" }, rows.map(([key, label, Icon]) => (0, import_react41.createElement)(
+        (0, import_react41.createElement)("div", { className: "bt-settings-group-card bt-discover-card" }, rows.map(([key, label, Icon]) => (0, import_react41.createElement)(
           "button",
           {
             key,
             type: "button",
-            className: "bt-settings-item",
+            className: "bt-settings-item bt-discover-row",
             "data-row": key,
             onClick: () => actions.openDiscoverRow(key)
           },
@@ -16265,7 +16265,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "373ca941" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "99ce645d" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

@@ -45,10 +45,15 @@ test('the list is three cards of doors that already exist, with no headings', ()
   assert.ok(!('Models & usage' in DICTIONARY.zh), 'nor in the dictionary')
   // The look is 我的 -> 全部设置's: the page wears that page's own layer, dialog, head, scrolling
   // body, group card and item row, so there is one design rather than two that resemble each other.
-  for (const borrowed of ["className: 'bt-settings-layer bt-discover'", "className: 'bt-settings'", "className: 'bt-settings-top'", "className: 'bt-settings-scroll'", "className: 'bt-settings-group'", "className: 'bt-settings-group-card'", "className: 'bt-settings-item'", "className: 'bt-settings-name'"]) {
+  for (const borrowed of ["className: 'bt-settings-layer bt-discover'", "className: 'bt-settings'", "className: 'bt-settings-top'", "className: 'bt-settings-scroll'", "className: 'bt-settings-group'", "className: 'bt-settings-group-card bt-discover-card'", "className: 'bt-settings-item bt-discover-row'", "className: 'bt-settings-name'"]) {
     assert.ok(discover.includes(borrowed), `the page borrows ${borrowed}`)
   }
-  assert.ok(!discover.includes('bt-discover-card') && !discover.includes('bt-discover-row'), 'and restates none of it under its own name')
+  // The names the page's own sheets and the device probes were written against are kept as aliases
+  // on the same two elements -- the look is the settings page's, the handles stay this page's --
+  // so neither a rule nor a verifier's selector has to be rewritten for the change of skin.
+  assert.ok(discover.includes("className: 'bt-settings-group-card bt-discover-card'"), 'the card carries both names')
+  assert.ok(discover.includes("className: 'bt-settings-item bt-discover-row'"), 'and so does the row')
+  assert.ok(!discover.includes('.bt-discover-card{') && !discover.includes('.bt-discover-row{'), 'with no rule of their own behind them')
   // 模型 and Agent 预设 are the two the user asked for that have no door of ours: the model chooser
   // is per Bot (and per Session), inside a Bot's own menu, and the only preset in the skin is that
   // Bot's permission preset, inside its settings. They are left out rather than drawn as buttons
@@ -245,7 +250,7 @@ test('every rule is a phone rule, and the page hands the shell nothing but the s
   assert.ok(read('peers-page.js').includes("className: 'bt-peers-row'"), 'and its rows are still its own')
   // The row stays a button and the card is not announced: a button that called itself a list item
   // stops being announced as a button.
-  assert.ok(discover.includes("className: 'bt-settings-group-card' }"), 'the card is the wrapper')
+  assert.ok(discover.includes("className: 'bt-settings-group-card bt-discover-card' }"), 'the card is the wrapper')
   const row = discover.slice(discover.indexOf("className: 'bt-settings-item'"), discover.indexOf("className: 'bt-settings-name'"))
   assert.ok(!row.includes('role:'), `the row keeps the button role: ${row}`)
   for (const borrowed of ['bt-row-body', 'bt-row-meta', 'RowMeta', 'unread']) {

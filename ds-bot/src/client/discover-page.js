@@ -71,8 +71,8 @@ export function DiscoverPage({ useUi, actions }) {
       h('div', { className: 'bt-settings-scroll' }, DISCOVER_CARDS.map((rows, card) => h('section', {
         key: `card:${card}`, className: 'bt-settings-group',
       },
-      h('div', { className: 'bt-settings-group-card' }, rows.map(([key, label, Icon]) => h('button', {
-        key, type: 'button', className: 'bt-settings-item', 'data-row': key,
+      h('div', { className: 'bt-settings-group-card bt-discover-card' }, rows.map(([key, label, Icon]) => h('button', {
+        key, type: 'button', className: 'bt-settings-item bt-discover-row', 'data-row': key,
         onClick: () => actions.openDiscoverRow(key),
       },
       h(Icon),
