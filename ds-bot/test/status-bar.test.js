@@ -7,7 +7,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { STATUS_BAR_MODE, publishStatusBarMode } from '../src/client/status-bar.js'
+import { STATUS_BAR_MODE, publishStatusBarMode, askForStatusBar } from '../src/client/status-bar.js'
 
 const withWindow = (bridge, run) => {
   const had = 'window' in globalThis
@@ -46,7 +46,31 @@ test('a shell without the bridge is left alone, and is never asked twice about i
 
 test('and the writer wires it, with the reader still feeding the frosted strip', () => {
   const index = readFileSync(new URL('../src/client/index.js', import.meta.url), 'utf8')
-  assert.ok(index.includes("import { publishStatusBarMode } from './status-bar.js'"), 'imported')
-  assert.ok(index.includes("publishStatusBarMode(quietly('status bar'))"), 'called where the theme is applied')
-  assert.ok(index.includes("publishStatusBarMode(quietly('status bar'))\n      publishShellBackground()"), 'before the reader, which stays for the strip\'s tint')
+  assert.ok(index.includes("import { askForStatusBar } from './status-bar.js'"), 'imported')
+  assert.ok(index.includes("askForStatusBar(quietly('status bar'))"), 'called where the theme is applied')
+  assert.ok(index.includes("askForStatusBar(quietly('status bar'))\n      publishShellBackground()"), 'before the reader, which stays for the strip\'s tint')
+})
+
+// The shell injects the bridge into the page's own context, and the theme renders as the plugin
+// applies: an ask that arrives before the object exists must not be the last one. Only the
+// missing case is retried -- once the bridge has answered, nothing here repeats the mode.
+test('a bridge that arrives late is still asked, and only until it answers', () => {
+  const calls = []
+  const timers = []
+  let bridge = null
+  const previousWindow = globalThis.window
+  const previousTimer = globalThis.setTimeout
+  globalThis.window = { get dshStatusBarBridge () { return bridge } }
+  globalThis.setTimeout = (fn, ms) => { timers.push(fn); return 0 }
+  try {
+    assert.equal(askForStatusBar(), false, 'nothing to ask yet')
+    assert.ok(timers.length > 0, 'but the page keeps a way back')
+    bridge = { set: (...args) => calls.push(args) }
+    for (const fire of timers) fire()
+    assert.deepEqual(calls, [['transparent', '', 'auto']], 'asked the moment it appeared, and only once')
+  } finally {
+    globalThis.setTimeout = previousTimer
+    if (previousWindow === undefined) delete globalThis.window
+    else globalThis.window = previousWindow
+  }
 })

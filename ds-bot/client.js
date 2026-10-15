@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 6f20003a
+// Source fingerprint: fe6183ab
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3809,6 +3809,19 @@ function publishStatusBarMode(report) {
     if (typeof report === "function") report(error);
     return false;
   }
+}
+var ASK_AGAIN_MS = [250, 750, 2e3, 4e3];
+function askForStatusBar(report) {
+  let waiting = true;
+  const ask = () => {
+    if (!waiting) return false;
+    if (!publishStatusBarMode(report)) return false;
+    waiting = false;
+    return true;
+  };
+  const landed = ask();
+  for (const delay of ASK_AGAIN_MS) setTimeout(ask, delay);
+  return landed;
 }
 
 // src/client/mark.js
@@ -16123,7 +16136,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "6f20003a" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "fe6183ab" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16414,7 +16427,7 @@ function apply(ctx) {
       const accent = isHex(prefs.accent) ? prefs.accent : void 0;
       const motion = prefs.motion === "quiet" || prefs.motion === "lively" ? prefs.motion : "normal";
       document.body.dataset.btMotion = motion;
-      publishStatusBarMode(quietly("status bar"));
+      askForStatusBar(quietly("status bar"));
       publishShellBackground();
       const next = `${id}|${accent ?? ""}|${motion}|${registry.getSnapshot()}`;
       if (next === key) return;

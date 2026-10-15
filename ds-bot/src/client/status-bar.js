@@ -24,3 +24,25 @@ export function publishStatusBarMode(report) {
     return false
   }
 }
+
+// The shell injects that object into the page's own context, and it can arrive after this plugin
+// has applied -- the theme render below runs as the plugin comes up, which is why one unanswered
+// ask cannot be the last word. So the page asks again for a few seconds while the bridge is
+// missing, stopping at the first answer; a call that lands is idempotent, and a shell that never
+// grows a bridge is left alone just as before. (Only the missing case is retried: once the bridge
+// has answered, the mode is the theme's business and nothing here repeats it.)
+const ASK_AGAIN_MS = [250, 750, 2000, 4000]
+
+/** Ask for the surface, and keep asking while the shell has not injected its bridge yet. */
+export function askForStatusBar(report) {
+  let waiting = true
+  const ask = () => {
+    if (!waiting) return false
+    if (!publishStatusBarMode(report)) return false
+    waiting = false
+    return true
+  }
+  const landed = ask()
+  for (const delay of ASK_AGAIN_MS) setTimeout(ask, delay)
+  return landed
+}
