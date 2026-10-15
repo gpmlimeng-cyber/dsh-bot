@@ -9,26 +9,30 @@
 // close it on the way to what they open.
 import { createElement as h, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronLeftIcon, ChevronRightIcon, FluentClockIcon, FluentDataUsageIcon, FluentPlugConnectedIcon, FluentPuzzlePieceIcon } from './icons.js'
+import { ChevronLeftIcon, ChevronRightIcon, FluentClockIcon, FluentDataUsageIcon, FluentKeyIcon, FluentOptionsIcon, FluentPlugConnectedIcon, FluentPuzzlePieceIcon } from './icons.js'
 import { useEscape, usePaneLeft } from './overlay-hooks.js'
 import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
 
 // The cards, in the order they are drawn, and the rows inside each one: key, label, icon. A card is
 // one group the user reads as one block -- no heading, one surface, one hairline between the rows
-// (the CSS below) -- so the grouping is the card itself: 插件 ｜ 连接器·自动化任务 ｜ 用量.
+// (the CSS below) -- so the grouping is the card itself: 插件 ｜ 连接器·能力·定时任务·密钥 ｜ 用量.
 //
-// Only rows whose door this skin can already open are here. 模型 and Agent 预设 have none of ours:
-// the model chooser is per Bot (and per Session) and lives inside a Bot's own menu, and the only
-// "preset" anywhere is that Bot's permission preset, also inside its settings. They are left out
-// rather than drawn as buttons that go nowhere, and the card keeps the rows that do have a screen.
+// Only rows whose door this skin can already open are here, and every one of them is a page the
+// settings dialog already draws (settings.js, SETTINGS_GROUPS) or a panel the shell registers. 模型
+// and Agent 预设 have neither: the model chooser is per Bot (and per Session) and lives inside a
+// Bot's own menu, and the only "preset" anywhere is that Bot's permission preset, also inside its
+// settings. They are left out rather than drawn as buttons that go nowhere, and the card keeps the
+// rows that do have a screen.
 export const DISCOVER_CARDS = [
   [
     ['plugins', 'Plugin manager', FluentPuzzlePieceIcon],
   ],
   [
     ['connectors', 'Connectors', FluentPlugConnectedIcon],
+    ['capabilities', 'Capabilities', FluentOptionsIcon],
     ['schedules', 'Automation tasks', FluentClockIcon],
+    ['secrets', 'Secrets', FluentKeyIcon],
   ],
   [
     ['usage', 'Usage', FluentDataUsageIcon],

@@ -93,9 +93,9 @@ test('each page is Fluent\u2019s regular and Fluent\u2019s fill, credited where 
   // that stood in before this one are gone, each with its notice.
   assert.equal(icons.split('const fluentNavIcon = (d, box = FLUENT_NAV_BOX)').length - 1, 1, 'one Fluent factory')
   assert.ok(icons.includes("viewBox: '0 0 24 24'"), 'on Fluent\u2019s 24 grid')
-  // Eight for the bar's four pages -- a regular and a solid each -- and four more for the rows of
-  // the 发现 page (discover-page.js), which wear the same family: twelve, one factory, one grid.
-  assert.equal((icons.match(/export const Fluent\w+/g) ?? []).length, 12, 'the bar\'s four pairs, plus the four rows of 发现')
+  // Eight for the bar's four pages -- a regular and a solid each -- and six more for the rows of the
+  // 发现 page (discover-page.js), which wear the same family: fourteen, one factory, one grid.
+  assert.equal((icons.match(/export const Fluent\w+/g) ?? []).length, 14, 'the bar\'s four pairs, plus the six rows of 发现')
   for (const dead of ['Phosphor Icons (MIT)', 'phosphorIcon', 'PHOSPHOR_BOX', 'ionicon(', 'Ionicons (MIT)', 'IonChatbubbleIcon', 'IonPeopleIcon', 'fluentIcon']) {
     assert.ok(!icons.includes(dead), `${dead} is gone with the family it belonged to`)
   }

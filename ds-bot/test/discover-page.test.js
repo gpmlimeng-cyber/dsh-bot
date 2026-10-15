@@ -34,10 +34,10 @@ const panelRows = [...discover.slice(discover.indexOf('export const PANEL_ROWS')
   .matchAll(/'([a-z]+)'/g)].map(match => match[1])
 
 test('the list is three cards of doors that already exist, with no headings', () => {
-  // 插件 ｜ 连接器·自动化任务 ｜ 用量 -- the user's own grouping, in this order, one card per group.
-  assert.deepEqual(cards.map(card => card.length), [1, 2, 1], 'three cards, 1/2/1 rows')
-  assert.deepEqual(rows.map(row => row[0]), ['plugins', 'connectors', 'schedules', 'usage'], 'the rows, in order')
-  assert.deepEqual(rows.map(row => row[1]), ['Plugin manager', 'Connectors', 'Automation tasks', 'Usage'], 'named by the screens they open')
+  // 插件 ｜ 连接器·能力·定时任务·密钥 ｜ 用量 -- the user's own grouping, in this order, one card per group.
+  assert.deepEqual(cards.map(card => card.length), [1, 4, 1], 'three cards, 1/4/1 rows')
+  assert.deepEqual(rows.map(row => row[0]), ['plugins', 'connectors', 'capabilities', 'schedules', 'secrets', 'usage'], 'the rows, in order')
+  assert.deepEqual(rows.map(row => row[1]), ['Plugin manager', 'Connectors', 'Capabilities', 'Automation tasks', 'Secrets', 'Usage'], 'named by the screens they open')
   // No heading anywhere: the grouping is the card, so the page draws no heading element of its own
   // and keeps no heading copy in the dictionary.
   assert.ok(!discover.includes('grouphead'), 'no heading is drawn')
@@ -69,12 +69,12 @@ test('the row that opens a shell panel is the only one that needs a back of ours
   // The plugin manager and the automation tasks screen are the shell's own main panels and draw
   // no back, so the page carries a second level for exactly those two.
   assert.match(index, /if \(PANEL_ROWS\.includes\(key\)\) \{[\s\S]*actions\.selectPanel\(key\)/, 'a panel row selects the panel')
-  // The other two rows land on the screens 我的 already opens, under the same page keys the
-  // settings dialog uses: one screen, one key, whichever door is taken.
+  // The rows that are not panels land on the screens 我的 already opens, under the same page keys
+  // the settings dialog uses: one screen, one key, whichever door is taken.
   const settings = sidebar.slice(sidebar.indexOf("t('Usage')"), sidebar.indexOf("t('Bot settings')"))
   assert.ok(settings.includes("actions.openSettings('usage')"), '用量 is the usage screen')
   assert.ok(settings.includes('actions.openConnectors()'), '连接器 is the connectors screen')
-  for (const key of ['connectors', 'usage']) {
+  for (const key of ['connectors', 'capabilities', 'secrets', 'usage']) {
     assert.ok(read('settings.js').includes(`['${key}', `), `${key} is a settings page the dialog already draws`)
   }
   assert.ok(index.includes('settings: { page: key, id: null }'), 'and every one of this page\'s rows uses the row key as that page')
