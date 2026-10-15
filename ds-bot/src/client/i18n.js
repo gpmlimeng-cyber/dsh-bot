@@ -28,6 +28,10 @@ const ZH = {
   // The 发现 page and the tab that opens it (nav-bar.js, discover-page.js) are one page, so they
   // carry one name: "Discover". 插件 is the first row of that page's list, never the page itself.
   Discover: '发现',
+  // The headings of that page's three groups (discover-page.js): 插件 heads the row that opens the
+  // plugin manager, and the other two read the way the settings dialog already groups its pages.
+  Plugins: '插件',
+  'Models & usage': '模型与用量',
   'Plugin manager': '插件',
   Me: '我的',
   Pages: '页面',

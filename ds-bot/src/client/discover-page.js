@@ -14,25 +14,34 @@ import { useEscape, usePaneLeft } from './overlay-hooks.js'
 import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
 
-// The cards, in the order they are drawn, and the row inside each one: key, label, icon. One row
-// per card -- the user pointed at a list where every row sits on a white surface of its own, one
-// gap apart (the screenshot's 资料库/专家/技能...) -- so a card holds a single row and the list's
-// own 8px gap is what separates one from the next, rather than a hairline inside a shared block.
+// The groups, in the order they are drawn, each with its own small grey heading and one row per
+// card under it -- the user drew the list that way: a heading, then a white card for every row
+// (the reference's 资料库 / 专家 / 技能 ...). The heading with a single row under it is kept as it
+// is: a group is a group however short it is, and the day a row has a door it has a home.
 //
 // Only rows whose door this skin can already open are here. 模型 and Agent 预设 have none of ours:
-// DSH keeps the model list in its own settings dialog, reachable as a whole but not one page of
-// it, and there is no agent-preset entry to open at all. They are left out rather than drawn as
-// buttons that go nowhere.
-export const DISCOVER_CARDS = [
-  [['plugins', 'Plugin manager', FluentPuzzlePieceIcon]],
-  [['connectors', 'Connectors', FluentPlugConnectedIcon]],
-  [['schedules', 'Automation tasks', FluentClockIcon]],
-  [['usage', 'Usage', FluentDataUsageIcon]],
+// the model chooser is per Bot (and per Session) and lives inside a Bot's own menu, and the only
+// "preset" anywhere is that Bot's permission preset, also inside its settings. They are left out
+// rather than drawn as buttons that go nowhere.
+export const DISCOVER_GROUPS = [
+  ['Plugins', [
+    ['plugins', 'Plugin manager', FluentPuzzlePieceIcon],
+  ]],
+  ['Connections & automation', [
+    ['connectors', 'Connectors', FluentPlugConnectedIcon],
+    ['schedules', 'Automation tasks', FluentClockIcon],
+  ]],
+  ['Models & usage', [
+    ['usage', 'Usage', FluentDataUsageIcon],
+  ]],
 ]
+
+// The heading of each group, in drawing order, for the copy check.
+export const DISCOVER_HEADINGS = DISCOVER_GROUPS.map(([heading]) => heading)
 
 // The same list without its grouping, in drawing order, for anything that only asks which rows
 // exist. Exported so the list can be checked without a DOM.
-export const DISCOVER_ROWS = DISCOVER_CARDS.flat()
+export const DISCOVER_ROWS = DISCOVER_GROUPS.flatMap(([, rows]) => rows)
 
 // The rows whose door is a shell panel: those are the ones that need a back of ours (see below).
 export const PANEL_ROWS = ['plugins', 'schedules']
@@ -45,15 +54,20 @@ export function DiscoverPage({ useUi, actions }) {
   if (!open || !mobile) return null
   return createPortal(h('div', { className: 'bt-discover', role: 'region', 'aria-label': t('Discover'), style: { left: paneLeft } },
     h('div', { className: 'bt-discover-head' }, h('h2', { className: 'bt-discover-title' }, t('Discover'))),
-    h('div', { className: 'bt-discover-list', role: 'list' }, DISCOVER_CARDS.map((rows, card) => h('div', {
-      key: `card:${card}`, className: 'bt-discover-card', role: 'presentation',
-    }, rows.map(([key, label, Icon]) => h('button', {
-      key, type: 'button', className: 'bt-discover-row', 'data-row': key,
+    h('div', { className: 'bt-discover-list', role: 'list' }, DISCOVER_GROUPS.map(([heading, rows]) => h('div', {
+      key: heading, className: 'bt-discover-group', role: 'presentation',
+    },
+    h('div', { className: 'bt-discover-grouphead' }, t(heading)),
+    rows.map(([key, label, Icon]) => h('div', {
+      key, className: 'bt-discover-card', role: 'presentation',
+    },
+    h('button', {
+      type: 'button', className: 'bt-discover-row', 'data-row': key,
       onClick: () => actions.openDiscoverRow(key),
     },
     h('span', { className: 'bt-discover-icon', 'aria-hidden': true }, h(Icon)),
     h('span', { className: 'bt-discover-name' }, t(label)),
-    h('span', { className: 'bt-discover-go', 'aria-hidden': true }, h(ChevronRightIcon)))))))), document.body)
+    h('span', { className: 'bt-discover-go', 'aria-hidden': true }, h(ChevronRightIcon))))))))), document.body)
 }
 
 // The strip a second-level panel carries. The plugin manager and the automation tasks page are
@@ -86,7 +100,11 @@ html[data-bt-mobile] .bt-discover{position:fixed;inset:0;z-index:79;display:flex
 html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
 html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}
 html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
-html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain}
+html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:16px;overflow-y:auto;overscroll-behavior:contain}
+/* A group is a heading and the cards under it: 8px between the cards, the list's own 16px between
+   two groups, so the heading reads as belonging to what follows rather than to what came before. */
+html[data-bt-mobile] .bt-discover-group{display:flex;flex-direction:column;gap:8px}
+html[data-bt-mobile] .bt-discover-grouphead{padding:0 4px;color:var(--bt-ink-3);font-size:13px;line-height:18px}
 /* A row is its own card: the same surface the composer's card and the floating controls wear, from
    the one shadow token. The list's 8px gap is the space between two cards, and the row clips its
    own tint at the card's corners. */

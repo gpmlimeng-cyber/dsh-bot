@@ -19,30 +19,37 @@ const nav = code('nav-bar.js')
 const sidebar = code('sidebar.js')
 const styles = code('styles.js')
 
-// The cards, read out of the declaration rather than copied: the drawing order is the page's own,
-// and a row added or removed here has to be answered for in the assertions below. A card opens
-// with its own `[` line or with an inline first row; its rows follow indented under it.
-const cardsBlock = discover.slice(discover.indexOf('export const DISCOVER_CARDS = ['), discover.indexOf('export const DISCOVER_ROWS'))
-const cards = []
-for (const line of cardsBlock.split('\n')) {
-  if (line.trim() === '[' || (/^ {2}\[/.test(line) && line.includes("['"))) cards.push([])
-  const row = /\[['"]([a-z]+)['"], ['"]([^'"]+)['"], (\w+)\]/.exec(line)
-  if (row && cards.length > 0) cards[cards.length - 1].push([row[1], row[2], row[3]])
+// The groups, read out of the declaration rather than copied: the drawing order and the headings
+// are the page's own, and a row added or removed here has to be answered for in the assertions
+// below. A group opens with its own `['Heading', [` line; its rows follow indented under it.
+const groupsBlock = discover.slice(discover.indexOf('export const DISCOVER_GROUPS = ['), discover.indexOf('export const DISCOVER_HEADINGS'))
+const groups = []
+for (const line of groupsBlock.split('\n')) {
+  if (/^ {2}\['[^']+', \[$/.test(line)) { groups.push([]); continue }
+  const row = /^\s*\['([a-z]+)', '([^']+)', (\w+)\],$/.exec(line)
+  if (row && groups.length > 0) groups[groups.length - 1].push([row[1], row[2], row[3]])
 }
-const rows = cards.flat()
+const headings = [...groupsBlock.matchAll(/^ {2}\['([^']+)', \[$/gm)].map(match => match[1])
+const rows = groups.flat()
 const panelRows = [...discover.slice(discover.indexOf('export const PANEL_ROWS')).match(/\[[^\]]*\]/)[0]
   .matchAll(/'([a-z]+)'/g)].map(match => match[1])
 
-test('the list is four doors that already exist, one card each', () => {
-  // Four rows, four cards, in this order: 插件 ｜ 连接器 ｜ 定时任务 ｜ 用量.
-  assert.deepEqual(cards.map(card => card.length), [1, 1, 1, 1], 'one row per card')
+test('the list is three groups of doors that already exist, one card each', () => {
+  // 插件 ｜ 连接与自动化 ｜ 模型与用量 -- the user's own grouping, in this order, one row per card.
+  assert.deepEqual(headings, ['Plugins', 'Connections & automation', 'Models & usage'], 'three headings, in order')
+  assert.deepEqual(groups.map(group => group.length), [1, 2, 1], '插件 heads a single row and still shows its heading')
   assert.deepEqual(rows.map(row => row[0]), ['plugins', 'connectors', 'schedules', 'usage'], 'the rows, in order')
   assert.deepEqual(rows.map(row => row[1]), ['Plugin manager', 'Connectors', 'Automation tasks', 'Usage'], 'named by the screens they open')
-  // 模型 and Agent 预设 are the two the user asked for that have no door of ours: DSH keeps the
-  // model list in its own settings dialog (reachable whole, not one page of it) and there is no
-  // agent-preset entry at all. They are left out rather than drawn as buttons that go nowhere.
+  // 模型 and Agent 预设 are the two the user asked for that have no door of ours: the model chooser
+  // is per Bot (and per Session), inside a Bot's own menu, and the only preset in the skin is that
+  // Bot's permission preset, inside its settings. They are left out rather than drawn as buttons
+  // that go nowhere -- the group is here, with the row that does have a screen, while it is asked.
   assert.ok(!discover.includes('Agent preset'), 'no dead Agent 预设 row')
   assert.ok(!rows.some(row => row[0] === 'models'), 'and no dead 模型 row')
+  // Every heading is a translated string of its own, and the heading is drawn for every group --
+  // the one-row group included.
+  assert.ok(discover.includes("h('div', { className: 'bt-discover-grouphead' }, t(heading))"), 'the heading is drawn per group, in the dictionary\'s words')
+  for (const heading of headings) assert.ok(heading in DICTIONARY.zh, `${heading} has a Chinese string`)
   // Every icon is Fluent artwork the skin carries, from the one icon module -- not a line drawing
   // of ours, and not a name without a definition behind it.
   assert.ok(discover.includes("} from './icons.js'"), 'the icons come from icons.js')
@@ -121,9 +128,17 @@ test('a row is a card of its own, from the shared surface', () => {
   // and the rule that drew one is gone rather than left behind unused.
   assert.ok(!discover.includes('::before'), 'no hairline is drawn between rows')
   assert.ok(!discover.includes('--bt-line-weak'), 'and no line token is read here')
-  // The 8px gap is the space between two cards.
-  assert.ok(discover.includes('.bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px'), '8px between cards')
-  assert.ok(discover.includes('.bt-discover-card{flex:none;'), 'and none inside one')
+  // The spacing is the grouping: 16px between two groups, 8px between the cards inside one, so a
+  // heading reads as belonging to the cards under it.
+  assert.ok(discover.includes('.bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:16px'), '16px between groups')
+  assert.ok(discover.includes('.bt-discover-group{display:flex;flex-direction:column;gap:8px}'), '8px between the cards of one group')
+  assert.ok(discover.includes('.bt-discover-card{flex:none;'), 'a card takes the width it is given')
+  // The heading is the skin's small grey line: the muted ink, 13px, and no surface of its own.
+  const head = discover.split('\n').find(line => line.includes('.bt-discover-grouphead{'))
+  assert.ok(head, 'the heading has a rule')
+  assert.ok(head.includes('color:var(--bt-ink-3)'), 'in the muted ink')
+  assert.ok(head.includes('font-size:13px'), 'at the small size')
+  assert.ok(!head.includes('background:'), 'with no surface of its own')
   assert.ok(discover.includes('.bt-discover-icon svg{width:20px;height:20px}'), 'the icon is 20px')
   assert.ok(discover.includes('.bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}'), 'drawn in the ink, not the muted one')
   assert.ok(discover.includes('.bt-discover-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}'), 'the chevron a shade lighter, at the row\'s far end')
