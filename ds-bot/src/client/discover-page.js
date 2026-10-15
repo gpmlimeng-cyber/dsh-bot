@@ -9,29 +9,25 @@
 // close it on the way to what they open.
 import { createElement as h, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, GaugeIcon, PlugIcon, SlidersIcon } from './icons.js'
-import { KeyIcon } from './secret-card.js'
+import { ChevronLeftIcon, ChevronRightIcon, FluentClockIcon, FluentDataUsageIcon, FluentPlugConnectedIcon, FluentPuzzlePieceIcon } from './icons.js'
 import { useEscape, usePaneLeft } from './overlay-hooks.js'
 import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
 
-// The cards, in the order they are drawn, and the rows inside each one: key, label, icon. A card
-// is a group the user reads as one block -- its rows share the surface and one hairline separates
-// each from the next (the CSS, below) -- so no card carries a header of its own.
+// The cards, in the order they are drawn, and the row inside each one: key, label, icon. One row
+// per card -- the user pointed at a list where every row sits on a white surface of its own, one
+// gap apart (the screenshot's 资料库/专家/技能...) -- so a card holds a single row and the list's
+// own 8px gap is what separates one from the next, rather than a hairline inside a shared block.
 //
 // Only rows whose door this skin can already open are here. 模型 and Agent 预设 have none of ours:
 // DSH keeps the model list in its own settings dialog, reachable as a whole but not one page of
 // it, and there is no agent-preset entry to open at all. They are left out rather than drawn as
 // buttons that go nowhere.
 export const DISCOVER_CARDS = [
-  [['plugins', 'Plugin manager', PlugIcon]],
-  [
-    ['connectors', 'Connectors', ConnectorIcon],
-    ['capabilities', 'Capabilities', SlidersIcon],
-    ['schedules', 'Automation tasks', ClockIcon],
-    ['secrets', 'Secrets', KeyIcon],
-  ],
-  [['usage', 'Usage', GaugeIcon]],
+  [['plugins', 'Plugin manager', FluentPuzzlePieceIcon]],
+  [['connectors', 'Connectors', FluentPlugConnectedIcon]],
+  [['schedules', 'Automation tasks', FluentClockIcon]],
+  [['usage', 'Usage', FluentDataUsageIcon]],
 ]
 
 // The same list without its grouping, in drawing order, for anything that only asks which rows
@@ -91,17 +87,12 @@ html[data-bt-mobile][data-bt-keyboard] .bt-discover{padding-bottom:12px}
 html[data-bt-mobile] .bt-discover-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}
 html[data-bt-mobile] .bt-discover-title{margin:0;font-size:20px;line-height:28px;font-weight:600}
 html[data-bt-mobile] .bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;overscroll-behavior:contain}
-/* A card is one group: the same surface the composer's card and the floating controls wear, from
-   the one shadow token, with the rows sharing it rather than each carrying its own. It clips its
-   rows so the first and last follow its corners, which is also what keeps a row's own tint off
-   the radius. */
+/* A row is its own card: the same surface the composer's card and the floating controls wear, from
+   the one shadow token. The list's 8px gap is the space between two cards, and the row clips its
+   own tint at the card's corners. */
 html[data-bt-mobile] .bt-discover-card{flex:none;overflow:hidden;border-radius:16px;background:var(--bt-card);box-shadow:var(--bt-float-shadow)}
-html[data-bt-mobile] .bt-discover-row{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:0;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
+html[data-bt-mobile] .bt-discover-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:8px 12px;border:0;border-radius:0;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-discover-row:hover{background:var(--bt-hover)}
-/* The hairline between two rows of one card. It is drawn, not a border, because it must start at
-   the icon's own edge and stop short of the card's: a border would run the full width and meet
-   both edges. The colour is the skin's lightest line token -- no new grey lives here. */
-html[data-bt-mobile] .bt-discover-row+.bt-discover-row::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--bt-line-weak)}
 html[data-bt-mobile] .bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}
 html[data-bt-mobile] .bt-discover-icon svg{width:20px;height:20px}
 html[data-bt-mobile] .bt-discover-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

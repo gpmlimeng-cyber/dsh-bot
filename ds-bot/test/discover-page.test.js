@@ -1,10 +1,10 @@
 // 发现 is a page of its own (discover-page.js), not the plugin manager opened the moment the tab
 // is tapped: the tab opens a list, and the list's rows are the doors that already existed — the
-// plugin manager panel, the connectors, capabilities, automation-tasks and secrets screens, and
-// the usage page. Nothing here invents a route, so what is pinned is the mapping (which row opens
-// which door), the one thing the page does add (the strip the shell's own panels do not draw), the
-// cards those rows share, and the wiring that keeps it a single surface: one page at a time, one
-// layer at a time, and the tab bar above it.
+// plugin manager panel, the connectors and automation-tasks screens, and the usage page. Each row
+// is a card of its own, the way the reference app draws its list. Nothing here invents a route, so
+// what is pinned is the mapping (which row opens which door), the one thing the page does add (the
+// strip the shell's own panels do not draw), and the wiring that keeps it a single surface: one
+// page at a time, one layer at a time, and the tab bar above it.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
@@ -33,24 +33,22 @@ const rows = cards.flat()
 const panelRows = [...discover.slice(discover.indexOf('export const PANEL_ROWS')).match(/\[[^\]]*\]/)[0]
   .matchAll(/'([a-z]+)'/g)].map(match => match[1])
 
-test('the list is six doors that already exist, grouped into three cards', () => {
-  // 三张卡: 插件 ｜ 连接器·能力·定时任务·密钥 ｜ 用量. The third holds one row rather than the
-  // three the user drew, because two of them have no door of ours (below): the card is kept
-  // anyway, so the day a route appears the row has a home.
-  assert.deepEqual(cards.map(card => card.length), [1, 4, 1], '三张卡, one row per card where the door is missing')
-  assert.deepEqual(rows.map(row => row[0]), ['plugins', 'connectors', 'capabilities', 'schedules', 'secrets', 'usage'], 'the rows, in order')
-  assert.deepEqual(rows.map(row => row[1]), ['Plugin manager', 'Connectors', 'Capabilities', 'Automation tasks', 'Secrets', 'Usage'], 'named by the screens they open')
+test('the list is four doors that already exist, one card each', () => {
+  // Four rows, four cards, in this order: 插件 ｜ 连接器 ｜ 定时任务 ｜ 用量.
+  assert.deepEqual(cards.map(card => card.length), [1, 1, 1, 1], 'one row per card')
+  assert.deepEqual(rows.map(row => row[0]), ['plugins', 'connectors', 'schedules', 'usage'], 'the rows, in order')
+  assert.deepEqual(rows.map(row => row[1]), ['Plugin manager', 'Connectors', 'Automation tasks', 'Usage'], 'named by the screens they open')
   // 模型 and Agent 预设 are the two the user asked for that have no door of ours: DSH keeps the
   // model list in its own settings dialog (reachable whole, not one page of it) and there is no
   // agent-preset entry at all. They are left out rather than drawn as buttons that go nowhere.
-  assert.ok(!discover.includes('Agent preset'), 'no dead 模型 row')
-  assert.ok(!rows.some(row => row[0] === 'models'), 'and no dead Agent 预设 row')
-  // Every icon is one the skin already draws, out of its own modules.
+  assert.ok(!discover.includes('Agent preset'), 'no dead Agent 预设 row')
+  assert.ok(!rows.some(row => row[0] === 'models'), 'and no dead 模型 row')
+  // Every icon is Fluent artwork the skin carries, from the one icon module -- not a line drawing
+  // of ours, and not a name without a definition behind it.
   assert.ok(discover.includes("} from './icons.js'"), 'the icons come from icons.js')
   for (const [, , icon] of rows) {
-    assert.ok(discover.includes(icon), `${icon} is imported rather than drawn here`)
-    const drawn = read('icons.js').includes(`export const ${icon} =`) || read('secret-card.js').includes(`export const ${icon} =`)
-    assert.ok(drawn, `${icon} already exists`)
+    assert.ok(discover.includes(icon), `${icon} is the row's own icon`)
+    assert.ok(read('icons.js').includes(`export const ${icon} = fluentNavIcon(`), `${icon} is Fluent artwork, not a drawing of ours`)
   }
   // A row is the door itself: the page holds a key and a label, never an action of its own, so
   // its own door is looked up in one place (index.js).
@@ -65,12 +63,12 @@ test('the row that opens a shell panel is the only one that needs a back of ours
   // The plugin manager and the automation tasks screen are the shell's own main panels and draw
   // no back, so the page carries a second level for exactly those two.
   assert.match(index, /if \(PANEL_ROWS\.includes\(key\)\) \{[\s\S]*actions\.selectPanel\(key\)/, 'a panel row selects the panel')
-  // The other four land on the screens 我的 already opens, under the same page keys the settings
-  // dialog uses: one screen, one key, whichever door is taken.
+  // The other two rows land on the screens 我的 already opens, under the same page keys the
+  // settings dialog uses: one screen, one key, whichever door is taken.
   const settings = sidebar.slice(sidebar.indexOf("t('Usage')"), sidebar.indexOf("t('Bot settings')"))
   assert.ok(settings.includes("actions.openSettings('usage')"), '用量 is the usage screen')
   assert.ok(settings.includes('actions.openConnectors()'), '连接器 is the connectors screen')
-  for (const key of ['connectors', 'capabilities', 'secrets', 'usage']) {
+  for (const key of ['connectors', 'usage']) {
     assert.ok(read('settings.js').includes(`['${key}', `), `${key} is a settings page the dialog already draws`)
   }
   assert.ok(index.includes('settings: { page: key, id: null }'), 'and every one of this page\'s rows uses the row key as that page')
@@ -108,33 +106,27 @@ test('the second level carries the strip a shell panel does not draw', () => {
   assert.ok(discover.includes('.bt-subback-btn>svg{width:22px;height:22px}'), 'and its glyph 22px')
 })
 
-test('a card is one surface, and one hairline separates its rows', () => {
+test('a row is a card of its own, from the shared surface', () => {
   // The card, not the row, carries the skin: the same card surface the composer and the floating
   // controls wear, and the one shadow token they both read.
   const card = discover.slice(discover.indexOf('.bt-discover-card{'), discover.indexOf('.bt-discover-row{'))
   assert.ok(card.includes('border-radius:16px'), 'rounded like the reference')
   assert.ok(card.includes('background:var(--bt-card)'), 'on the card colour')
   assert.ok(card.includes('box-shadow:var(--bt-float-shadow)'), 'the one shared shadow, not a value of its own')
-  assert.ok(card.includes('overflow:hidden'), 'and it clips its rows, so the ends follow its corners')
+  assert.ok(card.includes('overflow:hidden'), 'and it clips its row, so a row\'s tint stops at its corners')
   const row = discover.slice(discover.indexOf('.bt-discover-row{'), discover.indexOf('.bt-discover-row:hover'))
   assert.ok(row.includes('min-height:56px'), 'a row is 56px')
   assert.ok(row.includes('background:none'), 'the row adds no surface of its own')
-  assert.ok(row.includes('position:relative'), 'and it is the hairline\'s origin')
-  // The hairline is drawn rather than a border: a border would run the card's whole width and meet
-  // both edges, and it must start at the icon and stop short of them. Colour: the skin's own
-  // lightest line token -- no new grey is written here.
-  const line = discover.split('\n').find(line => line.includes('.bt-discover-row+.bt-discover-row::before'))
-  assert.ok(line, 'the hairline between two rows has its rule')
-  assert.ok(line.includes('left:12px') && line.includes('right:12px'), 'inset from both edges, starting at the icon')
-  assert.ok(!line.includes('left:0') && !line.includes('right:0'), 'and never reaching them')
-  assert.ok(line.includes('background:var(--bt-line-weak)'), 'in the shared faint-line token')
-  assert.ok(read('styles.js').includes('--bt-line-weak:'), 'which the skin declares')
-  assert.ok(!/#[0-9a-f]{3,8}|rgba?\(/i.test(line), 'with no colour of its own')
-  // A card holds its rows with no gap: the 8px belongs between cards.
+  // Nothing is shared between rows any more: one row per card means there is no divider to draw,
+  // and the rule that drew one is gone rather than left behind unused.
+  assert.ok(!discover.includes('::before'), 'no hairline is drawn between rows')
+  assert.ok(!discover.includes('--bt-line-weak'), 'and no line token is read here')
+  // The 8px gap is the space between two cards.
   assert.ok(discover.includes('.bt-discover-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px'), '8px between cards')
   assert.ok(discover.includes('.bt-discover-card{flex:none;'), 'and none inside one')
   assert.ok(discover.includes('.bt-discover-icon svg{width:20px;height:20px}'), 'the icon is 20px')
   assert.ok(discover.includes('.bt-discover-icon{flex:none;display:inline-flex;color:var(--bt-ink)}'), 'drawn in the ink, not the muted one')
+  assert.ok(discover.includes('.bt-discover-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}'), 'the chevron a shade lighter, at the row\'s far end')
 })
 
 test('the page is a surface of its own, one at a time', () => {
