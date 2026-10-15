@@ -23,7 +23,12 @@
 // two pages must never stack.
 import { createElement as h } from 'react'
 import { createPortal } from 'react-dom'
-import { LucideCompassIcon, LucideMessageReplyIcon, LucideUserRoundIcon, LucideUsersIcon } from './icons.js'
+import {
+  FluentChatFilledIcon, FluentChatIcon,
+  FluentCompassFilledIcon, FluentCompassIcon,
+  FluentPeopleFilledIcon, FluentPeopleIcon,
+  FluentPersonFilledIcon, FluentPersonIcon,
+} from './icons.js'
 import { useMobile, usePortrait } from './mobile.js'
 import { t } from './i18n.js'
 
@@ -32,16 +37,18 @@ import { t } from './i18n.js'
 // at render time like every other string here, so the bar names its pages in the language
 // the rest of the interface is in (Chinese must not be hard-coded into the labels).
 //
-// The glyphs are Lucide's copied data, on the grid every other glyph in this skin is on
-// (icons.js): 任务 takes Lucide's reply bubble, whose tail leaves at the lower left with a
-// leftward arrow inside, and 发现/我的 take its compass and round-headed user — the three
-// shapes the user's screenshot draws. 伙伴 takes the same set's users: that screenshot's
-// second tab is a scheduled-tasks page, so there is no shape of its own to copy.
+// Each page carries two drawings of one shape, Fluent's, on the grid every glyph in this
+// skin is on (icons.js): the outline while the page is not the current one and the solid
+// one while it is, which is the state the user asked for and the reason the bar does not
+// thicken a stroke to fake it. 任务 takes Fluent's chat bubble (round, tail at the lower
+// left — the shape the user's screenshot draws), 发现 its compass and 我的 its round-headed
+// figure, both also from that screenshot; 伙伴 takes the same set's people, since that
+// screenshot's second tab is a scheduled-tasks page with no shape of its own to copy.
 const TABS = [
-  ['tasks', 'Tasks', LucideMessageReplyIcon],
-  ['peers', 'Peers', LucideUsersIcon],
-  ['plugins', 'Discover', LucideCompassIcon],
-  ['me', 'Me', LucideUserRoundIcon],
+  ['tasks', 'Tasks', FluentChatIcon, FluentChatFilledIcon],
+  ['peers', 'Peers', FluentPeopleIcon, FluentPeopleFilledIcon],
+  ['plugins', 'Discover', FluentCompassIcon, FluentCompassFilledIcon],
+  ['me', 'Me', FluentPersonIcon, FluentPersonFilledIcon],
 ]
 
 export function BottomNav({ useUi, useNav, actions }) {
@@ -86,13 +93,16 @@ export function BottomNav({ useUi, useNav, actions }) {
     actions.openSettings('general')
   }
   return createPortal(h('nav', { className: 'bt-nav', 'aria-label': t('Pages') },
-    TABS.filter(([id]) => id !== 'plugins' || nav.plugins).map(([id, label, Icon]) => h('button', {
+    TABS.filter(([id]) => id !== 'plugins' || nav.plugins).map(([id, label, Icon, IconFilled]) => h('button', {
       key: id, type: 'button', className: 'bt-nav-tab',
       'data-active': active === id || undefined,
+      // Which drawing is on screen, for a real-device dump: the two states differ in the
+      // path, and a reader of the tree should not have to parse the SVG to tell them apart.
+      'data-icon': active === id ? 'filled' : 'outline',
       'aria-label': t(label), 'aria-current': active === id ? 'page' : undefined,
       onClick: () => go(id),
     },
-    h(Icon),
+    h(active === id ? IconFilled : Icon),
     h('span', { className: 'bt-nav-tab-text', 'aria-hidden': true }, t(label))))), document.body)
 }
 
@@ -121,7 +131,7 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
-/* The glyphs are Lucide's 24px grid and carry their own 24px box (icons.js), so nothing
+/* The drawings are Fluent's 24px grid and carry their own 24px box (icons.js), so nothing
    here sizes them; only the flex row's power to squeeze them is taken away. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-ink)}

@@ -63,28 +63,44 @@ test('the four pages are named for a UI dump, tasks first', () => {
   assert.ok(nav.includes("h('span', { className: 'bt-nav-tab-text', 'aria-hidden': true }, t(label))"), 'the drawn label is translated too')
 })
 
-// The three shapes the user's screenshot draws are copied from Lucide, not drawn here:
-// byte-for-byte the data lucide-static ships, so it can be diffed against the package.
-test('the page glyphs are Lucide’s copied data, on the grid the rest of the skin uses', () => {
-  assert.ok(nav.includes("import { LucideCompassIcon, LucideMessageReplyIcon, LucideUserRoundIcon, LucideUsersIcon } from './icons.js'"), 'the bar draws the copied set')
+// The two states are two drawings of one shape, copied from Fluent -- not one drawing with a
+// heavier stroke, which is what the user ruled out. The data is byte-for-byte what
+// @fluentui/svg-icons ships, so it can be diffed against the package, and its licence
+// travels with it.
+test('each page is Fluent’s outline and Fluent’s fill, credited where they live', () => {
   const icons = read('icons.js')
-  assert.ok(icons.includes('Lucide (ISC) · path data from lucide-static v1.57.0'), 'the ISC notice sits with the data')
+  assert.ok(icons.includes('Fluent System Icons (MIT) · path data from @fluentui/svg-icons v1.1.344'), 'the MIT notice sits with the data')
   const glyphs = [
-    ["m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z", 'compass, the needle'],
-    ["M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719", 'message-circle-reply, the bubble and its tail'],
-    ["m10 15-3-3 3-3", 'message-circle-reply, the arrow inside it'],
-    ["M7 12h8a2 2 0 0 1 2 2v1", 'message-circle-reply, the arrow stem'],
-    ["M20 21a8 8 0 0 0-16 0", 'user-round, the shoulders'],
-    ["M16 3.128a4 4 0 0 1 0 7.744", 'users, the second head'],
+    ['M12 2a10 10 0 1 1-4.59 18.89L3.6 21.96', 'chat, the outline'],
+    ['M12 2a10 10 0 1 1-4.64 18.86l-4.3 1.12', 'chat, the solid one'],
+    ['M5.5 8a2.5 2.5 0 1 1 5 0', 'people, the outline'],
+    ['M8 12a4 4 0 1 0 0-8', 'people, the solid one'],
+    ['M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m0 1.5a8.5 8.5 0 1 0 0 17', 'compass, the outline'],
+    ['M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20M8.56 7.43', 'compass, the solid one'],
+    ['M17.75 14C19 14 20 15 20 16.25v.57', 'person, the outline'],
+    ['M17.75 14C19 14 20 15 20 16.25v.92', 'person, the solid one'],
   ]
-  for (const [data, what] of glyphs) assert.ok(icons.includes(data), `${what} is lucide-static’s own data`)
-  // One factory, one grid, one stroke: the new glyphs ride the same declaration the
-  // deliverables screens do, and their box is the grid's own 24 -- the bar's reference, not
-  // the pill's 13px.
-  assert.equal(icons.split("viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',").length - 1, 1, 'still one glyph factory, one grid')
-  assert.ok(icons.includes('const LUCIDE_NAV_BOX = 24'), 'the bar draws on the grid at its own 24px')
-  const boxed = icons.split('], LUCIDE_NAV_BOX)').length - 1
-  assert.equal(boxed, 4, `all four page glyphs share the one box, found ${boxed}`)
+  for (const [data, what] of glyphs) assert.ok(icons.includes(data), `${what} is @fluentui/svg-icons' own data`)
+  // Two frames, two families, and nothing hand-drawn: Lucide's stroke factory above, and
+  // Fluent's filled one here. Both are declared once.
+  assert.equal(icons.split("const fluentIcon = (d, box = FLUENT_NAV_BOX)").length - 1, 1, 'one Fluent factory')
+  assert.equal(icons.split('Fluent System Icons (MIT)').length - 1, 2, 'declared in the notice and in one comment')
+  for (const dead of ['LucideMessageReplyIcon', 'LucideUsersIcon', 'LucideCompassIcon', 'LucideUserRoundIcon', 'LUCIDE_NAV_BOX']) {
+    assert.ok(!icons.includes(dead), `${dead} is gone with the family it belonged to`)
+  }
+})
+
+test('the tab on screen draws the filled one, and says so in the tree', () => {
+  // The pair travels in the tab row, and the render picks by the same `active` the styles
+  // hang on -- so the state cannot drift from the drawing.
+  const rows = [...nav.matchAll(/\['(tasks|peers|plugins|me)', '\w+', (\w+), (\w+)\]/g)]
+  assert.equal(rows.length, 4, 'four rows, each with both drawings')
+  for (const [, id, outline, filled] of rows) {
+    assert.ok(outline.endsWith('Icon') && !outline.includes('Filled'), `${id}: the outline first`)
+    assert.equal(filled, outline.replace(/Icon$/, 'FilledIcon'), `${id}: the filled one is the same shape`)
+  }
+  assert.ok(nav.includes('h(active === id ? IconFilled : Icon)'), 'the drawing follows the state')
+  assert.ok(nav.includes("'data-icon': active === id ? 'filled' : 'outline'"), 'and the tree reports which one')
 })
 
 // The four names are copy, not code: they live in the dictionary every other string in

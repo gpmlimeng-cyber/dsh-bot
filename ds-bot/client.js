@@ -4015,26 +4015,18 @@ var LucideCopyIcon = lucideIcon([
   ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" }]
 ], LUCIDE_MENU_BOX);
 var LucideCheckIcon = lucideIcon([["path", { d: "M20 6 9 17l-5-5" }]], LUCIDE_MENU_BOX);
-var LUCIDE_NAV_BOX = 24;
-var LucideMessageReplyIcon = lucideIcon([
-  ["path", { d: "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" }],
-  ["path", { d: "m10 15-3-3 3-3" }],
-  ["path", { d: "M7 12h8a2 2 0 0 1 2 2v1" }]
-], LUCIDE_NAV_BOX);
-var LucideUsersIcon = lucideIcon([
-  ["path", { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" }],
-  ["path", { d: "M16 3.128a4 4 0 0 1 0 7.744" }],
-  ["path", { d: "M22 21v-2a4 4 0 0 0-3-3.87" }],
-  ["circle", { cx: 9, cy: 7, r: 4 }]
-], LUCIDE_NAV_BOX);
-var LucideCompassIcon = lucideIcon([
-  ["circle", { cx: 12, cy: 12, r: 10 }],
-  ["path", { d: "m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" }]
-], LUCIDE_NAV_BOX);
-var LucideUserRoundIcon = lucideIcon([
-  ["circle", { cx: 12, cy: 8, r: 5 }],
-  ["path", { d: "M20 21a8 8 0 0 0-16 0" }]
-], LUCIDE_NAV_BOX);
+var FLUENT_NAV_BOX = 24;
+var fluentIcon = (d, box = FLUENT_NAV_BOX) => function FluentIcon() {
+  return (0, import_react3.createElement)("svg", { width: box, height: box, viewBox: "0 0 24 24", fill: "currentColor", "aria-hidden": true }, (0, import_react3.createElement)("path", { d }));
+};
+var FluentChatIcon = fluentIcon("M12 2a10 10 0 1 1-4.59 18.89L3.6 21.96a1.25 1.25 0 0 1-1.54-1.54l1.06-3.83A10 10 0 0 1 12 2m0 1.5a8.5 8.5 0 0 0-7.43 12.64l.15.27-1.1 3.98 3.98-1.11.27.15A8.5 8.5 0 1 0 12 3.5M8.75 13h4.5a.75.75 0 0 1 .1 1.5h-4.6a.75.75 0 0 1-.1-1.5zh4.5zm0-3.5h6.5a.75.75 0 0 1 .1 1.5h-6.6a.75.75 0 0 1-.1-1.5zh6.5z");
+var FluentChatFilledIcon = fluentIcon("M12 2a10 10 0 1 1-4.64 18.86l-4.3 1.12a.85.85 0 0 1-1.03-1.04l1.11-4.29A10 10 0 0 1 12 2m1.25 11h-4.6a.75.75 0 0 0 0 1.5h4.7a.75.75 0 0 0 0-1.5zm2-3.5h-6.6a.75.75 0 0 0 0 1.5h6.7a.75.75 0 0 0 0-1.5z");
+var FluentPeopleIcon = fluentIcon("M5.5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8m7.5 5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0M17 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6m-2.75 13.04q1.04.44 2.75.46c2.28 0 3.59-.7 4.3-1.56a3 3 0 0 0 .7-1.73v-.03c0-1.2-.97-2.18-2.18-2.18H14.1q.6.63.81 1.5h4.91a.7.7 0 0 1 .68.7l-.04.18q-.05.25-.32.6C19.8 17.42 18.97 18 17 18c-.98 0-1.67-.15-2.17-.34q-.14.62-.58 1.38M4.25 14C3.01 14 2 15 2 16.25v.28l.01.2q.02.21.1.53c.09.42.29.98.68 1.55C3.61 19.97 5.17 21 8 21s4.39-1.03 5.2-2.2a4.5 4.5 0 0 0 .8-2.27v-.28c0-1.24-1-2.25-2.25-2.25zm-.75 2.5v-.25c0-.41.34-.75.75-.75h7.5c.41 0 .75.34.75.75v.34l-.06.33c-.07.28-.2.65-.46 1.02-.5.71-1.56 1.56-3.98 1.56s-3.49-.85-3.98-1.56a3 3 0 0 1-.52-1.43");
+var FluentPeopleFilledIcon = fluentIcon("M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8m9 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6M4.25 14C3.01 14 2 15 2 16.25v.25S2 21 8 21s6-4.5 6-4.5v-.25c0-1.24-1-2.25-2.25-2.25zM17 19.5a7 7 0 0 1-2.75-.46 5.5 5.5 0 0 0 .75-2.49v-.3c0-.87-.34-1.66-.9-2.25h5.7c1.22 0 2.2.98 2.2 2.2 0 0 0 3.3-5 3.3");
+var FluentCompassIcon = fluentIcon("M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17M7.08 8.7c-.4-1.01.6-2.02 1.63-1.62l.2.09 3.75 1.42a4.8 4.8 0 0 1 2.75 2.75l.16.43 1.63 3.79a1.25 1.25 0 0 1-1.64 1.64l-3.76-1.61-.46-.18a4.8 4.8 0 0 1-2.75-2.75L7.21 9.03zm3 3.48c.32.8.95 1.44 1.74 1.78l.52.23 2.98 1.13-1.14-3-.22-.5a3.3 3.3 0 0 0-1.78-1.74L8.7 8.7z");
+var FluentCompassFilledIcon = fluentIcon("M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20M8.56 7.43a.88.88 0 0 0-1.13 1.13l1.5 3.97a4.4 4.4 0 0 0 2.54 2.53l3.97 1.5a.88.88 0 0 0 1.13-1.12l-1.51-3.96a4.4 4.4 0 0 0-2.53-2.54z");
+var FluentPersonIcon = fluentIcon("M17.75 14C19 14 20 15 20 16.25v.57c0 .9-.32 1.76-.9 2.44Q16.74 22.01 12 22q-4.74.01-7.1-2.74a3.8 3.8 0 0 1-.9-2.43v-.58C4 15 5.01 14 6.25 14zm0 1.5H6.25a.75.75 0 0 0-.75.75v.58c0 .53.2 1.05.54 1.46C7.3 19.76 9.26 20.5 12 20.5q4.09 0 5.96-2.21c.35-.41.54-.93.54-1.47v-.57a.75.75 0 0 0-.75-.75M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10m0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7");
+var FluentPersonFilledIcon = fluentIcon("M17.75 14C19 14 20 15 20 16.25v.92q-.01.88-.5 1.6Q17.13 22 12 22q-5.15 0-7.49-3.24a2.8 2.8 0 0 1-.5-1.6v-.91C4 15 5 14 6.24 14zM12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10");
 
 // src/client/questions.js
 var import_react4 = require("react");
@@ -15703,10 +15695,10 @@ function noticeApprovals({ work, roster, shownSession, openSession, since: since
 var import_react39 = require("react");
 var import_react_dom12 = require("react-dom");
 var TABS = [
-  ["tasks", "Tasks", LucideMessageReplyIcon],
-  ["peers", "Peers", LucideUsersIcon],
-  ["plugins", "Discover", LucideCompassIcon],
-  ["me", "Me", LucideUserRoundIcon]
+  ["tasks", "Tasks", FluentChatIcon, FluentChatFilledIcon],
+  ["peers", "Peers", FluentPeopleIcon, FluentPeopleFilledIcon],
+  ["plugins", "Discover", FluentCompassIcon, FluentCompassFilledIcon],
+  ["me", "Me", FluentPersonIcon, FluentPersonFilledIcon]
 ];
 function BottomNav({ useUi, useNav, actions }) {
   const ui2 = useUi((value) => value);
@@ -15742,18 +15734,21 @@ function BottomNav({ useUi, useNav, actions }) {
   return (0, import_react_dom12.createPortal)((0, import_react39.createElement)(
     "nav",
     { className: "bt-nav", "aria-label": t("Pages") },
-    TABS.filter(([id]) => id !== "plugins" || nav.plugins).map(([id, label, Icon]) => (0, import_react39.createElement)(
+    TABS.filter(([id]) => id !== "plugins" || nav.plugins).map(([id, label, Icon, IconFilled]) => (0, import_react39.createElement)(
       "button",
       {
         key: id,
         type: "button",
         className: "bt-nav-tab",
         "data-active": active === id || void 0,
+        // Which drawing is on screen, for a real-device dump: the two states differ in the
+        // path, and a reader of the tree should not have to parse the SVG to tell them apart.
+        "data-icon": active === id ? "filled" : "outline",
         "aria-label": t(label),
         "aria-current": active === id ? "page" : void 0,
         onClick: () => go(id)
       },
-      (0, import_react39.createElement)(Icon),
+      (0, import_react39.createElement)(active === id ? IconFilled : Icon),
       (0, import_react39.createElement)("span", { className: "bt-nav-tab-text", "aria-hidden": true }, t(label))
     ))
   ), document.body);
@@ -15767,7 +15762,7 @@ html[data-bt-mobile][data-bt-portrait] .bt-nav{position:fixed;left:0;right:0;bot
 /* One tab: the glyph over its name, both centred. The touch target is the whole cell, so
    it is at least the bar's height wide whatever the label's length. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;background:none;color:var(--bt-ink-3);font-family:inherit;font-size:11px;line-height:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .12s ease}
-/* The glyphs are Lucide's 24px grid and carry their own 24px box (icons.js), so nothing
+/* The drawings are Fluent's 24px grid and carry their own 24px box (icons.js), so nothing
    here sizes them; only the flex row's power to squeeze them is taken away. */
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab svg{flex:none}
 html[data-bt-mobile][data-bt-portrait] .bt-nav-tab[data-active]{color:var(--bt-ink)}
@@ -16845,6 +16840,7 @@ function apply(ctx) {
   }, "ds-bot: surface");
 }
 /*! Lucide (ISC) · path data from lucide-static v1.57.0 */
+/*! Fluent System Icons (MIT) · path data from @fluentui/svg-icons v1.1.344 */
 return Object.defineProperty({ ...module.exports }, Symbol.toStringTag, { value: 'Module' })
   },
 })
