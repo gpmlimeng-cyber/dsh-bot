@@ -7,7 +7,7 @@ import { MENTION_ORIGIN, currentPart } from './text.js'
 import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
 import { askForStatusBar } from './status-bar.js'
 import { lookOf } from './mark.js'
-import { TeamSidebar, ConnectPlugins, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts } from './sidebar.js'
+import { TeamSidebar, ConnectPlugins, PluginCompatNote, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts } from './sidebar.js'
 import { HeaderPill } from './header.js'
 import { BetterDetailsTab } from './details-drawer.js'
 import { ComposerPlus, ComposerVoice, menuIcons } from './composer.js'
@@ -1058,6 +1058,11 @@ export function apply(ctx) {
     shadow('sidebar.brand.name', { priority: -10 }, BrandName),
     shadow('sidebar.footer.action', { id: 'bot-account', order: -200, inject: face }, FooterAccount),
     shadow('sidebar.footer.action', { id: 'bot-connect', order: -100, inject: face }, ConnectPlugins),
+    // The plugin page's own note, where the reader is when it matters: the drawer's copy of the
+    // plugin row went away, and this rides the page the row opens (the plugin manager declares
+    // plugins.detail.section for exactly this). It is a contribution, not a re-skin: the page
+    // draws its own chrome and this block sits under it.
+    shadow('plugins.detail.section', { id: 'bot-plugin-note', order: 100, locale: 'chat' }, PluginCompatNote),
     shadow('settings.trigger', { priority: -10 }, YouAvatar),
     // At priority -10 the whale wins the seat over a shell account plugin's own
     // launcher (the Desktop's "··· More"), which comes back in Agent mode.

@@ -181,13 +181,21 @@ test('no rule the phone ends up with declares a target under the floor', () => {
 })
 
 test('the plugin row carries no sentence of its own on the phone', () => {
-  // The requirement changed (user, 2026-10-17): the line under 管理插件 is not to be shown, so the
-  // phone renders the row alone. This is not the old test relaxed -- the sentence is gone from the
-  // component and its stylesheet rules are gone with it; the hover tip stays for pointer bands.
+  // The requirement changed (user, 2026-10-17): the line under 管理插件 is not to be shown, the
+  // drawer keeps only the account key, and the sentence must not vanish with the row -- it moves
+  // into the plugin page. This is not the old test relaxed: the row is gone from the drawer, the
+  // mobile-only rules are gone with it, and the sentence has a new home that this pins.
   const sidebar = read('sidebar.js')
   assert.ok(!sidebar.includes('bt-connect-note'), 'the phone line is gone from the component')
+  assert.ok(!sidebar.includes('h(ConnectPlugins'), 'the drawer renders no plugin row')
   assert.ok(sidebar.includes("className: 'bt-connect-tip'"), 'the hover tip stays for the bands that have a pointer')
-  assert.equal(sidebar.split('Plugin compatibility is not fully verified.').length - 1, 1, 'the sentence survives, once: in the tip, not as a line of its own')
+  assert.ok(sidebar.includes('export function PluginCompatNote'), 'the sentence has its own block for the plugin page')
   const styles = read('styles.js')
   assert.ok(!styles.includes('bt-connect-note'), 'the mobile-only rules went with the node')
+  assert.ok(styles.includes('.bt-compat-note'), 'and the block it renders is drawn in our own ink')
+
+  const index = read('index.js')
+  assert.ok(index.includes('shadow(\'plugins.detail.section\', { id: \'bot-plugin-note\''), 'it is registered into the plugin page, not patched over it')
+  assert.ok(index.includes('PluginCompatNote)'), 'and the page renders our block')
+  assert.ok(index.includes('shadow(\'sidebar.footer.action\', { id: \'bot-connect\''), 'the wide sidebar keeps its own row, untouched')
 })

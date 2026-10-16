@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 4b54a62b
+// Source fingerprint: 87ad1f4d
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2342,6 +2342,10 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
 html[data-bt-mobile] .bt-connect-wrap{flex-direction:column;align-items:stretch;gap:4px}
 .bt-connect-warn{flex:none;width:16px;height:16px;border-radius:50%;background:var(--bt-danger-bright);color:#fff;font-size:11px;line-height:16px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 .bt-connect-tip{position:fixed;box-sizing:border-box;width:max-content;max-width:260px;padding:8px 12px;border-radius:10px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 8px 24px -4px rgba(0,0,0,.14);color:var(--bt-ink);font-size:12px;line-height:17px;white-space:normal;text-align:center;z-index:70;transform-origin:bottom left;animation:bt-tip-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing}}
+/* The plugin page's note, drawn as our own block under the page's content: the shell owes the
+   page its chrome, we owe the reader this sentence. Muted ink, no alarm colour -- it is a state
+   to know about, not an error, and the red badge stays on the footer row for pointer bands. */
+.bt-compat-note{margin-top:10px;padding-top:8px;border-top:.5px solid var(--bt-line-2);color:var(--bt-ink-2);font-size:12px;line-height:17px}
 @keyframes bt-tip-in{from{opacity:0;transform:scale(.96);filter:blur(4px)}}
 @media (prefers-reduced-motion:reduce){.bt-connect-tip{animation:none}}
 
@@ -8266,8 +8270,7 @@ function TeamSidebar(props) {
   const drawerFoot = mobile ? (0, import_react13.createElement)(
     "div",
     { className: "bt-side-foot" },
-    (0, import_react13.createElement)(AccountLauncher, { seat: false, actions }),
-    (0, import_react13.createElement)(ConnectPlugins, { wide: true, actions })
+    (0, import_react13.createElement)(AccountLauncher, { seat: false, actions })
   ) : null;
   const drawerChrome = mobile || pc;
   const pcFolded = shellCollapsed(document, wide);
@@ -8505,6 +8508,9 @@ function ConnectPlugins({ wide, actions }) {
       t("Plugin compatibility is not fully verified.")
     ), document.body) : null
   );
+}
+function PluginCompatNote() {
+  return (0, import_react13.createElement)("div", { className: "bt-compat-note", role: "note" }, t("Plugin compatibility is not fully verified."));
 }
 function YouAvatar() {
   return (0, import_react13.createElement)(
@@ -17803,7 +17809,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "4b54a62b" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "87ad1f4d" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -18817,6 +18823,11 @@ function apply(ctx) {
     shadow("sidebar.brand.name", { priority: -10 }, BrandName),
     shadow("sidebar.footer.action", { id: "bot-account", order: -200, inject: face }, FooterAccount),
     shadow("sidebar.footer.action", { id: "bot-connect", order: -100, inject: face }, ConnectPlugins),
+    // The plugin page's own note, where the reader is when it matters: the drawer's copy of the
+    // plugin row went away, and this rides the page the row opens (the plugin manager declares
+    // plugins.detail.section for exactly this). It is a contribution, not a re-skin: the page
+    // draws its own chrome and this block sits under it.
+    shadow("plugins.detail.section", { id: "bot-plugin-note", order: 100, locale: "chat" }, PluginCompatNote),
     shadow("settings.trigger", { priority: -10 }, YouAvatar),
     // At priority -10 the whale wins the seat over a shell account plugin's own
     // launcher (the Desktop's "··· More"), which comes back in Agent mode.

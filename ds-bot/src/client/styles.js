@@ -279,6 +279,10 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
 html[data-bt-mobile] .bt-connect-wrap{flex-direction:column;align-items:stretch;gap:4px}
 .bt-connect-warn{flex:none;width:16px;height:16px;border-radius:50%;background:var(--bt-danger-bright);color:#fff;font-size:11px;line-height:16px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 .bt-connect-tip{position:fixed;box-sizing:border-box;width:max-content;max-width:260px;padding:8px 12px;border-radius:10px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 8px 24px -4px rgba(0,0,0,.14);color:var(--bt-ink);font-size:12px;line-height:17px;white-space:normal;text-align:center;z-index:70;transform-origin:bottom left;animation:bt-tip-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing}}
+/* The plugin page's note, drawn as our own block under the page's content: the shell owes the
+   page its chrome, we owe the reader this sentence. Muted ink, no alarm colour -- it is a state
+   to know about, not an error, and the red badge stays on the footer row for pointer bands. */
+.bt-compat-note{margin-top:10px;padding-top:8px;border-top:.5px solid var(--bt-line-2);color:var(--bt-ink-2);font-size:12px;line-height:17px}
 @keyframes bt-tip-in{from{opacity:0;transform:scale(.96);filter:blur(4px)}}
 @media (prefers-reduced-motion:reduce){.bt-connect-tip{animation:none}}
 

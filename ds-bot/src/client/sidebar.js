@@ -395,13 +395,14 @@ export function TeamSidebar(props) {
   // Connect plugins — which the shell renders in a separate area of the sidebar column
   // (`sidebar.footer.action`), not in the section this component owns. On a phone that
   // column is off-canvas, so the footer did not travel with the drawer and the list ended
-  // in empty space: that is the "bottom is missing" report. The same two components the
-  // wide sidebar uses are rendered below instead, so neither copy can drift; only the
-  // drawer gets this one (the wide column keeps the shell's). It sits under the list,
-  // which is `flex:1`, so it stays at the bottom whatever the roster's length.
+  // in empty space: that is the "bottom is missing" report. The drawer used to render both
+  // components here; the plugin entry went away (user, 2026-10-17 -- it is a setting, and the
+  // discover page and the composer's plus menu both open it), so the drawer now carries only
+  // the account key, which is also the drawer's one mark of who is speaking here. What the
+  // plugin page owes the reader is said inside that page instead (index.js registers
+  // PluginCompatNote into plugins.detail.section).
   const drawerFoot = mobile ? h('div', { className: 'bt-side-foot' },
-    h(AccountLauncher, { seat: false, actions }),
-    h(ConnectPlugins, { wide: true, actions })) : null
+    h(AccountLauncher, { seat: false, actions })) : null
   // The PC band draws the phone drawer's top row: the same hamburger, then the search field,
   // then New (the row itself is built below). The hamburger is not a child of that row — on
   // a phone it lives in the floating bar, and the band draws that same bar box holding
@@ -600,6 +601,18 @@ export function ConnectPlugins({ wide, actions }) {
     h(PlugIcon), t('Manage plugins'), h('span', { className: 'bt-connect-warn', 'aria-hidden': true }, '!')),
     tip && box ? createPortal(h('span', { role: 'tooltip', id: tipId, className: 'bt-connect-tip', style: box },
       t('Plugin compatibility is not fully verified.')), document.body) : null)
+}
+
+// The note the drawer used to carry, moved to where the reader is when it matters (user,
+// 2026-10-17: "it should move into the plugin page -- I only need to know it in there").
+// index.js registers this into the plugin manager's documented `plugins.detail.section`, so it
+// sits at the foot of a plugin's own page rather than under the chat list. The page's list view
+// declares no contribution slot, so a plugin the user has not opened cannot show it; the shell
+// would have to offer one, and that is on the shell-request list rather than patched in here.
+// The tip on the footer's plugin row stays where a pointer can reach it, and the PC footer keeps
+// that row untouched.
+export function PluginCompatNote() {
+  return h('div', { className: 'bt-compat-note', role: 'note' }, t('Plugin compatibility is not fully verified.'))
 }
 
 // Account seat of the Settings trigger: the visible label stays for assistive tech only.
