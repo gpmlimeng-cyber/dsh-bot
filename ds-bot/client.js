@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 56fd7456
+// Source fingerprint: 226cdd27
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16425,7 +16425,9 @@ function PeersPage({ useRoster, useUi, actions }) {
               "data-bot-id": bot.id,
               onClick: () => openPage("bots", bot.id)
             },
-            (0, import_react42.createElement)(BotMark, { bot, size: 36 }),
+            // The face the Bot's own page draws, at this row's size: the same mark, and the same animation
+            // (live), so a Bot that blinks on its page blinks here too -- one component, one set of CSS.
+            (0, import_react42.createElement)(BotMark, { bot, size: 36, live: true }),
             (0, import_react42.createElement)(
               "span",
               { className: "bt-peers-body" },
@@ -16646,7 +16648,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "56fd7456" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "226cdd27" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

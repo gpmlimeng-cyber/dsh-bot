@@ -153,7 +153,9 @@ export function PeersPage({ useRoster, useUi, actions }) {
           h('button', {
             type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openPage('bots', bot.id),
           },
-          h(BotMark, { bot, size: 36 }),
+          // The face the Bot's own page draws, at this row's size: the same mark, and the same animation
+          // (live), so a Bot that blinks on its page blinks here too -- one component, one set of CSS.
+          h(BotMark, { bot, size: 36, live: true }),
           h('span', { className: 'bt-peers-body' },
             h('span', { className: 'bt-peers-name-row' },
               h('span', { className: 'bt-peers-name' }, bot.name),

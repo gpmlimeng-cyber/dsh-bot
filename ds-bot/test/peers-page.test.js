@@ -141,7 +141,8 @@ test('the page is a header row and one scroller of labelled cards', () => {
   // Nothing here animates on its own: every row wears the skin's own mark, and the skin already
   // silences marks under prefers-reduced-motion (which is what this device asks for).
   assert.ok(code('styles.js').includes('@media (prefers-reduced-motion:reduce){.bt-mark *{animation:none!important;transition:none!important}}'), 'the skin silences the marks')
-  assert.ok(peers.includes('h(BotMark, { bot, size: 36 })'), 'and every row wears that same mark')
+  assert.ok(peers.includes('h(BotMark, { bot, size: 36, live: true })'), 'and every row wears that same mark, animated as the Bot page animates it (live)')
+  assert.ok(code('bot-settings.js').includes('h(BotMark, { bot, size: 64, live: true })'), 'which is that page\'s own mark, at this row\'s size: one component, not two')
   // The animation level is offered at the 「伙伴」 heading's right end, as that list's own secondary
   // action rather than a section of its own at the end of the list. It is the Bots page's own control
   // component (set-rows.js), so the two places cannot come to read two values.
@@ -266,7 +267,7 @@ test('a row is a Bot with its role and a chevron, not a conversation', () => {
   assert.ok(peers.includes("className: 'bt-peers-row', 'data-bot-id': bot.id"), 'the row is a button')
   const row = peers.slice(peers.indexOf("className: 'bt-peers-row', 'data-bot-id'"), peers.indexOf('h(BotMark'))
   assert.ok(!row.includes('role:'), `the button keeps the button role: ${row}`)
-  assert.ok(peers.includes('h(BotMark, { bot, size: 36 })'), 'its avatar is the Bot\'s mark')
+  assert.ok(peers.includes('h(BotMark, { bot, size: 36, live: true })'), 'its avatar is the Bot\'s mark, at the size and with the animation its own page gives it')
   assert.ok(peers.includes("h('span', { className: 'bt-peers-name' }, bot.name)"), 'its name')
   assert.ok(peers.includes("h('span', { className: 'bt-tag' }, bot.role)"), 'its role, in the skin\'s existing tag')
   assert.ok(peers.includes('h(ChevronRightIcon)'), 'and the chevron that says it opens something')
