@@ -108,12 +108,18 @@ test('the panel is the one a preview opens in, title bar and all', () => {
 test('on a phone the list slides up from the foot: full width, rounded top, a handle and a scrim', () => {
   // The sheet's own shape: the width of the screen, glued to the foot, as tall as its list asks
   // for up to 85% of the viewport -- and a sliding entrance rather than the column's fade.
-  assert.ok(pane.includes('html[data-bt-mobile] .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;'), 'full width, at the foot, 85% at most')
+  // The selector carries one attribute more than the phone width bands in styles.js
+  // (html[data-bt-mobile][data-bt-size=medium] .bt-panel{…width:70vw!important}): a tie there goes to
+  // whichever sheet is injected last, and that one is -- measured -- so the weight is load-bearing.
+  const sheet = 'html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]'
+  assert.ok(pane.includes(`${sheet}{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;`), 'full width, at the foot, 85% at most, beating the 70vw band by weight')
+  assert.ok(pane.includes(`${sheet}[data-leaving]{`), 'and the exit reads from the same selector')
+  assert.ok(!pane.includes('\nhtml[data-bt-mobile] .bt-panel[data-view=products]{'), 'never spelled without it')
   assert.ok(pane.includes('border-radius:18px 18px 0 0'), 'with the two top corners rounded')
   assert.ok(pane.includes('animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)'), 'sliding up from below')
   assert.ok(pane.includes('@keyframes bt-sheet-in{from{transform:translateY(100%)}to{transform:none}}'), 'the entrance')
   assert.ok(pane.includes('@keyframes bt-sheet-out{from{transform:none}to{transform:translateY(100%)}}'), 'and the exit, which a leaving sheet takes')
-  assert.ok(pane.includes('html[data-bt-mobile] .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out'), 'on the way out too')
+  assert.ok(pane.includes(`${sheet}[data-leaving]{animation:bt-sheet-out`), 'on the way out too')
   // A handle says where it came from; the scrim above it dismisses it, and only a phone draws one.
   assert.ok(pane.includes("view === 'products' ? h('div', { className: 'bt-sheet-handle', 'aria-hidden': true }) : null"), 'the handle')
   assert.ok(pane.includes("view === 'products' ? h('div', { className: 'bt-scrim bt-panel-scrim', onClick: () => actions.closeProducts?.() }) : null"), 'the scrim closes it, and it is the skin\'s own scrim class')

@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 5514dd02
+// Source fingerprint: 77d3f042
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -8822,9 +8822,15 @@ var BROWSER_CSS = `
 /* 全部产物 on a phone is a sheet from the foot rather than the column that stands beside the
    conversation: full width, glued to the bottom, two rounded top corners and a handle that says
    where it came from, as tall as its list asks for up to 85% of the screen and scrolling inside.
-   The desktop column is untouched -- every rule of the sheet is on the phone. */
-html[data-bt-mobile] .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;border-left:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3);overflow:hidden;animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)}
-html[data-bt-mobile] .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out .2s cubic-bezier(.4,0,1,1) forwards}
+   The desktop column is untouched -- every rule of the sheet is on the phone.
+   The :not() is load-bearing, not decoration. styles.js holds the phone width bands for this panel
+   (html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:15vw;right:15vw;width:70vw!important}),
+   and that line weighs exactly as much as a plain html[data-bt-mobile] .bt-panel[data-view=products]:
+   ties in the cascade go to whichever sheet came last, CONVERSATION_CSS is injected after this one
+   (index.js), and the sheet was therefore drawn as the centred 70vw card the user photographed. One
+   more attribute in the selector settles it by weight instead of by injection order. */
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;border-left:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3);overflow:hidden;animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)}
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out .2s cubic-bezier(.4,0,1,1) forwards}
 html[data-bt-mobile] .bt-sheet-handle{flex:none;width:36px;height:4px;margin:8px auto 0;border-radius:999px;background:var(--bt-line-2)}
 /* The sheet's title bar reads left to right: the name from the edge, the close at the other one
    (the panel's own arrow stays where a preview's head is). */
@@ -8836,7 +8842,7 @@ html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:n
 html[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-index:95}
 @keyframes bt-sheet-in{from{transform:translateY(100%)}to{transform:none}}
 @keyframes bt-sheet-out{from{transform:none}to{transform:translateY(100%)}}
-@media (prefers-reduced-motion:reduce){html[data-bt-mobile] .bt-panel[data-view=products]{animation:bt-fade .12s ease-out}}
+@media (prefers-reduced-motion:reduce){html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{animation:bt-fade .12s ease-out}}
 .bt-panel{--bt-panel-view-fade:${SPRING_SHAPE.duration}ms}
 .bt-ptabs{position:relative;display:flex;align-items:center;height:44px;flex:none;border-bottom:.5px solid var(--bt-line);padding:0 6px;gap:0;animation:bt-strip-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
 @keyframes bt-strip-in{from{height:0;opacity:0}}
@@ -16798,7 +16804,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "5514dd02" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "77d3f042" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
