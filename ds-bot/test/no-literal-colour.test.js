@@ -48,7 +48,9 @@ const uncommented = (text) => {
   return out.join('')
 }
 
-/** Every hex whose channels are not all equal, and every rgb()/rgba() the same way. */
+/** Every hex whose channels are not all equal, and every rgb()/rgba() the same way. The other colour
+ *  functions count as colours outright: a neutral belongs in the token block, which is exempt, so a
+ *  rule that reaches for hsl()/oklch()/color() is doing it to name a colour. */
 const chromatics = (raw) => {
   const out = []
   for (const hit of raw.matchAll(/#([0-9a-fA-F]{3,8})\b/g)) {
@@ -61,6 +63,7 @@ const chromatics = (raw) => {
     const n = (hit[1].match(/\d+(\.\d+)?/g) ?? []).map(Number)
     if (n.length >= 3 && !(n[0] === n[1] && n[1] === n[2])) out.push(hit[0])
   }
+  for (const hit of raw.matchAll(/\b(?:hsla?|hwb|oklch|oklab|lab|lch|color)\(/g)) out.push(hit[0].replace(/\($/, '()'))
   return out
 }
 

@@ -87,7 +87,6 @@ const KEYS = [
 const EXEMPT = new Map([
   ['html[data-bt-mobile] .bt-sheet-handle', 'not a target: the 4px pill the eye sees; the 44px band around it (.bt-sheet-grip) is what a thumb grabs'],
   ['html[data-bt-mobile] .bt-peers-icon', 'not a target: the 群聊 door\u2019s avatar, aria-hidden, sized to a Bot row\u2019s own avatar; the row is the target'],
-  ['html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round', 'the drawer\u2019s floating balls, locked to the 40px search field beside them (styles.js) -- a family of their own, raised with Lead rather than left silent'],
 ])
 
 test('every title-bar icon key is the one shape: 48px of finger, no fill, a 12px press, a 22px glyph', () => {

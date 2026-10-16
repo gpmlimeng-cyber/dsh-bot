@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 7f3b3841
+// Source fingerprint: d435b2b9
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3083,6 +3083,12 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 .bt-mem{position:relative;width:min(680px,calc(100vw - 48px));height:min(760px,calc(100vh - 2*max(32px,var(--dsh-frame-overlay-top,32px))));background:var(--bt-main);border-radius:20px;border:.5px solid var(--bt-line-2);box-shadow:0 24px 80px rgba(0,0,0,.24);display:flex;flex-direction:column;overflow:hidden;color:var(--bt-ink);animation:bt-dialog-rise $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},bt-veil-in .2s ease-out}
 .bt-mem-head{position:relative;display:flex;align-items:center;gap:8px;height:60px;flex:none;padding:0 14px 0 24px;border-bottom:.5px solid var(--bt-line);box-sizing:border-box}
 .bt-mem-head .bt-icon-btn{width:32px;height:32px;flex:none}
+/* On a phone this head is a full screen's title row -- the back, the options and the close -- so its
+   keys are finger targets like every other bar's, and they get the floor: 48 square in a 60px head.
+   The desktop dialog keeps its 32: the rule above is the wide layout's. The glyph stays 18px (the
+   size this head draws), it is the finger that was too small. Proven by test/ux-rules.test.js, which
+   is why the touch-target lint (band-scoped rules only) no longer has to miss it. */
+html[data-bt-mobile] .bt-mem-head .bt-icon-btn{width:48px;height:48px}
 .bt-mem-head [aria-haspopup] svg{width:18px;height:18px;stroke-width:2.6}
 .bt-mem-head>.bt-icon-btn:first-child{margin-left:-10px}
 .bt-mem-head h2{margin:0;font-size:17px;line-height:24px;font-weight:600;white-space:nowrap}
@@ -3389,6 +3395,18 @@ html[data-bt-pc] .bt-side.bt-rail{margin-top:0}
 @media (prefers-reduced-motion:reduce){
 :is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active{transform:none;scale:none}
 }
+/* And a control a thumb has just used keeps no ring afterwards: an Android tap can leave :focus on
+   the element it hit, and the UA outline that comes with it is the same "still lit after the tap"
+   the press tint replaced. Keyboard focus is untouched -- :focus-visible keeps its ring, and the
+   skin's own focus-visible rules below are all still there -- so nothing is lost to a keyboard or a
+   screen reader; only the ring nobody asked for is gone.
+   The selector names this skin's own elements and nothing else: [class^="bt-"] / [class*=" bt-"].
+   It is deliberately not a universal or element selector -- that is what would reach a shell
+   control and take its focus drawing away. Our class prefix cannot match the shell: the shell's
+   whole web CSS carries no "bt-" at all (grep -o bt- dsh-client-web/lib/*.css | wc -l = 0), and its
+   class names are hashed (hHd-Xa_root, Ev1C1a_toBottomSlot). */
+html[data-bt-mobile] [class^="bt-"]:focus:not(:focus-visible),
+html[data-bt-mobile] [class*=" bt-"]:focus:not(:focus-visible){outline:none}
 /* No scrollbar anywhere in the mobile layouts -- on the band's own scroller as well as on
    every element under it. This WebView draws the bar as a gutter that takes width from the
    content it scrolls, which on a phone is noise in the middle of the skin, so the two touch
@@ -3473,13 +3491,16 @@ html[data-bt-mobile] .bt-side.bt-rail[data-mobile-open] .bt-brand{display:none}
 /* The three controls of that row read as one row only if they are one row: the 40px the pill
    above the conversation has, with their tops on the same line — the bar's collapse arrow
    sits 10px below the bar's top, and the drawer's own 10px top padding already lands the row
-   exactly there, so the row contributes none of its own. New is locked at 40x40: the field is
-   free to shrink (min-width:0) and used to take its share out of the round button beside it,
-   which is what turned that button into an oval on the phone. Its right padding goes too:
-   the drawer already insets its own contents by 12px, and the row added 5 more, which made
-   the gap between New and the drawer's edge read as 17px against the bar's 12. */
+   exactly there, so the row contributes none of its own. New is 44 square: the field beside it is
+   free to shrink (min-width:0), which it used to do to this very button, turning it into an oval --
+   so the button keeps a fixed basis. The 4px it is taller than that 40px field is absorbed by the
+   row's own centring (align-items:center puts both on one centre line) and by the drawer's 10px top
+   padding; the row grows 40 -> 44 and the list below starts 4px lower, which is the price of the
+   floor. It was 40 and the touch-target lint had to exempt it; the exemption is gone. Its right
+   padding goes too: the drawer already insets its own contents by 12px, and the row added 5 more,
+   which made the gap between New and the drawer's edge read as 17px against the bar's 12. */
 html[data-bt-mobile] .bt-side.bt-rail .bt-side-top{padding-top:0;padding-right:0}
-html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width:40px;height:40px}
+html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 44px;width:44px;height:44px}
 .bt-side-search{box-sizing:border-box;flex:1 1 auto;min-width:0;height:40px;display:flex;align-items:center;gap:8px;padding:0 12px}
 .bt-side-search>svg{flex:none;width:16px;height:16px;color:var(--bt-ink-3)}
 .bt-side-search input{flex:1 1 auto;min-width:0;border:0;background:none;outline:none;padding:0;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px}
@@ -17378,7 +17399,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "7f3b3841" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "d435b2b9" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
