@@ -76,4 +76,8 @@ test('the ask lands in the bell the user already has, not in a new surface', () 
   const styles = read('attention.js')
   const option = styles.split('\n').find(line => line.includes('.bt-attention-opt{'))
   assert.ok(option && option.includes('min-height:44px'), 'the option is a 44px box: the floor this skin holds every control to')
+  // A row is a tap target of its own -- it opens the Bot, the approval, the key that waits. It
+  // measured 33px on the target, so it takes the same floor as the options inside it.
+  const row = styles.split('\n').find(line => line.includes('.bt-attention-row{'))
+  assert.ok(row && row.includes('min-height:44px'), 'and the row that opens what waits carries the same floor')
 })

@@ -192,7 +192,9 @@ html[data-bt-mobile] .bt-mobile-acts .bt-attention{height:44px}
 .bt-mobile-acts .bt-attention-count{position:absolute;top:3px;right:5px;min-width:15px;height:15px;padding:0 4px;border-radius:999px;background:var(--bt-star);color:#fff;font-size:10px;line-height:15px;font-weight:600;text-align:center;box-sizing:border-box}
 .bt-attention-pop{position:fixed;z-index:70;min-width:240px;max-width:340px;padding:6px;border-radius:12px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 10px 20px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);display:flex;flex-direction:column;gap:2px;transform-origin:top right;animation:bt-attention-in .16s cubic-bezier(.2,0,0,1);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;box-sizing:border-box}
 @keyframes bt-attention-in{from{opacity:0;transform:translateY(-4px) scale(.98)}}
-.bt-attention-row{display:flex;align-items:center;gap:8px;width:100%;padding:7px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer}
+/* A row is a tap target of its own -- it opens the thing that waits -- so it holds the same 44px
+   floor as the options inside a decision. It measured 33px on the target, under our own line. */
+.bt-attention-row{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:7px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer}
 
 @media (hover:hover){
 .bt-attention-row:hover{background:var(--bt-hover)}
