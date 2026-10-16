@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: eafa1df7
+// Source fingerprint: e39d5a8a
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -15523,18 +15523,20 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
           }
         }, (0, import_react38.createElement)(ChevronLeftIcon)),
         (0, import_react38.createElement)("h2", null, screen === "list" ? t("All settings") : pageTitle),
-        // The right-hand control: on the group chats' list it is that page's own action -- the same
-        // one the list's row carries on the wide dialog -- and everywhere else it still closes
-        // Settings. Two buttons that both left the page was the user's complaint: the left one
-        // already goes back, so the right one now does the page's work instead.
-        screen === "list" ? null : shown === "groups" && !room2 ? (0, import_react38.createElement)("button", {
+        // The right-hand control is a *function* of the page it stands on, never a second way out: the
+        // group chats' list carries its own action there (the same one the wide dialog's row carries),
+        // and every other screen carries nothing -- the left key already goes back, and the page's own
+        // top card and rows are the way on. The close key that used to sit here was the second exit the
+        // user named as a complaint twice; the phone's bottom bar stays visible under this layer, so
+        // leaving Settings has never needed a button in its title.
+        screen === "list" || !(shown === "groups" && !room2) ? null : (0, import_react38.createElement)("button", {
           type: "button",
           className: "bt-icon-btn",
           "aria-label": t("Create group chat"),
           title: roster.bots.length < 2 ? t("A group chat needs at least two Bots") : t("Create group chat"),
           disabled: roster.bots.length < 2,
           onClick: () => setCreatingGroup(true)
-        }, (0, import_react38.createElement)(PlusIcon)) : (0, import_react38.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": t("Close settings"), title: t("Close settings"), onClick: close }, (0, import_react38.createElement)(CloseIcon))
+        }, (0, import_react38.createElement)(PlusIcon))
       ),
       // A div with role="navigation" rather than a <nav>: the Android responsive skin
       // tags the first [role=dialog][aria-modal] holding a direct nav child as the
@@ -17362,7 +17364,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "eafa1df7" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "e39d5a8a" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

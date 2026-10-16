@@ -239,17 +239,18 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
           onClick: () => { if (screen === 'list') close(); else stepBack() },
         }, h(ChevronLeftIcon)),
         h('h2', null, screen === 'list' ? t('All settings') : pageTitle),
-        // The right-hand control: on the group chats' list it is that page's own action -- the same
-        // one the list's row carries on the wide dialog -- and everywhere else it still closes
-        // Settings. Two buttons that both left the page was the user's complaint: the left one
-        // already goes back, so the right one now does the page's work instead.
-        screen === 'list' ? null
-          : shown === 'groups' && !room ? h('button', {
+        // The right-hand control is a *function* of the page it stands on, never a second way out: the
+        // group chats' list carries its own action there (the same one the wide dialog's row carries),
+        // and every other screen carries nothing -- the left key already goes back, and the page's own
+        // top card and rows are the way on. The close key that used to sit here was the second exit the
+        // user named as a complaint twice; the phone's bottom bar stays visible under this layer, so
+        // leaving Settings has never needed a button in its title.
+        screen === 'list' || !(shown === 'groups' && !room) ? null
+          : h('button', {
             type: 'button', className: 'bt-icon-btn', 'aria-label': t('Create group chat'), title: roster.bots.length < 2 ? t('A group chat needs at least two Bots') : t('Create group chat'),
             disabled: roster.bots.length < 2,
             onClick: () => setCreatingGroup(true),
-          }, h(PlusIcon))
-            : h('button', { type: 'button', className: 'bt-icon-btn', 'aria-label': t('Close settings'), title: t('Close settings'), onClick: close }, h(CloseIcon))),
+          }, h(PlusIcon))),
       // A div with role="navigation" rather than a <nav>: the Android responsive skin
       // tags the first [role=dialog][aria-modal] holding a direct nav child as the
       // upstream settings panel (data-dsh-settings-dialog) and reflows its nav into a

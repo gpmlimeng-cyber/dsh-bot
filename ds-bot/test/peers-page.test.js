@@ -340,11 +340,11 @@ test('a Bot\'s row opens that Bot\'s page, the 群聊 door opens the group chats
   assert.ok(code('i18n.js').includes("'Back to Peers': '返回伙伴'"), 'with its copy')
   assert.ok(peers.includes("'data-screen'") === false, 'neither page is redrawn here: the key is all this page knows')
   // The group chats' page is Settings' own, and its title bar's right-hand control is that page's
-  // action: the two buttons that both left the page (left = one step back, right = close Settings)
-  // became one that stays and does the work -- and the row the wide dialog uses is kept for it,
-  // because that dialog has no bar to raise the form from.
+  // action -- the only right-hand key any of those screens carries now: the two exits that once sat
+  // there (left = one step back, right = close Settings) left one of them behind, and the row the wide
+  // dialog uses is kept for it, because that dialog has no bar to raise the form from.
   const settingsPage = code('settings.js')
-  assert.ok(settingsPage.includes("shown === 'groups' && !room ? h('button', {"), 'the bar knows this page')
+  assert.ok(settingsPage.includes("screen === 'list' || !(shown === 'groups' && !room) ? null"), 'the bar knows this page, and every other screen carries nothing at all')
   assert.ok(settingsPage.includes("'aria-label': t('Create group chat'), title: roster.bots.length < 2 ? t('A group chat needs at least two Bots') : t('Create group chat')"), 'and offers the page\'s own action, guarded the way that row was')
   assert.ok(settingsPage.includes('disabled: roster.bots.length < 2') && settingsPage.includes('onClick: () => setCreatingGroup(true)'), 'which raises the same form')
   assert.ok(settingsPage.includes(": mobile ? null : h('div', { key: 'new', className: 'bt-actions' },"), 'the list\'s row is the wide dialog\'s own')
