@@ -176,25 +176,35 @@ test('two columns fold to one when the card column is narrow', () => {
   assert.ok(styles.includes('@container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}'))
 })
 
-test('the type mark is a tinted badge with the file’s extension, not a drawn glyph', () => {
+test('the type mark is the kind\u2019s own drawing in a tinted square, not letters', () => {
   const source = card.join('\n')
-  assert.ok(source.includes("h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h('span', { className: 'bt-dcard-type' }, badgeOf(name)))"), 'the badge is the extension in a tinted square')
-  assert.ok(!card.some(line => line.includes('FileTypeIcon')), 'and no drawn file glyph is left')
-  assert.ok(!card.some(line => line.includes('PaperclipIcon')), 'the placeholder paperclip is gone')
-  // What the badge writes: the extension short, the way a file manager writes it.
-  assert.ok(source.includes("const EXT_ALIASES = { markdown: 'MD', mdx: 'MD', jpeg: 'JPG', tiff: 'TIF', '7z': '7Z' }"), 'long extensions are written short')
-  assert.ok(source.includes("return EXT_ALIASES[extension] ?? extension.toUpperCase().slice(0, 4)"), 'and every other one in at most four letters, which is what fits the square')
-  assert.ok(source.includes("if (extension === '') return (name.slice(0, 1) || '?').toUpperCase()"), 'a file with no extension keeps its initial rather than an empty square')
+  assert.ok(source.includes("h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h(iconOf(name)))"), 'the square holds the kind\u2019s drawing')
+  assert.ok(!source.includes('badgeOf') && !source.includes('EXT_ALIASES'), 'no letters are written into it any more')
+  assert.ok(!source.includes('bt-dcard-type'), 'and the rule that drew them is gone')
+  // The map, kind by kind: the reader\u2019s kinds, not a mime table -- a picture, code, a sheet, a pdf,
+  // a zip, and a document for everything else (markdown included, which is a document to a reader).
+  assert.ok(source.includes("const CODE_EXTENSIONS = new Set(['html', 'htm', 'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'py', 'go', 'rs', 'java', 'c', 'h', 'cpp', 'css', 'json', 'yml', 'yaml', 'toml', 'sh', 'sql', 'xml'])"), 'code has its own kind')
+  assert.ok(source.includes("const TABLE_EXTENSIONS = new Set(['csv', 'tsv', 'xls', 'xlsx', 'ods'])"), 'so does a sheet')
+  for (const [test, icon] of [['IMAGE_EXTENSIONS.has(extension)', 'FluentImageIcon'], ['CODE_EXTENSIONS.has(extension)', 'FluentCodeIcon'], ['TABLE_EXTENSIONS.has(extension)', 'FluentTableIcon'], ["extension === 'pdf'", 'FluentPdfIcon'], ['ARCHIVE_EXTENSIONS.has(extension)', 'FluentArchiveIcon']]) {
+    assert.ok(source.includes(`if (${test}) return ${icon}`), `${icon} answers ${test}`)
+  }
+  assert.ok(source.includes('return FluentDocumentIcon'), 'and a document is what is left')
+  // Every glyph is Fluent\u2019s own artwork at 20, from the one 20-grid factory in icons.js.
+  const icons = read('icons.js')
+  assert.ok(icons.includes('const fluentIcon20 = d => function FluentIcon20()'), 'one factory for the 20 grid')
+  for (const icon of ['FluentDocumentIcon', 'FluentImageIcon', 'FluentCodeIcon', 'FluentTableIcon', 'FluentPdfIcon', 'FluentArchiveIcon']) {
+    assert.ok(icons.includes(`export const ${icon} = fluentIcon20(`), `${icon} is Fluent\u2019s artwork, not a drawing of ours`)
+  }
   // The tint says what kind of thing it is, before either line under it is read.
   assert.ok(source.includes("const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'tif', 'tiff'])"), 'pictures are their own tone')
   assert.ok(source.includes("const MEDIA_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv', 'avi', 'mp3', 'wav', 'm4a', 'ogg', 'flac'])"), 'and recordings')
   assert.ok(source.includes("if (IMAGE_EXTENSIONS.has(extension)) return 'image'") && source.includes("return 'doc'"), 'with documents as the default')
-  assert.ok(rule('.bt-dcard-ico-image{').includes('--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))'), 'the picture tone is the palette’s green, mixed into the ink so it reads on both themes')
-  assert.ok(rule('.bt-dcard-ico-doc{').includes('--bt-type-ink:var(--bt-accent)'), 'and a document is the shell’s accent')
+  assert.ok(rule('.bt-dcard-ico-image{').includes('--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))'), 'the picture tone is the palette\u2019s green, mixed into the ink so it reads on both themes')
+  assert.ok(rule('.bt-dcard-ico-doc{').includes('--bt-type-ink:var(--bt-accent)'), 'and a document is the shell\u2019s accent')
   assert.ok(rule('.bt-dcard-ico{').includes('width:40px') && rule('.bt-dcard-ico{').includes('height:40px'), 'the square stays the 40px the row was built around')
   assert.ok(rule('.bt-dcard-ico{').includes('background:color-mix(in srgb,var(--bt-type-ink) 12%,transparent)'), 'and carries the tint, not a border')
   assert.ok(!rule('.bt-dcard-ico{').includes('border:'), 'with no outline around it')
-  assert.ok(rule('.bt-dcard-type{').includes('font-size:11px') && rule('.bt-dcard-type{').includes('font-weight:700'), 'the letters are small and bold')
+  assert.ok(rule('.bt-dcard-ico>svg{').includes('width:24px') && rule('.bt-dcard-ico>svg{').includes('height:24px'), 'and the drawing is the 24px the row was measured with')
 })
 
 test('the metadata reads description, then the extension, then the word for a file', () => {

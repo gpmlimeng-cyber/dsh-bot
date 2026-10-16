@@ -16,6 +16,7 @@
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
+import { FluentArchiveIcon, FluentCodeIcon, FluentDocumentIcon, FluentImageIcon, FluentPdfIcon, FluentTableIcon } from './icons.js'
 import { LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { useMobile } from './mobile.js'
@@ -77,22 +78,26 @@ const TYPE_WORDS = {
 }
 const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')
 
-// The badge the list stands the file in with: a rounded square in the kind's own tint with
-// the file's extension written in it, which is the shape the reference list uses. Its point
-// is that a reader never has to decode it -- "MD" says markdown where a drawn page with a
-// folded corner says "some kind of document", and the tint says whether it is a document, a
-// picture, a recording or code before the word under the name is read. Long extensions are
-// written the short way a file manager writes them; a file with no extension at all keeps
-// its initial rather than an empty square.
-const EXT_ALIASES = { markdown: 'MD', mdx: 'MD', jpeg: 'JPG', tiff: 'TIF', '7z': '7Z' }
-const badgeOf = (name) => {
-  const extension = fileExtension(name).toLowerCase()
-  if (extension === '') return (name.slice(0, 1) || '?').toUpperCase()
-  return EXT_ALIASES[extension] ?? extension.toUpperCase().slice(0, 4)
-}
+// What the list stands the file in with: a rounded square in the kind's own tint, holding the kind's
+// own drawing. The user asked the letters away -- "MD", "WEBP" were words pretending to be icons --
+// so the kinds are Fluent's artwork (icons.js, copied from @fluentui/svg-icons like the rest of that
+// family), and the words that say which kind it is stay in the line under the name, once.
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'tif', 'tiff'])
 const MEDIA_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv', 'avi', 'mp3', 'wav', 'm4a', 'ogg', 'flac'])
 const ARCHIVE_EXTENSIONS = new Set(['zip', 'tar', 'gz', 'tgz', '7z', 'rar'])
+const CODE_EXTENSIONS = new Set(['html', 'htm', 'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'py', 'go', 'rs', 'java', 'c', 'h', 'cpp', 'css', 'json', 'yml', 'yaml', 'toml', 'sh', 'sql', 'xml'])
+const TABLE_EXTENSIONS = new Set(['csv', 'tsv', 'xls', 'xlsx', 'ods'])
+// The drawing for a file: its kind when one of these fits, a document when none does -- which is what
+// markdown, a text file, a font and everything unfamiliar are to a reader.
+const iconOf = (name) => {
+  const extension = fileExtension(name).toLowerCase()
+  if (IMAGE_EXTENSIONS.has(extension)) return FluentImageIcon
+  if (CODE_EXTENSIONS.has(extension)) return FluentCodeIcon
+  if (TABLE_EXTENSIONS.has(extension)) return FluentTableIcon
+  if (extension === 'pdf') return FluentPdfIcon
+  if (ARCHIVE_EXTENSIONS.has(extension)) return FluentArchiveIcon
+  return FluentDocumentIcon
+}
 const toneOf = (name) => {
   const extension = fileExtension(name).toLowerCase()
   if (IMAGE_EXTENSIONS.has(extension)) return 'image'
@@ -305,7 +310,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         'aria-label': `${t('Preview')} ${name}`,
         onClick: preview,
       }),
-      h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h('span', { className: 'bt-dcard-type' }, badgeOf(name))),
+      h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h(iconOf(name))),
       h('span', { className: 'bt-dcard-copy' },
         h('span', { className: 'bt-dcard-name' }, name),
         h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name))),

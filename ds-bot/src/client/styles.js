@@ -321,7 +321,7 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-ico-image{--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))}
 .bt-dcard-ico-media{--bt-type-ink:color-mix(in srgb,var(--bt-star) 88%,var(--bt-ink))}
 .bt-dcard-ico-plain{--bt-type-ink:var(--bt-ink-2)}
-.bt-dcard-type{font-size:11px;line-height:1;font-weight:700;letter-spacing:.02em;font-family:inherit;text-transform:uppercase}
+.bt-dcard-ico>svg{width:24px;height:24px}
 /* The two lines take the weight and the sizes of the delivery list the user pointed at: the
    name is a step larger and carries medium weight, the second line a step down in the
    quiet grey, and the two sit tight against each other -- 21 + 1 + 17 = 39px of the tile's

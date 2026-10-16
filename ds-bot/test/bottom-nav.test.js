@@ -97,10 +97,11 @@ test('each page is Fluent\u2019s regular and Fluent\u2019s fill, credited where 
   // 发现 page (discover-page.js), which wear the same family: fourteen on Fluent's 24 grid, one factory.
   // The Main Bot's crown (伙伴) is the family's other grid: Fluent draws Crown at 20, so its regular and
   // filled pair come with a factory of their own -- sixteen Fluent exports, two factories, two grids.
-  assert.equal((icons.match(/export const Fluent\w+/g) ?? []).length, 16, 'the bar\'s four pairs, the six rows of 发现, and the star pair')
-  assert.ok(icons.includes("const fluentCrownIcon = d => function FluentCrownIcon()"), 'which draws on Fluent\'s 20 grid')
+  assert.equal((icons.match(/export const Fluent\w+/g) ?? []).length, 22, 'the bar\'s four pairs, the six rows of 发现, the crown pair, and the six file kinds')
+  assert.ok(icons.includes('const fluentIcon20 = d => function FluentIcon20()'), 'which draws on Fluent\'s 20 grid')
+  assert.ok(icons.includes('const fluentCrownIcon = fluentIcon20'), 'the crown and the file kinds share that one factory')
   assert.ok(icons.includes("viewBox: '0 0 20 20'"), 'at the size that file carries')
-  for (const dead of ['Phosphor Icons (MIT)', 'phosphorIcon', 'PHOSPHOR_BOX', 'ionicon(', 'Ionicons (MIT)', 'IonChatbubbleIcon', 'IonPeopleIcon', 'fluentIcon']) {
+  for (const dead of ['Phosphor Icons (MIT)', 'phosphorIcon', 'PHOSPHOR_BOX', 'ionicon(', 'Ionicons (MIT)', 'IonChatbubbleIcon', 'IonPeopleIcon', 'const fluentIcon =', 'fluentIcon(']) {
     assert.ok(!icons.includes(dead), `${dead} is gone with the family it belonged to`)
   }
   // Nothing is pinned here either: Fluent draws both weights as filled artwork, so there is

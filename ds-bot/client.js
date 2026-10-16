@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 0afa47b2
+// Source fingerprint: badd4945
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2348,7 +2348,7 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-ico-image{--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))}
 .bt-dcard-ico-media{--bt-type-ink:color-mix(in srgb,var(--bt-star) 88%,var(--bt-ink))}
 .bt-dcard-ico-plain{--bt-type-ink:var(--bt-ink-2)}
-.bt-dcard-type{font-size:11px;line-height:1;font-weight:700;letter-spacing:.02em;font-family:inherit;text-transform:uppercase}
+.bt-dcard-ico>svg{width:24px;height:24px}
 /* The two lines take the weight and the sizes of the delivery list the user pointed at: the
    name is a step larger and carries medium weight, the second line a step down in the
    quiet grey, and the two sit tight against each other -- 21 + 1 + 17 = 39px of the tile's
@@ -4230,11 +4230,18 @@ var FluentCompassIcon = fluentNavIcon("M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20m0
 var FluentCompassFilledIcon = fluentNavIcon("M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20M8.56 7.43a.88.88 0 0 0-1.13 1.13l1.5 3.97a4.4 4.4 0 0 0 2.54 2.53l3.97 1.5a.88.88 0 0 0 1.13-1.12l-1.51-3.96a4.4 4.4 0 0 0-2.53-2.54z");
 var FluentPersonIcon = fluentNavIcon("M17.75 14C19 14 20 15 20 16.25v.57c0 .9-.32 1.76-.9 2.44Q16.74 22.01 12 22q-4.74.01-7.1-2.74a3.8 3.8 0 0 1-.9-2.43v-.58C4 15 5.01 14 6.25 14zm0 1.5H6.25a.75.75 0 0 0-.75.75v.58c0 .53.2 1.05.54 1.46C7.3 19.76 9.26 20.5 12 20.5q4.09 0 5.96-2.21c.35-.41.54-.93.54-1.47v-.57a.75.75 0 0 0-.75-.75M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10m0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7");
 var FluentPersonFilledIcon = fluentNavIcon("M17.75 14C19 14 20 15 20 16.25v.92q-.01.88-.5 1.6Q17.13 22 12 22q-5.15 0-7.49-3.24a2.8 2.8 0 0 1-.5-1.6v-.91C4 15 5 14 6.24 14zM12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10");
-var fluentCrownIcon = (d) => function FluentCrownIcon2() {
+var fluentIcon20 = (d) => function FluentIcon20() {
   return (0, import_react3.createElement)("svg", { width: 20, height: 20, viewBox: "0 0 20 20", fill: "currentColor", "aria-hidden": true }, (0, import_react3.createElement)("path", { d }));
 };
+var fluentCrownIcon = fluentIcon20;
 var FluentCrownIcon = fluentCrownIcon("M11.5 12.5C11.5 13.3284 10.8284 14 10 14C9.17157 14 8.5 13.3284 8.5 12.5C8.5 11.6716 9.17157 11 10 11C10.8284 11 11.5 11.6716 11.5 12.5ZM8.73696 5.3095L6.60863 8.04592C6.46231 8.23405 6.20353 8.29275 5.99035 8.18616L3.86474 7.12335C3.95159 6.93352 4 6.72241 4 6.5C4 5.67157 3.32843 5 2.5 5C1.67157 5 1 5.67157 1 6.5C1 7.22319 1.51179 7.82685 2.19294 7.96854L3.88536 16.0075C4.00713 16.5859 4.51744 17 5.10855 17H14.8915C15.4826 17 15.9929 16.5859 16.1146 16.0075L17.8071 7.96854C18.4882 7.82685 19 7.22319 19 6.5C19 5.67157 18.3284 5 17.5 5C16.6716 5 16 5.67157 16 6.5C16 6.72241 16.0484 6.93352 16.1353 7.12335L14.0096 8.18616C13.7965 8.29275 13.5377 8.23405 13.3914 8.04592L11.263 5.3095C11.413 5.07598 11.5 4.79815 11.5 4.5C11.5 3.67157 10.8284 3 10 3C9.17157 3 8.5 3.67157 8.5 4.5C8.5 4.79815 8.58698 5.07598 8.73696 5.3095ZM10 5.31441L12.602 8.65986C13.041 9.22426 13.8173 9.40035 14.4569 9.08059L16.7974 7.91032L15.1361 15.8015C15.1117 15.9172 15.0097 16 14.8915 16H5.10855C4.99032 16 4.88826 15.9172 4.86391 15.8015L3.20261 7.91032L5.54314 9.08059C6.18267 9.40035 6.95901 9.22426 7.39799 8.65986L10 5.31441Z");
 var FluentCrownFilledIcon = fluentCrownIcon("M8.73697 5.30951L6.60865 8.04592C6.46233 8.23405 6.20355 8.29275 5.99037 8.18616L3.86475 7.12335C3.9516 6.93351 4 6.72241 4 6.5C4 5.67157 3.32843 5 2.5 5C1.67157 5 1 5.67157 1 6.5C1 7.2232 1.5118 7.82686 2.19296 7.96855L3.88538 16.0075C4.00715 16.5859 4.51745 17 5.10856 17H14.8915C15.4826 17 15.9929 16.5859 16.1147 16.0075L17.8071 7.96854C18.4882 7.82684 19 7.22319 19 6.5C19 5.67157 18.3284 5 17.5 5C16.6716 5 16 5.67157 16 6.5C16 6.72241 16.0484 6.93352 16.1353 7.12336L14.0097 8.18616C13.7965 8.29275 13.5377 8.23405 13.3914 8.04592L11.263 5.30948C11.413 5.07597 11.5 4.79814 11.5 4.5C11.5 3.67157 10.8284 3 10 3C9.17157 3 8.5 3.67157 8.5 4.5C8.5 4.79815 8.58699 5.07599 8.73697 5.30951ZM10 14C9.17157 14 8.5 13.3284 8.5 12.5C8.5 11.6716 9.17157 11 10 11C10.8284 11 11.5 11.6716 11.5 12.5C11.5 13.3284 10.8284 14 10 14Z");
+var FluentDocumentIcon = fluentIcon20("M6 2a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V7.41c0-.4-.16-.78-.44-1.06l-3.91-3.91A1.5 1.5 0 0 0 10.59 2zM5 4a1 1 0 0 1 1-1h4v3.5c0 .83.67 1.5 1.5 1.5H15v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1zm9.8 3h-3.3a.5.5 0 0 1-.5-.5V3.2z");
+var FluentImageIcon = fluentIcon20("M14 7.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m-1 0a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0M3 6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3zm3-2a2 2 0 0 0-2 2v8q0 .56.28 1.02l4.67-4.59a1.5 1.5 0 0 1 2.1 0l4.67 4.59Q16 14.56 16 14V6a2 2 0 0 0-2-2zm0 12h8a2 2 0 0 0 1.01-.27l-4.66-4.58a.5.5 0 0 0-.7 0l-4.66 4.58A2 2 0 0 0 6 16");
+var FluentCodeIcon = fluentIcon20("M12.64 1.02a.5.5 0 0 1 .34.62l-5 17a.5.5 0 0 1-.96-.28l5-17a.5.5 0 0 1 .62-.34M5.13 5.17a.5.5 0 0 1 .74.66L2.17 10l3.7 4.17a.5.5 0 0 1-.74.66l-4-4.5a.5.5 0 0 1 0-.66zm9.04-.04a.5.5 0 0 1 .7.04l4 4.5a.5.5 0 0 1 0 .66l-4 4.5a.5.5 0 0 1-.74-.66l3.7-4.17-3.7-4.17a.5.5 0 0 1 .04-.7");
+var FluentTableIcon = fluentIcon20("M17 5.5A2.5 2.5 0 0 0 14.5 3h-9A2.5 2.5 0 0 0 3 5.5v9A2.5 2.5 0 0 0 5.5 17h9a2.5 2.5 0 0 0 2.5-2.5zm-13 9V13h3v3H5.36A1.5 1.5 0 0 1 4 14.5m8-1.5v3H8v-3zm2.5 3H13v-3h3v1.64A1.5 1.5 0 0 1 14.5 16M12 8v4H8V8zm1 0h3v4h-3zm-1-4v3H8V4zm1 0h1.64A1.5 1.5 0 0 1 16 5.5V7h-3zM7 4v3H4V5.36A1.5 1.5 0 0 1 5.5 4zm0 4v4H4V8z");
+var FluentPdfIcon = fluentIcon20("M3 12a2 2 0 1 1 0 4H2v1.5a.5.5 0 0 1-1 0v-5c0-.28.22-.5.5-.5zm-1 3h1a1 1 0 1 0 0-2H2zm6-3a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6.5a.5.5 0 0 1-.5-.5v-5c0-.28.22-.5.5-.5zm-1 5h1a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H7zm7.1-4.99a.5.5 0 0 1 0 .98L14 13h-2v1.5h1.5a.5.5 0 0 1 0 1H12v2a.5.5 0 0 1-1 0v-5c0-.28.22-.5.5-.5H14zM10.6 2c.4 0 .78.16 1.06.44l3.91 3.91c.28.28.44.67.44 1.06V16a2 2 0 0 1-2 2h-1.09q.09-.23.09-.5V17h1a1 1 0 0 0 1-1v-2.39a1.5 1.5 0 0 0 0-2.23V8h-3.5A1.5 1.5 0 0 1 10 6.5V3H6a1 1 0 0 0-1 1v7.63a3 3 0 0 0-1-.52V4c0-1.1.9-2 2-2zM11 6.5c0 .28.22.5.5.5h3.3L11 3.2z");
+var FluentArchiveIcon = fluentIcon20("M8.5 10a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1zM2 4.75C2 3.78 2.78 3 3.75 3h12.5c.97 0 1.75.78 1.75 1.75v1.5c0 .7-.4 1.3-1 1.58V14a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7.83c-.6-.28-1-.88-1-1.58zM3.75 4a.75.75 0 0 0-.75.75v1.5c0 .41.34.75.75.75h12.5c.41 0 .75-.34.75-.75v-1.5a.75.75 0 0 0-.75-.75zM4 8v6c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V8z");
 var FluentPuzzlePieceIcon = fluentNavIcon("M13 2.00423C14.5977 2.00423 15.9037 3.25315 15.994 4.82327L15.999 4.999L18.25 5C19.1172 5 19.837 5.63072 19.9758 6.45858L19.9942 6.60663L20 6.75018L19.9991 10.5012L18.0015 10.5013C17.2579 10.5013 16.6353 11.0445 16.5215 11.7403L16.5062 11.8725L16.5015 12.0013C16.5015 12.7449 17.0446 13.3675 17.7405 13.4813L17.8727 13.4965L18.0014 13.5013L19.9991 13.5012L20 17.2526C20 18.1708 19.2929 18.9238 18.3934 18.9968L18.2499 19.0026L15.999 19.002L15.9949 19.1747C15.9106 20.6305 14.7881 21.8078 13.3567 21.9774L13.1763 21.9933L13 21.9984C11.4023 21.9984 10.0963 20.7495 10.0051 19.1779L10 19.002L7.75 19.0026C6.88283 19.0026 6.16298 18.3719 6.02417 17.5443L6.0058 17.3963L6 17.2528L5.999 15.001L5.836 14.9962C4.38017 14.9119 3.20285 13.7894 3.03326 12.3581L3.01736 12.1776L3.01227 12.0013C3.01227 10.4036 4.26119 9.09765 5.83593 9.0064L5.999 9.001L6 6.75C6 5.88283 6.63072 5.16298 7.45831 5.02418L7.60631 5.0058L7.74981 5L9.999 4.999L10.0051 4.82796C10.0894 3.37214 11.2119 2.19482 12.6432 2.02523L12.8237 2.00933L13 2.00423ZM13 3.50423C12.2203 3.50423 11.5795 4.09912 11.5069 4.86039L11.5 5.00497L11.4985 6.49904L7.75 6.5C7.63165 6.5 7.53251 6.58223 7.5066 6.69279L7.5 6.75018L7.49909 10.5012L6.01227 10.5013C5.18384 10.5013 4.51227 11.1729 4.51227 12.0013C4.51227 12.781 5.10716 13.4218 5.86775 13.4944L6.01219 13.5013L7.49909 13.5012L7.5 17.2526C7.5 17.371 7.58223 17.4701 7.69261 17.496L7.7499 17.5026L11.4985 17.5021L11.5 18.9984C11.5 19.8268 12.1716 20.4984 13 20.4984C13.7797 20.4984 14.4204 19.9035 14.4931 19.1434L14.5 18.9991L14.4985 17.5021L18.25 17.5026C18.3683 17.5026 18.4675 17.4204 18.4934 17.3101L18.5 17.2528L18.499 15L17.9762 15.0009L17.7968 14.9944C16.2855 14.8922 15.0927 13.6769 15.0068 12.1532L15.0019 11.976L15.0084 11.7967C15.1105 10.2854 16.3258 9.09259 17.827 9.00631L18.0014 9.00131L18.499 9.001L18.5 6.75C18.5 6.65532 18.4474 6.57294 18.3697 6.5305L18.3072 6.5066L18.2498 6.5L14.4985 6.49904L14.5 5.00423C14.5 4.17581 13.8284 3.50423 13 3.50423Z");
 var FluentPlugConnectedIcon = fluentNavIcon("M19.4898 5.57084C20.2796 6.58684 20.7499 7.8635 20.7499 9.25001C20.7499 11.5333 19.4745 13.5187 17.5972 14.5327C16.9481 14.8833 16.1671 14.6672 15.6454 14.1455L9.85438 8.35451C9.33268 7.8328 9.1166 7.05181 9.46723 6.40265C10.4812 4.52541 12.4666 3.25001 14.7499 3.25001C16.1364 3.25001 17.4132 3.72034 18.4292 4.51016L20.7197 2.21967C21.0126 1.92678 21.4874 1.92678 21.7803 2.21967C22.0732 2.51256 22.0732 2.98744 21.7803 3.28033L19.4898 5.57084ZM17.4732 12.8331C18.5534 12.0106 19.2499 10.7106 19.2499 9.25001C19.2499 6.76473 17.2352 4.75001 14.7499 4.75001C13.2893 4.75001 11.9893 5.44648 11.1668 6.52671C10.9008 6.87593 10.9812 7.35998 11.2916 7.67036L16.3295 12.7083C16.6399 13.0187 17.124 13.0991 17.4732 12.8331ZM3.28033 21.7803L5.57072 19.4899C6.58673 20.2797 7.86339 20.75 9.24989 20.75C11.5332 20.75 13.5186 19.4746 14.5325 17.5973C14.8832 16.9482 14.6671 16.1672 14.1454 15.6455L8.35438 9.85448C7.83268 9.33278 7.05168 9.1167 6.40253 9.46733C4.52528 10.4813 3.24989 12.4667 3.24989 14.75C3.24989 16.1366 3.72022 17.4133 4.51005 18.4293L2.21967 20.7197C1.92678 21.0126 1.92678 21.4874 2.21967 21.7803C2.51256 22.0732 2.98744 22.0732 3.28033 21.7803ZM7.67023 11.2917L12.7082 16.3296C13.0186 16.64 13.0989 17.1241 12.833 17.4733C12.0105 18.5535 10.7105 19.25 9.24989 19.25C6.76461 19.25 4.74989 17.2353 4.74989 14.75C4.74989 13.2894 5.44635 11.9894 6.52659 11.1669C6.87581 10.9009 7.35985 10.9813 7.67023 11.2917Z");
 var FluentClockIcon = fluentNavIcon("M3.5 12C3.5 7.30558 7.30558 3.5 12 3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5C7.30558 20.5 3.5 16.6944 3.5 12ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM11.9931 6.64827C11.9435 6.28233 11.6295 6 11.25 6C10.836 6 10.5 6.336 10.5 6.75V12.75L10.5069 12.8517C10.5565 13.2177 10.8705 13.5 11.25 13.5H15.25L15.3517 13.4931C15.7177 13.4435 16 13.1295 16 12.75C16 12.336 15.664 12 15.25 12H12V6.75L11.9931 6.64827Z");
@@ -5379,15 +5386,20 @@ var TYPE_WORDS = {
   xml: "Code file"
 };
 var wordFor = (path) => t(TYPE_WORDS[(0, import_dsh_client_ui_primitives2.fileExtension)(basename(path))] ?? "File");
-var EXT_ALIASES = { markdown: "MD", mdx: "MD", jpeg: "JPG", tiff: "TIF", "7z": "7Z" };
-var badgeOf = (name) => {
-  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toLowerCase();
-  if (extension === "") return (name.slice(0, 1) || "?").toUpperCase();
-  return EXT_ALIASES[extension] ?? extension.toUpperCase().slice(0, 4);
-};
 var IMAGE_EXTENSIONS = /* @__PURE__ */ new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "bmp", "ico", "svg", "tif", "tiff"]);
 var MEDIA_EXTENSIONS = /* @__PURE__ */ new Set(["mp4", "mov", "webm", "mkv", "avi", "mp3", "wav", "m4a", "ogg", "flac"]);
 var ARCHIVE_EXTENSIONS = /* @__PURE__ */ new Set(["zip", "tar", "gz", "tgz", "7z", "rar"]);
+var CODE_EXTENSIONS = /* @__PURE__ */ new Set(["html", "htm", "js", "mjs", "cjs", "jsx", "ts", "tsx", "py", "go", "rs", "java", "c", "h", "cpp", "css", "json", "yml", "yaml", "toml", "sh", "sql", "xml"]);
+var TABLE_EXTENSIONS = /* @__PURE__ */ new Set(["csv", "tsv", "xls", "xlsx", "ods"]);
+var iconOf = (name) => {
+  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toLowerCase();
+  if (IMAGE_EXTENSIONS.has(extension)) return FluentImageIcon;
+  if (CODE_EXTENSIONS.has(extension)) return FluentCodeIcon;
+  if (TABLE_EXTENSIONS.has(extension)) return FluentTableIcon;
+  if (extension === "pdf") return FluentPdfIcon;
+  if (ARCHIVE_EXTENSIONS.has(extension)) return FluentArchiveIcon;
+  return FluentDocumentIcon;
+};
 var toneOf = (name) => {
   const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toLowerCase();
   if (IMAGE_EXTENSIONS.has(extension)) return "image";
@@ -5548,7 +5560,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         "aria-label": `${t("Preview")} ${name}`,
         onClick: preview
       }),
-      (0, import_react8.createElement)("span", { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, "aria-hidden": true }, (0, import_react8.createElement)("span", { className: "bt-dcard-type" }, badgeOf(name))),
+      (0, import_react8.createElement)("span", { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, "aria-hidden": true }, (0, import_react8.createElement)(iconOf(name))),
       (0, import_react8.createElement)(
         "span",
         { className: "bt-dcard-copy" },
@@ -16885,7 +16897,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "0afa47b2" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "badd4945" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
