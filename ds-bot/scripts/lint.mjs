@@ -15,11 +15,20 @@ try {
 } catch {}
 // Node runs oxlint's own script: on Windows it cannot spawn the .cmd shim in node_modules/.bin
 // without a shell.
+//
+// Which node runs it matters on this machine: node here starts through the dynamic linker
+// (/apex/com.android.runtime/bin/linker64 .../node ...), so process.execPath reports linker64
+// rather than node -- and spawning that asks the linker to load oxlint's 46-byte JS shim as an
+// ELF ("is too small to be an ELF executable"). npm's own npm_node_execpath/NODE point at the
+// linker too. Fall back to the `node` on PATH, which is the real binary; DSH_LINT_NODE names
+// one explicitly for a machine whose node lives somewhere PATH does not reach.
+const node = process.env.DSH_LINT_NODE
+  ?? (process.execPath.includes('linker64') ? 'node' : process.execPath)
 const bin = candidates.filter(Boolean).map(dir => join(dir, 'node_modules', 'oxlint', 'bin', 'oxlint')).find(existsSync)
 if (!bin) {
   console.error('lint: no oxlint found; run npm run harness, or set DSH_HARNESS to a deepseek-harness checkout')
   process.exit(2)
 }
-const result = spawnSync(process.execPath, [bin, '-c', '.oxlintrc.json', ...process.argv.slice(2), 'index.js', 'web-search.js', 'src', 'dev', 'scripts', 'test'], { cwd: plugin, stdio: 'inherit' })
+const result = spawnSync(node, [bin, '-c', '.oxlintrc.json', ...process.argv.slice(2), 'index.js', 'web-search.js', 'src', 'dev', 'scripts', 'test'], { cwd: plugin, stdio: 'inherit' })
 if (result.error) console.error(`lint: ${result.error.message}`)
 process.exit(result.status ?? 1)
