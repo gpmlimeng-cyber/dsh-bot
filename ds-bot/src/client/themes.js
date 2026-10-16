@@ -7,6 +7,10 @@ import { createSource } from './sources.js'
 // tokens derive from them, so a registered theme recolors the whole team UI.
 
 const THEME_KEYS = ['bg', 'sidebar', 'bubble', 'card', 'text', 'user', 'userText', 'accent']
+// Two more a theme MAY name, per mode: the bottom bar's pair. They are not derived from the eight
+// (the bar is sampled from the user's own app, not from the palette), so a theme that leaves them
+// out keeps the pair styles.js holds -- the pre-theme fallback -- and no existing theme moves.
+const THEME_OPTIONAL_KEYS = ['navOn', 'navInk']
 // Exported with `themeVars` so the base sheet's pre-theme fallback can be held to the live
 // values token by token (test/page-colour.test.js): themeCss emits `html body{...}`, which
 // outranks that fallback, so a fallback that disagrees is either a value nothing reads or a
@@ -44,6 +48,10 @@ export function themeVars(mode, dark, accent = mode.accent) {
     '--bt-accent': accent, '--bt-accent-ink': luminance(accent) > 0.45 ? '#141414' : '#ffffff',
     '--bt-user': mode.user, '--bt-user-ink': mode.userText,
     '--bt-tag-bg': rgba(mode.text, dark ? 0.09 : 0.06), '--bt-tag-ink': rgba(mode.text, 0.58),
+    // The bottom bar's own pair, only when the theme names it: `html body` outranks the base
+    // sheet's `body`, so a theme that says nothing here leaves those two values untouched.
+    ...(mode.navInk === undefined ? {} : { '--bt-nav-ink': mode.navInk }),
+    ...(mode.navOn === undefined ? {} : { '--bt-nav-on': mode.navOn }),
   }
 }
 const declarations = vars => Object.entries(vars).map(([name, value]) => `${name}:${value}`).join(';')
@@ -98,6 +106,10 @@ export function registerTheme(id, theme) {
   if (typeof id !== 'string' || !/^[a-z][\w-]{0,31}$/.test(id)) throw new Error('Theme ids are lowercase words')
   for (const mode of ['light', 'dark']) {
     for (const key of THEME_KEYS) if (!isHex(theme?.[mode]?.[key])) throw new Error(`Theme ${mode}.${key} must be a #rrggbb color`)
+    for (const key of THEME_OPTIONAL_KEYS) {
+      const value = theme?.[mode]?.[key]
+      if (value !== undefined && !isHex(value)) throw new Error(`Theme ${mode}.${key} must be a #rrggbb color`)
+    }
   }
   const previous = customThemes[id]
   customThemes[id] = { label: String(theme.label ?? id), light: theme.light, dark: theme.dark, css: typeof theme.css === 'string' ? theme.css : '' }

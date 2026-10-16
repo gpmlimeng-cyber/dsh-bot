@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: a5db6245
+// Source fingerprint: dde43d5b
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -1423,6 +1423,7 @@ function countCards(state, sessionId, callIds, delta) {
 
 // src/client/themes.js
 var THEME_KEYS = ["bg", "sidebar", "bubble", "card", "text", "user", "userText", "accent"];
+var THEME_OPTIONAL_KEYS = ["navOn", "navInk"];
 var THEMES = {
   deepseek: {
     label: "DeepSeek",
@@ -1464,7 +1465,11 @@ function themeVars(mode, dark, accent = mode.accent) {
     "--bt-user": mode.user,
     "--bt-user-ink": mode.userText,
     "--bt-tag-bg": rgba(mode.text, dark ? 0.09 : 0.06),
-    "--bt-tag-ink": rgba(mode.text, 0.58)
+    "--bt-tag-ink": rgba(mode.text, 0.58),
+    // The bottom bar's own pair, only when the theme names it: `html body` outranks the base
+    // sheet's `body`, so a theme that says nothing here leaves those two values untouched.
+    ...mode.navInk === void 0 ? {} : { "--bt-nav-ink": mode.navInk },
+    ...mode.navOn === void 0 ? {} : { "--bt-nav-on": mode.navOn }
   };
 }
 var declarations = (vars) => Object.entries(vars).map(([name, value]) => `${name}:${value}`).join(";");
@@ -1514,6 +1519,10 @@ function registerTheme(id, theme) {
   if (typeof id !== "string" || !/^[a-z][\w-]{0,31}$/.test(id)) throw new Error("Theme ids are lowercase words");
   for (const mode of ["light", "dark"]) {
     for (const key of THEME_KEYS) if (!isHex(theme?.[mode]?.[key])) throw new Error(`Theme ${mode}.${key} must be a #rrggbb color`);
+    for (const key of THEME_OPTIONAL_KEYS) {
+      const value = theme?.[mode]?.[key];
+      if (value !== void 0 && !isHex(value)) throw new Error(`Theme ${mode}.${key} must be a #rrggbb color`);
+    }
   }
   const previous = customThemes[id];
   customThemes[id] = { label: String(theme.label ?? id), light: theme.light, dark: theme.dark, css: typeof theme.css === "string" ? theme.css : "" };
@@ -17741,7 +17750,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "a5db6245" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "dde43d5b" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

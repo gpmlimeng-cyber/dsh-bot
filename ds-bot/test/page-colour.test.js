@@ -8,7 +8,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { THEMES, themeVars } from '../src/client/themes.js'
+import { THEMES, registerTheme, themeCss, themeVars } from '../src/client/themes.js'
 
 const read = (name) => readFileSync(new URL(`../src/client/${name}`, import.meta.url), 'utf8')
 const styles = read('styles.js').split('\n')
@@ -56,6 +56,30 @@ test('the tokens that live in one layer only are the documented ones', () => {
       '--bt-line-weak', '--bt-nav-ink', '--bt-nav-on', '--bt-news', '--bt-press', '--bt-rec', '--bt-spectrum',
       '--bt-star', '--bt-unread', '--bt-warn', '--bt-warn-ink', '--bt-warn-ink-2', '--bt-warn-ink-dark', '--bt-warn-soft'], 'fallback only')
   assert.deepEqual(Object.keys(theme).filter(token => !light.has(token)), ['--bt-accent-ink'], 'palette only')
+})
+
+// The bottom bar's pair is the one surface the user reads all day and the palette cannot derive
+// (it is sampled from their own app), so a theme may name it -- and one that says nothing keeps
+// the base sheet's values, which is what "no existing theme moves a pixel" means here.
+test('a theme may name the bottom bar\'s pair, and every built-in theme leaves it alone', () => {
+  for (const [id, theme] of Object.entries(THEMES)) {
+    for (const dark of [false, true]) {
+      const vars = themeVars(dark ? theme.dark : theme.light, dark)
+      assert.equal('--bt-nav-ink' in vars, false, `${id} ${dark ? 'dark' : 'light'}`)
+      assert.equal('--bt-nav-on' in vars, false, `${id} ${dark ? 'dark' : 'light'}`)
+    }
+  }
+  const named = themeVars({ ...THEMES.deepseek.light, navInk: '#8a8a8a', navOn: '#101010' }, false)
+  assert.equal(named['--bt-nav-ink'], '#8a8a8a')
+  assert.equal(named['--bt-nav-on'], '#101010')
+  // And they land in the theme's own layer, which is the one that outranks the fallback.
+  const css = themeCss({ label: 'x', light: { ...THEMES.deepseek.light, navOn: '#101010' }, dark: THEMES.deepseek.dark })
+  assert.match(css, /html body\{[^}]*--bt-nav-on:#101010/, 'the light layer carries it')
+  assert.doesNotMatch(css.split('\n')[1], /--bt-nav-on/, 'and a mode that says nothing does not')
+  // An optional key is still held to the same shape as the eight, and a refused registration
+  // leaves nothing behind (it throws before the theme is stored).
+  assert.throws(() => registerTheme('optional-check', { label: 'x', light: { ...THEMES.deepseek.light, navInk: 'grey' }, dark: THEMES.deepseek.dark }),
+    /light\.navInk must be a #rrggbb color/)
 })
 
 const light = styles.find(line => line.startsWith('body{--bt-nav-ink:'))
