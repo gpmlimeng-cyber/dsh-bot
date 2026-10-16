@@ -642,7 +642,11 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
   const pending = done || !live.speaking ? [] : [live.speaking]
   const speakerTool = useWork?.(work => work.bots?.[live.speaking]?.tool) ?? undefined
   const speakerDoing = useWork?.(work => (work.bots?.[live.speaking]?.tool ? workPhrase(work.bots[live.speaking]) : undefined)) ?? undefined
-  if (replies.length === 0 && pending.length === 0) return null
+  // Nothing to draw yet is not "draw nothing": this cell is where the group's replies live, so a
+  // node it leaves empty hands the tool row back to the shell -- `group_relay · {}` over the
+  // messages, which is the user's report. The blank box is `display:contents`, so it holds the
+  // node without taking a line of its own.
+  if (replies.length === 0 && pending.length === 0) return h('span', { className: 'bt-cell-blank', 'aria-hidden': true })
   const room = roster.roomsById[sessionId]
   // A decision the room admin asks for rides the bar above the composer instead of the transcript
   // (decide.js has the protocol): the block comes out of the reply it was written in, and the newest
@@ -815,15 +819,20 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, actions }
   const turn = node.location?.turn?.turn ?? root.turn
   const hidden = isHiddenTurn(roster, sessionId, turn)
   const findBot = nameOrId => roster.byId[nameOrId] ?? roster.bots.find(bot => bot.name.toLowerCase() === String(nameOrId ?? '').toLowerCase())
-  const calls = hidden ? [] : callTree(root)
+  const tree = callTree(root)
+  const calls = hidden ? [] : tree
   const drawn = calls.filter(call => DRAWN.has(toolName(call)))
+  // A relay node is never left empty: it carries the group's replies, so an empty render is what put
+  // the shell's raw `group_relay · {}` row over them. Every other tool we do not draw (read, bash,
+  // and the rest) still falls through to the shell's own row, which is where those belong.
+  const relay = tree.some(call => toolName(call) === 'group_relay')
   // The newest call still running names the work, so a program reads as the tool it is in.
   const running = root.kind === 'tool-result' ? undefined : calls.findLast(call => call.kind !== 'tool-result')
   const note = running ? toolActivity(toolName(running), toolArgs(running).text, findBot, roster.byId[sessionId]) : null
   // A running tool shows only as the activity row's phrase.
   useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note)
   useShownCards(actions, sessionId, drawn.filter(call => CARDS.has(toolName(call)) && call.callId).map(call => call.callId))
-  if (drawn.length === 0) return null
+  if (drawn.length === 0) return relay ? h('span', { className: 'bt-cell-blank', 'aria-hidden': true }) : null
   const env = { sessionId, roster, actions, useUi, useWork, findBot }
   return h(Fragment, null, drawn.map((call, index) => h(Fragment, { key: call.callId ?? index }, renderCall(call, env))))
 }

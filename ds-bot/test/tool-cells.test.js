@@ -378,3 +378,21 @@ test('a goal round draws nothing, while another unknown trigger keeps its event 
   assert.equal(trigger({ kind: 'goal', goalId: 'goal-1', revision: 1, round: 1 }), null)
   assert.match(text(trigger({ kind: 'webhook' })), /<goal_round>Keep going/)
 })
+
+// The user's report: the group chat showed the shell's raw `group_relay · {}` row and the messages
+// were gone. A cell that renders nothing gives its node back to the shell's own tool row, and the
+// group's replies are drawn by our relay cell -- so a relay node is never left empty.
+test('a relay node with nothing to draw is never handed back to the shell', () => {
+  const blank = node => find(node, child => child.props?.className === 'bt-cell-blank')
+  const drawn = (root, options) => expand(ToolCell(props(root, { sessionId: 'room', ...options })))
+  const empty = call('group_relay', 'relay-1', { content: { replies: [] } })
+  assert.ok(blank(drawn(empty)), 'a round that reported no replies still draws the cell')
+  // The same node inside a hidden turn: the tree is not drawn there, which used to mean `null`.
+  const roster = team({ exchangeTurns: { room: [1] } })
+  assert.ok(blank(drawn(call('group_relay', 'relay-2', { content: { replies: [] } }), { roster })),
+    'and a relay turn marked hidden draws it too, instead of falling through')
+  // Every other tool we do not draw keeps its own row, which is the shell's.
+  for (const name of ['read', 'bash']) {
+    assert.equal(ToolCell(props(call(name, `x-${name}`, { content: 'done' }), { sessionId: 'room' })), null, `${name} still belongs to the shell`)
+  }
+})

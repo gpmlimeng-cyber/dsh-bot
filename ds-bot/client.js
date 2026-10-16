@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 1af01539
+// Source fingerprint: fed27761
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3264,6 +3264,10 @@ var CONVERSATION_CSS = `
 [class*="_scroll"]>[class*="_column"]::before{content:var(--bt-first-sep,none);display:block;flex:none;height:28px;margin:17px 0 12px;font-size:12px;line-height:28px;text-align:center;color:var(--bt-ink-2);white-space:nowrap}
 .bt-activity{display:flex;align-items:center;gap:10px;margin:8px 0 4px 2px;font-size:14px;color:var(--bt-ink-2)}
 .bt-group-replies{display:contents}
+/* A cell that has nothing to draw yet, but must not be left empty: an empty node hands its row back
+   to the shell, which is how the raw group_relay row came to sit over the group's own messages.
+   display:contents holds the node without taking a line of its own. */
+.bt-cell-blank{display:contents}
 /* A Bot chat is flat in every work-details mode, without changing the user's mode
    (it is a DSH-wide setting): step groups lose their header and stay open, and what a
    mode folds away in a finished turn stays shown. TurnProcessCell also opens that
@@ -6922,7 +6926,7 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
   const pending = done || !live.speaking ? [] : [live.speaking];
   const speakerTool = useWork?.((work) => work.bots?.[live.speaking]?.tool) ?? void 0;
   const speakerDoing = useWork?.((work) => work.bots?.[live.speaking]?.tool ? workPhrase(work.bots[live.speaking]) : void 0) ?? void 0;
-  if (replies.length === 0 && pending.length === 0) return null;
+  if (replies.length === 0 && pending.length === 0) return (0, import_react9.createElement)("span", { className: "bt-cell-blank", "aria-hidden": true });
   const room2 = roster.roomsById[sessionId];
   const items = stackReplies(replies);
   const ask = items.filter((item) => room2 !== void 0 && item.reply.kind === void 0 && item.reply.botId === room2.admin).map((item) => parseDecision(item.texts[0])).filter((decision) => decision !== null).at(-1) ?? null;
@@ -7102,13 +7106,15 @@ function ToolCell({ node, sessionId, useRoster, useUi, useWork, actions }) {
   const turn = node.location?.turn?.turn ?? root.turn;
   const hidden = isHiddenTurn(roster, sessionId, turn);
   const findBot = (nameOrId) => roster.byId[nameOrId] ?? roster.bots.find((bot) => bot.name.toLowerCase() === String(nameOrId ?? "").toLowerCase());
-  const calls = hidden ? [] : callTree(root);
+  const tree = callTree(root);
+  const calls = hidden ? [] : tree;
   const drawn = calls.filter((call2) => DRAWN.has(toolName(call2)));
+  const relay = tree.some((call2) => toolName(call2) === "group_relay");
   const running = root.kind === "tool-result" ? void 0 : calls.findLast((call2) => call2.kind !== "tool-result");
   const note = running ? toolActivity(toolName(running), toolArgs(running).text, findBot, roster.byId[sessionId]) : null;
   useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note);
   useShownCards(actions, sessionId, drawn.filter((call2) => CARDS.has(toolName(call2)) && call2.callId).map((call2) => call2.callId));
-  if (drawn.length === 0) return null;
+  if (drawn.length === 0) return relay ? (0, import_react9.createElement)("span", { className: "bt-cell-blank", "aria-hidden": true }) : null;
   const env = { sessionId, roster, actions, useUi, useWork, findBot };
   return (0, import_react9.createElement)(import_react9.Fragment, null, drawn.map((call2, index) => (0, import_react9.createElement)(import_react9.Fragment, { key: call2.callId ?? index }, renderCall(call2, env))));
 }
@@ -17776,7 +17782,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "1af01539" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "fed27761" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
