@@ -1,4 +1,5 @@
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
+import { SHELL_OVERLAY } from './shell-overlay.js'
 import { inkText } from './inks.js'
 import { dayLabel } from './text.js'
 import { colorOf, BotMark } from './mark.js'
@@ -45,7 +46,7 @@ export function ExchangeDialog({ pair, roster, actions }) {
   let lastDay = 0
   const paneLeft = usePaneLeft()
   return h('div', { className: 'bt-pane bt-exchange', style: { left: paneLeft }, 'data-leaving': leaving || undefined },
-    h('div', { ref: dialogRef, className: 'bt-dialog', role: 'dialog', 'aria-modal': true, 'aria-label': t('Bot exchange') },
+    h('div', { ref: dialogRef, className: 'bt-dialog', role: 'dialog', 'aria-modal': true, ...SHELL_OVERLAY, 'aria-label': t('Bot exchange') },
       h('div', { className: 'bt-head' }, h('span', { className: 'bt-pill', style: { cursor: 'default' } },
         left ? h(BotMark, { bot: left, size: 22 }) : null, left?.name ?? '?',
         h('span', { className: 'bt-swap' }, '⇄'),

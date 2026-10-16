@@ -1,4 +1,5 @@
 import { createElement as h, useEffect, useRef, useState } from 'react'
+import { SHELL_OVERLAY } from './shell-overlay.js'
 import { stripHeader } from './text.js'
 import { MicIcon, CloseIcon } from './icons.js'
 import { BotMark, RoomAvatar } from './mark.js'
@@ -220,7 +221,7 @@ export function VoiceMode({ sessionId, roster, actions, useSessions, useSessionS
   const caption = phase === 'speaking' ? said : heard
   const shownNote = note || dictation.note
   return h('div', { className: 'bt-pane bt-voice-pane', style: { left: paneLeft } },
-    h('div', { ref: dialogRef, className: 'bt-voice-stage', role: 'dialog', 'aria-modal': true, 'aria-label': t('Voice chat with {name}', { name }), 'data-phase': phase === 'transcribing' ? 'thinking' : phase },
+    h('div', { ref: dialogRef, className: 'bt-voice-stage', role: 'dialog', 'aria-modal': true, ...SHELL_OVERLAY, 'aria-label': t('Voice chat with {name}', { name }), 'data-phase': phase === 'transcribing' ? 'thinking' : phase },
       h('div', { className: 'bt-voice-orb', style: { '--bt-level': level } },
         h('span', { className: 'bt-voice-ring', 'aria-hidden': true }),
         h('span', { className: 'bt-voice-ring bt-voice-ring-2', 'aria-hidden': true }),

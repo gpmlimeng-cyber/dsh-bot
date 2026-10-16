@@ -2,6 +2,7 @@
 // entries themselves behind the ⋯ menu, and "Ask or update", one model call that
 // answers from the entries or changes them. Modeled on ChatGPT's memory summary.
 import { createElement as h, Fragment, useCallback, useEffect, useRef, useState } from 'react'
+import { SHELL_OVERLAY } from './shell-overlay.js'
 import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
 import { ArrowUpIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, DotsIcon, MemoryIcon, TrashIcon } from './icons.js'
 import { dateLocale, hostText, t } from './i18n.js'
@@ -273,7 +274,7 @@ export function MemoryDialog({ bot, actions, leaving = false }) {
   const busy = answer?.pending === true
   return h('div', { className: 'bt-mem-layer', 'data-leaving': leaving || undefined },
     h('div', { className: 'bt-scrim bt-mem-scrim', onMouseDown: close }),
-    h('div', { ref: dialogRef, className: 'bt-mem', role: 'dialog', 'aria-modal': true, 'aria-label': t("{name}'s memory", { name: bot.name }) },
+    h('div', { ref: dialogRef, className: 'bt-mem', role: 'dialog', 'aria-modal': true, ...SHELL_OVERLAY, 'aria-label': t("{name}'s memory", { name: bot.name }) },
       h('div', { className: 'bt-mem-head' },
         page === 'entries' ? h('button', { type: 'button', className: 'bt-icon-btn', 'aria-label': t('Back to the summary'), onClick: backToSummary }, h(ChevronLeftIcon)) : null,
         h('h2', null, page === 'entries' ? t('All entries') : t('Memory summary')),

@@ -8,6 +8,7 @@
 // One surface at a time, like the peers page: opening this page closes the others, and the rows
 // close it on the way to what they open.
 import { createElement as h, useEffect, useRef } from 'react'
+import { SHELL_OVERLAY } from './shell-overlay.js'
 import { createPortal } from 'react-dom'
 import { ChevronLeftIcon, ChevronRightIcon, FluentClockIcon, FluentDataUsageIcon, FluentKeyIcon, FluentOptionsIcon, FluentPlugConnectedIcon, FluentPuzzlePieceIcon } from './icons.js'
 import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -78,7 +79,7 @@ export function DiscoverPage({ useUi, actions }) {
   // tab opened it (settings.js, `tab`), so the two are drawn alike without either restating the rule.
   return createPortal(h('div', { className: 'bt-settings-layer bt-discover', 'data-tabpage': '', style: { left: paneLeft } },
     h('div', { className: 'bt-scrim', onMouseDown: () => actions.closeDiscover() }),
-    h('div', { ref: dialogRef, className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('Discover'), 'data-screen': 'list' },
+    h('div', { ref: dialogRef, className: 'bt-settings', role: 'dialog', 'aria-modal': true, ...SHELL_OVERLAY, 'aria-label': t('Discover'), 'data-screen': 'list' },
       h('div', { className: 'bt-settings-top' }, h('h2', null, t('Discover'))),
       h('div', { className: 'bt-settings-scroll' }, DISCOVER_CARDS.map((rows, card) => h('section', {
         key: `card:${card}`, className: 'bt-settings-group',

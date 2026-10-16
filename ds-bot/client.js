@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 33088687
+// Source fingerprint: cc7f6299
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -8662,6 +8662,9 @@ var SIDEBAR_CSS = `
 @media (prefers-reduced-motion:reduce){.bt-agent-sub{transition:none}.bt-agent-sub .bt-agent-sub-row{animation:none}}
 `;
 
+// src/client/shell-overlay.js
+var SHELL_OVERLAY = { "data-shell-overlay": "" };
+
 // src/client/storage.js
 var STORAGE = {
   unread: "ds-bot:unread",
@@ -9306,7 +9309,7 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
       {
         ref: root,
         className: "bt-panel",
-        ...mobile ? { role: "dialog", "aria-modal": true } : null,
+        ...mobile ? { role: "dialog", "aria-modal": true, ...SHELL_OVERLAY } : null,
         "data-view": view,
         "aria-label": `${view === "files" ? t("Files") : view === "preview" ? t("File preview") : view === "products" ? t("All deliverables") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details")}`,
         // A leaving panel is out of the accessibility tree and holds no focus. `aria-hidden`
@@ -11009,7 +11012,7 @@ function MemoryDialog({ bot, actions, leaving = false }) {
     (0, import_react21.createElement)("div", { className: "bt-scrim bt-mem-scrim", onMouseDown: close }),
     (0, import_react21.createElement)(
       "div",
-      { ref: dialogRef, className: "bt-mem", role: "dialog", "aria-modal": true, "aria-label": t("{name}'s memory", { name: bot.name }) },
+      { ref: dialogRef, className: "bt-mem", role: "dialog", "aria-modal": true, ...SHELL_OVERLAY, "aria-label": t("{name}'s memory", { name: bot.name }) },
       (0, import_react21.createElement)(
         "div",
         { className: "bt-mem-head" },
@@ -13069,7 +13072,7 @@ ${shown}`, { axis: "y", ...QUICK_EDGES });
     (0, import_react28.createElement)("div", { className: "bt-backdrop", onMouseDown: close }),
     (0, import_react28.createElement)(
       "div",
-      { ref: dialogRef, className: "bt-palette", role: "dialog", "aria-label": t("Search"), "aria-modal": true },
+      { ref: dialogRef, className: "bt-palette", role: "dialog", "aria-label": t("Search"), "aria-modal": true, ...SHELL_OVERLAY },
       (0, import_react28.createElement)(
         "div",
         { className: "bt-palette-head" },
@@ -13309,7 +13312,7 @@ function CreateBot({ roster, actions, start, brief = "", onBack, canGoBack, onCr
   if (inline) return (0, import_react29.createElement)("div", { ref: frame, className: "bt-create-inline", role: "group", "aria-label": t("Create Bot") }, card);
   return (0, import_react29.createElement)(
     "div",
-    { ref: dialogRef, className: "bt-create", role: "dialog", "aria-modal": true, "aria-label": t("Create Bot") },
+    { ref: dialogRef, className: "bt-create", role: "dialog", "aria-modal": true, ...SHELL_OVERLAY, "aria-label": t("Create Bot") },
     (0, import_react29.createElement)(
       "div",
       { className: "bt-create-head" },
@@ -13478,7 +13481,7 @@ ${listed}`, { axis: "y", ...QUICK_EDGES });
     { className: "bt-pane", style: { left: paneLeft } },
     (0, import_react30.createElement)(
       "div",
-      { ref: dialogRef, className: "bt-newchat", role: "dialog", "aria-modal": true, "aria-label": mode === "search" ? t("Search") : t("New chat") },
+      { ref: dialogRef, className: "bt-newchat", role: "dialog", "aria-modal": true, ...SHELL_OVERLAY, "aria-label": mode === "search" ? t("Search") : t("New chat") },
       (0, import_react30.createElement)(
         "div",
         { className: "bt-to" },
@@ -13628,7 +13631,7 @@ function ExchangeDialog({ pair, roster, actions }) {
     { className: "bt-pane bt-exchange", style: { left: paneLeft }, "data-leaving": leaving || void 0 },
     (0, import_react31.createElement)(
       "div",
-      { ref: dialogRef, className: "bt-dialog", role: "dialog", "aria-modal": true, "aria-label": t("Bot exchange") },
+      { ref: dialogRef, className: "bt-dialog", role: "dialog", "aria-modal": true, ...SHELL_OVERLAY, "aria-label": t("Bot exchange") },
       (0, import_react31.createElement)("div", { className: "bt-head" }, (0, import_react31.createElement)(
         "span",
         { className: "bt-pill", style: { cursor: "default" } },
@@ -13896,7 +13899,7 @@ function VoiceMode({ sessionId, roster, actions, useSessions, useSessionStatus }
     { className: "bt-pane bt-voice-pane", style: { left: paneLeft } },
     (0, import_react32.createElement)(
       "div",
-      { ref: dialogRef, className: "bt-voice-stage", role: "dialog", "aria-modal": true, "aria-label": t("Voice chat with {name}", { name }), "data-phase": phase === "transcribing" ? "thinking" : phase },
+      { ref: dialogRef, className: "bt-voice-stage", role: "dialog", "aria-modal": true, ...SHELL_OVERLAY, "aria-label": t("Voice chat with {name}", { name }), "data-phase": phase === "transcribing" ? "thinking" : phase },
       (0, import_react32.createElement)(
         "div",
         { className: "bt-voice-orb", style: { "--bt-level": level } },
@@ -15753,7 +15756,7 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
     (0, import_react38.createElement)("div", { className: "bt-scrim", onMouseDown: close }),
     (0, import_react38.createElement)(
       "div",
-      { ref: dialogRef, className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("DS Bot settings"), "data-wide": shown === "usage" ? "" : void 0, "data-screen": mobile ? screen : void 0 },
+      { ref: dialogRef, className: "bt-settings", role: "dialog", "aria-modal": true, ...SHELL_OVERLAY, "aria-label": t("DS Bot settings"), "data-wide": shown === "usage" ? "" : void 0, "data-screen": mobile ? screen : void 0 },
       // Phone only: back, the title centred on the dialog rather than on the space left
       // between the two side buttons, and the close. A wider button on one side cannot
       // pull the title off centre because it is out of their flow. The close is drawn
@@ -17556,7 +17559,7 @@ function DiscoverPage({ useUi, actions }) {
     (0, import_react44.createElement)("div", { className: "bt-scrim", onMouseDown: () => actions.closeDiscover() }),
     (0, import_react44.createElement)(
       "div",
-      { ref: dialogRef, className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("Discover"), "data-screen": "list" },
+      { ref: dialogRef, className: "bt-settings", role: "dialog", "aria-modal": true, ...SHELL_OVERLAY, "aria-label": t("Discover"), "data-screen": "list" },
       (0, import_react44.createElement)("div", { className: "bt-settings-top" }, (0, import_react44.createElement)("h2", null, t("Discover"))),
       (0, import_react44.createElement)("div", { className: "bt-settings-scroll" }, DISCOVER_CARDS.map((rows, card) => (0, import_react44.createElement)(
         "section",
@@ -17623,7 +17626,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "33088687" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "cc7f6299" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

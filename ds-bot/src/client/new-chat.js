@@ -1,4 +1,5 @@
 import { createElement as h, useRef, useState } from 'react'
+import { SHELL_OVERLAY } from './shell-overlay.js'
 import { FishLogo, useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
 import { PlusIcon, PeopleIcon, ArrowUpIcon } from './icons.js'
 import { AdminStar, BotMark } from './mark.js'
@@ -140,7 +141,7 @@ export function NewChat({ mode, roster, actions }) {
     else if (admin !== null) setAdmin(null)
   }
   return h('div', { className: 'bt-pane', style: { left: paneLeft } },
-    h('div', { ref: dialogRef, className: 'bt-newchat', role: 'dialog', 'aria-modal': true, 'aria-label': mode === 'search' ? t('Search') : t('New chat') },
+    h('div', { ref: dialogRef, className: 'bt-newchat', role: 'dialog', 'aria-modal': true, ...SHELL_OVERLAY, 'aria-label': mode === 'search' ? t('Search') : t('New chat') },
       h('div', { className: 'bt-to' },
         h('span', { className: 'bt-to-label' }, t('To:')),
         adminBot ? h('span', { key: adminBot.id, className: 'bt-token bt-token-admin', title: t('Admin') },

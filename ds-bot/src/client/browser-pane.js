@@ -4,6 +4,7 @@
 // body-level layer by bot-browsers.js; the panel draws the strip and the toolbar
 // and reports the rectangle the shown webview covers.
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { SHELL_OVERLAY } from './shell-overlay.js'
 import { createPortal } from 'react-dom'
 import { BotMark } from './mark.js'
 import { STORAGE } from './storage.js'
@@ -556,7 +557,7 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   return h(Fragment, null,
     view === 'products' ? h('div', { className: 'bt-scrim bt-panel-scrim', onClick: () => actions.closeProducts?.() }) : null,
     h('aside', {
-    ref: root, className: 'bt-panel', ...(mobile ? { role: 'dialog', 'aria-modal': true } : null), 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'preview' ? t('File preview') : view === 'products' ? t('All deliverables') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}`,
+    ref: root, className: 'bt-panel', ...(mobile ? { role: 'dialog', 'aria-modal': true, ...SHELL_OVERLAY } : null), 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'preview' ? t('File preview') : view === 'products' ? t('All deliverables') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}`,
     // A leaving panel is out of the accessibility tree and holds no focus. `aria-hidden`
     // cannot say that here: the tap that closed the panel leaves the focus on one of its own
     // buttons, and a browser refuses to hide a subtree that still holds the focus -- it logs

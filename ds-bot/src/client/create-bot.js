@@ -1,4 +1,5 @@
 import { createElement as h, useEffect, useRef, useState } from 'react'
+import { SHELL_OVERLAY } from './shell-overlay.js'
 import { BotMark } from './mark.js'
 import { CharacterGrid, avatarImage } from './bot-settings.js'
 import { DEFAULT_SHAPES, DEFAULT_COLORS } from './characters.js'
@@ -101,7 +102,7 @@ export function CreateBot({ roster, actions, start, brief = '', onBack, canGoBac
       h('button', { type: 'button', className: 'bt-soft', onClick: onBack }, canGoBack ? t('Back') : t('Cancel')),
       h('button', { type: 'button', className: 'bt-send bt-create-go', disabled: busy || clash || Boolean(problem), onClick: () => void create() }, busy ? t('Creating…') : t('Create'))))
   if (inline) return h('div', { ref: frame, className: 'bt-create-inline', role: 'group', 'aria-label': t('Create Bot') }, card)
-  return h('div', { ref: dialogRef, className: 'bt-create', role: 'dialog', 'aria-modal': true, 'aria-label': t('Create Bot') },
+  return h('div', { ref: dialogRef, className: 'bt-create', role: 'dialog', 'aria-modal': true, ...SHELL_OVERLAY, 'aria-label': t('Create Bot') },
     h('div', { className: 'bt-create-head' },
       canGoBack ? h('button', { type: 'button', className: 'bt-icon-btn', 'aria-label': t('Back to new chat'), onClick: onBack }, h(ChevronLeftIcon)) : h('span', { className: 'bt-create-gap' }),
       h('span', { className: 'bt-create-title' }, t('Create Bot')),

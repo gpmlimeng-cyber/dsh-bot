@@ -1,4 +1,5 @@
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
+import { SHELL_OVERLAY } from './shell-overlay.js'
 import { FishLogo, useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
 import { isMainOf } from './sources.js'
 import { currentPart, stripHeader } from './text.js'
@@ -105,7 +106,7 @@ export function CommandPalette({ start, token, roster, actions, useSessions }) {
   let index = -1
   return h('div', { className: 'bt-palette-layer', 'data-leaving': leaving || undefined },
     h('div', { className: 'bt-backdrop', onMouseDown: close }),
-    h('div', { ref: dialogRef, className: 'bt-palette', role: 'dialog', 'aria-label': t('Search'), 'aria-modal': true },
+    h('div', { ref: dialogRef, className: 'bt-palette', role: 'dialog', 'aria-label': t('Search'), 'aria-modal': true, ...SHELL_OVERLAY },
       h('div', { className: 'bt-palette-head' },
         h('span', { className: 'bt-palette-glyph', 'aria-hidden': true }, h(SearchIcon)),
         h('input', {

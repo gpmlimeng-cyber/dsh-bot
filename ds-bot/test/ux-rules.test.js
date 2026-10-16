@@ -224,3 +224,28 @@ test('a layer that hands its Esc to the shell\u2019s modal machinery says it is 
     assert.match(read(view), /useEscape\(mobile \? \(\) => \{\} :/, `${view}: the wide column keeps our own key and focus -- the pair is deliberate, do not delete either line`)
   }
 })
+
+test('every dialog we render wears the shell overlay marker', () => {
+  // The Android responsive plugin (@dsh-android/dsh-client-ui-responsive, mobile/form-marker.js,
+  // MobileFormMarker.syncModal) keeps every [role=dialog][aria-modal=true] that is NOT inside
+  // [data-shell-overlay] and flips data-dsh-modal-open on <html>; the plugin's own rule then answers
+  // that flag with `html[data-dsh-modal-open] [data-dsh-frame] > [*sidebarCol]{transform:none}`,
+  // because the shell's settings overlay is drawn inside that column and would be carried off canvas
+  // with it. So a dialog we mark aria-modal -- deliberately, the shell's modal machinery reads it for
+  // Escape, the trap and the focus handed back -- also slides the shell's off-canvas left column back
+  // on screen: the drawer the user saw come in behind every popup (10-16). SHELL_OVERLAY is the
+  // plugin's own exemption (shell-overlay.js has the whole story), and it belongs on the element that
+  // carries aria-modal -- closest() reads the element itself as well as its ancestors.
+  const files = readdirSync(DIR).filter(name => name.endsWith('.js'))
+  let marked = 0
+  for (const name of files) {
+    const source = read(name)
+    for (const [at, line] of source.split('\n').entries()) {
+      if (!line.includes("'aria-modal': true")) continue
+      marked += 1
+      assert.ok(line.includes('SHELL_OVERLAY'), `${name}:${at + 1} marks a dialog aria-modal without ...SHELL_OVERLAY -- the shell's drawer slides in behind it`)
+      assert.ok(source.includes("from './shell-overlay.js'"), `${name} uses ...SHELL_OVERLAY without importing it`)
+    }
+  }
+  assert.equal(marked, 9, `the dialogs marked aria-modal are not the ones expected: ${marked}`)
+})
