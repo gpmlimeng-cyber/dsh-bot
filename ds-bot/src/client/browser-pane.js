@@ -11,7 +11,8 @@ import { SPRING_SHAPE, springEasing } from './motion.js'
 import { DetailsDrawer } from './details-drawer.js'
 import { FilePreview } from './file-preview.js'
 import { DeliveredList, DeliveredPreview } from './deliverables.js'
-import { isPcLayout, usePcColumns } from './mobile.js'
+import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
+import { isPcLayout, useMobile, usePcColumns } from './mobile.js'
 import { pcDetailsWidth } from './pc-layout.js'
 import { t } from './i18n.js'
 
@@ -312,6 +313,17 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   const active = tabState.active
   const page = useBrowserPages(pages => (active ? pages[active] : null) ?? EMPTY_PAGE)
   const root = useRef(null)
+  // The panel is the phone's screen and the wide window's right-hand column, so the key follows the
+  // same rule as the other panes (test/ux-rules.test.js, the host pair): on a phone the shell's modal
+  // machinery owns Escape, the focus trap and the focus handed back when the panel closes -- and it
+  // reads the panel through `root` below, so the role and aria-modal on that element are part of the
+  // same wiring, not decoration. A wide window keeps our own key, which details-drawer.js registers
+  // for the view that always had it, and the panel is not marked a dialog there at all.
+  //
+  // `mobile` alone, not per view: the views share one element, so a hook that came and went with the
+  // tab would hand the focus back to the opener every time the user switched to the browser tab.
+  const mobile = useMobile()
+  useModalLayer(root, mobile, () => actions.closeOverlay())
   const fly = useRef(null)
   const [landed, setLanded] = useState(false)
   const [settling, setSettling] = useState(false)
@@ -544,7 +556,7 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   return h(Fragment, null,
     view === 'products' ? h('div', { className: 'bt-scrim bt-panel-scrim', onClick: () => actions.closeProducts?.() }) : null,
     h('aside', {
-    ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'preview' ? t('File preview') : view === 'products' ? t('All deliverables') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}`,
+    ref: root, className: 'bt-panel', ...(mobile ? { role: 'dialog', 'aria-modal': true } : null), 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'preview' ? t('File preview') : view === 'products' ? t('All deliverables') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}`,
     // A leaving panel is out of the accessibility tree and holds no focus. `aria-hidden`
     // cannot say that here: the tap that closed the panel leaves the focus on one of its own
     // buttons, and a browser refuses to hide a subtree that still holds the focus -- it logs

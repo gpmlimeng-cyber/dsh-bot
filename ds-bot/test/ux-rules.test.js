@@ -187,7 +187,13 @@ test('a layer that hands its Esc to the shell\u2019s modal machinery says it is 
   // shape to keep our key for -- but the hook must be told when the dialog is up: handed a fixed
   // true it would mount with no element to read, never run again, and lose Esc without a sound.
   const PHONE_ONLY = ['discover-page.js']
-  assert.deepEqual(users, [...OVERLAYS, ...PANES, ...PHONE_ONLY].sort(), `the layers converted so far are not the ones expected: ${users.join(', ')}`)
+  // One element, two files: the details view's key is split the same way, but the element it belongs
+  // to is the panel's own <aside>, which browser-pane.js owns, while the wide half of the pair is
+  // registered in details-drawer.js (the view that always had it). The panel hands the key over once
+  // for the whole panel rather than per view: the views share one element, so a hook that came and
+  // went with the tab would hand the focus back to the opener on every tab switch.
+  const HOSTED = { 'browser-pane.js': 'details-drawer.js' }
+  assert.deepEqual(users, [...OVERLAYS, ...PANES, ...PHONE_ONLY, ...Object.keys(HOSTED)].sort(), `the layers converted so far are not the ones expected: ${users.join(', ')}`)
   for (const name of users) {
     const source = read(name)
     assert.ok(source.includes("'aria-modal': true"), `${name} calls useModalLayer without marking its dialog aria-modal -- it would have no Esc`)
@@ -211,5 +217,10 @@ test('a layer that hands its Esc to the shell\u2019s modal machinery says it is 
   for (const name of PHONE_ONLY) {
     assert.ok(!read(name).includes('useEscape'), `${name} is drawn on a phone only, so it has no wide shape to keep our key for`)
     assert.ok(!/useModalLayer\(\w+, true,/.test(read(name)), `${name} must hand the hook the same condition its render reads: a fixed true mounted with no dialog would never run again`)
+  }
+  for (const [host, view] of Object.entries(HOSTED)) {
+    assert.match(read(host), /useModalLayer\(\w+, mobile,/, `${host}: the phone's screen hands Escape to the shell's machinery`)
+    assert.ok(!read(host).includes('useEscape'), `${host}: one key, not two -- the wide half of the pair lives in ${view}`)
+    assert.match(read(view), /useEscape\(mobile \? \(\) => \{\} :/, `${view}: the wide column keeps our own key and focus -- the pair is deliberate, do not delete either line`)
   }
 })

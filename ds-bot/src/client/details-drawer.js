@@ -5,6 +5,7 @@ import { PlusIcon, ShareIcon, CloseIcon, ChevronLeftIcon, GearIcon } from './ico
 import { botState, BotMark, BotAvatar } from './mark.js'
 import { GlobeIcon, Favicon } from './browser-pane.js'
 import { useEscape } from './overlay-hooks.js'
+import { useMobile } from './mobile.js'
 import { BotSettingsForm } from './bot-settings.js'
 import { GroupSettingsForm, ROOM_MODES, roomSubtitle, shownMode } from './group-settings.js'
 import { ModelMenu, modelOf } from './model-menu.js'
@@ -104,7 +105,23 @@ function StatPopover({ anchorRef, open, onClose, title, rows }) {
   const panelRef = useRef(null)
   const pos = useAnchoredPosition({ open, anchorRef, panelRef, side: 'top', align: 'end', gap: 8, margin: 12 })
   useDismissOnOutsidePointer(anchorRef, open, value => { if (!value) onClose() }, panelRef)
-  useEscape(open ? onClose : () => {})
+  // Escape is taken here, in capture, and stops there. This popover is the innermost layer while it
+  // is up, and the shell's modal machinery reads the same key on document (useModalLayer), so a key
+  // that reached it would close the dialog this popover is sitting in as well -- one press, two
+  // layers gone. It is not handed to useModalLayer itself: it is an anchored popover, not a modal,
+  // and it holds no focusable control for that hook to trap Tab in. memory-panel.js's own menu
+  // handles its Escape the same way, for the same reason.
+  useEffect(() => {
+    if (!open) return undefined
+    const onKey = (event) => {
+      if (event.key !== 'Escape' || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return
+      event.preventDefault()
+      event.stopPropagation()
+      onClose()
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [open, onClose])
   if (!open) return null
   const style = { ...(pos ?? { visibility: 'hidden', left: 0, top: 0 }), position: 'fixed' }
   return createPortal(
@@ -235,6 +252,7 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
   const owner = roster.byId[sessionId]
   const part = owner ? currentPart(owner) : sessionId
   const isMainBot = isMainOf(roster, owner?.id)
+  const mobile = useMobile()
   const [tab, setTab] = useState('details')
   const room = roster.roomsById[sessionId]
   // The info pane swaps its overview for the Bot or group settings view in place.
@@ -252,7 +270,11 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
   const move = last.current.move
   const side = move === 'tab' ? undefined : move
   const close = () => actions.closeOverlay()
-  useEscape(close)
+  // The key is one, split by shape, and the shell's half is registered by the panel that owns the
+  // element (browser-pane.js hands its <aside> to useModalLayer while a phone is the one on screen).
+  // This is the other half: a wide window's right column keeps the key it always had. Both lines are
+  // asserted as a pair in test/ux-rules.test.js, so neither can be deleted on its own.
+  useEscape(mobile ? () => {} : close)
   const bot = owner
   const running = useSessionStatus(map => map.get(part)?.running === true)
   const doing = useActivity(map => map[bot?.id ?? sessionId])
