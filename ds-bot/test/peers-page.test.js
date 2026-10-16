@@ -73,7 +73,7 @@ const ROSTER = {
     { id: 'b2', name: 'Main', role: 'lead', workDir: '/x/repos/dsh-bot' },
   ],
   rooms: [{ id: 'r1', name: 'Room', members: ['b1', 'b2'] }],
-  mainBotIds: ['b2'], mainBotId: 'b2', models: [],
+  mainBotIds: ['b2'], models: [],
 }
 
 test('the list is Bots by name, narrowed by what is typed', () => {
@@ -105,29 +105,19 @@ test('the page is a header row and one scroller of labelled cards', () => {
   assert.deepEqual(plain(findAll(top, 'bt-peers-list')), [], 'no list inside the header row')
   assert.equal(findAll(top, 'bt-settings-top').length, 1, 'the header holds the title row')
   assert.equal(findAll(top, 'bt-side-search').length, 1, 'and the search field')
-  // Three cards, one per section of contacts: the Main Bots, the group chats, then the people.
+  // Three cards, one per section of contacts: the group chats, then the people.
   const cards = findAll(tree, 'bt-settings-group-card')
-  assert.equal(cards.length, 3, 'one card per section')
-  assert.deepEqual(plain(cards.map(card => card.children.length)), [1, 1, 1], 'one Main Bot, one group, one other Bot')
+  assert.equal(cards.length, 2, 'one card per section')
+  assert.deepEqual(plain(cards.map(card => card.children.length)), [1, 2], 'one group row, two Bot rows')
   // And one button per contact, with the chevron INSIDE it, after the body: a chevron outside the
   // button is a chevron on a line of its own, under the row it belongs to.
   const rows = findAll(tree, 'bt-peers-row')
   assert.equal(rows.length, 3, 'one row per contact')
-  const kidsOf = (node) => plain(node.children.filter(child => child !== null && child !== undefined).map(child => classList(child)[0] ?? '(mark)'))
-  assert.deepEqual(rows.map(kidsOf), [
-    ['(mark)', 'bt-peers-body'],
-    ['(mark)', 'bt-peers-body', 'bt-peers-go'],
-    ['(mark)', 'bt-peers-body', 'bt-peers-go'],
-  ], 'mark and the two lines, with the chevron inside the row where the row has one')
-  assert.deepEqual(plain(findAll(tree, 'bt-peers-go').map(node => classList(node))), [['bt-peers-go'], ['bt-peers-go']], 'a chevron on the rows that open something')
-  // The Main Bot's row carries the control instead, as the row's SIBLING -- a button cannot hold a
-  // button -- and it is the one that is pressed on the Bot holding the sidebar's place.
-  const seat = findAll(tree, 'bt-peers-set')
-  assert.equal(seat.length, 1, 'one control, on the Main Bot group')
-  const seatItem = findAll(tree, 'bt-peers-item').find(item => findAll(item, 'bt-peers-set').length > 0)
-  assert.deepEqual(plain(seatItem.children.filter(Boolean).map(node => classList(node)[0] ?? '(mark)')), ['bt-peers-row', 'bt-peers-set'], 'it sits beside the row rather than inside it')
-  assert.equal(findAll(seatItem, 'bt-peers-row').length, 1, 'and the row is still its own button')
-  assert.equal(seat[0].props['aria-pressed'], 'true', 'pressed on the Bot that holds the sidebar place')
+  for (const row of rows) {
+    const kids = plain(row.children.map(node => classList(node)[0] ?? '(mark)'))
+    assert.deepEqual(kids, ['(mark)', 'bt-peers-body', 'bt-peers-go'], 'mark, the two lines, the chevron -- all inside the button')
+  }
+  assert.deepEqual(plain(findAll(tree, 'bt-peers-go').map(node => classList(node))), [['bt-peers-go'], ['bt-peers-go'], ['bt-peers-go']], 'three of them, one per row')
   // What a description line is made of, row by row: a group has one value, a Bot with a model has
   // two and says so with the one mark between them, and a Bot without a model has one value and
   // therefore no mark -- a leading separator is not a separator.
@@ -136,8 +126,8 @@ test('the page is a header row and one scroller of labelled cards', () => {
   const descriptions = findAll(tree, 'bt-peers-desc').map(parts)
   assert.deepEqual(descriptions, [
     ['bt-peers-text'],
-    ['bt-peers-text'],
     ['bt-peers-text', 'bt-peers-sep', 'bt-peers-text'],
+    ['bt-peers-text'],
   ], 'the mark appears between two values and nowhere else')
 })
 
@@ -228,7 +218,7 @@ test('a row is a Bot with its role and a chevron, not a conversation', () => {
     assert.ok(!peers.includes(borrowed), `${borrowed} belongs to the conversation rows`)
   }
   // The data is the roster the rest of the skin reads, and the filter is the only transform.
-  assert.ok(peers.includes('peersList(roster.bots.filter(bot => !isMainOf(roster, bot.id)), query)'), 'the roster, filtered -- less whatever the 主 Bot group already lists')
+  assert.ok(peers.includes('peersList(roster.bots, query)'), 'the roster, filtered')
   assert.ok(peers.includes('peersRooms(roster.rooms, query)'), 'both rosters, by the one box')
   assert.ok(!peers.includes('fetch(') && !peers.includes('call('), 'nothing new is fetched')
 })
@@ -236,8 +226,7 @@ test('a row is a Bot with its role and a chevron, not a conversation', () => {
 test('a group is a row of its own kind, under its own heading', () => {
   // A group row is the same row shape as a Bot's -- wrapper, button, name, chevron -- with the
   // group's own mark and id, and without a role tag (a group has no role to carry).
-  const roomAt = peers.indexOf("className: 'bt-peers-row', 'data-room-id': room.id")
-  const group = peers.slice(roomAt, peers.indexOf('h(ChevronRightIcon)', roomAt) + 'h(ChevronRightIcon)'.length)
+  const group = peers.slice(peers.indexOf("className: 'bt-peers-row', 'data-room-id': room.id"), peers.indexOf("className: 'bt-peers-row', 'data-bot-id'"))
   assert.ok(group.includes('h(RoomAvatar, { room, roster, size: 36 })'), 'the group\'s own avatar')
   assert.ok(group.includes("h('span', { className: 'bt-peers-name' }, room.name)"), 'and its name')
   assert.ok(!group.includes('bt-tag'), 'with no role beside it')
@@ -279,28 +268,6 @@ test('a group\'s row opens the chat, a Bot\'s row opens that Bot\'s page', () =>
   assert.match(index, /openBotSettings: \(id\) => \{[\s\S]*peer[\s\S]*settings: \{ page: 'bots', id, tab: true, back: 'peers' \}/, 'the page, marked as one, with the way back')
   assert.ok(index.includes("if (state.settings.back === 'peers')") && index.includes('settings: null, peers: true'), 'which closeSettings reads')
   assert.ok(index.includes("back: state.settings?.back ?? null"), 'and every step inside keeps, so a row opened after a drill-in still closes onto this list')
-})
-
-test('the Main Bots are their own group, with the control that moves the sidebar place', () => {
-  // The user asked for the Main Bots at the top of the list, each with a control on the right that
-  // moves the sidebar's own place to it. A contact is listed once, under the heading that says what
-  // it is: the Main Bots under their own heading, everyone else under 伙伴.
-  assert.ok(peers.includes("mains.length > 0 ? section(t('Main Bot'), mains.map(bot => botRow(bot, true)))"), 'the group is drawn first, from the same row')
-  assert.ok(peers.includes('const mains = peersList(roster.bots.filter(bot => isMainOf(roster, bot.id)), query)'), 'it lists the roster\'s own Main Bots')
-  assert.ok(peers.includes('const shown = peersList(roster.bots.filter(bot => !isMainOf(roster, bot.id)), query)'), 'and the list below holds everyone else, so nobody is drawn twice')
-  assert.ok(peers.includes('const held = seat && seated === bot.id') && peers.includes('const seated = roster.mainBotId ?? null'), 'the selected row is the Bot holding the sidebar\'s place')
-  // The control is the row's sibling (a button cannot hold a button), a toggle, and it switches the
-  // place through the host's own entry for it: `set-main` with `primary` (roster.js moves that Bot to
-  // the front of mainBotIds, which is the sidebar tile). No second route is invented for it.
-  assert.ok(peers.includes("seat ? h('button', {") && peers.includes("type: 'button', className: 'bt-peers-set', 'aria-pressed': held ? 'true' : undefined"), 'the control is a pressed toggle beside the row')
-  assert.ok(peers.includes("actions.setMain(bot.id, true, { primary: true })"), 'and it uses the host\'s primary switch')
-  assert.ok(peers.includes("h(CheckIcon)"), 'with the skin\'s own check, not a drawing of ours')
-  const sheet = code('peers-page.js')
-  assert.ok(sheet.includes('.bt-peers-item{display:flex;align-items:center;gap:8px}'), 'the row and its control share the item line')
-  assert.ok(sheet.includes('.bt-peers-set{flex:none;width:32px;height:32px;'), 'the control keeps its own size')
-  assert.ok(sheet.includes('.bt-peers-set[aria-pressed=true]{'), 'and says so when it is the one holding the place')
-  // Only the 主 Bot group has it: every other row's right end is the chevron that opens it.
-  assert.ok(peers.includes("seat ? null : h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))"), 'the control and the chevron are the same position, never both')
 })
 
 test('the header\'s new button is the drawer\'s own entry, not a second door', () => {
