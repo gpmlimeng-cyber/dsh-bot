@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 44451a94
+// Source fingerprint: 5b583f58
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3350,6 +3350,11 @@ html[data-bt-mobile] body:has(.bt-panel) :is(.bt-mobile-bar,.bt-topfade),
 html[data-bt-mobile] body:has(.bt-mem-layer) :is(.bt-mobile-bar,.bt-topfade),
 html[data-bt-mobile] body:has(.bt-palette-layer) :is(.bt-mobile-bar,.bt-topfade),
 html[data-bt-mobile] body:has(.bt-settings-layer) :is(.bt-mobile-bar,.bt-topfade),
+/* 伙伴 is the same case as the settings pages: it covers the screen from its first pixel and pads
+   its own top by the strip (peers-page.js), so the veil over it is not a band over a page, it is a
+   band over the page's own colour. Its sheet hid the bar and left this one up, which is the seam the
+   user read as 伙伴 not following the theme: a --bt-main veil over a --bt-sidebar page. */
+html[data-bt-mobile] body:has(.bt-peers) :is(.bt-mobile-bar,.bt-topfade),
 /* 发现 is the settings layer itself (discover-page.js), so the line above already covers its
    list; these two name it anyway, and cover the strip a shell panel's second level draws -- that
    level is not a layer of this skin at all, only the strip is ours. */
@@ -3384,6 +3389,11 @@ html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;b
    page of the bar is named: a dialog over the conversation still shows it through the strip, and a
    desktop dialog is untouched. */
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-sidebar)}
+/* Its two screens do not share a base, so the strip has to move with the one on screen: the list is
+   --bt-sidebar and the page it opens is the dialog itself, painted --bt-main (.bt-settings above) with
+   the list hidden. Pinning the strip to the list's word would leave it up there as a band over a
+   --bt-main page -- the seam the list was fixed for, one screen further in. */
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]:has(.bt-settings[data-screen=page]){background:var(--bt-main)}
 /* 发现 shows one dialog painted --bt-main, so the strip above that page is painted the same word. Its
    title row carries no fill at all, which leaves the dialog's own colour showing through it (the two
    pages' bases are different, so each says which one it is rather than sharing a guess). */
@@ -3391,6 +3401,13 @@ html[data-bt-mobile] .bt-discover.bt-settings-layer[data-tabpage]{background:var
 html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}
+/* A floating dialog's scrim is the whole screen's, so it too starts at the first pixel. The layer
+   keeps the strip's height in its own padding -- which leaves its dialog exactly where it was, since
+   the centring happens in the same box either way -- while the scrim it holds is positioned against
+   the padding edge (absolute, inset 0), so it now covers the strip as well. That is the band that used
+   to stay undimmed behind a dialog, over whatever the page under it happened to be. */
+html[data-bt-mobile] :is(.bt-palette-layer,.bt-mem-layer),
+html[data-bt-mobile] .bt-settings-layer:not([data-tabpage]){top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px)}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
@@ -16753,7 +16770,7 @@ function PeersPage({ useRoster, useUi, actions }) {
   ), document.body);
 }
 var PEERS_CSS = `
-html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-main);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;flex-direction:column;box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 /* Typing in the search box raises the keyboard, and the bar (hidden underneath it, but still
    reserving its height) would leave the same dead band the user reported under the composer:
    give the room back while the flag is up. The flag is mobile.js's; the bar's own rule hides
@@ -16937,7 +16954,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "44451a94" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "5b583f58" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

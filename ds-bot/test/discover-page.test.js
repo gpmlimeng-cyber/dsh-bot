@@ -48,11 +48,17 @@ test('a tab page\u2019s strip is the colour of the surface that page shows', () 
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]:has(.bt-settings[data-screen=page]){background:var(--bt-main)}'), 'the page screen says its own word too')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-discover.bt-settings-layer[data-tabpage]{background:var(--bt-main)}'), '发现\u2019s strip follows its own dialog instead')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}'), 'and its title row leaves the dialog\u2019s colour showing')
-  // The other case: a page that does NOT paint the strip itself (fixed inset:0, the inset taken as its
-  // own padding), so the band above it is the skin's --bt-main. Such a page has to wear that same word,
-  // or the band reads as a different colour from the body under it: 伙伴 wore --bt-sidebar (#f9f9f9 under
-  // a #ffffff band, #171717 under #0f0f0f) and the user read it as a page that had not followed the theme.
-  assert.ok(read('peers-page.js').includes('padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-main)'), '伙伴 wears the colour of the band above it')
+  // 伙伴 is the other case, and it takes the other answer: the page already covers the strip itself
+  // (fixed inset:0 with the inset as its padding) and pads from it, so the band above its content is
+  // its own colour -- what sat on top was the veil, which its own sheet never hid. Hiding the veil
+  // settles it and leaves the page its --bt-sidebar; painting the page --bt-main would have recoloured
+  // 伙伴 to match a band that should not have been there at all.
+  assert.ok(read('peers-page.js').includes('padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar)'), '伙伴 keeps the colour it was designed with')
+  assert.ok(read('peers-page.js').includes('body:has(.bt-peers) .bt-mobile-bar{display:none}'), 'its sheet hides the bar over it')
+  assert.ok(styles.includes('html[data-bt-mobile] body:has(.bt-peers) :is(.bt-mobile-bar,.bt-topfade),'), 'and the skin hides the veil too, which is the one that was left up')
+  // A dialog's scrim is the whole screen's: the layer holds the strip in its own padding so its dialog
+  // stays put, and the scrim -- absolute, inset 0, against the padding edge -- now covers the strip.
+  assert.ok(styles.includes('html[data-bt-mobile] :is(.bt-palette-layer,.bt-mem-layer),\nhtml[data-bt-mobile] .bt-settings-layer:not([data-tabpage]){top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px)}'), 'a floating layer dims the strip as well')
   // The frost is the conversation's own: it is drawn on the tasks tab alone (nav-bar.js), so nothing
   // here needs a second word for it.
   assert.ok(navForTopfade.includes("active === 'tasks' ? h('div', { className: 'bt-topfade', 'aria-hidden': true }) : null"), 'the veil belongs to the conversation')
