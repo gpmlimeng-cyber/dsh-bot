@@ -85,6 +85,11 @@ const KEYS = [
 // Rules the sweep lets through, each with the reason it is not a target of its own. An entry that
 // stops naming an offender is reported too: a stale reason rots exactly like a missing one.
 const EXEMPT = new Map([
+  ['.bt-tool', 'the phone rule gives it 44 (audit 批②); the global box is the wide layout\'s'],
+  ['.bt-palette-clear', 'the phone rule gives it 44 (audit 批②); the global box is the wide layout\'s'],
+  ['.bt-us-month-nav', 'the phone rule gives it 44 (audit 批②); the global box is the wide layout\'s'],
+  ['.bt-mobile-acts .bt-attention', 'the phone rule gives it 44 (audit 批②); the global box is the wide layout\'s'],
+  ['.bt-mobile-left .bt-mobile-nav', 'the phone rule gives it 44 (audit 批②); the global box is the wide layout\'s'],
   ['html[data-bt-mobile] .bt-sheet-handle', 'not a target: the 4px pill the eye sees; the 44px band around it (.bt-sheet-grip) is what a thumb grabs'],
 ])
 
@@ -106,7 +111,6 @@ const NOT_A_TARGET = [
  *  entries exactly like EXEMPT -- fix it, delete its line, and the test tells you if a line was left
  *  behind after the rule changed under it. */
 const WORKLIST = new Map([
-['.bt-mobile-acts .bt-attention', '44×40'],
   ['.bt-switch', '36×20'],
   ['.bt-ptab-fav', '14×14'],
   ['.bt-ptab-x', '16×16'],
@@ -121,8 +125,6 @@ const WORKLIST = new Map([
   ['.bt-swatch', '22×22'],
   ['.bt-avatar-pencil', '22×22'],
   ['.bt-icon-btn', '28×28'],
-  ['.bt-tool', '24×24'],
-  ['.bt-palette-clear', '18×18'],
   ['.bt-palette-lead', '24×24'],
   ['.bt-palette-cmd', '24×24'],
   ['.bt-palette-agent', '24×24'],
@@ -130,10 +132,8 @@ const WORKLIST = new Map([
   ['.bt-theme-chip', '46×30'],
   ['.bt-mem-head .bt-icon-btn', '32×32'],
   ['.bt-mem-reply .bt-icon-btn', '24×24'],
-  ['.bt-mobile-left .bt-mobile-nav', '44×40'],
   ['[data-chat-flow-kind=user] [class*="_actions"] button', '24×24'],
   ['.bt-news-x', '20×20'],
-  ['.bt-us-month-nav', '28×28'],
   ['.bt-us-day>b', '28×28'],
   ['.bt-us-stub', '4×4'],
 ])

@@ -896,7 +896,10 @@ ${SKIN_FOOT}>div:has(> [data-slot="sidebar.settings"]){order:-1!important;flex:n
 .bt-msg:hover>.bt-msg-line>.bt-tools{opacity:1;visibility:visible}
 }
 .bt-tool{width:24px;height:24px;border:0;padding:0;border-radius:6px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background-color .12s ease,color .12s ease}
-.bt-tool[aria-expanded=true]{background:var(--bt-hover);color:var(--bt-ink)}
+
+/* 消息行内的工具键：24 的盒子只有 6px 圆角、没有填充，画面是盒子里的图标 —— 手机档给到 44 的命中，
+   -10px 的 margin 把版式还给周围，图标大小不变。 */
+html[data-bt-mobile] .bt-tool{width:44px;height:44px;margin:-10px}.bt-tool[aria-expanded=true]{background:var(--bt-hover);color:var(--bt-ink)}
 @media (hover:hover){
 .bt-tool:hover{background:var(--bt-hover);color:var(--bt-ink)}
 }
@@ -956,6 +959,7 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
 .bt-palette-head input::placeholder{color:var(--bt-ink-2)}
 .bt-palette-clear{width:18px;height:18px;border:0;padding:0;border-radius:6px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 
+html[data-bt-mobile] .bt-palette-clear{width:44px;height:44px;margin:-13px}
 @media (hover:hover){
 .bt-palette-clear:hover{color:var(--bt-ink)}
 }
@@ -1745,7 +1749,8 @@ html[data-bt-mobile][data-bt-size=expanded] .bt-settings-group{margin-top:0}
    title ellipsises into what the right-hand group leaves (the bar's own clearance). */
 .bt-mobile-left{position:absolute;left:12px;top:10px;z-index:31;display:flex;align-items:center;height:40px;box-sizing:border-box;max-width:calc(100% - var(--bt-mobile-clear) - 12px);overflow:hidden}
 .bt-mobile-left .bt-mobile-nav{position:static;left:auto;top:auto;width:44px;height:40px;border-radius:0;background:none;box-shadow:none}
-.bt-mobile-left .bt-pill{max-width:none;min-width:0;padding-left:2px;border-radius:0;background:none;box-shadow:none}
+
+html[data-bt-mobile] .bt-mobile-left .bt-mobile-nav{height:44px}.bt-mobile-left .bt-pill{max-width:none;min-width:0;padding-left:2px;border-radius:0;background:none;box-shadow:none}
 .bt-mobile-left .bt-pill-name{min-width:0}
 /* With the drawer up the capsule is the toggle alone: the title half steps aside, which is the
    same state that hides it in the bar. */

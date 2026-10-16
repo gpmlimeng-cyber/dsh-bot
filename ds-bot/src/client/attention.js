@@ -154,6 +154,7 @@ export const ATTENTION_CSS = `
    instead of a word beside it, which is what makes it one seat rather than a second pill. */
 .bt-mobile-acts .bt-attention{position:relative;width:44px;height:40px;padding:0;gap:0;border:0;border-radius:0;background:none;box-shadow:none;color:var(--bt-ink);pointer-events:auto}
 
+html[data-bt-mobile] .bt-mobile-acts .bt-attention{height:44px}
 @media (hover:hover){
 .bt-mobile-acts .bt-attention:hover{background:var(--bt-hover)}
 }
