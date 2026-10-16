@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: dc04a202
+// Source fingerprint: 92743b43
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3332,6 +3332,13 @@ html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;b
    given "animation:bt-fade .12s ease-out!important", and a page that must not animate is not a
    motion to soften, it is a motion that is not played. That media query is also why the fade the
    user saw was 120ms rather than the base rule's 200ms. */
+/* And it paints the screen, not the part of it below the chrome's top: the strip the chrome
+   reserves (0 .. --dsh-frame-chrome-top) is the page's own colour rather than whatever the shell
+   painted behind it, which is the band the user saw as a leftover. The dialog moves down by exactly
+   that strip -- the layer's own padding-top -- so everything inside it keeps the place it had. Only a
+   page of the bar is named: a dialog over the conversation still shows it through the strip, and a
+   desktop dialog is untouched. */
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-main)}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}
@@ -16412,7 +16419,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "dc04a202" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "92743b43" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

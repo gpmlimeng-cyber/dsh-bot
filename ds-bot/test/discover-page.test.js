@@ -254,6 +254,9 @@ test('every rule is a phone rule, and the page hands the shell nothing but the s
   assert.ok(nav.includes("actions.openSettings('general', null, 'tab')"), 'the 我的 tab comes through the tab door')
   assert.ok(index.includes("settings: { page: key, id: null, tab: true }"), 'and so does every row of this list')
   assert.ok(read('overlays.js').includes('tab: settings.tab === true'), 'which the layer is handed')
+  // And it paints the strip the chrome reserves, so the band above the page is the page's own colour
+  // instead of the shell's leftover: the dialog moves down by exactly that strip.
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-main)}'), "the page paints from the screen's top edge")
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}'), 'the phone plays no entrance for it, and beats the reduced-motion fade that would otherwise stand in for one')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}'), 'and no exit')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}'), 'and draws no veil')
