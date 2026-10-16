@@ -53,6 +53,9 @@ export function PeersPage({ useRoster, useUi, actions }) {
   const mobile = useMobile()
   if (!open || !mobile) return null
   const shown = peersList(roster.bots, query)
+  // How many group chats there are, read the way that page reads it itself (settings.js, its own
+  // title): every room the roster lists -- so the door and the page it opens can never disagree.
+  const rooms = (roster.rooms ?? []).length
   // A page of Settings, opened from here: the list steps aside for it (the layer is drawn under this
   // one, z 60 against 79, so it could not be seen over it), and the action remembers that the way
   // back is this list rather than the conversation. One door, two pages under it -- a Bot's own page
@@ -105,6 +108,9 @@ export function PeersPage({ useRoster, useUi, actions }) {
         h('span', { className: 'bt-peers-icon', 'aria-hidden': true }, h(SETTINGS_ICONS.groups)),
         h('span', { className: 'bt-peers-body' },
           h('span', { className: 'bt-peers-name-row' }, h('span', { className: 'bt-peers-name' }, t('Group chats')))),
+        // The count, in the skin's own number badge (the sidebar's own), before the chevron: the
+        // same number that page's title carries, so a user who counts them finds the same answer.
+        h('span', { className: 'bt-row-count', title: t('Group chats · {count}', { count: rooms }) }, String(rooms)),
         h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))]),
       shown.length > 0 ? section(t('Peers'), shown.map(bot => {
         const model = peersModel(bot, roster)

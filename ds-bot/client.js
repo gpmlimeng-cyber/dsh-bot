@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: e822e09e
+// Source fingerprint: 0fdfb5e8
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -15921,7 +15921,7 @@ function BottomNav({ useUi, useNav, actions }) {
   const mobile = useMobile();
   const portrait = usePortrait();
   if (!mobile || !portrait) return null;
-  const active = ui2.discover || ui2.discoverPanel !== null ? "plugins" : ui2.settings ? "me" : ui2.peers ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
+  const active = ui2.discover || ui2.discoverPanel !== null ? "plugins" : ui2.settings ? ui2.settings.back === "peers" ? "peers" : "me" : ui2.peers ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
   const go = (id) => {
     if (active === id) return;
     if (id === "tasks") {
@@ -16113,6 +16113,7 @@ function PeersPage({ useRoster, useUi, actions }) {
   const mobile = useMobile();
   if (!open || !mobile) return null;
   const shown = peersList(roster.bots, query2);
+  const rooms = (roster.rooms ?? []).length;
   const openPage = (page, id = null) => {
     actions.openPeerPage(page, id);
   };
@@ -16191,6 +16192,9 @@ function PeersPage({ useRoster, useUi, actions }) {
             { className: "bt-peers-body" },
             (0, import_react40.createElement)("span", { className: "bt-peers-name-row" }, (0, import_react40.createElement)("span", { className: "bt-peers-name" }, t("Group chats")))
           ),
+          // The count, in the skin's own number badge (the sidebar's own), before the chevron: the
+          // same number that page's title carries, so a user who counts them finds the same answer.
+          (0, import_react40.createElement)("span", { className: "bt-row-count", title: t("Group chats · {count}", { count: rooms }) }, String(rooms)),
           (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
         )
       )]),
@@ -16381,7 +16385,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "e822e09e" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "0fdfb5e8" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

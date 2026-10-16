@@ -106,15 +106,21 @@ test('the page is a header row and one scroller of labelled cards', () => {
   assert.equal(rows.length, 3, 'the door and one row per Bot')
   const kidsOf = (node) => plain(node.children.filter(child => child !== null && child !== undefined).map(child => classList(child)[0] ?? '(mark)'))
   assert.deepEqual(rows.map(kidsOf), [
-    ['bt-peers-icon', 'bt-peers-body', 'bt-peers-go'],
+    ['bt-peers-icon', 'bt-peers-body', 'bt-row-count', 'bt-peers-go'],
     ['(mark)', 'bt-peers-body', 'bt-peers-go'],
     ['(mark)', 'bt-peers-body', 'bt-peers-go'],
-  ], 'the door wears the section icon, a Bot its own mark; the chevron is inside every row')
+  ], 'the door wears the section icon and its count, a Bot its own mark; the chevron is inside every row')
   // The door names the page it opens, and that page is 我的 -> 群聊: the key is the settings page's own.
   const door = rows.find(row => row.props['data-page'] === 'groups')
   assert.ok(door, 'the door carries the page it opens')
   assert.ok(code('settings.js').includes("['groups', 'Group chats']"), 'which is the page key 我的 -> 群聊 uses')
   assert.equal(findAll(door, 'bt-peers-desc').length, 0, 'and the door says one thing, so it has no second line')
+  // The count is the page's own number, in the skin's own badge, before the chevron.
+  const count = findAll(door, 'bt-row-count')
+  assert.equal(count.length, 1, 'the door carries the group chats\' count')
+  assert.equal(String(count[0].children[0]), String(ROSTER.rooms.length), 'which is the number that page lists')
+  assert.ok(peers.includes("h('span', { className: 'bt-row-count', title: t('Group chats · {count}', { count: rooms }) }, String(rooms))"), 'named with that page\'s own words')
+  assert.ok(peers.includes('const rooms = (roster.rooms ?? []).length'), 'counted the way that page counts')
   // What a description line is made of, row by row: a Bot with a model has two values and says so
   // with the one mark between them, and a Bot without a model has one value and therefore no mark --
   // a leading separator is not a separator.

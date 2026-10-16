@@ -63,7 +63,10 @@ export function BottomNav({ useUi, useNav, actions }) {
   // scheduled-tasks page, opened from its own list) leaves every tab unlit rather than
   // claiming the conversation is on screen.
   const active = ui.discover || ui.discoverPanel !== null ? 'plugins'
-    : ui.settings ? 'me'
+    // A Settings page opened from the 伙伴 list keeps the light on that tab, the way one opened from
+    // 发现 keeps it on 发现: the user came in through it, and the light says which page they are on.
+    // (The layer carries that answer while it is up -- index.js, openPeerPage.)
+    : ui.settings ? (ui.settings.back === 'peers' ? 'peers' : 'me')
       : ui.peers ? 'peers'
         : nav.panel === 'plugins' ? 'plugins'
           : nav.panel === null ? 'tasks' : null
