@@ -495,6 +495,9 @@ const ZH = {
   'Working out a plan': '理一下思路',
   'Sorting out the details': '梳理细节',
   'On it': '在做了',
+  // A group round with nothing to draw yet, or one that came back empty: the cell says which.
+  'Working on it…': '正在处理…',
+  'No replies in this round.': '这轮没有回复',
   'Busy with it': '正在处理',
   'Moving ahead': '推进中',
   'Taking care of it': '处理中',

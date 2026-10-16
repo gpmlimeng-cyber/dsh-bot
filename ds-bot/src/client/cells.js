@@ -642,11 +642,13 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
   const pending = done || !live.speaking ? [] : [live.speaking]
   const speakerTool = useWork?.(work => work.bots?.[live.speaking]?.tool) ?? undefined
   const speakerDoing = useWork?.(work => (work.bots?.[live.speaking]?.tool ? workPhrase(work.bots[live.speaking]) : undefined)) ?? undefined
-  // Nothing to draw yet is not "draw nothing": this cell is where the group's replies live, so a
-  // node it leaves empty hands the tool row back to the shell -- `group_relay · {}` over the
-  // messages, which is the user's report. The blank box is `display:contents`, so it holds the
-  // node without taking a line of its own.
-  if (replies.length === 0 && pending.length === 0) return h('span', { className: 'bt-cell-blank', 'aria-hidden': true })
+  // Nothing to draw yet is not "draw nothing": this cell is where the group's replies live, so an
+  // empty node hands the row back to the shell -- the raw `group_relay · {}` over the messages,
+  // which is the user's report. Nor is it a void: one short line says which of the two states this
+  // is, and it uses the event row the other group notices already wear.
+  if (replies.length === 0 && pending.length === 0) {
+    return h('div', { className: 'bt-event' }, t(done ? 'No replies in this round.' : 'Working on it…'))
+  }
   const room = roster.roomsById[sessionId]
   // A decision the room admin asks for rides the bar above the composer instead of the transcript
   // (decide.js has the protocol): the block comes out of the reply it was written in, and the newest

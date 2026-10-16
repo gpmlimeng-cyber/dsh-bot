@@ -386,7 +386,10 @@ test('a relay node with nothing to draw is never handed back to the shell', () =
   const blank = node => find(node, child => child.props?.className === 'bt-cell-blank')
   const drawn = (root, options) => expand(ToolCell(props(root, { sessionId: 'room', ...options })))
   const empty = call('group_relay', 'relay-1', { content: { replies: [] } })
-  assert.ok(blank(drawn(empty)), 'a round that reported no replies still draws the cell')
+  assert.match(text(drawn(empty)), /No replies in this round\./, 'a round that reported no replies says so, rather than leaving a void')
+  // Still running, before any member has been reported: the same line, in the present tense.
+  const starting = call('group_relay', 'relay-3', { running: true })
+  assert.match(text(drawn(starting, { actions: { roomProgress: async () => [] } })), /Working on it/, 'a round with nothing reported yet says it is working')
   // The same node inside a hidden turn: the tree is not drawn there, which used to mean `null`.
   const roster = team({ exchangeTurns: { room: [1] } })
   assert.ok(blank(drawn(call('group_relay', 'relay-2', { content: { replies: [] } }), { roster })),
