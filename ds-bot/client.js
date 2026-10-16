@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 192284f0
+// Source fingerprint: b57e9fe2
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2333,9 +2333,16 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-left:42px;container-type:inline-size}
 .bt-dcard-wrap{min-width:0;display:flex;flex-direction:column;gap:6px}
 .bt-dcard{position:relative;box-sizing:border-box;display:flex;align-items:center;gap:10px;height:60px;padding:8px 10px;border-radius:10px;background:var(--bt-card);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;overflow:hidden;transition:background-color .12s ease}
-.bt-dcard:hover{background:var(--bt-hover)}
 .bt-dcard-hit{position:absolute;inset:0;z-index:1;width:100%;padding:0;border:0;border-radius:inherit;background:0 0;cursor:pointer}
-.bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);outline:none}
+/* A pointer's own states, and only a pointer's: an Android tap leaves :hover on whatever it touched,
+   so the card and its buttons would keep the very highlight the user asked away -- the tile read as
+   "selected" after opening a file. Nothing here draws a ring around the whole card either; what a
+   press does is the button's own business (.bt-dcard-btn, below). */
+@media (hover:hover){
+  .bt-dcard:hover{background:var(--bt-hover)}
+  .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
+}
+.bt-dcard-hit:focus-visible{outline:none}
 /* The file's badge: a rounded square in the kind's own tint with the extension written in
    it, the way the delivery list the user pointed at does it. A drawn glyph of a page is a
    shape every reader has to decode and none of them read as this file; four letters do not
@@ -2372,7 +2379,6 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
    drawing is not sized here: it is Lucide's ellipsis, which brings the same 33px box the bar's
    own "···" does, so the card's and the bar's are one glyph. */
 .bt-dcard-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);cursor:pointer;transition:background-color .12s ease,color .12s ease}
-.bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-dcard-btn:disabled{opacity:.5;cursor:default}
 /* The panel row's "···" arrives inside the platform Menu's own span; it is one control, so
    it neither shrinks nor wraps. The dots themselves are DotsBoldIcon at 34px -- the filled
@@ -16902,7 +16908,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "192284f0" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "b57e9fe2" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

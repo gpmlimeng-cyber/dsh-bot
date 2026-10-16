@@ -207,6 +207,20 @@ test('the type mark is the kind\u2019s own drawing in a tinted square, not lette
   assert.ok(rule('.bt-dcard-ico>svg{').includes('width:24px') && rule('.bt-dcard-ico>svg{').includes('height:24px'), 'and the drawing is the 24px the row was measured with')
 })
 
+test('the card keeps no selected look: no ring, and hover only where a pointer is', () => {
+  const source = styles.join('\n')
+  assert.ok(!styles.some(line => line.startsWith('.bt-dcard:hover{')), 'the card no longer greys itself under the cursor unconditionally')
+  assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn:hover{')), 'nor do its buttons')
+  const pointer = source.slice(source.indexOf('@media (hover:hover){'), source.indexOf('.bt-dcard-hit:focus-visible'))
+  assert.ok(pointer.includes('.bt-dcard:hover{background:var(--bt-hover)}'), 'both live inside the pointer-only block')
+  assert.ok(pointer.includes('.bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}'), 'which is where an Android tap cannot leave them stuck')
+  assert.ok(!source.includes('.bt-dcard-hit:focus-visible{box-shadow:'), 'and the accent ring around the whole card is gone')
+  assert.ok(styles.some(line => line.startsWith('.bt-dcard-hit:focus-visible{outline:none}')), 'with no outline put in its place')
+  assert.ok(!source.includes('.bt-dcard:active') && !source.includes('.bt-dcard[aria-selected'), 'and the card has no press or selected state of its own')
+  // The tile is still the thing that opens the file: only its selected look went.
+  assert.ok(source.includes(".bt-dcard-hit{position:absolute;inset:0;z-index:1;width:100%;padding:0;border:0;border-radius:inherit;background:0 0;cursor:pointer}"), 'the hit layer is still there')
+})
+
 test('the metadata reads description, then the extension, then the word for a file', () => {
   const source = card.join('\n')
   assert.ok(source.includes("replace(/\\s*(?:\\([^()]*\\)|（[^（）]*）)\\s*$/u, '')"), 'a trailing parenthetical is dropped')
