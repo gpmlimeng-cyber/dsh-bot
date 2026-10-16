@@ -1124,6 +1124,7 @@ html[data-bt-mobile] .bt-mem-head .bt-icon-btn{width:48px;height:48px}
 .bt-mem-failed{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--bt-hover);font-size:13px;line-height:18px;color:var(--bt-ink-2)}
 .bt-mem-failed>span{flex:1;min-width:0;overflow-wrap:anywhere}
 .bt-mem-entries{display:flex;flex-direction:column;gap:28px;animation:bt-page-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},bt-veil-in .22s ease-out}
+.bt-mem-note{margin:0 0 -14px;font-size:12px;line-height:16px;color:var(--bt-ink-2)}
 .bt-mem-section-head{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
 .bt-mem-section-head h3{margin:0;font-size:15px;line-height:22px;font-weight:600}
 .bt-mem-section-head span{font-size:12px;line-height:16px;color:var(--bt-ink-2)}

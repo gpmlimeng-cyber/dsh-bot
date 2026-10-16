@@ -792,6 +792,9 @@ const ZH = {
   '{share}% of all usage in the last {range}': '占最近 {range}全部用量的 {share}%',
   Calls: '调用次数',
   'Cache hit rate': '缓存命中率',
+  // U12: the two terms on the usage page that a first-time reader has not been taught, said in words.
+  'Cache hit rate: input the model had already read, so it was not sent again.': '缓存命中率＝输入里模型已经读过的部分，不用再发一次。',
+  'Compaction and handoff: a chat too long to keep whole is summarised so the work can go on.': '压缩与交接＝对话太长时自动整理成摘要，好继续往下做。',
   'Tokens over time': 'Token 走势',
   '{count} tokens': '{count} Token',
   '{tokens} tokens · {calls} calls': '{tokens} Token · {calls} 次调用',

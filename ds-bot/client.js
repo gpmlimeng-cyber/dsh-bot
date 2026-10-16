@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 0e5886b0
+// Source fingerprint: 4dafecc6
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -840,6 +840,9 @@ var ZH = {
   "{share}% of all usage in the last {range}": "占最近 {range}全部用量的 {share}%",
   Calls: "调用次数",
   "Cache hit rate": "缓存命中率",
+  // U12: the two terms on the usage page that a first-time reader has not been taught, said in words.
+  "Cache hit rate: input the model had already read, so it was not sent again.": "缓存命中率＝输入里模型已经读过的部分，不用再发一次。",
+  "Compaction and handoff: a chat too long to keep whole is summarised so the work can go on.": "压缩与交接＝对话太长时自动整理成摘要，好继续往下做。",
   "Tokens over time": "Token 走势",
   "{count} tokens": "{count} Token",
   "{tokens} tokens · {calls} calls": "{tokens} Token · {calls} 次调用",
@@ -3169,6 +3172,7 @@ html[data-bt-mobile] .bt-mem-head .bt-icon-btn{width:48px;height:48px}
 .bt-mem-failed{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--bt-hover);font-size:13px;line-height:18px;color:var(--bt-ink-2)}
 .bt-mem-failed>span{flex:1;min-width:0;overflow-wrap:anywhere}
 .bt-mem-entries{display:flex;flex-direction:column;gap:28px;animation:bt-page-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing},bt-veil-in .22s ease-out}
+.bt-mem-note{margin:0 0 -14px;font-size:12px;line-height:16px;color:var(--bt-ink-2)}
 .bt-mem-section-head{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
 .bt-mem-section-head h3{margin:0;font-size:15px;line-height:22px;font-weight:600}
 .bt-mem-section-head span{font-size:12px;line-height:16px;color:var(--bt-ink-2)}
@@ -10940,6 +10944,10 @@ function Entries({ bot, view, remove }) {
   return (0, import_react21.createElement)(
     "div",
     { className: "bt-mem-entries" },
+    // U12: MEMORY.md was named only in a `title=`, and this user reads what is drawn rather than what
+    // is hovered -- so the file, and what it is for, get a line of their own. The title stays for
+    // whoever does hover.
+    (0, import_react21.createElement)("p", { className: "bt-mem-note" }, t("MEMORY.md, which every conversation reads")),
     sections.map((section) => (0, import_react21.createElement)(
       "section",
       { key: section.scope, className: "bt-mem-section" },
@@ -14443,7 +14451,10 @@ function Stats({ range, total, previous }) {
     ),
     cell(t("Cache hit rate"), `${hitRate(total)}%`),
     cell(t("Output"), compact(total.output)),
-    cell(t("Calls"), full(total.calls))
+    cell(t("Calls"), full(total.calls)),
+    // U12: a term the user has not learned gets a line of its own where it is read. A `title=` only
+    // tells the user who hovers, and this one says so twice that they do not.
+    (0, import_react34.createElement)("p", { className: "bt-us-hint" }, t("Cache hit rate: input the model had already read, so it was not sent again."))
   );
 }
 function niceTop(max) {
@@ -14523,7 +14534,10 @@ function Chart({ range, columns, series, tipSeries, by, onBy, onPick }) {
         className: "bt-us-key",
         ...entry.pick ? { type: "button", onClick: () => onPick(entry.pick) } : {}
       }, (0, import_react34.createElement)("i", { className: "bt-us-dot", style: { background: entry.fill } }), entry.name))
-    ) : null
+    ) : null,
+    // U12, the second term: it names a share of the token spend, and it is not a phrase anyone was
+    // taught. Said in words under the chart that draws it.
+    (0, import_react34.createElement)("p", { className: "bt-us-hint" }, t("Compaction and handoff: a chat too long to keep whole is summarised so the work can go on."))
   );
 }
 function Row2({ kind, glyph, name, sub, sum, whole, fill: fill2, index, onClick }) {
@@ -15059,6 +15073,8 @@ html[data-bt-mobile] .bt-us-month-nav{width:44px;height:44px;margin:-8px}.bt-us-
 }
 .bt-us-tabs:not([data-glide]) button[aria-pressed=true]{background:var(--bt-card)}
 .bt-us-tabs>.bt-thumb{top:3px;bottom:3px;border-radius:999px;background:var(--bt-card);box-shadow:0 1px 3px rgba(0,0,0,.08),0 0 0 .5px var(--bt-line-2)}
+.bt-us-hint{grid-column:1/-1;margin:0;font-size:12px;line-height:16px;color:var(--bt-ink-2)}
+.bt-us-stats>.bt-us-hint{padding:0 18px 14px}
 .bt-us-note{display:inline-flex;align-items:center;gap:8px;font-size:12px;line-height:16px;color:var(--bt-ink-2)}
 .bt-us-note::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--bt-accent);animation:bt-us-pulse 1.4s ease-in-out infinite}
 .bt-us-sheet{display:flex;flex-direction:column;gap:4px}
@@ -17758,7 +17774,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "0e5886b0" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "4dafecc6" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

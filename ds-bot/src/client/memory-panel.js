@@ -125,6 +125,10 @@ function Entries({ bot, view, remove }) {
     { scope: 'team', title: t('Team memory'), hint: t('Every Bot reads it'), size: view.sizes.team },
   ]
   return h('div', { className: 'bt-mem-entries' },
+    // U12: MEMORY.md was named only in a `title=`, and this user reads what is drawn rather than what
+    // is hovered -- so the file, and what it is for, get a line of their own. The title stays for
+    // whoever does hover.
+    h('p', { className: 'bt-mem-note' }, t('MEMORY.md, which every conversation reads')),
     sections.map(section => h('section', { key: section.scope, className: 'bt-mem-section' },
       h('div', { className: 'bt-mem-section-head' },
         h('h3', null, section.title),

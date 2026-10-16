@@ -294,3 +294,25 @@ test('an open drawer carries a visible close in its top row, beside search and N
   assert.ok(glyph, 'the glyph is sized by the skin, like every other Fluent icon')
   assert.ok(glyph.includes('width:20px;height:20px'))
 })
+
+test('a term the user has not been taught is said in words, on screen', () => {
+  // U12: the usage page said 缓存命中率 and 压缩与交接, and the memory page named MEMORY.md in a
+  // `title=` alone -- and the user's own words are that they do not hover or tap to be told
+  // anything. Each of the three now has a line of its own, where it is read.
+  const usage = read('usage-page.js')
+  assert.ok(usage.includes("className: 'bt-us-hint' }, t('Cache hit rate: input the model had already read, so it was not sent again.')"),
+    'the rate says what it counts, under the cells it labels')
+  assert.ok(usage.includes("className: 'bt-us-hint' }, t('Compaction and handoff: a chat too long to keep whole is summarised so the work can go on.')"),
+    'and the chart says what 压缩与交接 counts')
+  assert.ok(usage.includes('.bt-us-hint{'), 'the line is styled where the page keeps its own sheet')
+  assert.ok(usage.includes('.bt-us-stats>.bt-us-hint{padding:0 18px 14px}'), 'and lines up with the cells when it sits in their grid')
+  const memory = read('memory-panel.js')
+  assert.ok(memory.includes("className: 'bt-mem-note' }, t('MEMORY.md, which every conversation reads')"),
+    'the memory page names the file in words')
+  assert.ok(memory.includes("title: t('MEMORY.md, which every conversation reads')"), 'and keeps the title for whoever does hover')
+  assert.ok(read('styles.js').includes('.bt-mem-note{'), 'with the line styled in the skin')
+  // Both strings are copy the user reads, so both are translated rather than left in English.
+  const dictionary = read('i18n.js')
+  assert.ok(dictionary.includes("'Cache hit rate: input the model had already read, so it was not sent again.':"), 'the rate line is translated')
+  assert.ok(dictionary.includes("'Compaction and handoff: a chat too long to keep whole is summarised so the work can go on.':"), 'and so is the chart line')
+})

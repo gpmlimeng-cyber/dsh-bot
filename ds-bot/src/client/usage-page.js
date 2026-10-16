@@ -156,7 +156,10 @@ function Stats({ range, total, previous }) {
           `${change >= 0 ? '↑' : '↓'} ${Math.abs(change)}%`))),
     cell(t('Cache hit rate'), `${hitRate(total)}%`),
     cell(t('Output'), compact(total.output)),
-    cell(t('Calls'), full(total.calls)))
+    cell(t('Calls'), full(total.calls)),
+    // U12: a term the user has not learned gets a line of its own where it is read. A `title=` only
+    // tells the user who hovers, and this one says so twice that they do not.
+    h('p', { className: 'bt-us-hint' }, t('Cache hit rate: input the model had already read, so it was not sent again.')))
 }
 
 function niceTop(max) {
@@ -206,7 +209,10 @@ function Chart({ range, columns, series, tipSeries, by, onBy, onPick }) {
     series.length > 1 || series[0]?.pick ? h('div', { className: 'bt-us-legend' },
       series.map(entry => h(entry.pick ? 'button' : 'span', {
         key: entry.key, className: 'bt-us-key', ...(entry.pick ? { type: 'button', onClick: () => onPick(entry.pick) } : {}),
-      }, h('i', { className: 'bt-us-dot', style: { background: entry.fill } }), entry.name))) : null)
+      }, h('i', { className: 'bt-us-dot', style: { background: entry.fill } }), entry.name))) : null,
+      // U12, the second term: it names a share of the token spend, and it is not a phrase anyone was
+      // taught. Said in words under the chart that draws it.
+      h('p', { className: 'bt-us-hint' }, t('Compaction and handoff: a chat too long to keep whole is summarised so the work can go on.')))
 }
 
 function Row({ kind, glyph, name, sub, sum, whole, fill, index, onClick }) {
@@ -655,6 +661,8 @@ html[data-bt-mobile] .bt-us-month-nav{width:44px;height:44px;margin:-8px}.bt-us-
 }
 .bt-us-tabs:not([data-glide]) button[aria-pressed=true]{background:var(--bt-card)}
 .bt-us-tabs>.bt-thumb{top:3px;bottom:3px;border-radius:999px;background:var(--bt-card);box-shadow:0 1px 3px rgba(0,0,0,.08),0 0 0 .5px var(--bt-line-2)}
+.bt-us-hint{grid-column:1/-1;margin:0;font-size:12px;line-height:16px;color:var(--bt-ink-2)}
+.bt-us-stats>.bt-us-hint{padding:0 18px 14px}
 .bt-us-note{display:inline-flex;align-items:center;gap:8px;font-size:12px;line-height:16px;color:var(--bt-ink-2)}
 .bt-us-note::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--bt-accent);animation:bt-us-pulse 1.4s ease-in-out infinite}
 .bt-us-sheet{display:flex;flex-direction:column;gap:4px}
