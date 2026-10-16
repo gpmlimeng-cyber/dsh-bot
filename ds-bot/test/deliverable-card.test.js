@@ -336,7 +336,9 @@ test('the preview page’s title bar is back, the name, and one more menu', () =
   assert.ok(source.includes('}, h(LucideEllipsisIcon)),'), 'the menu’s anchor draws Lucide’s three dots')
   // The menu is the platform’s own component and carries both exits, which are the same
   // behaviour the card’s row of buttons runs: one definition, two chromes.
-  assert.ok(source.includes("import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'") && source.includes("import { LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'"), 'the menu is the platform’s, and every glyph in it is Lucide’s data')
+  // The sheet's close is added to the same import line (the list's own head draws it), so the
+  // assertion reads the Lucide names themselves rather than the whole line.
+  assert.ok(source.includes("import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'") && source.includes("LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'"), 'the menu is the platform’s, and every glyph in it is Lucide’s data')
   assert.ok(source.includes('export function useDeliverableExits(file, actions, onFailed)'), 'the exits are defined once')
   assert.equal(source.split('useDeliverableExits(file, actions, onFailed)').length - 1, 3, 'and used by both chromes')
   assert.ok(source.includes("h(Menu, {"), 'the page’s exits are a menu')
