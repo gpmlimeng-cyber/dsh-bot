@@ -16,7 +16,7 @@
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { VividCsvMark, VividDocumentMark, VividGzMark, VividImageMark, VividMarkdownMark, VividPdfMark, VividSevenZipMark, VividTarMark, VividTextMark, VividXlsMark, VividXlsxMark, VividZipMark } from './icons.js'
+import { VividCsvMark, VividDocMark, VividGzMark, VividImageMark, VividMarkdownMark, VividPdfMark, VividSevenZipMark, VividTarMark, VividTextMark, VividXlsMark, VividXlsxMark, VividZipMark } from './icons.js'
 import { LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { useMobile } from './mobile.js'
@@ -101,7 +101,7 @@ const iconOf = (name) => {
   if (extension === 'tar') return VividTarMark
   if (extension === 'gz') return VividGzMark
   if (extension === '7z') return VividSevenZipMark
-  return VividDocumentMark
+  return VividDocMark
 }
 
 // The workspace a delivered file came out of, named the way a reader asks about it rather

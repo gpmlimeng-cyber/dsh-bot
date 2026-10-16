@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 5b583f58
+// Source fingerprint: e75ab0c3
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -4305,7 +4305,7 @@ var VividTarMark = vividMark('<path fill="#4d1b9b" d="M0 2v92c0 1.1.9 2 2 2h68c1
 var VividGzMark = vividMark('<path fill="#90c" d="M0 2v92c0 1.1.9 2 2 2h68c1.1 0 2-.9 2-2V28H50c-1.1 0-2-.9-2-2V0H2C.9 0 0 .9 0 2z"/><path fill="#90c" d="M71.9 24c-.1-.4-.2-.7-.4-1L52 1.2V24h19.9z"/><path d="M6 41h60v49H6zm6.4-34.9c1.4 0 2.9.4 3.9 1.3l-1.4 2.8c-.6-.6-1.4-.9-2.3-.9-2.2 0-3.2 1.9-3.2 4.2 0 2.6 1.2 4.3 2.9 4.3.6 0 1.3-.2 1.7-.6v-1.7h-1.5v-2.9h4.3v8.1h-2.6v-.9c-.5.7-1.6 1.2-2.7 1.2-2.8 0-5.6-2.7-5.6-7.3.1-4.5 2.6-7.6 6.5-7.6zm7.2 12.4l4.2-7.9c.5-.9.8-1.3.8-1.3s-.3.1-.8.1h-4v-3h8.7v2.2l-4.2 8c-.5.9-.8 1.3-.8 1.3s.3-.1.8-.1h4.3v2.9h-8.9v-2.2z" fill="#fff"/><path fill="#90c" d="M51.1 57.5h-5.7v-5.7l5.7 5.7zm-15.3-5.7v20.7h15.4V58.9H44v-7.1h-8.2zm2.4-5.4h-17v4h6.7l-4.2 3.3v3.5l6.2-4.8v-1.9h21.6v-1.6l-13.3-2.5zm-8.3 8.7l-6.2 4.8v3.5l6.2-4.8v-3.5zm-6.3 14.4l6.2-4.8v-3.5L23.6 66v3.5zm6.3 1.4v-3.5l-6.2 4.8V74h-2.5v4H25v2.8h-2.2c-.4-.7-1.1-1.2-2-1.2-1.3 0-2.3 1-2.3 2.3 0 1.3 1 2.3 2.3 2.3.9 0 1.6-.5 2-1.2H25v2.1h3.4V83h2.2c.4.7 1.1 1.2 2 1.2 1.3 0 2.3-1 2.3-2.3 0-1.3-1-2.3-2.3-2.3-.9 0-1.6.5-2 1.2h-2.2V78h9.7l13.3-2.4V74H25.7l4.2-3.1z"/>');
 var VividSevenZipMark = vividMark('<path fill="#90c" d="M0 2v92c0 1.1.9 2 2 2h68c1.1 0 2-.9 2-2V28H50c-1.1 0-2-.9-2-2V0H2C.9 0 0 .9 0 2z"/><path fill="#90c" d="M71.9 24c-.1-.4-.2-.7-.4-1L52 1.2V24h19.9z"/><path d="M6 41h60v49H6zm4.3-30.3c.4-1 .6-1.4.6-1.4H6.1V6.4h8.2v2.4L9.7 20.7H6.3l4-10zm6.3 7.8l4.2-7.9c.5-.9.8-1.3.8-1.3s-.3.1-.8.1h-4v-3h8.7v2.2l-4.2 8c-.5.9-.8 1.3-.8 1.3s.3-.1.8-.1h4.3v2.9h-8.9v-2.2z" fill="#fff"/><path fill="#90c" d="M51.1 57.5h-5.7v-5.7l5.7 5.7zm-15.3-5.7v20.7h15.4V58.9H44v-7.1h-8.2zm2.4-5.4h-17v4h6.7l-4.2 3.3v3.5l6.2-4.8v-1.9h21.6v-1.6l-13.3-2.5zm-8.3 8.7l-6.2 4.8v3.5l6.2-4.8v-3.5zm-6.3 14.4l6.2-4.8v-3.5L23.6 66v3.5zm6.3 1.4v-3.5l-6.2 4.8V74h-2.5v4H25v2.8h-2.2c-.4-.7-1.1-1.2-2-1.2-1.3 0-2.3 1-2.3 2.3 0 1.3 1 2.3 2.3 2.3.9 0 1.6-.5 2-1.2H25v2.1h3.4V83h2.2c.4.7 1.1 1.2 2 1.2 1.3 0 2.3-1 2.3-2.3 0-1.3-1-2.3-2.3-2.3-.9 0-1.6.5-2 1.2h-2.2V78h9.7l13.3-2.4V74H25.7l4.2-3.1z"/>');
 var VividImageMark = vividMark('<path fill="#3c3" d="M0 2v92c0 1.1.9 2 2 2h68c1.1 0 2-.9 2-2V28H50c-1.1 0-2-.9-2-2V0H2C.9 0 0 .9 0 2z"/><path fill="#3c3" d="M71.9 24c-.1-.4-.2-.7-.4-1L52 1.2V24h19.9z"/><path d="M9.8 74V37h52.8v35.4l-14.9-20c-.1-.1-.2-.2-.3-.2s-.3.1-.3.2L34.4 67.9l-9.8-8.7c-.2-.1-.4-.1-.6 0L9.8 74z" fill="#fff"/><path fill="#3c3" d="M30.4 46.9c0-2.8-2.3-5.1-5.1-5.1s-5.1 2.3-5.1 5.1 2.3 5.1 5.1 5.1c2.8-.1 5.1-2.3 5.1-5.1z"/>');
-var VividDocumentMark = vividMark('<path fill="#fff" d="M71.9 24c-.1-.4-.2-.7-.4-1L52 1.2V24h19.9z"/><path fill="#fff" d="M0 2v92c0 1.1.9 2 2 2h68c1.1 0 2-.9 2-2V28H50c-1.1 0-2-.9-2-2V0H2C.9 0 0 .9 0 2z"/><path fill="#bababa" d="M0 94V2C0 .9.9 0 2 0h48c.6 0 1.1.2 1.5.7l20 22.3c.3.4.5.8.5 1.3V94c0 1.1-.9 2-2 2H2c-1.1 0-2-.9-2-2zm68-68.9L49.1 4H4v88h64V25.1z"/><path fill="#bababa" d="M48 26V4c0-1.1.9-2 2-2s2 .9 2 2v20h16c1.1 0 2 .9 2 2s-.9 2-2 2H50c-1.1 0-2-.9-2-2z"/>');
+var VividDocMark = vividMark('<path fill="#1a75ce" d="M0 2v92c0 1.1.9 2 2 2h68c1.1 0 2-.9 2-2V28H50c-1.1 0-2-.9-2-2V0H2C.9 0 0 .9 0 2z"/><path fill="#1a75ce" d="M71.9 24c-.1-.4-.2-.7-.4-1L52 1.2V24h19.9z"/><path d="M6 41h60v49H6zm.6-34.6h4.2c3.7 0 5.9 2.6 5.9 7.1s-2.2 7.2-5.9 7.2H6.6V6.4zm4.1 11.4c1.7 0 2.6-1.5 2.6-4.3s-1-4.2-2.6-4.2h-.8v8.5h.8zM24.1 6.1c3.8 0 5.9 3.1 5.9 7.3 0 4.2-2.1 7.5-5.9 7.5s-5.8-3.2-5.8-7.5c0-4.1 2.1-7.3 5.8-7.3zm0 11.7c1.7 0 2.5-1.8 2.5-4.3s-.8-4.2-2.5-4.2-2.5 1.7-2.5 4.2.8 4.3 2.5 4.3zM38 6.1c1.3 0 2.6.4 3.6 1.2l-1.4 2.8c-.4-.5-1.3-.9-2.1-.9-2.1 0-3.2 1.9-3.2 4.2 0 2.3 1.2 4.4 3.2 4.4 1 0 1.7-.5 2.3-1l1.4 2.8c-.9.7-2 1.3-3.9 1.3-4 0-6.3-3.1-6.3-7.4-.1-4.2 2.3-7.4 6.4-7.4z" fill="#fff"/><path fill="#1a75ce" d="M19.5 67.1l-4.8-14.8c-.2-.6-.3-.8-.4-.8-.1-.1-.2-.1-.3-.2l-1.7-.5-.1-2.1h9l.2 2.1-1.7.5v.2c0 .2.1.6.3 1l1.8 5.7 3.2-9.5 2.4-.1 2.9 9.5 2-5.7c.1-.4.3-.8.3-1v-.1l-1.5-.4-.1-2.2h7l.2 2.1-1.9.6c-.1 0-.2.1-.3.1 0 .1-.2.2-.3.7l-5.3 14.7-2.5.2-2.7-9.1-3.2 8.9-2.5.2z"/><path d="M42.4 48.6H60v2.8H42.4zm0 7.4H60v2.8H42.4zm0 7.7H60v2.8H42.4zM13 71.5h47v2.8H13zm0 7.6h47v2.8H13z" fill="#1a75ce" stroke="#1a75ce" stroke-width=".5" stroke-miterlimit="10"/>');
 
 // src/client/questions.js
 var import_react4 = require("react");
@@ -5457,7 +5457,7 @@ var iconOf = (name) => {
   if (extension === "tar") return VividTarMark;
   if (extension === "gz") return VividGzMark;
   if (extension === "7z") return VividSevenZipMark;
-  return VividDocumentMark;
+  return VividDocMark;
 };
 var WORKSPACES = [
   [".dsh/bot/workspace", "DSH workspace"],
@@ -16954,7 +16954,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "5b583f58" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "e75ab0c3" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

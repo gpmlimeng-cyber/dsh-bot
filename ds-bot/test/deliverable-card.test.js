@@ -189,11 +189,11 @@ test('the type mark is the kind\u2019s own drawing, one row per mark, not letter
   for (const [extension, mark] of [['pdf', 'VividPdfMark'], ['md', 'VividMarkdownMark'], ['txt', 'VividTextMark'], ['csv', 'VividCsvMark'], ['xls', 'VividXlsMark'], ['xlsx', 'VividXlsxMark'], ['zip', 'VividZipMark'], ['tar', 'VividTarMark'], ['gz', 'VividGzMark'], ['7z', 'VividSevenZipMark']]) {
     assert.ok(source.includes(`if (extension === '${extension}') return ${mark}`), `${mark} answers .${extension}`)
   }
-  assert.ok(source.includes('return VividDocumentMark'), 'and the generic document is what is left')
+  assert.ok(source.includes('return VividDocMark'), 'and the generic document is what is left')
   assert.ok(!source.includes('CODE_EXTENSIONS') && !source.includes('TABLE_EXTENSIONS') && !source.includes('MEDIA_EXTENSIONS'), 'no kind sets are left to answer with a look that says nothing')
   assert.ok(!source.includes('toneOf') && !source.includes('bt-dcard-ico-'), 'and no tone class: the artwork carries its own colour')
   // The twelve come from the package, inlined whole -- nothing drawn or recoloured here.
-  for (const mark of ['VividMarkdownMark', 'VividTextMark', 'VividPdfMark', 'VividCsvMark', 'VividXlsMark', 'VividXlsxMark', 'VividZipMark', 'VividTarMark', 'VividGzMark', 'VividSevenZipMark', 'VividImageMark', 'VividDocumentMark']) {
+  for (const mark of ['VividMarkdownMark', 'VividTextMark', 'VividPdfMark', 'VividCsvMark', 'VividXlsMark', 'VividXlsxMark', 'VividZipMark', 'VividTarMark', 'VividGzMark', 'VividSevenZipMark', 'VividImageMark', 'VividDocMark']) {
     assert.ok(source.includes(mark), `${mark} is the mark for its kind`)
   }
   // Flat: the drawing is the whole mark -- no plate, no border, no tint of ours underneath it.
@@ -218,7 +218,12 @@ test('the vivid marks are inlined whole, and can share one page without repainti
   assert.ok(!/<style/.test(section) && !/class=/.test(section) && !/id=/.test(section), 'no style block, class or id reaches the page')
   assert.ok(!/url\(#/.test(section), 'and nothing points at an id that is no longer there')
   assert.ok(section.includes('fill="#c11e07"'), 'each path carries its own fill instead')
-  assert.equal((section.match(/<path /g) ?? []).length, 12 * 4, 'and every path of every mark came across, four at a time')
+  assert.equal((section.match(/<path /g) ?? []).length, 11 * 4 + 5, 'and every path of every mark came across -- four each, five in the document')
+  // The fallback is the package's blue doc.svg rather than its blank.svg: the blank one is a white page
+  // with pale grey lines, which on this skin's page and cards read as a row with no mark at all.
+  assert.ok(icons.includes('The document is the package\'s doc.svg'), 'the fallback says which drawing it is and why')
+  assert.ok(!section.includes('fill="#bababa"'), 'and its pale grey lines are not among the marks')
+  assert.ok(!icons.includes("blank: '"), 'the blank page is not inlined at all')
   // The package's README attributes a list of brand marks to their owners, a few of them paid for
   // rather than MIT. None of those is inlined, so this skin owes nobody but the notice above.
   assert.ok(!/vivid\/(ps1|git|deb|apk|docx|office)/i.test(icons), 'no brand mark is among them')
