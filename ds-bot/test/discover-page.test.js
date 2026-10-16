@@ -34,14 +34,15 @@ const panelRows = [...discover.slice(discover.indexOf('export const PANEL_ROWS')
   .matchAll(/'([a-z]+)'/g)].map(match => match[1])
 
 test('the list is three cards of doors that already exist, with no headings', () => {
-test('发现\u2019s title row draws no band of its own', () => {
-  // The user saw a band across the top of that page and nowhere else: the list screen's title row is
-  // filled with --bt-sidebar while the page under it is --bt-main, and the two tokens only match in
-  // the light palette (#fcfcfc; in the dark one they are #1b1b1b and #141414).
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}'), 'the rule every list screen wears')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}'), 'cleared for this page alone')
-  const cleared = styles.split('\n').filter(line => line.includes('bt-settings-top{background:transparent}'))
-  assert.equal(cleared.length, 1, 'and only this page clears it')
+test('a phone\u2019s settings page is one colour, the strip above it included', () => {
+  // The user saw a band under the status bar on 发现 and then on 全部设置: the list screen based itself
+  // on --bt-sidebar (the wide dialog's column colour) while the layer's strip and the status-bar frost
+  // are --bt-main, and the two only match in the light palette (#fcfcfc against #1b1b1b in the dark).
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-main)}'), 'the title row names the page\u2019s own colour')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-nav{background:var(--bt-main)}'), 'and so does the list under it')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-main)}'), 'which is the colour the layer\u2019s strip already paints')
+  assert.ok(!styles.includes('.bt-discover .bt-settings[data-screen=list] .bt-settings-top'), 'so no page needs a rule of its own for it')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}'), 'and a page screen keeps the same one')
 })
 
   // 插件 ｜ 连接器·能力·定时任务·密钥 ｜ 用量 -- the user's own grouping, in this order, one card per group.

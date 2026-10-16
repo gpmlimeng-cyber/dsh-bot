@@ -1362,17 +1362,15 @@ html[data-bt-mobile] .bt-settings-top>.bt-icon-btn::after{content:"";position:ab
    than answering a tap with nothing. */
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn:disabled{opacity:.4;cursor:default}
 html[data-bt-mobile] .bt-settings-top h2{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0 60px;text-align:center;font-size:16px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
-/* The title bar is the page under it, not a surface of its own. It inherited the dialog's
-   --bt-main, which on the list screen is not the colour there: the list's base is the
-   sidebar colour, so a band of a different colour ran across the top, and it stayed there
-   while the list scrolled under it. Each screen names its own base, so the seam cannot come
-   back, and no rule adds a divider line. */
-html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}
-/* 发现's title row carries no fill of its own: the page under it already has the colour, and the two
-   tokens only look alike in the light palette (--bt-sidebar #fcfcfc against --bt-main #fcfcfc; in the
-   dark one they are #1b1b1b and #141414), so the row read as a band across the top of that page and
-   nowhere else. 我的 keeps its own: there the row is the list's own header, over the list. */
-html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}
+/* One phone page, one colour. A phone shows one screen at a time, so the list and the page it opens
+   are the same surface, and both wear the page's own --bt-main -- the colour the layer's strip (0 ..
+   --dsh-frame-chrome-top) and the status-bar frost already use. The list screen used to base itself on
+   --bt-sidebar instead, which is the wide dialog's 198px column colour and legitimate there; on a phone
+   it left the title row a shade off the strip above it in the dark palette (#1b1b1b against #141414),
+   which is the band the user saw under the status bar, and the same reason 发现's row read as one. Each
+   screen names its own base, so the seam cannot come back, and no rule adds a divider line. */
+html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-nav{background:var(--bt-main)}
+html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-main)}
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}
 /* That bar replaces the wide dialog's head and its floating close. */
 html[data-bt-mobile] .bt-settings-head,
