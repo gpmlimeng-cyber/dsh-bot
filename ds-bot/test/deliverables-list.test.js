@@ -156,6 +156,15 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   const conditional = index.indexOf('browsers ? installCompiledStyles(BROWSER_CSS')
   assert.ok(at > 0 && conditional > at, 'before the conditional browser block, in the same list')
   assert.ok(!pane.slice(pane.indexOf('export const BROWSER_CSS')).includes('data-view=products'), 'with no copy left inside the conditional one')
+  // Two more panel-common pieces a phone uses went the same way (measured: they were swallowed too).
+  const sheetBlock = pane.slice(pane.indexOf('export const PANEL_SHEET_CSS'), pane.indexOf('export const BROWSER_CSS'))
+  const conditionalBlock = pane.slice(pane.indexOf('export const BROWSER_CSS'))
+  for (const rule of ['.bt-panel-view{flex:1;min-height:0;display:flex;flex-direction:column;animation:bt-panel-view-in .22s cubic-bezier(.16,1,.3,1)}', '@keyframes bt-panel-view-in{from{opacity:0}}', '.bt-panel[data-settling]{overflow:hidden}']) {
+    assert.ok(sheetBlock.includes(rule), `the sheet block carries ${rule.slice(0, 24)}`)
+    assert.ok(!conditionalBlock.includes(rule), `and the conditional one no longer does`)
+  }
+  // The ghost column is the pc layout's, and stays with the browser.
+  assert.ok(conditionalBlock.includes('.bt-panel-ghost{position:absolute;top:44px;'), 'the ghost column stays behind the bridge')
   // Nothing invented behind a batch-action bar: the reference has one, this skin has no such command.
   assert.ok(!list.includes('批量操作') && !list.includes('Batch actions'), 'no empty action bar')
 })

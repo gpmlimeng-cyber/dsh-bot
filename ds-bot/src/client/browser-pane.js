@@ -620,6 +620,13 @@ html[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-inde
 @keyframes bt-sheet-in{from{transform:translateY(100%)}to{transform:none}}
 @keyframes bt-sheet-out{from{transform:none}to{transform:translateY(100%)}}
 @media (prefers-reduced-motion:reduce){html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{animation:bt-fade .12s ease-out}}
+/* The panel's own view column, and the state it is in while a drag settles. Both are used on every
+   profile -- a phone draws the panel too -- so they live here rather than in the block that needs
+   the desktop browser shell. The ghost column above them (browser-pane.js) is the pc layout's. */
+.bt-panel-view{flex:1;min-height:0;display:flex;flex-direction:column;animation:bt-panel-view-in .22s cubic-bezier(.16,1,.3,1)}
+@keyframes bt-panel-view-in{from{opacity:0}}
+.bt-panel[data-settling]{overflow:hidden}
+.bt-panel[data-settling]>.bt-ptabs,.bt-panel[data-settling]>.bt-panel-view{flex-shrink:0;align-self:flex-end;box-sizing:border-box;width:calc(var(--bt-panel-w,320px) - .5px)}
 `
 
 export const BROWSER_CSS = `
@@ -653,12 +660,9 @@ export const BROWSER_CSS = `
 .bt-ptab-close{flex:none;margin-left:2px}
 .bt-panel-ghost{position:absolute;top:44px;right:0;bottom:0;overflow:hidden;pointer-events:none;z-index:2}
 .bt-panel-ghost>.bt-panel-view{position:absolute;inset:0}
-.bt-panel-view{flex:1;min-height:0;display:flex;flex-direction:column;animation:bt-panel-view-in .22s cubic-bezier(.16,1,.3,1)}
-@keyframes bt-panel-view-in{from{opacity:0}}
 /* While the panel changes width its views keep their final width on the right edge, so
    only the panel edge moves and nothing inside reflows frame by frame. */
-.bt-panel[data-settling]{overflow:hidden}
-.bt-panel[data-settling]>.bt-ptabs,.bt-panel[data-settling]>.bt-panel-view{flex-shrink:0;align-self:flex-end;box-sizing:border-box;width:calc(var(--bt-panel-w,320px) - .5px)}
+
 .bt-panel-browser{position:relative}
 .bt-browser-bar{position:relative;display:flex;align-items:center;gap:2px;height:52px;padding:0 10px 0 12px;flex:none;border-bottom:.5px solid var(--bt-line)}
 .bt-browser-bar .bt-icon-btn:disabled{opacity:.35;cursor:default;background:none}
