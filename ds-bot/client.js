@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: e1c4bd3b
+// Source fingerprint: 4b5b68a3
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -4686,19 +4686,17 @@ function fileMediaUrl(base, path) {
 }
 
 // src/client/media.js
-var baseIsServable = (base) => typeof base === "string" && (/^https?:/u.test(base) || base.startsWith("dsh-app://app/"));
 function localPathMediaUrl(base, cwd, value) {
-  if (!baseIsServable(base) || typeof value !== "string") return void 0;
+  if (typeof value !== "string") return void 0;
   let path;
   try {
     path = decodeURIComponent(value.split(/[?#]/u)[0] ?? "");
   } catch {
     return void 0;
   }
-  const absolute = resolveWorkspacePath(cwd, path);
-  if (!isAbsoluteWorkspacePath(absolute) || /^[/\\]{2}/u.test(absolute) || /[\u0000-\u001f\u007f]/u.test(absolute)) return void 0;
   try {
-    return new URL(`api/file?path=${encodeURIComponent(absolute)}`, base).href;
+    const absolute = isAbsoluteWorkspacePath(path) ? path : resolveWorkspacePath(cwd ?? void 0, path);
+    return fileMediaUrl(base, absolute);
   } catch {
     return void 0;
   }
@@ -17576,7 +17574,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "e1c4bd3b" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "4b5b68a3" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

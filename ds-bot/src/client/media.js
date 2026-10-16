@@ -15,23 +15,27 @@
 // here may be used to build a path out of anything but what the markdown author wrote. This
 // is that shape, copied rather than invented, so a local path becomes the app's own file URL exactly as
 // it does in a native message. There is no prefetch and no cache: the resolver is a pure function.
-import { isAbsoluteWorkspacePath, resolveWorkspacePath } from '@deepseek-ai/dsh-util-workspace-path'
+import { fileMediaUrl, isAbsoluteWorkspacePath, resolveWorkspacePath } from '@deepseek-ai/dsh-util-workspace-path'
 
-const baseIsServable = (base) => typeof base === 'string' && (/^https?:/u.test(base) || base.startsWith('dsh-app://app/'))
-
-/** One authored image destination, as the shell resolves it. `undefined` leaves the alt text in place. */
+/** One authored image destination, as the shell resolves it. The guards -- an http(s)/dsh-app base, an
+ *  absolute workspace path, no UNC, no control characters -- live inside the shell's own `fileMediaUrl`,
+ *  which this util package exports; copying them here would be a second place for them to drift, and the
+ *  endpoint itself does not discriminate (measured: a path outside the workspace answered 200), so they
+ *  are the whole of the range check. `undefined` leaves the picture as the alt text it already was. */
 export function localPathMediaUrl(base, cwd, value) {
-  if (!baseIsServable(base) || typeof value !== 'string') return undefined
+  if (typeof value !== 'string') return undefined
   let path
   try {
     path = decodeURIComponent(value.split(/[?#]/u)[0] ?? '')
   } catch {
     return undefined
   }
-  const absolute = resolveWorkspacePath(cwd, path)
-  if (!isAbsoluteWorkspacePath(absolute) || /^[/\\]{2}/u.test(absolute) || /[\u0000-\u001f\u007f]/u.test(absolute)) return undefined
   try {
-    return new URL(`api/file?path=${encodeURIComponent(absolute)}`, base).href
+    // An absolute path is taken as it is; a relative one is joined onto the workspace. `cwd ?? undefined`
+    // matters: the helper treats undefined/'' as "no workspace" and returns the path unchanged, but a
+    // null cwd falls through to a string join and throws.
+    const absolute = isAbsoluteWorkspacePath(path) ? path : resolveWorkspacePath(cwd ?? undefined, path)
+    return fileMediaUrl(base, absolute)
   } catch {
     return undefined
   }
