@@ -249,3 +249,27 @@ test('every dialog we render wears the shell overlay marker', () => {
   }
   assert.equal(marked, 9, `the dialogs marked aria-modal are not the ones expected: ${marked}`)
 })
+
+test('the pinned mark sits after the name, in the one layout that has a name', () => {
+  // The pin follows the name, at 12px -- the user's own correction to an avatar-corner badge, and
+  // then to a 14px one. It is Fluent's *outline* cut: at 12px the filled pin's interior detail read
+  // as a smudge (the user called it dirty; a model reading their screenshot took it for a muted
+  // bell), so the line drawing is the honest one at this size. Its ink is a step heavier than
+  // --bt-ink-2, worked out from the token rather than a second copy of it. One anchor, in one
+  // layout: a row with a name. The icon-only rail has no name to sit after and the 伙伴 grid draws
+  // none, which is also the end of the old `left:calc(50% + 12px)` -- a placement measured from the
+  // row's own width, written for a centred rail and drifting the moment a row is left-aligned.
+  const sidebar = read('sidebar.js')
+  assert.ok(sidebar.includes("import { FishLogo, IconPinOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'"), 'Fluent\'s outline pin, which is the cut that survives 12px')
+  assert.ok(!sidebar.includes('IconPinFillRegular'), 'and not the filled one, whose detail is what read as a smudge')
+  assert.ok(!read('icons.js').includes('PinMarkIcon'), 'the hand-drawn pushpin is gone, not left as a second definition')
+  assert.equal((sidebar.match(/pinned \? h\(PinMark\) : null/g) ?? []).length, 2, 'both named-row shapes place it, after the title')
+  assert.equal((sidebar.match(/pin: pinned/g) ?? []).length, 0, 'no avatar carries it any more')
+  assert.ok(!sidebar.includes('bot.pinned === true && !tile'), 'and the tile is not the exception that draws one')
+  const rule = sidebar.split('\n').find(line => line.includes('.bt-pin{'))
+  assert.ok(rule, 'the pin is a mark on the name\'s own line')
+  assert.ok(rule.includes('flex:none'), 'laid out by the name\'s own gap')
+  assert.ok(rule.includes('color:color-mix(in srgb,var(--bt-ink) 75%,transparent)'), 'heavier than ink-2, derived from the token: a 12px glyph at 60% was half of "looks dirty"')
+  assert.ok(sidebar.includes('.bt-pin svg{width:12px;height:12px}'), 'and sized by the skin, like every other Fluent icon')
+  assert.ok(!sidebar.split('\n').some(line => line.includes('.bt-pin') && (line.includes('calc(50%') || line.includes('position:absolute'))), 'nothing places the pin from the row\'s own width')
+})

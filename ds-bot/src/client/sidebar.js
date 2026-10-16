@@ -1,9 +1,9 @@
 import { createElement as h, Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { FishLogo } from '@deepseek-ai/dsh-client-ui-primitives'
+import { FishLogo, IconPinOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
-import { PlusIcon, SearchIcon, GaugeIcon, PlugIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon } from './icons.js'
+import { PlusIcon, SearchIcon, GaugeIcon, PlugIcon, ClockIcon, GearIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon } from './icons.js'
 import { MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
@@ -25,7 +25,13 @@ function useMarkedUnread(id, active, marked, actions) {
   }, [active, marked])
 }
 
-const PinMark = () => h('span', { className: 'bt-pin', 'aria-hidden': true }, h(PinMarkIcon))
+// The mark a pinned chat wears, right after its name: Fluent's own pin at 12px -- the outline cut,
+// because at this size the filled one's interior detail read as a smudge rather than a pin (the
+// user's report, and the model reading their screenshot took it for a muted bell). Its ink is a
+// step heavier than --bt-ink-2 as well: a 12px glyph at 60% was the other half of "looks dirty".
+// One anchor, in the one layout that has a name to sit after: the icon-only rail (no name) and the
+// 伙伴 grid draw none, and nothing places it from the row's own width any more.
+const PinMark = () => h('span', { className: 'bt-pin', role: 'img', 'aria-label': t('Pinned') }, h(IconPinOutlineRegular))
 
 // A row's message count: the indexed lines of a Session and its earlier parts. The
 // index is lazy and partial, so a Session it does not know yet contributes nothing,
@@ -96,7 +102,9 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
     event.preventDefault()
     actions.openMenu({ kind: 'bot', id, x: event.clientX, y: event.clientY })
   }
-  const pinned = bot.pinned === true && !tile
+  // Pinned is a state of the row, so the mark rides the avatar in every layout -- the tile
+  // included, which used to drop it (the 伙伴 grid showed no pin at all).
+  const pinned = bot.pinned === true
   const label = [bot.name, main ? t('Main Bot') : '', pinned ? t('Pinned') : '', running || away ? t('Working') : '', approval ? t('Waiting for your approval') : alert ? t('Waiting for your answer') : '', unread ? t('Unread activity') : ''].filter(Boolean).join(', ')
   // The wide column seats the Main Bot in its own tile, with the shortcuts that float
   // around it. The phone drawer renders that same wide list, so the tile followed it and
@@ -116,9 +124,9 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
     'data-bot-id': id, title: wide ? undefined : bot.name, onClick: () => actions.openSession(id), onContextMenu,
   },
   h(BotAvatar, { bot, size: 36, state, main }),
-  pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
-    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null,
+    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name),
+      pinned ? h(PinMark) : null,
       h(RowMeta, { at })),
     h(RowSub, { preview: awayLine ?? preview, count: countOf(roster, [part, ...(bot.parts ?? [])]) })) : null,
   wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
@@ -145,9 +153,9 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
     onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'room', id, x: event.clientX, y: event.clientY }) },
   },
   h(RoomAvatar, { room, roster, size: 36 }),
-  pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
-    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null,
+    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name),
+      pinned ? h(PinMark) : null,
       h(RowMeta, { at })),
     // A group's messages live in each member's own hidden Session, so the indexed
     // lines would count the same conversation once per member. No number, then.
@@ -790,9 +798,8 @@ export const SIDEBAR_CSS = `
 .bt-side-top .bt-brand:hover{background:none}
 }
 .bt-brand .bt-mark{flex:none}
-.bt-pin{flex:none;display:inline-flex;color:var(--bt-ink-3)}
-.bt-rail .bt-row{position:relative}
-.bt-rail .bt-pin{position:absolute;top:3px;left:calc(50% + 12px)}
+.bt-pin{flex:none;display:inline-flex;color:color-mix(in srgb,var(--bt-ink) 75%,transparent)}
+.bt-pin svg{width:12px;height:12px}
 [class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"],[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"]>div{display:contents!important}
 .bt-foot-account{order:-1;flex:none;display:inline-flex}
 [class*="_footArea"]:has(.bt-foot-account) .bt-connect-foot{order:0;flex:1 1 auto;min-width:0;width:auto}

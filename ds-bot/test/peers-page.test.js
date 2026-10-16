@@ -30,7 +30,11 @@ const { peersList, peersMainsFirst, peersModel, peersFolder, PeersPage } = await
   const bundle = await build({
     entryPoints: [fileURLToPath(new URL('../src/client/peers-page.js', import.meta.url))],
     bundle: true, format: 'cjs', platform: 'node', write: false,
-    external: ['react', 'react-dom'],
+    // The primitives are the plugin's one platform import (the rows wear Fluent's pin, sidebar.js,
+    // and draw their avatars through mark.js): the shell provides them at runtime, so they stay
+    // external here rather than dragging the package's own dependencies (clsx, shiki, simple-icons)
+    // into the test bundle.
+    external: ['react', 'react-dom', '@deepseek-ai/dsh-client-ui-primitives'],
   })
   const module = { exports: {} }
   const react = {
@@ -47,6 +51,9 @@ const { peersList, peersMainsFirst, peersModel, peersFolder, PeersPage } = await
     require: (name) => {
       if (name === 'react') return react
       if (name === 'react-dom') return { createPortal: node => node }
+      // mark.js wears Fluent's pin (the plugin's one platform import): here it only has to exist,
+      // since this page draws no pinned mark of its own.
+      if (name === '@deepseek-ai/dsh-client-ui-primitives') return { IconPinFillRegular: () => null }
       throw new Error(`no platform module ${name}`)
     },
   })
