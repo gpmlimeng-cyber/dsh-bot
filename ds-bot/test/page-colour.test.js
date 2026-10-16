@@ -119,8 +119,11 @@ test('every floating control reads the composer card\'s skin', () => {
   assert.ok(declared[0].startsWith('body{'), 'in the skin\'s own token block, so both bands and both themes see it')
   assert.ok(declared[0].includes('0 2px 8px rgba(20,20,20,.08),0 1px 2px rgba(20,20,20,.04)'), 'two soft layers, no ring')
   const readers = sheet.split('\n').filter(line => line.includes('box-shadow:var(--bt-float-shadow'))
-  assert.equal(readers.length, 2, `two readers -- the chrome's controls and the composer card -- found ${readers.length}`)
+  assert.equal(readers.length, 3, `three readers -- the chrome's controls, the composer card and the scroll-to-bottom button -- found ${readers.length}`)
   assert.ok(readers.some(line => line.startsWith('[data-composer-card]{')), 'the composer card')
+  // The button the shell floats above the composer wore the same half-pixel ring the capsule did; it
+  // reads this shadow too now, which is why the count above is three.
+  assert.ok(readers.some(line => line.startsWith('[class*="_toBottomSlot"]>button{') && line.includes('!important')), 'the scroll-to-bottom button, keeping the !important that holds the shell\'s own elevation out')
   // The chrome's own declaration, carrying every floating control in one selector list (which
   // spans several lines, so take the block rather than the one line the shadow sits on).
   const lines = sheet.split('\n')
