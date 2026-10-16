@@ -44,18 +44,19 @@ test('only the narrow bands of the mobile layout take it, never a desktop window
   assert.ok(whole[0].startsWith(`${narrow} ${domain}{`), whole[0])
 })
 
-// The user asked for both kinds of bubble to start on the input card's left edge and grow right, so
-// the user's own rows stopped hugging the right: the live transcript's row (row-reverse, with the
-// stack's items at flex-end) and the earlier pages' / group replies' row both start from the left now.
-test('both sides start on the left edge and grow right', () => {
+// Which side each kind of bubble hugs: the Bot's rows start at the left edge and grow right, the
+// user's own hug the right and grow left. (The user asked for the two to be swapped on 2026-10-16
+// and took it back within the hour -- "我发的消息还是得靠右,别乱搞" -- so this is the rule.)
+test('the Bot hugs the left and the user hugs the right', () => {
   const umsg = messages.find(line => line.startsWith('.bt-umsg{'))
-  assert.ok(umsg.includes('flex-direction:row;') && umsg.includes('justify-content:flex-start'), umsg)
-  assert.ok(!umsg.includes('row-reverse'), 'the row no longer hugs the right')
+  assert.ok(umsg.includes('flex-direction:row-reverse;') && umsg.includes('justify-content:flex-start'), umsg)
   const ustack = messages.find(line => line.startsWith('.bt-ustack{'))
-  assert.ok(ustack.includes('align-items:flex-start'), ustack)
+  assert.ok(ustack.includes('align-items:flex-end'), ustack)
   const uattach = messages.find(line => line.startsWith('.bt-uattach{'))
-  assert.ok(uattach.includes('justify-content:flex-start'), uattach)
-  assert.ok(styles.some(line => line.startsWith('.bt-urow{display:flex;justify-content:flex-start}')), 'and the earlier pages agree')
+  assert.ok(uattach.includes('justify-content:flex-end'), uattach)
+  assert.ok(styles.some(line => line.startsWith('.bt-urow{display:flex;justify-content:flex-end}')), 'and the earlier pages agree')
+  // The Bot's side is the stack that starts at the left edge (it takes the row's own measure).
+  assert.ok(styles.some(line => line.startsWith('.bt-astack{display:flex;flex-direction:column;align-items:flex-start;')), 'the Bot starts from the left')
 })
 
 test("the user's own bubbles keep the base cap", () => {
