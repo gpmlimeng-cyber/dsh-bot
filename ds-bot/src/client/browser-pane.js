@@ -552,7 +552,7 @@ html[data-bt-mobile] .bt-sheet-handle{flex:none;width:36px;height:4px;margin:8px
 /* The sheet's title bar reads left to right: the name from the edge, the close at the other one
    (the panel's own arrow stays where a preview's head is). */
 html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:1;min-width:0;text-align:left}
-/* The scrim a sheet is dismissed with: the skin's own `.bt-scrim` (its colour and fade live in
+/* The scrim a sheet is dismissed with: the skin's own .bt-scrim class (its colour and fade live in
    styles.js, declared once) placed by this rule, under the sheet (96) and over the bar (95, which
    the scrim follows in the document). A desktop column draws none: its rule says so. */
 .bt-panel-scrim{display:none}
