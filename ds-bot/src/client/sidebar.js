@@ -555,8 +555,12 @@ function UpdateButton({ useUpdate, actions }) {
                 }, dshPhase === 'installing' ? t('Updating…') : dshPhase === 'failed' ? t('Try again') : t('Update')))) : null), document.body) : null)
 }
 
-// The footer entry to the shell's plugin panel, marked as not yet adapted: the red
-// badge and a hover tip explain that plugin support lands step by step.
+// The footer entry to the shell's plugin panel, marked as not yet adapted: the red badge and a tip
+// explain that plugin support lands step by step. The tip is a *hover* affordance, which a phone
+// does not have -- tapping the row opens the panel instead, and focusing it is not a gesture anyone
+// performs on a touch screen -- so the phone gets the same sentence as a line under the row
+// (`bt-connect-note`, shown by the stylesheet on the mobile band only). The user's report was
+// exactly this: the name was fixed, the red "!" still explained nothing where they could reach it.
 export function ConnectPlugins({ wide, actions }) {
   const tipId = useId()
   const [tip, setTip] = useState(false)
@@ -583,6 +587,9 @@ export function ConnectPlugins({ wide, actions }) {
       onClick: () => actions.selectPanel('plugins'),
     },
     h(PlugIcon), t('Manage plugins'), h('span', { className: 'bt-connect-warn', 'aria-hidden': true }, '!')),
+    // The same sentence, permanently, where a hand can read it: a phone has no hover, and tapping
+    // the row opens the panel rather than the tip. Hidden above the mobile band by the stylesheet.
+    h('span', { className: 'bt-connect-note' }, t('Plugin compatibility is not fully verified.')),
     tip && box ? createPortal(h('span', { role: 'tooltip', id: tipId, className: 'bt-connect-tip', style: box },
       t('Plugin compatibility is not fully verified.')), document.body) : null)
 }

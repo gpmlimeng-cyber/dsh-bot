@@ -179,3 +179,19 @@ test('no rule the phone ends up with declares a target under the floor', () => {
     .map(rule => `${rule.file}:${rule.line} ${rule.selector} ${rule.declared.width}×${rule.declared.height}`)
   assert.deepEqual(found, [], `a target under ${FLOOR}px on the phone: give it the box, or write the reason into EXEMPT`)
 })
+
+test('the red badge says what it means where a phone can read it', () => {
+  // The warning beside 管理插件 explained itself in a hover tip, and a phone has no hover: the tap
+  // opens the plugin panel, focus is not a touch gesture, so the red "!" said nothing at all there.
+  // The user's report was exactly that ("the name is fixed, the alarm is not"). The phone now gets
+  // the same sentence as a line under the row; every other band keeps the tip.
+  const sidebar = read('sidebar.js')
+  assert.ok(sidebar.includes("h('span', { className: 'bt-connect-note' }, t('Plugin compatibility is not fully verified.'))"), 'the sentence is rendered with the row')
+  assert.ok(sidebar.includes("className: 'bt-connect-tip'"), 'and the hover tip stays for the bands that have a pointer')
+  const styles = read('styles.js')
+  assert.ok(styles.includes('.bt-connect-note{display:none}'), 'the line is off by default')
+  const shown = styles.split('\n').find(line => line.startsWith('html[data-bt-mobile] .bt-connect-note{'))
+  assert.ok(shown, 'and on by the mobile band')
+  assert.ok(shown.includes('display:block'), shown)
+  assert.ok(shown.includes('color:var(--bt-ink-2)'), 'in readable ink: this is text, so --bt-ink-3 is not allowed (section 7 of the mobile system)')
+})
