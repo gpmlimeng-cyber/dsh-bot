@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: d9d3bf1a
+// Source fingerprint: 44451a94
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3046,8 +3046,11 @@ html[data-bt-mobile] header[class*="_header"]:has(.bt-head-mark){display:none!im
 /* The body-level bar the pill and its hamburger float in. It starts at the status-bar
    inset: the adaptation layer's --dsh-mobile-top-inset first, then env(safe-area-inset-top)
    for the bands it does not cover, and whatever mobile.js measured only if both are absent.
-   The shell's own --dsh-frame-chrome-top is deliberately not in this chain: it is never
-   defined on Android, so reading it only ever produced 0. */
+   The shell's own --dsh-frame-chrome-top is deliberately not in this chain, and the reason is
+   a cycle rather than an absence: this skin defines that variable *from* --bt-top-inset a few
+   rules below (the phone band), so a chain that read it back here would feed a variable into
+   its own definition and both would compute to nothing. The Android layer publishes no such
+   variable of its own, which is why the chain names its inputs instead. */
 /* The Android adaptation layer (@dsh-android/dsh-client-ui-responsive) draws its own phone
    chrome from the frame's overlay seat: a strip [data-dsh-mobile-topbar] whose height is
    44px + the status-bar inset, filled with the sidebar colour, and — from its own centerCol
@@ -16934,7 +16937,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "d9d3bf1a" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "44451a94" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
