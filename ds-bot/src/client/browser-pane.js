@@ -455,6 +455,46 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
 
   // A drag writes the width into the panel's and the column's own inline styles each
   // frame (each restyles one element) and renders once, on release.
+  // The sheet's handle drags how tall the sheet stands (a phone only: its width is always the
+  // screen's). The band a finger grabs is 44px tall while the pill it draws stays 4, a drag well
+  // past the shortest height closes the sheet the way the scrim does, and nothing is remembered --
+  // the sheet opens at its own height every time.
+  const SHEET_MIN_VH = 30
+  const SHEET_MAX_VH = 85
+  const SHEET_CLOSE_SLACK = 32
+  const startSheetDrag = (event) => {
+    const panel = root.current
+    if (!panel || (event.button ?? 0) !== 0) return
+    const vh = window.innerHeight
+    const min = Math.round(vh * SHEET_MIN_VH / 100)
+    const max = Math.round(vh * SHEET_MAX_VH / 100)
+    const from = panel.getBoundingClientRect().height
+    const startY = event.clientY
+    let wanted = from
+    let moved = false
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    panel.dataset.draggingSheet = ''
+    const move = (moveEvent) => {
+      if (Math.abs(moveEvent.clientY - startY) > 3) moved = true
+      wanted = Math.round(from + (startY - moveEvent.clientY))
+      panel.style.height = `${Math.max(0, wanted)}px`
+    }
+    const finish = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', finish)
+      window.removeEventListener('pointercancel', finish)
+      delete panel.dataset.draggingSheet
+      // A tap on the handle is not a drag: it changes nothing, not even the clamp below.
+      if (!moved) return
+      if (wanted < min - SHEET_CLOSE_SLACK) { actions.closeProducts?.(); return }
+      panel.style.height = `${Math.min(Math.max(wanted, min), max)}px`
+    }
+    move(event)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', finish)
+    window.addEventListener('pointercancel', finish)
+  }
+
   const startResize = (event) => {
     if (event.button !== 0 || leaving) return
     event.preventDefault()
@@ -517,7 +557,12 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   },
     leaving ? null : h('div', { className: 'bt-panel-grip', role: 'separator', 'aria-orientation': 'vertical', 'aria-label': t('Resize panel'), onPointerDown: startResize }),
     // What says the sheet came from below; a phone's rule draws it, nothing else sees it.
-    view === 'products' ? h('div', { className: 'bt-sheet-handle', 'aria-hidden': true }) : null,
+    view === 'products'
+      ? h('div', {
+          className: 'bt-sheet-grip', role: 'separator', 'aria-orientation': 'horizontal',
+          'aria-label': t('Resize the sheet'), onPointerDown: startSheetDrag,
+        }, h('span', { className: 'bt-sheet-handle', 'aria-hidden': true }))
+      : null,
     // On a phone the panel is full screen and already carries a close button in the corner
     // the desktop layout puts its own controls, so it adds none of its own.
     // Over the whole window while dragging: the cursor stays a resize cursor and the
@@ -557,7 +602,13 @@ export const PANEL_SHEET_CSS = `
    more attribute in the selector settles it by weight instead of by injection order. */
 html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;border-left:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3);overflow:hidden;animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)}
 html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out .2s cubic-bezier(.4,0,1,1) forwards}
-html[data-bt-mobile] .bt-sheet-handle{flex:none;width:36px;height:4px;margin:8px auto 0;border-radius:999px;background:var(--bt-line-2)}
+/* The band a thumb grabs is 44 tall and draws nothing; the pill inside it is the 4px the eye sees.
+   touch-action:none keeps the page's own scroll out of the gesture. */
+html[data-bt-mobile] .bt-sheet-grip{flex:none;display:flex;align-items:center;justify-content:center;height:44px;touch-action:none;cursor:grab}
+html[data-bt-mobile] .bt-sheet-grip:active{cursor:grabbing}
+html[data-bt-mobile] .bt-sheet-handle{width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
+/* While a finger is on it the sheet follows that finger exactly: nothing eases behind it. */
+html[data-bt-mobile] .bt-panel[data-dragging-sheet]{animation:none;transition:none}
 /* The sheet's title bar reads left to right: the name from the edge, the close at the other one
    (the panel's own arrow stays where a preview's head is). */
 html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:1;min-width:0;text-align:left}
