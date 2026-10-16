@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
-import { usePathImages } from './media.js'
+import { pathImagesFor } from './media.js'
 import { inkText } from './inks.js'
 import { linkMentions, mentionTarget, dayLabel, contentText, stripHeader, isHiddenTurn, isRelayContext, relaysBefore, relayPart, commRunOf, toolName, toolArgs, reminderPrompts } from './text.js'
 import { SmileIcon, ReplyIcon, DotsIcon, CheckIcon, DownloadIcon, CopyIcon, MemoryIcon } from './icons.js'
@@ -21,8 +21,10 @@ const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied')
 // `lead` (a sender avatar in group chats) sits beside the last bubble, in the same
 // row, so it lines up with the bubble whether or not reactions hang below it.
 export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions }) {
-  // The pictures in these bubbles: one prefetch for the list, one resolver for every bubble in it.
-  const pathImages = usePathImages(texts, actions)
+  // The pictures in these bubbles: the shell's own resolver shape, so a local path a Bot writes as a
+  // picture becomes the app's file URL exactly as it does in a native message (media.js).
+  const workDir = roster?.byId?.[sessionId]?.workDir ?? roster?.roomsById?.[sessionId]?.workDir ?? null
+  const pathImages = useMemo(() => pathImagesFor(workDir), [workDir])
   const onClick = (event) => {
     const target = mentionTarget(event)
     if (target === null) return
