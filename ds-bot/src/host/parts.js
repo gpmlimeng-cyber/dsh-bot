@@ -781,14 +781,9 @@ export function install(rt) {
     } else {
       ;(bot.segments ??= []).push(segment)
       bot.sessionId = freshId
-      // The card's call stays in the old part, so the fresh part shows it in the
-      // composer dock, which takes questions without a call.
-      if (state.questions[agent.id] !== undefined) {
-        const { callId: _call, ...question } = state.questions[agent.id]
-        state.questions[freshId] = question
-        delete state.questions[agent.id]
-      }
     }
+    // An open card moves with the Session, and the room's copy follows it (see store.js).
+    rt.moveQuestion(agent.id, freshId)
     await rt.save()
     if (job.failed !== undefined) rescued.set(freshId, job.bare ? 'bare' : 'carried')
     void rt.moveSchedules(agent.id, freshId)

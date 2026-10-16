@@ -251,6 +251,28 @@ test('stop_bot belongs to a Main Bot', async (t) => {
   await assert.rejects(tool('stop_bot', { bot: 'Writer' }, 'a'), { message: 'Writer is not running right now, so there is nothing to stop. Use message_bot to reach it.' })
 })
 
+// store.js keeps an open card and its room mirror in step, and turns.js/parts.js reach for
+// these two; this file's hand-written runtimes carry the same behaviour.
+function dropQuestionFrom(state, id) {
+  const question = state.questions[id]
+  if (question === undefined) return undefined
+  delete state.questions[id]
+  if (question.mirrorOf !== undefined) delete state.questions[question.mirrorOf]
+  if (question.mirroredTo !== undefined) delete state.questions[question.mirroredTo]
+  return question
+}
+
+function moveQuestionTo(state, from, to) {
+  const question = state.questions[from]
+  if (question === undefined) return
+  const moved = { ...question }
+  delete moved.callId
+  state.questions[to] = moved
+  delete state.questions[from]
+  const mirrored = question.mirroredTo === undefined ? undefined : state.questions[question.mirroredTo]
+  if (mirrored !== undefined) state.questions[question.mirroredTo] = { ...mirrored, mirrorOf: to }
+}
+
 function turnsHost() {
   let listener
   const delivered = []
@@ -270,6 +292,9 @@ function turnsHost() {
     warn() {},
     switchJobs: () => [],
     dropKickoff() {},
+    // store.js keeps a card and its room mirror in step; turns.js clears them through this.
+    dropQuestion: id => dropQuestionFrom(rt.state, id),
+    moveQuestion: (from, to) => moveQuestionTo(rt.state, from, to),
   }
   installTurns(rt)
   let seq = 0
@@ -558,13 +583,15 @@ test('an earlier part keeps the request its Bot answered', async () => {
   const rt = {
     ctx: { on() {}, effect() {}, get() {}, sessionController: { page: async () => ({ records: events.map(event => ({ event })), hasMore: false }) } },
     config: {},
-    state: { exchangeTurns: {} },
+    state: { exchangeTurns: {}, questions: {} },
     chatOwners: new Map([['b2', 'b']]),
     pastOwners: new Map([['b1', { botId: 'b' }]]),
     botOf: id => (id === 'b' ? writer : undefined),
     roomOf: () => undefined,
     chatOf: () => 'b2',
     resolveAgent: async id => ({ session: { id, seq: 3 } }),
+    dropQuestion: id => dropQuestionFrom(rt.state, id),
+    moveQuestion: (from, to) => moveQuestionTo(rt.state, from, to),
   }
   installParts(rt)
   const { items } = await rt.earlierPage('b2')

@@ -461,8 +461,15 @@ export function install(rt) {
     async execute(args, exec) {
       await rt.load()
       const id = exec.agent?.id
-      if (rt.groupOwners.has(id)) return 'Question cards only work in your own chat. In a group, ask in your message instead.'
-      if (!rt.chatOwners.has(id)) return 'Only Bots on the team can use ask_user.'
+      // A member's group Session asks into the room it is speaking in: the user reads the group
+      // chat, and a card left on the hidden Session is one nobody ever sees. A Session that
+      // speaks for no Bot (a DSH Agent's own chat) has no card the user could answer.
+      const group = rt.groupOwners.get(id)
+      if (group === undefined && !rt.chatOwners.has(id)) return 'Only Bots on the team can use ask_user.'
+      const room = group === undefined ? undefined : rt.roomOf(group.roomId)
+      if (group !== undefined && (room === undefined || state.questions[room.id] !== undefined)) {
+        return 'A card is already waiting in this group chat. Ask in your message instead.'
+      }
       const options = (Array.isArray(args.options) ? args.options : [])
         .map(option => (typeof option === 'string' ? { label: option } : option ?? {}))
         .map(option => ({
@@ -476,7 +483,7 @@ export function install(rt) {
       // composer dock, which takes questions without a call.
       const turn = rt.live.get(id)?.turn
       const hidden = turn !== undefined && (state.exchangeTurns[id] ?? []).includes(turn)
-      state.questions[id] = {
+      const card = {
         id: randomUUID(),
         ...(exec.callId && !hidden ? { callId: exec.callId } : {}),
         question: String(args.question ?? '').trim(),
@@ -485,6 +492,15 @@ export function install(rt) {
         multiSelect: args.multiSelect === true,
         ...(args.allowCustom === true ? { allowCustom: true } : {}),
         askedAt: Date.now(),
+      }
+      if (room === undefined) {
+        state.questions[id] = card
+      } else {
+        // The room's copy carries no call: a group transcript does not draw the member's hidden
+        // call, so the composer dock takes it. The pair names each other (see store.js).
+        const { callId: _call, ...open } = card
+        state.questions[room.id] = { ...open, mirrorOf: id }
+        state.questions[id] = { ...open, mirroredTo: room.id }
       }
       await rt.save()
       exec.concludeTurn?.()

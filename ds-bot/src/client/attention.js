@@ -39,6 +39,9 @@ export function needsYou(roster, work, unread, indexed, decision = null) {
     items.push({ kind: 'decision', open: decision.sessionId, title: decision.title, where: name, botId: id, options: decision.options ?? [] })
   }
   for (const [sessionId, question] of Object.entries(roster.questions ?? {})) {
+    // A card a Bot asked in a group chat sits in the room as well; the waiting copy marks itself,
+    // so the same question is listed once, under the room.
+    if (question.mirroredTo !== undefined) continue
     const { name, id } = nameOf(sessionId)
     items.push({
       kind: 'question',

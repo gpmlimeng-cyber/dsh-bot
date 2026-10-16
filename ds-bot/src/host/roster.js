@@ -401,6 +401,8 @@ export function install(rt) {
     const room = rt.roomOf(id)
     if (room === undefined) throw new Error('Unknown group chat')
     for (const botId of Object.keys(room.sessions ?? {})) rt.dropGroupSession(room, botId)
+    // Its card goes with the group: a card left here would open a conversation that is gone.
+    rt.dropQuestion(id)
     delete state.rooms[id]
     rt.roomInbox.delete(id)
     const failed = await saveForDelete()
@@ -449,11 +451,12 @@ export function install(rt) {
     // Before the Bot and its group Sessions leave the state, which the archive reads.
     const archived = rt.archiveBotMemory(id)
     const current = rt.chatOf(id)
-    // Questions and exchange turns are kept per Session, so every part of the chat is cleared.
+    // Questions and exchange turns are kept per Session, so every part of the chat is cleared;
+    // each card takes the room's copy with it, and dropGroupSession below clears the group's.
     const parts = new Set([id, current, ...(bot.segments ?? []).map(segment => segment.sessionId)])
     delete state.bots[id]
     for (const part of parts) {
-      delete state.questions[part]
+      rt.dropQuestion(part)
       delete state.exchangeTurns[part]
     }
     const touched = []

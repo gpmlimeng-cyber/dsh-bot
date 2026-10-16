@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 3c56a6ce
+// Source fingerprint: 4ca7f17d
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -7305,6 +7305,7 @@ function needsYou(roster, work, unread, indexed, decision = null) {
     items.push({ kind: "decision", open: decision.sessionId, title: decision.title, where: name, botId: id, options: decision.options ?? [] });
   }
   for (const [sessionId, question] of Object.entries(roster.questions ?? {})) {
+    if (question.mirroredTo !== void 0) continue;
     const { name, id } = nameOf(sessionId);
     items.push({
       kind: "question",
@@ -17728,7 +17729,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "3c56a6ce" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "4ca7f17d" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

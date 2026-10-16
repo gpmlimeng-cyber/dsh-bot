@@ -221,10 +221,7 @@ export function install(rt) {
           return ok(await rt.stopMemberWork(String(body.roomId ?? ''), String(body.botId ?? '')))
         case 'dismiss-question':
           await rt.load()
-          if (state.questions[body.sessionId] !== undefined) {
-            delete state.questions[body.sessionId]
-            await rt.save()
-          }
+          if (rt.dropQuestion(body.sessionId) !== undefined) await rt.save()
           return ok(true)
         case 'secret-set':
         case 'secret-allow':
@@ -263,15 +260,20 @@ export function install(rt) {
           if (question === undefined || question.id !== body.questionId) return fail('This question is no longer open', 'bot/stale')
           const reply = questionReply(question, body.answer)
           if (reply === undefined) return fail('Nothing to send', 'bot/invalid')
+          // A card mirrored into a room is answered there; the answer belongs to the Session that
+          // asked it (tools.js ask_user pairs the two).
+          const waiting = question.mirrorOf ?? sessionId
+          const mirrored = question.mirrorOf === undefined ? undefined : state.questions[question.mirrorOf]
           // Claim the question before queueing so a second answer is refused.
-          delete state.questions[sessionId]
+          rt.dropQuestion(sessionId)
           try {
-            await rt.ensureCapabilities(sessionId)
-            const agent = await rt.resolveAgent(sessionId)
+            await rt.ensureCapabilities(waiting)
+            const agent = await rt.resolveAgent(waiting)
             agent.followup(createUserMessage({ content: [{ type: 'text', text: reply.text }], source: reply.source }))
             await ctx.sessions.flush(agent.session)
           } catch (error) {
             state.questions[sessionId] ??= question
+            if (question.mirrorOf !== undefined && mirrored !== undefined) state.questions[question.mirrorOf] ??= mirrored
             throw error
           }
           await rt.save()

@@ -70,15 +70,31 @@ async function setup({ served = ['read', 'ask_user', QUESTION], goals } = {}) {
     sessionTitle: { rename: async () => {} },
     sessions: { flush: async () => {} },
   })
+  // The client talks to the runtime over one fetch route; capturing it lets a test answer or
+  // dismiss a card the way the dock does.
+  let route
+  const registerFetch = ctx.connection.fetch.register
+  ctx.connection.fetch.register = (options) => {
+    route = options
+    return registerFetch(options)
+  }
   const rt = createRuntime(ctx, { home, github: false, diagnosticsFile: false })
   await rt.load()
+  const post = async (endpoint, payload) => (await (await route.fetch(new Request('http://localhost/api/bot', {
+    method: 'POST',
+    body: JSON.stringify({ endpoint, payload }),
+  }))).json()).value
+  const ask = (sessionId, options = [{ label: 'Lookout' }], callId = 'call-1') => ctx.registeredTools.get('ask_user').execute(
+    { question: 'Which name?', options },
+    { agent: { id: sessionId }, callId, concludeTurn() {} },
+  )
   const guard = (name, sessionId) => ctx.guards.map(check => check({ name, agent: sessionId === undefined ? undefined : { id: sessionId } })).find(reason => reason !== undefined)
   const hiddenIn = id => hidden.filter(([sessionId, deny]) => sessionId === id && deny.includes(QUESTION))
   const stop = async () => {
     await ctx.dispose()
     rmSync(home, { recursive: true, force: true, maxRetries: 5 })
   }
-  return { ctx, rt, agentFor, hidden, hiddenIn, guard, sent, stop }
+  return { ctx, rt, ask, post, agentFor, hidden, hiddenIn, guard, sent, stop }
 }
 
 // DSH's goal service, holding one goal per Session; block() records what was asked.
@@ -208,4 +224,62 @@ test('without DSH\'s goal service a goal change is left alone', async (t) => {
   startGoal(ctx, undefined, 'writer')
   await new Promise(resolve => setTimeout(resolve, 20))
   assert.deepEqual(warnings, [])
+})
+
+// A member Bot works in the group from a hidden Session of its own, so a card it asks for used
+// to land where the user never looks. The room carries the card now; the answer still belongs
+// to the Session that asked.
+test('a card asked in a group chat waits in the room and answers the Session that asked', async (t) => {
+  const { rt, ask, post, sent, stop } = await setup()
+  t.after(stop)
+  assert.match(await ask('room-writer'), /card is on screen/)
+  const card = rt.state.questions.room
+  assert.equal(card.mirrorOf, 'room-writer')
+  assert.equal(card.question, 'Which name?')
+  // No call: a group transcript does not draw the member's hidden call, so the dock takes it.
+  assert.equal(card.callId, undefined)
+  const waiting = rt.state.questions['room-writer']
+  assert.equal(waiting.id, card.id)
+  assert.equal(waiting.mirroredTo, 'room')
+  await post('answer-question', { sessionId: 'room', questionId: card.id, answer: { selected: ['Lookout'] } })
+  assert.deepEqual(rt.state.questions, {})
+  assert.deepEqual(sent.map(entry => entry.sessionId), ['room-writer'])
+  assert.match(sent[0].message.content[0].text, /"selected":\["Lookout"\]/)
+})
+
+test('a card in a Bot\'s own chat stays on its own Session, with no copy in any room', async (t) => {
+  const { rt, ask, post, sent, stop } = await setup()
+  t.after(stop)
+  await ask('writer')
+  const card = rt.state.questions.writer
+  assert.equal(card.mirrorOf, undefined)
+  assert.equal(card.mirroredTo, undefined)
+  assert.equal(card.callId, 'call-1')
+  assert.equal(rt.state.questions.room, undefined)
+  await post('answer-question', { sessionId: 'writer', questionId: card.id, answer: { selected: ['Lookout'] } })
+  assert.deepEqual(rt.state.questions, {})
+  assert.deepEqual(sent.map(entry => entry.sessionId), ['writer'])
+})
+
+test('dismissing a room\'s card, or deleting the room, leaves no copy behind', async (t) => {
+  const { rt, ask, post, stop } = await setup()
+  t.after(stop)
+  await ask('room-writer')
+  await post('dismiss-question', { sessionId: 'room' })
+  assert.deepEqual(rt.state.questions, {})
+  await ask('room-writer')
+  assert.equal(Object.keys(rt.state.questions).length, 2)
+  await rt.deleteRoom('room')
+  assert.deepEqual(rt.state.questions, {})
+})
+
+// One card per Session is what the dock can show: a second one would sit on the hidden Session
+// where nobody sees it, so the tool says so instead.
+test('a second card in one group chat is refused, leaving the first one alone', async (t) => {
+  const { rt, ask, stop } = await setup()
+  t.after(stop)
+  await ask('room-writer')
+  const before = JSON.stringify(rt.state.questions)
+  assert.match(await ask('room-writer'), /already waiting in this group chat/)
+  assert.equal(JSON.stringify(rt.state.questions), before)
 })

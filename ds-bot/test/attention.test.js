@@ -235,3 +235,24 @@ test('needsYou is empty when nothing waits', () => {
   assert.equal(needsYou({}, {}, {}, { byId: {}, roomsById: {} }).length, 0)
   assert.equal(needsYou({ questions: {}, secretRequests: { s1: [] } }, { approvals: [] }, { s1: false }, { byId: {}, roomsById: {} }).length, 0)
 })
+
+// A card a Bot asks for in a group chat sits in the room as well: one question, two copies. The
+// bell names the room and leaves the waiting copy out, so the user is not asked the same thing twice.
+test('a card mirrored into its room is listed once, under the room', () => {
+  const snapshot = {
+    byId: { s1: { id: 's1', name: 'Chief', sessionId: 's1' } },
+    roomsById: { r1: { id: 'r1', name: 'Ops' } },
+  }
+  const items = needsYou(
+    {
+      questions: {
+        r1: { id: 'q1', question: '用哪种格式？', mirrorOf: 's1' },
+        s1: { id: 'q1', question: '用哪种格式？', mirroredTo: 'r1' },
+      },
+      secretRequests: {},
+    },
+    { approvals: [] },
+    { s1: false },
+    snapshot)
+  assert.deepEqual(deep(items.map(item => [item.kind, item.where, item.open])), [['question', 'Ops', 'r1']])
+})

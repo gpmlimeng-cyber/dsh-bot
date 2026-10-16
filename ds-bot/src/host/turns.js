@@ -417,11 +417,8 @@ export function install(rt) {
           }
           const own = rt.chatOwners.get(id)
           if (own !== undefined) rt.dropKickoff(own)
-          // Any user message answers or supersedes the open question card.
-          if (state.questions[id] !== undefined) {
-            delete state.questions[id]
-            void rt.save().catch(() => {})
-          }
+          // Any user message answers or supersedes the open question card, in the room too.
+          if (rt.dropQuestion(id) !== undefined) void rt.save().catch(() => {})
         }
         break
       }

@@ -282,6 +282,32 @@ export function install(rt) {
   const roomOf = id => (id === undefined ? undefined : state.rooms[id])
   const isMain = id => id !== undefined && state.mainBotIds.includes(id)
 
+  // Open question cards. A card lives on the Session the user answers it in: a Bot's own chat,
+  // or the room a member asked in (tools.js ask_user writes both copies for a group). The two
+  // copies name each other — `mirrorOf` on the room's card routes the answer back to the Session
+  // waiting for it, `mirroredTo` on the waiting card marks the pair — so one answer, one
+  // dismissal, or one deletion always takes both, and the bell lists a mirrored card once.
+  const dropQuestion = id => {
+    const question = state.questions[id]
+    if (question === undefined) return undefined
+    delete state.questions[id]
+    if (question.mirrorOf !== undefined) delete state.questions[question.mirrorOf]
+    if (question.mirroredTo !== undefined) delete state.questions[question.mirroredTo]
+    return question
+  }
+  // A long conversation moves to a fresh Session. The card moves with it, dropping its call:
+  // the call stays in the old part, so the fresh one hands the card to the composer dock. A
+  // room's copy follows the Session, so the answer still reaches the one that is waiting.
+  const moveQuestion = (from, to) => {
+    const question = state.questions[from]
+    if (question === undefined) return
+    const { callId: _call, ...moved } = question
+    state.questions[to] = moved
+    delete state.questions[from]
+    const mirrored = question.mirroredTo === undefined ? undefined : state.questions[question.mirroredTo]
+    if (mirrored !== undefined) state.questions[question.mirroredTo] = { ...mirrored, mirrorOf: to }
+  }
+
   // Group Sessions. A member speaks in each group from a hidden Session of its own,
   // `room.sessions[botId]`, that renders the same system prompt and tools as its own
   // chat: the provider's prefix cache is shared, and a group turn never re-reads the
@@ -325,6 +351,7 @@ export function install(rt) {
   const dropGroupSession = (room, botId) => {
     const sessionId = room.sessions?.[botId]
     if (sessionId === undefined) return
+    dropQuestion(sessionId)
     delete room.sessions[botId]
     if (room.segments !== undefined) delete room.segments[botId]
     groupOwners.delete(sessionId)
@@ -352,6 +379,6 @@ export function install(rt) {
     state, load, save, refresh, readOnly,
     botOf, roomOf, isMain, chatOf, selfOf, isBotSession,
     chatOwners, groupOwners, pastOwners,
-    groupSessionsOf, dropGroupSession, findBot, findRooms, isAdminOf,
+    groupSessionsOf, dropGroupSession, dropQuestion, moveQuestion, findBot, findRooms, isAdminOf,
   })
 }
