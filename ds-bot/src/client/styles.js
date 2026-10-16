@@ -321,16 +321,14 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);outline:none}
 html[data-bt-mobile] .bt-dcard-hit:focus-visible{box-shadow:none;outline:none}
 /* The kind's mark is the drawing itself: flat, one colour, and no plate behind it -- the tinted square
-   the user asked away (it made the artwork read as a badge). The colour now comes from the artwork
-   rather than from a token under it: the marks are the vivid set (icons.js), each one drawn in its own
-   kind colour, so there is nothing left for a tone class to tint. They are 72x96 documents shown 40px
-   tall -- 30 wide -- which is the size at which the type word baked into each drawing still reads; the
-   card is 60px with 8px of padding, so a 40px mark leaves the two lines their room. 40 is this
-   drawing's floor and not a spare: measured, the type word inside one is 8-15px of those 40, so these
-   marks are not to be reused in a shorter row. The fixed 30x40 slot is what keeps a list of them from
-   jittering -- every mark in the set is 72x96, except the folder, which this skin does not use. */
-.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;display:inline-flex;align-items:center;justify-content:center;width:30px;height:40px}
-.bt-dcard-ico>svg{width:30px;height:40px}
+   the user asked away (it made Fluent's own flat artwork read as a badge). The colour still says which
+   kind it is, so the word under the name is not the only thing doing that work. */
+.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;color:var(--bt-type-ink);--bt-type-ink:var(--bt-ink-2)}
+.bt-dcard-ico-doc{--bt-type-ink:var(--bt-accent)}
+.bt-dcard-ico-image{--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))}
+.bt-dcard-ico-media{--bt-type-ink:color-mix(in srgb,var(--bt-star) 88%,var(--bt-ink))}
+.bt-dcard-ico-plain{--bt-type-ink:var(--bt-ink-2)}
+.bt-dcard-ico>svg{width:24px;height:24px}
 /* The two lines take the weight and the sizes of the delivery list the user pointed at: the
    name is a step larger and carries medium weight, the second line a step down in the
    quiet grey, and the two sit tight against each other -- 21 + 1 + 17 = 39px of the tile's

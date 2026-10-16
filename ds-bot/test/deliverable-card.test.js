@@ -35,12 +35,12 @@ const previewRule = (prefix) => {
   return found[0]
 }
 
-test('the tile is DSH-shaped: 60px tall, a flat mark, one hit target over it', () => {
+test('the tile is DSH-shaped: 60px tall, a 24px flat mark, one hit target over it', () => {
   const tile = rule('.bt-dcard{')
   assert.ok(tile.includes('height:60px'), tile)
   assert.ok(tile.includes('border-radius:10px'), tile)
   const icon = rule('.bt-dcard-ico{')
-  assert.ok(icon.includes('width:30px') && icon.includes('height:40px'), icon)
+  assert.ok(icon.includes('width:24px') && icon.includes('height:24px'), icon)
   assert.ok(!icon.includes('background:') && !icon.includes('border-radius:'), 'and the mark is the drawing itself, with no plate behind it')
   const hit = rule('.bt-dcard-hit{')
   assert.ok(hit.includes('position:absolute') && hit.includes('inset:0'), hit)
@@ -59,9 +59,9 @@ test('the name and its metadata keep their two sizes, and nothing swaps places o
   assert.ok(rule('.bt-dcard-copy{').includes('gap:1px'), 'and the second line sits tight under the first')
   // 21 + 1 + 17 = 39 of the tile's 44px of content room, so the tile is still 60px.
   assert.ok(rule('.bt-dcard{').includes('height:60px'), 'the tile does not grow with the type')
-  // The type mark is the drawing the file's kind comes with, 40px tall: the two lines beside it keep
-  // their room, 40 of the tile's 44px of content, and the tile itself does not grow.
-  assert.ok(rule('.bt-dcard-ico{').includes('width:30px') && rule('.bt-dcard-ico{').includes('height:40px'), 'the type mark is the drawing itself, at the size its type word needsw was measured with')
+  // The type mark is a 40px tinted square with the extension in it: the name and the line
+  // under it keep their room, since the square has not grown.
+  assert.ok(rule('.bt-dcard-ico{').includes('width:24px') && rule('.bt-dcard-ico{').includes('height:24px'), 'the type mark is the drawing itself, at the size the row was measured with')
   // The second line used to be replaced by the word "Preview" while the pointer was on the
   // card. A tap anywhere on the card says that now, so the line stays where it is.
   assert.ok(!styles.includes('.bt-dcard-peek'), 'the hover-only word is gone')
@@ -116,7 +116,7 @@ test('the card’s exits are one "···", the same control in every list', () =
   assert.ok(rule('.bt-dcard-menu{').includes('flex:none'), 'the one control neither shrinks nor wraps')
   assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the row never wraps into a second row the 60px tile would clip')
   assert.ok(rule('.bt-dcard-acts{').includes('justify-content:flex-end'), 'and is held at the card’s right end')
-  assert.ok(rule('.bt-dcard-ico{').includes('width:30px'), 'the kind\u2019s mark it sits beside is unchanged')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:24px'), 'the kind\u2019s mark it sits beside is unchanged')
   // No word is painted on the card: a label that used to be a button's child would be one.
   for (const painted of [": t('Open with another app'))", ": t('Copy path'))", "t('Path')"]) {
     assert.ok(!source.includes(painted), `${painted} is not painted on the card`)
@@ -177,56 +177,36 @@ test('two columns fold to one when the card column is narrow', () => {
   assert.ok(styles.includes('@container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}'))
 })
 
-test('the type mark is the kind\u2019s own drawing, one row per mark, not letters', () => {
+test('the type mark is the kind\u2019s own drawing in a tinted square, not letters', () => {
   const source = card.join('\n')
-  assert.ok(source.includes("h('span', { className: 'bt-dcard-ico', 'aria-hidden': true }, h(iconOf(name)))"), 'the box holds the kind\u2019s drawing')
+  assert.ok(source.includes("h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h(iconOf(name)))"), 'the square holds the kind\u2019s drawing')
   assert.ok(!source.includes('badgeOf') && !source.includes('EXT_ALIASES'), 'no letters are written into it any more')
   assert.ok(!source.includes('bt-dcard-type'), 'and the rule that drew them is gone')
-  // One row per mark we carry, matched on the exact extension: each of these drawings has its own type
-  // word baked in (the csv mark reads "CSV"), so a near miss would be a wrong label rather than a
-  // near-enough picture. A picture is the exception -- its mark names the kind, not the extension.
-  assert.ok(source.includes("if (IMAGE_EXTENSIONS.has(extension)) return VividImageMark"), 'pictures take the kind\u2019s own mark')
-  for (const [extension, mark] of [['pdf', 'VividPdfMark'], ['md', 'VividMarkdownMark'], ['txt', 'VividTextMark'], ['csv', 'VividCsvMark'], ['xls', 'VividXlsMark'], ['xlsx', 'VividXlsxMark'], ['zip', 'VividZipMark'], ['tar', 'VividTarMark'], ['gz', 'VividGzMark'], ['7z', 'VividSevenZipMark']]) {
-    assert.ok(source.includes(`if (extension === '${extension}') return ${mark}`), `${mark} answers .${extension}`)
+  // The map, kind by kind: the reader\u2019s kinds, not a mime table -- a picture, code, a sheet, a pdf,
+  // a zip, and a document for everything else (markdown included, which is a document to a reader).
+  assert.ok(source.includes("const CODE_EXTENSIONS = new Set(['html', 'htm', 'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'py', 'go', 'rs', 'java', 'c', 'h', 'cpp', 'css', 'json', 'yml', 'yaml', 'toml', 'sh', 'sql', 'xml'])"), 'code has its own kind')
+  assert.ok(source.includes("const TABLE_EXTENSIONS = new Set(['csv', 'tsv', 'xls', 'xlsx', 'ods'])"), 'so does a sheet')
+  for (const [test, icon] of [['IMAGE_EXTENSIONS.has(extension)', 'FluentImageIcon'], ['CODE_EXTENSIONS.has(extension)', 'FluentCodeIcon'], ['TABLE_EXTENSIONS.has(extension)', 'FluentTableIcon'], ["extension === 'pdf'", 'FluentPdfIcon'], ['ARCHIVE_EXTENSIONS.has(extension)', 'FluentArchiveIcon']]) {
+    assert.ok(source.includes(`if (${test}) return ${icon}`), `${icon} answers ${test}`)
   }
-  assert.ok(source.includes('return VividDocMark'), 'and the generic document is what is left')
-  assert.ok(!source.includes('CODE_EXTENSIONS') && !source.includes('TABLE_EXTENSIONS') && !source.includes('MEDIA_EXTENSIONS'), 'no kind sets are left to answer with a look that says nothing')
-  assert.ok(!source.includes('toneOf') && !source.includes('bt-dcard-ico-'), 'and no tone class: the artwork carries its own colour')
-  // The twelve come from the package, inlined whole -- nothing drawn or recoloured here.
-  for (const mark of ['VividMarkdownMark', 'VividTextMark', 'VividPdfMark', 'VividCsvMark', 'VividXlsMark', 'VividXlsxMark', 'VividZipMark', 'VividTarMark', 'VividGzMark', 'VividSevenZipMark', 'VividImageMark', 'VividDocMark']) {
-    assert.ok(source.includes(mark), `${mark} is the mark for its kind`)
-  }
-  // Flat: the drawing is the whole mark -- no plate, no border, no tint of ours underneath it.
-  assert.ok(!rule('.bt-dcard-ico{').includes('background:'), 'the drawing is the mark, with nothing behind it')
-  assert.ok(!rule('.bt-dcard-ico{').includes('border:') && !rule('.bt-dcard-ico{').includes('border-radius:'), 'and no outline or plate of its own')
-  assert.ok(!rule('.bt-dcard-ico{').includes('--bt-type-ink'), 'no tone token is left to tint it with')
-  assert.ok(rule('.bt-dcard-ico{').includes('width:30px') && rule('.bt-dcard-ico{').includes('height:40px'), 'the mark is 40px tall, as the type word in it needs')
-  assert.ok(rule('.bt-dcard-ico>svg{').includes('width:30px') && rule('.bt-dcard-ico>svg{').includes('height:40px'), 'and the drawing fills that box, 72x96 scaled to it')
-})
-
-test('the vivid marks are inlined whole, and can share one page without repainting each other', () => {
+  assert.ok(source.includes('return FluentDocumentIcon'), 'and a document is what is left')
+  // Every glyph is Fluent\u2019s own artwork at 20, from the one 20-grid factory in icons.js.
   const icons = read('icons.js')
-  // Provenance, in the same form this file's other copied artwork carries: package, version, licence
-  // and holder, so the notice travels with the paths.
-  assert.ok(icons.includes('/*! file-icon-vectors (MIT) \u00b7 Copyright (c) 2018 Daniel M. Hendricks \u00b7 artwork from its icons/dist/icons/vivid v1.0.0 */'), 'the MIT notice travels with the artwork')
-  assert.ok(icons.includes('artwork from its "vivid" set v1.0.0'), 'and the section names the set it came from')
-  // The published form keeps each fill in a <style> block whose class names every mark in the package
-  // reuses (.st0), which one document cannot hold twice -- folded into fill attributes here, with the
-  // shared id dropped. Both would leak out of the drawing and onto the page.
-  const section = icons.slice(icons.indexOf('const vividMark = markup =>'))
-  assert.equal((section.match(/vividMark\('/g) ?? []).length, 12, 'twelve marks, one per kind')
-  assert.ok(!/<style/.test(section) && !/class=/.test(section) && !/id=/.test(section), 'no style block, class or id reaches the page')
-  assert.ok(!/url\(#/.test(section), 'and nothing points at an id that is no longer there')
-  assert.ok(section.includes('fill="#c11e07"'), 'each path carries its own fill instead')
-  assert.equal((section.match(/<path /g) ?? []).length, 11 * 4 + 5, 'and every path of every mark came across -- four each, five in the document')
-  // The fallback is the package's blue doc.svg rather than its blank.svg: the blank one is a white page
-  // with pale grey lines, which on this skin's page and cards read as a row with no mark at all.
-  assert.ok(icons.includes('The document is the package\'s doc.svg'), 'the fallback says which drawing it is and why')
-  assert.ok(!section.includes('fill="#bababa"'), 'and its pale grey lines are not among the marks')
-  assert.ok(!icons.includes("blank: '"), 'the blank page is not inlined at all')
-  // The package's README attributes a list of brand marks to their owners, a few of them paid for
-  // rather than MIT. None of those is inlined, so this skin owes nobody but the notice above.
-  assert.ok(!/vivid\/(ps1|git|deb|apk|docx|office)/i.test(icons), 'no brand mark is among them')
+  assert.ok(icons.includes('const fluentIcon20 = d => function FluentIcon20()'), 'one factory for the 20 grid')
+  for (const icon of ['FluentDocumentIcon', 'FluentImageIcon', 'FluentCodeIcon', 'FluentTableIcon', 'FluentPdfIcon', 'FluentArchiveIcon']) {
+    assert.ok(icons.includes(`export const ${icon} = fluentIcon20(`), `${icon} is Fluent\u2019s artwork, not a drawing of ours`)
+  }
+  // The tint says what kind of thing it is, before either line under it is read.
+  assert.ok(source.includes("const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'tif', 'tiff'])"), 'pictures are their own tone')
+  assert.ok(source.includes("const MEDIA_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv', 'avi', 'mp3', 'wav', 'm4a', 'ogg', 'flac'])"), 'and recordings')
+  assert.ok(source.includes("if (IMAGE_EXTENSIONS.has(extension)) return 'image'") && source.includes("return 'doc'"), 'with documents as the default')
+  assert.ok(rule('.bt-dcard-ico-image{').includes('--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))'), 'the picture tone is the palette\u2019s green, mixed into the ink so it reads on both themes')
+  assert.ok(rule('.bt-dcard-ico-doc{').includes('--bt-type-ink:var(--bt-accent)'), 'and a document is the shell\u2019s accent')
+  // Flat: the glyph is the whole mark -- no plate, no border, one colour from the kind's tint.
+  assert.ok(rule('.bt-dcard-ico{').includes('color:var(--bt-type-ink)') && !rule('.bt-dcard-ico{').includes('background:'), 'the drawing is the mark, with nothing behind it')
+  assert.ok(!rule('.bt-dcard-ico{').includes('border:') && !rule('.bt-dcard-ico{').includes('border-radius:'), 'and no outline or plate of its own')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:24px') && rule('.bt-dcard-ico{').includes('height:24px'), 'the row keeps its 24px mark')
+  assert.ok(rule('.bt-dcard-ico>svg{').includes('width:24px') && rule('.bt-dcard-ico>svg{').includes('height:24px'), 'and the drawing is the 24px the row was measured with')
 })
 
 test('the card keeps no selected look on a phone, and a keyboard keeps its ring', () => {
