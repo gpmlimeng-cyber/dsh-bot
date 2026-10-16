@@ -103,7 +103,7 @@ export function PeersPage({ useRoster, useUi, actions }) {
       h('div', { className: 'bt-settings-top' },
         h('h2', null, t('Peers')),
         h('button', {
-          type: 'button', className: 'bt-round bt-peers-new',
+          type: 'button', className: 'bt-peers-new',
           'aria-label': t('New…'), title: t('New…'),
           onClick: () => actions.openNewChat('new'),
         }, h(PlusIcon))),
@@ -232,7 +232,13 @@ html[data-bt-mobile] .bt-motion-mini button:active{color:var(--bt-ink)}
    of the chrome, so its surface (fill, hairline, radius, shadow) is the one shared declaration in
    styles.js -- the same control the drawer's + and the conversation pill read. Only size and layout
    live here. */
-html[data-bt-mobile] .bt-peers-new{flex:0 0 40px;width:40px;height:40px;margin-left:auto}
+/* The 伙伴 page's one control, and it is a title-bar icon key rather than a floating button: 44px of
+   finger with no fill and no ring, a 22px glyph in the theme's ink, on the title row's own centre
+   line. It used to be a 40px white ball (the floating-control skin in styles.js); a bar that is part
+   of the page does not need a button floating above it, and the user read the ball as the wrong
+   thing. Its press is the skin's own (the unified :active tint), so nothing sticks after a tap. */
+html[data-bt-mobile] .bt-peers-new{flex:0 0 44px;width:44px;height:44px;margin-left:auto;padding:0;border:0;border-radius:12px;background:none;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}
+html[data-bt-mobile] .bt-peers-new svg{width:22px;height:22px}
 html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 /* The row and its own controls share one line: the row takes what they leave, and the control is never
    squeezed (so a long name, model or folder gives way instead). The trailing control keeps the row's

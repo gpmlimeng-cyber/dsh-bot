@@ -279,7 +279,6 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
    they sit on a white panel, where a white, edgeless circle would have nothing to read as.) */
 .bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-side-search,.bt-mobile-left,
 html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round,
-html[data-bt-mobile] .bt-peers-new,
 html[data-bt-pc] .bt-side .bt-side-top .bt-round{background:var(--bt-card);border:0;border-radius:999px;box-shadow:var(--bt-float-shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 

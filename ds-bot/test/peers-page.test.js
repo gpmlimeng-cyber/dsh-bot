@@ -370,7 +370,7 @@ test('the header\'s new button is the drawer\'s own entry, not a second door', (
   assert.ok(peers.includes("className: 'bt-settings-top' }"), 'in the title row')
   assert.ok(index.includes('openNewChat: (mode) =>') && index.includes('newChat: mode') && index.includes('peers: false'), 'and nothing is stacked on the page')
   // One control, one surface: the skin stays the shared declaration (styles.js), never a copy here.
-  assert.ok(code('styles.js').includes('html[data-bt-mobile] .bt-peers-new,'), 'the skin list carries this control')
+  assert.ok(!code('styles.js').includes('html[data-bt-mobile] .bt-peers-new,'), 'and that list does not carry it: a title-bar key is not a floating control')
   assert.ok(!peers.includes('box-shadow:0 2px 8px -1px rgba(0,0,0,.06)'), 'and this sheet does not restate the surface')
 })
 
@@ -419,4 +419,20 @@ test('the parts of the address book the ask left out stay out', () => {
   assert.ok(peers.includes("h('h2', null, t('Peers'))"), 'which holds the name and nothing of its own')
   assert.ok(!peers.includes('bt-peers-title') && !peers.includes('bt-peers-head'), 'with no title row of its own any more')
   assert.ok(peers.includes("className: 'bt-side-search'"), 'and the search field the sidebar already styles')
+})
+
+test('the 伙伴 page\u2019s title-bar key is a key, not a floating ball', () => {
+  const peers = read('peers-page.js')
+  const rule = peers.slice(peers.indexOf('html[data-bt-mobile] .bt-peers-new{'), peers.indexOf('html[data-bt-mobile] .bt-peers-new svg{'))
+  // The user read the white circle as the wrong thing on a title bar, and it was: the floating-control
+  // skin in styles.js gave it --bt-card, a 999px radius and a float shadow. A title-bar key sits on the
+  // bar, so it has no surface of its own -- only 44px of finger and a glyph.
+  assert.ok(rule.includes('width:44px') && rule.includes('height:44px') && rule.includes('flex:0 0 44px'), '44px of finger')
+  assert.ok(rule.includes('background:none'), 'no fill')
+  assert.ok(rule.includes('border:0'), 'no ring')
+  assert.ok(rule.includes('border-radius:12px') && !rule.includes('999px'), 'a rounded press shape, not a ball')
+  assert.ok(rule.includes('color:var(--bt-ink)'), 'the theme\u2019s own ink')
+  assert.ok(peers.includes('html[data-bt-mobile] .bt-peers-new svg{width:22px;height:22px}'), 'a 22px glyph, the size a title-bar key carries')
+  assert.ok(peers.includes("className: 'bt-peers-new'") && !peers.includes("className: 'bt-round bt-peers-new'"), 'and it no longer wears the round-button class that drew the ball')
+  assert.ok(peers.includes("type: 'button', className: 'bt-peers-new'"), 'it stays a button, so the skin\u2019s unified :active press is what answers a tap')
 })
