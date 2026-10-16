@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: c5d46d05
+// Source fingerprint: 76bf83ef
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -17573,7 +17573,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "c5d46d05" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "76bf83ef" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
