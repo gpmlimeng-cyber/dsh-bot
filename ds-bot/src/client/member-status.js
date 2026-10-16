@@ -198,16 +198,16 @@ export const MEMBER_CSS = `
 .bt-mw-dock{display:flex;justify-content:center;margin:0 auto 8px;pointer-events:none}
 .bt-mw-pill{pointer-events:auto;position:relative;display:inline-flex;align-items:center;flex:none;box-sizing:border-box;height:32px;max-width:100%;padding:0;border:0;border-radius:999px;overflow:hidden;background:var(--bt-main);box-shadow:var(--bt-float-shadow);color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer;animation:bt-mw-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .18s ease-out backwards;transition:background-color .12s ease,${spring(SPRING_SHAPE, 'width')},${spring(SPRING_TAP, 'scale')}}
 .bt-mw-pill:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))}
-/* On a phone the pill does not end on an edge: its fill and its shadow move to one layer of its own,
+/* On a phone the capsule does not end on an edge: its fill and its shadow move to a layer of its own,
    which is feathered at the four sides, so the card dissolves into what is behind it instead of
-   drawing a line across the strip. The ring that used to be part of the shadow
-   (0 0 0 .5px var(--bt-line-2)) read on the device as exactly that line, so it is gone and the soft
+   drawing a line across the strip. That line was the ring the shadow used to open with
+   (0 0 0 .5px var(--bt-line-2)) -- not a border, the capsule has none -- so it is gone and the soft
    shadow is the same --bt-float-shadow the composer's card carries.
-   The blur rides that same layer, which is why it only shows in the feathered band: the fill in the
-   middle is opaque, so a blur of the transcript behind it would have been the haze this device
+   The blur rides that same layer, which is why it shows in the feathered band only: the fill in the
+   middle stays opaque, so a blur of the transcript behind it cannot become the haze this device
    rejected once already (the top bar's frost).
-   10px a side and 8px top and bottom of a 32px pill leaves 16px of solid fill down the middle; if the
-   pill starts to look washed the vertical band is the one to halve. */
+   10px a side and 8px top and bottom of a 32px capsule leaves 16px of solid fill down the middle; if
+   the capsule starts to look washed, the vertical band is the one to halve. */
 html[data-bt-mobile] .bt-mw-pill{background:none;box-shadow:none;isolation:isolate}
 html[data-bt-mobile] .bt-mw-pill:hover{background:none}
 html[data-bt-mobile] .bt-mw-pill:hover::before{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))}
