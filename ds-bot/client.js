@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 77d3f042
+// Source fingerprint: 2030a281
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -8818,7 +8818,7 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
     )
   );
 }
-var BROWSER_CSS = `
+var PANEL_SHEET_CSS = `
 /* 全部产物 on a phone is a sheet from the foot rather than the column that stands beside the
    conversation: full width, glued to the bottom, two rounded top corners and a handle that says
    where it came from, as tall as its list asks for up to 85% of the screen and scrolling inside.
@@ -8843,6 +8843,8 @@ html[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-inde
 @keyframes bt-sheet-in{from{transform:translateY(100%)}to{transform:none}}
 @keyframes bt-sheet-out{from{transform:none}to{transform:translateY(100%)}}
 @media (prefers-reduced-motion:reduce){html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{animation:bt-fade .12s ease-out}}
+`;
+var BROWSER_CSS = `
 .bt-panel{--bt-panel-view-fade:${SPRING_SHAPE.duration}ms}
 .bt-ptabs{position:relative;display:flex;align-items:center;height:44px;flex:none;border-bottom:.5px solid var(--bt-line);padding:0 6px;gap:0;animation:bt-strip-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
 @keyframes bt-strip-in{from{height:0;opacity:0}}
@@ -16804,7 +16806,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "77d3f042" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "2030a281" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -17785,6 +17787,9 @@ function apply(ctx) {
     installCompiledStyles(ABOUT_CSS, "about"),
     installCompiledStyles(MEMBER_CSS, "members"),
     installCompiledStyles(USER_MESSAGE_CSS, "user-messages"),
+    // The browser's own chrome needs the desktop shell; the 全部产物 sheet does not, and a phone
+    // without a bridge still draws it -- so it is installed here, where nothing is conditional.
+    installCompiledStyles(PANEL_SHEET_CSS, "panel-sheet"),
     browsers ? installCompiledStyles(BROWSER_CSS, "browser") : null,
     installCompiledStyles(FILE_PREVIEW_CSS, "file-preview"),
     installCompiledStyles(ATTENTION_CSS, "attention"),

@@ -132,6 +132,17 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   assert.ok(list.includes("close ? 'bt-preview-head bt-sheet-head' : 'bt-preview-head'"), 'and asks the head for its sheet form')
   assert.ok(list.includes("h('button', { type: 'button', className: 'bt-preview-back bt-sheet-close', onClick: onClose, 'aria-label': t('Close'), title: t('Close') }, h(CloseIcon))"), 'which is a close, not the preview page\'s back arrow')
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:1;min-width:0;text-align:left}'), 'the name reads from the edge there')
+  // The sheet must load on a phone that has no desktop browser shell: BROWSER_CSS is installed only
+  // when a webview bridge exists (index.js), so the sheet lives in a block of its own, installed
+  // beside the unconditional ones. Measured: with it inside BROWSER_CSS the panel stayed the centred
+  // 70vw card on this device -- those rules were never injected at all.
+  assert.ok(pane.includes('export const PANEL_SHEET_CSS = `'), 'the sheet is a block of its own')
+  assert.ok(index.includes("import { BROWSER_CSS, PANEL_SHEET_CSS } from './browser-pane.js'"), 'the installer takes it')
+  assert.ok(index.includes("installCompiledStyles(PANEL_SHEET_CSS, 'panel-sheet'),"), 'and installs it')
+  const at = index.indexOf("installCompiledStyles(PANEL_SHEET_CSS")
+  const conditional = index.indexOf('browsers ? installCompiledStyles(BROWSER_CSS')
+  assert.ok(at > 0 && conditional > at, 'before the conditional browser block, in the same list')
+  assert.ok(!pane.slice(pane.indexOf('export const BROWSER_CSS')).includes('data-view=products'), 'with no copy left inside the conditional one')
   // Nothing invented behind a batch-action bar: the reference has one, this skin has no such command.
   assert.ok(!list.includes('批量操作') && !list.includes('Batch actions'), 'no empty action bar')
 })

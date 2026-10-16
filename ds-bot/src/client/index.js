@@ -18,7 +18,7 @@ import { AnsweredCell, QuestionCard, QuestionDock } from './questions.js'
 import { AssistantCell, TriggerCell, TurnProcessCell, Nothing, TurnTailCell, ToolCell } from './cells.js'
 import { Overlays } from './overlays.js'
 import { createBotBrowsers, serveBrowserReads } from './bot-browsers.js'
-import { BROWSER_CSS } from './browser-pane.js'
+import { BROWSER_CSS, PANEL_SHEET_CSS } from './browser-pane.js'
 import { FILE_PREVIEW_CSS } from './file-preview.js'
 import { ATTENTION_CSS } from './attention.js'
 import { SECRET_CSS, SecretDock } from './secret-card.js'
@@ -1027,6 +1027,9 @@ export function apply(ctx) {
     installCompiledStyles(ABOUT_CSS, 'about'),
     installCompiledStyles(MEMBER_CSS, 'members'),
     installCompiledStyles(USER_MESSAGE_CSS, 'user-messages'),
+    // The browser's own chrome needs the desktop shell; the 全部产物 sheet does not, and a phone
+    // without a bridge still draws it -- so it is installed here, where nothing is conditional.
+    installCompiledStyles(PANEL_SHEET_CSS, 'panel-sheet'),
     browsers ? installCompiledStyles(BROWSER_CSS, 'browser') : null,
     installCompiledStyles(FILE_PREVIEW_CSS, 'file-preview'),
     installCompiledStyles(ATTENTION_CSS, 'attention'),

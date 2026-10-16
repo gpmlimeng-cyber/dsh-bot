@@ -541,7 +541,10 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
             }))))
 }
 
-export const BROWSER_CSS = `
+// The 全部产物 sheet, in a block of its own because it must be installed whether or not this profile
+// has the desktop browser shell: BROWSER_CSS below is installed only when a webview bridge exists
+// (index.js), and a phone without one still draws this panel.
+export const PANEL_SHEET_CSS = `
 /* 全部产物 on a phone is a sheet from the foot rather than the column that stands beside the
    conversation: full width, glued to the bottom, two rounded top corners and a handle that says
    where it came from, as tall as its list asks for up to 85% of the screen and scrolling inside.
@@ -566,6 +569,9 @@ html[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-inde
 @keyframes bt-sheet-in{from{transform:translateY(100%)}to{transform:none}}
 @keyframes bt-sheet-out{from{transform:none}to{transform:translateY(100%)}}
 @media (prefers-reduced-motion:reduce){html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{animation:bt-fade .12s ease-out}}
+`
+
+export const BROWSER_CSS = `
 .bt-panel{--bt-panel-view-fade:${SPRING_SHAPE.duration}ms}
 .bt-ptabs{position:relative;display:flex;align-items:center;height:44px;flex:none;border-bottom:.5px solid var(--bt-line);padding:0 6px;gap:0;animation:bt-strip-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
 @keyframes bt-strip-in{from{height:0;opacity:0}}
