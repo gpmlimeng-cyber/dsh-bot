@@ -539,7 +539,7 @@ button.bt-q-opt:active{background:var(--bt-active)}
 @keyframes bt-create-pop{from{transform:scale(.72);opacity:.4}}
 .bt-create-name{font-size:17px;line-height:24px;font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-create-step{font-size:12px;line-height:16px;color:var(--bt-ink-2);margin-bottom:-10px}
-.bt-create-looks{display:flex;flex-direction:column;gap:10px;padding:10px;border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card)}
+.bt-create-looks{display:flex;flex-direction:column;gap:10px;padding:10px;border:0;box-shadow:inset 0 0 0 .5px var(--bt-line);border-radius:12px;background:var(--bt-card)}
 .bt-create-lookbar{justify-content:center}
 .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
 .bt-create-go{height:36px;padding:0 20px}
@@ -765,7 +765,7 @@ body[data-ds-dark-theme] .bt-scrim{background:rgba(0,0,0,.5)}
 }
 .bt-settings-form{display:flex;flex-direction:column;gap:16px}
 .bt-set-section h3{font-size:13px;line-height:18px;font-weight:600;margin:0 0 8px;padding:0 4px}
-.bt-set-card{border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card);display:flex;flex-direction:column}
+.bt-set-card{border:0;box-shadow:inset 0 0 0 .5px var(--bt-line);border-radius:12px;background:var(--bt-card);display:flex;flex-direction:column}
 .bt-set-card>*+*{border-top:.5px solid var(--bt-line)}
 .bt-set-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:0;background:none;color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;text-align:left;width:100%;box-sizing:border-box;border-radius:0}
 button.bt-set-row{cursor:pointer}
@@ -1030,7 +1030,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 @media (prefers-reduced-motion:reduce){.bt-addlist{animation:none}}
 
 /* Memory dialog: a summary of every entry, the entries behind the menu, "Ask or update" below. */
-.bt-mem-row{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 8px 0 10px;border:.5px solid var(--bt-line-2);border-radius:10px;background:var(--bt-card);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer;box-sizing:border-box;transition:background-color .12s ease}
+.bt-mem-row{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 8px 0 10px;border:0;box-shadow:inset 0 0 0 .5px var(--bt-line);border-radius:10px;background:var(--bt-card);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer;box-sizing:border-box;transition:background-color .12s ease}
 
 @media (hover:hover){
 .bt-mem-row:hover{background:var(--bt-hover)}
@@ -1111,7 +1111,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 .bt-mem-changes li{display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:18px;color:var(--bt-ink-2);overflow-wrap:anywhere}
 .bt-mem-changes li svg{flex:none;margin-top:1px;color:#e02135;animation:bt-check-pop ${SPRING_POP.duration}ms ${SPRING_POP.easing} .12s backwards}
 .bt-mem-changes li[data-ok] svg{color:var(--bt-green)}
-.bt-mem-ask{display:flex;align-items:center;gap:8px;height:52px;padding:0 8px 0 22px;border-radius:999px;border:.5px solid var(--bt-line-2);background:var(--bt-card);box-shadow:0 4px 16px rgba(0,0,0,.06);box-sizing:border-box;transition:border-color .15s ease,box-shadow .15s ease}
+.bt-mem-ask{display:flex;align-items:center;gap:8px;height:52px;padding:0 8px 0 22px;border-radius:999px;border:0;background:var(--bt-card);box-shadow:0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px var(--bt-line);box-sizing:border-box;transition:border-color .15s ease,box-shadow .15s ease}
 .bt-mem-ask:focus-within{border-color:var(--bt-ink-3);box-shadow:0 4px 20px rgba(0,0,0,.1)}
 .bt-mem-input{flex:1;min-width:0;border:0;background:none;outline:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:22px;padding:0}
 .bt-mem-input::placeholder{color:var(--bt-ink-3)}
@@ -1131,7 +1131,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 .bt-with-icon{display:inline-flex;align-items:center;gap:4px}
 .bt-with-icon svg{width:14px;height:14px}
 .bt-tag-admin{display:inline-flex;align-items:center;gap:4px}
-.bt-create-inline{padding:18px 16px;border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card)}
+.bt-create-inline{padding:18px 16px;border:0;box-shadow:inset 0 0 0 .5px var(--bt-line);border-radius:12px;background:var(--bt-card)}
 .bt-create-inline .bt-create-card{max-width:none}
 .bt-panel-view>[data-move=in]{animation:bt-page-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing} backwards,bt-veil-in .2s ease-out backwards}
 .bt-panel-view>[data-move=out]{animation:bt-page-out $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing} backwards,bt-veil-in .2s ease-out backwards}
@@ -1592,7 +1592,7 @@ html[data-bt-mobile] .bt-settings-group-head{display:block;margin:0 0 8px;paddin
    than the group heading above them suggests. The rows inside it are flush neighbours --
    the card's own edge and fill is what separates one group from the next, so no line is
    drawn between rows. */
-html[data-bt-mobile] .bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:16px;background:var(--bt-card);overflow:hidden}
+html[data-bt-mobile] .bt-settings-group-card{display:block;border:0;box-shadow:inset 0 0 0 .5px var(--bt-line);border-radius:16px;background:var(--bt-card);overflow:hidden}
 html[data-bt-mobile] .bt-settings-main{width:100%;height:auto;flex:1;min-height:0}
 /* The list reads in two levels: the row's name is the text, one step below the 15px it
    was and in the primary ink, and everything beside it is the second level at the group

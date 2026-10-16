@@ -179,7 +179,7 @@ test('the page is 全部设置\'s own look, to the letter', () => {
   assert.ok(!sheet.includes('::before'), 'and no line is drawn between two rows')
   const settings = read('styles.js')
   for (const rule of [
-    '.bt-settings-group-card{display:block;border:1px solid var(--bt-line);border-radius:16px;background:var(--bt-card);overflow:hidden}',
+    '.bt-settings-group-card{display:block;border:0;box-shadow:inset 0 0 0 .5px var(--bt-line);border-radius:16px;background:var(--bt-card);overflow:hidden}',
     '.bt-settings-group+.bt-settings-group{margin-top:var(--bt-set-gap,14px)}',
     '.bt-settings-item{min-height:var(--bt-set-row-h,48px);padding:0 12px;border-radius:0;font-size:14px',
     '.bt-settings-item>svg{flex:none;width:24px;height:24px;color:var(--bt-ink-2)}',

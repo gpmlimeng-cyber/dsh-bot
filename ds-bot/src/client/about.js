@@ -104,7 +104,7 @@ export function AboutPage({ useUpdate, actions, run, Section, Row }) {
 }
 
 export const ABOUT_CSS = `
-.bt-about-hero{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card)}
+.bt-about-hero{display:flex;align-items:center;gap:14px;padding:16px;border:0;box-shadow:inset 0 0 0 .5px var(--bt-line);border-radius:12px;background:var(--bt-card)}
 .bt-about-mark{flex:none;display:inline-flex;position:relative}
 .bt-about-mark::before{content:'';position:absolute;inset:-20%;border-radius:50%}
 

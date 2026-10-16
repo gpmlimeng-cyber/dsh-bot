@@ -71,7 +71,7 @@ export function AccountPage({ account, onChange }) {
 // The card's own look. The rows on the page are 我的 -> Bot settings' own (bot-settings.js), so only
 // the card and the face above the fields are declared here.
 export const ACCOUNT_CSS = `
-html[data-bt-mobile] .bt-account-card{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;margin:0 0 14px;padding:10px 12px;border:1px solid var(--bt-line);border-radius:16px;background:var(--bt-card);color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer;box-sizing:border-box}
+html[data-bt-mobile] .bt-account-card{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;margin:0 0 14px;padding:10px 12px;border:0;box-shadow:inset 0 0 0 .5px var(--bt-line);border-radius:16px;background:var(--bt-card);color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer;box-sizing:border-box}
 
 @media (hover:hover){
 html[data-bt-mobile] .bt-account-card:hover{background:var(--bt-hover)}
