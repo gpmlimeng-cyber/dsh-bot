@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 11b33344
+// Source fingerprint: 7277302c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16470,13 +16470,19 @@ html[data-bt-mobile][data-bt-keyboard] .bt-peers{padding-bottom:12px}
 html[data-bt-mobile] .bt-peers-top{flex:none;display:flex;flex-direction:column;gap:10px;padding-bottom:8px}
 /* The 「伙伴」 heading carries the animation level at its right end: one row of two things, the name
    and the control. The name keeps the section head's own type -- it is an h3 inside a row now, since
-   the row holds the two -- and the control keeps its own width, so neither is what gives way. */
-html[data-bt-mobile] .bt-settings-group-head.bt-peers-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+   the row holds the two -- and the control keeps its own width, so neither is what gives way. The row
+   keeps 8px above and below the pill so a segment's finger-sized box (44, against a 28px pill) can
+   stand in the heading's own padding: a box that overflowed the row instead would be cut off by the
+   list's own scroller, which is where this heading lives. */
+html[data-bt-mobile] .bt-settings-group-head.bt-peers-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px 8px 13px}
 html[data-bt-mobile] .bt-peers-section-head>.bt-peers-section-label{margin:0;padding:0;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-2)}
 /* The level is a secondary action, so it is the skin's own segmented control (the one 我的 -> Bots
-   offers, so the two read as one value) narrowed to what three short words need, with a finger's 44px
-   of height -- this heading is used with a thumb -- and one step further back in colour than a row. */
-html[data-bt-mobile] .bt-motion-mini{width:auto;flex:none}
+   offers, so the two read as one value) narrowed to what three short words need. It is drawn at the
+   heading's own height -- 28px of pill, which is what the user reads -- while every segment keeps a
+   finger's 44px box: the button is taller than the pill and draws nothing of its own, so the eight
+   pixels it carries above and below are touch area rather than something seen. Colour sits one step
+   further back than a row's (--bt-ink-3), with only the chosen level in ink. */
+html[data-bt-mobile] .bt-motion-mini{width:auto;flex:none;height:28px;box-sizing:border-box;align-items:center}
 html[data-bt-mobile] .bt-motion-mini button{min-width:44px;height:44px;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
 html[data-bt-mobile] .bt-motion-mini button[aria-pressed=true]{color:var(--bt-ink)}
 /* The title row is 我的's own (styles.js: .bt-settings-top): the 52px bar with the name centred in
@@ -16623,7 +16629,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "11b33344" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "7277302c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

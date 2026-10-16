@@ -158,9 +158,13 @@ test('the page is a header row and one scroller of labelled cards', () => {
   assert.ok(code('set-rows.js').includes('motionOf(roster)') && code('set-rows.js').includes('export function motionOf('), 'reading the one value both places read')
   // Secondary or not, this heading is used with a thumb: the control keeps a finger's hit area, and
   // its colour sits one step further back than a row's (--bt-ink-3), with only the chosen level in ink.
-  assert.ok(sheet.includes('.bt-motion-mini button{min-width:44px;height:44px;'), 'the control is finger-sized where it is drawn')
+  // The user found the first cut too tall, so the pill is drawn at the heading's own height (28) while
+  // the segment's own box stays 44 -- and that box stands in the heading's own 8px of padding, since a
+  // box overflowing a row inside the list would be cut off by the list's scroller.
+  assert.ok(sheet.includes('.bt-motion-mini{width:auto;flex:none;height:28px;box-sizing:border-box;align-items:center}'), 'the pill is drawn at the heading\'s own height')
+  assert.ok(sheet.includes('.bt-motion-mini button{min-width:44px;height:44px;'), 'while each segment keeps a finger-sized box')
   assert.ok(sheet.includes('.bt-motion-mini button[aria-pressed=true]{color:var(--bt-ink)}'), 'and the chosen level is the one drawn in ink')
-  assert.ok(sheet.includes('.bt-settings-group-head.bt-peers-section-head{display:flex;align-items:center;justify-content:space-between;'), 'the heading and the control share one row')
+  assert.ok(sheet.includes('.bt-settings-group-head.bt-peers-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px 8px 13px}'), 'the heading and the control share one row, with room for the box')
   // The door names the page it opens, and that page is 我的 -> 群聊: the key is the settings page's own.
   const door = rows.find(row => row.props['data-page'] === 'groups')
   assert.ok(door, 'the door carries the page it opens')
