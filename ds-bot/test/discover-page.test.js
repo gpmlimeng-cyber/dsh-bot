@@ -155,7 +155,8 @@ test('the second level carries the strip a shell panel does not draw', () => {
   // arrow does: Escape inside a page returns to Settings' own list first, and leaving that list is
   // what comes back here (closeSettings reads the row the page was opened from).
   const settingsPage = read('settings.js')
-  assert.match(settingsPage, /useModalLayer\(dialogRef, true, \(\) => \{ if \(screen === 'list'\) close\(\); else stepBack\(\) \}\)/, 'Escape steps up inside Settings')
+  assert.match(settingsPage, /useModalLayer\(dialogRef, mobile, leaveLevel\)/, 'Escape steps up inside Settings on a phone')
+  assert.match(settingsPage, /useEscape\(mobile \? \(\) => \{\} : leaveLevel\)/, 'and the wide column keeps the key it always had')
   assert.ok(settingsPage.includes("onClick: () => { if (screen === 'list') close(); else stepBack() }"), 'the same rule its back arrow uses')
   const close = index.slice(index.indexOf('closeSettings: () =>'), index.indexOf('openMemory:'))
   assert.ok(close.includes('state.discoverPanel !== null'), 'closing a page this list opened comes back here')

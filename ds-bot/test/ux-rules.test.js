@@ -171,7 +171,21 @@ test('a layer that hands its Esc to the shell\u2019s modal machinery says it is 
   // guard Lead asked for: convert a layer, mark it, or the test says so.
   const files = readdirSync(DIR).filter(name => name.endsWith('.js'))
   const users = files.filter(name => read(name).includes('useModalLayer(')).sort()
-  assert.deepEqual(users, ['discover-page.js', 'exchange.js', 'memory-panel.js', 'palette.js', 'settings.js', 'voice.js'], `the layers converted so far are not the ones expected: ${users.join(', ')}`)
+  // Three shapes, three ways of owning the key, and which layer is which is a decision, not a
+  // detail -- so each shape gets its own line below and a file that drifts into another one is red.
+  //
+  // An overlay is a dialog at every width, on a scrim: the shell's machinery owns the key outright,
+  // and a useEscape left behind would be a second owner of the same key.
+  const OVERLAYS = ['memory-panel.js', 'palette.js']
+  // A pane is the screen on a phone and the right-hand column on a wide window, where the sidebar is
+  // still live and Tab must be able to leave: phone hands the key over, wide keeps ours. Both lines
+  // are required together -- deleting either one is the mistake this list is here to catch.
+  const PANES = ['exchange.js', 'settings.js', 'voice.js']
+  // Drawn on a phone only (its own render returns null above the breakpoint), so there is no wide
+  // shape to keep our key for -- but the hook must be told when the dialog is up: handed a fixed
+  // true it would mount with no element to read, never run again, and lose Esc without a sound.
+  const PHONE_ONLY = ['discover-page.js']
+  assert.deepEqual(users, [...OVERLAYS, ...PANES, ...PHONE_ONLY].sort(), `the layers converted so far are not the ones expected: ${users.join(', ')}`)
   for (const name of users) {
     const source = read(name)
     assert.ok(source.includes("'aria-modal': true"), `${name} calls useModalLayer without marking its dialog aria-modal -- it would have no Esc`)
@@ -183,5 +197,17 @@ test('a layer that hands its Esc to the shell\u2019s modal machinery says it is 
     assert.ok(call, `${name} passes no ref to useModalLayer, so the hook has no dialog to read`)
     const marked = source.split('\n').some(line => line.includes(`ref: ${call[1]}`) && line.includes("'aria-modal': true"))
     assert.ok(marked, `${name} hands ${call[1]} to useModalLayer but does not attach it to the element marked aria-modal, so the hook has no dialog to read`)
+  }
+  for (const name of OVERLAYS) {
+    assert.ok(!read(name).includes('useEscape'), `${name} is a dialog at every width, so it hands the key over at every width -- our own stack there would be a second owner of one key`)
+    assert.match(read(name), /useModalLayer\(\w+, true,/, `${name} is only mounted while it is up, so the hook is told so`)
+  }
+  for (const name of PANES) {
+    assert.match(read(name), /useModalLayer\(\w+, mobile,/, `${name}: the phone's shape hands Escape to the shell's machinery`)
+    assert.match(read(name), /useEscape\(mobile \? \(\) => \{\} :/, `${name}: the wide shape keeps our own key and focus -- the pair is deliberate, do not delete either line`)
+  }
+  for (const name of PHONE_ONLY) {
+    assert.ok(!read(name).includes('useEscape'), `${name} is drawn on a phone only, so it has no wide shape to keep our key for`)
+    assert.ok(!/useModalLayer\(\w+, true,/.test(read(name)), `${name} must hand the hook the same condition its render reads: a fixed true mounted with no dialog would never run again`)
   }
 })

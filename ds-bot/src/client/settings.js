@@ -8,6 +8,7 @@ import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
 import { openHarnessSettings } from './sidebar.js'
 import { useMobile } from './mobile.js'
 import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
+import { useEscape } from './overlay-hooks.js'
 import { BotSettingsForm } from './bot-settings.js'
 import { MOTIONS, MotionSection, SetRow, SetSection } from './set-rows.js'
 import { Segmented, useGlide } from './motion.js'
@@ -223,11 +224,16 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
   // Escape goes up one level, exactly as the back arrow does: a page inside Settings returns to
   // Settings' own list rather than leaving it, and only the list itself leaves. Opened from 发现,
   // that leave is what lands back on 发现's own list (closeSettings reads the row it came from).
-  // The key itself, the focus trap and the focus handed back on close belong to the shell's modal
-  // machinery, which reads the dialog through the ref below -- drop the ref and this layer loses
-  // Esc without a word (test/ux-rules.test.js holds the two lines together).
+  // Two keys, one per shape, and the pair is deliberate (test/ux-rules.test.js asserts it). A phone
+  // shows this dialog as the screen, so the shell's modal machinery owns Escape, the focus trap and
+  // the focus handed back on close; it reads the dialog through the ref below, which is why the ref
+  // is load-bearing. A wide window shows the same dialog as the right column with a live sidebar
+  // beside it, and there our own stack keeps the key it always had: the shell is told `mobile` is
+  // false, so it neither takes Escape nor traps Tab inside a column.
   const dialogRef = useRef(null)
-  useModalLayer(dialogRef, true, () => { if (screen === 'list') close(); else stepBack() })
+  const leaveLevel = () => { if (screen === 'list') close(); else stepBack() }
+  useModalLayer(dialogRef, mobile, leaveLevel)
+  useEscape(mobile ? () => {} : leaveLevel)
   const pageTitle = bot?.name ?? room?.name ?? label
   // The same rule the arrow itself follows (stepBack): the level above when there is one, the door it
   // came in through when there is not, and Settings' own list otherwise.

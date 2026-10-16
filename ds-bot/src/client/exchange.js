@@ -4,7 +4,8 @@ import { dayLabel } from './text.js'
 import { colorOf, BotMark } from './mark.js'
 import { Bubbles } from './cells.js'
 import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
-import { usePaneLeft } from './overlay-hooks.js'
+import { useEscape, usePaneLeft } from './overlay-hooks.js'
+import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
 
 const SHEET_EXIT_MS = 220
@@ -17,11 +18,14 @@ export function ExchangeDialog({ pair, roster, actions }) {
     setLeaving(true)
     setTimeout(() => actions.closeOverlay(), SHEET_EXIT_MS)
   }
-  // Esc, the focus trap and the focus handed back on close are the shell's modal machinery, which
-  // reads the dialog through the ref below -- without the ref this sheet would lose Esc silently
-  // (test/ux-rules.test.js holds the two lines together).
+  // Two keys, one per shape, and the pair is deliberate (test/ux-rules.test.js asserts it): a phone
+  // draws this sheet as the screen and the shell's modal machinery owns Escape, the focus trap and
+  // the focus handed back on close -- it reads the dialog through the ref below. A wide window draws
+  // it as the column beside a live sidebar, and there our own stack keeps the key it always had.
+  const mobile = useMobile()
   const dialogRef = useRef(null)
-  useModalLayer(dialogRef, true, close)
+  useModalLayer(dialogRef, mobile, close)
+  useEscape(mobile ? () => {} : close)
   useEffect(() => {
     let stop = false
     let timer

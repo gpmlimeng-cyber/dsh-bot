@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 3ef2650f
+// Source fingerprint: 9a1281ff
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -13565,8 +13565,11 @@ function ExchangeDialog({ pair, roster, actions }) {
     setLeaving(true);
     setTimeout(() => actions.closeOverlay(), SHEET_EXIT_MS);
   };
+  const mobile = useMobile();
   const dialogRef = (0, import_react31.useRef)(null);
-  (0, import_dsh_client_ui_primitives9.useModalLayer)(dialogRef, true, close);
+  (0, import_dsh_client_ui_primitives9.useModalLayer)(dialogRef, mobile, close);
+  useEscape(mobile ? () => {
+  } : close);
   (0, import_react31.useEffect)(() => {
     let stop = false;
     let timer;
@@ -13714,8 +13717,11 @@ function VoiceMode({ sessionId, roster, actions, useSessions, useSessionStatus }
     window.speechSynthesis?.cancel();
     actions.closeVoice();
   };
+  const mobile = useMobile();
   const dialogRef = (0, import_react32.useRef)(null);
-  (0, import_dsh_client_ui_primitives10.useModalLayer)(dialogRef, true, close);
+  (0, import_dsh_client_ui_primitives10.useModalLayer)(dialogRef, mobile, close);
+  useEscape(mobile ? () => {
+  } : close);
   const submit = (text) => {
     setHeard(text);
     setPhase("thinking");
@@ -15703,10 +15709,13 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
     else setScreen("list");
   };
   const dialogRef = (0, import_react38.useRef)(null);
-  (0, import_dsh_client_ui_primitives11.useModalLayer)(dialogRef, true, () => {
+  const leaveLevel = () => {
     if (screen === "list") close();
     else stepBack();
-  });
+  };
+  (0, import_dsh_client_ui_primitives11.useModalLayer)(dialogRef, mobile, leaveLevel);
+  useEscape(mobile ? () => {
+  } : leaveLevel);
   const pageTitle = bot?.name ?? room2?.name ?? label;
   const backLabel = screen === "list" ? t("Close settings") : back ?? t(BACK_TO[from] ?? "Back to all settings");
   return (0, import_react38.createElement)(
@@ -17585,7 +17594,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "3ef2650f" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "9a1281ff" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
