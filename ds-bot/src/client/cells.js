@@ -654,14 +654,19 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
   // (decide.js has the protocol): the block comes out of the reply it was written in, and the newest
   // one wins. Only the admin's own replies are read this way -- anyone else's block stays text.
   const items = stackReplies(replies)
-  // The fence stays in the record (that is what lets a reload rebuild a question nobody has answered
-  // yet), so an answered one is skipped by the key the host kept when the user tapped it. Without
-  // that, every reload asked the user the same question again.
+  // Two sources, because the rounds on screen are not the whole room. A fence in a round that is
+  // still loaded is read here; the newest one the host found in the record is read from the room, so
+  // a reload (or a round the transcript no longer mounts) still offers the question. The fence stays
+  // in the record either way, so an answered one is skipped by the key the host kept when the user
+  // tapped it -- without that, every reload asked the same question again.
   const answered = roster.decisions?.[sessionId] ?? []
-  const ask = items
+  const fromRounds = items
     .filter(item => room !== undefined && item.reply.kind === undefined && item.reply.botId === room.admin)
     .map(item => parseDecision(item.texts[0]))
-    .filter(decision => decision !== null && !answered.includes(decision.key))
+    .filter(decision => decision !== null)
+  const fromRecord = parseDecision(room?.decision?.text ?? '')
+  const ask = [...fromRounds, ...(fromRecord === null ? [] : [fromRecord])]
+    .filter(decision => !answered.includes(decision.key))
     .at(-1) ?? null
   useEffect(() => { if (ask !== null) actions.proposeDecision?.(sessionId, ask) }, [ask?.key, sessionId])
   return h('div', { className: 'bt-group-replies' },

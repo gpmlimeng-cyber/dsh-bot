@@ -419,3 +419,21 @@ test('a decision the user already answered is not offered again from the record'
   run({ actions, roster: team({ decisions: { room: ['Ship it?\u0000Yes\u0000No'] } }) })
   assert.deepEqual(asked, [], 'and an answered one does not come back')
 })
+
+// A round the transcript no longer mounts is not a question that is gone: the fence stays in the
+// record, and the host carries the newest one back with the room.
+test('a decision from a round that is gone is still offered from the record', () => {
+  const fence = 'On it.\n```ds-decide\n{"title":"Ship it?","options":["Yes","No"]}\n```'
+  const plain = call('group_relay', 'relay-10', { content: { replies: [{ botId: 'writer', text: 'Nothing else.' }] } })
+  const asked = []
+  const actions = { proposeDecision: (sessionId, decision) => asked.push([sessionId, decision.title]) }
+  const run = (roster) => {
+    effects = []
+    expand(ToolCell(props(plain, { sessionId: 'room', roster, actions })))
+    for (const effect of effects) effect()
+  }
+  run(team())
+  assert.deepEqual(asked, [], 'no fence in the rounds on screen, nothing to ask')
+  run(team({ roomsById: { room: { ...room, decision: { text: fence } } } }))
+  assert.deepEqual(asked, [['room', 'Ship it?']], 'and the one the host kept in the record still reaches the bell')
+})

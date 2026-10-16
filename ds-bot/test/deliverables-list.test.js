@@ -41,7 +41,7 @@ test('the list keeps the message cards, and changes only their second line', () 
   // The very cards a message ends with, so a later edit cannot grow a second row design; the
   // exits are the card's own one "···" here as well, so there is no shape to ask for.
   assert.ok(list.includes('h(DeliverableCards, { deliverables: rows, actions, list: true, metaOf })'), 'the list is the shared card list')
-  assert.ok(list.includes('const rows = [{ files: files.map(entry => ({ path: entry.path, at: entry.at })) }]'), 'fed the host’s rows')
+  assert.ok(list.includes('const rows = [{ files: files.map(entry => ({ path: entry.path, at: entry.at, by: entry.by })) }]'), 'fed the host’s rows')
   assert.ok(!list.includes('menu: list,') && !list.includes('menu ='), 'and asks for no shape of its own')
   assert.ok(!list.includes("className: 'bt-prod-row'"), 'and there is no row of its own')
   assert.ok(!preview.includes('.bt-prod-row'), 'nor a row style of its own')
@@ -50,7 +50,8 @@ test('the list keeps the message cards, and changes only their second line', () 
   // list names its kind, how big it is and which workspace it came from, naming the workspace
   // rather than spelling its absolute path out.
   assert.ok(list.includes('const metaOf = (file, workDir = null) => {'), 'the list’s line is its own shape')
-  assert.ok(list.includes("const parts = [wordFor(file.path)]"), 'it opens with the kind')
+  assert.ok(list.includes("const parts = [...(typeof file.by === 'string' && file.by !== '' ? [file.by] : []), wordFor(file.path)]"),
+    'it opens with the Bot that handed it over, when the host knows one, and then the kind')
   assert.ok(list.includes('if (Number.isFinite(size)) parts.push(fileSizeText(size))'), 'the size joins it when the read answers')
   assert.ok(list.includes('parts.push(workspaceOf(file.path, workDir))'), 'and the workspace closes it')
   assert.ok(list.includes("return parts.join(' · ')"), 'joined the reference way')
@@ -250,4 +251,16 @@ test('the list has an entry the user can see, not only the long-press menu', () 
   assert.ok(settings.includes('IconDeliverDocRegular'), 'with Fluent\'s deliverable mark, not a hand-drawn one')
   assert.ok(index.includes("actions.openProducts = () => ui.set(state => ({ ...state, products: true, preview: null, lightbox: null, view: 'products', menu: null }))"), 'the same action the long-press menu calls')
   assert.ok(!settings.includes("'products', 'All deliverables'"), 'and it is not a settings page: there is nothing to configure on it')
+})
+
+// The panel is a team-wide record, so a row has to be able to say whose file it is. The host keeps
+// the name of the Bot that handed it over; the row leads its second line with it.
+test('a row in the list says which Bot handed the file over', () => {
+  assert.ok(list.includes('by: entry.by'), 'the list carries the author into the card')
+  assert.ok(list.includes('by: file?.by'), 'and the card\'s own shape keeps it')
+  assert.ok(list.includes("...(typeof file.by === 'string' && file.by !== '' ? [file.by] : []), wordFor(file.path)"),
+    'the second line leads with the name, and says nothing when the host has none')
+  assert.ok(host('files.js').includes('const keep = (path, at = Date.now(), by) =>'), 'the record takes the author with the path')
+  assert.ok(host('turns.js').includes("rt.rememberDelivered?.(data.files.map(file => file?.path), rt.botOf(rt.selfOf(id))?.name)"),
+    'and a delivery names the Bot whose turn it was')
 })

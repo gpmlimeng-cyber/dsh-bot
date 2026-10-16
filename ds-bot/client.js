@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 00368fb8
+// Source fingerprint: 684e159f
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3279,6 +3279,12 @@ var CONVERSATION_CSS = `
 [data-step-process]>[data-step-process-body]{display:block!important;content-visibility:visible!important;max-height:none!important;overflow:visible!important;mask-image:none!important;scrollbar-gutter:auto!important}
 :is([data-step-process],[data-turn-process-hidden])[hidden]{content-visibility:visible!important}
 [class*="_flowItem"]:has(> [data-slot="conversation.chat.node"]:empty){display:none!important}
+/* The shell draws its own tool row into the very cell our relay content goes in, so once the replies
+   are there the cell is not empty and the rule above no longer hides it: the user saw the shell's
+   "工具调用 group_relay · {}" line sitting above the group's messages. data-tool is the shell's own hook
+   -- the tool's name, on its row's root -- so this hides that one row, by name, and touches no other
+   tool: read and bash keep the shell's rows, which is where they belong. */
+[data-slot="conversation.chat.node"] [data-tool="group_relay"]{display:none!important}
 [class*="_header"]:has(.bt-head){border-bottom-color:transparent!important;box-shadow:none!important}
 /* The transcript runs under a floating header pill. */
 header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;right:0;z-index:8;display:flex!important;padding:10px 0 0!important;background:transparent!important;pointer-events:none;justify-content:center}
@@ -5924,7 +5930,7 @@ var workspaceOf = (path, dir) => {
 };
 var sizesOf = /* @__PURE__ */ new Map();
 var metaOf = (file, workDir = null) => {
-  const parts = [wordFor(file.path)];
+  const parts = [...typeof file.by === "string" && file.by !== "" ? [file.by] : [], wordFor(file.path)];
   const size = sizesOf.get(file.path);
   if (Number.isFinite(size)) parts.push((0, import_dsh_client_ui_primitives2.fileSizeText)(size));
   parts.push(workspaceOf(file.path, workDir));
@@ -6080,6 +6086,7 @@ function DeliverableCards({ deliverables, actions, metaOf: metaOf2 = null, list 
     // A file's own coordinates when the source has them (DSH's turn record does), the
     // position among its neighbours otherwise (the host's group replies do not).
     at: file?.at,
+    by: file?.by,
     sessionId: entry.sessionId,
     seq: entry.seq,
     index: Number.isInteger(file?.index) ? file.index : position
@@ -6217,7 +6224,7 @@ function DeliveredList({ actions, onClose }) {
       live = false;
     };
   }, [files]);
-  const rows = [{ files: files.map((entry) => ({ path: entry.path, at: entry.at })) }];
+  const rows = [{ files: files.map((entry) => ({ path: entry.path, at: entry.at, by: entry.by })) }];
   const body = state === "reading" ? (0, import_react8.createElement)("div", { className: "bt-products" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…")))) : state === "failed" ? (0, import_react8.createElement)("div", { className: "bt-products" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty-title", role: "status" }, t("This list could not be read")))) : (0, import_react8.createElement)(
     "div",
     { className: "bt-products" },
@@ -6935,7 +6942,9 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
   const room2 = roster.roomsById[sessionId];
   const items = stackReplies(replies);
   const answered = roster.decisions?.[sessionId] ?? [];
-  const ask = items.filter((item) => room2 !== void 0 && item.reply.kind === void 0 && item.reply.botId === room2.admin).map((item) => parseDecision(item.texts[0])).filter((decision) => decision !== null && !answered.includes(decision.key)).at(-1) ?? null;
+  const fromRounds = items.filter((item) => room2 !== void 0 && item.reply.kind === void 0 && item.reply.botId === room2.admin).map((item) => parseDecision(item.texts[0])).filter((decision) => decision !== null);
+  const fromRecord = parseDecision(room2?.decision?.text ?? "");
+  const ask = [...fromRounds, ...fromRecord === null ? [] : [fromRecord]].filter((decision) => !answered.includes(decision.key)).at(-1) ?? null;
   (0, import_react9.useEffect)(() => {
     if (ask !== null) actions.proposeDecision?.(sessionId, ask);
   }, [ask?.key, sessionId]);
@@ -17788,7 +17797,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "00368fb8" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "684e159f" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

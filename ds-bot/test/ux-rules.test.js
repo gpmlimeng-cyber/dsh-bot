@@ -316,3 +316,17 @@ test('a term the user has not been taught is said in words, on screen', () => {
   assert.ok(dictionary.includes("'Cache hit rate: input the model had already read, so it was not sent again.':"), 'the rate line is translated')
   assert.ok(dictionary.includes("'Compaction and handoff: a chat too long to keep whole is summarised so the work can go on.':"), 'and so is the chart line')
 })
+
+test('the shell\'s own relay row is hidden, by the tool name the shell puts on it', () => {
+  // U13's real shape (the user's report, and the target's DOM): the shell draws its own tool row into
+  // the same node our relay content goes in, so `:empty` does not hide it once the replies are there.
+  // The row's root carries `data-tool` with the tool's name -- the shell's own hook, not a CSS-module
+  // hash that changes every build -- so the row is hidden by name.
+  const styles = read('styles.js')
+  assert.ok(styles.includes('[class*="_flowItem"]:has(> [data-slot="conversation.chat.node"]:empty){display:none!important}'),
+    'a cell with nothing in it is still hidden whole')
+  assert.ok(styles.includes('[data-slot="conversation.chat.node"] [data-tool="group_relay"]{display:none!important}'),
+    'and the relay\'s own row is hidden by name, inside the transcript')
+  // Only the relay: every other tool keeps the shell's row, which is where those belong.
+  for (const tool of ['read', 'bash']) assert.ok(!styles.includes(`[data-tool="${tool}"]`), `${tool} keeps its row`)
+})

@@ -142,7 +142,9 @@ const sizesOf = new Map()
 // line the user asked for. The kind and the workspace are in the path and show at once; the
 // size joins them when the host answers, so the line is never blank and never a bare path.
 const metaOf = (file, workDir = null) => {
-  const parts = [wordFor(file.path)]
+  // Whose file it is comes first: the panel is a team-wide record, and this is the one thing a list
+  // of paths cannot say. The host keeps the name of the Bot that handed it over, beside the path.
+  const parts = [...(typeof file.by === 'string' && file.by !== '' ? [file.by] : []), wordFor(file.path)]
   const size = sizesOf.get(file.path)
   if (Number.isFinite(size)) parts.push(fileSizeText(size))
   parts.push(workspaceOf(file.path, workDir))
@@ -337,6 +339,7 @@ export function DeliverableCards({ deliverables, actions, metaOf = null, list = 
       // A file's own coordinates when the source has them (DSH's turn record does), the
       // position among its neighbours otherwise (the host's group replies do not).
       at: file?.at,
+      by: file?.by,
       sessionId: entry.sessionId,
       seq: entry.seq,
       index: Number.isInteger(file?.index) ? file.index : position,
@@ -499,7 +502,7 @@ export function DeliveredList({ actions, onClose }) {
   // A row from this list carries no message coordinates -- nothing here knows which
   // reply a file came from -- so the card's own exits do what they can: the phone's
   // chooser gets a copy, and the path is one tap away either way.
-  const rows = [{ files: files.map(entry => ({ path: entry.path, at: entry.at })) }]
+  const rows = [{ files: files.map(entry => ({ path: entry.path, at: entry.at, by: entry.by })) }]
   const body = state === 'reading'
     ? h('div', { className: 'bt-products' }, h('div', { className: 'bt-fp-empty' }, h('div', { className: 'bt-fp-empty-title' }, t('Loading…'))))
     : state === 'failed'
