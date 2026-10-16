@@ -4,6 +4,29 @@ All notable changes to DS Bot are listed here. The format follows [Keep a Change
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-10-15
+
+### Added
+
+- **Group permissions**: a group chat can run all its members with one permission preset (Read only, Workspace or Full access) in place of each member's own. Turn on **Same for every member** under Permissions in the group's settings; the group's details show the preset while it is on. Members' conversations in the group change at once, and a member's later conversations there start on it. Turned off, each member works with its own preset again.
+
+### Changed
+
+- A Bot at work in a group chat no longer stays silent until it is done: it says what it will do, keeps the group posted as it goes, and ends with the result.
+- The work status in the group, the sidebar and a Bot's own chat says what the Bot is doing, instead of only "On it", also while it moves to a fresh conversation.
+
+### Fixed
+
+- In a group chat, what a Bot did after one of its background jobs finished, or after it moved to a fresh conversation, never reached the group. It now does.
+- Bots could keep messaging each other for a long time without you, for example by forwarding a request from Bot to Bot or through group posts. Every forwarded message and group post now counts toward the limit on how long a chain of Bot messages can get, and after 40 Bot messages since you last wrote, answered a question card or a scheduled task ran, `message_bot` and `post_to_group` fail and tell the Bot to report to you. Bots are also told not to send thanks or acknowledgements, and not to answer a reply. ([#129](https://github.com/Fei2411/DeepSeek-Bot/issues/129))
+- An HTTP MCP capability with `$DSH_SECRET_<NAME>` in its URL sent the reference itself to the server and showed ready until the first tool call failed. The URL now gets the secret's value, URL-encoded, and a capability whose Bot may not use the secret shows an error. ([#125](https://github.com/Fei2411/DeepSeek-Bot/issues/125))
+- Group chats now relay messages to their Bots with the `ptc` agent preset, DSH Desktop's default. New Bot chats, group chats and conversation parts use the `standard` preset. A group chat made under `ptc` still relays, but each of its rounds is limited by DSH's time limit for a program run, about 10 minutes. ([#37](https://github.com/Fei2411/DeepSeek-Bot/issues/37))
+- Bot chats and group chats no longer run DeepSeek Harness goals. A goal started there with `/goal` is stopped at once with a short note, so a group chat no longer runs round after round, and the chat shows no goal rounds. ([#133](https://github.com/Fei2411/DeepSeek-Bot/issues/133))
+- With a plugin that re-skins DSH's composer or sidebar installed alongside, such as `@michengai/dsh-codex-ui`, a Bot chat's message box keeps its one-line height, its button spacing and its "Message <Bot>" placeholder, and the sidebar footer keeps the account button and Connect plugins on one row. ([#127](https://github.com/Fei2411/DeepSeek-Bot/issues/127))
+- Opening and closing the details panel no longer stutters in a long chat, most of all in a group chat. On every frame of the glide the whole conversation was styled again, because of a width that DSH writes on the conversation at every resize and that Bot chats do not use. The conversation still glides with the panel, and each frame now restyles only what changes.
+- In a group chat, each member at work had a row of its own above the message box, which ran over the messages behind it. One capsule above the message box now says who waits for your approval and who is at work, and opens the group's details. A Bot's own chat shows the groups it works in the same way.
+- A group's details panel no longer puts badges on the members' marks or a member's work on a loose line under its row. Each member has one row with its mark, name, Admin tag and what it is doing, Stop beside it while it works in the group, and the approvals it waits on below. The group shows its first members side by side, and the tab row that only held Details is gone.
+
 ## [0.1.5] - 2026-10-13
 
 ### Added
@@ -146,7 +169,8 @@ If you used the legacy `dsh-bot` package, remove it before you install `ds-bot`.
 - Only one DSH can change a team at a time; a second DSH on the same DSH home opens it read-only ([Data and backups](ds-bot/README.md#data-and-backups)).
 - Group chats use many tokens: each member reads the group and answers in turn.
 
-[Unreleased]: https://github.com/Fei2411/DeepSeek-Bot/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/Fei2411/DeepSeek-Bot/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/Fei2411/DeepSeek-Bot/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/Fei2411/DeepSeek-Bot/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/Fei2411/DeepSeek-Bot/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/Fei2411/DeepSeek-Bot/compare/v0.1.2...v0.1.3

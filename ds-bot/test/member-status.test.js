@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { runInNewContext } from 'node:vm'
 import { build } from 'esbuild'
@@ -15,7 +14,7 @@ runInNewContext(bundle.outputFiles[0].text, {
   module, exports: module.exports,
   require: (name) => {
     const platform = {
-      react: { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) }), useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}], useEffect: () => {}, useRef: initial => ({ current: initial }), useLayoutEffect: () => {}, Fragment: 'fragment' },
+      react: { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) }), useState: initial => [initial, () => {}], useEffect: () => {}, useRef: initial => ({ current: initial }), useLayoutEffect: () => {}, Fragment: 'fragment' },
       'react-dom': {},
       '@deepseek-ai/dsh-client-ui-primitives': {},
     }
@@ -23,20 +22,18 @@ runInNewContext(bundle.outputFiles[0].text, {
     return platform[name]
   },
 })
-const { busyMembers, summaryText, splitBusy, MemberDock, dockPlan } = module.exports
+const { busyMembers, summaryText, MemberDock } = module.exports
 // Values from the bundle's realm compare by content only.
 const plain = value => JSON.parse(JSON.stringify(value))
-// Renders the dock's own parts of an element tree, and lists its rows' labels.
-const expand = (node) => {
-  if (Array.isArray(node)) return node.flatMap(expand)
-  if (node === null || typeof node !== 'object') return node
-  if (['WorkRow', 'SummaryLine'].includes(node.type?.name)) return expand(node.type({ ...node.props, children: node.children }))
-  return { ...node, children: node.children.map(expand) }
-}
-const rowLabels = (node) => {
-  if (Array.isArray(node)) return node.flatMap(rowLabels)
-  if (node === null || typeof node !== 'object') return []
-  return [...(node.props.className === 'bt-mw-row' ? [node.props['aria-label']] : []), ...rowLabels(node.children)]
+// The dock's capsule in an element tree.
+const capsuleOf = (node) => {
+  if (node === null || typeof node !== 'object') return null
+  if (node.props.className === 'bt-mw-pill') return node
+  for (const child of node.children) {
+    const found = capsuleOf(child)
+    if (found) return found
+  }
+  return null
 }
 
 test('the members line names who waits for an approval first, then who is at work', () => {
@@ -56,72 +53,42 @@ test('the members line names who waits for an approval first, then who is at wor
 })
 
 const names = { a: 'Anvil', b: 'Flint', c: 'Prism', d: 'Quill' }
-// These rows started just now: an elapsed label only appears after a minute of work.
-const NOW = Date.now()
 const team = {
   byId: Object.fromEntries(Object.entries(names).map(([id, name]) => [id, { id, name }])),
   roomsById: { r1: { id: 'r1', name: 'Ops', members: ['a', 'b', 'c', 'd'] }, r2: { id: 'r2', name: 'Docs', members: ['a', 'b'] } },
 }
-const dock = (sessionId, work) => expand(MemberDock({ sessionId, useRoster: pick => pick(team), useWork: pick => pick(work), actions: {} }))
+// The capsule's label and what a click on it asks for.
+const dock = (sessionId, work) => {
+  const calls = []
+  const actions = { showDetails: id => calls.push(['details', id]), openSession: id => calls.push(['session', id]) }
+  const capsule = capsuleOf(MemberDock({ sessionId, useRoster: pick => pick(team), useWork: pick => pick(work), actions }))
+  if (!capsule) return null
+  capsule.props.onClick()
+  return { label: capsule.props['aria-label'], calls }
+}
 
-test('a member at work in the group gets a row; the speaker, work elsewhere and approvals do not', () => {
+test('one capsule names who waits and who works, without the round\'s speaker, and opens the details', () => {
   const work = {
     // Anvil runs in its own chat too; its work here wins.
-    bots: { a: { since: NOW, tool: 'pwsh' }, b: { since: NOW, roomId: 'r2', tool: 'edit' } },
-    rooms: { r1: [{ botId: 'a', since: NOW, tool: 'write' }, { botId: 'd', since: NOW, speaking: true }], r2: [{ botId: 'b', since: NOW, tool: 'edit' }] },
+    bots: { a: { since: 1, tool: 'pwsh' }, b: { since: 1, roomId: 'r2', tool: 'edit' } },
+    rooms: { r1: [{ botId: 'a', since: 1, tool: 'write' }, { botId: 'd', since: 1, speaking: true }], r2: [{ botId: 'b', since: 1, tool: 'edit' }] },
     approvals: [{ botId: 'c', roomId: 'r1' }],
   }
-  const busy = busyMembers(team.roomsById.r1, work, team)
-  const { rows, rest } = splitBusy(busy)
-  assert.deepEqual(plain(rows.map(entry => [entry.bot.name, entry.doing.tool, entry.doing.roomId])), [['Anvil', 'write', 'r1']])
-  assert.deepEqual(plain(rest.map(entry => [entry.bot.name, entry.state])), [['Prism', 'ask'], ['Flint', 'work']])
-  assert.deepEqual(rowLabels(dock('r1', work)), ['Anvil · Writing changes…'])
-  assert.equal(busyMembers(team.roomsById.r2, work, team).length, 2)
+  assert.deepEqual(plain(dock('r1', work)), { label: 'Prism is waiting for your approval · Anvil · Writing changes… +1', calls: [['details', 'r1']] })
+  assert.equal(dock('r1', { bots: {}, rooms: { r1: [{ botId: 'd', since: 1, speaking: true }] }, approvals: [] }), null)
 })
 
 test('a Bot\'s own chat shows the groups it is at work in, unless its own chat runs', () => {
-  const away = { bots: { a: { since: NOW, roomId: 'r1', tool: 'pwsh' } }, rooms: { r1: [{ botId: 'a', since: NOW, tool: 'pwsh' }], r2: [{ botId: 'a', since: NOW }] }, approvals: [] }
-  assert.deepEqual(rowLabels(dock('a', away)), ['in Ops · Running shell commands…', 'in Docs · Thinking about it…'])
-  assert.deepEqual(rowLabels(dock('a', { ...away, bots: { a: { since: NOW } } })), [])
+  const away = { bots: { a: { since: 1, roomId: 'r1', tool: 'pwsh' } }, rooms: { r1: [{ botId: 'a', since: 1, tool: 'pwsh' }], r2: [{ botId: 'a', since: 1 }] }, approvals: [] }
+  assert.deepEqual(plain(dock('a', away)), { label: 'in Ops · Running shell commands… +1', calls: [['session', 'r1']] })
+  assert.equal(dock('a', { ...away, bots: { a: { since: 1 } } }), null)
   assert.equal(dock('b', away), null)
 })
 
-// The phone's list: one row until it is opened. The four-row stack was measured on the phone
-// the user reported eating a third of the conversation, so the rule is a height rule -- one
-// 32px row plus its 6px margin stays inside the 40px the ask allows.
-test('an upright phone shows one row and a count, and opens to the full list', () => {
-  const rows = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
-  const rest = [{ id: 'd' }]
-  // Desktop, and a phone held sideways: every row, no control, and `more` is not a number.
-  for (const phone of [false]) {
-    assert.deepEqual(plain(dockPlan(rows, rest, false, phone)), { first: rows[0], others: rows.slice(1), summary: rest, more: 0 })
-  }
-  // Closed on the phone: the first row alone, the three behind it counted, the summary kept
-  // out of the stack (its members are what the count leads to).
-  assert.deepEqual(plain(dockPlan(rows, rest, false, true)), { first: rows[0], others: [], summary: [], more: 3 })
-  // Opened: exactly what the desktop draws, with the control saying how to close it.
-  assert.deepEqual(plain(dockPlan(rows, rest, true, true)), { first: rows[0], others: rows.slice(1), summary: rest, more: 3 })
-  // One row and nothing else: nothing to open, so no control.
-  assert.deepEqual(plain(dockPlan(rows.slice(0, 1), [], false, true)), { first: rows[0], others: [], summary: [], more: 0 })
-  // No rows at all: the summary line already stands for everyone, so it stays as it is.
-  assert.deepEqual(plain(dockPlan([], rest, false, true)), { first: null, others: [], summary: rest, more: 0 })
-})
-
-test('the closed line is one row of the dock, with the control beside it', () => {
-  const source = readFileSync(new URL('../src/client/member-status.js', import.meta.url), 'utf8')
-  // The row is a button that opens the details; the control is its sibling, not its child.
-  assert.ok(source.includes("className: 'bt-mw-dock-first'"), 'the row and its control share one line')
-  assert.ok(source.includes("className: 'bt-mw-more'"), 'the control is its own element')
-  assert.ok(source.includes("'aria-expanded': expanded"), 'and reports whether the list is open')
-  // Gated on the phone layout the rest of the skin uses, and closed again when work ends.
-  assert.ok(source.includes('const phone = usePortrait()'), 'the phone layout decides it')
-  assert.ok(source.includes('if (open && count <= 1) setOpen(false)'), 'the list closes itself when the run ends')
-  // Height: the row is 32px and the stack gives it 6px of margin below.
-  assert.ok(source.includes('.bt-mw-row{') && source.includes('height:32px'), 'the row is 32px')
-  assert.ok(source.includes('margin:0 auto 6px'), 'and the stack keeps 6px under it')
-  assert.ok(32 + 6 <= 40, 'one line stays inside the 40px the ask allows')
-  // House rule: a rule only a phone can use hangs on the phone flag, never on the bare class.
-  const ownRules = source.split('\n').filter(rule => /^(html\[data-bt-mobile\] )?\.bt-mw-(dock-first|more)\b/.test(rule))
-  assert.ok(ownRules.length >= 3, `the rules are there: ${ownRules.length}`)
-  for (const line of ownRules) assert.ok(line.startsWith('html[data-bt-mobile] '), line)
+test('the capsule says what a member does in its call\'s own words, and that it moves to a fresh conversation', () => {
+  const label = doing => dock('r1', { bots: {}, rooms: { r1: [{ botId: 'a', since: 1, ...doing }] }, approvals: [] }).label
+  assert.equal(label({ tool: 'pwsh', note: 'Download Ghidra 12.1.4 and check its hash.' }), 'Anvil · Download Ghidra 12.1.4 and check its hash…')
+  assert.equal(label({ tool: 'read', target: 'dump.py' }), 'Anvil · Opening a file · dump.py…')
+  assert.equal(label({ switching: true }), 'Anvil · Moving to a fresh conversation…')
+  assert.equal(label({ tool: 'pwsh', said: '解压 Ghidra，顺便写脚本。', note: 'Expand-Archive' }), 'Anvil · 解压 Ghidra，顺便写脚本…')
 })
