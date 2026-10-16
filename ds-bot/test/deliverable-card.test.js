@@ -189,13 +189,15 @@ test('the type mark is DSH\u2019s own glyph, one colour, with no table of ours',
   for (const gone of ['iconOf', 'FluentDocumentIcon', 'FluentImageIcon', 'FluentCodeIcon', 'FluentTableIcon', 'FluentPdfIcon', 'FluentArchiveIcon']) {
     assert.ok(!source.includes(gone), `${gone} is not a second opinion about a file type any more`)
   }
-  // One colour, from this skin's tone, through the component's documented single-colour override --
-  // not the official category colours, which would put a coloured plate back under the glyph.
-  assert.ok(rule('.bt-dcard-ico{').includes('--dsh-file-type-icon-color:var(--bt-type-ink)'), 'the mark reads the tone the card sets')
-  assert.ok(rule('.bt-dcard-ico{').includes('color:var(--bt-type-ink)'), 'and that tone is the colour language here')
-  // The tone classes remain the set of colours a mark can be drawn in.
-  assert.ok(rule('.bt-dcard-ico-doc{').includes('--bt-type-ink:var(--bt-accent)'), 'a document is the accent')
-  assert.ok(rule('.bt-dcard-ico-image{').includes('--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))'), 'a picture the palette\u2019s green')
+  // Drawn in the component's own category colours, which is how the rest of DSH draws a file: the
+  // tone machinery this skin used to colour its own marks is gone with the marks, and the documented
+  // single-colour override is deliberately not set (that is the one-line way to flatten them later).
+  assert.ok(!rule('.bt-dcard-ico{').includes('--dsh-file-type-icon-color'), 'the component colours its own glyphs')
+  assert.ok(!rule('.bt-dcard-ico{').includes('--bt-type-ink'), 'and no tone of ours is applied')
+  for (const gone of ['bt-dcard-ico-doc', 'bt-dcard-ico-image', 'bt-dcard-ico-media', 'bt-dcard-ico-plain']) {
+    assert.ok(!source.includes(gone), `${gone} went with the marks that needed a tone`)
+  }
+  assert.ok(!source.includes('toneOf'), 'and so did the helper that answered it')
   // Flat: the glyph is the whole mark -- no plate, no border, and the slot is the glyph's own 28.
   assert.ok(!rule('.bt-dcard-ico{').includes('background:'), 'the drawing is the mark, with nothing behind it')
   assert.ok(!rule('.bt-dcard-ico{').includes('border:') && !rule('.bt-dcard-ico{').includes('border-radius:'), 'and no outline or plate of its own')

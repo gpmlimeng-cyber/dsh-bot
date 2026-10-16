@@ -81,27 +81,16 @@ const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')
 // own drawing. The user asked the letters away -- "MD", "WEBP" were words pretending to be icons --
 // so the kinds are Fluent's artwork (icons.js, copied from @fluentui/svg-icons like the rest of that
 // family), and the words that say which kind it is stay in the line under the name, once.
-const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'tif', 'tiff'])
-const MEDIA_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv', 'avi', 'mp3', 'wav', 'm4a', 'ogg', 'flac'])
-const ARCHIVE_EXTENSIONS = new Set(['zip', 'tar', 'gz', 'tgz', '7z', 'rar'])
-const CODE_EXTENSIONS = new Set(['html', 'htm', 'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'py', 'go', 'rs', 'java', 'c', 'h', 'cpp', 'css', 'json', 'yml', 'yaml', 'toml', 'sh', 'sql', 'xml'])
-const TABLE_EXTENSIONS = new Set(['csv', 'tsv', 'xls', 'xlsx', 'ods'])
 // The drawing for a file is DSH's own: `FileTypeIcon` classifies the path into its twelve kinds and
 // forty-eight code subtypes and draws the matching glyph, with everything it does not know falling back
 // to `other`. This skin carried a suffix table of its own until now; it is gone, because a second table
 // can only disagree with the first one, and the official set is the one the rest of DSH draws.
 //
-// The mark is one colour here -- the tone below -- rather than the component's own twelve category
-// colours: --dsh-file-type-icon-color is the component's documented single-colour override, and this
-// skin's cards are flat and toned, not coloured plates.
+// It is drawn in the component's own category colours, which is how the rest of DSH draws a file: the
+// twelve kinds carry their own colours and the code subtypes their own. Should this skin ever want them
+// flat, --dsh-file-type-icon-color on this slot is the component's documented one-line override, and
+// turning that on is a decision rather than a default.
 const FileMark = ({ path, size = 28 }) => h(FileTypeIcon, { path, size })
-const toneOf = (name) => {
-  const extension = fileExtension(name).toLowerCase()
-  if (IMAGE_EXTENSIONS.has(extension)) return 'image'
-  if (MEDIA_EXTENSIONS.has(extension)) return 'media'
-  if (ARCHIVE_EXTENSIONS.has(extension) || extension === '') return 'plain'
-  return 'doc'
-}
 
 // The workspace a delivered file came out of, named the way a reader asks about it rather than spelled
 // out as an absolute path -- the path is what a reader cannot act on.
@@ -326,7 +315,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         'aria-label': `${t('Preview')} ${name}`,
         onClick: preview,
       }),
-      h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h(FileMark, { path: file.path })),
+      h('span', { className: 'bt-dcard-ico', 'aria-hidden': true }, h(FileMark, { path: file.path })),
       h('span', { className: 'bt-dcard-copy' },
         h('span', { className: 'bt-dcard-name' }, name),
         h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name))),

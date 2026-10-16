@@ -362,15 +362,11 @@ html[data-bt-mobile] .bt-dcard:has(.bt-dcard-hit:active){background:var(--bt-act
 html[data-bt-mobile] .bt-settings-item:active,
 html[data-bt-mobile] .bt-peers-row:active{background:var(--bt-active)}
 /* The kind's mark is DSH's own glyph (FileTypeIcon): a 28px square, which is the size that component
-   draws its twelve kinds and forty-eight code subtypes at. One colour, from the tone classes below --
-   the component's documented --dsh-file-type-icon-color is the single-colour override, so the mark
-   carries this skin's tone rather than the official category colours (a coloured plate is the thing the
-   user asked away). No plate behind it: the drawing is the mark. */
-.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--bt-type-ink);--bt-type-ink:var(--bt-ink-2);--dsh-file-type-icon-color:var(--bt-type-ink)}
-.bt-dcard-ico-doc{--bt-type-ink:var(--bt-accent)}
-.bt-dcard-ico-image{--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))}
-.bt-dcard-ico-media{--bt-type-ink:color-mix(in srgb,var(--bt-star) 88%,var(--bt-ink))}
-.bt-dcard-ico-plain{--bt-type-ink:var(--bt-ink-2)}
+   draws its twelve kinds and forty-eight code subtypes at, in its own category colours -- the colours
+   the rest of DSH uses for a file. No tone of ours is applied: the component paints each glyph, and the
+   --dsh-file-type-icon-color override it documents is deliberately not set (that is the one-line way to
+   flatten them here if this skin ever wants that). No plate behind it: the drawing is the mark. */
+.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px}
 /* The component sets its own size; this keeps a caller that forgets the prop from letting the svg fall
    back to the browser's default box. */
 .bt-dcard-ico>svg{width:28px;height:28px}

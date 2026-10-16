@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: cbcfbdcd
+// Source fingerprint: 83464916
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2389,15 +2389,11 @@ html[data-bt-mobile] .bt-dcard:has(.bt-dcard-hit:active){background:var(--bt-act
 html[data-bt-mobile] .bt-settings-item:active,
 html[data-bt-mobile] .bt-peers-row:active{background:var(--bt-active)}
 /* The kind's mark is DSH's own glyph (FileTypeIcon): a 28px square, which is the size that component
-   draws its twelve kinds and forty-eight code subtypes at. One colour, from the tone classes below --
-   the component's documented --dsh-file-type-icon-color is the single-colour override, so the mark
-   carries this skin's tone rather than the official category colours (a coloured plate is the thing the
-   user asked away). No plate behind it: the drawing is the mark. */
-.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--bt-type-ink);--bt-type-ink:var(--bt-ink-2);--dsh-file-type-icon-color:var(--bt-type-ink)}
-.bt-dcard-ico-doc{--bt-type-ink:var(--bt-accent)}
-.bt-dcard-ico-image{--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))}
-.bt-dcard-ico-media{--bt-type-ink:color-mix(in srgb,var(--bt-star) 88%,var(--bt-ink))}
-.bt-dcard-ico-plain{--bt-type-ink:var(--bt-ink-2)}
+   draws its twelve kinds and forty-eight code subtypes at, in its own category colours -- the colours
+   the rest of DSH uses for a file. No tone of ours is applied: the component paints each glyph, and the
+   --dsh-file-type-icon-color override it documents is deliberately not set (that is the one-line way to
+   flatten them here if this skin ever wants that). No plate behind it: the drawing is the mark. */
+.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px}
 /* The component sets its own size; this keeps a caller that forgets the prop from letting the svg fall
    back to the browser's default box. */
 .bt-dcard-ico>svg{width:28px;height:28px}
@@ -5649,19 +5645,7 @@ var TYPE_WORDS = {
   xml: "Code file"
 };
 var wordFor = (path) => t(TYPE_WORDS[(0, import_dsh_client_ui_primitives2.fileExtension)(basename(path))] ?? "File");
-var IMAGE_EXTENSIONS = /* @__PURE__ */ new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "bmp", "ico", "svg", "tif", "tiff"]);
-var MEDIA_EXTENSIONS = /* @__PURE__ */ new Set(["mp4", "mov", "webm", "mkv", "avi", "mp3", "wav", "m4a", "ogg", "flac"]);
-var ARCHIVE_EXTENSIONS = /* @__PURE__ */ new Set(["zip", "tar", "gz", "tgz", "7z", "rar"]);
-var CODE_EXTENSIONS = /* @__PURE__ */ new Set(["html", "htm", "js", "mjs", "cjs", "jsx", "ts", "tsx", "py", "go", "rs", "java", "c", "h", "cpp", "css", "json", "yml", "yaml", "toml", "sh", "sql", "xml"]);
-var TABLE_EXTENSIONS = /* @__PURE__ */ new Set(["csv", "tsv", "xls", "xlsx", "ods"]);
 var FileMark = ({ path, size = 28 }) => (0, import_react8.createElement)(import_dsh_client_ui_primitives2.FileTypeIcon, { path, size });
-var toneOf = (name) => {
-  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toLowerCase();
-  if (IMAGE_EXTENSIONS.has(extension)) return "image";
-  if (MEDIA_EXTENSIONS.has(extension)) return "media";
-  if (ARCHIVE_EXTENSIONS.has(extension) || extension === "") return "plain";
-  return "doc";
-};
 var WORKSPACES = [
   [".dsh/bot/workspace", "DSH workspace"],
   ["repos/dsh-bot/ds-bot", "DSBot"],
@@ -5826,7 +5810,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         "aria-label": `${t("Preview")} ${name}`,
         onClick: preview
       }),
-      (0, import_react8.createElement)("span", { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, "aria-hidden": true }, (0, import_react8.createElement)(FileMark, { path: file.path })),
+      (0, import_react8.createElement)("span", { className: "bt-dcard-ico", "aria-hidden": true }, (0, import_react8.createElement)(FileMark, { path: file.path })),
       (0, import_react8.createElement)(
         "span",
         { className: "bt-dcard-copy" },
@@ -17364,7 +17348,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "cbcfbdcd" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "83464916" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
