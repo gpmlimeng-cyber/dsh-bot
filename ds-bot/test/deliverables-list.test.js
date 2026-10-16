@@ -99,10 +99,34 @@ test('the panel is the one a preview opens in, title bar and all', () => {
   assert.ok(pane.includes("view !== 'preview' && view !== 'products'"), 'the strip is skipped for it')
   assert.ok(pane.includes("h(DeliveredList, { actions: panelActions, onClose: () => actions.closeProducts?.() })"), 'the list is what the panel renders')
   assert.ok(pane.includes('view === \'products\' ? t(\'All deliverables\')'), 'and it is labelled')
-  assert.ok(list.includes('h(PreviewHead, { name: t(\'All deliverables\'), onClose })'), 'with the same title bar component as the preview page')
-  assert.ok(list.includes('function PreviewHead({ name, onClose, children })'), 'one title bar definition, shared by both pages')
+  assert.ok(list.includes("h(PreviewHead, { name: t('All deliverables'), onClose, close: mobile })"), 'with the same title bar component as the preview page')
+  assert.ok(list.includes('function PreviewHead({ name, onClose, children, close = false })'), 'one title bar definition, shared by both pages')
   const previewUses = list.split('h(PreviewHead, ').length - 1
   assert.equal(previewUses, 2, 'and both pages use it')
+})
+
+test('on a phone the list slides up from the foot: full width, rounded top, a handle and a scrim', () => {
+  // The sheet's own shape: the width of the screen, glued to the foot, as tall as its list asks
+  // for up to 85% of the viewport -- and a sliding entrance rather than the column's fade.
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;'), 'full width, at the foot, 85% at most')
+  assert.ok(pane.includes('border-radius:18px 18px 0 0'), 'with the two top corners rounded')
+  assert.ok(pane.includes('animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)'), 'sliding up from below')
+  assert.ok(pane.includes('@keyframes bt-sheet-in{from{transform:translateY(100%)}to{transform:none}}'), 'the entrance')
+  assert.ok(pane.includes('@keyframes bt-sheet-out{from{transform:none}to{transform:translateY(100%)}}'), 'and the exit, which a leaving sheet takes')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out'), 'on the way out too')
+  // A handle says where it came from; the scrim above it dismisses it, and only a phone draws one.
+  assert.ok(pane.includes("view === 'products' ? h('div', { className: 'bt-sheet-handle', 'aria-hidden': true }) : null"), 'the handle')
+  assert.ok(pane.includes("view === 'products' ? h('div', { className: 'bt-panel-scrim', onClick: () => actions.closeProducts?.() }) : null"), 'the scrim closes it')
+  assert.ok(pane.includes('.bt-panel-scrim{display:none}'), 'a desktop column gets no backdrop')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-index:95;'), 'the phone draws one under the sheet')
+  assert.ok(pane.includes('.bt-sheet-handle{flex:none;width:36px;height:4px;margin:8px auto 0;border-radius:999px;background:var(--bt-line-2)}'), 'the handle is a small pill, centred')
+  // The head is the sheet's: name from the edge, close at the other end.
+  assert.ok(list.includes('const mobile = useMobile()'), 'the list knows the band through the shared hook')
+  assert.ok(list.includes("close ? 'bt-preview-head bt-sheet-head' : 'bt-preview-head'"), 'and asks the head for its sheet form')
+  assert.ok(list.includes("h('button', { type: 'button', className: 'bt-preview-back bt-sheet-close', onClick: onClose, 'aria-label': t('Close'), title: t('Close') }, h(CloseIcon))"), 'which is a close, not the preview page\'s back arrow')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:1;min-width:0;text-align:left}'), 'the name reads from the edge there')
+  // Nothing invented behind a batch-action bar: the reference has one, this skin has no such command.
+  assert.ok(!list.includes('批量操作') && !list.includes('Batch actions'), 'no empty action bar')
 })
 
 test('every kind of file the list can name is translated', () => {

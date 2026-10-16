@@ -3,7 +3,7 @@
 // browser tab is a tab of its own. Browser pages are Electron webviews kept in a
 // body-level layer by bot-browsers.js; the panel draws the strip and the toolbar
 // and reports the rectangle the shown webview covers.
-import { createElement as h, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BotMark } from './mark.js'
 import { STORAGE } from './storage.js'
@@ -499,7 +499,11 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
   // view is chosen by `view === 'files'`, which the panel falls back from only when
   // the subject disappears. A preview draws its own title bar instead of the strip.
   const showStrip = view !== 'preview' && view !== 'products' && (hasStrip || view === 'files')
-  return h('aside', {
+  // The list of everything the team handed over is a sheet from the foot on a phone (its own CSS),
+  // so it brings the scrim a sheet is dismissed with; the desktop column draws none (display:none).
+  return h(Fragment, null,
+    view === 'products' ? h('div', { className: 'bt-panel-scrim', onClick: () => actions.closeProducts?.() }) : null,
+    h('aside', {
     ref: root, className: 'bt-panel', 'data-view': view, 'aria-label': `${view === 'files' ? t('Files') : view === 'preview' ? t('File preview') : view === 'products' ? t('All deliverables') : view === 'browser' && bot ? t("{name}'s browser", { name: bot.name }) : t('Conversation details')}`,
     // A leaving panel is out of the accessibility tree and holds no focus. `aria-hidden`
     // cannot say that here: the tap that closed the panel leaves the focus on one of its own
@@ -512,6 +516,8 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
     onAnimationEnd: (event) => { if (event.target === event.currentTarget) setLanded(true) },
   },
     leaving ? null : h('div', { className: 'bt-panel-grip', role: 'separator', 'aria-orientation': 'vertical', 'aria-label': t('Resize panel'), onPointerDown: startResize }),
+    // What says the sheet came from below; a phone's rule draws it, nothing else sees it.
+    view === 'products' ? h('div', { className: 'bt-sheet-handle', 'aria-hidden': true }) : null,
     // On a phone the panel is full screen and already carries a close button in the corner
     // the desktop layout puts its own controls, so it adds none of its own.
     // Over the whole window while dragging: the cursor stays a resize cursor and the
@@ -532,10 +538,27 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
             h(DetailsDrawer, {
               sessionId: pane.id, startRenaming: pane.renaming, startTab: pane.tab, hasStrip,
               roster, actions: panelActions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages,
-            })))
+            }))))
 }
 
 export const BROWSER_CSS = `
+/* 全部产物 on a phone is a sheet from the foot rather than the column that stands beside the
+   conversation: full width, glued to the bottom, two rounded top corners and a handle that says
+   where it came from, as tall as its list asks for up to 85% of the screen and scrolling inside.
+   The desktop column is untouched -- every rule of the sheet is on the phone. */
+html[data-bt-mobile] .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;border-left:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3);overflow:hidden;animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)}
+html[data-bt-mobile] .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out .2s cubic-bezier(.4,0,1,1) forwards}
+html[data-bt-mobile] .bt-sheet-handle{flex:none;width:36px;height:4px;margin:8px auto 0;border-radius:999px;background:var(--bt-line-2)}
+/* The sheet's title bar reads left to right: the name from the edge, the close at the other one
+   (the panel's own arrow stays where a preview's head is). */
+html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:1;min-width:0;text-align:left}
+/* The scrim a sheet is dismissed with. It is drawn only where the sheet is: the desktop column has
+   no backdrop of its own. */
+.bt-panel-scrim{display:none}
+html[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.32);animation:bt-fade .2s ease-out}
+@keyframes bt-sheet-in{from{transform:translateY(100%)}to{transform:none}}
+@keyframes bt-sheet-out{from{transform:none}to{transform:translateY(100%)}}
+@media (prefers-reduced-motion:reduce){html[data-bt-mobile] .bt-panel[data-view=products]{animation:bt-fade .12s ease-out}}
 .bt-panel{--bt-panel-view-fade:${SPRING_SHAPE.duration}ms}
 .bt-ptabs{position:relative;display:flex;align-items:center;height:44px;flex:none;border-bottom:.5px solid var(--bt-line);padding:0 6px;gap:0;animation:bt-strip-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
 @keyframes bt-strip-in{from{height:0;opacity:0}}

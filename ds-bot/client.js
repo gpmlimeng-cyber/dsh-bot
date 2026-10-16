@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 5a4736e8
+// Source fingerprint: f17bfd17
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -5104,1484 +5104,6 @@ var FILE_PREVIEW_CSS = `
 .bt-products .bt-dcards{margin-left:0;grid-template-columns:minmax(0,1fr);gap:6px;padding:0 2px 6px}
 `;
 
-// src/client/deliverables.js
-var import_react7 = require("react");
-var import_dsh_client_ui_primitives2 = require("@deepseek-ai/dsh-client-ui-primitives");
-var basename = (path) => {
-  const at = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
-  return at === -1 ? path : path.slice(at + 1);
-};
-var PHONE_COPY_HINT = "/storage/emulated/0/DSH/deliverables/";
-var PICTURE_NAME = /\.(?:png|jpe?g|gif|webp|avif|bmp|ico|svg)$/iu;
-var isPicture = (name) => PICTURE_NAME.test(name);
-var readable = (answer) => answer?.ok === true && (answer.kind === "html" || answer.kind === "image" || answer.kind === "text" || answer.kind === "markdown");
-var openUrl = (file) => {
-  const query2 = new URLSearchParams({ sessionId: file.sessionId, seq: String(file.seq), index: String(file.index ?? 0) });
-  return `api/present.open?${query2}`;
-};
-var metaText = (file, name) => {
-  const trimmed2 = typeof file.description === "string" ? file.description.replace(/\s*(?:\([^()]*\)|（[^（）]*）)\s*$/u, "").trim() : "";
-  if (trimmed2 !== "") return trimmed2;
-  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toUpperCase();
-  return extension === "" ? t("File") : extension;
-};
-var TYPE_WORDS = {
-  md: "Markdown file",
-  markdown: "Markdown file",
-  mdx: "Markdown file",
-  png: "Image",
-  jpg: "Image",
-  jpeg: "Image",
-  gif: "Image",
-  webp: "Image",
-  avif: "Image",
-  bmp: "Image",
-  ico: "Image",
-  svg: "Image",
-  html: "HTML file",
-  htm: "HTML file",
-  pdf: "PDF file",
-  doc: "Word document",
-  docx: "Word document",
-  rtf: "Word document",
-  xls: "Spreadsheet",
-  xlsx: "Spreadsheet",
-  csv: "Spreadsheet",
-  ods: "Spreadsheet",
-  ppt: "Slides",
-  pptx: "Slides",
-  odp: "Slides",
-  mp4: "Video",
-  mov: "Video",
-  webm: "Video",
-  mkv: "Video",
-  avi: "Video",
-  mp3: "Audio",
-  wav: "Audio",
-  m4a: "Audio",
-  ogg: "Audio",
-  flac: "Audio",
-  zip: "Archive file",
-  tar: "Archive file",
-  gz: "Archive file",
-  tgz: "Archive file",
-  "7z": "Archive file",
-  rar: "Archive file",
-  js: "Code file",
-  mjs: "Code file",
-  cjs: "Code file",
-  ts: "Code file",
-  tsx: "Code file",
-  jsx: "Code file",
-  py: "Code file",
-  go: "Code file",
-  rs: "Code file",
-  java: "Code file",
-  c: "Code file",
-  h: "Code file",
-  cpp: "Code file",
-  css: "Code file",
-  json: "Code file",
-  yml: "Code file",
-  yaml: "Code file",
-  toml: "Code file",
-  sh: "Code file",
-  sql: "Code file",
-  xml: "Code file"
-};
-var wordFor = (path) => t(TYPE_WORDS[(0, import_dsh_client_ui_primitives2.fileExtension)(basename(path))] ?? "File");
-var EXT_ALIASES = { markdown: "MD", mdx: "MD", jpeg: "JPG", tiff: "TIF", "7z": "7Z" };
-var badgeOf = (name) => {
-  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toLowerCase();
-  if (extension === "") return (name.slice(0, 1) || "?").toUpperCase();
-  return EXT_ALIASES[extension] ?? extension.toUpperCase().slice(0, 4);
-};
-var IMAGE_EXTENSIONS = /* @__PURE__ */ new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "bmp", "ico", "svg", "tif", "tiff"]);
-var MEDIA_EXTENSIONS = /* @__PURE__ */ new Set(["mp4", "mov", "webm", "mkv", "avi", "mp3", "wav", "m4a", "ogg", "flac"]);
-var ARCHIVE_EXTENSIONS = /* @__PURE__ */ new Set(["zip", "tar", "gz", "tgz", "7z", "rar"]);
-var toneOf = (name) => {
-  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toLowerCase();
-  if (IMAGE_EXTENSIONS.has(extension)) return "image";
-  if (MEDIA_EXTENSIONS.has(extension)) return "media";
-  if (ARCHIVE_EXTENSIONS.has(extension) || extension === "") return "plain";
-  return "doc";
-};
-var WORKSPACES = [
-  [".dsh/bot/workspace", "DSH workspace"],
-  ["repos/dsh-bot/ds-bot", "DSBot"],
-  ["repos/dsh-bot", "DSBot"],
-  ["repos/DeepSeek-Bot", "DSBot"]
-];
-var workspaceOf = (path) => {
-  for (const [root, name] of WORKSPACES) {
-    if (path.includes(`${root}/`)) return t(name);
-  }
-  const at = path.lastIndexOf("/");
-  const folder = at === -1 ? "" : basename(path.slice(0, at));
-  return folder === "" ? t("Workspace") : folder;
-};
-var sizesOf = /* @__PURE__ */ new Map();
-var metaOf = (file) => {
-  const parts = [wordFor(file.path)];
-  const size = sizesOf.get(file.path);
-  if (Number.isFinite(size)) parts.push((0, import_dsh_client_ui_primitives2.fileSizeText)(size));
-  parts.push(workspaceOf(file.path));
-  return parts.join(" · ");
-};
-var exitsSentence = (shared2) => shared2 !== null && shared2 !== void 0 ? t("Could not open it here. The copy is at {path}", { path: shared2 }) : t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT });
-function useDeliverableExits(file, actions, onFailed) {
-  const [state, setState] = (0, import_react7.useState)("idle");
-  const failed = (next) => {
-    setState("failed");
-    onFailed?.({ shared: next });
-  };
-  const open = async () => {
-    if (state === "opening") return;
-    setState("opening");
-    onFailed?.(null);
-    try {
-      const chooser = globalThis.__dshOpenPath;
-      if (typeof chooser === "function") {
-        const copy3 = await actions?.shareFile?.(file.path);
-        const shared2 = copy3?.ok === true ? copy3.path : null;
-        if (shared2 !== null && chooser(shared2, "view") === true) {
-          setState("idle");
-          return;
-        }
-        failed(shared2);
-        return;
-      }
-      if (file.sessionId === void 0) {
-        failed(null);
-        return;
-      }
-      const response = await fetch(openUrl(file), { method: "POST", credentials: "same-origin" });
-      if (response.ok) setState("idle");
-      else failed(null);
-    } catch {
-      failed(null);
-    }
-  };
-  const copy2 = async () => {
-    onFailed?.(null);
-    try {
-      await navigator.clipboard?.writeText(file.path);
-      setState("copied");
-      setTimeout(() => setState((current) => current === "copied" ? "idle" : current), 1600);
-    } catch {
-      failed(null);
-    }
-  };
-  return { state, open, copy: copy2 };
-}
-function DeliverableActions({ file, actions, onFailed }) {
-  const exits = useDeliverableExits(file, actions, onFailed);
-  const [shown, setShown] = (0, import_react7.useState)(false);
-  return (0, import_react7.createElement)(ExitsMenu, {
-    exits,
-    shown,
-    setShown,
-    className: "bt-dcard-menu",
-    anchor: (0, import_react7.createElement)("button", {
-      type: "button",
-      className: "bt-dcard-btn",
-      "data-act": "more",
-      "aria-haspopup": "menu",
-      "aria-expanded": shown,
-      "aria-label": t("More"),
-      title: t("More"),
-      onClick: () => setShown((value) => !value)
-      // Lucide's three dots at the size the shell's own controls draw: the glyph brings its
-      // box, so this control passes no size and cannot drift from the bar's identical anchor.
-    }, (0, import_react7.createElement)(LucideEllipsisIcon))
-  });
-}
-var exitItems = (state) => [
-  { id: "open", icon: (0, import_react7.createElement)(LucideExternalLinkIcon), label: state === "opening" ? t("Opening…") : t("Open with another app") },
-  { id: "copy", icon: state === "copied" ? (0, import_react7.createElement)(LucideCheckIcon) : (0, import_react7.createElement)(LucideCopyIcon), label: state === "copied" ? t("Copied") : t("Copy path") }
-];
-function ExitsMenu({ exits, shown, setShown, className, anchor, extra = null, onExtra }) {
-  return (0, import_react7.createElement)(import_dsh_client_ui_primitives2.Menu, {
-    className,
-    open: shown,
-    autoFocus: true,
-    portal: true,
-    align: "end",
-    onClose: () => setShown(false),
-    anchor,
-    items: [...extra === null ? [] : [extra], ...exitItems(exits.state)],
-    onSelect: (id) => {
-      setShown(false);
-      if (id === "copy") void exits.copy();
-      else if (id === "open") void exits.open();
-      else if (extra !== null && extra.id === id) onExtra?.();
-    }
-  });
-}
-function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
-  const exits = useDeliverableExits(file, actions, onFailed);
-  const [shown, setShown] = (0, import_react7.useState)(false);
-  return (0, import_react7.createElement)(ExitsMenu, {
-    exits,
-    shown,
-    setShown,
-    className: "bt-preview-menu",
-    extra,
-    onExtra,
-    anchor: (0, import_react7.createElement)("button", {
-      type: "button",
-      className: "bt-preview-more",
-      "aria-haspopup": "menu",
-      "aria-expanded": shown,
-      "aria-label": t("More"),
-      title: t("More"),
-      onClick: () => setShown((value) => !value)
-      // The same Lucide dots as the card's control: one glyph, two anchors, one box.
-    }, (0, import_react7.createElement)(LucideEllipsisIcon))
-  });
-}
-function DeliverableCard({ file, actions, meta, role }) {
-  const name = basename(file.path);
-  const [failure, setFailure] = (0, import_react7.useState)(null);
-  const preview = () => {
-    if (isPicture(name)) actions?.previewImage?.(file);
-    else actions?.previewFile?.(file);
-  };
-  return (0, import_react7.createElement)(
-    "div",
-    { className: "bt-dcard-wrap", role },
-    (0, import_react7.createElement)(
-      "div",
-      { className: "bt-dcard" },
-      (0, import_react7.createElement)("button", {
-        type: "button",
-        className: "bt-dcard-hit",
-        "aria-label": `${t("Preview")} ${name}`,
-        onClick: preview
-      }),
-      (0, import_react7.createElement)("span", { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, "aria-hidden": true }, (0, import_react7.createElement)("span", { className: "bt-dcard-type" }, badgeOf(name))),
-      (0, import_react7.createElement)(
-        "span",
-        { className: "bt-dcard-copy" },
-        (0, import_react7.createElement)("span", { className: "bt-dcard-name" }, name),
-        (0, import_react7.createElement)("span", { className: "bt-dcard-desc" }, meta ?? metaText(file, name))
-      ),
-      (0, import_react7.createElement)("span", { className: "bt-dcard-acts" }, (0, import_react7.createElement)(DeliverableActions, { file, actions, onFailed: setFailure }))
-    ),
-    failure ? (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
-  );
-}
-function DeliverableCards({ deliverables, actions, metaOf: metaOf2 = null, list = false }) {
-  const files = (deliverables ?? []).flatMap((entry) => (entry?.files ?? []).map((file, position) => ({
-    path: file?.path,
-    description: typeof file?.description === "string" ? file.description : void 0,
-    // A file's own coordinates when the source has them (DSH's turn record does), the
-    // position among its neighbours otherwise (the host's group replies do not).
-    at: file?.at,
-    sessionId: entry.sessionId,
-    seq: entry.seq,
-    index: Number.isInteger(file?.index) ? file.index : position
-  }))).filter((file) => typeof file.path === "string" && file.path !== "");
-  if (files.length === 0) return null;
-  return (0, import_react7.createElement)(
-    "div",
-    { className: "bt-dcards", role: list ? "list" : void 0 },
-    files.map((file) => (0, import_react7.createElement)(DeliverableCard, {
-      // The same file can be handed over twice; a row without coordinates is keyed by its
-      // path, which is what makes it one row.
-      key: file.sessionId === void 0 ? file.path : `${file.sessionId}:${file.seq}:${file.index}`,
-      file,
-      actions,
-      meta: metaOf2?.(file),
-      role: list ? "listitem" : void 0
-    }))
-  );
-}
-var FRAME_POLICY = "default-src 'none'; style-src 'unsafe-inline'; img-src data:";
-var frameDocument = (text) => `<!doctype html><meta http-equiv="Content-Security-Policy" content="${FRAME_POLICY}">${text}`;
-function DeliveredPreview({ file, actions, onClose }) {
-  const [read, setRead] = (0, import_react7.useState)(null);
-  const [state, setState] = (0, import_react7.useState)("reading");
-  const [source, setSource] = (0, import_react7.useState)(false);
-  const [failure, setFailure] = (0, import_react7.useState)(null);
-  const name = basename(file.path);
-  const ask = (0, import_react7.useRef)(actions);
-  ask.current = actions;
-  (0, import_react7.useEffect)(() => {
-    let live = true;
-    setRead(null);
-    setState("reading");
-    setSource(false);
-    void (async () => {
-      try {
-        const answer = await ask.current?.presentFile?.(file.path);
-        if (!live) return;
-        if (!readable(answer)) {
-          setState("failed");
-          return;
-        }
-        setRead(answer);
-        setState("shown");
-      } catch {
-        if (live) setState("failed");
-      }
-    })();
-    return () => {
-      live = false;
-    };
-  }, [file.path]);
-  const body = state === "reading" ? (0, import_react7.createElement)("div", { className: "bt-preview-body bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…"))) : state === "failed" ? (0, import_react7.createElement)(
-    "div",
-    { className: "bt-preview-body bt-fp-empty" },
-    (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("This file has no preview")),
-    (0, import_react7.createElement)("div", { className: "bt-fp-empty-text", role: "status" }, t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT }))
-  ) : read.kind === "html" && !source ? (0, import_react7.createElement)("iframe", { className: "bt-preview-frame", sandbox: "", srcDoc: frameDocument(read.text ?? ""), title: name }) : read.kind === "image" ? (0, import_react7.createElement)("div", { className: "bt-preview-body bt-fp-image" }, (0, import_react7.createElement)("img", { src: `data:${read.mime ?? "application/octet-stream"};base64,${read.base64 ?? ""}`, alt: name })) : (0, import_react7.createElement)("div", { className: "bt-preview-body" }, (0, import_react7.createElement)(FileView, { file: source ? { ...read, kind: "text" } : read }));
-  const toggle = state === "shown" && read.kind === "html" ? { id: "source", label: source ? t("Preview") : t("Source") } : null;
-  return (0, import_react7.createElement)(
-    import_react7.Fragment,
-    null,
-    (0, import_react7.createElement)(
-      PreviewHead,
-      { name, onClose },
-      (0, import_react7.createElement)(PreviewMenu, { file, actions, onFailed: setFailure, extra: toggle, onExtra: () => setSource((current) => !current) })
-    ),
-    body,
-    // A refusal is the one thing that still needs a line of its own under the file.
-    failure ? (0, import_react7.createElement)(
-      "div",
-      { className: "bt-preview-acts" },
-      (0, import_react7.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared))
-    ) : null
-  );
-}
-function PreviewHead({ name, onClose, children }) {
-  return (0, import_react7.createElement)(
-    "div",
-    { className: "bt-preview-head" },
-    (0, import_react7.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react7.createElement)(LucideChevronLeftIcon)),
-    (0, import_react7.createElement)("span", { className: "bt-preview-name" }, name),
-    children
-  );
-}
-function DeliveredList({ actions, onClose }) {
-  const [state, setState] = (0, import_react7.useState)("reading");
-  const [files, setFiles] = (0, import_react7.useState)([]);
-  const [, bumpSizes] = (0, import_react7.useState)(0);
-  const ask = (0, import_react7.useRef)(actions);
-  ask.current = actions;
-  (0, import_react7.useEffect)(() => {
-    let live = true;
-    void (async () => {
-      try {
-        const answer = await ask.current?.listDelivered?.();
-        if (!live) return;
-        if (!Array.isArray(answer?.files)) {
-          setState("failed");
-          return;
-        }
-        setFiles(answer.files.filter((entry) => typeof entry?.path === "string" && entry.path !== ""));
-        setState("shown");
-      } catch {
-        if (live) setState("failed");
-      }
-    })();
-    return () => {
-      live = false;
-    };
-  }, []);
-  (0, import_react7.useEffect)(() => {
-    let live = true;
-    void (async () => {
-      for (const entry of files) {
-        if (sizesOf.has(entry.path)) continue;
-        let answer = null;
-        try {
-          answer = await ask.current?.presentFile?.(entry.path);
-        } catch {
-          answer = null;
-        }
-        if (!live) return;
-        sizesOf.set(entry.path, Number.isFinite(answer?.size) ? answer.size : null);
-        bumpSizes((count) => count + 1);
-      }
-    })();
-    return () => {
-      live = false;
-    };
-  }, [files]);
-  const rows = [{ files: files.map((entry) => ({ path: entry.path, at: entry.at })) }];
-  const body = state === "reading" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…")))) : state === "failed" ? (0, import_react7.createElement)("div", { className: "bt-products" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty" }, (0, import_react7.createElement)("div", { className: "bt-fp-empty-title", role: "status" }, t("This list could not be read")))) : (0, import_react7.createElement)(
-    "div",
-    { className: "bt-products" },
-    // The list is what this host saw delivered, and it is not backfilled: a short
-    // list is the truth rather than a bug, so it says so above itself.
-    (0, import_react7.createElement)("div", { className: "bt-prod-note" }, t("Only files delivered since this run started are listed.")),
-    files.length === 0 ? (0, import_react7.createElement)(
-      "div",
-      { className: "bt-fp-empty" },
-      (0, import_react7.createElement)("div", { className: "bt-fp-empty-title" }, t("No deliverables yet")),
-      (0, import_react7.createElement)("div", { className: "bt-fp-empty-text" }, t("Files a Bot hands over are listed here."))
-    ) : (0, import_react7.createElement)(DeliverableCards, { deliverables: rows, actions, list: true, metaOf })
-  );
-  return (0, import_react7.createElement)(
-    import_react7.Fragment,
-    null,
-    (0, import_react7.createElement)(PreviewHead, { name: t("All deliverables"), onClose }),
-    body
-  );
-}
-function DeliveredLightbox({ file, actions, onClose, onUnreadable }) {
-  const [src, setSrc] = (0, import_react7.useState)(null);
-  const name = basename(file.path);
-  const ask = (0, import_react7.useRef)(actions);
-  ask.current = actions;
-  const fallback = (0, import_react7.useRef)(onUnreadable);
-  fallback.current = onUnreadable;
-  (0, import_react7.useEffect)(() => {
-    let live = true;
-    void (async () => {
-      try {
-        const answer = await ask.current?.presentFile?.(file.path);
-        if (!live) return;
-        if (answer?.ok === true && answer.kind === "image") {
-          setSrc(`data:${answer.mime ?? "application/octet-stream"};base64,${answer.base64 ?? ""}`);
-          return;
-        }
-        fallback.current?.();
-      } catch {
-        if (live) fallback.current?.();
-      }
-    })();
-    return () => {
-      live = false;
-    };
-  }, [file.path]);
-  (0, import_react7.useEffect)(() => () => {
-    const active = document.activeElement;
-    if (active !== null && active !== document.body) return;
-    const again = [...document.querySelectorAll(".bt-dcard-hit")].find((node) => (node.getAttribute("aria-label") ?? "").endsWith(` ${name}`));
-    if (again instanceof HTMLElement) again.focus();
-  }, [name]);
-  if (src === null || typeof import_dsh_client_ui_primitives2.ImageLightbox !== "function") return null;
-  return (0, import_react7.createElement)(import_dsh_client_ui_primitives2.ImageLightbox, {
-    src,
-    alt: name,
-    labels: { dialog: t("Image preview"), close: t("Close preview") },
-    onClose
-  });
-}
-
-// src/client/turn-reasoning.js
-function turnReasoning(steps, current) {
-  const members = steps.length ? steps : [current];
-  if (members.find((step) => stepReasoning(step) !== "")?.step !== current.step) return "";
-  return members.filter((step) => !thinkingLive(step)).map(stepReasoning).filter(Boolean).join("\n\n");
-}
-var texts = (step) => step.blocks.filter((block) => block.kind === "text" && block.text.trim() !== "");
-var thinkingLive = (step) => step.status === "running" && texts(step).length === 0 && step.blocks.some((block) => block.kind === "reasoning");
-var stepReasoning = (step) => step.blocks.filter((block) => block.kind === "reasoning").map((block) => block.text).join("\n").trim();
-
-// src/client/cells.js
-var import_react8 = require("react");
-var import_react_dom = require("react-dom");
-var import_dsh_client_ui_primitives3 = require("@deepseek-ai/dsh-client-ui-primitives");
-var mdLabels2 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
-function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions }) {
-  const onClick = (event) => {
-    const target = mentionTarget(event);
-    if (target === null) return;
-    event.preventDefault();
-    event.stopPropagation();
-    actions.openSession(target);
-  };
-  const reactions = useUi ? useUi((state) => msgKey ? state.reactions?.[msgKey] ?? null : null) : null;
-  return (0, import_react8.createElement)(
-    "div",
-    { className: "bt-astack", "data-lead": lead ? "" : void 0, onClickCapture: onClick },
-    texts2.map((text, index) => {
-      const key = msgKey ? `${msgKey}:${index}` : void 0;
-      const picked = key ? reactions?.[index] ?? [] : [];
-      const last = index === texts2.length - 1;
-      const live = streaming && last;
-      return (0, import_react8.createElement)(
-        "div",
-        { key: index, className: "bt-msg" },
-        (0, import_react8.createElement)(
-          "div",
-          { className: "bt-msg-line" },
-          lead && last ? lead : null,
-          (0, import_react8.createElement)(
-            "div",
-            { className: "bt-bubble" },
-            (0, import_react8.createElement)(import_dsh_client_ui_primitives3.MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels2(), variant: "compact", fileMentions: mentions })
-          ),
-          live ? null : (0, import_react8.createElement)(MessageTools, { text, name: roster.byId[selfId]?.name ?? t("Bot"), sessionId, react: key ? (emoji) => actions.toggleReaction(msgKey, index, emoji) : void 0, actions })
-        ),
-        picked.length ? (0, import_react8.createElement)("div", { className: "bt-reacts" }, picked.map((emoji) => (0, import_react8.createElement)("button", {
-          key: emoji,
-          type: "button",
-          className: "bt-react",
-          "aria-label": t("Remove reaction {emoji}", { emoji }),
-          onClick: () => actions.toggleReaction(msgKey, index, emoji)
-        }, emoji))) : null
-      );
-    })
-  );
-}
-var REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
-function useDismiss(open, close, refs) {
-  (0, import_react8.useEffect)(() => {
-    if (!open) return void 0;
-    const onDown = (event) => {
-      if (refs.some((ref) => ref.current?.contains(event.target))) return;
-      close();
-    };
-    const onKey = (event) => {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        close();
-      }
-    };
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey, true);
-    return () => {
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey, true);
-    };
-  }, [open]);
-}
-function MessageTools({ text, name, sessionId, react, actions }) {
-  const [panel, setPanel] = (0, import_react8.useState)(null);
-  const [place, setPlace] = (0, import_react8.useState)(null);
-  const [copied, setCopied] = (0, import_react8.useState)(false);
-  const tools = (0, import_react8.useRef)(null);
-  const pop = (0, import_react8.useRef)(null);
-  const close = () => setPanel(null);
-  useDismiss(panel !== null, close, [tools, pop]);
-  const open = (kind, event) => {
-    if (panel === kind) {
-      close();
-      return;
-    }
-    const rect = event.currentTarget.getBoundingClientRect();
-    const below = rect.bottom + 220 < window.innerHeight;
-    setPlace(kind === "react" ? { left: rect.left + rect.width / 2, top: rect.top - 6, "--bt-origin": "bottom center" } : { left: Math.min(rect.left, window.innerWidth - 208), ...below ? { top: rect.bottom + 4 } : { bottom: window.innerHeight - rect.top + 4, "--bt-origin": "bottom left" } });
-    setPanel(kind);
-  };
-  const copy2 = () => {
-    void navigator.clipboard?.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1e3);
-    });
-  };
-  const download2 = () => {
-    const url = URL.createObjectURL(new Blob([text], { type: "text/markdown" }));
-    const link = Object.assign(document.createElement("a"), { href: url, download: `${name}-message.md` });
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1e3);
-  };
-  const item = (label, Icon, run) => (0, import_react8.createElement)("button", { key: label, type: "button", role: "menuitem", onClick: () => {
-    close();
-    run();
-  } }, (0, import_react8.createElement)(Icon), label);
-  return (0, import_react8.createElement)(
-    "div",
-    { ref: tools, className: "bt-tools", "data-open": panel !== null || void 0 },
-    react ? (0, import_react8.createElement)("button", { type: "button", className: "bt-tool", "aria-label": t("Add reaction"), title: t("Add reaction"), "aria-expanded": panel === "react", onClick: (event) => open("react", event) }, (0, import_react8.createElement)(SmileIcon)) : null,
-    sessionId ? (0, import_react8.createElement)("button", { type: "button", className: "bt-tool", "aria-label": t("Reply"), title: t("Reply"), onClick: () => actions.quote(sessionId, text) }, (0, import_react8.createElement)(ReplyIcon)) : null,
-    (0, import_react8.createElement)("button", { type: "button", className: "bt-tool", "aria-label": t("More message actions"), title: t("More"), "aria-haspopup": "menu", "aria-expanded": panel === "more", onClick: (event) => open("more", event) }, copied ? (0, import_react8.createElement)(CheckIcon) : (0, import_react8.createElement)(DotsIcon)),
-    panel === "react" ? (0, import_react_dom.createPortal)((0, import_react8.createElement)(
-      "div",
-      { ref: pop, className: "bt-react-strip", role: "menu", "aria-label": t("Reactions"), style: place },
-      REACTIONS.map((emoji) => (0, import_react8.createElement)("button", { key: emoji, type: "button", role: "menuitem", "aria-label": emoji, onClick: () => {
-        close();
-        react(emoji);
-      } }, emoji))
-    ), document.body) : null,
-    panel === "more" ? (0, import_react_dom.createPortal)((0, import_react8.createElement)(
-      "div",
-      { ref: pop, className: "bt-menu", role: "menu", "aria-label": t("Message actions"), style: place },
-      item(t("Copy"), CopyIcon, copy2),
-      item(t("Download"), DownloadIcon, download2)
-    ), document.body) : null
-  );
-}
-function ThinkingRow({ text }) {
-  return (0, import_react8.createElement)(
-    "details",
-    { className: "bt-think" },
-    (0, import_react8.createElement)("summary", null, t("Thought it through")),
-    (0, import_react8.createElement)("div", { className: "bt-think-text" }, text)
-  );
-}
-function useFileMentions({ node, openFile, fileMentions, useTurnData }) {
-  const tail = useTurnData?.("turn-tail");
-  const location2 = node.location;
-  const turn = location2?.kind === "turn" || location2?.kind === "step" ? location2.turn : void 0;
-  const seq = node.data.finalNode?.seq;
-  return (0, import_react8.useMemo)(() => {
-    if (typeof fileMentions !== "function" || turn?.status !== "closed" || seq === void 0) return void 0;
-    return tail?.closing?.finalNode.seq === seq ? fileMentions({ turn, seq, openFile }) : void 0;
-  }, [fileMentions, openFile, seq, tail, turn]);
-}
-function AssistantCell({ node, groupPart, sessionId, openFile, fileMentions, useTurnData, useRoster, useUi, useTurnSteps, useTurnContext, actions }) {
-  const roster = useRoster((value) => value);
-  const data = node.data;
-  const steps = useTurnSteps(String(data.turn));
-  const contexts = useTurnContext(String(data.turn));
-  const mentions = useFileMentions({ node, openFile, fileMentions, useTurnData });
-  const hidden = Boolean(roster.roomsById[sessionId]) || isHiddenTurn(roster, sessionId, data.turn);
-  const texts2 = groupPart === "reasoning" ? [] : data.blocks.filter((block) => block.kind === "text" && block.text.trim() !== "").map((block) => block.text);
-  const running = data.status === "running";
-  useLiveNote(actions, sessionId, `text:${node.key ?? data.seq}`, !hidden && running && texts2.length > 0 ? { text: true } : null);
-  if (hidden) return null;
-  const reasoning = groupPart === "response" ? "" : turnReasoning(steps, data);
-  const relays = relayPart(data, groupPart) ? relaysBefore(contexts, steps, data) : [];
-  if (texts2.length === 0 && !reasoning && relays.length === 0) return null;
-  const selfId = roster.byId[sessionId]?.id ?? sessionId;
-  return (0, import_react8.createElement)(
-    import_react8.Fragment,
-    null,
-    relays.map((relay) => {
-      const source = relay.source;
-      const sender = roster.byId[source.senderSessionId] ?? { id: source.senderSessionId, name: source.senderName ?? t("a Bot"), color: "gray" };
-      return (0, import_react8.createElement)(EventLine, {
-        key: relay.seq,
-        prefix: source.role === "stopped" ? t("Stopped by") : source.role === "reply" ? t("Reply from") : t("Message from"),
-        bots: [sender],
-        preview: stripHeader(contentText(relay.content)),
-        onOpen: () => {
-          if (sender.id) actions.openExchange(selfId, sender.id);
-        },
-        whole: true
-      });
-    }),
-    reasoning ? (0, import_react8.createElement)(ThinkingRow, { text: reasoning }) : null,
-    texts2.length ? (0, import_react8.createElement)(Bubbles, { texts: texts2, roster, selfId, actions, streaming: running, sessionId, msgKey: `${sessionId}:${data.turn}:${node.key ?? data.seq ?? ""}`, useUi, mentions }) : null
-  );
-}
-function EventLine({ prefix, bots, joiner = t("and"), onOpen, whole = false, preview }) {
-  if (whole && bots.length === 1) {
-    const line = typeof preview === "string" ? preview.replace(/\s+/g, " ").trim() : "";
-    return (0, import_react8.createElement)(
-      "div",
-      { className: "bt-event" },
-      (0, import_react8.createElement)(
-        "button",
-        { type: "button", className: "bt-event-whole", title: bots[0].name, onClick: () => onOpen?.(bots[0]) },
-        (0, import_react8.createElement)("span", null, prefix),
-        (0, import_react8.createElement)(BotMark, { bot: bots[0], size: 16 }),
-        (0, import_react8.createElement)("span", { className: "bt-event-name" }, bots[0].name),
-        line !== "" ? (0, import_react8.createElement)("span", { className: "bt-event-preview" }, line) : null
-      )
-    );
-  }
-  const parts = [];
-  parts.push((0, import_react8.createElement)("span", { key: "p" }, prefix));
-  bots.forEach((bot, index) => {
-    if (index > 0) parts.push((0, import_react8.createElement)("span", { key: `j${index}` }, joiner));
-    parts.push((0, import_react8.createElement)(
-      "button",
-      { key: bot.id ?? index, type: "button", onClick: () => onOpen?.(bot) },
-      (0, import_react8.createElement)(BotMark, { bot, size: 16 }),
-      bot.name
-    ));
-  });
-  return (0, import_react8.createElement)("div", { className: "bt-event" }, parts);
-}
-function GroupMessage({ bot, text, texts: texts2 = [text], room: room2, roster, actions, msgKey, useUi, deliverables }) {
-  const lead = (0, import_react8.createElement)(
-    "button",
-    { type: "button", className: "bt-lead", "aria-label": t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
-    (0, import_react8.createElement)(BotMark, { bot, size: 22 })
-  );
-  return (0, import_react8.createElement)(
-    "div",
-    { className: "bt-group-msg" },
-    (0, import_react8.createElement)(
-      "span",
-      { className: "bt-group-name", style: { color: inkText(colorOf(bot)) } },
-      bot.name,
-      room2?.admin === bot.id ? (0, import_react8.createElement)("span", { className: "bt-group-role" }, t("Admin")) : null
-    ),
-    (0, import_react8.createElement)(Bubbles, { texts: texts2, roster, selfId: bot.id, actions, sessionId: room2?.id, msgKey, useUi, lead }),
-    (0, import_react8.createElement)(DeliverableCards, { deliverables, actions })
-  );
-}
-function stackReplies(replies) {
-  const items = [];
-  replies.forEach((reply, index) => {
-    const last = items.at(-1);
-    if (reply.kind === void 0 && last?.reply.kind === void 0 && last?.reply.botId === reply.botId) {
-      last.texts.push(reply.text);
-      if (reply.deliverables) last.deliverables = [...last.deliverables ?? [], ...reply.deliverables];
-    } else items.push({ reply, index, texts: reply.kind === void 0 ? [reply.text] : [], deliverables: reply.deliverables });
-  });
-  return items;
-}
-function GroupEvent({ prefix, room: room2, name, roster, actions }) {
-  return (0, import_react8.createElement)(
-    "div",
-    { className: "bt-event" },
-    (0, import_react8.createElement)("span", null, prefix),
-    room2 ? (0, import_react8.createElement)("button", { type: "button", onClick: () => actions.openSession(room2.id) }, (0, import_react8.createElement)(RoomAvatar, { room: room2, roster, size: 16 }), room2.name) : name ? (0, import_react8.createElement)("span", null, name) : null
-  );
-}
-function MemoryEvent({ sessionId, scope, result, roster, actions, findBot }) {
-  if (!/^(Saved to|Updated in|Removed from) /.test(result)) return null;
-  const self = roster.byId[sessionId];
-  const team = /^(team|团队|共享)$/i.test(String(scope ?? "").trim());
-  const other = team || !scope ? void 0 : findBot(scope);
-  const target = other && other.id !== self?.id ? other : self;
-  if (!target) return null;
-  const label = team ? t("Team memory updated") : target === self ? t("Memory updated") : t("Updated {name}'s memory", { name: target.name });
-  return (0, import_react8.createElement)(
-    "div",
-    { className: "bt-event" },
-    (0, import_react8.createElement)("button", { type: "button", title: result, onClick: () => actions.openMemory(target.id) }, (0, import_react8.createElement)(MemoryIcon), label)
-  );
-}
-function PartLine({ time }) {
-  return (0, import_react8.createElement)("div", { className: "bt-part-line", role: "separator" }, Number.isFinite(time) ? (0, import_react8.createElement)("span", null, dayLabel(time)) : null);
-}
-var scrollParent = (node) => {
-  for (let at = node.parentElement; at; at = at.parentElement) {
-    if (/(auto|scroll)/.test(getComputedStyle(at).overflowY)) return at;
-  }
-  return null;
-};
-function EarlierParts({ sessionId, roster, actions }) {
-  const [view, setView] = (0, import_react8.useState)({ items: [], cursor: void 0, loading: true, failed: false, startedAt: null });
-  const top = (0, import_react8.useRef)(null);
-  const busy = (0, import_react8.useRef)(false);
-  const alive = (0, import_react8.useRef)(true);
-  const restore = (0, import_react8.useRef)(null);
-  const load = (cursor) => {
-    if (busy.current) return;
-    busy.current = true;
-    setView((current) => ({ ...current, loading: true, failed: false }));
-    actions.earlier(sessionId, cursor).then((page) => {
-      busy.current = false;
-      if (!alive.current) return;
-      const scroller = top.current && scrollParent(top.current);
-      if (scroller) restore.current = { scroller, fromEnd: scroller.scrollHeight - scroller.scrollTop };
-      setView((current) => ({ items: [...page.items, ...current.items], cursor: page.cursor, loading: false, failed: false, startedAt: page.startedAt ?? current.startedAt }));
-    }, () => {
-      busy.current = false;
-      if (alive.current) setView((current) => ({ ...current, loading: false, failed: true }));
-    });
-  };
-  (0, import_react8.useEffect)(() => {
-    alive.current = true;
-    load(void 0);
-    return () => {
-      alive.current = false;
-    };
-  }, [sessionId]);
-  (0, import_react8.useLayoutEffect)(() => {
-    const pending = restore.current;
-    restore.current = null;
-    if (pending) pending.scroller.scrollTop = pending.scroller.scrollHeight - pending.fromEnd;
-  }, [view.items]);
-  (0, import_react8.useEffect)(() => {
-    const node = top.current;
-    if (!node || view.loading || view.failed || !view.cursor || typeof IntersectionObserver !== "function") return void 0;
-    const observer = new IntersectionObserver((entries2) => {
-      if (entries2.some((entry) => entry.isIntersecting)) load(view.cursor);
-    }, { root: scrollParent(node), rootMargin: "600px 0px 0px 0px" });
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [view.cursor, view.loading, view.failed]);
-  const selfId = roster.byId[sessionId]?.id;
-  const rows = [];
-  for (const item of view.items) {
-    const last = rows.at(-1);
-    if (item.kind === "bot" && last?.kind === "bot") last.texts.push(item.text);
-    else rows.push(item.kind === "bot" ? { kind: "bot", texts: [item.text] } : item);
-  }
-  return (0, import_react8.createElement)(
-    "div",
-    { className: "bt-earlier", role: "feed", "aria-label": t("Earlier messages"), "aria-busy": view.loading },
-    (0, import_react8.createElement)(
-      "div",
-      { ref: top, className: "bt-earlier-top" },
-      view.loading ? (0, import_react8.createElement)(Shimmer, null, t("Loading earlier messages…")) : view.failed ? (0, import_react8.createElement)("button", { type: "button", className: "bt-soft", onClick: () => load(view.cursor) }, t("Couldn’t load earlier messages · Retry")) : view.cursor ? (0, import_react8.createElement)("button", { type: "button", className: "bt-soft", onClick: () => load(view.cursor) }, t("Load earlier")) : null
-    ),
-    rows.map((row, index) => {
-      const key = rows.length - index;
-      switch (row.kind) {
-        case "divider":
-          return (0, import_react8.createElement)(PartLine, { key, time: row.time });
-        case "user":
-          return (0, import_react8.createElement)("div", { key, className: "bt-urow" }, (0, import_react8.createElement)(
-            "div",
-            { className: "bt-ububble" },
-            row.text ? (0, import_react8.createElement)(import_dsh_client_ui_primitives3.MarkdownText, { text: row.text, labels: mdLabels2(), variant: "compact" }) : null,
-            row.images ? (0, import_react8.createElement)("span", { className: "bt-uimages" }, row.images === 1 ? t("1 image") : t("{count} images", { count: row.images })) : null
-          ));
-        case "answer":
-          return (0, import_react8.createElement)(AnsweredCell, { key, node: { data: row } });
-        case "bot":
-          return (0, import_react8.createElement)(Bubbles, { key, texts: row.texts, roster, selfId, actions });
-        case "event": {
-          if (row.role === "report") return (0, import_react8.createElement)(GroupEvent, { key, prefix: t("Replies from"), room: roster.roomsById[row.roomId], name: t("a group chat"), roster, actions });
-          const other = roster.byId[row.botId] ?? { id: row.botId, name: row.name ?? t("a Bot"), color: "gray" };
-          const prefix = { stopped: t("Stopped by"), reply: t("Reply from") }[row.role] ?? t("Message from");
-          return (0, import_react8.createElement)(EventLine, { key, prefix, bots: [other], onOpen: () => {
-            if (selfId && other.id) actions.openExchange(selfId, other.id);
-          }, whole: true });
-        }
-        default:
-          return null;
-      }
-    }),
-    (0, import_react8.createElement)(PartLine, { time: view.startedAt })
-  );
-}
-function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnClock, useUi, actions }) {
-  const roster = useRoster((value) => value);
-  const data = node.data;
-  const source = data.source !== null && typeof data.source === "object" ? data.source : {};
-  const selfId = roster.byId[sessionId]?.id ?? sessionId;
-  const deferred = source.kind === "bot" && source.deferred === true;
-  const relayed = isRelayContext(data);
-  const turn = node.location?.turn?.turn ?? data.turn;
-  (0, import_react8.useLayoutEffect)(() => {
-    if (relayed) actions.noteTurnPeer(sessionId, turn, source.senderSessionId);
-  }, [relayed, sessionId, turn, source.senderSessionId]);
-  const order = useSessions((list) => {
-    const outline = list.projectionsBySession?.[sessionId]?.values?.turnOutline ?? list.byId[sessionId]?.projectionValues?.turnOutline;
-    return Array.isArray(outline) ? outline.map((entry) => entry.turn).join(",") : "";
-  });
-  const peers = useTurnClock((state) => {
-    if (!relayed) return "";
-    const turns = state[sessionId] ?? {};
-    return Object.keys(turns).filter((key) => turns[key].peer !== void 0).map((key) => `${key}:${turns[key].peer}`).join(",");
-  });
-  const visit = useUi((state) => state.visits?.[sessionId]);
-  const hiddenTurns = roster.exchangeTurns[sessionId];
-  const unreadOpening = useTurnClock((state) => {
-    const first = openingTurn(state[sessionId], order, hiddenTurns);
-    return first?.turn === turn && unseenSince(visit, first.start) ? clockLabel(first.start) : "";
-  });
-  const body = triggerBody();
-  return unreadOpening ? (0, import_react8.createElement)(import_react8.Fragment, null, (0, import_react8.createElement)("div", { className: "bt-open-new" }, (0, import_react8.createElement)(NewDivider), (0, import_react8.createElement)("div", { className: "bt-time-sep", role: "separator" }, unreadOpening)), body) : body;
-  function triggerBody() {
-    if (source.kind === "bot") {
-      if (source.handoff === true) return roster.roomsById[sessionId] ? null : (0, import_react8.createElement)(EarlierParts, { sessionId, roster, actions });
-      if (source.role === "kickoff" || source.role === "room") return null;
-      if (source.role === "secret" || deferred) return null;
-      if (source.role === "post") {
-        if (source.failed !== void 0 || source.resumed === true || source.stopped === true) return null;
-        const room2 = roster.roomsById[sessionId];
-        const poster = roster.byId[source.senderSessionId] ?? { id: source.senderSessionId, name: source.senderName ?? t("a Bot"), color: "gray" };
-        return (0, import_react8.createElement)(GroupMessage, { bot: poster, text: stripHeader(contentText(data.content)), room: room2, roster, actions, msgKey: `${sessionId}:${data.turn}:post`, useUi });
-      }
-      if (source.role === "report") {
-        return (0, import_react8.createElement)(GroupEvent, { prefix: t("Replies from"), room: roster.roomsById[source.roomId], name: t("a group chat"), roster, actions });
-      }
-      if (source.role === "resume" || source.resumed === true) return (0, import_react8.createElement)("div", { className: "bt-event" }, t("Picked up its work after a restart"));
-      if (source.role === "retry" || source.retried === true) return (0, import_react8.createElement)("div", { className: "bt-event" }, t("Asked to make the tool call it wrote as text"));
-      const run = relayed ? commRunOf(
-        order.split(",").filter(Boolean).map(Number),
-        Object.fromEntries(peers.split(",").filter(Boolean).map((pair) => [Number(pair.slice(0, pair.indexOf(":"))), pair.slice(pair.indexOf(":") + 1)])),
-        turn,
-        hiddenTurns
-      ) : null;
-      if (run === "folded") return null;
-      const sender = roster.byId[source.senderSessionId] ?? { id: source.senderSessionId, name: source.senderName ?? t("a Bot"), color: "gray" };
-      const count = run?.count ?? (isHiddenTurn(roster, sessionId, turn) ? 2 : 1);
-      const bots = [sender];
-      for (const peer of (run?.peerIds ?? []).map((id) => roster.byId[id]).filter(Boolean)) {
-        if (!bots.some((bot) => bot.id === peer.id)) bots.push(peer);
-      }
-      return (0, import_react8.createElement)(EventLine, {
-        prefix: source.role === "stopped" ? t("Stopped by") : count > 1 ? t("{count} messages with", { count }) : t("Message from"),
-        bots,
-        preview: stripHeader(contentText(data.content)),
-        onOpen: (bot) => actions.openExchange(selfId, bot.id),
-        whole: true
-      });
-    }
-    if (source.kind === "schedule") {
-      const prompts = reminderPrompts(contentText(data.content));
-      return (0, import_react8.createElement)("div", { className: "bt-event" }, prompts.length > 0 ? t("Scheduled task: {text}", { text: prompts.join(" · ").slice(0, 80) }) : t("Routine started"));
-    }
-    if (source.kind === "user-question-reply" || source.kind === "goal") return null;
-    return (0, import_react8.createElement)("div", { className: "bt-event" }, contentText(data.content).slice(0, 80) || t("Update"));
-  }
-}
-function NewDivider() {
-  return (0, import_react8.createElement)("div", { className: "bt-new-sep", role: "separator", "aria-label": t("New messages") }, (0, import_react8.createElement)("span", null, t("New")));
-}
-function TurnProcessCell({ node, sessionId, turnProcess, useRoster, useUi, useTurnClock, actions }) {
-  const open = turnProcess === void 0 || !turnProcess.foldable || turnProcess.open;
-  (0, import_react8.useEffect)(() => {
-    if (!open) turnProcess.setOpen(true);
-  }, [open, turnProcess]);
-  const turn = node?.location?.turn?.turn ?? node?.data?.turn;
-  const start = node?.location?.turn?.start?.time;
-  const hidden = useRoster((roster) => isHiddenTurn(roster, sessionId, turn));
-  (0, import_react8.useEffect)(() => {
-    actions.noteTurnTime(sessionId, turn, "first", start);
-  }, [sessionId, turn, start]);
-  const visit = useUi((state) => state.visits?.[sessionId]);
-  const fresh = useTurnClock((state) => {
-    const own = state[sessionId]?.[turn];
-    return !hidden && typeof visit?.seen === "number" && own?.first !== void 0 && own.first <= visit.seen && own.end !== void 0 && own.end > visit.seen && own.end <= visit.entered;
-  });
-  return fresh ? (0, import_react8.createElement)(NewDivider) : null;
-}
-function Nothing() {
-  return null;
-}
-var SEPARATOR_GAP_MS = 15 * 60 * 1e3;
-function clockLabel(time, now = Date.now()) {
-  const date = new Date(time);
-  const midnight = (value) => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
-  const days = Math.round((midnight(new Date(now)) - midnight(date)) / 864e5);
-  const clock4 = date.toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" });
-  if (days === 0) return t("Today {time}", { time: clock4 });
-  if (days === 1) return t("Yesterday {time}", { time: clock4 });
-  const sameYear = date.getFullYear() === new Date(now).getFullYear();
-  return `${date.toLocaleDateString(dateLocale(), { weekday: "short", month: "short", day: "numeric", ...sameYear ? {} : { year: "numeric" } })} ${clock4}`;
-}
-function nextTurnStart(turns, turn) {
-  let next;
-  for (const key in turns) {
-    const candidate = Number(key);
-    if (candidate > turn && turns[key].first !== void 0 && (next === void 0 || candidate < next)) next = candidate;
-  }
-  return next === void 0 ? void 0 : turns[next].first;
-}
-function openingTurn(turns, firstTurns, hiddenTurns) {
-  if (!turns || !firstTurns) return null;
-  const start = nextTurnStart(turns, -Infinity);
-  if (start === void 0) return null;
-  const turn = Number(Object.keys(turns).filter((key) => turns[key].first === start)[0]);
-  const listed = firstTurns.split(",").map(Number);
-  const earlier = listed.filter((entry) => entry < turn);
-  return listed.includes(turn) && earlier.every((entry) => hiddenTurns?.includes(entry)) ? { turn, start } : null;
-}
-var unseenSince = (visit, time) => typeof visit?.seen === "number" && time > visit.seen && time <= visit.entered;
-function TurnTailCell({ turn: location2, sessionId, useTurnClock, useUi, actions }) {
-  const turn = location2.turn;
-  const time = location2.end.time;
-  (0, import_react8.useEffect)(() => {
-    actions.noteTurnTime(sessionId, turn, "end", time);
-  }, [sessionId, turn, time]);
-  const label = useTurnClock((state) => {
-    const start = nextTurnStart(state[sessionId] ?? {}, turn);
-    return start !== void 0 && start - time >= SEPARATOR_GAP_MS ? clockLabel(start) : "";
-  });
-  const visit = useUi((state) => state.visits?.[sessionId]);
-  const fresh = useTurnClock((state) => {
-    if (typeof visit?.seen !== "number" || time > visit.seen) return false;
-    const start = nextTurnStart(state[sessionId] ?? {}, turn);
-    return start !== void 0 && start > visit.seen && start <= visit.entered;
-  });
-  const delivered = turnDeliverables(location2, sessionId);
-  if (!label && !fresh && delivered.length === 0) return null;
-  return (0, import_react8.createElement)(
-    import_react8.Fragment,
-    null,
-    delivered.length > 0 ? (0, import_react8.createElement)(DeliverableCards, { deliverables: delivered, actions }) : null,
-    label ? (0, import_react8.createElement)("div", { className: "bt-time-sep", role: "separator" }, label) : null,
-    fresh ? (0, import_react8.createElement)(NewDivider) : null
-  );
-}
-function turnDeliverables(location2, sessionId) {
-  const presented = location2?.data?.get?.("deliverables")?.presented;
-  if (!Array.isArray(presented) || presented.length === 0) return [];
-  const bySequence = /* @__PURE__ */ new Map();
-  for (const file of presented) {
-    if (typeof file?.path !== "string" || file.path === "") continue;
-    const seq = file.seq;
-    if (!bySequence.has(seq)) bySequence.set(seq, []);
-    bySequence.get(seq).push({ path: file.path, description: file.description, index: file.index });
-  }
-  return [...bySequence].map(([seq, files]) => ({ sessionId, seq, files }));
-}
-function Shimmer({ children }) {
-  return (0, import_react8.createElement)("span", { className: "bt-shimmer" }, children);
-}
-var PHRASES = {
-  thinking: ["Thinking about it", "Weighing the options", "Working out a plan", "Sorting out the details"],
-  working: ["On it", "Busy with it", "Moving ahead", "Taking care of it", "Making headway"]
-};
-var TOOL_PHRASES = [
-  [/web_?search|search_?web/i, "Searching online"],
-  [/fetch|browse|browser|web/i, "Reading a page"],
-  [/shell|bash|pwsh|powershell|exec|command|terminal/i, "Running shell commands"],
-  [/^(read|view|cat)\b|read_/i, "Opening a file"],
-  [/grep|glob|list_dir|^ls$|find|search/i, "Looking through files"],
-  [/write|edit|patch|apply|replace/i, "Writing changes"],
-  [/image|photo|draw/i, "Working on an image"]
-];
-var GROUP_PHRASES = { create_group: "Creating a group", update_group: "Updating the group", delete_group: "Deleting the group", post_to_group: "Posting in the group" };
-function toolActivity(name, arg, findBot, self) {
-  switch (name) {
-    case "ask_user":
-      return null;
-    case "request_secret":
-      return null;
-    case "list_secrets":
-      return { label: t("Checking the keys"), state: "searching" };
-    case "ask_user_question":
-      return { label: t("Waiting for your answer"), state: "alert" };
-    case "group_relay":
-      return { relay: true, state: "orbit" };
-    case "message_bot": {
-      const target = findBot(arg("to"));
-      return { label: target ? t("Asking {name}", { name: target.name }) : t("Asking another Bot"), state: "sending" };
-    }
-    case "stop_bot": {
-      const target = findBot(arg("bot"));
-      return { label: target ? t("Stopping {name}", { name: target.name }) : t("Stopping another Bot"), state: "sending" };
-    }
-    case "create_bot":
-      return { label: t("Creating {name}", { name: arg("name") ?? t("a Bot") }), state: "sending" };
-    case "update_bot": {
-      const target = findBot(arg("name")) ?? findBot(arg("bot")) ?? (arg("bot") ? void 0 : self);
-      return { label: t("Updating {name}", { name: target?.name ?? t("a Bot") }), state: "sending" };
-    }
-    case "list_bots":
-      return { label: t("Checking the team"), state: "searching" };
-    case "read_group_chat":
-      return { label: t("Reading {name}", { name: arg("group") ?? t("a group chat") }), state: "searching" };
-    case "read_own_chat":
-      return { label: t("Looking back through the chat"), state: "searching" };
-    case "remember":
-      return { label: t("Saving to memory"), state: "working" };
-    case "forget":
-      return { label: t("Updating memory"), state: "working" };
-    case "recall":
-      return { label: t("Checking memory"), state: "searching" };
-    default:
-      if (GROUP_PHRASES[name]) return { label: t(GROUP_PHRASES[name]), state: "sending" };
-      const phrase = TOOL_PHRASES.find(([pattern]) => pattern.test(name))?.[1];
-      return { label: phrase ? t(phrase) : null, state: toolState(name) };
-  }
-}
-function workPhrase(doing) {
-  const { tool, said, note, target, switching } = typeof doing === "string" ? { tool: doing } : doing ?? {};
-  if (switching) return t("Moving to a fresh conversation");
-  const own = (said || note)?.replace(/[\s.。…]+$/u, "");
-  if (own) return own;
-  if (!tool) return t("Thinking about it");
-  const label = toolActivity(tool, () => void 0, () => void 0)?.label ?? t("On it");
-  return target ? `${label} · ${target}` : label;
-}
-function useLiveNote(actions, sessionId, id, entry) {
-  const key = entry ? JSON.stringify(entry) : "";
-  (0, import_react8.useEffect)(() => {
-    if (!key) return void 0;
-    actions.noteLive(sessionId, id, JSON.parse(key));
-    return () => actions.noteLive(sessionId, id, null);
-  }, [sessionId, id, key]);
-}
-function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork }) {
-  const [live, setLive] = (0, import_react8.useState)({ replies: [], speaking: null });
-  (0, import_react8.useEffect)(() => {
-    if (done) return void 0;
-    let stop = false;
-    let timer;
-    let seen = "";
-    const tick = async () => {
-      const result = await actions.roomProgress(sessionId);
-      if (stop) return;
-      const entry = (result ?? []).find((item) => item.callId === callId) ?? (result ?? [])[0];
-      const key = entry ? JSON.stringify([entry.replies, entry.speaking]) : "";
-      if (entry && key !== seen) {
-        seen = key;
-        setLive({ replies: entry.replies ?? [], speaking: entry.speaking ?? null });
-      }
-      timer = setTimeout(tick, document.hidden ? 5e3 : 1e3);
-    };
-    void tick();
-    return () => {
-      stop = true;
-      clearTimeout(timer);
-    };
-  }, [done, sessionId, callId]);
-  let replies = live.replies;
-  if (done) {
-    try {
-      replies = JSON.parse(contentText(content)).replies ?? [];
-    } catch {
-      replies = [];
-    }
-  }
-  const pending = done || !live.speaking ? [] : [live.speaking];
-  const speakerTool = useWork?.((work) => work.bots?.[live.speaking]?.tool) ?? void 0;
-  const speakerDoing = useWork?.((work) => work.bots?.[live.speaking]?.tool ? workPhrase(work.bots[live.speaking]) : void 0) ?? void 0;
-  if (replies.length === 0 && pending.length === 0) return null;
-  const room2 = roster.roomsById[sessionId];
-  return (0, import_react8.createElement)(
-    "div",
-    { className: "bt-group-replies" },
-    stackReplies(replies).map(({ reply, index, texts: texts2, deliverables }) => {
-      const bot = roster.byId[reply.botId] ?? { id: reply.botId, name: reply.name, color: reply.color ?? "gray" };
-      if (reply.kind === "user") {
-        return (0, import_react8.createElement)("div", { key: `user-${index}`, className: "bt-urow" }, (0, import_react8.createElement)(
-          "div",
-          { className: "bt-ububble" },
-          (0, import_react8.createElement)(import_dsh_client_ui_primitives3.MarkdownText, { text: reply.text, labels: mdLabels2(), variant: "compact" })
-        ));
-      }
-      if (reply.kind === "failed") {
-        return (0, import_react8.createElement)(
-          "div",
-          { key: `${reply.botId}-${index}`, className: "bt-event bt-event-error", role: "status", title: [reply.code, reply.status, reply.text].filter(Boolean).join(" · ") },
-          t("{name} could not answer: {reason}", { name: bot.name, reason: failureLabel(reply.code, reply.text) })
-        );
-      }
-      if (reply.kind === "lookup") {
-        return (0, import_react8.createElement)(
-          "div",
-          { key: `${reply.botId}-${index}`, className: "bt-event" },
-          reply.text ? t("{name} looked up its own chat for “{text}”", { name: bot.name, text: reply.text }) : t("{name} looked up its own chat", { name: bot.name })
-        );
-      }
-      if (reply.kind === "missed") {
-        return (0, import_react8.createElement)("div", { key: `${reply.botId}-${index}`, className: "bt-event" }, t("{name} didn't answer in time", { name: bot.name }));
-      }
-      if (reply.kind === "resumed") {
-        return (0, import_react8.createElement)("div", { key: `${reply.botId}-${index}`, className: "bt-event" }, t("{name} was cut off by a restart and picked its work back up", { name: bot.name }));
-      }
-      if (reply.kind === "cut") {
-        return (0, import_react8.createElement)("div", { key: `${reply.botId}-${index}`, className: "bt-event" }, t("{name} was cut off by a restart again and stopped", { name: bot.name }));
-      }
-      if (reply.kind === "approval" || reply.kind === "working") {
-        return (0, import_react8.createElement)(
-          "div",
-          { key: `${reply.botId}-${index}`, className: "bt-event" },
-          (0, import_react8.createElement)(
-            "button",
-            { type: "button", className: "bt-event-whole", onClick: () => actions.showDetails(sessionId) },
-            (0, import_react8.createElement)(BotMark, { bot, size: 16 }),
-            (0, import_react8.createElement)("span", { className: "bt-event-name" }, t(reply.kind === "working" ? "{name} started on it" : "{name} paused for your approval", { name: bot.name }))
-          )
-        );
-      }
-      if (reply.kind === "stopped") {
-        return (0, import_react8.createElement)("div", { key: `${reply.botId}-${index}`, className: "bt-event" }, t("You stopped {name}'s work", { name: bot.name }));
-      }
-      return (0, import_react8.createElement)(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts: texts2, room: room2, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : void 0, useUi, deliverables });
-    }),
-    pending.map((id) => {
-      const bot = roster.byId[id];
-      if (!bot) return null;
-      return (0, import_react8.createElement)(
-        "div",
-        { key: `pending-${id}`, className: "bt-activity" },
-        (0, import_react8.createElement)(BotMark, { bot, size: 22, state: speakerTool ? toolState(speakerTool) : "thinking" }),
-        (0, import_react8.createElement)(Shimmer, null, speakerDoing ? `${bot.name} · ${speakerDoing}…` : t("{name} is typing…", { name: bot.name }))
-      );
-    })
-  );
-}
-var DRAWN = /* @__PURE__ */ new Set(["message_bot", "stop_bot", "create_bot", "update_bot", "group_relay", "create_group", "update_group", "delete_group", "post_to_group", "ask_user", "request_secret", "ask_user_question", "read_group_chat", "remember", "forget"]);
-var CARDS = /* @__PURE__ */ new Set(["ask_user", "request_secret"]);
-function callTree(root) {
-  const calls = [];
-  const seen = /* @__PURE__ */ new Set();
-  const visit = (call2) => {
-    const id = call2.callId ?? call2;
-    if (seen.has(id)) return;
-    seen.add(id);
-    calls.push(call2);
-    for (const child of call2.subCalls ?? []) visit(child);
-  };
-  visit(root);
-  return calls;
-}
-function useShownCards(actions, sessionId, callIds) {
-  const key = JSON.stringify(callIds);
-  (0, import_react8.useLayoutEffect)(() => {
-    const ids = JSON.parse(key);
-    if (ids.length === 0 || !actions.noteCards) return void 0;
-    actions.noteCards(sessionId, ids, 1);
-    return () => actions.noteCards(sessionId, ids, -1);
-  }, [sessionId, key]);
-}
-function renderCall(call2, { sessionId, roster, actions, useUi, useWork, findBot }) {
-  const tool = toolName(call2);
-  const done = call2.kind === "tool-result";
-  const { text: arg, value: argValue } = toolArgs(call2);
-  const self = roster.byId[sessionId];
-  switch (tool) {
-    case "message_bot": {
-      const target = findBot(arg("to")) ?? { name: arg("to") ?? "…", color: "gray" };
-      if (done && call2.isError) return (0, import_react8.createElement)("div", { className: "bt-event" }, t("Couldn't message {name}", { name: target.name }));
-      return (0, import_react8.createElement)(EventLine, { prefix: t("Messaged"), bots: [target], onOpen: (bot) => bot.id && actions.openExchange(self?.id ?? sessionId, bot.id), whole: true });
-    }
-    case "stop_bot": {
-      const target = findBot(arg("bot")) ?? { name: arg("bot") ?? "…", color: "gray" };
-      if (done && call2.isError) return (0, import_react8.createElement)("div", { className: "bt-event" }, t("Couldn't stop {name}", { name: target.name }));
-      return (0, import_react8.createElement)(EventLine, { prefix: t("Stopped"), bots: [target], onOpen: (bot) => bot.id && actions.openExchange(self?.id ?? sessionId, bot.id), whole: true });
-    }
-    case "create_bot": {
-      const created = findBot(arg("name"));
-      if (!done || created === void 0) return null;
-      return (0, import_react8.createElement)(EventLine, { prefix: t("Created"), bots: [created], onOpen: (bot) => actions.openSession(bot.id) });
-    }
-    case "update_bot": {
-      const target = findBot(arg("name")) ?? findBot(arg("bot")) ?? (arg("bot") ? void 0 : self);
-      return done && target ? (0, import_react8.createElement)(EventLine, { prefix: t("Updated"), bots: [target], onOpen: (bot) => actions.openSession(bot.id) }) : null;
-    }
-    case "group_relay":
-      return (0, import_react8.createElement)(GroupReplies, { sessionId, callId: call2.callId, done, content: call2.content, roster, actions, useUi, useWork });
-    case "create_group":
-    case "update_group":
-    case "delete_group":
-    case "post_to_group": {
-      const verbs = {
-        create_group: ["Created group", "Couldn't create the group"],
-        update_group: ["Updated group", "Couldn't update the group"],
-        delete_group: ["Deleted group", "Couldn't delete the group"],
-        post_to_group: ["Posted in", "Couldn't post in the group"]
-      }[tool];
-      if (!done) return null;
-      const result = contentText(call2.content);
-      const named = /^(Created group|Updated|Nothing changed in|Deleted|Posted in) "([^"]+)"/.exec(result);
-      if (call2.isError || !named) return (0, import_react8.createElement)("div", { className: "bt-event", title: result }, t(verbs[1]));
-      const name = named[2];
-      const room2 = roster.rooms.find((entry) => entry.name === name);
-      return (0, import_react8.createElement)(GroupEvent, { prefix: t(verbs[0]), room: tool === "delete_group" ? void 0 : room2, name, roster, actions });
-    }
-    case "ask_user": {
-      const question = roster.questions?.[sessionId];
-      if (!question || question.callId !== call2.callId) return (0, import_react8.createElement)("span", { className: "bt-q-gone", hidden: true });
-      return (0, import_react8.createElement)(PendingQuestion, { sessionId, question, actions, inline: true });
-    }
-    case "request_secret":
-      return (0, import_react8.createElement)(SecretToolCell, { sessionId, callId: call2.callId, name: arg("name"), done, content: call2.content, roster, actions });
-    case "ask_user_question": {
-      if (!done) return null;
-      let parsed = null;
-      try {
-        parsed = JSON.parse(contentText(call2.content));
-      } catch {
-        parsed = null;
-      }
-      const answer = parsed?.answers?.[0];
-      const question = argValue("questions")?.[0];
-      if (!answer) return null;
-      return (0, import_react8.createElement)("div", { className: "bt-q-inline" }, (0, import_react8.createElement)(SettledQuestion, { question, answer }));
-    }
-    case "read_group_chat": {
-      if (!done) return null;
-      const room2 = roster.rooms.find((entry) => entry.name === arg("group"));
-      return room2 ? (0, import_react8.createElement)(GroupEvent, { prefix: t("Read"), room: room2, roster, actions }) : null;
-    }
-    case "remember":
-    case "forget":
-      return done && !call2.isError ? (0, import_react8.createElement)(MemoryEvent, { sessionId, scope: arg("scope"), result: contentText(call2.content), roster, actions, findBot }) : null;
-    default:
-      return null;
-  }
-}
-function ToolCell({ node, sessionId, useRoster, useUi, useWork, actions }) {
-  const roster = useRoster((value) => value);
-  const root = node.data.root;
-  const turn = node.location?.turn?.turn ?? root.turn;
-  const hidden = isHiddenTurn(roster, sessionId, turn);
-  const findBot = (nameOrId) => roster.byId[nameOrId] ?? roster.bots.find((bot) => bot.name.toLowerCase() === String(nameOrId ?? "").toLowerCase());
-  const calls = hidden ? [] : callTree(root);
-  const drawn = calls.filter((call2) => DRAWN.has(toolName(call2)));
-  const running = root.kind === "tool-result" ? void 0 : calls.findLast((call2) => call2.kind !== "tool-result");
-  const note = running ? toolActivity(toolName(running), toolArgs(running).text, findBot, roster.byId[sessionId]) : null;
-  useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note);
-  useShownCards(actions, sessionId, drawn.filter((call2) => CARDS.has(toolName(call2)) && call2.callId).map((call2) => call2.callId));
-  if (drawn.length === 0) return null;
-  const env = { sessionId, roster, actions, useUi, useWork, findBot };
-  return (0, import_react8.createElement)(import_react8.Fragment, null, drawn.map((call2, index) => (0, import_react8.createElement)(import_react8.Fragment, { key: call2.callId ?? index }, renderCall(call2, env))));
-}
-
-// src/client/activity-row.js
-var import_react9 = require("react");
-var import_react_dom2 = require("react-dom");
-var PHRASE_HOLD_MS = 800;
-var drawPhrase = (pool) => t(pool[Math.min(pool.length - 1, Math.floor(Math.random() * pool.length))]);
-function elapsedLabel(ms2) {
-  const minutes = Math.floor(ms2 / 6e4);
-  if (minutes < 60) return `${Math.max(1, minutes)}m`;
-  const hours = Math.floor(minutes / 60);
-  return minutes % 60 === 0 ? `${hours}h` : `${hours}h ${minutes % 60}m`;
-}
-function useRunningHost(active) {
-  const [host, setHost] = (0, import_react9.useState)(null);
-  (0, import_react9.useEffect)(() => {
-    if (!active) {
-      setHost(null);
-      return void 0;
-    }
-    let frame = 0;
-    const find = () => {
-      frame = 0;
-      const node = document.querySelector("[data-chat-flow] > [data-chat-running]");
-      setHost((prev) => prev === node ? prev : node);
-    };
-    const observer = new MutationObserver(() => {
-      if (!frame) frame = requestAnimationFrame(find);
-    });
-    observer.observe(document.querySelector("[data-conversation-scroll]") ?? document.body, { childList: true, subtree: true });
-    find();
-    return () => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-    };
-  }, [active]);
-  return host;
-}
-function useRowEntrances(replacing) {
-  const check = (0, import_react9.useRef)(replacing);
-  check.current = replacing;
-  (0, import_react9.useEffect)(() => {
-    const seen = /* @__PURE__ */ new WeakSet();
-    const started = Date.now();
-    let column = null;
-    let frame = 0;
-    const settle = (event) => {
-      if (event.target !== event.currentTarget || !/^bt-row/.test(event.animationName)) return;
-      delete event.currentTarget.dataset.btEnter;
-      event.currentTarget.removeEventListener("animationend", settle);
-    };
-    const scan = () => {
-      frame = 0;
-      const next = document.querySelector("[data-chat-flow]");
-      if (next !== column) {
-        observer.disconnect();
-        column = next;
-        if (column) observer.observe(column, { childList: true, subtree: true });
-      }
-      if (!column) return;
-      const items = [...column.querySelectorAll(":scope > [data-chat-flow-key]")];
-      let last = -1;
-      items.forEach((item, index) => {
-        if (seen.has(item)) last = index;
-      });
-      const fresh = items.filter((item) => !seen.has(item) && item.offsetHeight > 0);
-      for (const item of fresh) seen.add(item);
-      if (last < 0 || Date.now() - started < 800 || fresh.length > 3) return;
-      for (const item of fresh) {
-        if (items.indexOf(item) < last) continue;
-        const reply = [void 0, "assistant-step", "tool-call"].includes(item.dataset.chatFlowKind);
-        item.dataset.btEnter = reply && check.current() ? "after-collapse" : "new";
-        item.addEventListener("animationend", settle);
-      }
-    };
-    const observer = new MutationObserver(() => {
-      if (!frame) frame = requestAnimationFrame(scan);
-    });
-    scan();
-    return () => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-    };
-  }, []);
-}
-function ActivityIndicator({ sessionId, useRoster, useSessionStatus, useLive, useSession, actions }) {
-  const roster = useRoster((value) => value);
-  const running = useSessionStatus((map) => map.get(sessionId)?.running === true);
-  const liveKey = useLive((state) => JSON.stringify(state[sessionId] ?? {}));
-  const pendingInput = useSession((snapshot) => Math.max(0, ...(snapshot?.pendingSubmissions ?? []).filter((sub) => sub.placement !== "queued").map((sub) => sub.time)));
-  const bot = roster.byId[sessionId];
-  const room2 = roster.roomsById[sessionId];
-  const entries2 = (0, import_react9.useMemo)(() => Object.values(JSON.parse(liveKey)), [liveKey]);
-  const streaming = entries2.some((entry) => entry.text);
-  const tools = entries2.filter((entry) => !entry.text).sort((a, b) => a.at - b.at);
-  const relaying = tools.some((entry) => entry.relay);
-  const visible = running && !streaming && !relaying && (bot !== void 0 || room2 !== void 0);
-  const tool = tools.at(-1);
-  const inputRef = (0, import_react9.useRef)(0);
-  const inputAt = Math.max(inputRef.current, pendingInput);
-  inputRef.current = inputAt;
-  const want = !visible ? null : inputAt > (tool?.at ?? 0) ? { key: `input:${inputAt}`, pool: PHRASES.thinking, state: "thinking" } : tool ? { key: tool.label ? `tool:${tool.label}` : "working", label: tool.label, pool: PHRASES.working, state: tool.state ?? "working" } : { key: "thinking", pool: PHRASES.thinking, state: "thinking" };
-  const [shown, setShown] = (0, import_react9.useState)(null);
-  const wantKey = want?.key ?? null;
-  const markState = (0, import_react9.useRef)("thinking");
-  if (want) markState.current = want.state;
-  (0, import_react9.useEffect)(() => {
-    if (wantKey === null || shown?.key === wantKey) return void 0;
-    const make = () => setShown({ key: wantKey, text: want.label ?? drawPhrase(want.pool), at: Date.now() });
-    const wait = shown ? shown.at + PHRASE_HOLD_MS - Date.now() : 0;
-    if (wait <= 0) {
-      make();
-      return void 0;
-    }
-    const timer = setTimeout(make, wait);
-    return () => clearTimeout(timer);
-  }, [wantKey, shown]);
-  const [phase, setPhase] = (0, import_react9.useState)(null);
-  const endedAt = (0, import_react9.useRef)(0);
-  const shift = (0, import_react9.useRef)(null);
-  const leaving = (0, import_react9.useRef)(false);
-  leaving.current = phase !== null && !visible;
-  (0, import_react9.useEffect)(() => {
-    if (visible) {
-      setPhase("in");
-      return void 0;
-    }
-    setPhase((current) => current === "in" ? "out" : current);
-    const timer = setTimeout(() => {
-      shift.current = document.querySelector("[data-conversation-scroll]")?.scrollTop ?? null;
-      setPhase((current) => current === "out" ? null : current);
-    }, 140);
-    return () => clearTimeout(timer);
-  }, [visible]);
-  (0, import_react9.useLayoutEffect)(() => {
-    if (phase !== null) return;
-    endedAt.current = Date.now();
-    setShown(null);
-    const before = shift.current;
-    shift.current = null;
-    const scroller = document.querySelector("[data-conversation-scroll]");
-    if (before === null || !scroller || reducedMotion()) return;
-    const delta = before - scroller.scrollTop;
-    if (delta > 0) scroller.querySelector("[data-chat-flow]")?.animate([{ transform: `translateY(${-delta}px)` }, { transform: "none" }], { duration: 140, easing: "cubic-bezier(.23,1,.32,1)" });
-  }, [phase]);
-  (0, import_react9.useEffect)(() => {
-    if (!running) actions.clearLive(sessionId);
-  }, [running, sessionId]);
-  useRowEntrances(() => leaving.current || Date.now() - endedAt.current < 300);
-  const [now, setNow] = (0, import_react9.useState)(Date.now);
-  (0, import_react9.useEffect)(() => {
-    if (phase !== "in") return void 0;
-    const timer = setInterval(() => setNow(Date.now()), 1e4);
-    return () => clearInterval(timer);
-  }, [phase]);
-  const host = useRunningHost(running);
-  if (!host || phase === null || !shown) return null;
-  const elapsed = now - shown.at >= 6e4 ? elapsedLabel(now - shown.at) : null;
-  return (0, import_react_dom2.createPortal)((0, import_react9.createElement)(
-    "div",
-    { className: "bt-typing", "data-exiting": phase === "out" ? "" : void 0, "aria-hidden": true },
-    bot ? (0, import_react9.createElement)(BotMark, { bot, size: 28, state: markState.current, live: true, pokeable: true }) : (0, import_react9.createElement)(RoomAvatar, { room: room2, roster, size: 28 }),
-    (0, import_react9.createElement)(
-      "span",
-      { className: "bt-typing-text" },
-      (0, import_react9.createElement)(
-        "span",
-        { key: `${shown.key}:${shown.at}`, className: "bt-typing-label" },
-        (0, import_react9.createElement)(Shimmer, null, `${shown.text}…`),
-        elapsed ? (0, import_react9.createElement)("span", { className: "bt-typing-time" }, `· ${elapsed}`) : null
-      )
-    )
-  ), host);
-}
-
-// src/client/dsh-offer.js
-var APP_OFFER = /* @__PURE__ */ new Set(["available", "downloading", "verifying", "installing", "ready"]);
-var bare = (value) => String(value ?? "").trim().replace(/^v/i, "").split("+")[0];
-var sameVersion = (a, b) => bare(a) !== "" && bare(a) === bare(b);
-function showsDshRow(dsh, app) {
-  if (!dsh?.verified || !dsh.current || sameVersion(dsh.verified, dsh.current)) return false;
-  if (dsh.kind === "npm") return true;
-  return dsh.kind === "app" && APP_OFFER.has(app?.phase) && sameVersion(app.version, dsh.verified);
-}
-
 // src/client/pc-layout.js
 var PC_QUERY = "(min-width:841px) and (max-width:1023px) and (orientation:landscape)";
 var pcSidebarMemory = { band: null };
@@ -6604,7 +5126,7 @@ function pcDetailsWidth(viewport) {
 }
 
 // src/client/mobile.js
-var import_react10 = require("react");
+var import_react7 = require("react");
 var MOBILE_QUERY = "(max-width:840px), (max-width:1023px) and (orientation:portrait)";
 var SIZE_MEDIUM_QUERY = "(min-width:600px)";
 var SIZE_EXPANDED_QUERY = "(min-width:841px)";
@@ -6735,8 +5257,8 @@ function watchMobile() {
   return mql?.matches === true;
 }
 function useMobile() {
-  const [mobile, setMobile] = (0, import_react10.useState)(() => media()?.matches === true);
-  (0, import_react10.useEffect)(() => {
+  const [mobile, setMobile] = (0, import_react7.useState)(() => media()?.matches === true);
+  (0, import_react7.useEffect)(() => {
     const mql = media();
     if (!mql) return void 0;
     listeners.add(setMobile);
@@ -6748,8 +5270,8 @@ function useMobile() {
   return mobile;
 }
 function usePortrait() {
-  const [portrait, setPortrait] = (0, import_react10.useState)(() => isPortraitNav());
-  (0, import_react10.useEffect)(() => {
+  const [portrait, setPortrait] = (0, import_react7.useState)(() => isPortraitNav());
+  (0, import_react7.useEffect)(() => {
     portraitListeners.add(setPortrait);
     setPortrait(isPortraitNav());
     return () => {
@@ -6759,8 +5281,8 @@ function usePortrait() {
   return portrait;
 }
 function usePcColumns() {
-  const [pc, setPc] = (0, import_react10.useState)(() => isPcLayout());
-  (0, import_react10.useEffect)(() => {
+  const [pc, setPc] = (0, import_react7.useState)(() => isPcLayout());
+  (0, import_react7.useEffect)(() => {
     const mql = pcMedia();
     if (!mql?.addEventListener) return void 0;
     const on = (event) => setPc(event.matches === true);
@@ -6769,6 +5291,1485 @@ function usePcColumns() {
     return () => mql.removeEventListener("change", on);
   }, []);
   return pc;
+}
+
+// src/client/deliverables.js
+var import_react8 = require("react");
+var import_dsh_client_ui_primitives2 = require("@deepseek-ai/dsh-client-ui-primitives");
+var basename = (path) => {
+  const at = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
+  return at === -1 ? path : path.slice(at + 1);
+};
+var PHONE_COPY_HINT = "/storage/emulated/0/DSH/deliverables/";
+var PICTURE_NAME = /\.(?:png|jpe?g|gif|webp|avif|bmp|ico|svg)$/iu;
+var isPicture = (name) => PICTURE_NAME.test(name);
+var readable = (answer) => answer?.ok === true && (answer.kind === "html" || answer.kind === "image" || answer.kind === "text" || answer.kind === "markdown");
+var openUrl = (file) => {
+  const query2 = new URLSearchParams({ sessionId: file.sessionId, seq: String(file.seq), index: String(file.index ?? 0) });
+  return `api/present.open?${query2}`;
+};
+var metaText = (file, name) => {
+  const trimmed2 = typeof file.description === "string" ? file.description.replace(/\s*(?:\([^()]*\)|（[^（）]*）)\s*$/u, "").trim() : "";
+  if (trimmed2 !== "") return trimmed2;
+  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toUpperCase();
+  return extension === "" ? t("File") : extension;
+};
+var TYPE_WORDS = {
+  md: "Markdown file",
+  markdown: "Markdown file",
+  mdx: "Markdown file",
+  png: "Image",
+  jpg: "Image",
+  jpeg: "Image",
+  gif: "Image",
+  webp: "Image",
+  avif: "Image",
+  bmp: "Image",
+  ico: "Image",
+  svg: "Image",
+  html: "HTML file",
+  htm: "HTML file",
+  pdf: "PDF file",
+  doc: "Word document",
+  docx: "Word document",
+  rtf: "Word document",
+  xls: "Spreadsheet",
+  xlsx: "Spreadsheet",
+  csv: "Spreadsheet",
+  ods: "Spreadsheet",
+  ppt: "Slides",
+  pptx: "Slides",
+  odp: "Slides",
+  mp4: "Video",
+  mov: "Video",
+  webm: "Video",
+  mkv: "Video",
+  avi: "Video",
+  mp3: "Audio",
+  wav: "Audio",
+  m4a: "Audio",
+  ogg: "Audio",
+  flac: "Audio",
+  zip: "Archive file",
+  tar: "Archive file",
+  gz: "Archive file",
+  tgz: "Archive file",
+  "7z": "Archive file",
+  rar: "Archive file",
+  js: "Code file",
+  mjs: "Code file",
+  cjs: "Code file",
+  ts: "Code file",
+  tsx: "Code file",
+  jsx: "Code file",
+  py: "Code file",
+  go: "Code file",
+  rs: "Code file",
+  java: "Code file",
+  c: "Code file",
+  h: "Code file",
+  cpp: "Code file",
+  css: "Code file",
+  json: "Code file",
+  yml: "Code file",
+  yaml: "Code file",
+  toml: "Code file",
+  sh: "Code file",
+  sql: "Code file",
+  xml: "Code file"
+};
+var wordFor = (path) => t(TYPE_WORDS[(0, import_dsh_client_ui_primitives2.fileExtension)(basename(path))] ?? "File");
+var EXT_ALIASES = { markdown: "MD", mdx: "MD", jpeg: "JPG", tiff: "TIF", "7z": "7Z" };
+var badgeOf = (name) => {
+  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toLowerCase();
+  if (extension === "") return (name.slice(0, 1) || "?").toUpperCase();
+  return EXT_ALIASES[extension] ?? extension.toUpperCase().slice(0, 4);
+};
+var IMAGE_EXTENSIONS = /* @__PURE__ */ new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "bmp", "ico", "svg", "tif", "tiff"]);
+var MEDIA_EXTENSIONS = /* @__PURE__ */ new Set(["mp4", "mov", "webm", "mkv", "avi", "mp3", "wav", "m4a", "ogg", "flac"]);
+var ARCHIVE_EXTENSIONS = /* @__PURE__ */ new Set(["zip", "tar", "gz", "tgz", "7z", "rar"]);
+var toneOf = (name) => {
+  const extension = (0, import_dsh_client_ui_primitives2.fileExtension)(name).toLowerCase();
+  if (IMAGE_EXTENSIONS.has(extension)) return "image";
+  if (MEDIA_EXTENSIONS.has(extension)) return "media";
+  if (ARCHIVE_EXTENSIONS.has(extension) || extension === "") return "plain";
+  return "doc";
+};
+var WORKSPACES = [
+  [".dsh/bot/workspace", "DSH workspace"],
+  ["repos/dsh-bot/ds-bot", "DSBot"],
+  ["repos/dsh-bot", "DSBot"],
+  ["repos/DeepSeek-Bot", "DSBot"]
+];
+var workspaceOf = (path) => {
+  for (const [root, name] of WORKSPACES) {
+    if (path.includes(`${root}/`)) return t(name);
+  }
+  const at = path.lastIndexOf("/");
+  const folder = at === -1 ? "" : basename(path.slice(0, at));
+  return folder === "" ? t("Workspace") : folder;
+};
+var sizesOf = /* @__PURE__ */ new Map();
+var metaOf = (file) => {
+  const parts = [wordFor(file.path)];
+  const size = sizesOf.get(file.path);
+  if (Number.isFinite(size)) parts.push((0, import_dsh_client_ui_primitives2.fileSizeText)(size));
+  parts.push(workspaceOf(file.path));
+  return parts.join(" · ");
+};
+var exitsSentence = (shared2) => shared2 !== null && shared2 !== void 0 ? t("Could not open it here. The copy is at {path}", { path: shared2 }) : t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT });
+function useDeliverableExits(file, actions, onFailed) {
+  const [state, setState] = (0, import_react8.useState)("idle");
+  const failed = (next) => {
+    setState("failed");
+    onFailed?.({ shared: next });
+  };
+  const open = async () => {
+    if (state === "opening") return;
+    setState("opening");
+    onFailed?.(null);
+    try {
+      const chooser = globalThis.__dshOpenPath;
+      if (typeof chooser === "function") {
+        const copy3 = await actions?.shareFile?.(file.path);
+        const shared2 = copy3?.ok === true ? copy3.path : null;
+        if (shared2 !== null && chooser(shared2, "view") === true) {
+          setState("idle");
+          return;
+        }
+        failed(shared2);
+        return;
+      }
+      if (file.sessionId === void 0) {
+        failed(null);
+        return;
+      }
+      const response = await fetch(openUrl(file), { method: "POST", credentials: "same-origin" });
+      if (response.ok) setState("idle");
+      else failed(null);
+    } catch {
+      failed(null);
+    }
+  };
+  const copy2 = async () => {
+    onFailed?.(null);
+    try {
+      await navigator.clipboard?.writeText(file.path);
+      setState("copied");
+      setTimeout(() => setState((current) => current === "copied" ? "idle" : current), 1600);
+    } catch {
+      failed(null);
+    }
+  };
+  return { state, open, copy: copy2 };
+}
+function DeliverableActions({ file, actions, onFailed }) {
+  const exits = useDeliverableExits(file, actions, onFailed);
+  const [shown, setShown] = (0, import_react8.useState)(false);
+  return (0, import_react8.createElement)(ExitsMenu, {
+    exits,
+    shown,
+    setShown,
+    className: "bt-dcard-menu",
+    anchor: (0, import_react8.createElement)("button", {
+      type: "button",
+      className: "bt-dcard-btn",
+      "data-act": "more",
+      "aria-haspopup": "menu",
+      "aria-expanded": shown,
+      "aria-label": t("More"),
+      title: t("More"),
+      onClick: () => setShown((value) => !value)
+      // Lucide's three dots at the size the shell's own controls draw: the glyph brings its
+      // box, so this control passes no size and cannot drift from the bar's identical anchor.
+    }, (0, import_react8.createElement)(LucideEllipsisIcon))
+  });
+}
+var exitItems = (state) => [
+  { id: "open", icon: (0, import_react8.createElement)(LucideExternalLinkIcon), label: state === "opening" ? t("Opening…") : t("Open with another app") },
+  { id: "copy", icon: state === "copied" ? (0, import_react8.createElement)(LucideCheckIcon) : (0, import_react8.createElement)(LucideCopyIcon), label: state === "copied" ? t("Copied") : t("Copy path") }
+];
+function ExitsMenu({ exits, shown, setShown, className, anchor, extra = null, onExtra }) {
+  return (0, import_react8.createElement)(import_dsh_client_ui_primitives2.Menu, {
+    className,
+    open: shown,
+    autoFocus: true,
+    portal: true,
+    align: "end",
+    onClose: () => setShown(false),
+    anchor,
+    items: [...extra === null ? [] : [extra], ...exitItems(exits.state)],
+    onSelect: (id) => {
+      setShown(false);
+      if (id === "copy") void exits.copy();
+      else if (id === "open") void exits.open();
+      else if (extra !== null && extra.id === id) onExtra?.();
+    }
+  });
+}
+function PreviewMenu({ file, actions, onFailed, extra = null, onExtra }) {
+  const exits = useDeliverableExits(file, actions, onFailed);
+  const [shown, setShown] = (0, import_react8.useState)(false);
+  return (0, import_react8.createElement)(ExitsMenu, {
+    exits,
+    shown,
+    setShown,
+    className: "bt-preview-menu",
+    extra,
+    onExtra,
+    anchor: (0, import_react8.createElement)("button", {
+      type: "button",
+      className: "bt-preview-more",
+      "aria-haspopup": "menu",
+      "aria-expanded": shown,
+      "aria-label": t("More"),
+      title: t("More"),
+      onClick: () => setShown((value) => !value)
+      // The same Lucide dots as the card's control: one glyph, two anchors, one box.
+    }, (0, import_react8.createElement)(LucideEllipsisIcon))
+  });
+}
+function DeliverableCard({ file, actions, meta, role }) {
+  const name = basename(file.path);
+  const [failure, setFailure] = (0, import_react8.useState)(null);
+  const preview = () => {
+    if (isPicture(name)) actions?.previewImage?.(file);
+    else actions?.previewFile?.(file);
+  };
+  return (0, import_react8.createElement)(
+    "div",
+    { className: "bt-dcard-wrap", role },
+    (0, import_react8.createElement)(
+      "div",
+      { className: "bt-dcard" },
+      (0, import_react8.createElement)("button", {
+        type: "button",
+        className: "bt-dcard-hit",
+        "aria-label": `${t("Preview")} ${name}`,
+        onClick: preview
+      }),
+      (0, import_react8.createElement)("span", { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, "aria-hidden": true }, (0, import_react8.createElement)("span", { className: "bt-dcard-type" }, badgeOf(name))),
+      (0, import_react8.createElement)(
+        "span",
+        { className: "bt-dcard-copy" },
+        (0, import_react8.createElement)("span", { className: "bt-dcard-name" }, name),
+        (0, import_react8.createElement)("span", { className: "bt-dcard-desc" }, meta ?? metaText(file, name))
+      ),
+      (0, import_react8.createElement)("span", { className: "bt-dcard-acts" }, (0, import_react8.createElement)(DeliverableActions, { file, actions, onFailed: setFailure }))
+    ),
+    failure ? (0, import_react8.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
+  );
+}
+function DeliverableCards({ deliverables, actions, metaOf: metaOf2 = null, list = false }) {
+  const files = (deliverables ?? []).flatMap((entry) => (entry?.files ?? []).map((file, position) => ({
+    path: file?.path,
+    description: typeof file?.description === "string" ? file.description : void 0,
+    // A file's own coordinates when the source has them (DSH's turn record does), the
+    // position among its neighbours otherwise (the host's group replies do not).
+    at: file?.at,
+    sessionId: entry.sessionId,
+    seq: entry.seq,
+    index: Number.isInteger(file?.index) ? file.index : position
+  }))).filter((file) => typeof file.path === "string" && file.path !== "");
+  if (files.length === 0) return null;
+  return (0, import_react8.createElement)(
+    "div",
+    { className: "bt-dcards", role: list ? "list" : void 0 },
+    files.map((file) => (0, import_react8.createElement)(DeliverableCard, {
+      // The same file can be handed over twice; a row without coordinates is keyed by its
+      // path, which is what makes it one row.
+      key: file.sessionId === void 0 ? file.path : `${file.sessionId}:${file.seq}:${file.index}`,
+      file,
+      actions,
+      meta: metaOf2?.(file),
+      role: list ? "listitem" : void 0
+    }))
+  );
+}
+var FRAME_POLICY = "default-src 'none'; style-src 'unsafe-inline'; img-src data:";
+var frameDocument = (text) => `<!doctype html><meta http-equiv="Content-Security-Policy" content="${FRAME_POLICY}">${text}`;
+function DeliveredPreview({ file, actions, onClose }) {
+  const [read, setRead] = (0, import_react8.useState)(null);
+  const [state, setState] = (0, import_react8.useState)("reading");
+  const [source, setSource] = (0, import_react8.useState)(false);
+  const [failure, setFailure] = (0, import_react8.useState)(null);
+  const name = basename(file.path);
+  const ask = (0, import_react8.useRef)(actions);
+  ask.current = actions;
+  (0, import_react8.useEffect)(() => {
+    let live = true;
+    setRead(null);
+    setState("reading");
+    setSource(false);
+    void (async () => {
+      try {
+        const answer = await ask.current?.presentFile?.(file.path);
+        if (!live) return;
+        if (!readable(answer)) {
+          setState("failed");
+          return;
+        }
+        setRead(answer);
+        setState("shown");
+      } catch {
+        if (live) setState("failed");
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [file.path]);
+  const body = state === "reading" ? (0, import_react8.createElement)("div", { className: "bt-preview-body bt-fp-empty" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…"))) : state === "failed" ? (0, import_react8.createElement)(
+    "div",
+    { className: "bt-preview-body bt-fp-empty" },
+    (0, import_react8.createElement)("div", { className: "bt-fp-empty-title" }, t("This file has no preview")),
+    (0, import_react8.createElement)("div", { className: "bt-fp-empty-text", role: "status" }, t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT }))
+  ) : read.kind === "html" && !source ? (0, import_react8.createElement)("iframe", { className: "bt-preview-frame", sandbox: "", srcDoc: frameDocument(read.text ?? ""), title: name }) : read.kind === "image" ? (0, import_react8.createElement)("div", { className: "bt-preview-body bt-fp-image" }, (0, import_react8.createElement)("img", { src: `data:${read.mime ?? "application/octet-stream"};base64,${read.base64 ?? ""}`, alt: name })) : (0, import_react8.createElement)("div", { className: "bt-preview-body" }, (0, import_react8.createElement)(FileView, { file: source ? { ...read, kind: "text" } : read }));
+  const toggle = state === "shown" && read.kind === "html" ? { id: "source", label: source ? t("Preview") : t("Source") } : null;
+  return (0, import_react8.createElement)(
+    import_react8.Fragment,
+    null,
+    (0, import_react8.createElement)(
+      PreviewHead,
+      { name, onClose },
+      (0, import_react8.createElement)(PreviewMenu, { file, actions, onFailed: setFailure, extra: toggle, onExtra: () => setSource((current) => !current) })
+    ),
+    body,
+    // A refusal is the one thing that still needs a line of its own under the file.
+    failure ? (0, import_react8.createElement)(
+      "div",
+      { className: "bt-preview-acts" },
+      (0, import_react8.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared))
+    ) : null
+  );
+}
+function PreviewHead({ name, onClose, children, close = false }) {
+  return (0, import_react8.createElement)(
+    "div",
+    { className: close ? "bt-preview-head bt-sheet-head" : "bt-preview-head" },
+    close ? null : (0, import_react8.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react8.createElement)(LucideChevronLeftIcon)),
+    (0, import_react8.createElement)("span", { className: "bt-preview-name" }, name),
+    close ? (0, import_react8.createElement)("button", { type: "button", className: "bt-preview-back bt-sheet-close", onClick: onClose, "aria-label": t("Close"), title: t("Close") }, (0, import_react8.createElement)(CloseIcon)) : children
+  );
+}
+function DeliveredList({ actions, onClose }) {
+  const mobile = useMobile();
+  const [state, setState] = (0, import_react8.useState)("reading");
+  const [files, setFiles] = (0, import_react8.useState)([]);
+  const [, bumpSizes] = (0, import_react8.useState)(0);
+  const ask = (0, import_react8.useRef)(actions);
+  ask.current = actions;
+  (0, import_react8.useEffect)(() => {
+    let live = true;
+    void (async () => {
+      try {
+        const answer = await ask.current?.listDelivered?.();
+        if (!live) return;
+        if (!Array.isArray(answer?.files)) {
+          setState("failed");
+          return;
+        }
+        setFiles(answer.files.filter((entry) => typeof entry?.path === "string" && entry.path !== ""));
+        setState("shown");
+      } catch {
+        if (live) setState("failed");
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, []);
+  (0, import_react8.useEffect)(() => {
+    let live = true;
+    void (async () => {
+      for (const entry of files) {
+        if (sizesOf.has(entry.path)) continue;
+        let answer = null;
+        try {
+          answer = await ask.current?.presentFile?.(entry.path);
+        } catch {
+          answer = null;
+        }
+        if (!live) return;
+        sizesOf.set(entry.path, Number.isFinite(answer?.size) ? answer.size : null);
+        bumpSizes((count) => count + 1);
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [files]);
+  const rows = [{ files: files.map((entry) => ({ path: entry.path, at: entry.at })) }];
+  const body = state === "reading" ? (0, import_react8.createElement)("div", { className: "bt-products" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…")))) : state === "failed" ? (0, import_react8.createElement)("div", { className: "bt-products" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty-title", role: "status" }, t("This list could not be read")))) : (0, import_react8.createElement)(
+    "div",
+    { className: "bt-products" },
+    // The list is what this host saw delivered, and it is not backfilled: a short
+    // list is the truth rather than a bug, so it says so above itself.
+    (0, import_react8.createElement)("div", { className: "bt-prod-note" }, t("Only files delivered since this run started are listed.")),
+    files.length === 0 ? (0, import_react8.createElement)(
+      "div",
+      { className: "bt-fp-empty" },
+      (0, import_react8.createElement)("div", { className: "bt-fp-empty-title" }, t("No deliverables yet")),
+      (0, import_react8.createElement)("div", { className: "bt-fp-empty-text" }, t("Files a Bot hands over are listed here."))
+    ) : (0, import_react8.createElement)(DeliverableCards, { deliverables: rows, actions, list: true, metaOf })
+  );
+  return (0, import_react8.createElement)(
+    import_react8.Fragment,
+    null,
+    (0, import_react8.createElement)(PreviewHead, { name: t("All deliverables"), onClose, close: mobile }),
+    body
+  );
+}
+function DeliveredLightbox({ file, actions, onClose, onUnreadable }) {
+  const [src, setSrc] = (0, import_react8.useState)(null);
+  const name = basename(file.path);
+  const ask = (0, import_react8.useRef)(actions);
+  ask.current = actions;
+  const fallback = (0, import_react8.useRef)(onUnreadable);
+  fallback.current = onUnreadable;
+  (0, import_react8.useEffect)(() => {
+    let live = true;
+    void (async () => {
+      try {
+        const answer = await ask.current?.presentFile?.(file.path);
+        if (!live) return;
+        if (answer?.ok === true && answer.kind === "image") {
+          setSrc(`data:${answer.mime ?? "application/octet-stream"};base64,${answer.base64 ?? ""}`);
+          return;
+        }
+        fallback.current?.();
+      } catch {
+        if (live) fallback.current?.();
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [file.path]);
+  (0, import_react8.useEffect)(() => () => {
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
+    const again = [...document.querySelectorAll(".bt-dcard-hit")].find((node) => (node.getAttribute("aria-label") ?? "").endsWith(` ${name}`));
+    if (again instanceof HTMLElement) again.focus();
+  }, [name]);
+  if (src === null || typeof import_dsh_client_ui_primitives2.ImageLightbox !== "function") return null;
+  return (0, import_react8.createElement)(import_dsh_client_ui_primitives2.ImageLightbox, {
+    src,
+    alt: name,
+    labels: { dialog: t("Image preview"), close: t("Close preview") },
+    onClose
+  });
+}
+
+// src/client/turn-reasoning.js
+function turnReasoning(steps, current) {
+  const members = steps.length ? steps : [current];
+  if (members.find((step) => stepReasoning(step) !== "")?.step !== current.step) return "";
+  return members.filter((step) => !thinkingLive(step)).map(stepReasoning).filter(Boolean).join("\n\n");
+}
+var texts = (step) => step.blocks.filter((block) => block.kind === "text" && block.text.trim() !== "");
+var thinkingLive = (step) => step.status === "running" && texts(step).length === 0 && step.blocks.some((block) => block.kind === "reasoning");
+var stepReasoning = (step) => step.blocks.filter((block) => block.kind === "reasoning").map((block) => block.text).join("\n").trim();
+
+// src/client/cells.js
+var import_react9 = require("react");
+var import_react_dom = require("react-dom");
+var import_dsh_client_ui_primitives3 = require("@deepseek-ai/dsh-client-ui-primitives");
+var mdLabels2 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
+function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions }) {
+  const onClick = (event) => {
+    const target = mentionTarget(event);
+    if (target === null) return;
+    event.preventDefault();
+    event.stopPropagation();
+    actions.openSession(target);
+  };
+  const reactions = useUi ? useUi((state) => msgKey ? state.reactions?.[msgKey] ?? null : null) : null;
+  return (0, import_react9.createElement)(
+    "div",
+    { className: "bt-astack", "data-lead": lead ? "" : void 0, onClickCapture: onClick },
+    texts2.map((text, index) => {
+      const key = msgKey ? `${msgKey}:${index}` : void 0;
+      const picked = key ? reactions?.[index] ?? [] : [];
+      const last = index === texts2.length - 1;
+      const live = streaming && last;
+      return (0, import_react9.createElement)(
+        "div",
+        { key: index, className: "bt-msg" },
+        (0, import_react9.createElement)(
+          "div",
+          { className: "bt-msg-line" },
+          lead && last ? lead : null,
+          (0, import_react9.createElement)(
+            "div",
+            { className: "bt-bubble" },
+            (0, import_react9.createElement)(import_dsh_client_ui_primitives3.MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels2(), variant: "compact", fileMentions: mentions })
+          ),
+          live ? null : (0, import_react9.createElement)(MessageTools, { text, name: roster.byId[selfId]?.name ?? t("Bot"), sessionId, react: key ? (emoji) => actions.toggleReaction(msgKey, index, emoji) : void 0, actions })
+        ),
+        picked.length ? (0, import_react9.createElement)("div", { className: "bt-reacts" }, picked.map((emoji) => (0, import_react9.createElement)("button", {
+          key: emoji,
+          type: "button",
+          className: "bt-react",
+          "aria-label": t("Remove reaction {emoji}", { emoji }),
+          onClick: () => actions.toggleReaction(msgKey, index, emoji)
+        }, emoji))) : null
+      );
+    })
+  );
+}
+var REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+function useDismiss(open, close, refs) {
+  (0, import_react9.useEffect)(() => {
+    if (!open) return void 0;
+    const onDown = (event) => {
+      if (refs.some((ref) => ref.current?.contains(event.target))) return;
+      close();
+    };
+    const onKey = (event) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        close();
+      }
+    };
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey, true);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+}
+function MessageTools({ text, name, sessionId, react, actions }) {
+  const [panel, setPanel] = (0, import_react9.useState)(null);
+  const [place, setPlace] = (0, import_react9.useState)(null);
+  const [copied, setCopied] = (0, import_react9.useState)(false);
+  const tools = (0, import_react9.useRef)(null);
+  const pop = (0, import_react9.useRef)(null);
+  const close = () => setPanel(null);
+  useDismiss(panel !== null, close, [tools, pop]);
+  const open = (kind, event) => {
+    if (panel === kind) {
+      close();
+      return;
+    }
+    const rect = event.currentTarget.getBoundingClientRect();
+    const below = rect.bottom + 220 < window.innerHeight;
+    setPlace(kind === "react" ? { left: rect.left + rect.width / 2, top: rect.top - 6, "--bt-origin": "bottom center" } : { left: Math.min(rect.left, window.innerWidth - 208), ...below ? { top: rect.bottom + 4 } : { bottom: window.innerHeight - rect.top + 4, "--bt-origin": "bottom left" } });
+    setPanel(kind);
+  };
+  const copy2 = () => {
+    void navigator.clipboard?.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1e3);
+    });
+  };
+  const download2 = () => {
+    const url = URL.createObjectURL(new Blob([text], { type: "text/markdown" }));
+    const link = Object.assign(document.createElement("a"), { href: url, download: `${name}-message.md` });
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1e3);
+  };
+  const item = (label, Icon, run) => (0, import_react9.createElement)("button", { key: label, type: "button", role: "menuitem", onClick: () => {
+    close();
+    run();
+  } }, (0, import_react9.createElement)(Icon), label);
+  return (0, import_react9.createElement)(
+    "div",
+    { ref: tools, className: "bt-tools", "data-open": panel !== null || void 0 },
+    react ? (0, import_react9.createElement)("button", { type: "button", className: "bt-tool", "aria-label": t("Add reaction"), title: t("Add reaction"), "aria-expanded": panel === "react", onClick: (event) => open("react", event) }, (0, import_react9.createElement)(SmileIcon)) : null,
+    sessionId ? (0, import_react9.createElement)("button", { type: "button", className: "bt-tool", "aria-label": t("Reply"), title: t("Reply"), onClick: () => actions.quote(sessionId, text) }, (0, import_react9.createElement)(ReplyIcon)) : null,
+    (0, import_react9.createElement)("button", { type: "button", className: "bt-tool", "aria-label": t("More message actions"), title: t("More"), "aria-haspopup": "menu", "aria-expanded": panel === "more", onClick: (event) => open("more", event) }, copied ? (0, import_react9.createElement)(CheckIcon) : (0, import_react9.createElement)(DotsIcon)),
+    panel === "react" ? (0, import_react_dom.createPortal)((0, import_react9.createElement)(
+      "div",
+      { ref: pop, className: "bt-react-strip", role: "menu", "aria-label": t("Reactions"), style: place },
+      REACTIONS.map((emoji) => (0, import_react9.createElement)("button", { key: emoji, type: "button", role: "menuitem", "aria-label": emoji, onClick: () => {
+        close();
+        react(emoji);
+      } }, emoji))
+    ), document.body) : null,
+    panel === "more" ? (0, import_react_dom.createPortal)((0, import_react9.createElement)(
+      "div",
+      { ref: pop, className: "bt-menu", role: "menu", "aria-label": t("Message actions"), style: place },
+      item(t("Copy"), CopyIcon, copy2),
+      item(t("Download"), DownloadIcon, download2)
+    ), document.body) : null
+  );
+}
+function ThinkingRow({ text }) {
+  return (0, import_react9.createElement)(
+    "details",
+    { className: "bt-think" },
+    (0, import_react9.createElement)("summary", null, t("Thought it through")),
+    (0, import_react9.createElement)("div", { className: "bt-think-text" }, text)
+  );
+}
+function useFileMentions({ node, openFile, fileMentions, useTurnData }) {
+  const tail = useTurnData?.("turn-tail");
+  const location2 = node.location;
+  const turn = location2?.kind === "turn" || location2?.kind === "step" ? location2.turn : void 0;
+  const seq = node.data.finalNode?.seq;
+  return (0, import_react9.useMemo)(() => {
+    if (typeof fileMentions !== "function" || turn?.status !== "closed" || seq === void 0) return void 0;
+    return tail?.closing?.finalNode.seq === seq ? fileMentions({ turn, seq, openFile }) : void 0;
+  }, [fileMentions, openFile, seq, tail, turn]);
+}
+function AssistantCell({ node, groupPart, sessionId, openFile, fileMentions, useTurnData, useRoster, useUi, useTurnSteps, useTurnContext, actions }) {
+  const roster = useRoster((value) => value);
+  const data = node.data;
+  const steps = useTurnSteps(String(data.turn));
+  const contexts = useTurnContext(String(data.turn));
+  const mentions = useFileMentions({ node, openFile, fileMentions, useTurnData });
+  const hidden = Boolean(roster.roomsById[sessionId]) || isHiddenTurn(roster, sessionId, data.turn);
+  const texts2 = groupPart === "reasoning" ? [] : data.blocks.filter((block) => block.kind === "text" && block.text.trim() !== "").map((block) => block.text);
+  const running = data.status === "running";
+  useLiveNote(actions, sessionId, `text:${node.key ?? data.seq}`, !hidden && running && texts2.length > 0 ? { text: true } : null);
+  if (hidden) return null;
+  const reasoning = groupPart === "response" ? "" : turnReasoning(steps, data);
+  const relays = relayPart(data, groupPart) ? relaysBefore(contexts, steps, data) : [];
+  if (texts2.length === 0 && !reasoning && relays.length === 0) return null;
+  const selfId = roster.byId[sessionId]?.id ?? sessionId;
+  return (0, import_react9.createElement)(
+    import_react9.Fragment,
+    null,
+    relays.map((relay) => {
+      const source = relay.source;
+      const sender = roster.byId[source.senderSessionId] ?? { id: source.senderSessionId, name: source.senderName ?? t("a Bot"), color: "gray" };
+      return (0, import_react9.createElement)(EventLine, {
+        key: relay.seq,
+        prefix: source.role === "stopped" ? t("Stopped by") : source.role === "reply" ? t("Reply from") : t("Message from"),
+        bots: [sender],
+        preview: stripHeader(contentText(relay.content)),
+        onOpen: () => {
+          if (sender.id) actions.openExchange(selfId, sender.id);
+        },
+        whole: true
+      });
+    }),
+    reasoning ? (0, import_react9.createElement)(ThinkingRow, { text: reasoning }) : null,
+    texts2.length ? (0, import_react9.createElement)(Bubbles, { texts: texts2, roster, selfId, actions, streaming: running, sessionId, msgKey: `${sessionId}:${data.turn}:${node.key ?? data.seq ?? ""}`, useUi, mentions }) : null
+  );
+}
+function EventLine({ prefix, bots, joiner = t("and"), onOpen, whole = false, preview }) {
+  if (whole && bots.length === 1) {
+    const line = typeof preview === "string" ? preview.replace(/\s+/g, " ").trim() : "";
+    return (0, import_react9.createElement)(
+      "div",
+      { className: "bt-event" },
+      (0, import_react9.createElement)(
+        "button",
+        { type: "button", className: "bt-event-whole", title: bots[0].name, onClick: () => onOpen?.(bots[0]) },
+        (0, import_react9.createElement)("span", null, prefix),
+        (0, import_react9.createElement)(BotMark, { bot: bots[0], size: 16 }),
+        (0, import_react9.createElement)("span", { className: "bt-event-name" }, bots[0].name),
+        line !== "" ? (0, import_react9.createElement)("span", { className: "bt-event-preview" }, line) : null
+      )
+    );
+  }
+  const parts = [];
+  parts.push((0, import_react9.createElement)("span", { key: "p" }, prefix));
+  bots.forEach((bot, index) => {
+    if (index > 0) parts.push((0, import_react9.createElement)("span", { key: `j${index}` }, joiner));
+    parts.push((0, import_react9.createElement)(
+      "button",
+      { key: bot.id ?? index, type: "button", onClick: () => onOpen?.(bot) },
+      (0, import_react9.createElement)(BotMark, { bot, size: 16 }),
+      bot.name
+    ));
+  });
+  return (0, import_react9.createElement)("div", { className: "bt-event" }, parts);
+}
+function GroupMessage({ bot, text, texts: texts2 = [text], room: room2, roster, actions, msgKey, useUi, deliverables }) {
+  const lead = (0, import_react9.createElement)(
+    "button",
+    { type: "button", className: "bt-lead", "aria-label": t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
+    (0, import_react9.createElement)(BotMark, { bot, size: 22 })
+  );
+  return (0, import_react9.createElement)(
+    "div",
+    { className: "bt-group-msg" },
+    (0, import_react9.createElement)(
+      "span",
+      { className: "bt-group-name", style: { color: inkText(colorOf(bot)) } },
+      bot.name,
+      room2?.admin === bot.id ? (0, import_react9.createElement)("span", { className: "bt-group-role" }, t("Admin")) : null
+    ),
+    (0, import_react9.createElement)(Bubbles, { texts: texts2, roster, selfId: bot.id, actions, sessionId: room2?.id, msgKey, useUi, lead }),
+    (0, import_react9.createElement)(DeliverableCards, { deliverables, actions })
+  );
+}
+function stackReplies(replies) {
+  const items = [];
+  replies.forEach((reply, index) => {
+    const last = items.at(-1);
+    if (reply.kind === void 0 && last?.reply.kind === void 0 && last?.reply.botId === reply.botId) {
+      last.texts.push(reply.text);
+      if (reply.deliverables) last.deliverables = [...last.deliverables ?? [], ...reply.deliverables];
+    } else items.push({ reply, index, texts: reply.kind === void 0 ? [reply.text] : [], deliverables: reply.deliverables });
+  });
+  return items;
+}
+function GroupEvent({ prefix, room: room2, name, roster, actions }) {
+  return (0, import_react9.createElement)(
+    "div",
+    { className: "bt-event" },
+    (0, import_react9.createElement)("span", null, prefix),
+    room2 ? (0, import_react9.createElement)("button", { type: "button", onClick: () => actions.openSession(room2.id) }, (0, import_react9.createElement)(RoomAvatar, { room: room2, roster, size: 16 }), room2.name) : name ? (0, import_react9.createElement)("span", null, name) : null
+  );
+}
+function MemoryEvent({ sessionId, scope, result, roster, actions, findBot }) {
+  if (!/^(Saved to|Updated in|Removed from) /.test(result)) return null;
+  const self = roster.byId[sessionId];
+  const team = /^(team|团队|共享)$/i.test(String(scope ?? "").trim());
+  const other = team || !scope ? void 0 : findBot(scope);
+  const target = other && other.id !== self?.id ? other : self;
+  if (!target) return null;
+  const label = team ? t("Team memory updated") : target === self ? t("Memory updated") : t("Updated {name}'s memory", { name: target.name });
+  return (0, import_react9.createElement)(
+    "div",
+    { className: "bt-event" },
+    (0, import_react9.createElement)("button", { type: "button", title: result, onClick: () => actions.openMemory(target.id) }, (0, import_react9.createElement)(MemoryIcon), label)
+  );
+}
+function PartLine({ time }) {
+  return (0, import_react9.createElement)("div", { className: "bt-part-line", role: "separator" }, Number.isFinite(time) ? (0, import_react9.createElement)("span", null, dayLabel(time)) : null);
+}
+var scrollParent = (node) => {
+  for (let at = node.parentElement; at; at = at.parentElement) {
+    if (/(auto|scroll)/.test(getComputedStyle(at).overflowY)) return at;
+  }
+  return null;
+};
+function EarlierParts({ sessionId, roster, actions }) {
+  const [view, setView] = (0, import_react9.useState)({ items: [], cursor: void 0, loading: true, failed: false, startedAt: null });
+  const top = (0, import_react9.useRef)(null);
+  const busy = (0, import_react9.useRef)(false);
+  const alive = (0, import_react9.useRef)(true);
+  const restore = (0, import_react9.useRef)(null);
+  const load = (cursor) => {
+    if (busy.current) return;
+    busy.current = true;
+    setView((current) => ({ ...current, loading: true, failed: false }));
+    actions.earlier(sessionId, cursor).then((page) => {
+      busy.current = false;
+      if (!alive.current) return;
+      const scroller = top.current && scrollParent(top.current);
+      if (scroller) restore.current = { scroller, fromEnd: scroller.scrollHeight - scroller.scrollTop };
+      setView((current) => ({ items: [...page.items, ...current.items], cursor: page.cursor, loading: false, failed: false, startedAt: page.startedAt ?? current.startedAt }));
+    }, () => {
+      busy.current = false;
+      if (alive.current) setView((current) => ({ ...current, loading: false, failed: true }));
+    });
+  };
+  (0, import_react9.useEffect)(() => {
+    alive.current = true;
+    load(void 0);
+    return () => {
+      alive.current = false;
+    };
+  }, [sessionId]);
+  (0, import_react9.useLayoutEffect)(() => {
+    const pending = restore.current;
+    restore.current = null;
+    if (pending) pending.scroller.scrollTop = pending.scroller.scrollHeight - pending.fromEnd;
+  }, [view.items]);
+  (0, import_react9.useEffect)(() => {
+    const node = top.current;
+    if (!node || view.loading || view.failed || !view.cursor || typeof IntersectionObserver !== "function") return void 0;
+    const observer = new IntersectionObserver((entries2) => {
+      if (entries2.some((entry) => entry.isIntersecting)) load(view.cursor);
+    }, { root: scrollParent(node), rootMargin: "600px 0px 0px 0px" });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [view.cursor, view.loading, view.failed]);
+  const selfId = roster.byId[sessionId]?.id;
+  const rows = [];
+  for (const item of view.items) {
+    const last = rows.at(-1);
+    if (item.kind === "bot" && last?.kind === "bot") last.texts.push(item.text);
+    else rows.push(item.kind === "bot" ? { kind: "bot", texts: [item.text] } : item);
+  }
+  return (0, import_react9.createElement)(
+    "div",
+    { className: "bt-earlier", role: "feed", "aria-label": t("Earlier messages"), "aria-busy": view.loading },
+    (0, import_react9.createElement)(
+      "div",
+      { ref: top, className: "bt-earlier-top" },
+      view.loading ? (0, import_react9.createElement)(Shimmer, null, t("Loading earlier messages…")) : view.failed ? (0, import_react9.createElement)("button", { type: "button", className: "bt-soft", onClick: () => load(view.cursor) }, t("Couldn’t load earlier messages · Retry")) : view.cursor ? (0, import_react9.createElement)("button", { type: "button", className: "bt-soft", onClick: () => load(view.cursor) }, t("Load earlier")) : null
+    ),
+    rows.map((row, index) => {
+      const key = rows.length - index;
+      switch (row.kind) {
+        case "divider":
+          return (0, import_react9.createElement)(PartLine, { key, time: row.time });
+        case "user":
+          return (0, import_react9.createElement)("div", { key, className: "bt-urow" }, (0, import_react9.createElement)(
+            "div",
+            { className: "bt-ububble" },
+            row.text ? (0, import_react9.createElement)(import_dsh_client_ui_primitives3.MarkdownText, { text: row.text, labels: mdLabels2(), variant: "compact" }) : null,
+            row.images ? (0, import_react9.createElement)("span", { className: "bt-uimages" }, row.images === 1 ? t("1 image") : t("{count} images", { count: row.images })) : null
+          ));
+        case "answer":
+          return (0, import_react9.createElement)(AnsweredCell, { key, node: { data: row } });
+        case "bot":
+          return (0, import_react9.createElement)(Bubbles, { key, texts: row.texts, roster, selfId, actions });
+        case "event": {
+          if (row.role === "report") return (0, import_react9.createElement)(GroupEvent, { key, prefix: t("Replies from"), room: roster.roomsById[row.roomId], name: t("a group chat"), roster, actions });
+          const other = roster.byId[row.botId] ?? { id: row.botId, name: row.name ?? t("a Bot"), color: "gray" };
+          const prefix = { stopped: t("Stopped by"), reply: t("Reply from") }[row.role] ?? t("Message from");
+          return (0, import_react9.createElement)(EventLine, { key, prefix, bots: [other], onOpen: () => {
+            if (selfId && other.id) actions.openExchange(selfId, other.id);
+          }, whole: true });
+        }
+        default:
+          return null;
+      }
+    }),
+    (0, import_react9.createElement)(PartLine, { time: view.startedAt })
+  );
+}
+function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnClock, useUi, actions }) {
+  const roster = useRoster((value) => value);
+  const data = node.data;
+  const source = data.source !== null && typeof data.source === "object" ? data.source : {};
+  const selfId = roster.byId[sessionId]?.id ?? sessionId;
+  const deferred = source.kind === "bot" && source.deferred === true;
+  const relayed = isRelayContext(data);
+  const turn = node.location?.turn?.turn ?? data.turn;
+  (0, import_react9.useLayoutEffect)(() => {
+    if (relayed) actions.noteTurnPeer(sessionId, turn, source.senderSessionId);
+  }, [relayed, sessionId, turn, source.senderSessionId]);
+  const order = useSessions((list) => {
+    const outline = list.projectionsBySession?.[sessionId]?.values?.turnOutline ?? list.byId[sessionId]?.projectionValues?.turnOutline;
+    return Array.isArray(outline) ? outline.map((entry) => entry.turn).join(",") : "";
+  });
+  const peers = useTurnClock((state) => {
+    if (!relayed) return "";
+    const turns = state[sessionId] ?? {};
+    return Object.keys(turns).filter((key) => turns[key].peer !== void 0).map((key) => `${key}:${turns[key].peer}`).join(",");
+  });
+  const visit = useUi((state) => state.visits?.[sessionId]);
+  const hiddenTurns = roster.exchangeTurns[sessionId];
+  const unreadOpening = useTurnClock((state) => {
+    const first = openingTurn(state[sessionId], order, hiddenTurns);
+    return first?.turn === turn && unseenSince(visit, first.start) ? clockLabel(first.start) : "";
+  });
+  const body = triggerBody();
+  return unreadOpening ? (0, import_react9.createElement)(import_react9.Fragment, null, (0, import_react9.createElement)("div", { className: "bt-open-new" }, (0, import_react9.createElement)(NewDivider), (0, import_react9.createElement)("div", { className: "bt-time-sep", role: "separator" }, unreadOpening)), body) : body;
+  function triggerBody() {
+    if (source.kind === "bot") {
+      if (source.handoff === true) return roster.roomsById[sessionId] ? null : (0, import_react9.createElement)(EarlierParts, { sessionId, roster, actions });
+      if (source.role === "kickoff" || source.role === "room") return null;
+      if (source.role === "secret" || deferred) return null;
+      if (source.role === "post") {
+        if (source.failed !== void 0 || source.resumed === true || source.stopped === true) return null;
+        const room2 = roster.roomsById[sessionId];
+        const poster = roster.byId[source.senderSessionId] ?? { id: source.senderSessionId, name: source.senderName ?? t("a Bot"), color: "gray" };
+        return (0, import_react9.createElement)(GroupMessage, { bot: poster, text: stripHeader(contentText(data.content)), room: room2, roster, actions, msgKey: `${sessionId}:${data.turn}:post`, useUi });
+      }
+      if (source.role === "report") {
+        return (0, import_react9.createElement)(GroupEvent, { prefix: t("Replies from"), room: roster.roomsById[source.roomId], name: t("a group chat"), roster, actions });
+      }
+      if (source.role === "resume" || source.resumed === true) return (0, import_react9.createElement)("div", { className: "bt-event" }, t("Picked up its work after a restart"));
+      if (source.role === "retry" || source.retried === true) return (0, import_react9.createElement)("div", { className: "bt-event" }, t("Asked to make the tool call it wrote as text"));
+      const run = relayed ? commRunOf(
+        order.split(",").filter(Boolean).map(Number),
+        Object.fromEntries(peers.split(",").filter(Boolean).map((pair) => [Number(pair.slice(0, pair.indexOf(":"))), pair.slice(pair.indexOf(":") + 1)])),
+        turn,
+        hiddenTurns
+      ) : null;
+      if (run === "folded") return null;
+      const sender = roster.byId[source.senderSessionId] ?? { id: source.senderSessionId, name: source.senderName ?? t("a Bot"), color: "gray" };
+      const count = run?.count ?? (isHiddenTurn(roster, sessionId, turn) ? 2 : 1);
+      const bots = [sender];
+      for (const peer of (run?.peerIds ?? []).map((id) => roster.byId[id]).filter(Boolean)) {
+        if (!bots.some((bot) => bot.id === peer.id)) bots.push(peer);
+      }
+      return (0, import_react9.createElement)(EventLine, {
+        prefix: source.role === "stopped" ? t("Stopped by") : count > 1 ? t("{count} messages with", { count }) : t("Message from"),
+        bots,
+        preview: stripHeader(contentText(data.content)),
+        onOpen: (bot) => actions.openExchange(selfId, bot.id),
+        whole: true
+      });
+    }
+    if (source.kind === "schedule") {
+      const prompts = reminderPrompts(contentText(data.content));
+      return (0, import_react9.createElement)("div", { className: "bt-event" }, prompts.length > 0 ? t("Scheduled task: {text}", { text: prompts.join(" · ").slice(0, 80) }) : t("Routine started"));
+    }
+    if (source.kind === "user-question-reply" || source.kind === "goal") return null;
+    return (0, import_react9.createElement)("div", { className: "bt-event" }, contentText(data.content).slice(0, 80) || t("Update"));
+  }
+}
+function NewDivider() {
+  return (0, import_react9.createElement)("div", { className: "bt-new-sep", role: "separator", "aria-label": t("New messages") }, (0, import_react9.createElement)("span", null, t("New")));
+}
+function TurnProcessCell({ node, sessionId, turnProcess, useRoster, useUi, useTurnClock, actions }) {
+  const open = turnProcess === void 0 || !turnProcess.foldable || turnProcess.open;
+  (0, import_react9.useEffect)(() => {
+    if (!open) turnProcess.setOpen(true);
+  }, [open, turnProcess]);
+  const turn = node?.location?.turn?.turn ?? node?.data?.turn;
+  const start = node?.location?.turn?.start?.time;
+  const hidden = useRoster((roster) => isHiddenTurn(roster, sessionId, turn));
+  (0, import_react9.useEffect)(() => {
+    actions.noteTurnTime(sessionId, turn, "first", start);
+  }, [sessionId, turn, start]);
+  const visit = useUi((state) => state.visits?.[sessionId]);
+  const fresh = useTurnClock((state) => {
+    const own = state[sessionId]?.[turn];
+    return !hidden && typeof visit?.seen === "number" && own?.first !== void 0 && own.first <= visit.seen && own.end !== void 0 && own.end > visit.seen && own.end <= visit.entered;
+  });
+  return fresh ? (0, import_react9.createElement)(NewDivider) : null;
+}
+function Nothing() {
+  return null;
+}
+var SEPARATOR_GAP_MS = 15 * 60 * 1e3;
+function clockLabel(time, now = Date.now()) {
+  const date = new Date(time);
+  const midnight = (value) => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
+  const days = Math.round((midnight(new Date(now)) - midnight(date)) / 864e5);
+  const clock4 = date.toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" });
+  if (days === 0) return t("Today {time}", { time: clock4 });
+  if (days === 1) return t("Yesterday {time}", { time: clock4 });
+  const sameYear = date.getFullYear() === new Date(now).getFullYear();
+  return `${date.toLocaleDateString(dateLocale(), { weekday: "short", month: "short", day: "numeric", ...sameYear ? {} : { year: "numeric" } })} ${clock4}`;
+}
+function nextTurnStart(turns, turn) {
+  let next;
+  for (const key in turns) {
+    const candidate = Number(key);
+    if (candidate > turn && turns[key].first !== void 0 && (next === void 0 || candidate < next)) next = candidate;
+  }
+  return next === void 0 ? void 0 : turns[next].first;
+}
+function openingTurn(turns, firstTurns, hiddenTurns) {
+  if (!turns || !firstTurns) return null;
+  const start = nextTurnStart(turns, -Infinity);
+  if (start === void 0) return null;
+  const turn = Number(Object.keys(turns).filter((key) => turns[key].first === start)[0]);
+  const listed = firstTurns.split(",").map(Number);
+  const earlier = listed.filter((entry) => entry < turn);
+  return listed.includes(turn) && earlier.every((entry) => hiddenTurns?.includes(entry)) ? { turn, start } : null;
+}
+var unseenSince = (visit, time) => typeof visit?.seen === "number" && time > visit.seen && time <= visit.entered;
+function TurnTailCell({ turn: location2, sessionId, useTurnClock, useUi, actions }) {
+  const turn = location2.turn;
+  const time = location2.end.time;
+  (0, import_react9.useEffect)(() => {
+    actions.noteTurnTime(sessionId, turn, "end", time);
+  }, [sessionId, turn, time]);
+  const label = useTurnClock((state) => {
+    const start = nextTurnStart(state[sessionId] ?? {}, turn);
+    return start !== void 0 && start - time >= SEPARATOR_GAP_MS ? clockLabel(start) : "";
+  });
+  const visit = useUi((state) => state.visits?.[sessionId]);
+  const fresh = useTurnClock((state) => {
+    if (typeof visit?.seen !== "number" || time > visit.seen) return false;
+    const start = nextTurnStart(state[sessionId] ?? {}, turn);
+    return start !== void 0 && start > visit.seen && start <= visit.entered;
+  });
+  const delivered = turnDeliverables(location2, sessionId);
+  if (!label && !fresh && delivered.length === 0) return null;
+  return (0, import_react9.createElement)(
+    import_react9.Fragment,
+    null,
+    delivered.length > 0 ? (0, import_react9.createElement)(DeliverableCards, { deliverables: delivered, actions }) : null,
+    label ? (0, import_react9.createElement)("div", { className: "bt-time-sep", role: "separator" }, label) : null,
+    fresh ? (0, import_react9.createElement)(NewDivider) : null
+  );
+}
+function turnDeliverables(location2, sessionId) {
+  const presented = location2?.data?.get?.("deliverables")?.presented;
+  if (!Array.isArray(presented) || presented.length === 0) return [];
+  const bySequence = /* @__PURE__ */ new Map();
+  for (const file of presented) {
+    if (typeof file?.path !== "string" || file.path === "") continue;
+    const seq = file.seq;
+    if (!bySequence.has(seq)) bySequence.set(seq, []);
+    bySequence.get(seq).push({ path: file.path, description: file.description, index: file.index });
+  }
+  return [...bySequence].map(([seq, files]) => ({ sessionId, seq, files }));
+}
+function Shimmer({ children }) {
+  return (0, import_react9.createElement)("span", { className: "bt-shimmer" }, children);
+}
+var PHRASES = {
+  thinking: ["Thinking about it", "Weighing the options", "Working out a plan", "Sorting out the details"],
+  working: ["On it", "Busy with it", "Moving ahead", "Taking care of it", "Making headway"]
+};
+var TOOL_PHRASES = [
+  [/web_?search|search_?web/i, "Searching online"],
+  [/fetch|browse|browser|web/i, "Reading a page"],
+  [/shell|bash|pwsh|powershell|exec|command|terminal/i, "Running shell commands"],
+  [/^(read|view|cat)\b|read_/i, "Opening a file"],
+  [/grep|glob|list_dir|^ls$|find|search/i, "Looking through files"],
+  [/write|edit|patch|apply|replace/i, "Writing changes"],
+  [/image|photo|draw/i, "Working on an image"]
+];
+var GROUP_PHRASES = { create_group: "Creating a group", update_group: "Updating the group", delete_group: "Deleting the group", post_to_group: "Posting in the group" };
+function toolActivity(name, arg, findBot, self) {
+  switch (name) {
+    case "ask_user":
+      return null;
+    case "request_secret":
+      return null;
+    case "list_secrets":
+      return { label: t("Checking the keys"), state: "searching" };
+    case "ask_user_question":
+      return { label: t("Waiting for your answer"), state: "alert" };
+    case "group_relay":
+      return { relay: true, state: "orbit" };
+    case "message_bot": {
+      const target = findBot(arg("to"));
+      return { label: target ? t("Asking {name}", { name: target.name }) : t("Asking another Bot"), state: "sending" };
+    }
+    case "stop_bot": {
+      const target = findBot(arg("bot"));
+      return { label: target ? t("Stopping {name}", { name: target.name }) : t("Stopping another Bot"), state: "sending" };
+    }
+    case "create_bot":
+      return { label: t("Creating {name}", { name: arg("name") ?? t("a Bot") }), state: "sending" };
+    case "update_bot": {
+      const target = findBot(arg("name")) ?? findBot(arg("bot")) ?? (arg("bot") ? void 0 : self);
+      return { label: t("Updating {name}", { name: target?.name ?? t("a Bot") }), state: "sending" };
+    }
+    case "list_bots":
+      return { label: t("Checking the team"), state: "searching" };
+    case "read_group_chat":
+      return { label: t("Reading {name}", { name: arg("group") ?? t("a group chat") }), state: "searching" };
+    case "read_own_chat":
+      return { label: t("Looking back through the chat"), state: "searching" };
+    case "remember":
+      return { label: t("Saving to memory"), state: "working" };
+    case "forget":
+      return { label: t("Updating memory"), state: "working" };
+    case "recall":
+      return { label: t("Checking memory"), state: "searching" };
+    default:
+      if (GROUP_PHRASES[name]) return { label: t(GROUP_PHRASES[name]), state: "sending" };
+      const phrase = TOOL_PHRASES.find(([pattern]) => pattern.test(name))?.[1];
+      return { label: phrase ? t(phrase) : null, state: toolState(name) };
+  }
+}
+function workPhrase(doing) {
+  const { tool, said, note, target, switching } = typeof doing === "string" ? { tool: doing } : doing ?? {};
+  if (switching) return t("Moving to a fresh conversation");
+  const own = (said || note)?.replace(/[\s.。…]+$/u, "");
+  if (own) return own;
+  if (!tool) return t("Thinking about it");
+  const label = toolActivity(tool, () => void 0, () => void 0)?.label ?? t("On it");
+  return target ? `${label} · ${target}` : label;
+}
+function useLiveNote(actions, sessionId, id, entry) {
+  const key = entry ? JSON.stringify(entry) : "";
+  (0, import_react9.useEffect)(() => {
+    if (!key) return void 0;
+    actions.noteLive(sessionId, id, JSON.parse(key));
+    return () => actions.noteLive(sessionId, id, null);
+  }, [sessionId, id, key]);
+}
+function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork }) {
+  const [live, setLive] = (0, import_react9.useState)({ replies: [], speaking: null });
+  (0, import_react9.useEffect)(() => {
+    if (done) return void 0;
+    let stop = false;
+    let timer;
+    let seen = "";
+    const tick = async () => {
+      const result = await actions.roomProgress(sessionId);
+      if (stop) return;
+      const entry = (result ?? []).find((item) => item.callId === callId) ?? (result ?? [])[0];
+      const key = entry ? JSON.stringify([entry.replies, entry.speaking]) : "";
+      if (entry && key !== seen) {
+        seen = key;
+        setLive({ replies: entry.replies ?? [], speaking: entry.speaking ?? null });
+      }
+      timer = setTimeout(tick, document.hidden ? 5e3 : 1e3);
+    };
+    void tick();
+    return () => {
+      stop = true;
+      clearTimeout(timer);
+    };
+  }, [done, sessionId, callId]);
+  let replies = live.replies;
+  if (done) {
+    try {
+      replies = JSON.parse(contentText(content)).replies ?? [];
+    } catch {
+      replies = [];
+    }
+  }
+  const pending = done || !live.speaking ? [] : [live.speaking];
+  const speakerTool = useWork?.((work) => work.bots?.[live.speaking]?.tool) ?? void 0;
+  const speakerDoing = useWork?.((work) => work.bots?.[live.speaking]?.tool ? workPhrase(work.bots[live.speaking]) : void 0) ?? void 0;
+  if (replies.length === 0 && pending.length === 0) return null;
+  const room2 = roster.roomsById[sessionId];
+  return (0, import_react9.createElement)(
+    "div",
+    { className: "bt-group-replies" },
+    stackReplies(replies).map(({ reply, index, texts: texts2, deliverables }) => {
+      const bot = roster.byId[reply.botId] ?? { id: reply.botId, name: reply.name, color: reply.color ?? "gray" };
+      if (reply.kind === "user") {
+        return (0, import_react9.createElement)("div", { key: `user-${index}`, className: "bt-urow" }, (0, import_react9.createElement)(
+          "div",
+          { className: "bt-ububble" },
+          (0, import_react9.createElement)(import_dsh_client_ui_primitives3.MarkdownText, { text: reply.text, labels: mdLabels2(), variant: "compact" })
+        ));
+      }
+      if (reply.kind === "failed") {
+        return (0, import_react9.createElement)(
+          "div",
+          { key: `${reply.botId}-${index}`, className: "bt-event bt-event-error", role: "status", title: [reply.code, reply.status, reply.text].filter(Boolean).join(" · ") },
+          t("{name} could not answer: {reason}", { name: bot.name, reason: failureLabel(reply.code, reply.text) })
+        );
+      }
+      if (reply.kind === "lookup") {
+        return (0, import_react9.createElement)(
+          "div",
+          { key: `${reply.botId}-${index}`, className: "bt-event" },
+          reply.text ? t("{name} looked up its own chat for “{text}”", { name: bot.name, text: reply.text }) : t("{name} looked up its own chat", { name: bot.name })
+        );
+      }
+      if (reply.kind === "missed") {
+        return (0, import_react9.createElement)("div", { key: `${reply.botId}-${index}`, className: "bt-event" }, t("{name} didn't answer in time", { name: bot.name }));
+      }
+      if (reply.kind === "resumed") {
+        return (0, import_react9.createElement)("div", { key: `${reply.botId}-${index}`, className: "bt-event" }, t("{name} was cut off by a restart and picked its work back up", { name: bot.name }));
+      }
+      if (reply.kind === "cut") {
+        return (0, import_react9.createElement)("div", { key: `${reply.botId}-${index}`, className: "bt-event" }, t("{name} was cut off by a restart again and stopped", { name: bot.name }));
+      }
+      if (reply.kind === "approval" || reply.kind === "working") {
+        return (0, import_react9.createElement)(
+          "div",
+          { key: `${reply.botId}-${index}`, className: "bt-event" },
+          (0, import_react9.createElement)(
+            "button",
+            { type: "button", className: "bt-event-whole", onClick: () => actions.showDetails(sessionId) },
+            (0, import_react9.createElement)(BotMark, { bot, size: 16 }),
+            (0, import_react9.createElement)("span", { className: "bt-event-name" }, t(reply.kind === "working" ? "{name} started on it" : "{name} paused for your approval", { name: bot.name }))
+          )
+        );
+      }
+      if (reply.kind === "stopped") {
+        return (0, import_react9.createElement)("div", { key: `${reply.botId}-${index}`, className: "bt-event" }, t("You stopped {name}'s work", { name: bot.name }));
+      }
+      return (0, import_react9.createElement)(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts: texts2, room: room2, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : void 0, useUi, deliverables });
+    }),
+    pending.map((id) => {
+      const bot = roster.byId[id];
+      if (!bot) return null;
+      return (0, import_react9.createElement)(
+        "div",
+        { key: `pending-${id}`, className: "bt-activity" },
+        (0, import_react9.createElement)(BotMark, { bot, size: 22, state: speakerTool ? toolState(speakerTool) : "thinking" }),
+        (0, import_react9.createElement)(Shimmer, null, speakerDoing ? `${bot.name} · ${speakerDoing}…` : t("{name} is typing…", { name: bot.name }))
+      );
+    })
+  );
+}
+var DRAWN = /* @__PURE__ */ new Set(["message_bot", "stop_bot", "create_bot", "update_bot", "group_relay", "create_group", "update_group", "delete_group", "post_to_group", "ask_user", "request_secret", "ask_user_question", "read_group_chat", "remember", "forget"]);
+var CARDS = /* @__PURE__ */ new Set(["ask_user", "request_secret"]);
+function callTree(root) {
+  const calls = [];
+  const seen = /* @__PURE__ */ new Set();
+  const visit = (call2) => {
+    const id = call2.callId ?? call2;
+    if (seen.has(id)) return;
+    seen.add(id);
+    calls.push(call2);
+    for (const child of call2.subCalls ?? []) visit(child);
+  };
+  visit(root);
+  return calls;
+}
+function useShownCards(actions, sessionId, callIds) {
+  const key = JSON.stringify(callIds);
+  (0, import_react9.useLayoutEffect)(() => {
+    const ids = JSON.parse(key);
+    if (ids.length === 0 || !actions.noteCards) return void 0;
+    actions.noteCards(sessionId, ids, 1);
+    return () => actions.noteCards(sessionId, ids, -1);
+  }, [sessionId, key]);
+}
+function renderCall(call2, { sessionId, roster, actions, useUi, useWork, findBot }) {
+  const tool = toolName(call2);
+  const done = call2.kind === "tool-result";
+  const { text: arg, value: argValue } = toolArgs(call2);
+  const self = roster.byId[sessionId];
+  switch (tool) {
+    case "message_bot": {
+      const target = findBot(arg("to")) ?? { name: arg("to") ?? "…", color: "gray" };
+      if (done && call2.isError) return (0, import_react9.createElement)("div", { className: "bt-event" }, t("Couldn't message {name}", { name: target.name }));
+      return (0, import_react9.createElement)(EventLine, { prefix: t("Messaged"), bots: [target], onOpen: (bot) => bot.id && actions.openExchange(self?.id ?? sessionId, bot.id), whole: true });
+    }
+    case "stop_bot": {
+      const target = findBot(arg("bot")) ?? { name: arg("bot") ?? "…", color: "gray" };
+      if (done && call2.isError) return (0, import_react9.createElement)("div", { className: "bt-event" }, t("Couldn't stop {name}", { name: target.name }));
+      return (0, import_react9.createElement)(EventLine, { prefix: t("Stopped"), bots: [target], onOpen: (bot) => bot.id && actions.openExchange(self?.id ?? sessionId, bot.id), whole: true });
+    }
+    case "create_bot": {
+      const created = findBot(arg("name"));
+      if (!done || created === void 0) return null;
+      return (0, import_react9.createElement)(EventLine, { prefix: t("Created"), bots: [created], onOpen: (bot) => actions.openSession(bot.id) });
+    }
+    case "update_bot": {
+      const target = findBot(arg("name")) ?? findBot(arg("bot")) ?? (arg("bot") ? void 0 : self);
+      return done && target ? (0, import_react9.createElement)(EventLine, { prefix: t("Updated"), bots: [target], onOpen: (bot) => actions.openSession(bot.id) }) : null;
+    }
+    case "group_relay":
+      return (0, import_react9.createElement)(GroupReplies, { sessionId, callId: call2.callId, done, content: call2.content, roster, actions, useUi, useWork });
+    case "create_group":
+    case "update_group":
+    case "delete_group":
+    case "post_to_group": {
+      const verbs = {
+        create_group: ["Created group", "Couldn't create the group"],
+        update_group: ["Updated group", "Couldn't update the group"],
+        delete_group: ["Deleted group", "Couldn't delete the group"],
+        post_to_group: ["Posted in", "Couldn't post in the group"]
+      }[tool];
+      if (!done) return null;
+      const result = contentText(call2.content);
+      const named = /^(Created group|Updated|Nothing changed in|Deleted|Posted in) "([^"]+)"/.exec(result);
+      if (call2.isError || !named) return (0, import_react9.createElement)("div", { className: "bt-event", title: result }, t(verbs[1]));
+      const name = named[2];
+      const room2 = roster.rooms.find((entry) => entry.name === name);
+      return (0, import_react9.createElement)(GroupEvent, { prefix: t(verbs[0]), room: tool === "delete_group" ? void 0 : room2, name, roster, actions });
+    }
+    case "ask_user": {
+      const question = roster.questions?.[sessionId];
+      if (!question || question.callId !== call2.callId) return (0, import_react9.createElement)("span", { className: "bt-q-gone", hidden: true });
+      return (0, import_react9.createElement)(PendingQuestion, { sessionId, question, actions, inline: true });
+    }
+    case "request_secret":
+      return (0, import_react9.createElement)(SecretToolCell, { sessionId, callId: call2.callId, name: arg("name"), done, content: call2.content, roster, actions });
+    case "ask_user_question": {
+      if (!done) return null;
+      let parsed = null;
+      try {
+        parsed = JSON.parse(contentText(call2.content));
+      } catch {
+        parsed = null;
+      }
+      const answer = parsed?.answers?.[0];
+      const question = argValue("questions")?.[0];
+      if (!answer) return null;
+      return (0, import_react9.createElement)("div", { className: "bt-q-inline" }, (0, import_react9.createElement)(SettledQuestion, { question, answer }));
+    }
+    case "read_group_chat": {
+      if (!done) return null;
+      const room2 = roster.rooms.find((entry) => entry.name === arg("group"));
+      return room2 ? (0, import_react9.createElement)(GroupEvent, { prefix: t("Read"), room: room2, roster, actions }) : null;
+    }
+    case "remember":
+    case "forget":
+      return done && !call2.isError ? (0, import_react9.createElement)(MemoryEvent, { sessionId, scope: arg("scope"), result: contentText(call2.content), roster, actions, findBot }) : null;
+    default:
+      return null;
+  }
+}
+function ToolCell({ node, sessionId, useRoster, useUi, useWork, actions }) {
+  const roster = useRoster((value) => value);
+  const root = node.data.root;
+  const turn = node.location?.turn?.turn ?? root.turn;
+  const hidden = isHiddenTurn(roster, sessionId, turn);
+  const findBot = (nameOrId) => roster.byId[nameOrId] ?? roster.bots.find((bot) => bot.name.toLowerCase() === String(nameOrId ?? "").toLowerCase());
+  const calls = hidden ? [] : callTree(root);
+  const drawn = calls.filter((call2) => DRAWN.has(toolName(call2)));
+  const running = root.kind === "tool-result" ? void 0 : calls.findLast((call2) => call2.kind !== "tool-result");
+  const note = running ? toolActivity(toolName(running), toolArgs(running).text, findBot, roster.byId[sessionId]) : null;
+  useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note);
+  useShownCards(actions, sessionId, drawn.filter((call2) => CARDS.has(toolName(call2)) && call2.callId).map((call2) => call2.callId));
+  if (drawn.length === 0) return null;
+  const env = { sessionId, roster, actions, useUi, useWork, findBot };
+  return (0, import_react9.createElement)(import_react9.Fragment, null, drawn.map((call2, index) => (0, import_react9.createElement)(import_react9.Fragment, { key: call2.callId ?? index }, renderCall(call2, env))));
+}
+
+// src/client/activity-row.js
+var import_react10 = require("react");
+var import_react_dom2 = require("react-dom");
+var PHRASE_HOLD_MS = 800;
+var drawPhrase = (pool) => t(pool[Math.min(pool.length - 1, Math.floor(Math.random() * pool.length))]);
+function elapsedLabel(ms2) {
+  const minutes = Math.floor(ms2 / 6e4);
+  if (minutes < 60) return `${Math.max(1, minutes)}m`;
+  const hours = Math.floor(minutes / 60);
+  return minutes % 60 === 0 ? `${hours}h` : `${hours}h ${minutes % 60}m`;
+}
+function useRunningHost(active) {
+  const [host, setHost] = (0, import_react10.useState)(null);
+  (0, import_react10.useEffect)(() => {
+    if (!active) {
+      setHost(null);
+      return void 0;
+    }
+    let frame = 0;
+    const find = () => {
+      frame = 0;
+      const node = document.querySelector("[data-chat-flow] > [data-chat-running]");
+      setHost((prev) => prev === node ? prev : node);
+    };
+    const observer = new MutationObserver(() => {
+      if (!frame) frame = requestAnimationFrame(find);
+    });
+    observer.observe(document.querySelector("[data-conversation-scroll]") ?? document.body, { childList: true, subtree: true });
+    find();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [active]);
+  return host;
+}
+function useRowEntrances(replacing) {
+  const check = (0, import_react10.useRef)(replacing);
+  check.current = replacing;
+  (0, import_react10.useEffect)(() => {
+    const seen = /* @__PURE__ */ new WeakSet();
+    const started = Date.now();
+    let column = null;
+    let frame = 0;
+    const settle = (event) => {
+      if (event.target !== event.currentTarget || !/^bt-row/.test(event.animationName)) return;
+      delete event.currentTarget.dataset.btEnter;
+      event.currentTarget.removeEventListener("animationend", settle);
+    };
+    const scan = () => {
+      frame = 0;
+      const next = document.querySelector("[data-chat-flow]");
+      if (next !== column) {
+        observer.disconnect();
+        column = next;
+        if (column) observer.observe(column, { childList: true, subtree: true });
+      }
+      if (!column) return;
+      const items = [...column.querySelectorAll(":scope > [data-chat-flow-key]")];
+      let last = -1;
+      items.forEach((item, index) => {
+        if (seen.has(item)) last = index;
+      });
+      const fresh = items.filter((item) => !seen.has(item) && item.offsetHeight > 0);
+      for (const item of fresh) seen.add(item);
+      if (last < 0 || Date.now() - started < 800 || fresh.length > 3) return;
+      for (const item of fresh) {
+        if (items.indexOf(item) < last) continue;
+        const reply = [void 0, "assistant-step", "tool-call"].includes(item.dataset.chatFlowKind);
+        item.dataset.btEnter = reply && check.current() ? "after-collapse" : "new";
+        item.addEventListener("animationend", settle);
+      }
+    };
+    const observer = new MutationObserver(() => {
+      if (!frame) frame = requestAnimationFrame(scan);
+    });
+    scan();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
+}
+function ActivityIndicator({ sessionId, useRoster, useSessionStatus, useLive, useSession, actions }) {
+  const roster = useRoster((value) => value);
+  const running = useSessionStatus((map) => map.get(sessionId)?.running === true);
+  const liveKey = useLive((state) => JSON.stringify(state[sessionId] ?? {}));
+  const pendingInput = useSession((snapshot) => Math.max(0, ...(snapshot?.pendingSubmissions ?? []).filter((sub) => sub.placement !== "queued").map((sub) => sub.time)));
+  const bot = roster.byId[sessionId];
+  const room2 = roster.roomsById[sessionId];
+  const entries2 = (0, import_react10.useMemo)(() => Object.values(JSON.parse(liveKey)), [liveKey]);
+  const streaming = entries2.some((entry) => entry.text);
+  const tools = entries2.filter((entry) => !entry.text).sort((a, b) => a.at - b.at);
+  const relaying = tools.some((entry) => entry.relay);
+  const visible = running && !streaming && !relaying && (bot !== void 0 || room2 !== void 0);
+  const tool = tools.at(-1);
+  const inputRef = (0, import_react10.useRef)(0);
+  const inputAt = Math.max(inputRef.current, pendingInput);
+  inputRef.current = inputAt;
+  const want = !visible ? null : inputAt > (tool?.at ?? 0) ? { key: `input:${inputAt}`, pool: PHRASES.thinking, state: "thinking" } : tool ? { key: tool.label ? `tool:${tool.label}` : "working", label: tool.label, pool: PHRASES.working, state: tool.state ?? "working" } : { key: "thinking", pool: PHRASES.thinking, state: "thinking" };
+  const [shown, setShown] = (0, import_react10.useState)(null);
+  const wantKey = want?.key ?? null;
+  const markState = (0, import_react10.useRef)("thinking");
+  if (want) markState.current = want.state;
+  (0, import_react10.useEffect)(() => {
+    if (wantKey === null || shown?.key === wantKey) return void 0;
+    const make = () => setShown({ key: wantKey, text: want.label ?? drawPhrase(want.pool), at: Date.now() });
+    const wait = shown ? shown.at + PHRASE_HOLD_MS - Date.now() : 0;
+    if (wait <= 0) {
+      make();
+      return void 0;
+    }
+    const timer = setTimeout(make, wait);
+    return () => clearTimeout(timer);
+  }, [wantKey, shown]);
+  const [phase, setPhase] = (0, import_react10.useState)(null);
+  const endedAt = (0, import_react10.useRef)(0);
+  const shift = (0, import_react10.useRef)(null);
+  const leaving = (0, import_react10.useRef)(false);
+  leaving.current = phase !== null && !visible;
+  (0, import_react10.useEffect)(() => {
+    if (visible) {
+      setPhase("in");
+      return void 0;
+    }
+    setPhase((current) => current === "in" ? "out" : current);
+    const timer = setTimeout(() => {
+      shift.current = document.querySelector("[data-conversation-scroll]")?.scrollTop ?? null;
+      setPhase((current) => current === "out" ? null : current);
+    }, 140);
+    return () => clearTimeout(timer);
+  }, [visible]);
+  (0, import_react10.useLayoutEffect)(() => {
+    if (phase !== null) return;
+    endedAt.current = Date.now();
+    setShown(null);
+    const before = shift.current;
+    shift.current = null;
+    const scroller = document.querySelector("[data-conversation-scroll]");
+    if (before === null || !scroller || reducedMotion()) return;
+    const delta = before - scroller.scrollTop;
+    if (delta > 0) scroller.querySelector("[data-chat-flow]")?.animate([{ transform: `translateY(${-delta}px)` }, { transform: "none" }], { duration: 140, easing: "cubic-bezier(.23,1,.32,1)" });
+  }, [phase]);
+  (0, import_react10.useEffect)(() => {
+    if (!running) actions.clearLive(sessionId);
+  }, [running, sessionId]);
+  useRowEntrances(() => leaving.current || Date.now() - endedAt.current < 300);
+  const [now, setNow] = (0, import_react10.useState)(Date.now);
+  (0, import_react10.useEffect)(() => {
+    if (phase !== "in") return void 0;
+    const timer = setInterval(() => setNow(Date.now()), 1e4);
+    return () => clearInterval(timer);
+  }, [phase]);
+  const host = useRunningHost(running);
+  if (!host || phase === null || !shown) return null;
+  const elapsed = now - shown.at >= 6e4 ? elapsedLabel(now - shown.at) : null;
+  return (0, import_react_dom2.createPortal)((0, import_react10.createElement)(
+    "div",
+    { className: "bt-typing", "data-exiting": phase === "out" ? "" : void 0, "aria-hidden": true },
+    bot ? (0, import_react10.createElement)(BotMark, { bot, size: 28, state: markState.current, live: true, pokeable: true }) : (0, import_react10.createElement)(RoomAvatar, { room: room2, roster, size: 28 }),
+    (0, import_react10.createElement)(
+      "span",
+      { className: "bt-typing-text" },
+      (0, import_react10.createElement)(
+        "span",
+        { key: `${shown.key}:${shown.at}`, className: "bt-typing-label" },
+        (0, import_react10.createElement)(Shimmer, null, `${shown.text}…`),
+        elapsed ? (0, import_react10.createElement)("span", { className: "bt-typing-time" }, `· ${elapsed}`) : null
+      )
+    )
+  ), host);
+}
+
+// src/client/dsh-offer.js
+var APP_OFFER = /* @__PURE__ */ new Set(["available", "downloading", "verifying", "installing", "ready"]);
+var bare = (value) => String(value ?? "").trim().replace(/^v/i, "").split("+")[0];
+var sameVersion = (a, b) => bare(a) !== "" && bare(a) === bare(b);
+function showsDshRow(dsh, app) {
+  if (!dsh?.verified || !dsh.current || sameVersion(dsh.verified, dsh.current)) return false;
+  if (dsh.kind === "npm") return true;
+  return dsh.kind === "app" && APP_OFFER.has(app?.phase) && sameVersion(app.version, dsh.verified);
 }
 
 // src/client/attention.js
@@ -8753,64 +8754,88 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
   const hasStrip = canBrowse && tabState.ids.length > 0;
   const showStrip = view !== "preview" && view !== "products" && (hasStrip || view === "files");
   return (0, import_react14.createElement)(
-    "aside",
-    {
-      ref: root,
-      className: "bt-panel",
-      "data-view": view,
-      "aria-label": `${view === "files" ? t("Files") : view === "preview" ? t("File preview") : view === "products" ? t("All deliverables") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details")}`,
-      // A leaving panel is out of the accessibility tree and holds no focus. `aria-hidden`
-      // cannot say that here: the tap that closed the panel leaves the focus on one of its own
-      // buttons, and a browser refuses to hide a subtree that still holds the focus -- it logs
-      // "Blocked aria-hidden on an element because its descendant retained focus", keeps
-      // announcing the panel, and leaves the focus on a control that is on its way out.
-      // `inert` is the browser's own answer: it hides the subtree and lets the focus go.
-      "data-leaving": leaving || void 0,
-      inert: leaving ? "" : void 0,
-      "data-settling": settling || void 0,
-      "data-instant": instant || void 0,
-      "data-dragging": dragging || void 0,
-      style: { "--bt-panel-w": `${panelWidth}px` },
-      onAnimationEnd: (event) => {
-        if (event.target === event.currentTarget) setLanded(true);
-      }
-    },
-    leaving ? null : (0, import_react14.createElement)("div", { className: "bt-panel-grip", role: "separator", "aria-orientation": "vertical", "aria-label": t("Resize panel"), onPointerDown: startResize }),
-    // On a phone the panel is full screen and already carries a close button in the corner
-    // the desktop layout puts its own controls, so it adds none of its own.
-    // Over the whole window while dragging: the cursor stays a resize cursor and the
-    // pages underneath (the chat, the guest) see no pointer.
-    dragging ? (0, import_react_dom6.createPortal)((0, import_react14.createElement)("div", { className: "bt-drag-shield", "aria-hidden": true }), document.body) : null,
-    showStrip ? (0, import_react14.createElement)(PanelStrip, { bot, subject: pane.id, view, ids: tabState.ids, active, reading, onView: switchView, actions: panelActions, useBrowserPages }) : null,
-    view === "browser" && bot ? (0, import_react14.createElement)(BrowserView, { key: `browser:${active}`, bot, tabId: active, leaving, landed: landed && !settling, actions, useBrowserPages }) : view === "preview" ? (0, import_react14.createElement)(
-      "div",
-      { key: `preview:${pane.preview?.path ?? ""}`, className: "bt-panel-view" },
-      (0, import_react14.createElement)(DeliveredPreview, { file: pane.preview, actions: panelActions, onClose: () => actions.closePreview?.() })
-    ) : view === "products" ? (0, import_react14.createElement)(
-      "div",
-      { key: "products", className: "bt-panel-view" },
-      (0, import_react14.createElement)(DeliveredList, { actions: panelActions, onClose: () => actions.closeProducts?.() })
-    ) : view === "files" ? (0, import_react14.createElement)(FilePreview, { key: "files", actions: panelActions }) : (0, import_react14.createElement)(
-      "div",
-      { key: `details:${pane.id}:${pane.renaming ? "rename" : ""}:${pane.tab ?? ""}`, className: "bt-panel-view" },
-      (0, import_react14.createElement)(DetailsDrawer, {
-        sessionId: pane.id,
-        startRenaming: pane.renaming,
-        startTab: pane.tab,
-        hasStrip,
-        roster,
-        actions: panelActions,
-        useSessions,
-        useSessionStatus,
-        useActivity,
-        useWork,
-        useBrowserTabs,
-        useBrowserPages
-      })
+    import_react14.Fragment,
+    null,
+    view === "products" ? (0, import_react14.createElement)("div", { className: "bt-panel-scrim", onClick: () => actions.closeProducts?.() }) : null,
+    (0, import_react14.createElement)(
+      "aside",
+      {
+        ref: root,
+        className: "bt-panel",
+        "data-view": view,
+        "aria-label": `${view === "files" ? t("Files") : view === "preview" ? t("File preview") : view === "products" ? t("All deliverables") : view === "browser" && bot ? t("{name}'s browser", { name: bot.name }) : t("Conversation details")}`,
+        // A leaving panel is out of the accessibility tree and holds no focus. `aria-hidden`
+        // cannot say that here: the tap that closed the panel leaves the focus on one of its own
+        // buttons, and a browser refuses to hide a subtree that still holds the focus -- it logs
+        // "Blocked aria-hidden on an element because its descendant retained focus", keeps
+        // announcing the panel, and leaves the focus on a control that is on its way out.
+        // `inert` is the browser's own answer: it hides the subtree and lets the focus go.
+        "data-leaving": leaving || void 0,
+        inert: leaving ? "" : void 0,
+        "data-settling": settling || void 0,
+        "data-instant": instant || void 0,
+        "data-dragging": dragging || void 0,
+        style: { "--bt-panel-w": `${panelWidth}px` },
+        onAnimationEnd: (event) => {
+          if (event.target === event.currentTarget) setLanded(true);
+        }
+      },
+      leaving ? null : (0, import_react14.createElement)("div", { className: "bt-panel-grip", role: "separator", "aria-orientation": "vertical", "aria-label": t("Resize panel"), onPointerDown: startResize }),
+      // What says the sheet came from below; a phone's rule draws it, nothing else sees it.
+      view === "products" ? (0, import_react14.createElement)("div", { className: "bt-sheet-handle", "aria-hidden": true }) : null,
+      // On a phone the panel is full screen and already carries a close button in the corner
+      // the desktop layout puts its own controls, so it adds none of its own.
+      // Over the whole window while dragging: the cursor stays a resize cursor and the
+      // pages underneath (the chat, the guest) see no pointer.
+      dragging ? (0, import_react_dom6.createPortal)((0, import_react14.createElement)("div", { className: "bt-drag-shield", "aria-hidden": true }), document.body) : null,
+      showStrip ? (0, import_react14.createElement)(PanelStrip, { bot, subject: pane.id, view, ids: tabState.ids, active, reading, onView: switchView, actions: panelActions, useBrowserPages }) : null,
+      view === "browser" && bot ? (0, import_react14.createElement)(BrowserView, { key: `browser:${active}`, bot, tabId: active, leaving, landed: landed && !settling, actions, useBrowserPages }) : view === "preview" ? (0, import_react14.createElement)(
+        "div",
+        { key: `preview:${pane.preview?.path ?? ""}`, className: "bt-panel-view" },
+        (0, import_react14.createElement)(DeliveredPreview, { file: pane.preview, actions: panelActions, onClose: () => actions.closePreview?.() })
+      ) : view === "products" ? (0, import_react14.createElement)(
+        "div",
+        { key: "products", className: "bt-panel-view" },
+        (0, import_react14.createElement)(DeliveredList, { actions: panelActions, onClose: () => actions.closeProducts?.() })
+      ) : view === "files" ? (0, import_react14.createElement)(FilePreview, { key: "files", actions: panelActions }) : (0, import_react14.createElement)(
+        "div",
+        { key: `details:${pane.id}:${pane.renaming ? "rename" : ""}:${pane.tab ?? ""}`, className: "bt-panel-view" },
+        (0, import_react14.createElement)(DetailsDrawer, {
+          sessionId: pane.id,
+          startRenaming: pane.renaming,
+          startTab: pane.tab,
+          hasStrip,
+          roster,
+          actions: panelActions,
+          useSessions,
+          useSessionStatus,
+          useActivity,
+          useWork,
+          useBrowserTabs,
+          useBrowserPages
+        })
+      )
     )
   );
 }
 var BROWSER_CSS = `
+/* 全部产物 on a phone is a sheet from the foot rather than the column that stands beside the
+   conversation: full width, glued to the bottom, two rounded top corners and a handle that says
+   where it came from, as tall as its list asks for up to 85% of the screen and scrolling inside.
+   The desktop column is untouched -- every rule of the sheet is on the phone. */
+html[data-bt-mobile] .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;border-left:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3);overflow:hidden;animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)}
+html[data-bt-mobile] .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out .2s cubic-bezier(.4,0,1,1) forwards}
+html[data-bt-mobile] .bt-sheet-handle{flex:none;width:36px;height:4px;margin:8px auto 0;border-radius:999px;background:var(--bt-line-2)}
+/* The sheet's title bar reads left to right: the name from the edge, the close at the other one
+   (the panel's own arrow stays where a preview's head is). */
+html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:1;min-width:0;text-align:left}
+/* The scrim a sheet is dismissed with. It is drawn only where the sheet is: the desktop column has
+   no backdrop of its own. */
+.bt-panel-scrim{display:none}
+html[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.32);animation:bt-fade .2s ease-out}
+@keyframes bt-sheet-in{from{transform:translateY(100%)}to{transform:none}}
+@keyframes bt-sheet-out{from{transform:none}to{transform:translateY(100%)}}
+@media (prefers-reduced-motion:reduce){html[data-bt-mobile] .bt-panel[data-view=products]{animation:bt-fade .12s ease-out}}
 .bt-panel{--bt-panel-view-fade:${SPRING_SHAPE.duration}ms}
 .bt-ptabs{position:relative;display:flex;align-items:center;height:44px;flex:none;border-bottom:.5px solid var(--bt-line);padding:0 6px;gap:0;animation:bt-strip-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
 @keyframes bt-strip-in{from{height:0;opacity:0}}
@@ -16772,7 +16797,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "5a4736e8" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "f17bfd17" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

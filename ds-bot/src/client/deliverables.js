@@ -16,8 +16,9 @@
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'
+import { CloseIcon, LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'
 import { FileView } from './file-preview.js'
+import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
 
 const basename = (path) => {
@@ -416,11 +417,16 @@ export function DeliveredPreview({ file, actions, onClose }) {
  * The title bar both panel pages open with: the way back, what is being shown, and
  * whatever that page puts beside the two (a page's source toggle, and nothing else).
  */
-function PreviewHead({ name, onClose, children }) {
-  return h('div', { className: 'bt-preview-head' },
-    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(LucideChevronLeftIcon)),
+// The head a preview and the deliverables list share. `close` is the phone's sheet: a sheet came up
+// from the foot and slides back down, so its way out is a close at the far end and its name reads
+// from the edge -- the panel's own back arrow belongs to the preview page, which is a level down.
+function PreviewHead({ name, onClose, children, close = false }) {
+  return h('div', { className: close ? 'bt-preview-head bt-sheet-head' : 'bt-preview-head' },
+    close ? null : h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(LucideChevronLeftIcon)),
     h('span', { className: 'bt-preview-name' }, name),
-    children)
+    close
+      ? h('button', { type: 'button', className: 'bt-preview-back bt-sheet-close', onClick: onClose, 'aria-label': t('Close'), title: t('Close') }, h(CloseIcon))
+      : children)
 }
 
 /**
@@ -433,6 +439,8 @@ function PreviewHead({ name, onClose, children }) {
  * its kind and how big it is. Read-only: it lists and opens.
  */
 export function DeliveredList({ actions, onClose }) {
+  // A phone draws this list as a sheet from the foot (browser-pane.js), so its head is the sheet's.
+  const mobile = useMobile()
   const [state, setState] = useState('reading') // reading | shown | failed
   const [files, setFiles] = useState([])
   const [, bumpSizes] = useState(0)
@@ -493,7 +501,7 @@ export function DeliveredList({ actions, onClose }) {
                 h('div', { className: 'bt-fp-empty-text' }, t('Files a Bot hands over are listed here.')))
             : h(DeliverableCards, { deliverables: rows, actions, list: true, metaOf }))
   return h(Fragment, null,
-    h(PreviewHead, { name: t('All deliverables'), onClose }),
+    h(PreviewHead, { name: t('All deliverables'), onClose, close: mobile }),
     body)
 }
 
