@@ -70,11 +70,16 @@ const isTokenBlock = (line) => /^body(\[data-ds-dark-theme\])?\{--bt-nav-ink:/.t
 test('no client module paints with a colour literal', () => {
   const found = []
   const used = new Set()
+  // Where the colours are meant to live, read from the sheet rather than typed here: a line number in a
+  // failure message goes stale the first time the block moves (it moved twice while this lint was being
+  // written), and a message that points at the wrong line is the same class of mistake as the one this
+  // test exists to catch.
+  let tokenBlock = null
   for (const file of readdirSync(DIR).filter(name => name.endsWith('.js'))) {
     if (PALETTES.has(file)) continue
     const lines = uncommented(read(file)).split('\n')
     lines.forEach((line, index) => {
-      if (isTokenBlock(line)) return
+      if (isTokenBlock(line)) { if (file === 'styles.js' && !tokenBlock) tokenBlock = `styles.js:${index + 1}`; return }
       for (const part of line.split(/[;{}]/)) {
         for (const literal of chromatics(part)) {
           const key = `${file}: ${literal}`
@@ -90,6 +95,6 @@ test('no client module paints with a colour literal', () => {
   // declaration -- an earlier wording put "(styles.js, the token block)" in the headline, which read as
   // the place the colour was found rather than the place it should have been read from.
   assert.deepEqual(found, [], found.length
-    ? `read these from a token (styles.js:62, the body block) instead of writing them where they are used:\n  ${found.join('\n  ')}`
+    ? `read these from a token (${tokenBlock ?? 'styles.js'}, the body block) instead of writing them where they are used:\n  ${found.join('\n  ')}`
     : '')
 })
