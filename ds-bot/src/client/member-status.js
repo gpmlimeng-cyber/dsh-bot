@@ -235,13 +235,13 @@ html[data-bt-mobile] .bt-mw-pill::before{-webkit-backdrop-filter:blur(10px);back
 .bt-mw-faces{display:inline-flex;align-items:center;flex:none;line-height:0}
 .bt-mw-face{position:relative;display:inline-flex;flex:none;border-radius:50%;background:var(--bt-main);box-shadow:0 0 0 2px var(--bt-main);animation:bt-mw-seat .26s cubic-bezier(.34,1.56,.64,1) backwards}
 .bt-mw-face+.bt-mw-face{margin-left:-5px}
-.bt-mw-face[data-ask]::after{content:"";position:absolute;right:-1px;bottom:-1px;width:7px;height:7px;border-radius:50%;background:#e3a008;box-shadow:0 0 0 1.5px var(--bt-main)}
+.bt-mw-face[data-ask]::after{content:"";position:absolute;right:-1px;bottom:-1px;width:7px;height:7px;border-radius:50%;background:var(--bt-warn);box-shadow:0 0 0 1.5px var(--bt-main)}
 .bt-mw-label{display:inline-flex;align-items:center;gap:5px;min-width:0;max-width:min(420px,58vw);animation:bt-mw-swap .22s ease-out backwards}
 .bt-mw-label>*{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-mw-ask{color:#b7791f;flex:none}
+.bt-mw-ask{color:var(--bt-warn-ink);flex:none}
 .bt-mw-dot{flex:none;color:var(--bt-ink-3)}
 .bt-mw-doing{flex:0 1 auto}
-body[data-ds-dark-theme] .bt-mw-ask{color:#f0b84a}
+body[data-ds-dark-theme] .bt-mw-ask{color:var(--bt-warn-ink-dark)}
 @keyframes bt-mw-in{from{transform:translateY(8px) scale(.94)}}
 @keyframes bt-mw-out{to{opacity:0;transform:translateY(6px) scale(.96);filter:blur(3px)}}
 @keyframes bt-mw-seat{from{opacity:0;scale:.6}}
@@ -260,8 +260,8 @@ body[data-ds-dark-theme] .bt-mw-ask{color:#f0b84a}
 .bt-member-name{min-width:0;font-size:14px;line-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-member-line>.bt-tag{font-size:11px;line-height:15px;padding:0 5px}
 .bt-member-state{min-width:0;font-size:12px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-member-state.bt-mw-ask{color:#b7791f}
-body[data-ds-dark-theme] .bt-member-state.bt-mw-ask{color:#f0b84a}
+.bt-member-state.bt-mw-ask{color:var(--bt-warn-ink)}
+body[data-ds-dark-theme] .bt-member-state.bt-mw-ask{color:var(--bt-warn-ink-dark)}
 .bt-member-stop{flex:none;height:26px;padding:0 11px;border:0;border-radius:13px;background:var(--bt-main);box-shadow:inset 0 0 0 .5px var(--bt-line-2);color:var(--bt-ink-2);font:inherit;font-size:12px;cursor:pointer;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, 'scale')}}
 
 @media (hover:hover){

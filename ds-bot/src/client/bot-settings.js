@@ -280,11 +280,11 @@ label.bt-bs-row{cursor:text}
 @media (hover:hover){
 .bt-bs-area:hover{background:var(--bt-active)}
 }
-.bt-bs-danger .bt-bs-label{color:#c21d2e}
-.bt-bs-danger[data-confirm]{background:color-mix(in srgb,#e02135 8%,transparent)}
+.bt-bs-danger .bt-bs-label{color:var(--bt-danger-deep)}
+.bt-bs-danger[data-confirm]{background:color-mix(in srgb,var(--bt-danger) 8%,transparent)}
 
 @media (hover:hover){
-.bt-bs-danger[data-confirm]:hover{background:color-mix(in srgb,#e02135 12%,transparent)}
+.bt-bs-danger[data-confirm]:hover{background:color-mix(in srgb,var(--bt-danger) 12%,transparent)}
 }
 .bt-switch{position:relative;flex:none;width:36px;height:20px;padding:0;border:0;border-radius:999px;background:var(--bt-line-2);cursor:pointer;transition:background-color .2s ease}
 .bt-switch[aria-checked=true]{background:var(--bt-accent)}

@@ -150,7 +150,7 @@ export const FILE_PREVIEW_CSS = `
 .bt-fp-open:disabled{opacity:.4;cursor:default;background:none}
 .bt-fp-open svg{width:15px;height:15px}
 .bt-fp-body{flex:1;min-height:0;overflow:auto;padding:10px 12px 14px}
-.bt-fp-error{padding:8px 12px;color:#e02135;font-size:12px;line-height:16px;flex:none}
+.bt-fp-error{padding:8px 12px;color:var(--bt-danger);font-size:12px;line-height:16px;flex:none}
 .bt-fp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--bt-ink-3);text-align:center;padding:24px}
 .bt-fp-empty svg{width:22px;height:22px}
 .bt-fp-empty-title{font-size:13px;line-height:18px;font-weight:500;color:var(--bt-ink-2)}

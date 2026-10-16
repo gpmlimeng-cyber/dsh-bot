@@ -22,7 +22,7 @@
 ## 3. 按压反馈
 
 **标准**：手指按住才有反馈，用 `:active`，不用 hover；反馈是一层 `--bt-press` 起的 `background-image` 渐变（因此不会盖掉按钮自己的填色，也不动盒模型）；`prefers-reduced-motion` 只关位移/缩放，不关颜色。
-**依据**：`styles.js:49`（`--bt-press:var(--bt-active)`，一个名字一处定义）、`:1348`（`-webkit-tap-highlight-color:transparent`，两个触摸档各一次）、`:1349`（统一规则，盖 `button` 与 `[role=*]` 行，排除底栏 tab）、`:1350-1352`（reduced-motion 重置）。
+**依据**：`styles.js:62`（`--bt-press:var(--bt-active)`，一个名字一处定义）、`:1348`（`-webkit-tap-highlight-color:transparent`，两个触摸档各一次）、`:1349`（统一规则，盖 `button` 与 `[role=*]` 行，排除底栏 tab）、`:1350-1352`（reduced-motion 重置）。
 **反例**：给某个键单写一条 `:hover` 当按下态——Android 点一下会把它粘住。
 
 ## 4. hover 只给有指针的设备
@@ -45,8 +45,9 @@
 
 ## 7. 颜色：只用 token
 
-**标准**：颜色一律读 `body` 上的 `--bt-*`（`styles.js:49`），不写死色值；浮起件的表面只用共享声明，不另造一套。
-**判据**：**未落**——「字面色」lint 还没写（裸 `:hover`、命中 <44 两条已落）。
+**标准**：颜色一律读 `body` 上的 `--bt-*`（`styles.js:62`，token 块；深色档在同处 `:63`）。**一个颜色一个 token**；中性色（`#000`/`#fff`、r=g=b 的 rgb/rgba，用于阴影与遮罩）除外；值一模一样的色只能活在 token 块和两份调色板（`themes.js`/`inks.js`）里。浮起件的表面只用共享声明，不另造一套。
+**判据**：`test/no-literal-colour.test.js`——扫全部 client 模块、跳注释，token 块与调色板放行；**两个不在 CSS 里的值在 ALLOW 表里各带一条理由**（`characters.js` 头像里那支 SVG、`settings.js` 强调色输入框的默认值）；豁免失效也红。
+**反例**：新写一条 `color:#e02135`（该读 `var(--bt-danger)`）；把品牌蓝写成主题强调色——每套主题 accent 都不同（claude `#d97757`、sky `#1e86ff`），DeepSeek 标记会跟着变色，凡"不随主题走"的固定色要给它自己的 token（如 `--bt-brand`）。
 
 ## 8. 验证手法
 

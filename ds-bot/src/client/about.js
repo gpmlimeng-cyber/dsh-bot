@@ -126,7 +126,7 @@ body:not([data-bt-motion=quiet]) .bt-about-mark:hover .bt-mark[data-live][data-s
 .bt-star{flex:none;display:inline-flex;align-items:stretch;height:30px;border-radius:999px;border:1px solid var(--bt-line-2,var(--bt-line));overflow:hidden;color:var(--bt-ink);text-decoration:none;font-size:12px;line-height:28px;transition:transform .12s ease,border-color .15s ease}
 
 @media (hover:hover){
-.bt-star:hover{border-color:color-mix(in srgb,#e3a008 55%,var(--bt-line))}
+.bt-star:hover{border-color:color-mix(in srgb,var(--bt-warn) 55%,var(--bt-line))}
 }
 .bt-star:active{transform:scale(.96)}
 .bt-star-main{display:inline-flex;align-items:center;gap:6px;padding:0 12px 0 10px;background:var(--bt-hover);font-weight:500}
@@ -134,7 +134,7 @@ body:not([data-bt-motion=quiet]) .bt-about-mark:hover .bt-mark[data-live][data-s
 .bt-star-icon path{transition:fill .15s ease}
 
 @media (hover:hover){
-.bt-star:hover .bt-star-icon{color:#e3a008;animation:bt-star-pop ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
+.bt-star:hover .bt-star-icon{color:var(--bt-warn);animation:bt-star-pop ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
 }
 
 @media (hover:hover){

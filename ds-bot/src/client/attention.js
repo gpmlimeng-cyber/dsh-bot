@@ -169,8 +169,8 @@ export const ATTENTION_CSS = `
 .bt-attention-row:hover{background:var(--bt-hover)}
 }
 .bt-attention-kind{flex:none;font-size:10.5px;line-height:14px;padding:2px 6px;border-radius:6px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);white-space:nowrap}
-.bt-attention-row[data-kind=question] .bt-attention-kind{background:color-mix(in srgb,var(--bt-accent,#4d6bfe) 14%,transparent);color:var(--bt-accent,#4d6bfe)}
-.bt-attention-row[data-kind=approval] .bt-attention-kind{background:color-mix(in srgb,var(--bt-star,#ff9800) 16%,transparent);color:color-mix(in srgb,var(--bt-star,#ff9800) 80%,var(--bt-ink))}
+.bt-attention-row[data-kind=question] .bt-attention-kind{background:color-mix(in srgb,var(--bt-accent) 14%,transparent);color:var(--bt-accent)}
+.bt-attention-row[data-kind=approval] .bt-attention-kind{background:color-mix(in srgb,var(--bt-star) 16%,transparent);color:color-mix(in srgb,var(--bt-star) 80%,var(--bt-ink))}
 .bt-attention-title{flex:1;min-width:0;font-size:12.5px;line-height:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-attention-where{flex:none;max-width:32%;font-size:11px;line-height:15px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-attention-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}

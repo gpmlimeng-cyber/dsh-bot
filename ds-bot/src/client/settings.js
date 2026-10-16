@@ -51,6 +51,9 @@ function GeneralPage({ roster, actions, run }) {
   const prefs = roster.prefs ?? {}
   const themes = allThemes()
   const current = themes[prefs.theme] ? prefs.theme : 'deepseek'
+  // The colour the custom-accent field starts on when the user has never picked one. It has to be
+  // the same value --bt-accent carries (styles.js, the token block): this is the only place the
+  // skin's accent is written out of CSS, and two accents that drift apart are the bug.
   const [custom, setCustom] = useState(prefs.accent ?? '#4d6bfe')
   const timer = useRef(0)
   useEffect(() => () => clearTimeout(timer.current), [])

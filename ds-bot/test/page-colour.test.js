@@ -52,7 +52,9 @@ test('the tokens that live in one layer only are the documented ones', () => {
   const light = declarations(styles.find(line => line.startsWith('body{--bt-nav-ink:')))
   const theme = themeVars(THEMES.deepseek.light, false)
   assert.deepEqual([...light.keys()].filter(token => !(token in theme)).sort(),
-    ['--bt-float-shadow', '--bt-green', '--bt-line-weak', '--bt-nav-ink', '--bt-nav-on', '--bt-press', '--bt-star'], 'fallback only')
+    ['--bt-brand', '--bt-danger', '--bt-danger-bright', '--bt-danger-deep', '--bt-float-shadow', '--bt-good-deep', '--bt-green',
+      '--bt-line-weak', '--bt-nav-ink', '--bt-nav-on', '--bt-news', '--bt-press', '--bt-rec', '--bt-spectrum',
+      '--bt-star', '--bt-unread', '--bt-warn', '--bt-warn-ink', '--bt-warn-ink-2', '--bt-warn-ink-dark', '--bt-warn-soft'], 'fallback only')
   assert.deepEqual(Object.keys(theme).filter(token => !light.has(token)), ['--bt-accent-ink'], 'palette only')
 })
 
