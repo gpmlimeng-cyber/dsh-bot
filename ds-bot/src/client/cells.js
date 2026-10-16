@@ -611,6 +611,11 @@ function useLiveNote(actions, sessionId, id, entry) {
 }
 
 function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork }) {
+  // A picture a Bot puts in a group reply is the same case as one in a bubble: the shell's MarkdownText
+  // asks its owner for a URL, and media.js is that answer, memoized on the room's workspace so the
+  // resolver's identity survives re-renders (the shell drops its streaming render cache when it changes).
+  const groupWorkDir = roster?.roomsById?.[sessionId]?.workDir ?? roster?.byId?.[sessionId]?.workDir ?? null
+  const pathImages = useMemo(() => pathImagesFor(groupWorkDir), [groupWorkDir])
   const [live, setLive] = useState({ replies: [], speaking: null })
   useEffect(() => {
     if (done) return undefined
@@ -643,7 +648,7 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
       const bot = roster.byId[reply.botId] ?? { id: reply.botId, name: reply.name, color: reply.color ?? 'gray' }
       if (reply.kind === 'user') {
         return h('div', { key: `user-${index}`, className: 'bt-urow' }, h('div', { className: 'bt-ububble' },
-          h(MarkdownText, { text: reply.text, labels: mdLabels(), variant: 'compact' })))
+          h(MarkdownText, { text: reply.text, labels: mdLabels(), variant: 'compact', pathImages })))
       }
       if (reply.kind === 'failed') {
         return h('div', { key: `${reply.botId}-${index}`, className: 'bt-event bt-event-error', role: 'status', title: [reply.code, reply.status, reply.text].filter(Boolean).join(' · ') },

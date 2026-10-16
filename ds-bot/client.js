@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 76bf83ef
+// Source fingerprint: f258615e
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -6847,6 +6847,8 @@ function useLiveNote(actions, sessionId, id, entry) {
   }, [sessionId, id, key]);
 }
 function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork }) {
+  const groupWorkDir = roster?.roomsById?.[sessionId]?.workDir ?? roster?.byId?.[sessionId]?.workDir ?? null;
+  const pathImages = (0, import_react9.useMemo)(() => pathImagesFor(groupWorkDir), [groupWorkDir]);
   const [live, setLive] = (0, import_react9.useState)({ replies: [], speaking: null });
   (0, import_react9.useEffect)(() => {
     if (done) return void 0;
@@ -6892,7 +6894,7 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
         return (0, import_react9.createElement)("div", { key: `user-${index}`, className: "bt-urow" }, (0, import_react9.createElement)(
           "div",
           { className: "bt-ububble" },
-          (0, import_react9.createElement)(import_dsh_client_ui_primitives3.MarkdownText, { text: reply.text, labels: mdLabels2(), variant: "compact" })
+          (0, import_react9.createElement)(import_dsh_client_ui_primitives3.MarkdownText, { text: reply.text, labels: mdLabels2(), variant: "compact", pathImages })
         ));
       }
       if (reply.kind === "failed") {
@@ -17573,7 +17575,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "76bf83ef" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "f258615e" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
