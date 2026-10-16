@@ -3,6 +3,7 @@
 // collection logic is covered separately below, over the esbuild bundle.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -10,14 +11,18 @@ import { runInNewContext } from 'node:vm'
 import { build } from 'esbuild'
 import { DICTIONARY } from '../src/client/i18n.js'
 
-// jsdom comes from the harness packages the tests load (dev/harness or DSH_HARNESS);
-// react does not ship there, so it comes from the deepseek-harness checkout beside
-// ds-bot, whose pnpm store pins it — requiring from the react package itself
-// resolves its own react-dom sibling through the store's links.
+// jsdom comes from the harness packages the tests load (dev/harness or DSH_HARNESS), and react may
+// come from the same place: dev/harness carries it for exactly this test on machines with no
+// deepseek-harness checkout. On a checkout machine react comes from the checkout beside ds-bot
+// instead, whose pnpm store pins it -- requiring from the react package itself resolves its own
+// react-dom sibling through the store's links, which is why that path is preferred when it exists.
+// The sibling is only used, never created: harness-resolve.mjs treats a directory named
+// deepseek-harness in an ancestor as the harness anchor, so making one would move every test's anchor.
 const PLUGIN = dirname(dirname(fileURLToPath(import.meta.url)))
 const harnessRequire = createRequire(join(process.env.DSH_HARNESS ?? join(PLUGIN, 'dev', 'harness'), 'package.json'))
 const { JSDOM } = harnessRequire('jsdom')
-const reactRequire = createRequire(join(PLUGIN, '..', 'deepseek-harness', 'node_modules', '.pnpm', 'react@18.3.1', 'node_modules', 'react', 'package.json'))
+const sibling = join(PLUGIN, '..', 'deepseek-harness', 'node_modules', '.pnpm', 'react@18.3.1', 'node_modules', 'react', 'package.json')
+const reactRequire = existsSync(sibling) ? createRequire(sibling) : harnessRequire
 const React = reactRequire('react')
 const reactDom = reactRequire('react-dom/client')
 
