@@ -399,3 +399,23 @@ test('a relay node with nothing to draw is never handed back to the shell', () =
     assert.equal(ToolCell(props(call(name, `x-${name}`, { content: 'done' }), { sessionId: 'room' })), null, `${name} still belongs to the shell`)
   }
 })
+
+// #105's other half: the fence stays in the record, so a reload could offer a decision the user had
+// already answered. The host keeps the keys it has seen answered; the cell skips those.
+test('a decision the user already answered is not offered again from the record', () => {
+  const fence = 'On it.\n```ds-decide\n{"title":"Ship it?","options":["Yes","No"]}\n```'
+  const relay = call('group_relay', 'relay-9', { content: { replies: [{ botId: 'chief', text: fence }] } })
+  const asked = []
+  const actions = { proposeDecision: (sessionId, decision) => asked.push([sessionId, decision.title]) }
+  const run = (options) => {
+    effects = []
+    expand(ToolCell(props(relay, { sessionId: 'room', ...options })))
+    for (const effect of effects) effect()
+  }
+  run({ actions })
+  assert.deepEqual(asked, [['room', 'Ship it?']], 'an open one reaches the bell')
+  // The same node again, now with the key the host recorded when the user answered it.
+  asked.length = 0
+  run({ actions, roster: team({ decisions: { room: ['Ship it?\u0000Yes\u0000No'] } }) })
+  assert.deepEqual(asked, [], 'and an answered one does not come back')
+})

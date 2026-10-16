@@ -47,6 +47,9 @@ export function install(rt) {
     }),
     exchangeTurns: state.exchangeTurns,
     questions: state.questions,
+    // Decisions the user has already answered, so the client does not offer them again: the fence
+    // itself stays in the record.
+    decisions: state.decisions,
     // The team's DSH Agent (at most one): plain dsh Sessions, not Bots.
     agents: Object.values(state.agents),
     // Key names and who may use them; values never leave the host.
@@ -305,6 +308,17 @@ export function install(rt) {
           // A Bot id or an earlier part of its own chat means the current part.
           const past = rt.pastOwners.get(body.sessionId)
           const sessionId = rt.botOf(body.sessionId) ? rt.chatOf(body.sessionId) : past && past.roomId === undefined ? rt.chatOf(past.botId) : body.sessionId
+          // The user's answer to a decision carries its key, and the key is kept: the fence stays in
+          // the record (that is how a reload rebuilds an open one), so without this mark the same
+          // question would come back to the bell after every reload.
+          if (typeof body.decisionKey === 'string' && body.decisionKey !== '') {
+            const answered = state.decisions[sessionId] ??= []
+            if (!answered.includes(body.decisionKey)) {
+              answered.push(body.decisionKey)
+              if (answered.length > 200) answered.splice(0, answered.length - 200)
+              await rt.save()
+            }
+          }
           await rt.ensureCapabilities(sessionId)
           await ctx.sessionController.prompt({
             requestId: randomUUID(),

@@ -290,3 +290,19 @@ test('a second card in one group chat is refused, leaving the first one alone', 
   assert.match(await ask('room-writer'), /already waiting in this group chat/)
   assert.equal(JSON.stringify(rt.state.questions), before)
 })
+
+// The fence stays in the room's record (that is how a reload rebuilds an open decision), so the
+// answer has to be marked or the same question comes back to the bell after every reload. The mark
+// rides the send the user's answer already takes.
+test('an answered decision keeps its key where the client can skip it', async (t) => {
+  const { rt, post, stop } = await setup()
+  t.after(stop)
+  const key = 'Ship it?\u0000Yes\u0000No'
+  await post('send', { sessionId: 'room', text: 'Yes', decisionKey: key })
+  assert.deepEqual(rt.state.decisions.room, [key], 'the host keeps the key it was answered with')
+  const roster = await post('state', {})
+  assert.deepEqual(roster.decisions, { room: [key] }, 'and hands it to the client')
+  // Answering the same one again is not a second entry.
+  await post('send', { sessionId: 'room', text: 'Yes', decisionKey: key })
+  assert.deepEqual(rt.state.decisions.room, [key])
+})

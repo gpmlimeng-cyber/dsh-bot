@@ -689,7 +689,10 @@ export function apply(ctx) {
     setPrefs: prefs => after(call('set-prefs', prefs)),
     setMain: (id, main = true, options = {}) => after(call('set-main', { id, main, ...options })),
     updateRoom: (id, patch) => after(call('update-room', { id, ...patch })),
-    send: (sessionId, text) => after(call('send', { sessionId: partFor(sessionId), text })),
+    // `decisionKey` rides along when this send is the user's answer to a decision, so the host can
+    // mark it answered -- the fence stays in the record, and the mark is what keeps it from coming
+    // back to the bell after a reload.
+    send: (sessionId, text, decisionKey) => after(call('send', { sessionId: partFor(sessionId), text, ...(decisionKey ? { decisionKey } : {}) })),
     answerQuestion: (sessionId, questionId, answer) => after(call('answer-question', { sessionId: partFor(sessionId), questionId, answer })),
     // The decision bar (decide.js). One ask at a time, and the answer is the user's own message in
     // that room: the same host path every one of our own sends takes -- `send` prompts the session
@@ -699,8 +702,9 @@ export function apply(ctx) {
       ? state
       : { ...state, decision: { ...decision, sessionId } })),
     answerDecision: async (sessionId, label) => {
+      const key = ui.getSnapshot().decision?.key
       ui.set(state => (state.decision === null ? state : { ...state, decision: null }))
-      try { await actions.send(sessionId, label) } catch (failure) { actions.reportError(failure, 'decision') }
+      try { await actions.send(sessionId, label, key) } catch (failure) { actions.reportError(failure, 'decision') }
     },
     dismissQuestion: sessionId => after(call('dismiss-question', { sessionId })),
     answerApproval: (id, choice) => after(call('approval-answer', { id, choice })),

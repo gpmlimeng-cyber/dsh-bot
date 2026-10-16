@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 63964c68
+// Source fingerprint: 00368fb8
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -1399,7 +1399,7 @@ function createSource(initial) {
     }
   };
 }
-var EMPTY_ROSTER = { revision: -1, mainBotId: null, mainBotIds: [], bots: [], rooms: [], agents: [], exchangeTurns: {}, questions: {}, secrets: [], capabilities: [], capabilityStatuses: {}, secretRequests: {}, models: [], defaultModel: null, modelsKey: null, prefs: {}, counts: {}, byId: {}, roomsById: {}, agentsById: {}, agentOf: {}, ready: false };
+var EMPTY_ROSTER = { revision: -1, mainBotId: null, mainBotIds: [], bots: [], rooms: [], agents: [], exchangeTurns: {}, questions: {}, decisions: {}, secrets: [], capabilities: [], capabilityStatuses: {}, secretRequests: {}, models: [], defaultModel: null, modelsKey: null, prefs: {}, counts: {}, byId: {}, roomsById: {}, agentsById: {}, agentOf: {}, ready: false };
 var isMainOf = (roster, id) => id !== void 0 && (roster.mainBotIds ?? []).includes(id);
 function indexRoster(value) {
   const byId = {};
@@ -6934,7 +6934,8 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
   }
   const room2 = roster.roomsById[sessionId];
   const items = stackReplies(replies);
-  const ask = items.filter((item) => room2 !== void 0 && item.reply.kind === void 0 && item.reply.botId === room2.admin).map((item) => parseDecision(item.texts[0])).filter((decision) => decision !== null).at(-1) ?? null;
+  const answered = roster.decisions?.[sessionId] ?? [];
+  const ask = items.filter((item) => room2 !== void 0 && item.reply.kind === void 0 && item.reply.botId === room2.admin).map((item) => parseDecision(item.texts[0])).filter((decision) => decision !== null && !answered.includes(decision.key)).at(-1) ?? null;
   (0, import_react9.useEffect)(() => {
     if (ask !== null) actions.proposeDecision?.(sessionId, ask);
   }, [ask?.key, sessionId]);
@@ -17787,7 +17788,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "63964c68" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "00368fb8" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -18470,7 +18471,10 @@ function apply(ctx) {
     setPrefs: (prefs) => after(call("set-prefs", prefs)),
     setMain: (id, main = true, options = {}) => after(call("set-main", { id, main, ...options })),
     updateRoom: (id, patch) => after(call("update-room", { id, ...patch })),
-    send: (sessionId, text) => after(call("send", { sessionId: partFor(sessionId), text })),
+    // `decisionKey` rides along when this send is the user's answer to a decision, so the host can
+    // mark it answered -- the fence stays in the record, and the mark is what keeps it from coming
+    // back to the bell after a reload.
+    send: (sessionId, text, decisionKey) => after(call("send", { sessionId: partFor(sessionId), text, ...decisionKey ? { decisionKey } : {} })),
     answerQuestion: (sessionId, questionId, answer) => after(call("answer-question", { sessionId: partFor(sessionId), questionId, answer })),
     // The decision bar (decide.js). One ask at a time, and the answer is the user's own message in
     // that room: the same host path every one of our own sends takes -- `send` prompts the session
@@ -18478,9 +18482,10 @@ function apply(ctx) {
     // act on it, and the audit trail is the transcript itself.
     proposeDecision: (sessionId, decision) => ui2.set((state) => state.decision !== null && state.decision.key === decision.key && state.decision.sessionId === sessionId ? state : { ...state, decision: { ...decision, sessionId } }),
     answerDecision: async (sessionId, label) => {
+      const key = ui2.getSnapshot().decision?.key;
       ui2.set((state) => state.decision === null ? state : { ...state, decision: null });
       try {
-        await actions.send(sessionId, label);
+        await actions.send(sessionId, label, key);
       } catch (failure) {
         actions.reportError(failure, "decision");
       }
