@@ -347,3 +347,22 @@ test('a message sent between rounds still opens a full round', async (t) => {
   const result = JSON.parse(await running)
   assert.deepEqual(result.replies.map(reply => reply.name ?? 'User'), ['Chief', 'Writer'])
 })
+
+// A decision the admin asks for exists only in the words of its reply. The fence stays in the
+// record, so a reload has to be able to find it there -- the round it was written in may not be
+// mounted, and the client only scans what is on screen. The host keeps the newest one's words.
+test('the decision the admin asked for is kept, for a reload to find', async (t) => {
+  const { call, emit, userMessage, relay, answer, stop, sent, rt } = start()
+  t.after(stop)
+  const room = await team(call, sent)
+  await emit(room.id, userMessage('Start'))
+  const running = relay(room.id, 'decide-turn')
+  const chief = await turnFor(sent)
+  const fence = 'Sure.\n```ds-decide\n{"title":"Ship it?","options":["Yes","No"]}\n```'
+  await answer(chief.sessionId, chief.message.source.exchangeId, fence, 1)
+  const writer = await turnFor(sent, chief)
+  if (writer) await answer(writer.sessionId, writer.message.source.exchangeId, '[PASS]', 2)
+  await running
+  assert.match(rt.state.rooms[room.id].decision.text, /ds-decide/)
+  assert.match(rt.state.rooms[room.id].decision.text, /Ship it\?/)
+})

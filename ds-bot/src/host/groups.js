@@ -490,6 +490,15 @@ export function install(rt) {
       if (exec.signal?.aborted) {
         for (const turn of round.started) void rt.stopRoomTurn?.(room.sessions?.[turn.botId] ?? turn.sessionId, turn.exchangeId)
       }
+      // The newest decision the admin asked for, kept as the text it was written in. The fence stays
+      // in the record, and the record is the only place a reload can find it: the round it was written
+      // in may not be mounted, and the client's scan only sees what is on screen. The protocol itself
+      // stays on the client -- this only recognises the marker and carries the words.
+      const asked = round.replies.filter(reply => reply.kind === undefined && reply.botId === room.admin
+        && typeof reply.text === 'string' && reply.text.includes('```ds-decide'))
+      if (asked.length > 0 && asked.at(-1).text !== room.decision?.text) {
+        room.decision = { text: asked.at(-1).text, at: Date.now() }
+      }
       await rt.save()
       for (const post of posts) {
         if (post.reportBack && rt.botOf(post.botId)) void reportRound(room, post, round)
