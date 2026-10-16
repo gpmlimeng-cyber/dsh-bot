@@ -180,18 +180,14 @@ test('no rule the phone ends up with declares a target under the floor', () => {
   assert.deepEqual(found, [], `a target under ${FLOOR}px on the phone: give it the box, or write the reason into EXEMPT`)
 })
 
-test('the red badge says what it means where a phone can read it', () => {
-  // The warning beside 管理插件 explained itself in a hover tip, and a phone has no hover: the tap
-  // opens the plugin panel, focus is not a touch gesture, so the red "!" said nothing at all there.
-  // The user's report was exactly that ("the name is fixed, the alarm is not"). The phone now gets
-  // the same sentence as a line under the row; every other band keeps the tip.
+test('the plugin row carries no sentence of its own on the phone', () => {
+  // The requirement changed (user, 2026-10-17): the line under 管理插件 is not to be shown, so the
+  // phone renders the row alone. This is not the old test relaxed -- the sentence is gone from the
+  // component and its stylesheet rules are gone with it; the hover tip stays for pointer bands.
   const sidebar = read('sidebar.js')
-  assert.ok(sidebar.includes("h('span', { className: 'bt-connect-note' }, t('Plugin compatibility is not fully verified.'))"), 'the sentence is rendered with the row')
-  assert.ok(sidebar.includes("className: 'bt-connect-tip'"), 'and the hover tip stays for the bands that have a pointer')
+  assert.ok(!sidebar.includes('bt-connect-note'), 'the phone line is gone from the component')
+  assert.ok(sidebar.includes("className: 'bt-connect-tip'"), 'the hover tip stays for the bands that have a pointer')
+  assert.equal(sidebar.split('Plugin compatibility is not fully verified.').length - 1, 1, 'the sentence survives, once: in the tip, not as a line of its own')
   const styles = read('styles.js')
-  assert.ok(styles.includes('.bt-connect-note{display:none}'), 'the line is off by default')
-  const shown = styles.split('\n').find(line => line.startsWith('html[data-bt-mobile] .bt-connect-note{'))
-  assert.ok(shown, 'and on by the mobile band')
-  assert.ok(shown.includes('display:block'), shown)
-  assert.ok(shown.includes('color:var(--bt-ink-2)'), 'in readable ink: this is text, so --bt-ink-3 is not allowed (section 7 of the mobile system)')
+  assert.ok(!styles.includes('bt-connect-note'), 'the mobile-only rules went with the node')
 })

@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 967cb158
+// Source fingerprint: 4b54a62b
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2339,11 +2339,7 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
 }
 .bt-connect svg{flex:none;width:15px;height:15px}
 .bt-connect-wrap{position:relative;display:flex;flex:1 1 auto;min-width:0}
-/* The red badge's explanation, for the band that has no hover to read the tip with: the phone gets
-   the sentence as a line under the row, everything else keeps the tip. */
-.bt-connect-note{display:none}
 html[data-bt-mobile] .bt-connect-wrap{flex-direction:column;align-items:stretch;gap:4px}
-html[data-bt-mobile] .bt-connect-note{display:block;font-size:11px;line-height:15px;color:var(--bt-ink-2);text-align:center}
 .bt-connect-warn{flex:none;width:16px;height:16px;border-radius:50%;background:var(--bt-danger-bright);color:#fff;font-size:11px;line-height:16px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 .bt-connect-tip{position:fixed;box-sizing:border-box;width:max-content;max-width:260px;padding:8px 12px;border-radius:10px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 8px 24px -4px rgba(0,0,0,.14);color:var(--bt-ink);font-size:12px;line-height:17px;white-space:normal;text-align:center;z-index:70;transform-origin:bottom left;animation:bt-tip-in $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing}}
 @keyframes bt-tip-in{from{opacity:0;transform:scale(.96);filter:blur(4px)}}
@@ -8503,9 +8499,6 @@ function ConnectPlugins({ wide, actions }) {
       t("Manage plugins"),
       (0, import_react13.createElement)("span", { className: "bt-connect-warn", "aria-hidden": true }, "!")
     ),
-    // The same sentence, permanently, where a hand can read it: a phone has no hover, and tapping
-    // the row opens the panel rather than the tip. Hidden above the mobile band by the stylesheet.
-    (0, import_react13.createElement)("span", { className: "bt-connect-note" }, t("Plugin compatibility is not fully verified.")),
     tip && box ? (0, import_react_dom5.createPortal)((0, import_react13.createElement)(
       "span",
       { role: "tooltip", id: tipId, className: "bt-connect-tip", style: box },
@@ -17810,7 +17803,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "967cb158" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "4b54a62b" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
