@@ -340,6 +340,11 @@ html[data-bt-pc] .bt-side .bt-side-top .bt-round{background:var(--bt-card);borde
 .bt-group-msg:first-child{margin-top:0}
 .bt-lead{flex:none;display:flex;margin-bottom:1px}
 button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
+/* A finger target on a 22px avatar: the box is 44 square with the avatar centred inside it, so the
+   drawing does not move, and the -11px margin hands the layout back exactly what the box took --
+   which is why the name beside it does not shift and the head row does not grow. The hit is this
+   element's own padding box; nothing is drawn behind it. */
+html[data-bt-mobile] button.bt-lead{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;margin:-11px}
 /* Rows without the avatar start where the bubble beside it starts: 22px avatar + 8px gap. */
 .bt-astack[data-lead]>.bt-msg:not(:last-child)>.bt-msg-line,.bt-astack[data-lead] .bt-reacts{margin-left:30px}
 .bt-group-name{font-size:12px;line-height:16px;font-weight:500;margin-left:42px}
@@ -701,6 +706,11 @@ button.bt-q-opt:active{background:var(--bt-active)}
 .bt-about{white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 .bt-about[data-open]{display:block;-webkit-line-clamp:unset}
 .bt-more{border:0;background:none;color:var(--bt-ink-3);font-size:12px;line-height:16px;cursor:pointer;padding:2px 0}
+/* "Show more" / "Add a notice" and the rest of this family are a line of 12px text -- 20px of target.
+   On a phone they get the floor: 14px of padding either side of the 16px line is 44, and -12px of
+   margin hands the two rows' worth of space straight back, so the paragraph above stays where it was
+   and the card does not grow. The text itself is unchanged. */
+html[data-bt-mobile] .bt-more{padding:14px 0;margin:-12px 0}
 
 @media (hover:hover){
 .bt-more:hover{color:var(--bt-ink)}
@@ -970,6 +980,10 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
 @media (prefers-reduced-motion:reduce){.bt-palette{animation:bt-fade .1s ease-out}}
 .bt-account-menu{width:224px}
 .bt-account{flex:none;width:36px;height:36px;border:0;padding:0;background:none;border-radius:50%;cursor:pointer;display:inline-flex}
+/* The launcher's face: 36px of drawing, 44px of finger on a phone. The -4px margin keeps the row it
+   sits in exactly as tall as it was, and the avatar inside stays 36 (it is the button's child, not
+   its background), so nothing moves but the hit. */
+html[data-bt-mobile] .bt-account{width:44px;height:44px;margin:-4px;align-items:center;justify-content:center}
 .bt-account[aria-expanded=true] .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-sidebar))}
 @media (hover:hover){
 .bt-account:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-sidebar))}

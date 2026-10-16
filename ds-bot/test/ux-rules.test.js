@@ -115,3 +115,20 @@ test('the memory page\u2019s head keys are finger targets on a phone', () => {
   const height = /(?:^|;)\s*height:(\d+(?:\.\d+)?)px/.exec(rule.body)
   assert.ok(width && Number(width[1]) >= 44 && height && Number(height[1]) >= 44, `the memory head\u2019s keys are ${width?.[1]}x${height?.[1]} on a phone, under the 44px floor`)
 })
+
+test('our own targets sized by their content get the floor on a phone', () => {
+  // The touch-target lint reads declared boxes; these three are a drawing inside a box, so their size
+  // came from what they contained (a 22px avatar, a 36px one, a line of 12px text). Each gets the
+  // floor without moving the drawing: the box grows and a negative margin hands the layout back what
+  // the box took. A device read found them (audit A1-d).
+  const all = rules()
+  const lead = all.find(rule => rule.selector === 'html[data-bt-mobile] button.bt-lead')
+  assert.ok(lead && /min-width:44px/.test(lead.body) && /min-height:44px/.test(lead.body) && /margin:-11px/.test(lead.body), 'the message head\u2019s avatar key is not a 44px box handed back by its margin')
+  const account = all.find(rule => rule.selector === 'html[data-bt-mobile] .bt-account')
+  assert.ok(account && /width:44px/.test(account.body) && /height:44px/.test(account.body) && /margin:-4px/.test(account.body), 'the account launcher is not a 44px box handed back by its margin')
+  const more = all.find(rule => rule.selector === 'html[data-bt-mobile] .bt-more')
+  const pad = more && /padding:(\d+)px 0/.exec(more.body)
+  const base = all.find(rule => rule.selector === '.bt-more')
+  const line = base && /line-height:(\d+)px/.exec(base.body)
+  assert.ok(pad && line && Number(pad[1]) * 2 + Number(line[1]) >= 44, `the Show-more family is ${pad?.[1]}px of padding around a ${line?.[1]}px line, under the 44px floor`)
+})
