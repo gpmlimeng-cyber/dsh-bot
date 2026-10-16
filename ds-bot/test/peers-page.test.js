@@ -145,8 +145,8 @@ test('the page is a header row and one scroller of labelled cards', () => {
   assert.ok(peers.includes('h(isMain ? FluentCrownFilledIcon : FluentCrownIcon)'), 'and the two weights are the Fluent crown pair')
   assert.ok(code('icons.js').includes('export const FluentCrownFilledIcon = fluentCrownIcon(') && code('icons.js').includes('export const FluentCrownIcon = fluentCrownIcon('), 'copied from Fluent\'s own artwork rather than drawn here')
   // Nothing here animates on its own: every row wears the skin's own mark, and the skin already
-  // silences marks under prefers-reduced-motion (which is what this device asks for).
-  assert.ok(code('styles.js').includes('@media (prefers-reduced-motion:reduce){.bt-mark *{animation:none!important;transition:none!important}}'), 'the skin silences the marks')
+  // ends marks at once under prefers-reduced-motion, shortened rather than removed (which is what this device asks for).
+  assert.ok(code('styles.js').includes('@media (prefers-reduced-motion:reduce){.bt-mark *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}'), 'the skin silences the marks')
   assert.ok(peers.includes('h(BotMark, { bot, size: 36, live: true })'), 'and every row wears that same mark, animated as the Bot page animates it (live)')
   assert.ok(code('bot-settings.js').includes('h(BotMark, { bot, size: 64, live: true })'), 'which is that page\'s own mark, at this row\'s size: one component, not two')
   // The animation level is offered at the 「伙伴」 heading's right end, as that list's own secondary
