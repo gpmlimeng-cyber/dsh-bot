@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 4ca7f17d
+// Source fingerprint: a5db6245
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -8263,7 +8263,18 @@ function TeamSidebar(props) {
           }
         })
       ) : (0, import_react13.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Search"), title: t("Search"), onClick: () => actions.openPalette() }, (0, import_react13.createElement)(SearchIcon)),
-      (0, import_react13.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react13.createElement)(PlusIcon))
+      (0, import_react13.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react13.createElement)(PlusIcon)),
+      // The drawer's own way out. The bar that holds the hamburger is `display:none` while the
+      // drawer is open, the panel covers the whole screen with its scrim underneath, and the
+      // leftward swipe has no hint on it — so a phone had no visible exit at all. Fluent's
+      // outline close, in the same 44px round seat as New, at the row's outer end.
+      mobile ? (0, import_react13.createElement)("button", {
+        type: "button",
+        className: "bt-round bt-side-close",
+        "aria-label": t("Close navigation"),
+        title: t("Close navigation"),
+        onClick: actions.closeMobileNav
+      }, (0, import_react13.createElement)(import_dsh_client_ui_primitives4.IconCloseOutlineRegular)) : null
     ) : (0, import_react13.createElement)(
       import_react13.Fragment,
       null,
@@ -8672,6 +8683,7 @@ var SIDEBAR_CSS = `
 .bt-brand .bt-mark{flex:none}
 .bt-pin{flex:none;display:inline-flex;color:color-mix(in srgb,var(--bt-ink) 75%,transparent)}
 .bt-pin svg{width:12px;height:12px}
+.bt-side-close svg{width:20px;height:20px}
 [class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"],[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"]>div{display:contents!important}
 .bt-foot-account{order:-1;flex:none;display:inline-flex}
 [class*="_footArea"]:has(.bt-foot-account) .bt-connect-foot{order:0;flex:1 1 auto;min-width:0;width:auto}
@@ -17729,7 +17741,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "4ca7f17d" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "a5db6245" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

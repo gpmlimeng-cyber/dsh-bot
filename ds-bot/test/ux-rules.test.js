@@ -260,7 +260,7 @@ test('the pinned mark sits after the name, in the one layout that has a name', (
   // none, which is also the end of the old `left:calc(50% + 12px)` -- a placement measured from the
   // row's own width, written for a centred rail and drifting the moment a row is left-aligned.
   const sidebar = read('sidebar.js')
-  assert.ok(sidebar.includes("import { FishLogo, IconPinOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'"), 'Fluent\'s outline pin, which is the cut that survives 12px')
+  assert.match(sidebar, /import \{[^}]*IconPinOutlineRegular[^}]*\} from '@deepseek-ai\/dsh-client-ui-primitives'/, 'Fluent\'s outline pin, which is the cut that survives 12px')
   assert.ok(!sidebar.includes('IconPinFillRegular'), 'and not the filled one, whose detail is what read as a smudge')
   assert.ok(!read('icons.js').includes('PinMarkIcon'), 'the hand-drawn pushpin is gone, not left as a second definition')
   assert.equal((sidebar.match(/pinned \? h\(PinMark\) : null/g) ?? []).length, 2, 'both named-row shapes place it, after the title')
@@ -272,4 +272,25 @@ test('the pinned mark sits after the name, in the one layout that has a name', (
   assert.ok(rule.includes('color:color-mix(in srgb,var(--bt-ink) 75%,transparent)'), 'heavier than ink-2, derived from the token: a 12px glyph at 60% was half of "looks dirty"')
   assert.ok(sidebar.includes('.bt-pin svg{width:12px;height:12px}'), 'and sized by the skin, like every other Fluent icon')
   assert.ok(!sidebar.split('\n').some(line => line.includes('.bt-pin') && (line.includes('calc(50%') || line.includes('position:absolute'))), 'nothing places the pin from the row\'s own width')
+})
+
+test('an open drawer carries a visible close in its top row, beside search and New', () => {
+  // U1, the reported blocker: with the drawer open the bar that holds the hamburger is
+  // `display:none`, the panel covers the screen with its scrim underneath, so "tap the empty
+  // space" does not exist on a phone and the only non-key exit was an unhinted leftward swipe.
+  // The user asked for one visible close, in the top row next to the search field.
+  const sidebar = read('sidebar.js')
+  assert.ok(sidebar.includes('IconCloseOutlineRegular'), 'Fluent\'s outline close: the same family and cut as the pin, not a drawn one')
+  const close = sidebar.match(/mobile\s*\?\s*h\('button',\s*\{([\s\S]*?)\},\s*h\(IconCloseOutlineRegular\)\)/)
+  assert.ok(close, 'the button belongs to the drawer form only — the wide column already has its hamburger')
+  assert.match(close[1], /className: 'bt-round bt-side-close'/, 'the round seat the row\'s other keys use')
+  assert.match(close[1], /'aria-label': t\('Close navigation'\)/, 'named like the hamburger that opens it')
+  assert.match(close[1], /onClick: actions\.closeMobileNav/, 'and it closes the drawer, the same action the scrim and the swipe use')
+  // 44px target and a press feedback come from `.bt-round` in the drawer's top row, so the
+  // close cannot drift from the two keys beside it.
+  assert.ok(read('styles.js').includes('html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 44px;width:44px;height:44px}'), 'the row\'s keys are 44px on a phone')
+  assert.ok(read('styles.js').includes('.bt-round:active{transform:scale(.94)}'), 'and every one of them answers a press')
+  const glyph = sidebar.split('\n').find(line => line.includes('.bt-side-close svg{'))
+  assert.ok(glyph, 'the glyph is sized by the skin, like every other Fluent icon')
+  assert.ok(glyph.includes('width:20px;height:20px'))
 })

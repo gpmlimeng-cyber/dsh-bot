@@ -1,6 +1,6 @@
 import { createElement as h, Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { FishLogo, IconPinOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { FishLogo, IconPinOutlineRegular, IconCloseOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
 import { PlusIcon, SearchIcon, GaugeIcon, PlugIcon, ClockIcon, GearIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon } from './icons.js'
@@ -448,7 +448,18 @@ export function TeamSidebar(props) {
               onKeyDown: (event) => { if (event.key === 'Enter' && search.trim() !== '') actions.openPalette(search) },
             }))
         : h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
-      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)))
+      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
+      // The drawer's own way out. The bar that holds the hamburger is `display:none` while the
+      // drawer is open, the panel covers the whole screen with its scrim underneath, and the
+      // leftward swipe has no hint on it — so a phone had no visible exit at all. Fluent's
+      // outline close, in the same 44px round seat as New, at the row's outer end.
+      mobile
+        ? h('button', {
+            type: 'button', className: 'bt-round bt-side-close',
+            'aria-label': t('Close navigation'), title: t('Close navigation'),
+            onClick: actions.closeMobileNav,
+          }, h(IconCloseOutlineRegular))
+        : null)
       : h(Fragment, null,
           h(UpdateButton, { useUpdate: props.useUpdate, actions }),
           h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon))),
@@ -807,6 +818,7 @@ export const SIDEBAR_CSS = `
 .bt-brand .bt-mark{flex:none}
 .bt-pin{flex:none;display:inline-flex;color:color-mix(in srgb,var(--bt-ink) 75%,transparent)}
 .bt-pin svg{width:12px;height:12px}
+.bt-side-close svg{width:20px;height:20px}
 [class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"],[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"]>div{display:contents!important}
 .bt-foot-account{order:-1;flex:none;display:inline-flex}
 [class*="_footArea"]:has(.bt-foot-account) .bt-connect-foot{order:0;flex:1 1 auto;min-width:0;width:auto}
