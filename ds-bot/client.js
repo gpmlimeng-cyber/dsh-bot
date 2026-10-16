@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 150e5812
+// Source fingerprint: d37d4a8f
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3792,7 +3792,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-earlier{display:flex;flex-direction:column;gap:6px}
 .bt-earlier-top{display:flex;justify-content:center;align-items:center;height:34px;flex:none}
 .bt-earlier-top .bt-soft{height:28px;font-size:12px;padding:0 12px}
-.bt-urow{display:flex;justify-content:flex-end}
+.bt-urow{display:flex;justify-content:flex-start}
 .bt-ububble{max-width:var(--bt-bubble-max);background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:14px;line-height:20px;box-sizing:border-box;overflow-wrap:anywhere}
 .bt-ububble [class*="_markdown"],.bt-ububble a{color:inherit!important}
 .bt-ububble p{margin:0;line-height:22px}
@@ -16170,14 +16170,14 @@ function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageIma
   );
 }
 var USER_MESSAGE_CSS = `
-.bt-umsg{display:flex;flex-direction:row-reverse;align-items:center;justify-content:flex-start;gap:4px}
-.bt-ustack{min-width:0;max-width:var(--bt-bubble-max);display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.bt-umsg{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:4px}
+.bt-ustack{min-width:0;max-width:var(--bt-bubble-max);display:flex;flex-direction:column;align-items:flex-start;gap:8px}
 .bt-ubody{max-width:100%;box-sizing:border-box;background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 8px);white-space:pre-wrap;word-break:break-word}
 .bt-ubody a{color:inherit}
 .bt-umention{display:inline-flex;align-items:center;gap:3px;vertical-align:-3px;max-width:100%;padding:0 1px;border:0;background:none;color:inherit;font:inherit;font-weight:600;line-height:inherit;cursor:pointer;border-radius:6px;white-space:nowrap}
 .bt-umention:hover{text-decoration:underline;text-underline-offset:2px}
 .bt-umention>:first-child{flex:none}
-.bt-uattach{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;max-width:100%}
+.bt-uattach{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:8px;max-width:100%}
 .bt-ufile{display:inline-flex;align-items:center;gap:10px;box-sizing:border-box;width:240px;min-height:64px;padding:8px 12px;border-radius:18px;border:.5px solid var(--bt-line-2);background:var(--bt-card)}
 .bt-ufile-icon{flex:none;width:28px;height:28px}
 .bt-ufile-text{display:flex;flex-direction:column;min-width:0}
@@ -16771,7 +16771,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "150e5812" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "d37d4a8f" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

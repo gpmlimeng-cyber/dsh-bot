@@ -1767,7 +1767,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-earlier{display:flex;flex-direction:column;gap:6px}
 .bt-earlier-top{display:flex;justify-content:center;align-items:center;height:34px;flex:none}
 .bt-earlier-top .bt-soft{height:28px;font-size:12px;padding:0 12px}
-.bt-urow{display:flex;justify-content:flex-end}
+.bt-urow{display:flex;justify-content:flex-start}
 .bt-ububble{max-width:var(--bt-bubble-max);background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:14px;line-height:20px;box-sizing:border-box;overflow-wrap:anywhere}
 .bt-ububble [class*="_markdown"],.bt-ububble a{color:inherit!important}
 .bt-ububble p{margin:0;line-height:22px}

@@ -43,6 +43,20 @@ test('only the narrow bands of the mobile layout take it, never a desktop window
   assert.ok(whole[0].startsWith(`${narrow} ${domain}{`), whole[0])
 })
 
+// The user asked for both kinds of bubble to start on the input card's left edge and grow right, so
+// the user's own rows stopped hugging the right: the live transcript's row (row-reverse, with the
+// stack's items at flex-end) and the earlier pages' / group replies' row both start from the left now.
+test('both sides start on the left edge and grow right', () => {
+  const umsg = messages.find(line => line.startsWith('.bt-umsg{'))
+  assert.ok(umsg.includes('flex-direction:row;') && umsg.includes('justify-content:flex-start'), umsg)
+  assert.ok(!umsg.includes('row-reverse'), 'the row no longer hugs the right')
+  const ustack = messages.find(line => line.startsWith('.bt-ustack{'))
+  assert.ok(ustack.includes('align-items:flex-start'), ustack)
+  const uattach = messages.find(line => line.startsWith('.bt-uattach{'))
+  assert.ok(uattach.includes('justify-content:flex-start'), uattach)
+  assert.ok(styles.some(line => line.startsWith('.bt-urow{display:flex;justify-content:flex-start}')), 'and the earlier pages agree')
+})
+
 test("the user's own bubbles keep the base cap", () => {
   assert.ok(!styles.some(line => line.startsWith(narrow) && line.includes('.bt-umsg')), 'the phone retunes the user row')
   assert.ok(!styles.some(line => line.startsWith(narrow) && line.includes('.bt-urow')), 'the phone retunes the user rows')
