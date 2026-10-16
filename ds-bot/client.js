@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 9a1281ff
+// Source fingerprint: 71f95775
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -13154,6 +13154,7 @@ function createPayload({ name, look, image, model, effort, brief }) {
 
 // src/client/create-bot.js
 var import_react29 = require("react");
+var import_dsh_client_ui_primitives8 = require("@deepseek-ai/dsh-client-ui-primitives");
 var pick = (list) => list[Math.floor(Math.random() * list.length)];
 var randomLook = (avoid = {}) => {
   const shapes = DEFAULT_SHAPES.filter((shape) => shape !== avoid.shape);
@@ -13170,7 +13171,11 @@ function CreateBot({ roster, actions, start, brief = "", onBack, canGoBack, onCr
   const [error, setError] = (0, import_react29.useState)("");
   const fileRef = (0, import_react29.useRef)(null);
   const frame = (0, import_react29.useRef)(null);
-  useEscape(onBack);
+  const mobile = useMobile();
+  const dialogRef = (0, import_react29.useRef)(null);
+  (0, import_dsh_client_ui_primitives8.useModalLayer)(dialogRef, mobile && !inline, onBack);
+  useEscape(mobile ? () => {
+  } : onBack);
   (0, import_react29.useEffect)(() => {
     if (inline) frame.current?.scrollIntoView({ block: "start", behavior: "smooth" });
   }, []);
@@ -13284,7 +13289,7 @@ function CreateBot({ roster, actions, start, brief = "", onBack, canGoBack, onCr
   if (inline) return (0, import_react29.createElement)("div", { ref: frame, className: "bt-create-inline", role: "group", "aria-label": t("Create Bot") }, card);
   return (0, import_react29.createElement)(
     "div",
-    { className: "bt-create", role: "dialog", "aria-label": t("Create Bot") },
+    { ref: dialogRef, className: "bt-create", role: "dialog", "aria-modal": true, "aria-label": t("Create Bot") },
     (0, import_react29.createElement)(
       "div",
       { className: "bt-create-head" },
@@ -13298,7 +13303,7 @@ function CreateBot({ roster, actions, start, brief = "", onBack, canGoBack, onCr
 
 // src/client/new-chat.js
 var import_react30 = require("react");
-var import_dsh_client_ui_primitives8 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives9 = require("@deepseek-ai/dsh-client-ui-primitives");
 function NewChat({ mode, roster, actions }) {
   const [query2, setQuery] = (0, import_react30.useState)("");
   const [picked, setPicked] = (0, import_react30.useState)([]);
@@ -13311,7 +13316,11 @@ function NewChat({ mode, roster, actions }) {
   const [draft, setDraft] = (0, import_react30.useState)(mode === "create" ? { name: "", fromList: false } : null);
   const inputRef = (0, import_react30.useRef)(null);
   const close = () => actions.closeOverlay();
-  useEscape(close);
+  const mobile = useMobile();
+  const dialogRef = (0, import_react30.useRef)(null);
+  (0, import_dsh_client_ui_primitives9.useModalLayer)(dialogRef, mobile && draft === null, close);
+  useEscape(mobile ? () => {
+  } : close);
   const paneLeft = usePaneLeft();
   const wanted = query2.trim().toLowerCase();
   const matches = roster.bots.filter((bot) => !picked.includes(bot.id) && bot.id !== admin && (wanted === "" || bot.name.toLowerCase().includes(wanted) || (bot.role ?? "").toLowerCase().includes(wanted)));
@@ -13402,7 +13411,7 @@ function NewChat({ mode, roster, actions }) {
       inputRef.current?.focus();
     } });
     if ((roster.agents ?? []).length === 0) {
-      options.push({ key: "agent", icon: (0, import_react30.createElement)(import_dsh_client_ui_primitives8.FishLogo, { size: 16 }), label: t("Add DSH Agent"), run: () => run(async () => {
+      options.push({ key: "agent", icon: (0, import_react30.createElement)(import_dsh_client_ui_primitives9.FishLogo, { size: 16 }), label: t("Add DSH Agent"), run: () => run(async () => {
         await actions.addAgent();
         close();
       }) });
@@ -13449,7 +13458,7 @@ ${listed}`, { axis: "y", ...QUICK_EDGES });
     { className: "bt-pane", style: { left: paneLeft } },
     (0, import_react30.createElement)(
       "div",
-      { className: "bt-newchat", role: "dialog", "aria-label": mode === "search" ? t("Search") : t("New chat") },
+      { ref: dialogRef, className: "bt-newchat", role: "dialog", "aria-modal": true, "aria-label": mode === "search" ? t("Search") : t("New chat") },
       (0, import_react30.createElement)(
         "div",
         { className: "bt-to" },
@@ -13555,7 +13564,7 @@ ${listed}`, { axis: "y", ...QUICK_EDGES });
 
 // src/client/exchange.js
 var import_react31 = require("react");
-var import_dsh_client_ui_primitives9 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives10 = require("@deepseek-ai/dsh-client-ui-primitives");
 var SHEET_EXIT_MS = 220;
 function ExchangeDialog({ pair, roster, actions }) {
   const [entries2, setEntries] = (0, import_react31.useState)(null);
@@ -13567,7 +13576,7 @@ function ExchangeDialog({ pair, roster, actions }) {
   };
   const mobile = useMobile();
   const dialogRef = (0, import_react31.useRef)(null);
-  (0, import_dsh_client_ui_primitives9.useModalLayer)(dialogRef, mobile, close);
+  (0, import_dsh_client_ui_primitives10.useModalLayer)(dialogRef, mobile, close);
   useEscape(mobile ? () => {
   } : close);
   (0, import_react31.useEffect)(() => {
@@ -13636,7 +13645,7 @@ function ExchangeDialog({ pair, roster, actions }) {
 
 // src/client/voice.js
 var import_react32 = require("react");
-var import_dsh_client_ui_primitives10 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives11 = require("@deepseek-ai/dsh-client-ui-primitives");
 var plainSpeech = (text) => stripHeader(text).replace(/```[\s\S]*?```/g, " ").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`#>|~-]+/g, " ").replace(/\s+/g, " ").trim();
 var VOICE_LABELS = {
   listening: "Listening",
@@ -13719,7 +13728,7 @@ function VoiceMode({ sessionId, roster, actions, useSessions, useSessionStatus }
   };
   const mobile = useMobile();
   const dialogRef = (0, import_react32.useRef)(null);
-  (0, import_dsh_client_ui_primitives10.useModalLayer)(dialogRef, mobile, close);
+  (0, import_dsh_client_ui_primitives11.useModalLayer)(dialogRef, mobile, close);
   useEscape(mobile ? () => {
   } : close);
   const submit = (text) => {
@@ -15487,7 +15496,7 @@ body:not([data-bt-motion=quiet]) .bt-about-mark:hover .bt-mark[data-live][data-s
 
 // src/client/settings.js
 var import_react38 = require("react");
-var import_dsh_client_ui_primitives11 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives12 = require("@deepseek-ai/dsh-client-ui-primitives");
 var capitalize2 = (word) => word[0].toUpperCase() + word.slice(1);
 var SETTINGS_PAGES = [["general", "General"], ["bots", "Bots"], ["groups", "Group chats"], ["account", "Account settings"], ["connectors", "Connectors"], ["capabilities", "Capabilities"], ["schedules", "Scheduled tasks"], ["usage", "Usage"], ["secrets", "Secrets"], ["feedback", "Feedback"], ["about", "About DS Bot"]];
 var BACK_TO = { peers: "Back to Peers" };
@@ -15713,7 +15722,7 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
     if (screen === "list") close();
     else stepBack();
   };
-  (0, import_dsh_client_ui_primitives11.useModalLayer)(dialogRef, mobile, leaveLevel);
+  (0, import_dsh_client_ui_primitives12.useModalLayer)(dialogRef, mobile, leaveLevel);
   useEscape(mobile ? () => {
   } : leaveLevel);
   const pageTitle = bot?.name ?? room2?.name ?? label;
@@ -17495,7 +17504,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/discover-page.js
 var import_react44 = require("react");
 var import_react_dom14 = require("react-dom");
-var import_dsh_client_ui_primitives12 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives13 = require("@deepseek-ai/dsh-client-ui-primitives");
 var DISCOVER_CARDS = [
   [
     ["plugins", "Plugin manager", FluentPuzzlePieceIcon]
@@ -17519,7 +17528,7 @@ function DiscoverPage({ useUi, actions }) {
   const paneLeft = usePaneLeft();
   const shown = open && mobile;
   const dialogRef = (0, import_react44.useRef)(null);
-  (0, import_dsh_client_ui_primitives12.useModalLayer)(dialogRef, shown, () => panel !== null ? actions.closeDiscoverRow() : actions.closeDiscover());
+  (0, import_dsh_client_ui_primitives13.useModalLayer)(dialogRef, shown, () => panel !== null ? actions.closeDiscoverRow() : actions.closeDiscover());
   if (!shown) return null;
   return (0, import_react_dom14.createPortal)((0, import_react44.createElement)(
     "div",
@@ -17594,7 +17603,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "9a1281ff" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "71f95775" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

@@ -1,8 +1,9 @@
 import { createElement as h, useRef, useState } from 'react'
-import { FishLogo } from '@deepseek-ai/dsh-client-ui-primitives'
+import { FishLogo, useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
 import { PlusIcon, PeopleIcon, ArrowUpIcon } from './icons.js'
 import { AdminStar, BotMark } from './mark.js'
 import { useEscape, usePaneLeft } from './overlay-hooks.js'
+import { useMobile } from './mobile.js'
 import { CreateBot } from './create-bot.js'
 import { QUICK_EDGES, useFlip, useGlide, useMorph } from './motion.js'
 import { t } from './i18n.js'
@@ -21,7 +22,19 @@ export function NewChat({ mode, roster, actions }) {
   const [draft, setDraft] = useState(mode === 'create' ? { name: '', fromList: false } : null)
   const inputRef = useRef(null)
   const close = () => actions.closeOverlay()
-  useEscape(close)
+  // Two keys, one per shape, and the pair is deliberate (test/ux-rules.test.js asserts it): a phone
+  // draws this pane as the screen and the shell's modal machinery owns Escape, the focus trap and
+  // the focus handed back on close -- it reads the dialog through the ref below. A wide window draws
+  // it as the column beside a live sidebar, and there our own stack keeps the key it always had.
+  //
+  // The condition is not just `mobile`: this pane has two shapes, and in the Create Bot one (a
+  // draft is being filled in) there is no `.bt-newchat` element to read -- that shape brings the
+  // form's own key. A hook mounted with no dialog would never run again, so the hook and the render
+  // read the same thing.
+  const mobile = useMobile()
+  const dialogRef = useRef(null)
+  useModalLayer(dialogRef, mobile && draft === null, close)
+  useEscape(mobile ? () => {} : close)
   const paneLeft = usePaneLeft()
   const wanted = query.trim().toLowerCase()
   const matches = roster.bots.filter(bot => !picked.includes(bot.id) && bot.id !== admin && (wanted === '' || bot.name.toLowerCase().includes(wanted) || (bot.role ?? '').toLowerCase().includes(wanted)))
@@ -127,7 +140,7 @@ export function NewChat({ mode, roster, actions }) {
     else if (admin !== null) setAdmin(null)
   }
   return h('div', { className: 'bt-pane', style: { left: paneLeft } },
-    h('div', { className: 'bt-newchat', role: 'dialog', 'aria-label': mode === 'search' ? t('Search') : t('New chat') },
+    h('div', { ref: dialogRef, className: 'bt-newchat', role: 'dialog', 'aria-modal': true, 'aria-label': mode === 'search' ? t('Search') : t('New chat') },
       h('div', { className: 'bt-to' },
         h('span', { className: 'bt-to-label' }, t('To:')),
         adminBot ? h('span', { key: adminBot.id, className: 'bt-token bt-token-admin', title: t('Admin') },

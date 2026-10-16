@@ -179,8 +179,10 @@ test('a layer that hands its Esc to the shell\u2019s modal machinery says it is 
   const OVERLAYS = ['memory-panel.js', 'palette.js']
   // A pane is the screen on a phone and the right-hand column on a wide window, where the sidebar is
   // still live and Tab must be able to leave: phone hands the key over, wide keeps ours. Both lines
-  // are required together -- deleting either one is the mistake this list is here to catch.
-  const PANES = ['exchange.js', 'settings.js', 'voice.js']
+  // are required together -- deleting either one is the mistake this list is here to catch. A pane
+  // with two shapes of its own (new-chat's picker and its Create Bot form, create-bot's pane and its
+  // inline form) narrows `mobile` further so the hook and the render read the same condition.
+  const PANES = ['create-bot.js', 'exchange.js', 'new-chat.js', 'settings.js', 'voice.js']
   // Drawn on a phone only (its own render returns null above the breakpoint), so there is no wide
   // shape to keep our key for -- but the hook must be told when the dialog is up: handed a fixed
   // true it would mount with no element to read, never run again, and lose Esc without a sound.
@@ -203,7 +205,7 @@ test('a layer that hands its Esc to the shell\u2019s modal machinery says it is 
     assert.match(read(name), /useModalLayer\(\w+, true,/, `${name} is only mounted while it is up, so the hook is told so`)
   }
   for (const name of PANES) {
-    assert.match(read(name), /useModalLayer\(\w+, mobile,/, `${name}: the phone's shape hands Escape to the shell's machinery`)
+    assert.match(read(name), /useModalLayer\(\w+, mobile\b/, `${name}: the phone's shape hands Escape to the shell's machinery`)
     assert.match(read(name), /useEscape\(mobile \? \(\) => \{\} :/, `${name}: the wide shape keeps our own key and focus -- the pair is deliberate, do not delete either line`)
   }
   for (const name of PHONE_ONLY) {

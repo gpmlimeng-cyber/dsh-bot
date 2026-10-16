@@ -3,7 +3,9 @@ import { BotMark } from './mark.js'
 import { CharacterGrid, avatarImage } from './bot-settings.js'
 import { DEFAULT_SHAPES, DEFAULT_COLORS } from './characters.js'
 import { ChevronLeftIcon, CloseIcon } from './icons.js'
+import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useEscape } from './overlay-hooks.js'
+import { useMobile } from './mobile.js'
 import { createPayload, freshBotName, startModel } from './bot-draft.js'
 import { ModelMenu } from './model-menu.js'
 import { hostText, t } from './i18n.js'
@@ -28,7 +30,15 @@ export function CreateBot({ roster, actions, start, brief = '', onBack, canGoBac
   const [error, setError] = useState('')
   const fileRef = useRef(null)
   const frame = useRef(null)
-  useEscape(onBack)
+  // Two keys, one per shape, and the pair is deliberate (test/ux-rules.test.js asserts it): the
+  // standalone form is a phone's screen and the shell's modal machinery owns Escape there, reading
+  // the dialog through the ref below. A wide window draws that form as the column beside a live
+  // sidebar, where our own stack keeps the key it always had. The `inline` shape is neither -- it is
+  // a group drawn inside Settings, so the hook stays down and the form keeps its own key.
+  const mobile = useMobile()
+  const dialogRef = useRef(null)
+  useModalLayer(dialogRef, mobile && !inline, onBack)
+  useEscape(mobile ? () => {} : onBack)
   // Inside Settings the form opens below other sections, so it scrolls itself into view.
   useEffect(() => { if (inline) frame.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }) }, [])
   const fallbackName = freshBotName(roster, t('New Bot'))
@@ -91,7 +101,7 @@ export function CreateBot({ roster, actions, start, brief = '', onBack, canGoBac
       h('button', { type: 'button', className: 'bt-soft', onClick: onBack }, canGoBack ? t('Back') : t('Cancel')),
       h('button', { type: 'button', className: 'bt-send bt-create-go', disabled: busy || clash || Boolean(problem), onClick: () => void create() }, busy ? t('Creating…') : t('Create'))))
   if (inline) return h('div', { ref: frame, className: 'bt-create-inline', role: 'group', 'aria-label': t('Create Bot') }, card)
-  return h('div', { className: 'bt-create', role: 'dialog', 'aria-label': t('Create Bot') },
+  return h('div', { ref: dialogRef, className: 'bt-create', role: 'dialog', 'aria-modal': true, 'aria-label': t('Create Bot') },
     h('div', { className: 'bt-create-head' },
       canGoBack ? h('button', { type: 'button', className: 'bt-icon-btn', 'aria-label': t('Back to new chat'), onClick: onBack }, h(ChevronLeftIcon)) : h('span', { className: 'bt-create-gap' }),
       h('span', { className: 'bt-create-title' }, t('Create Bot')),
