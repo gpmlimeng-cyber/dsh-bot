@@ -86,5 +86,10 @@ test('no client module paints with a colour literal', () => {
   }
   const stale = [...ALLOW.keys()].filter(key => !used.has(key))
   assert.deepEqual(stale, [], `an allowance that no longer names anything is hiding nothing: ${stale.join(', ')}`)
-  assert.deepEqual(found, [], 'a colour written where it is used instead of read from a token (styles.js, the token block)')
+  // The message names the remedy, and the offenders the assertion reports carry their own file, line and
+  // declaration -- an earlier wording put "(styles.js, the token block)" in the headline, which read as
+  // the place the colour was found rather than the place it should have been read from.
+  assert.deepEqual(found, [], found.length
+    ? `read these from a token (styles.js:62, the body block) instead of writing them where they are used:\n  ${found.join('\n  ')}`
+    : '')
 })
