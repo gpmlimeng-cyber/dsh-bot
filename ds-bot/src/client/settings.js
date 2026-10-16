@@ -25,6 +25,10 @@ const capitalize = word => word[0].toUpperCase() + word.slice(1)
 // Settings dialog: a 198px page list beside the page. Bots and group chats each list
 // their members, and one opens on its own settings form. Usage widens the dialog.
 const SETTINGS_PAGES = [['general', 'General'], ['bots', 'Bots'], ['groups', 'Group chats'], ['connectors', 'Connectors'], ['capabilities', 'Capabilities'], ['schedules', 'Scheduled tasks'], ['usage', 'Usage'], ['secrets', 'Secrets'], ['feedback', 'Feedback'], ['about', 'About DS Bot']]
+// What the phone's back arrow is called, per door the layer came in through (index.js sets `from`):
+// the arrow's name and the arrow's action are one answer, so a button that returns to the 伙伴 list
+// is not named for Settings' own list. A new door adds one line here.
+const BACK_TO = { peers: 'Back to Peers' }
 const PAGE_ICONS = { ...SETTINGS_ICONS, connectors: ConnectorIcon, capabilities: PlugIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon }
 const PAGE_TEXT = Object.fromEntries(SETTINGS_PAGES)
 // The phone draws the list as cards under group headings. The wide dialog's 198px column
@@ -226,7 +230,9 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
   // that leave is what lands back on 发现's own list (closeSettings reads the row it came from).
   useEscape(() => { if (screen === 'list') close(); else stepBack() })
   const pageTitle = bot?.name ?? room?.name ?? label
-  const backLabel = screen === 'list' ? t('Close settings') : back ?? t('All settings')
+  // The same rule the arrow itself follows (stepBack): the level above when there is one, the door it
+  // came in through when there is not, and Settings' own list otherwise.
+  const backLabel = screen === 'list' ? t('Close settings') : back ?? t(BACK_TO[from] ?? 'All settings')
   return h('div', { className: 'bt-settings-layer', 'data-tabpage': tab ? '' : undefined, 'data-leaving': leaving || undefined },
     h('div', { className: 'bt-scrim', onMouseDown: close }),
     h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('DS Bot settings'), 'data-wide': shown === 'usage' ? '' : undefined, 'data-screen': mobile ? screen : undefined },

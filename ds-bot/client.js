@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 1bd1618d
+// Source fingerprint: dc04a202
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -433,6 +433,8 @@ var ZH = {
   "Models, providers, and the rest of DeepSeek Harness": "模型、服务商和 DeepSeek Harness 的其他设置",
   "Harness settings": "Harness 设置",
   "Back to Bots": "返回 Bot 列表",
+  // The 伙伴 page, when a page of Settings was opened from it and has nothing above it.
+  "Back to Peers": "返回伙伴",
   "Back to the list": "返回列表",
   "Close settings": "关闭设置",
   // Context menu
@@ -14394,6 +14396,7 @@ body:not([data-bt-motion=quiet]) .bt-about-mark:hover .bt-mark[data-live][data-s
 var import_react35 = require("react");
 var capitalize2 = (word) => word[0].toUpperCase() + word.slice(1);
 var SETTINGS_PAGES = [["general", "General"], ["bots", "Bots"], ["groups", "Group chats"], ["connectors", "Connectors"], ["capabilities", "Capabilities"], ["schedules", "Scheduled tasks"], ["usage", "Usage"], ["secrets", "Secrets"], ["feedback", "Feedback"], ["about", "About DS Bot"]];
+var BACK_TO = { peers: "Back to Peers" };
 var PAGE_ICONS = { ...SETTINGS_ICONS, connectors: ConnectorIcon, capabilities: PlugIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon };
 var PAGE_TEXT = Object.fromEntries(SETTINGS_PAGES);
 var SETTINGS_GROUPS = [
@@ -14641,7 +14644,7 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
     else stepBack();
   });
   const pageTitle = bot?.name ?? room2?.name ?? label;
-  const backLabel = screen === "list" ? t("Close settings") : back ?? t("All settings");
+  const backLabel = screen === "list" ? t("Close settings") : back ?? t(BACK_TO[from] ?? "All settings");
   return (0, import_react35.createElement)(
     "div",
     { className: "bt-settings-layer", "data-tabpage": tab ? "" : void 0, "data-leaving": leaving || void 0 },
@@ -16409,7 +16412,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "1bd1618d" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "dc04a202" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

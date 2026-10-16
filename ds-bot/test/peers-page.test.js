@@ -260,6 +260,11 @@ test('a Bot\'s row opens that Bot\'s page, the 群聊 door opens the group chats
   assert.ok(code('settings.js').includes('if (from !== null) close()'), 'and otherwise leaves by the door it came in through')
   assert.ok(code('settings.js').includes('else setScreen(\'list\')'), 'while a page with no door shows the list it came from')
   assert.ok(code('overlays.js').includes('from: settings.from ?? null'), 'which the layer is handed')
+  // The arrow's name is that same answer: a button that returns to this list must not be named for
+  // Settings' own list (the mismatch 快速执行 found on the device).
+  assert.ok(code('settings.js').includes("const BACK_TO = { peers: 'Back to Peers' }"), 'the door has its own name for the arrow')
+  assert.ok(code('settings.js').includes("t(BACK_TO[from] ?? 'All settings')"), 'used where the fallback was, and only there')
+  assert.ok(code('i18n.js').includes("'Back to Peers': '返回伙伴'"), 'with its copy')
   assert.ok(peers.includes("'data-screen'") === false, 'neither page is redrawn here: the key is all this page knows')
   // The group chats' page is Settings' own, and its title bar's right-hand control is that page's
   // action: the two buttons that both left the page (left = one step back, right = close Settings)

@@ -371,6 +371,8 @@ const ZH = {
   'Models, providers, and the rest of DeepSeek Harness': '模型、服务商和 DeepSeek Harness 的其他设置',
   'Harness settings': 'Harness 设置',
   'Back to Bots': '返回 Bot 列表',
+  // The 伙伴 page, when a page of Settings was opened from it and has nothing above it.
+  'Back to Peers': '返回伙伴',
   'Back to the list': '返回列表',
   'Close settings': '关闭设置',
 
