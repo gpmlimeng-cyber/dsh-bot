@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 23469420
+// Source fingerprint: f593c669
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -15477,6 +15477,7 @@ body:not([data-bt-motion=quiet]) .bt-about-mark:hover .bt-mark[data-live][data-s
 
 // src/client/settings.js
 var import_react38 = require("react");
+var import_dsh_client_ui_primitives9 = require("@deepseek-ai/dsh-client-ui-primitives");
 var capitalize2 = (word) => word[0].toUpperCase() + word.slice(1);
 var SETTINGS_PAGES = [["general", "General"], ["bots", "Bots"], ["groups", "Group chats"], ["account", "Account settings"], ["connectors", "Connectors"], ["capabilities", "Capabilities"], ["schedules", "Scheduled tasks"], ["usage", "Usage"], ["secrets", "Secrets"], ["feedback", "Feedback"], ["about", "About DS Bot"]];
 var BACK_TO = { peers: "Back to Peers" };
@@ -15697,7 +15698,8 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
     if (from !== null) close();
     else setScreen("list");
   };
-  useEscape(() => {
+  const dialogRef = (0, import_react38.useRef)(null);
+  (0, import_dsh_client_ui_primitives9.useModalLayer)(dialogRef, true, () => {
     if (screen === "list") close();
     else stepBack();
   });
@@ -15709,7 +15711,7 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
     (0, import_react38.createElement)("div", { className: "bt-scrim", onMouseDown: close }),
     (0, import_react38.createElement)(
       "div",
-      { className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("DS Bot settings"), "data-wide": shown === "usage" ? "" : void 0, "data-screen": mobile ? screen : void 0 },
+      { ref: dialogRef, className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("DS Bot settings"), "data-wide": shown === "usage" ? "" : void 0, "data-screen": mobile ? screen : void 0 },
       // Phone only: back, the title centred on the dialog rather than on the space left
       // between the two side buttons, and the close. A wider button on one side cannot
       // pull the title off centre because it is out of their flow. The close is drawn
@@ -17576,7 +17578,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "23469420" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "f593c669" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

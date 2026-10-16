@@ -7,7 +7,7 @@ import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon,
 import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
 import { openHarnessSettings } from './sidebar.js'
 import { useMobile } from './mobile.js'
-import { useEscape } from './overlay-hooks.js'
+import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
 import { BotSettingsForm } from './bot-settings.js'
 import { MOTIONS, MotionSection, SetRow, SetSection } from './set-rows.js'
 import { Segmented, useGlide } from './motion.js'
@@ -223,14 +223,18 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
   // Escape goes up one level, exactly as the back arrow does: a page inside Settings returns to
   // Settings' own list rather than leaving it, and only the list itself leaves. Opened from 发现,
   // that leave is what lands back on 发现's own list (closeSettings reads the row it came from).
-  useEscape(() => { if (screen === 'list') close(); else stepBack() })
+  // The key itself, the focus trap and the focus handed back on close belong to the shell's modal
+  // machinery, which reads the dialog through the ref below -- drop the ref and this layer loses
+  // Esc without a word (test/ux-rules.test.js holds the two lines together).
+  const dialogRef = useRef(null)
+  useModalLayer(dialogRef, true, () => { if (screen === 'list') close(); else stepBack() })
   const pageTitle = bot?.name ?? room?.name ?? label
   // The same rule the arrow itself follows (stepBack): the level above when there is one, the door it
   // came in through when there is not, and Settings' own list otherwise.
   const backLabel = screen === 'list' ? t('Close settings') : back ?? t(BACK_TO[from] ?? 'Back to all settings')
   return h('div', { className: 'bt-settings-layer', 'data-tabpage': tab ? '' : undefined, 'data-leaving': leaving || undefined },
     h('div', { className: 'bt-scrim', onMouseDown: close }),
-    h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('DS Bot settings'), 'data-wide': shown === 'usage' ? '' : undefined, 'data-screen': mobile ? screen : undefined },
+    h('div', { ref: dialogRef, className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('DS Bot settings'), 'data-wide': shown === 'usage' ? '' : undefined, 'data-screen': mobile ? screen : undefined },
       // Phone only: back, the title centred on the dialog rather than on the space left
       // between the two side buttons, and the close. A wider button on one side cannot
       // pull the title off centre because it is out of their flow. The close is drawn
