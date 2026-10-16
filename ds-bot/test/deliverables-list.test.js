@@ -85,7 +85,7 @@ test('an empty list and a list that cannot be read each say so, in the reader’
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-hint{font-size:12px;line-height:16px;color:var(--bt-ink-2)}'), 'in the second level\'s own small type')
   assert.ok(!list.includes('bt-prod-note') && !preview.includes('.bt-prod-note{'), 'and the row of its own is gone, not kept in two places')
   assert.ok(list.includes("if (!Array.isArray(answer?.files)) { setState('failed'); return }"), 'a shape the host did not send is not listed')
-  assert.ok(i18n.includes("'No deliverables yet': '还没有产物'"), 'the empty state is translated')
+  assert.ok(i18n.includes("'No deliverables yet': '还没有交付物'"), 'the empty state is translated')
   assert.ok(i18n.includes("'This list could not be read': '这份列表读不出来'"), 'and the failure')
   assert.ok(i18n.includes("'Only files delivered since this run started are listed.': '只显示本次启动以来交付过的文件。'"), 'and the note explains a short list in Chinese')
 })
