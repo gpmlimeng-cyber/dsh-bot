@@ -207,15 +207,17 @@ test('the type mark is the kind\u2019s own drawing in a tinted square, not lette
   assert.ok(rule('.bt-dcard-ico>svg{').includes('width:24px') && rule('.bt-dcard-ico>svg{').includes('height:24px'), 'and the drawing is the 24px the row was measured with')
 })
 
-test('the card keeps no selected look: no ring, and hover only where a pointer is', () => {
+test('the card keeps no selected look on a phone, and a keyboard keeps its ring', () => {
   const source = styles.join('\n')
   assert.ok(!styles.some(line => line.startsWith('.bt-dcard:hover{')), 'the card no longer greys itself under the cursor unconditionally')
   assert.ok(!styles.some(line => line.startsWith('.bt-dcard-btn:hover{')), 'nor do its buttons')
   const pointer = source.slice(source.indexOf('@media (hover:hover){'), source.indexOf('.bt-dcard-hit:focus-visible'))
   assert.ok(pointer.includes('.bt-dcard:hover{background:var(--bt-hover)}'), 'both live inside the pointer-only block')
   assert.ok(pointer.includes('.bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}'), 'which is where an Android tap cannot leave them stuck')
-  assert.ok(!source.includes('.bt-dcard-hit:focus-visible{box-shadow:'), 'and the accent ring around the whole card is gone')
-  assert.ok(styles.some(line => line.startsWith('.bt-dcard-hit:focus-visible{outline:none}')), 'with no outline put in its place')
+  // The ring belongs to a keyboard: the wide layout keeps it, and the phone band -- where a finger
+  // opens the file and the user asked the card not to look chosen afterwards -- turns it off alone.
+  assert.ok(styles.some(line => line.startsWith('.bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);')), 'a keyboard still sees the card it has reached')
+  assert.ok(styles.some(line => line.startsWith('html[data-bt-mobile] .bt-dcard-hit:focus-visible{box-shadow:none;outline:none}')), 'and the phone band draws none')
   assert.ok(!source.includes('.bt-dcard:active') && !source.includes('.bt-dcard[aria-selected'), 'and the card has no press or selected state of its own')
   // The tile is still the thing that opens the file: only its selected look went.
   assert.ok(source.includes(".bt-dcard-hit{position:absolute;inset:0;z-index:1;width:100%;padding:0;border:0;border-radius:inherit;background:0 0;cursor:pointer}"), 'the hit layer is still there')

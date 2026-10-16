@@ -309,13 +309,17 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
 .bt-dcard-hit{position:absolute;inset:0;z-index:1;width:100%;padding:0;border:0;border-radius:inherit;background:0 0;cursor:pointer}
 /* A pointer's own states, and only a pointer's: an Android tap leaves :hover on whatever it touched,
    so the card and its buttons would keep the very highlight the user asked away -- the tile read as
-   "selected" after opening a file. Nothing here draws a ring around the whole card either; what a
-   press does is the button's own business (.bt-dcard-btn, below). */
+   "selected" after opening a file. The ring below is a keyboard's (see its own note); what a press
+   does is the button's own business (.bt-dcard-btn). */
 @media (hover:hover){
   .bt-dcard:hover{background:var(--bt-hover)}
   .bt-dcard-btn:hover{background:var(--bt-active);color:var(--bt-ink)}
 }
-.bt-dcard-hit:focus-visible{outline:none}
+/* A keyboard's ring is a keyboard's: it stays for the wide layout and comes back here, and a phone
+   -- where a finger opens the file and the user asked the card not to look chosen afterwards -- turns
+   it off for its own band only. */
+.bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);outline:none}
+html[data-bt-mobile] .bt-dcard-hit:focus-visible{box-shadow:none;outline:none}
 /* The file's badge: a rounded square in the kind's own tint with the extension written in
    it, the way the delivery list the user pointed at does it. A drawn glyph of a page is a
    shape every reader has to decode and none of them read as this file; four letters do not
