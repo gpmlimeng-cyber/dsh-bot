@@ -1567,12 +1567,19 @@ html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;tr
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
 /* The title bar spans both screens, so it stays put when the list opens a page: back on
-   the left, the title centred on the dialog, the close on the right. Both side buttons are
-   40px with 44px of target; the title is out of their flow, so a wider button on one side
-   cannot pull it off centre, and it ellipsises rather than wrapping. */
+   the left, the title centred on the dialog, and on the right the page's own action or
+   nothing. Both keys are title-bar icon keys (the one shape the phone's bars use): 48px of
+   finger, no fill and no ring, a 12px press shape, a 22px glyph -- the 52px row holds 48, so
+   neither needs the row's exception, and the 60px the title keeps clear on either side is
+   exactly 12px of bar padding plus one key. The 40px circle with a ::after that reached 44
+   is gone: a hit only a pseudo-element could reach was the wrong thing to make bigger, and
+   the fill that came with it drew a plate where the bar has none. The ink stays the quiet
+   one -- a back key is navigation, not the bar's primary action, which is the one key that
+   wears full ink (peers-page.js). The title is out of their flow, so a wider button on one
+   side cannot pull it off centre, and it ellipsises rather than wrapping. */
 html[data-bt-mobile] .bt-settings-top{position:relative;flex:none;display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 12px;box-sizing:border-box}
-html[data-bt-mobile] .bt-settings-top>.bt-icon-btn{position:relative;flex:none;width:40px;height:40px;background:var(--bt-hover)}
-html[data-bt-mobile] .bt-settings-top>.bt-icon-btn::after{content:"";position:absolute;inset:-2px}
+html[data-bt-mobile] .bt-settings-top>.bt-icon-btn{position:relative;flex:none;width:48px;height:48px;border-radius:12px;background:none}
+html[data-bt-mobile] .bt-settings-top>.bt-icon-btn svg{width:22px;height:22px}
 /* A control the page cannot use yet (the group chats' + with fewer than two Bots) says so rather
    than answering a tap with nothing. */
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn:disabled{opacity:.4;cursor:default}

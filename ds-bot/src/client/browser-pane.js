@@ -613,10 +613,11 @@ html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products][
 /* The band a thumb grabs is 44 tall and draws nothing; the pill inside it is the 4px the eye sees.
    touch-action:none keeps the page's own scroll out of the gesture. */
 html[data-bt-mobile] .bt-sheet-grip{position:relative;flex:none;display:flex;align-items:center;justify-content:center;height:44px;touch-action:none;cursor:grab}
-/* The close of the sheet: the top-right corner of the row the handle sits in -- 44px of finger,
-   out of the drag's way, and only on the phone (a desktop column closes through its back arrow). */
+/* The close of the sheet: the top-right corner of the row the handle sits in -- 48px of finger and
+   the title-bar icon key's own press shape, out of the drag's way, and only on the phone (a desktop
+   column closes through its back arrow). */
 .bt-sheet-close{display:none}
-html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:2;align-items:center;justify-content:center;width:48px;height:48px;padding:0;border:0;border-radius:14px;background:none;color:var(--bt-ink-2);cursor:pointer;touch-action:manipulation}
+html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:2;align-items:center;justify-content:center;width:48px;height:48px;padding:0;border:0;border-radius:12px;background:none;color:var(--bt-ink-2);cursor:pointer;touch-action:manipulation}
 
 @media (hover:hover){
 html[data-bt-mobile] .bt-sheet-close:hover{background:var(--bt-hover);color:var(--bt-ink)}

@@ -121,7 +121,11 @@ export const DISCOVER_CSS = `
    hide the conversation's top row is the skin's business, not
    this page's: the discover page and this strip are both named in the list in styles.js. */
 html[data-bt-mobile] .bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px 0;z-index:96;display:flex;align-items:center;background:var(--bt-main);pointer-events:none}
-html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+/* The strip's one key, and it is a title-bar icon key like the bars' others: 48px of finger with no
+   face, a 12px press shape, a 22px glyph in the page's ink. The 999px it wore was the ball era's
+   leftover -- with nothing filled underneath, a circle only ever showed as the press, and the press
+   is the one thing every key on every bar shares. */
+html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:12px;background:none;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 
 @media (hover:hover){
 html[data-bt-mobile] .bt-subback-btn:hover{background:var(--bt-hover)}

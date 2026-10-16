@@ -144,7 +144,7 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   // The user could not hit it at 44 with an 18px mark: 48 of finger, a 22px drawing, clear of the edge by
   // 6px, and above the handle's own band so a press on it is never a drag (its pointerdown stops there).
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:2;'), 'pinned to the right corner of that row, over the handle\'s band')
-  assert.ok(pane.includes('width:48px;height:48px;padding:0;border:0;border-radius:14px'), 'a 48px target')
+  assert.ok(pane.includes('width:48px;height:48px;padding:0;border:0;border-radius:12px'), 'a 48px target in the title-bar key\'s own press shape')
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-close svg{width:22px;height:22px}'), 'with a 22px drawing in it')
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-close:active{background:var(--bt-active);color:var(--bt-ink)}'), 'and it shows the press while the finger is down')
   assert.ok(pane.includes('.bt-sheet-close{display:none}'), 'while a desktop column keeps its back arrow')

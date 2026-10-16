@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 83464916
+// Source fingerprint: 7db83c5d
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3593,12 +3593,19 @@ html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;tr
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
 /* The title bar spans both screens, so it stays put when the list opens a page: back on
-   the left, the title centred on the dialog, the close on the right. Both side buttons are
-   40px with 44px of target; the title is out of their flow, so a wider button on one side
-   cannot pull it off centre, and it ellipsises rather than wrapping. */
+   the left, the title centred on the dialog, and on the right the page's own action or
+   nothing. Both keys are title-bar icon keys (the one shape the phone's bars use): 48px of
+   finger, no fill and no ring, a 12px press shape, a 22px glyph -- the 52px row holds 48, so
+   neither needs the row's exception, and the 60px the title keeps clear on either side is
+   exactly 12px of bar padding plus one key. The 40px circle with a ::after that reached 44
+   is gone: a hit only a pseudo-element could reach was the wrong thing to make bigger, and
+   the fill that came with it drew a plate where the bar has none. The ink stays the quiet
+   one -- a back key is navigation, not the bar's primary action, which is the one key that
+   wears full ink (peers-page.js). The title is out of their flow, so a wider button on one
+   side cannot pull it off centre, and it ellipsises rather than wrapping. */
 html[data-bt-mobile] .bt-settings-top{position:relative;flex:none;display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 12px;box-sizing:border-box}
-html[data-bt-mobile] .bt-settings-top>.bt-icon-btn{position:relative;flex:none;width:40px;height:40px;background:var(--bt-hover)}
-html[data-bt-mobile] .bt-settings-top>.bt-icon-btn::after{content:"";position:absolute;inset:-2px}
+html[data-bt-mobile] .bt-settings-top>.bt-icon-btn{position:relative;flex:none;width:48px;height:48px;border-radius:12px;background:none}
+html[data-bt-mobile] .bt-settings-top>.bt-icon-btn svg{width:22px;height:22px}
 /* A control the page cannot use yet (the group chats' + with fewer than two Bots) says so rather
    than answering a tap with nothing. */
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn:disabled{opacity:.4;cursor:default}
@@ -9184,10 +9191,11 @@ html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products][
 /* The band a thumb grabs is 44 tall and draws nothing; the pill inside it is the 4px the eye sees.
    touch-action:none keeps the page's own scroll out of the gesture. */
 html[data-bt-mobile] .bt-sheet-grip{position:relative;flex:none;display:flex;align-items:center;justify-content:center;height:44px;touch-action:none;cursor:grab}
-/* The close of the sheet: the top-right corner of the row the handle sits in -- 44px of finger,
-   out of the drag's way, and only on the phone (a desktop column closes through its back arrow). */
+/* The close of the sheet: the top-right corner of the row the handle sits in -- 48px of finger and
+   the title-bar icon key's own press shape, out of the drag's way, and only on the phone (a desktop
+   column closes through its back arrow). */
 .bt-sheet-close{display:none}
-html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:2;align-items:center;justify-content:center;width:48px;height:48px;padding:0;border:0;border-radius:14px;background:none;color:var(--bt-ink-2);cursor:pointer;touch-action:manipulation}
+html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:2;align-items:center;justify-content:center;width:48px;height:48px;padding:0;border:0;border-radius:12px;background:none;color:var(--bt-ink-2);cursor:pointer;touch-action:manipulation}
 
 @media (hover:hover){
 html[data-bt-mobile] .bt-sheet-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
@@ -17192,12 +17200,14 @@ html[data-bt-mobile] .bt-motion-mini button:active{color:var(--bt-ink)}
    of the chrome, so its surface (fill, hairline, radius, shadow) is the one shared declaration in
    styles.js -- the same control the drawer's + and the conversation pill read. Only size and layout
    live here. */
-/* The 伙伴 page's one control, and it is a title-bar icon key rather than a floating button: 44px of
+/* The 伙伴 page's one control, and it is a title-bar icon key rather than a floating button: 48px of
    finger with no fill and no ring, a 22px glyph in the theme's ink, on the title row's own centre
    line. It used to be a 40px white ball (the floating-control skin in styles.js); a bar that is part
    of the page does not need a button floating above it, and the user read the ball as the wrong
-   thing. Its press is the skin's own (the unified :active tint), so nothing sticks after a tap. */
-html[data-bt-mobile] .bt-peers-new{flex:0 0 44px;width:44px;height:44px;margin-left:auto;padding:0;border:0;border-radius:12px;background:none;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}
+   thing. Its press is the skin's own (the unified :active tint), so nothing sticks after a tap.
+   The 52px row holds 48, so this key never needs the row's own exception; the 60px the title keeps
+   clear on either side is exactly 12px of bar padding plus this button. */
+html[data-bt-mobile] .bt-peers-new{flex:0 0 48px;width:48px;height:48px;margin-left:auto;padding:0;border:0;border-radius:12px;background:none;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}
 html[data-bt-mobile] .bt-peers-new svg{width:22px;height:22px}
 html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 /* The row and its own controls share one line: the row takes what they leave, and the control is never
@@ -17337,7 +17347,11 @@ var DISCOVER_CSS = `
    hide the conversation's top row is the skin's business, not
    this page's: the discover page and this strip are both named in the list in styles.js. */
 html[data-bt-mobile] .bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px 0;z-index:96;display:flex;align-items:center;background:var(--bt-main);pointer-events:none}
-html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+/* The strip's one key, and it is a title-bar icon key like the bars' others: 48px of finger with no
+   face, a 12px press shape, a 22px glyph in the page's ink. The 999px it wore was the ball era's
+   leftover -- with nothing filled underneath, a circle only ever showed as the press, and the press
+   is the one thing every key on every bar shares. */
+html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:12px;background:none;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 
 @media (hover:hover){
 html[data-bt-mobile] .bt-subback-btn:hover{background:var(--bt-hover)}
@@ -17348,7 +17362,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "83464916" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "7db83c5d" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

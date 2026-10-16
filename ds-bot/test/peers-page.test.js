@@ -426,8 +426,8 @@ test('the 伙伴 page\u2019s title-bar key is a key, not a floating ball', () =>
   const rule = peers.slice(peers.indexOf('html[data-bt-mobile] .bt-peers-new{'), peers.indexOf('html[data-bt-mobile] .bt-peers-new svg{'))
   // The user read the white circle as the wrong thing on a title bar, and it was: the floating-control
   // skin in styles.js gave it --bt-card, a 999px radius and a float shadow. A title-bar key sits on the
-  // bar, so it has no surface of its own -- only 44px of finger and a glyph.
-  assert.ok(rule.includes('width:44px') && rule.includes('height:44px') && rule.includes('flex:0 0 44px'), '44px of finger')
+  // bar, so it has no surface of its own -- only 48px of finger and a glyph.
+  assert.ok(rule.includes('width:48px') && rule.includes('height:48px') && rule.includes('flex:0 0 48px'), '48px of finger')
   assert.ok(rule.includes('background:none'), 'no fill')
   assert.ok(rule.includes('border:0'), 'no ring')
   assert.ok(rule.includes('border-radius:12px') && !rule.includes('999px'), 'a rounded press shape, not a ball')
