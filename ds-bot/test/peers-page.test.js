@@ -119,15 +119,28 @@ test('the page is a header row and one scroller of labelled cards', () => {
   const childName = (node) => classList(node)[0] ?? node?.props?.label ?? '(mark)'
   assert.deepEqual(plain(items.map(item => item.children.filter(Boolean).map(childName))), [
     ['bt-peers-row', 'bt-peers-go'],
-    ['bt-peers-row', 'Main Bot', 'bt-peers-go'],
-    ['bt-peers-row', 'Main Bot', 'bt-peers-go'],
-  ], 'the door has a chevron, a Bot has its switch and a chevron')
-  // The switch is the Bot settings page's own control: one per Bot row, on for the Main Bot, and out
-  // of reach for the only one there is (the host refuses to leave the team with none).
-  const switches = items.flatMap(item => item.children).filter(node => node?.props?.label === 'Main Bot')
-  assert.equal(switches.length, 2, 'one switch per Bot row, and none on the door')
-  assert.deepEqual(plain(switches.map(node => node.props.on)), [true, false], 'on for the Main Bot, off for the other')
-  assert.deepEqual(plain(switches.map(node => node.props.disabled)), [true, false], 'and the only Main Bot cannot switch itself off')
+    ['bt-peers-row', 'bt-peers-main', 'bt-peers-go'],
+    ['bt-peers-row', 'bt-peers-main', 'bt-peers-go'],
+  ], 'the door has a chevron, a Bot has its Main Bot action and a chevron')
+  // One action per Bot row: pressed on the Main Bot, plain on the other, and out of reach for the only
+  // Main Bot there is (the host refuses to leave the team with none).
+  const mains = items.flatMap(item => item.children).filter(node => classList(node).includes('bt-peers-main'))
+  assert.equal(mains.length, 2, 'one per Bot row, and none on the door')
+  // plain() is JSON, so an attribute that is not set reads as null: unpressed is an absence.
+  assert.deepEqual(plain(mains.map(node => node.props['aria-pressed'])), ['true', null], 'pressed on the Main Bot, unpressed on the other')
+  assert.deepEqual(plain(mains.map(node => node.props.disabled)), [true, false], 'and the only Main Bot cannot hand the role away from itself')
+  assert.ok(mains.every(node => node.children.some(child => typeof child === 'object' && child !== null)), 'each carries the star the badge wears')
+  // A phone's control: 44px of finger, a state that is drawn as well as announced, and an answer to the
+  // tap itself rather than to a hover.
+  const sheet = code('peers-page.js')
+  assert.ok(sheet.includes('.bt-peers-main{flex:none;width:44px;height:44px;'), 'the target is finger-sized')
+  assert.ok(sheet.includes('.bt-peers-main[aria-pressed=true]{background:var(--bt-active);color:var(--bt-star)}'), 'and shows its state with the star the badge uses')
+  assert.ok(sheet.includes('.bt-peers-main:active{background:var(--bt-active)}'), 'answering the tap at once')
+  // Nothing here animates on its own: every row wears the skin's own mark, and the skin already
+  // silences marks under prefers-reduced-motion (which is what this device asks for).
+  assert.ok(code('styles.js').includes('@media (prefers-reduced-motion:reduce){.bt-mark *{animation:none!important;transition:none!important}}'), 'the skin silences the marks')
+  assert.ok(peers.includes('h(BotMark, { bot, size: 36 })'), 'and every row wears that same mark')
+  assert.ok(peers.includes('h(MotionSection, { roster, actions, run })'), 'the animation level is offered once, as the Bots page draws it')
   // The door names the page it opens, and that page is 我的 -> 群聊: the key is the settings page's own.
   const door = rows.find(row => row.props['data-page'] === 'groups')
   assert.ok(door, 'the door carries the page it opens')

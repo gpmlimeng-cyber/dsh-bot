@@ -16,9 +16,9 @@
 import { createElement as h, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BotMark, RoomAvatar } from './mark.js'
-import { MotionSection, Switch } from './set-rows.js'
+import { MotionSection } from './set-rows.js'
 import { modelOf } from './model-ref.js'
-import { ChevronRightIcon, PlusIcon, SearchIcon } from './icons.js'
+import { ChevronRightIcon, PlusIcon, SearchIcon, StarLineIcon } from './icons.js'
 import { useMobile } from './mobile.js'
 import { isMainOf } from './sources.js'
 import { t } from './i18n.js'
@@ -135,11 +135,13 @@ export function PeersPage({ useRoster, useUi, actions }) {
         // gave it another). That word is the settings row's own (folder-menu.js), so the two read
         // the same; the real path behind it is a host call, and a list line does not make one.
         const folder = peersFolder(bot.workDir) ?? t('Team workspace')
-        // The Main Bot switch is the row's sibling, never its child -- a button cannot hold a button --
-        // and it is the Bot settings page's own control: the same switch, the same action, and the same
-        // rule that the only Main Bot cannot be switched off (the host refuses to leave the team with
-        // none: roster.js). Everything else about the row is untouched.
-        const onlyMain = isMainOf(roster, bot.id) && (roster.mainBotIds ?? []).length === 1
+        // The Main Bot control is the row's sibling, never its child -- a button cannot hold a button --
+        // and it is the row's own action rather than the settings page's small switch: a finger-sized
+        // target (44px, this page is a phone's), pressed in place, with the state drawn on it (that star
+        // is the badge the avatar wears for a Main Bot). The one exception is the only Main Bot there
+        // is: the host refuses to leave the team with none (roster.js), so its control says so.
+        const isMain = isMainOf(roster, bot.id)
+        const onlyMain = isMain && (roster.mainBotIds ?? []).length === 1
         return h('div', { key: bot.id, className: 'bt-peers-item', role: 'listitem' },
           h('button', {
             type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openPage('bots', bot.id),
@@ -158,10 +160,13 @@ export function PeersPage({ useRoster, useUi, actions }) {
               // when there are two values to tell apart, and the group's one-value line has none.
               model ? h('span', { className: 'bt-peers-sep', 'aria-hidden': true }, '·') : null,
               h('span', { className: 'bt-peers-text' }, folder)))),
-          h(Switch, {
-            label: t('Main Bot'), on: isMainOf(roster, bot.id), disabled: onlyMain,
-            onChange: on => { void actions.setMain(bot.id, on) },
-          }),
+          h('button', {
+            type: 'button', className: 'bt-peers-main',
+            'aria-pressed': isMain ? 'true' : undefined, disabled: onlyMain,
+            'aria-label': t('Main Bot'),
+            title: onlyMain ? t('The only Main Bot. To hand the role to another Bot, use Main Bot on the Bots page.') : t('Main Bot'),
+            onClick: () => { void actions.setMain(bot.id, !isMain) },
+          }, h(StarLineIcon)),
           h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))
       })) : null,
       shown.length === 0
@@ -195,7 +200,14 @@ html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;o
 /* The row and its own controls share one line: the row takes what they leave, and neither the switch
    nor the chevron is ever squeezed (so a long name, model or folder gives way instead). */
 html[data-bt-mobile] .bt-peers-item{display:flex;align-items:center;gap:8px}
-html[data-bt-mobile] .bt-peers-item>.bt-switch{flex:none}
+/* The Main Bot action: 44px of finger, in the row rather than beside it, pressed where it is read.
+   Its state is drawn (the star the avatar's own Main Bot badge wears) as well as announced, and a
+   tap tint answers at once -- this page is used with a thumb, not a pointer. */
+html[data-bt-mobile] .bt-peers-main{flex:none;width:44px;height:44px;padding:0;border:0;border-radius:999px;background:none;color:var(--bt-ink-3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html[data-bt-mobile] .bt-peers-main>svg{width:20px;height:20px}
+html[data-bt-mobile] .bt-peers-main:active{background:var(--bt-active)}
+html[data-bt-mobile] .bt-peers-main[aria-pressed=true]{background:var(--bt-active);color:var(--bt-star)}
+html[data-bt-mobile] .bt-peers-main:disabled{opacity:.4;cursor:default}
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}

@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: ba78fd50
+// Source fingerprint: 6536da90
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16390,7 +16390,8 @@ function PeersPage({ useRoster, useUi, actions }) {
       shown.length > 0 ? section(t("Peers"), shown.map((bot) => {
         const model = peersModel(bot, roster);
         const folder = peersFolder(bot.workDir) ?? t("Team workspace");
-        const onlyMain = isMainOf(roster, bot.id) && (roster.mainBotIds ?? []).length === 1;
+        const isMain = isMainOf(roster, bot.id);
+        const onlyMain = isMain && (roster.mainBotIds ?? []).length === 1;
         return (0, import_react42.createElement)(
           "div",
           { key: bot.id, className: "bt-peers-item", role: "listitem" },
@@ -16426,14 +16427,17 @@ function PeersPage({ useRoster, useUi, actions }) {
               )
             )
           ),
-          (0, import_react42.createElement)(Switch, {
-            label: t("Main Bot"),
-            on: isMainOf(roster, bot.id),
+          (0, import_react42.createElement)("button", {
+            type: "button",
+            className: "bt-peers-main",
+            "aria-pressed": isMain ? "true" : void 0,
             disabled: onlyMain,
-            onChange: (on) => {
-              void actions.setMain(bot.id, on);
+            "aria-label": t("Main Bot"),
+            title: onlyMain ? t("The only Main Bot. To hand the role to another Bot, use Main Bot on the Bots page.") : t("Main Bot"),
+            onClick: () => {
+              void actions.setMain(bot.id, !isMain);
             }
-          }),
+          }, (0, import_react42.createElement)(StarLineIcon)),
           (0, import_react42.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react42.createElement)(ChevronRightIcon))
         );
       })) : null,
@@ -16463,7 +16467,14 @@ html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;o
 /* The row and its own controls share one line: the row takes what they leave, and neither the switch
    nor the chevron is ever squeezed (so a long name, model or folder gives way instead). */
 html[data-bt-mobile] .bt-peers-item{display:flex;align-items:center;gap:8px}
-html[data-bt-mobile] .bt-peers-item>.bt-switch{flex:none}
+/* The Main Bot action: 44px of finger, in the row rather than beside it, pressed where it is read.
+   Its state is drawn (the star the avatar's own Main Bot badge wears) as well as announced, and a
+   tap tint answers at once -- this page is used with a thumb, not a pointer. */
+html[data-bt-mobile] .bt-peers-main{flex:none;width:44px;height:44px;padding:0;border:0;border-radius:999px;background:none;color:var(--bt-ink-3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html[data-bt-mobile] .bt-peers-main>svg{width:20px;height:20px}
+html[data-bt-mobile] .bt-peers-main:active{background:var(--bt-active)}
+html[data-bt-mobile] .bt-peers-main[aria-pressed=true]{background:var(--bt-active);color:var(--bt-star)}
+html[data-bt-mobile] .bt-peers-main:disabled{opacity:.4;cursor:default}
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
@@ -16589,7 +16600,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "ba78fd50" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "6536da90" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
