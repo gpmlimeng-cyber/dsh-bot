@@ -1,6 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
+import { usePathImages } from './media.js'
 import { inkText } from './inks.js'
 import { linkMentions, mentionTarget, dayLabel, contentText, stripHeader, isHiddenTurn, isRelayContext, relaysBefore, relayPart, commRunOf, toolName, toolArgs, reminderPrompts } from './text.js'
 import { SmileIcon, ReplyIcon, DotsIcon, CheckIcon, DownloadIcon, CopyIcon, MemoryIcon } from './icons.js'
@@ -20,6 +21,8 @@ const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied')
 // `lead` (a sender avatar in group chats) sits beside the last bubble, in the same
 // row, so it lines up with the bubble whether or not reactions hang below it.
 export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions }) {
+  // The pictures in these bubbles: one prefetch for the list, one resolver for every bubble in it.
+  const pathImages = usePathImages(texts, actions)
   const onClick = (event) => {
     const target = mentionTarget(event)
     if (target === null) return
@@ -38,7 +41,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, 
         h('div', { className: 'bt-msg-line' },
           lead && last ? lead : null,
           h('div', { className: 'bt-bubble' },
-            h(MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact', fileMentions: mentions })),
+            h(MarkdownText, { text: linkMentions(text, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact', fileMentions: mentions, pathImages })),
           live ? null : h(MessageTools, { text, name: roster.byId[selfId]?.name ?? t('Bot'), sessionId, react: key ? emoji => actions.toggleReaction(msgKey, index, emoji) : undefined, actions })),
         picked.length ? h('div', { className: 'bt-reacts' }, picked.map(emoji => h('button', {
           key: emoji, type: 'button', className: 'bt-react', 'aria-label': t('Remove reaction {emoji}', { emoji }), onClick: () => actions.toggleReaction(msgKey, index, emoji),
