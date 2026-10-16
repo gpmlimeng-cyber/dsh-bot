@@ -207,8 +207,19 @@ html[data-bt-mobile] .bt-peers-section-head>.bt-peers-section-label{margin:0;pad
    pixels it carries above and below are touch area rather than something seen. Colour sits one step
    further back than a row's (--bt-ink-3), with only the chosen level in ink. */
 html[data-bt-mobile] .bt-motion-mini{width:auto;flex:none;height:28px;box-sizing:border-box;align-items:center}
-html[data-bt-mobile] .bt-motion-mini button{min-width:44px;height:44px;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-motion-mini button{min-width:44px;height:44px;font-size:12px;line-height:16px;color:var(--bt-ink-3);-webkit-tap-highlight-color:transparent}
 html[data-bt-mobile] .bt-motion-mini button[aria-pressed=true]{color:var(--bt-ink)}
+/* A thumb, not a pointer: the answer to a press is drawn the moment it lands, and it goes on the
+   levels rather than on the button -- the button's own box is 44 tall against a 28px pill, so a tint
+   on the button itself would flash a box taller than the control. The tint is a box of the pill's own
+   size, in the skin's own pressed colour, and the text goes to ink on the way down. It is :active, so
+   it answers the press itself; nothing here waits for a hover it will never get on a phone. */
+html[data-bt-mobile] .bt-motion-mini button::after{content:"";position:absolute;z-index:-1;left:0;right:0;top:8px;bottom:8px;border-radius:8px;background:transparent}
+html[data-bt-mobile] .bt-motion-mini button:active::after{background:var(--bt-active)}
+html[data-bt-mobile] .bt-motion-mini button:active{color:var(--bt-ink)}
+/* Under reduced motion the press is answered instantly rather than eased, and the press scale goes
+   with the rest of the skin's motion -- the level itself never slides, which the glide already reads. */
+@media (prefers-reduced-motion:reduce){html[data-bt-mobile] .bt-motion-mini button{transition:none}html[data-bt-mobile] .bt-motion-mini button:active{scale:1}}
 /* The title row is 我的's own (styles.js: .bt-settings-top): the 52px bar with the name centred in
    it, out of the flow so the control beside it cannot pull it off centre. The button is a control
    of the chrome, so its surface (fill, hairline, radius, shadow) is the one shared declaration in

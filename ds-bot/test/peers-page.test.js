@@ -164,6 +164,14 @@ test('the page is a header row and one scroller of labelled cards', () => {
   assert.ok(sheet.includes('.bt-motion-mini{width:auto;flex:none;height:28px;box-sizing:border-box;align-items:center}'), 'the pill is drawn at the heading\'s own height')
   assert.ok(sheet.includes('.bt-motion-mini button{min-width:44px;height:44px;'), 'while each segment keeps a finger-sized box')
   assert.ok(sheet.includes('.bt-motion-mini button[aria-pressed=true]{color:var(--bt-ink)}'), 'and the chosen level is the one drawn in ink')
+  // A thumb's feedback: the answer to a press is the skin's own pressed colour, drawn at once on the
+  // pill's own box (the button's box is taller than the pill, so a tint on the button itself would
+  // flash a box taller than the control), and nothing about it waits for a hover.
+  assert.ok(sheet.includes('.bt-motion-mini button::after{content:"";position:absolute;z-index:-1;left:0;right:0;top:8px;bottom:8px;border-radius:8px;background:transparent}'), 'the tint is a box of the pill\'s own size')
+  assert.ok(sheet.includes('.bt-motion-mini button:active::after{background:var(--bt-active)}'), 'and answers the press itself, in the skin\'s pressed colour')
+  assert.ok(sheet.includes('.bt-motion-mini button:active{color:var(--bt-ink)}'), 'with the pressed level going to ink')
+  assert.ok(!sheet.includes('.bt-motion-mini button:hover'), 'nothing here is hover-only')
+  assert.ok(sheet.includes('@media (prefers-reduced-motion:reduce){html[data-bt-mobile] .bt-motion-mini button{transition:none}html[data-bt-mobile] .bt-motion-mini button:active{scale:1}}'), 'and reduced motion takes the ease and the press scale away')
   assert.ok(sheet.includes('.bt-settings-group-head.bt-peers-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px 8px 13px}'), 'the heading and the control share one row, with room for the box')
   // The door names the page it opens, and that page is 我的 -> 群聊: the key is the settings page's own.
   const door = rows.find(row => row.props['data-page'] === 'groups')
