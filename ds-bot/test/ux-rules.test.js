@@ -170,11 +170,18 @@ test('a layer that hands its Esc to the shell\u2019s modal machinery says it is 
   // without aria-modal loses Esc (and gains no focus trap) with nothing to show for it. This is the
   // guard Lead asked for: convert a layer, mark it, or the test says so.
   const files = readdirSync(DIR).filter(name => name.endsWith('.js'))
-  const users = files.filter(name => read(name).includes('useModalLayer('))
+  const users = files.filter(name => read(name).includes('useModalLayer(')).sort()
   assert.deepEqual(users, ['palette.js'], `the layers converted so far are not the ones expected: ${users.join(', ')}`)
   for (const name of users) {
-    assert.ok(read(name).includes("'aria-modal': true"), `${name} calls useModalLayer without marking its dialog aria-modal -- it would have no Esc`)
-    const ref = /const (\w+) = useRef\(null\)/.exec(read(name))
-    assert.ok(ref && read(name).includes(`ref: ${ref[1]}`), `${name} never attaches the ref useModalLayer needs, so the hook has no dialog to read`)
+    const source = read(name)
+    assert.ok(source.includes("'aria-modal': true"), `${name} calls useModalLayer without marking its dialog aria-modal -- it would have no Esc`)
+    // The ref has to be the one on the element that carries aria-modal. "Some ref in this file is
+    // attached somewhere" is not the same claim: memory-panel.js opens with a useRef for its menu,
+    // so a looser check would let that layer through while its dialog went on having no Esc --
+    // exactly the silent failure this guard exists to catch.
+    const call = /useModalLayer\((\w+),/.exec(source)
+    assert.ok(call, `${name} passes no ref to useModalLayer, so the hook has no dialog to read`)
+    const marked = source.split('\n').some(line => line.includes(`ref: ${call[1]}`) && line.includes("'aria-modal': true"))
+    assert.ok(marked, `${name} hands ${call[1]} to useModalLayer but does not attach it to the element marked aria-modal, so the hook has no dialog to read`)
   }
 })
