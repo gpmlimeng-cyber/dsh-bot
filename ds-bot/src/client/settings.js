@@ -9,6 +9,7 @@ import { openHarnessSettings } from './sidebar.js'
 import { useMobile } from './mobile.js'
 import { useEscape } from './overlay-hooks.js'
 import { BotSettingsForm } from './bot-settings.js'
+import { MOTIONS, MotionSection, SetRow, SetSection } from './set-rows.js'
 import { Segmented, useGlide } from './motion.js'
 import { GroupSettingsForm, NewGroupForm } from './group-settings.js'
 import { CreateBot } from './create-bot.js'
@@ -45,15 +46,6 @@ const SETTINGS_GROUPS = [
   ['Connections & automation', ['connectors', 'capabilities', 'schedules', 'secrets']],
   ['Other', ['feedback', 'about']],
 ]
-
-function SetSection({ title, children }) {
-  return h('section', { className: 'bt-set-section' }, h('h3', null, title), h('div', { className: 'bt-set-card' }, children))
-}
-function SetRow({ label, hint, children }) {
-  return h('div', { className: 'bt-set-row' },
-    h('div', { className: 'bt-set-copy' }, h('span', null, label), hint ? h('span', { className: 'bt-set-hint' }, hint) : null),
-    children ? h('div', { className: 'bt-set-control' }, children) : null)
-}
 
 function GeneralPage({ roster, actions, run }) {
   const prefs = roster.prefs ?? {}
@@ -110,17 +102,6 @@ function MainBotsSection({ roster, actions, run }) {
         className: 'bt-select', 'aria-label': t('Add a Main Bot'), value: '',
         onChange: (event) => { if (event.target.value) void run(actions.setMain(event.target.value, true)) },
       }, h('option', { value: '' }, t('Choose a Bot…')), candidates.map(bot => h('option', { key: bot.id, value: bot.id }, bot.name)))) : null)
-}
-
-const MOTIONS = [['quiet', 'Quiet'], ['normal', 'Normal'], ['lively', 'Lively']]
-function MotionSection({ roster, actions, run }) {
-  const motion = roster.prefs?.motion === 'quiet' || roster.prefs?.motion === 'lively' ? roster.prefs.motion : 'normal'
-  return h(SetSection, { title: t('Animation') },
-    h(SetRow, { label: t('Bot animation') },
-      h(Segmented, { label: t('Bot animation'), value: motion, className: 'bt-motion-seg' }, MOTIONS.map(([id, label]) => h('button', {
-        key: id, type: 'button', 'aria-pressed': motion === id,
-        onClick: () => { if (motion !== id) run(actions.setPrefs({ motion: id })) },
-      }, t(label))))))
 }
 
 function BotsPage({ roster, actions, run }) {

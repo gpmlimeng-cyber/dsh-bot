@@ -106,10 +106,28 @@ test('the page is a header row and one scroller of labelled cards', () => {
   assert.equal(rows.length, 3, 'the door and one row per Bot')
   const kidsOf = (node) => plain(node.children.filter(child => child !== null && child !== undefined).map(child => classList(child)[0] ?? '(mark)'))
   assert.deepEqual(rows.map(kidsOf), [
-    ['bt-peers-icon', 'bt-peers-body', 'bt-row-count', 'bt-peers-go'],
-    ['(mark)', 'bt-peers-body', 'bt-peers-go'],
-    ['(mark)', 'bt-peers-body', 'bt-peers-go'],
-  ], 'the door wears the section icon and its count, a Bot its own mark; the chevron is inside every row')
+    ['bt-peers-icon', 'bt-peers-body', 'bt-row-count'],
+    ['(mark)', 'bt-peers-body'],
+    ['(mark)', 'bt-peers-body'],
+  ], 'the door wears the section icon and its count, a Bot its own mark')
+  // The row's own controls are its SIBLINGS -- a button cannot hold a button -- and the item lays them
+  // out on one line: the chevron on every row, and the Main Bot switch in front of it where a Bot has
+  // one. A sibling inside a block used to wrap onto a line of its own (the stray chevron the user
+  // reported); the item's flex row is what keeps them beside the text.
+  const items = findAll(tree, 'bt-peers-item')
+  assert.equal(items.length, 3, 'one item per row')
+  const childName = (node) => classList(node)[0] ?? node?.props?.label ?? '(mark)'
+  assert.deepEqual(plain(items.map(item => item.children.filter(Boolean).map(childName))), [
+    ['bt-peers-row', 'bt-peers-go'],
+    ['bt-peers-row', 'Main Bot', 'bt-peers-go'],
+    ['bt-peers-row', 'Main Bot', 'bt-peers-go'],
+  ], 'the door has a chevron, a Bot has its switch and a chevron')
+  // The switch is the Bot settings page's own control: one per Bot row, on for the Main Bot, and out
+  // of reach for the only one there is (the host refuses to leave the team with none).
+  const switches = items.flatMap(item => item.children).filter(node => node?.props?.label === 'Main Bot')
+  assert.equal(switches.length, 2, 'one switch per Bot row, and none on the door')
+  assert.deepEqual(plain(switches.map(node => node.props.on)), [true, false], 'on for the Main Bot, off for the other')
+  assert.deepEqual(plain(switches.map(node => node.props.disabled)), [true, false], 'and the only Main Bot cannot switch itself off')
   // The door names the page it opens, and that page is 我的 -> 群聊: the key is the settings page's own.
   const door = rows.find(row => row.props['data-page'] === 'groups')
   assert.ok(door, 'the door carries the page it opens')

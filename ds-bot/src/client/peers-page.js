@@ -16,6 +16,7 @@
 import { createElement as h, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BotMark, RoomAvatar } from './mark.js'
+import { MotionSection, Switch } from './set-rows.js'
 import { modelOf } from './model-ref.js'
 import { ChevronRightIcon, PlusIcon, SearchIcon } from './icons.js'
 import { useMobile } from './mobile.js'
@@ -62,6 +63,9 @@ export function PeersPage({ useRoster, useUi, actions }) {
   // Filtered by the box, then ordered with the Main Bots first: the user's own order for this list,
   // and a partition rather than a second section (the Main Bot tag still says which rows they are).
   const shown = peersMainsFirst(peersList(roster.bots, query), roster)
+  // What the settings sections below ask for: a promise, with nothing to report it on -- this page has
+  // no error line, and the roster's own re-render is the confirmation that a preference landed.
+  const run = promise => Promise.resolve(promise).catch(() => {})
   // How many group chats there are, read the way that page reads it itself (settings.js, its own
   // title): every room the roster lists -- so the door and the page it opens can never disagree.
   const rooms = (roster.rooms ?? []).length
@@ -122,8 +126,8 @@ export function PeersPage({ useRoster, useUi, actions }) {
           h('span', { className: 'bt-peers-name-row' }, h('span', { className: 'bt-peers-name' }, t('Group chats')))),
         // The count, in the skin's own number badge (the sidebar's own), before the chevron: the
         // same number that page's title carries, so a user who counts them finds the same answer.
-        h('span', { className: 'bt-row-count', title: t('Group chats · {count}', { count: rooms }) }, String(rooms)),
-        h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))]),
+        h('span', { className: 'bt-row-count', title: t('Group chats · {count}', { count: rooms }) }, String(rooms))),
+        h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))]),
       shown.length > 0 ? section(t('Peers'), shown.map(bot => {
         const model = peersModel(bot, roster)
         // The folder it works in: its own when it has one, and the team workspace's own word when
@@ -131,6 +135,11 @@ export function PeersPage({ useRoster, useUi, actions }) {
         // gave it another). That word is the settings row's own (folder-menu.js), so the two read
         // the same; the real path behind it is a host call, and a list line does not make one.
         const folder = peersFolder(bot.workDir) ?? t('Team workspace')
+        // The Main Bot switch is the row's sibling, never its child -- a button cannot hold a button --
+        // and it is the Bot settings page's own control: the same switch, the same action, and the same
+        // rule that the only Main Bot cannot be switched off (the host refuses to leave the team with
+        // none: roster.js). Everything else about the row is untouched.
+        const onlyMain = isMainOf(roster, bot.id) && (roster.mainBotIds ?? []).length === 1
         return h('div', { key: bot.id, className: 'bt-peers-item', role: 'listitem' },
           h('button', {
             type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openPage('bots', bot.id),
@@ -148,12 +157,20 @@ export function PeersPage({ useRoster, useUi, actions }) {
               // its own ellipsis) and the mark between them is never what is cut. It is drawn only
               // when there are two values to tell apart, and the group's one-value line has none.
               model ? h('span', { className: 'bt-peers-sep', 'aria-hidden': true }, '·') : null,
-              h('span', { className: 'bt-peers-text' }, folder))),
-          h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))
+              h('span', { className: 'bt-peers-text' }, folder)))),
+          h(Switch, {
+            label: t('Main Bot'), on: isMainOf(roster, bot.id), disabled: onlyMain,
+            onChange: on => { void actions.setMain(bot.id, on) },
+          }),
+          h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))
       })) : null,
       shown.length === 0
         ? h('div', { className: 'bt-peers-empty', role: 'status' }, t('Nothing matches'))
-        : null)), document.body)
+        : null,
+      // The animation level is one setting for the whole skin -- index.js publishes it as
+      // body[data-bt-motion], and the marks above already animate at it -- so it is offered here as
+      // the Bots page's own control rather than a switch on every row.
+      h(MotionSection, { roster, actions, run }))), document.body)
 }
 
 // The page covers the screen and carries the status bar's inset itself, from the status bar's own
@@ -175,7 +192,11 @@ html[data-bt-mobile] .bt-peers-top{flex:none;display:flex;flex-direction:column;
    live here. */
 html[data-bt-mobile] .bt-peers-new{flex:0 0 40px;width:40px;height:40px;margin-left:auto}
 html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
+/* The row and its own controls share one line: the row takes what they leave, and neither the switch
+   nor the chevron is ever squeezed (so a long name, model or folder gives way instead). */
+html[data-bt-mobile] .bt-peers-item{display:flex;align-items:center;gap:8px}
+html[data-bt-mobile] .bt-peers-item>.bt-switch{flex:none}
+html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
 /* The 群聊 door's face, in the box a Bot's avatar takes (36px) so every row's text starts at the

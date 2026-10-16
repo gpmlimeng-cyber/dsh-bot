@@ -2,6 +2,9 @@ import { createElement as h, Fragment, useCallback, useEffect, useRef, useState 
 import { paintCss } from './inks.js'
 import { CHARACTERS, PICKER_SHAPES, PICKER_COLUMNS, CHARACTER_COLORS, SHAPES, hasShape, shapeOf, bodyOf, maskBox, holes, nextMarkSerial } from './characters.js'
 import { isMainOf } from './sources.js'
+import { Switch } from './set-rows.js'
+
+export { Switch }
 import { PencilIcon, ChevronRightIcon } from './icons.js'
 import { lookOf, BotMark } from './mark.js'
 import { ModelMenu, modelOf } from './model-menu.js'
@@ -69,11 +72,6 @@ export function Row({ label, hint, stack = false, children }) {
 
 export function Card({ title, children }) {
   return h('section', { className: 'bt-set-section' }, title ? h('h3', null, title) : null, h('div', { className: 'bt-set-card' }, children))
-}
-
-export function Switch({ on, label, disabled, onChange }) {
-  return h('button', { type: 'button', role: 'switch', className: 'bt-switch', 'aria-checked': on, 'aria-label': label, disabled, onClick: () => onChange(!on) },
-    h('span', { className: 'bt-switch-knob', 'aria-hidden': true }))
 }
 
 // A row with a switch. Not a label: a click on the copy must not flip it twice.
