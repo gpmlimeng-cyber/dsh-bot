@@ -76,7 +76,7 @@ test('the light page is the skin design colour, with white cards on it', () => {
   assert.ok(light, 'the light theme declares the page colour')
   assert.ok(light.includes('--bt-main:#fcfcfc'), light)
   assert.ok(light.includes('--bt-card:#ffffff'), 'cards stay white -- the layering the screenshot draws')
-  assert.ok(light.includes('--bt-sidebar:#fcfcfc'), 'the lists that are pages too')
+  assert.ok(light.includes('--bt-sidebar:#fcfcfc'), 'the sidebar colour equals the page in the default palette, which is what let a phone page wear it unnoticed before a theme split the pair')
   // The shell's band is a fixed colour the page cannot paint (measured: forcing the page's
   // surfaces magenta moved nothing above CSS 46). The page keeps its own design colour and the
   // 10px fade covers the join; this is what the user asked for, twice.
