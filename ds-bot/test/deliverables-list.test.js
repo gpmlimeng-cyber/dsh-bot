@@ -116,9 +116,10 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   assert.ok(pane.includes('html[data-bt-mobile] .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out'), 'on the way out too')
   // A handle says where it came from; the scrim above it dismisses it, and only a phone draws one.
   assert.ok(pane.includes("view === 'products' ? h('div', { className: 'bt-sheet-handle', 'aria-hidden': true }) : null"), 'the handle')
-  assert.ok(pane.includes("view === 'products' ? h('div', { className: 'bt-panel-scrim', onClick: () => actions.closeProducts?.() }) : null"), 'the scrim closes it')
+  assert.ok(pane.includes("view === 'products' ? h('div', { className: 'bt-scrim bt-panel-scrim', onClick: () => actions.closeProducts?.() }) : null"), 'the scrim closes it, and it is the skin\'s own scrim class')
   assert.ok(pane.includes('.bt-panel-scrim{display:none}'), 'a desktop column gets no backdrop')
-  assert.ok(pane.includes('html[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-index:95;'), 'the phone draws one under the sheet')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-index:95}'), 'the phone places one under the sheet (96), and its colour is not declared twice')
+  assert.ok(!pane.includes('.bt-panel-scrim{display:none}\nhtml[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-index:95;background:'), 'which means no second copy of the scrim\'s colour')
   assert.ok(pane.includes('.bt-sheet-handle{flex:none;width:36px;height:4px;margin:8px auto 0;border-radius:999px;background:var(--bt-line-2)}'), 'the handle is a small pill, centred')
   // The head is the sheet's: name from the edge, close at the other end.
   assert.ok(list.includes('const mobile = useMobile()'), 'the list knows the band through the shared hook')
