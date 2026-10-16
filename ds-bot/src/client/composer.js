@@ -149,7 +149,7 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       canReference ? [t('Reference a chat'), ChatsIcon, reference, keepComposerFocus] : null,
       [t('Scheduled task'), ClockIcon, schedule],
       [t('Connectors'), ConnectorIcon, () => actions.openConnectors()],
-      [t('Connect plugins'), PlugIcon, () => actions.selectPanel('plugins')],
+      [t('Manage plugins'), PlugIcon, () => actions.selectPanel('plugins')],
       bot !== undefined && roster.memory !== false ? [t('Memory'), MemoryIcon, () => actions.openMemory(bot.id)] : null,
       bot !== undefined && roster.browser === true && typeof actions.openBrowser === 'function'
         ? [t('Open browser'), GlobeIcon, () => actions.openBrowser(sessionId)] : null,

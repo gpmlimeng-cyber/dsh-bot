@@ -45,6 +45,8 @@ export function MotionControl({ roster, actions, run, className }) {
 
 export function MotionSection({ roster, actions, run }) {
   return h(SetSection, { title: t('Animation') },
-    h(SetRow, { label: t('Bot animation') },
+    // The row says what it moves. The report was "I see quiet / normal / lively but not what I am
+    // changing": the three levels name the amount, never the thing.
+    h(SetRow, { label: t('Bot animation'), hint: t('How much the Bots\' faces move while they work.') },
       h(MotionControl, { roster, actions, run })))
 }

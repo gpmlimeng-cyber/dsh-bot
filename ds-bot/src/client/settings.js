@@ -66,7 +66,7 @@ function GeneralPage({ roster, actions, run }) {
   }
   return [
     h(SetSection, { key: 'look', title: t('Appearance') },
-      h(SetRow, { label: t('Theme'), hint: t('Colors for the whole team, on every device.') },
+      h(SetRow, { label: t('Theme'), hint: t('Colors on this device only.') },
         h('select', { className: 'bt-select', 'aria-label': t('Theme'), value: current, onChange: event => run(actions.setPrefs({ theme: event.target.value })) },
           Object.entries(themes).map(([id, theme]) => h('option', { key: id, value: id }, t(theme.label))))),
       h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },
@@ -79,7 +79,9 @@ function GeneralPage({ roster, actions, run }) {
           h('label', { className: 'bt-swatch bt-swatch-custom', title: t('Custom accent'), 'data-on': Boolean(prefs.accent) && !ACCENT_INKS.some(ink => INKS[ink][0] === prefs.accent) },
             h('input', { type: 'color', value: custom, 'aria-label': t('Custom accent'), onChange: event => pickCustom(event.target.value) }))))),
     h(SetSection, { key: 'mode', title: t('Mode') },
-      h(SetRow, { label: t('Classic Agent mode') },
+      // The switch takes the whole skin away and hands the plain DSH interface back, and the way
+      // home is a small control in the other shell's sidebar: worth one sentence before it is pressed.
+      h(SetRow, { label: t('Classic Agent mode'), hint: t('Switches to the plain DSH interface. You can switch back any time.') },
         h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: () => actions.setSurface('agent') }, t('Switch')))),
   ]
 }

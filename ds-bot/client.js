@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: d580650a
+// Source fingerprint: 817d33cb
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -54,6 +54,8 @@ var ZH = {
   "New…": "新建",
   "Animation": "动画",
   "Bot animation": "Bot 动画",
+  "How much the Bots' faces move while they work.": "Bot 头像在工作时动多少。",
+  "Switches to the plain DSH interface. You can switch back any time.": "换成 DSH 原生界面，随时能切回来。",
   "Quiet": "安静",
   "Normal": "正常",
   "Lively": "活泼",
@@ -107,7 +109,7 @@ var ZH = {
   // Sidebar and account menu
   "Bot list": "Bot 列表",
   "Setting up your Main Bot…": "正在设置你的主 Bot…",
-  "Connect plugins": "连接插件",
+  "Manage plugins": "管理插件",
   "Plugin compatibility is not fully verified.": "插件兼容性未完全验证",
   "Automation tasks": "自动化任务",
   Connectors: "连接器",
@@ -410,7 +412,7 @@ var ZH = {
   Secrets: "密钥",
   Appearance: "外观",
   Theme: "主题",
-  "Colors for the whole team, on every device.": "整个团队的配色，所有设备同步。",
+  "Colors on this device only.": "只改这台设备的配色。",
   Accent: "强调色",
   "Unread marks, badges, and the brand mark.": "未读标记、徽标和品牌标志。",
   "Theme accent": "主题强调色",
@@ -8397,7 +8399,7 @@ function ConnectPlugins({ wide, actions }) {
         onClick: () => actions.selectPanel("plugins")
       },
       (0, import_react13.createElement)(PlugIcon),
-      t("Connect plugins"),
+      t("Manage plugins"),
       (0, import_react13.createElement)("span", { className: "bt-connect-warn", "aria-hidden": true }, "!")
     ),
     tip && box ? (0, import_react_dom5.createPortal)((0, import_react13.createElement)(
@@ -9669,9 +9671,11 @@ function MotionSection({ roster, actions, run }) {
   return (0, import_react16.createElement)(
     SetSection,
     { title: t("Animation") },
+    // The row says what it moves. The report was "I see quiet / normal / lively but not what I am
+    // changing": the three levels name the amount, never the thing.
     (0, import_react16.createElement)(
       SetRow,
-      { label: t("Bot animation") },
+      { label: t("Bot animation"), hint: t("How much the Bots' faces move while they work.") },
       (0, import_react16.createElement)(MotionControl, { roster, actions, run })
     )
   );
@@ -12724,7 +12728,7 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       canReference ? [t("Reference a chat"), ChatsIcon, reference, keepComposerFocus] : null,
       [t("Scheduled task"), ClockIcon, schedule],
       [t("Connectors"), ConnectorIcon, () => actions.openConnectors()],
-      [t("Connect plugins"), PlugIcon, () => actions.selectPanel("plugins")],
+      [t("Manage plugins"), PlugIcon, () => actions.selectPanel("plugins")],
       bot !== void 0 && roster.memory !== false ? [t("Memory"), MemoryIcon, () => actions.openMemory(bot.id)] : null,
       bot !== void 0 && roster.browser === true && typeof actions.openBrowser === "function" ? [t("Open browser"), GlobeIcon, () => actions.openBrowser(sessionId)] : null
     ].filter(Boolean)
@@ -15602,7 +15606,7 @@ function GeneralPage({ roster, actions, run }) {
       { key: "look", title: t("Appearance") },
       (0, import_react39.createElement)(
         SetRow,
-        { label: t("Theme"), hint: t("Colors for the whole team, on every device.") },
+        { label: t("Theme"), hint: t("Colors on this device only.") },
         (0, import_react39.createElement)(
           "select",
           { className: "bt-select", "aria-label": t("Theme"), value: current, onChange: (event) => run(actions.setPrefs({ theme: event.target.value })) },
@@ -15637,9 +15641,11 @@ function GeneralPage({ roster, actions, run }) {
     (0, import_react39.createElement)(
       SetSection,
       { key: "mode", title: t("Mode") },
+      // The switch takes the whole skin away and hands the plain DSH interface back, and the way
+      // home is a small control in the other shell's sidebar: worth one sentence before it is pressed.
       (0, import_react39.createElement)(
         SetRow,
-        { label: t("Classic Agent mode") },
+        { label: t("Classic Agent mode"), hint: t("Switches to the plain DSH interface. You can switch back any time.") },
         (0, import_react39.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: () => actions.setSurface("agent") }, t("Switch"))
       )
     )
@@ -17692,7 +17698,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "d580650a" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "817d33cb" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
