@@ -232,7 +232,7 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
   const pageTitle = bot?.name ?? room?.name ?? label
   // The same rule the arrow itself follows (stepBack): the level above when there is one, the door it
   // came in through when there is not, and Settings' own list otherwise.
-  const backLabel = screen === 'list' ? t('Close settings') : back ?? t(BACK_TO[from] ?? 'All settings')
+  const backLabel = screen === 'list' ? t('Close settings') : back ?? t(BACK_TO[from] ?? 'Back to all settings')
   return h('div', { className: 'bt-settings-layer', 'data-tabpage': tab ? '' : undefined, 'data-leaving': leaving || undefined },
     h('div', { className: 'bt-scrim', onMouseDown: close }),
     h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('DS Bot settings'), 'data-wide': shown === 'usage' ? '' : undefined, 'data-screen': mobile ? screen : undefined },

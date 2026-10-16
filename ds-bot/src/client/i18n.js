@@ -373,6 +373,9 @@ const ZH = {
   'Back to Bots': '返回 Bot 列表',
   // The 伙伴 page, when a page of Settings was opened from it and has nothing above it.
   'Back to Peers': '返回伙伴',
+  // And Settings' own list, which is where a page with nothing above it and no door behind it returns
+  // (the 群聊 item on that list is one) -- named the way the other two are, "back to X".
+  'Back to all settings': '返回全部设置',
   'Back to the list': '返回列表',
   'Close settings': '关闭设置',
 

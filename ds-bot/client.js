@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 92743b43
+// Source fingerprint: 40f4080e
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -435,6 +435,9 @@ var ZH = {
   "Back to Bots": "返回 Bot 列表",
   // The 伙伴 page, when a page of Settings was opened from it and has nothing above it.
   "Back to Peers": "返回伙伴",
+  // And Settings' own list, which is where a page with nothing above it and no door behind it returns
+  // (the 群聊 item on that list is one) -- named the way the other two are, "back to X".
+  "Back to all settings": "返回全部设置",
   "Back to the list": "返回列表",
   "Close settings": "关闭设置",
   // Context menu
@@ -14651,7 +14654,7 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
     else stepBack();
   });
   const pageTitle = bot?.name ?? room2?.name ?? label;
-  const backLabel = screen === "list" ? t("Close settings") : back ?? t(BACK_TO[from] ?? "All settings");
+  const backLabel = screen === "list" ? t("Close settings") : back ?? t(BACK_TO[from] ?? "Back to all settings");
   return (0, import_react35.createElement)(
     "div",
     { className: "bt-settings-layer", "data-tabpage": tab ? "" : void 0, "data-leaving": leaving || void 0 },
@@ -16419,7 +16422,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "92743b43" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "40f4080e" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

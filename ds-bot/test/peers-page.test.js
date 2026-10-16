@@ -263,7 +263,8 @@ test('a Bot\'s row opens that Bot\'s page, the 群聊 door opens the group chats
   // The arrow's name is that same answer: a button that returns to this list must not be named for
   // Settings' own list (the mismatch 快速执行 found on the device).
   assert.ok(code('settings.js').includes("const BACK_TO = { peers: 'Back to Peers' }"), 'the door has its own name for the arrow')
-  assert.ok(code('settings.js').includes("t(BACK_TO[from] ?? 'All settings')"), 'used where the fallback was, and only there')
+  assert.ok(code('settings.js').includes("t(BACK_TO[from] ?? 'Back to all settings')"), 'used where the fallback was, and only there')
+  assert.ok(code('i18n.js').includes("'Back to all settings': '返回全部设置'"), 'named the way the other two are ("back to X")')
   assert.ok(code('i18n.js').includes("'Back to Peers': '返回伙伴'"), 'with its copy')
   assert.ok(peers.includes("'data-screen'") === false, 'neither page is redrawn here: the key is all this page knows')
   // The group chats' page is Settings' own, and its title bar's right-hand control is that page's
