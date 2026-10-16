@@ -48,6 +48,13 @@
 **标准**：颜色一律读 `body` 上的 `--bt-*`（`styles.js:49`），不写死色值；浮起件的表面只用共享声明，不另造一套。
 **判据**：**未落**——「字面色」lint 还没写（裸 `:hover`、命中 <44 两条已落）。
 
-## 8. 变更流程
+## 8. 验证手法
+
+**标准**：**核现状一律以源码为准**。活窗里看到的选择器、类名和源码可能不是同一串（壳会哈希自己的类名，WebView/壳侧还可能把选择器规范化），所以「这条规则现在是什么」要去 `src/client/*.js` 读，不要拿活窗里 grep 到的字符串反推源码。
+**认版**：读 `<html data-bt-src>`（`client.js` 里是 `__DS_BOT_SRC__`），它就是源码指纹；指纹只覆盖 `src/client/**`（`scripts/build-client.mjs:26-41`），所以只改 `docs/` 或 `test/` **不会**让指纹变，页面不会因此需要重载。
+**复现**：`npm run build` 后必须跑 `node scripts/build-client.mjs --check`（两者都要 `ESBUILD_BINARY_PATH`），`--check` 比的是整文件。
+**量 DOM**：要摸壳自己的件时用前缀选择器——壳的类名是哈希过的（`[class*="_toBottomSlot"]`，`styles.js:2009`），按源码里的字面类名去 query 会找不到。
+
+## 9. 变更流程
 
 **标准**：先读后改、最小改动；改完 `npm run build` + `node scripts/build-client.mjs --check` + 全量测试（带 `ESBUILD_BINARY_PATH`）；一项一提交、报产物指纹；只推 `better-sidebar`、不推 `main`，push 前先问用户并扫密钥。
