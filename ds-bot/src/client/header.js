@@ -112,23 +112,27 @@ export function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, u
   // The menu the "more" button opens lives in the shared overlay state, so the button's
   // aria-expanded can follow it no matter who opened or closed it.
   const moreOpen = useUi(value => value.menu !== null)
+  // The session's own pill, built once: on a phone it is the right half of the bar's left capsule
+  // (the drawer's toggle is the left half), and in the shell's header row it stands alone.
+  const pill = h('button', {
+    type: 'button', className: 'bt-pill',
+    // With the Better Sidebar service the drawer opens in the shell's right Sidebar,
+    // whose expanded state this client cannot read, so the button carries no
+    // `aria-expanded` there instead of one that is always false. Without the service
+    // it still opens our own panel, and the attribute stays exact.
+    ...(betterSidebar ? {} : { 'aria-expanded': detailsOpen }),
+    'data-memory': memoryNotice ? 'updated' : undefined,
+    'aria-label': memoryNotice ? t('Memory updated. Open {name}\'s memory', { name: roster.byId[changed]?.name ?? name }) : t('View conversation details'),
+    onClick: () => (memoryNotice ? actions.openMemory(changed) : actions.toggleDetails(sessionId)),
+  },
+  bot ? h(BotAvatar, { bot, size: 24, state: botState(running, doing, roster.questions?.[currentPart(bot)] !== undefined), badge: false })
+    : room ? h(RoomAvatar, { room, roster, size: 24 }) : null,
+  h('span', { className: 'bt-pill-name' }, bot?.name ?? room?.name ?? (title || t('New chat'))),
+  h(MemoryNotice, { shown: memoryNotice }),
+  h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow)))
   const head = h('div', { className: 'bt-head' },
-    h('button', {
-      type: 'button', className: 'bt-pill',
-      // With the Better Sidebar service the drawer opens in the shell's right Sidebar,
-      // whose expanded state this client cannot read, so the button carries no
-      // `aria-expanded` there instead of one that is always false. Without the service
-      // it still opens our own panel, and the attribute stays exact.
-      ...(betterSidebar ? {} : { 'aria-expanded': detailsOpen }),
-      'data-memory': memoryNotice ? 'updated' : undefined,
-      'aria-label': memoryNotice ? t('Memory updated. Open {name}\'s memory', { name: roster.byId[changed]?.name ?? name }) : t('View conversation details'),
-      onClick: () => (memoryNotice ? actions.openMemory(changed) : actions.toggleDetails(sessionId)),
-    },
-    bot ? h(BotAvatar, { bot, size: 24, state: botState(running, doing, roster.questions?.[currentPart(bot)] !== undefined), badge: false })
-      : room ? h(RoomAvatar, { room, roster, size: 24 }) : null,
-    h('span', { className: 'bt-pill-name' }, bot?.name ?? room?.name ?? (title || t('New chat'))),
-    h(MemoryNotice, { shown: memoryNotice }),
-    h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
+    // A phone draws it inside the bar's left capsule instead (below).
+    mobile ? null : pill,
     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
     // A phone keeps this out of the pill's row and gives it a seat in the bar's right-hand group
     // instead (below): in that row it was a second pill beside the first, and its own tap was
@@ -167,7 +171,13 @@ export function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, u
     // that state to the stylesheet (the pill steps aside there) and the button draws the
     // collapse affordance instead of the hamburger.
     createPortal(h('div', { className: 'bt-mobile-bar', 'data-nav-open': mobileNavOpen || undefined },
-      h(NavToggle, { open: mobileNavOpen, onToggle: () => actions.toggleMobileNav() }),
+      // The user asked for one capsule on the left rather than a hamburger beside a floating title:
+      // the toggle is its left half, the session's own pill its right half, and the wrapper carries
+      // the skin the two used to wear separately (styles.js). With the drawer up the title half
+      // steps aside and the capsule is the toggle alone -- the same state that collapses it.
+      h('div', { className: 'bt-mobile-left' },
+        h(NavToggle, { open: mobileNavOpen, onToggle: () => actions.toggleMobileNav() }),
+        pill),
       head,
       h('div', { className: 'bt-mobile-acts' },
         // The one control here that is not always there: a phone's "needs you" count, drawn as a

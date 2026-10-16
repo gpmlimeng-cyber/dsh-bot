@@ -300,6 +300,21 @@ test('the needs-you count is a seat of the bar\'s right-hand group on a phone', 
   assert.ok(read('styles.js').includes('.bt-mobile-bar:has(.bt-mobile-acts .bt-attention){--bt-mobile-clear:148px}'), 'the bar\'s clearance grows with the group')
 })
 
+// The user asked for the hamburger and the session's title to be one capsule on the left instead of
+// two floating controls; the centered pill goes with the merge.
+test('the phone\'s left capsule is the drawer\'s toggle and the session title together', () => {
+  const header = read('header.js')
+  assert.ok(header.includes("      h('div', { className: 'bt-mobile-left' },\n        h(NavToggle, { open: mobileNavOpen, onToggle: () => actions.toggleMobileNav() }),\n        pill),"), 'the toggle is its left half, the session pill its right')
+  assert.ok(header.includes('    mobile ? null : pill,'), 'and the pill is not drawn twice -- the shell header row keeps it off the phone')
+  const styles = read('styles.js')
+  // One capsule wears the skin: the two halves inside drop their own.
+  assert.ok(styles.includes('.bt-mobile-left .bt-pill{max-width:none;min-width:0;padding-left:2px;border-radius:0;background:none;box-shadow:none}'), 'the inner halves drop their skins')
+  assert.ok(styles.includes('.bt-mobile-left .bt-mobile-nav{position:static;left:auto;top:auto;width:44px;height:40px;border-radius:0;background:none;box-shadow:none}'), 'including the toggle, which stops being a capsule of its own')
+  assert.ok(styles.includes('max-width:calc(100% - var(--bt-mobile-clear) - 12px)'), 'the capsule stops where the right-hand group begins')
+  assert.ok(styles.includes('.bt-mobile-left .bt-pill-name{min-width:0}'), 'and a long title ellipsises inside it')
+  assert.ok(styles.includes('.bt-mobile-bar[data-nav-open] .bt-mobile-left .bt-pill{opacity:0;visibility:hidden;pointer-events:none}'), 'with the drawer up the capsule is the toggle alone')
+})
+
 test('a popup menu is drawn over the bar', () => {
   // The menus clamp to the viewport bottom (context-menu.js), so a long-press on one of
   // the last rows lands under a 56px bar that takes the taps there.

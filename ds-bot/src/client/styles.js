@@ -253,7 +253,7 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:co
    so the properties live here and only here, and every one of those selectors reads this one
    declaration. (The round buttons inside the details panel are deliberately not in this list:
    they sit on a white panel, where a white, edgeless circle would have nothing to read as.) */
-.bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-side-search,
+.bt-pill,.bt-mobile-nav,.bt-mobile-acts,.bt-side-search,.bt-mobile-left,
 html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round,
 html[data-bt-mobile] .bt-peers-new,
 html[data-bt-pc] .bt-side .bt-side-top .bt-round{background:var(--bt-card);border:0;border-radius:999px;box-shadow:var(--bt-float-shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -1456,9 +1456,18 @@ html[data-bt-mobile][data-bt-size=expanded] .bt-settings-group{margin-top:0}
    the skin lives in the shared rule above; both controls are border-box 40px tall, the
    same 40px the pill itself has. */
 .bt-mobile-nav,.bt-mobile-act{pointer-events:auto;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--bt-ink);cursor:pointer}
-/* The hamburger sits on the screen's left edge, the group on its right; both are out of
-   flow, so neither can push the pill off centre. */
-.bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31;width:40px;height:40px}
+/* The left capsule: the drawer's toggle and the session's own pill are one control now, so they
+   share one capsule instead of floating as two. The wrapper is the one that wears the skin above;
+   inside it both halves drop theirs -- the pill's own background, radius and shadow -- and the
+   title ellipsises into what the right-hand group leaves (the bar's own clearance). */
+.bt-mobile-left{position:absolute;left:12px;top:10px;z-index:31;display:flex;align-items:center;height:40px;box-sizing:border-box;max-width:calc(100% - var(--bt-mobile-clear) - 12px);overflow:hidden}
+.bt-mobile-left .bt-mobile-nav{position:static;left:auto;top:auto;width:44px;height:40px;border-radius:0;background:none;box-shadow:none}
+.bt-mobile-left .bt-pill{max-width:none;min-width:0;padding-left:2px;border-radius:0;background:none;box-shadow:none}
+.bt-mobile-left .bt-pill-name{min-width:0}
+/* With the drawer up the capsule is the toggle alone: the title half steps aside, which is the
+   same state that hides it in the bar. */
+.bt-mobile-bar[data-nav-open] .bt-mobile-left .bt-pill{opacity:0;visibility:hidden;pointer-events:none}
+/* The group on the right is out of flow too, so neither it nor this capsule can push anything. */
 /* The right group is one component: the frame carries the shared skin, the 44px seats inside
    drop all of theirs, and nothing separates them — so the outline is continuous around the whole
    group. overflow:hidden clips a seat's own hover fill inside the frame's arc. Its width is its
