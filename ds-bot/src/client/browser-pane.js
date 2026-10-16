@@ -616,9 +616,12 @@ html[data-bt-mobile] .bt-sheet-grip{position:relative;flex:none;display:flex;ali
 /* The close of the sheet: the top-right corner of the row the handle sits in -- 44px of finger,
    out of the drag's way, and only on the phone (a desktop column closes through its back arrow). */
 .bt-sheet-close{display:none}
-html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:2px;top:50%;transform:translateY(-50%);align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:0;border-radius:12px;background:none;color:var(--bt-ink-2);cursor:pointer;touch-action:manipulation}
+html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:2;align-items:center;justify-content:center;width:48px;height:48px;padding:0;border:0;border-radius:14px;background:none;color:var(--bt-ink-2);cursor:pointer;touch-action:manipulation}
 html[data-bt-mobile] .bt-sheet-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
-html[data-bt-mobile] .bt-sheet-close svg{width:18px;height:18px}
+/* The press, for a finger: it is gone the moment the finger is, which is what makes it different
+   from the hover highlight an Android tap leaves stuck behind it. */
+html[data-bt-mobile] .bt-sheet-close:active{background:var(--bt-active);color:var(--bt-ink)}
+html[data-bt-mobile] .bt-sheet-close svg{width:22px;height:22px}
 /* On the sheet the title row holds the name alone: the arrow is the preview page's, and the close
    is up in the corner above it. */
 html[data-bt-mobile] .bt-sheet-head .bt-preview-back{display:none}

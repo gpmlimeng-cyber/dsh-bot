@@ -320,6 +320,12 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
    it off for its own band only. */
 .bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);outline:none}
 html[data-bt-mobile] .bt-dcard-hit:focus-visible{box-shadow:none;outline:none}
+/* What a press looks like, which is not what a tap left behind: this one ends with the finger. The
+   hit target is the whole card, so the press is read off it (the card is the tile the eye knows),
+   and the same rule serves the panel's list -- one card component, both places. */
+html[data-bt-mobile] .bt-dcard:has(.bt-dcard-hit:active){background:var(--bt-active)}
+html[data-bt-mobile] .bt-settings-item:active,
+html[data-bt-mobile] .bt-peers-row:active{background:var(--bt-active)}
 /* The kind's mark is the drawing itself: flat, one colour, and no plate behind it -- the tinted square
    the user asked away (it made Fluent's own flat artwork read as a badge). The colour still says which
    kind it is, so the word under the name is not the only thing doing that work. */

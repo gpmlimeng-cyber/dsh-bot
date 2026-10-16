@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 556628b1
+// Source fingerprint: 3f174b9f
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2347,6 +2347,12 @@ button.bt-lead{border:0;background:none;padding:0;cursor:pointer}
    it off for its own band only. */
 .bt-dcard-hit:focus-visible{box-shadow:inset 0 0 0 2px var(--bt-accent);outline:none}
 html[data-bt-mobile] .bt-dcard-hit:focus-visible{box-shadow:none;outline:none}
+/* What a press looks like, which is not what a tap left behind: this one ends with the finger. The
+   hit target is the whole card, so the press is read off it (the card is the tile the eye knows),
+   and the same rule serves the panel's list -- one card component, both places. */
+html[data-bt-mobile] .bt-dcard:has(.bt-dcard-hit:active){background:var(--bt-active)}
+html[data-bt-mobile] .bt-settings-item:active,
+html[data-bt-mobile] .bt-peers-row:active{background:var(--bt-active)}
 /* The kind's mark is the drawing itself: flat, one colour, and no plate behind it -- the tinted square
    the user asked away (it made Fluent's own flat artwork read as a badge). The colour still says which
    kind it is, so the word under the name is not the only thing doing that work. */
@@ -8969,9 +8975,12 @@ html[data-bt-mobile] .bt-sheet-grip{position:relative;flex:none;display:flex;ali
 /* The close of the sheet: the top-right corner of the row the handle sits in -- 44px of finger,
    out of the drag's way, and only on the phone (a desktop column closes through its back arrow). */
 .bt-sheet-close{display:none}
-html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:2px;top:50%;transform:translateY(-50%);align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:0;border-radius:12px;background:none;color:var(--bt-ink-2);cursor:pointer;touch-action:manipulation}
+html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:2;align-items:center;justify-content:center;width:48px;height:48px;padding:0;border:0;border-radius:14px;background:none;color:var(--bt-ink-2);cursor:pointer;touch-action:manipulation}
 html[data-bt-mobile] .bt-sheet-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
-html[data-bt-mobile] .bt-sheet-close svg{width:18px;height:18px}
+/* The press, for a finger: it is gone the moment the finger is, which is what makes it different
+   from the hover highlight an Android tap leaves stuck behind it. */
+html[data-bt-mobile] .bt-sheet-close:active{background:var(--bt-active);color:var(--bt-ink)}
+html[data-bt-mobile] .bt-sheet-close svg{width:22px;height:22px}
 /* On the sheet the title row holds the name alone: the arrow is the preview page's, and the close
    is up in the corner above it. */
 html[data-bt-mobile] .bt-sheet-head .bt-preview-back{display:none}
@@ -16982,7 +16991,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "556628b1" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "3f174b9f" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

@@ -474,3 +474,16 @@ test('the second line names the configured workspace, and where a file is when i
   assert.ok(read('cells.js').includes('workDir: room?.workDir ?? bot.workDir'), "a group reply takes the room folder when it has one")
   assert.ok(!read('deliverables.js').includes('h(DeliverableCards, { deliverables: rows, actions, list: true, metaOf, workDir'), "while the panel list hands none, having none to hand")
 })
+
+test('a finger gets a press, and nothing that stays behind it', () => {
+  const source = styles.join('\n')
+  // What was asked away was the highlight a tap leaves stuck on the tile; a press that ends with the
+  // finger is the other thing, and the two can hold at once. So the phone gets :active -- the hit
+  // target is the whole card, so the press is read off it -- and the pointer-only :hover stays where
+  // it was, behind (hover:hover).
+  assert.ok(styles.some(line => line.startsWith('html[data-bt-mobile] .bt-dcard:has(.bt-dcard-hit:active){background:var(--bt-active)}')), 'the card shows a press while the finger is down')
+  assert.ok(styles.some(line => line.startsWith('html[data-bt-mobile] .bt-settings-item:active,')), 'the settings rows do too')
+  assert.ok(styles.some(line => line.startsWith('html[data-bt-mobile] .bt-peers-row:active{background:var(--bt-active)}')), 'and the partner rows')
+  assert.ok(!styles.some(line => line.startsWith('.bt-dcard:active')), 'no press rule for a pointer, which already has its hover')
+  assert.ok(source.slice(source.indexOf('@media (hover:hover){'), source.indexOf('.bt-dcard-hit:focus-visible')).includes('.bt-dcard:hover{background:var(--bt-hover)}'), 'and the pointer highlight is still the pointer block\'s own')
+})

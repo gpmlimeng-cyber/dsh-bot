@@ -141,7 +141,12 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   assert.ok(pane.includes("className: 'bt-sheet-close', 'aria-label': t('Close'), title: t('Close'),"), 'the close is a button of its own')
   assert.ok(pane.includes('onPointerDown: (event) => event.stopPropagation(),'), 'which does not begin a drag')
   assert.ok(pane.includes("onClick: () => actions.closeProducts?.(),") && pane.includes("}, h(CloseIcon)))"), 'and it closes the sheet')
-  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:2px;top:50%;transform:translateY(-50%);'), 'pinned to the right corner of that row')
+  // The user could not hit it at 44 with an 18px mark: 48 of finger, a 22px drawing, clear of the edge by
+  // 6px, and above the handle's own band so a press on it is never a drag (its pointerdown stops there).
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:2;'), 'pinned to the right corner of that row, over the handle\'s band')
+  assert.ok(pane.includes('width:48px;height:48px;padding:0;border:0;border-radius:14px'), 'a 48px target')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-close svg{width:22px;height:22px}'), 'with a 22px drawing in it')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-close:active{background:var(--bt-active);color:var(--bt-ink)}'), 'and it shows the press while the finger is down')
   assert.ok(pane.includes('.bt-sheet-close{display:none}'), 'while a desktop column keeps its back arrow')
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-back{display:none}'), 'the sheet\'s title row draws the name alone')
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:none;min-width:0;text-align:left;font-size:15px;line-height:21px}'), 'the name reads from the edge there')
