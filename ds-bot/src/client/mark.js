@@ -130,8 +130,11 @@ function clusterSeats(count, frame) {
   return [[0, 0, half], [half, 0, half], [0, half, half], [half, half, half]]
 }
 
-export function RoomAvatar({ room, roster, size = 36 }) {
-  const members = room.members.map(id => roster.byId[id]).filter(Boolean)
+// `room` draws that group's own members; `bots` draws a list of Bots handed in -- the same cluster,
+// for a surface that stands for the team rather than for one group (the 伙伴 page's 群聊 door wears
+// the first Bots of the roster). One drawing, two ways to ask for it.
+export function RoomAvatar({ room, bots, roster, size = 36 }) {
+  const members = bots ?? (room?.members ?? []).map(id => roster.byId[id]).filter(Boolean)
   // A group with one Bot left shows the user beside it.
   const people = members.length === 1 ? [members[0], null] : members
   const seat = (bot, seatSize, key) => (bot

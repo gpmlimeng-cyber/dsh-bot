@@ -15,9 +15,9 @@
 // (index.js).
 import { createElement as h, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { BotMark } from './mark.js'
+import { BotMark, RoomAvatar } from './mark.js'
 import { modelOf } from './model-ref.js'
-import { ChevronRightIcon, PlusIcon, SearchIcon, SETTINGS_ICONS } from './icons.js'
+import { ChevronRightIcon, PlusIcon, SearchIcon } from './icons.js'
 import { useMobile } from './mobile.js'
 import { isMainOf } from './sources.js'
 import { t } from './i18n.js'
@@ -56,6 +56,8 @@ export function PeersPage({ useRoster, useUi, actions }) {
   // How many group chats there are, read the way that page reads it itself (settings.js, its own
   // title): every room the roster lists -- so the door and the page it opens can never disagree.
   const rooms = (roster.rooms ?? []).length
+  // The four the door's cluster draws: whoever the roster lists first, in its own order.
+  const team = (roster.bots ?? []).slice(0, 4)
   // A page of Settings, opened from here: the list steps aside for it (the layer is drawn under this
   // one, z 60 against 79, so it could not be seen over it), and the action remembers that the way
   // back is this list rather than the conversation. One door, two pages under it -- a Bot's own page
@@ -97,15 +99,16 @@ export function PeersPage({ useRoster, useUi, actions }) {
     // being announced as a button.
     //
     // The door is a row like any other -- one line, because it names a page rather than a contact --
-    // and it wears the icon 我的 -> 群聊's own row wears for it (SETTINGS_ICONS), so the two read as
-    // the same door. It is drawn whatever the search says: it is not a contact to match against, and
-    // the list behind it has a search box of its own.
+    // and it wears the team's own face: the first Bots of the roster in the cluster a group chat
+    // wears (RoomAvatar), which is what the page behind it is a list of. It is drawn whatever the
+    // search says: it is not a contact to match against, and the list behind it has a search of its
+    // own.
     h('div', { className: 'bt-peers-list' },
       section(t('Group chats'), [h('div', { key: 'groups', className: 'bt-peers-item', role: 'listitem' },
         h('button', {
           type: 'button', className: 'bt-peers-row', 'data-page': 'groups', onClick: () => openPage('groups'),
         },
-        h('span', { className: 'bt-peers-icon', 'aria-hidden': true }, h(SETTINGS_ICONS.groups)),
+        h('span', { className: 'bt-peers-icon', 'aria-hidden': true }, h(RoomAvatar, { bots: team, roster, size: 36 })),
         h('span', { className: 'bt-peers-body' },
           h('span', { className: 'bt-peers-name-row' }, h('span', { className: 'bt-peers-name' }, t('Group chats')))),
         // The count, in the skin's own number badge (the sidebar's own), before the chevron: the
@@ -166,11 +169,9 @@ html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;o
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
-/* The 群聊 door's glyph, in the box a Bot's avatar takes (36px) so every row's text starts at the
-   same x, and at the 24px 我的 -> 全部设置 draws its own row icons at -- the same icon, the same
-   size, so the two doors read as one. */
-html[data-bt-mobile] .bt-peers-icon{flex:none;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-2)}
-html[data-bt-mobile] .bt-peers-icon>svg{width:24px;height:24px}
+/* The 群聊 door's face, in the box a Bot's avatar takes (36px) so every row's text starts at the
+   same x: the same cluster a group chat wears, drawn from the roster's first Bots. */
+html[data-bt-mobile] .bt-peers-icon{flex:none;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center}
 /* The two lines a row reads in: the name with its labels, then the description under it. The pair
    takes what the chevron leaves, and neither line ever wraps: a line that runs out of room cuts its
    own text with an ellipsis instead of becoming two. The name gives way first (it is the flexible

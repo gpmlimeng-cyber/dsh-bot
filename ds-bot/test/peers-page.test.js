@@ -116,6 +116,13 @@ test('the page is a header row and one scroller of labelled cards', () => {
   assert.ok(code('settings.js').includes("['groups', 'Group chats']"), 'which is the page key 我的 -> 群聊 uses')
   assert.equal(findAll(door, 'bt-peers-desc').length, 0, 'and the door says one thing, so it has no second line')
   // The count is the page's own number, in the skin's own badge, before the chevron.
+  // The face it is handed: the cluster drawing, with the roster's own Bots and the row's own size.
+  // (The stub renderer stops at a component, so what is checked here is the wiring; the drawing
+  // itself is RoomAvatar's, already in use by every group chat.)
+  const face = findAll(door, 'bt-peers-icon')[0].children[0]
+  assert.equal(typeof face.type, 'function', 'the door\'s face is that component')
+  assert.deepEqual(plain(face.props.bots.map(bot => bot.id)), ['b1', 'b2'], 'handed the roster\'s first Bots')
+  assert.equal(face.props.size, 36, 'in the row\'s own box')
   const count = findAll(door, 'bt-row-count')
   assert.equal(count.length, 1, 'the door carries the group chats\' count')
   assert.equal(String(count[0].children[0]), String(ROSTER.rooms.length), 'which is the number that page lists')
@@ -202,9 +209,13 @@ test('the group chats are one door, not a second copy of their page', () => {
   // 新建群聊 button, no member counts.
   assert.ok(peers.includes("section(t('Group chats'), ["), 'one section, holding one row')
   assert.ok(peers.includes("className: 'bt-peers-row', 'data-page': 'groups', onClick: () => openPage('groups')"), 'the door names the page it opens and asks for it')
-  assert.ok(peers.includes("h('span', { className: 'bt-peers-icon', 'aria-hidden': true }, h(SETTINGS_ICONS.groups))"), "and wears the icon that page's own settings row wears")
+  // Its face is the team's: the roster's first four Bots in the same cluster a group chat wears --
+  // one drawing, asked for by a list of Bots instead of by a room (mark.js, RoomAvatar).
+  assert.ok(peers.includes("h('span', { className: 'bt-peers-icon', 'aria-hidden': true }, h(RoomAvatar, { bots: team, roster, size: 36 }))"), 'the door wears the team cluster')
+  assert.ok(peers.includes('const team = (roster.bots ?? []).slice(0, 4)'), 'built from the roster\'s first four Bots')
+  assert.ok(code('mark.js').includes('export function RoomAvatar({ room, bots, roster, size = 36 })'), 'through the one cluster drawing, which takes either')
   assert.ok(peers.includes("section(t('Peers'), shown.map"), 'then the people')
-  for (const gone of ['RoomAvatar', 'data-room-id', '{count} members', 'room.members', 'peersRooms']) {
+  for (const gone of ['data-room-id', '{count} members', 'room.members', 'peersRooms']) {
     assert.ok(!peers.includes(gone), `${gone} was the list this page no longer draws`)
   }
   // The page's own list still holds the shape 我的 -> 全部设置 draws: a section, a heading, a card.
