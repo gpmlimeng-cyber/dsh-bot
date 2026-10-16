@@ -196,8 +196,27 @@ export function useMemberWork(room, useWork) {
 
 export const MEMBER_CSS = `
 .bt-mw-dock{display:flex;justify-content:center;margin:0 auto 8px;pointer-events:none}
-.bt-mw-pill{pointer-events:auto;position:relative;display:inline-flex;align-items:center;flex:none;box-sizing:border-box;height:32px;max-width:100%;padding:0;border:0;border-radius:999px;overflow:hidden;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line-2),0 2px 8px -2px rgba(0,0,0,.12);color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer;animation:bt-mw-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .18s ease-out backwards;transition:background-color .12s ease,${spring(SPRING_SHAPE, 'width')},${spring(SPRING_TAP, 'scale')}}
+.bt-mw-pill{pointer-events:auto;position:relative;display:inline-flex;align-items:center;flex:none;box-sizing:border-box;height:32px;max-width:100%;padding:0;border:0;border-radius:999px;overflow:hidden;background:var(--bt-main);box-shadow:var(--bt-float-shadow);color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer;animation:bt-mw-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .18s ease-out backwards;transition:background-color .12s ease,${spring(SPRING_SHAPE, 'width')},${spring(SPRING_TAP, 'scale')}}
 .bt-mw-pill:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))}
+/* On a phone the pill does not end on an edge: its fill and its shadow move to one layer of its own,
+   which is feathered at the four sides, so the card dissolves into what is behind it instead of
+   drawing a line across the strip. The ring that used to be part of the shadow
+   (0 0 0 .5px var(--bt-line-2)) read on the device as exactly that line, so it is gone and the soft
+   shadow is the same --bt-float-shadow the composer's card carries.
+   The blur rides that same layer, which is why it only shows in the feathered band: the fill in the
+   middle is opaque, so a blur of the transcript behind it would have been the haze this device
+   rejected once already (the top bar's frost).
+   10px a side and 8px top and bottom of a 32px pill leaves 16px of solid fill down the middle; if the
+   pill starts to look washed the vertical band is the one to halve. */
+html[data-bt-mobile] .bt-mw-pill{background:none;box-shadow:none;isolation:isolate}
+html[data-bt-mobile] .bt-mw-pill:hover{background:none}
+html[data-bt-mobile] .bt-mw-pill:hover::before{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))}
+html[data-bt-mobile] .bt-mw-pill::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:999px;background:var(--bt-main);box-shadow:var(--bt-float-shadow);-webkit-mask-image:linear-gradient(to right,transparent 0,#000 10px,#000 calc(100% - 10px),transparent 100%),linear-gradient(to bottom,transparent 0,#000 8px,#000 calc(100% - 8px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 10px,#000 calc(100% - 10px),transparent 100%),linear-gradient(to bottom,transparent 0,#000 8px,#000 calc(100% - 8px),transparent 100%);-webkit-mask-composite:source-in;mask-composite:intersect}
+/* Both spellings, and the blur only where the engine admits to it: an engine that cannot blur still
+   gets the feather above, so the fallback is a soft edge rather than a hard one. */
+@supports (backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px)){
+html[data-bt-mobile] .bt-mw-pill::before{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+}
 .bt-mw-pill:active{scale:.97}
 .bt-mw-dock[data-leaving] .bt-mw-pill{animation:bt-mw-out .16s cubic-bezier(.4,0,1,1) forwards;pointer-events:none}
 .bt-mw-pill-in{display:inline-flex;align-items:center;gap:8px;flex:none;padding:0 13px 0 6px;white-space:nowrap}

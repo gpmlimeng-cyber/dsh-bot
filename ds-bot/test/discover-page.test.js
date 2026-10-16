@@ -34,40 +34,29 @@ const rows = cards.flat()
 const panelRows = [...discover.slice(discover.indexOf('export const PANEL_ROWS')).match(/\[[^\]]*\]/)[0]
   .matchAll(/'([a-z]+)'/g)].map(match => match[1])
 
-test('a tab page\u2019s strip is the colour of the surface that page shows', () => {
-  // The user saw a band under the status bar on 全部设置 (live read: --bt-main #ffffff above, --bt-sidebar
-  // #f9f9f9 below, and #141414 against #1b1b1b in the dark palette). The two pages under this layer do
-  // not share a base -- the settings list is the sidebar colour with --bt-card rows on it, and 发现 is
-  // one dialog painted --bt-main -- so each says which word its strip wears.
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-sidebar)}'), 'the strip follows the settings list\u2019s own base')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}'), 'and so does that list\u2019s title row')
-  assert.ok(styles.includes('.bt-settings-nav{position:relative;width:198px;flex:none;padding:16px 8px;border-right:.5px solid var(--bt-line);display:flex;flex-direction:column;gap:2px;background:var(--bt-sidebar);box-sizing:border-box}'), 'which is the colour the list itself already wears')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}'), 'which is the colour that screen\u2019s title row wears')
-  // And the strip follows the screen: the second screen of the flow is the dialog itself (--bt-main), so
-  // leaving the list's --bt-sidebar up there would be the same seam one screen further in.
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]:has(.bt-settings[data-screen=page]){background:var(--bt-main)}'), 'the page screen says its own word too')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-discover.bt-settings-layer[data-tabpage]{background:var(--bt-main)}'), '发现\u2019s strip follows its own dialog instead')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}'), 'and its title row leaves the dialog\u2019s colour showing')
-  // 伙伴 is the other case, and it takes the other answer: the page already covers the strip itself
-  // (fixed inset:0 with the inset as its padding) and pads from it, so the band above its content is
-  // its own colour -- what sat on top was the veil, which its own sheet never hid. Hiding the veil
-  // settles it and leaves the page its --bt-sidebar; painting the page --bt-main would have recoloured
-  // 伙伴 to match a band that should not have been there at all.
-  assert.ok(read('peers-page.js').includes('padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar)'), '伙伴 keeps the colour it was designed with')
-  assert.ok(read('peers-page.js').includes('body:has(.bt-peers) .bt-mobile-bar{display:none}'), 'its sheet hides the bar over it')
-  assert.ok(styles.includes('html[data-bt-mobile] body:has(.bt-peers) :is(.bt-mobile-bar,.bt-topfade),'), 'and the skin hides the veil too, which is the one that was left up')
-  // A dialog's scrim is the whole screen's. The layer keeps its own top, so the scrim is fixed rather
-  // than absolute -- absolute filled only the layer and left the strip undimmed. Padding the layer
-  // instead would have moved a centred dialog (`.bt-palette` is absolute at top:50%).
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer:not([data-tabpage])>.bt-scrim,\nhtml[data-bt-mobile] .bt-palette-layer>.bt-backdrop,\nhtml[data-bt-mobile] .bt-mem-layer>.bt-scrim{position:fixed;inset:0}'), 'a floating layer dims the strip as well')
-  assert.ok(!styles.includes('html[data-bt-mobile] .bt-settings-layer:not([data-tabpage]){top:0'), 'and none of those layers is padded, which would move its dialog')
-  // The frost is the conversation's own: it is drawn on the tasks tab alone (nav-bar.js), so nothing
-  // here needs a second word for it.
+test('a phone page, its rows and the strip above them wear one pair of words', () => {
+  // The user saw a band under the status bar (live read: --bt-main #ffffff above, --bt-sidebar #f9f9f9
+  // below, and #141414 against #1b1b1b in the dark palette), and then 伙伴 read a shade greyer than the
+  // conversation. One answer for every phone page: --bt-main, the page base the conversation and the
+  // tasks page already use. --bt-sidebar keeps one job, the wide layout's 198px column, which is not a
+  // page. A white row on a white page stays readable because the row carries the edge, not a second
+  // page colour: --bt-card with a 1px --bt-line around it.
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-main)}'), 'the strip is the page base')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-main)}') && styles.includes('html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}'), 'and so is the title bar of both screens')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-nav{width:100%;flex:1;overflow-y:auto;border-right:0;background:var(--bt-main);'), 'and the list itself, which on a phone is the page the tab opened')
+  assert.ok(styles.includes('.bt-settings-nav{position:relative;width:198px;flex:none;padding:16px 8px;border-right:.5px solid var(--bt-line);display:flex;flex-direction:column;gap:2px;background:var(--bt-sidebar);box-sizing:border-box}'), 'while the 198px column keeps the sidebar colour it is named after')
+  assert.ok(styles.slice(styles.indexOf('html[data-bt-mobile] .bt-side.bt-rail{'), styles.indexOf('html[data-bt-mobile] .bt-side.bt-rail{') + 700).includes('background:var(--bt-sidebar)'), 'and the phone drawer is the sidebar itself, so it keeps the sidebar colour')
+  assert.ok(read('peers-page.js').includes('padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-main)'), '伙伴 is a phone page as well')
+  // The screens disagreeing is what the two overrides existed for; with one word for both, 发现 names
+  // nothing and no screen is singled out (asserted by their absence).
+  assert.ok(!styles.includes('.bt-discover.bt-settings-layer[data-tabpage]'), '发现 needs no word of its own')
+  assert.ok(!styles.includes(':has(.bt-settings[data-screen=page])'), 'and no screen needs to be singled out')
+  // The frost is the conversation's own: it is drawn on the tasks tab alone (nav-bar.js), and 伙伴 --
+  // a page, not a conversation -- steps it aside like the other pages do.
   assert.ok(navForTopfade.includes("active === 'tasks' ? h('div', { className: 'bt-topfade', 'aria-hidden': true }) : null"), 'the veil belongs to the conversation')
+  assert.ok(styles.includes('html[data-bt-mobile] body:has(.bt-peers) :is(.bt-mobile-bar,.bt-topfade),'), 'and a page steps it aside')
 })
 
-// It used to be written inside the test above, which made its failures read as that test's. Same file,
-// and neither test's assertions changed.
 test('the list is three cards of doors that already exist, with no headings', () => {
   // 插件 ｜ 连接器·能力·定时任务·密钥 ｜ 用量 -- the user's own grouping, in this order, one card per group.
   assert.deepEqual(cards.map(card => card.length), [1, 4, 1], 'three cards, 1/4/1 rows')
@@ -297,7 +286,7 @@ test('every rule is a phone rule, and the page hands the shell nothing but the s
   assert.ok(read('overlays.js').includes('tab: settings.tab === true'), 'which the layer is handed')
   // And it paints the strip the chrome reserves, so the band above the page is the page's own colour
   // instead of the shell's leftover: the dialog moves down by exactly that strip.
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-sidebar)}'), "the page paints from the screen's top edge, in the settings list's own colour (发现 overrides it with its dialog's)")
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-main)}'), "the page paints from the screen's top edge, in the settings list's own colour (发现 overrides it with its dialog's)")
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}'), 'the phone plays no entrance for it, and beats the reduced-motion fade that would otherwise stand in for one')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}'), 'and no exit')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}'), 'and draws no veil')
