@@ -118,6 +118,17 @@ test('the page is a header row and one scroller of labelled cards', () => {
     assert.deepEqual(kids, ['(mark)', 'bt-peers-body', 'bt-peers-go'], 'mark, the two lines, the chevron -- all inside the button')
   }
   assert.deepEqual(plain(findAll(tree, 'bt-peers-go').map(node => classList(node))), [['bt-peers-go'], ['bt-peers-go'], ['bt-peers-go']], 'three of them, one per row')
+  // What a description line is made of, row by row: a group has one value, a Bot with a model has
+  // two and says so with the one mark between them, and a Bot without a model has one value and
+  // therefore no mark -- a leading separator is not a separator.
+  const partOf = (child) => classList(child)[0] ?? (typeof child === 'string' ? child : '(node)')
+  const parts = (node) => plain(node.children.filter(child => child !== null && child !== undefined).map(partOf))
+  const descriptions = findAll(tree, 'bt-peers-desc').map(parts)
+  assert.deepEqual(descriptions, [
+    ['bt-peers-text'],
+    ['bt-peers-text', 'bt-peers-sep', 'bt-peers-text'],
+    ['bt-peers-text'],
+  ], 'the mark appears between two values and nowhere else')
 })
 
 test('a label sits on the name\'s line and a value on the line below it', () => {
@@ -142,7 +153,13 @@ test('a label sits on the name\'s line and a value on the line below it', () => 
   // The folder is always said: the Bot's own last segment when it has one, and the team workspace's
   // own word from 我的 -> Bot settings when it has none -- which is the usual case, and what the
   // settings row shows, so the two read the same line.
-  assert.ok(peers.includes("peersFolder(bot.workDir) ?? t('Team workspace')"), 'the folder falls back to the settings row\'s own word')
+  assert.ok(peers.includes('peersFolder(bot.workDir) ?? t(\'Team workspace\')'), 'the folder falls back to the settings row\'s own word')
+  // One fixed mark tells the two values apart, and it is not a value: it keeps its own width, so a
+  // long model or a long folder is what gives way. The group's line has one value, so it has none.
+  assert.ok(peers.includes("h('span', { className: 'bt-peers-sep', 'aria-hidden': true }, '·')"), 'the values are separated by one fixed mark')
+  assert.ok(code('peers-page.js').includes('.bt-peers-sep{flex:none}'), 'which never shrinks, so it cannot be squeezed out')
+  const groupDesc = peers.slice(peers.indexOf("className: 'bt-peers-desc' },"), peers.indexOf("const model = peersModel"))
+  assert.ok(!groupDesc.includes('bt-peers-sep'), 'and a line with one value carries no separator')
   assert.ok(secondLine.includes("h('span', { className: 'bt-peers-text' }, folder)"), 'and is always drawn')
   assert.ok(!secondLine.includes('folder ?'), 'with no gap where it has nothing of its own')
   assert.ok(code('folder-menu.js').includes("t('Team workspace')"), 'which is the word that settings row uses')

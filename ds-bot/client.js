@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 4d29ed10
+// Source fingerprint: 6c5b0c5b
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16242,6 +16242,11 @@ function PeersPage({ useRoster, useUi, actions }) {
                 "span",
                 { className: "bt-peers-desc" },
                 model ? (0, import_react40.createElement)("span", { className: "bt-peers-text" }, model) : null,
+                // The two values are told apart by one mark, and it is a mark rather than a value: it
+                // keeps its own width, so a long model and a long folder are what give way (each with
+                // its own ellipsis) and the mark between them is never what is cut. It is drawn only
+                // when there are two values to tell apart, and the group's one-value line has none.
+                model ? (0, import_react40.createElement)("span", { className: "bt-peers-sep", "aria-hidden": true }, "·") : null,
                 (0, import_react40.createElement)("span", { className: "bt-peers-text" }, folder)
               )
             ),
@@ -16285,6 +16290,9 @@ html[data-bt-mobile] .bt-peers-desc{display:flex;flex-wrap:nowrap;align-items:ce
 /* A value is the part that gives way: the labels and the chevron keep their width, and the model
    and the folder ellipsise -- the folder last, since it is the one that can be longest. */
 html[data-bt-mobile] .bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The mark between two values is not one of them: it takes exactly the width of the glyph, so
+   nothing about it can be squeezed or dropped when the two values are long. */
+html[data-bt-mobile] .bt-peers-sep{flex:none}
 /* The chevron is the row's edge, not a thing floating at the end of the text: it is pushed to the
    right end of the row by its own margin, it keeps its own width, and the text side is what gives
    way. So every row shows it at the same x -- whatever the name, the model or the folder says --
@@ -16387,7 +16395,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "4d29ed10" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "6c5b0c5b" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

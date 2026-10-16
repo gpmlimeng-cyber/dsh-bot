@@ -144,6 +144,11 @@ export function PeersPage({ useRoster, useUi, actions }) {
               isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null),
             h('span', { className: 'bt-peers-desc' },
               model ? h('span', { className: 'bt-peers-text' }, model) : null,
+              // The two values are told apart by one mark, and it is a mark rather than a value: it
+              // keeps its own width, so a long model and a long folder are what give way (each with
+              // its own ellipsis) and the mark between them is never what is cut. It is drawn only
+              // when there are two values to tell apart, and the group's one-value line has none.
+              model ? h('span', { className: 'bt-peers-sep', 'aria-hidden': true }, '·') : null,
               h('span', { className: 'bt-peers-text' }, folder))),
           h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))
       })) : null,
@@ -188,6 +193,9 @@ html[data-bt-mobile] .bt-peers-desc{display:flex;flex-wrap:nowrap;align-items:ce
 /* A value is the part that gives way: the labels and the chevron keep their width, and the model
    and the folder ellipsise -- the folder last, since it is the one that can be longest. */
 html[data-bt-mobile] .bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The mark between two values is not one of them: it takes exactly the width of the glyph, so
+   nothing about it can be squeezed or dropped when the two values are long. */
+html[data-bt-mobile] .bt-peers-sep{flex:none}
 /* The chevron is the row's edge, not a thing floating at the end of the text: it is pushed to the
    right end of the row by its own margin, it keeps its own width, and the text side is what gives
    way. So every row shows it at the same x -- whatever the name, the model or the folder says --
