@@ -60,14 +60,26 @@ export function pcSidebarStep(wasPc, isPc, collapsed) {
  * `!collapsed || !settled`, and `settled` only catches up a few hundred ms after the
  * column folds, so `wide` can still be true while the column is on its way to the rail.
  * The frame carries the shell's own verdict (it is what the shell's own collapsed-state
- * CSS matches on), and the column's rendered width settles the rest. `wide` is the last
- * resort, for a first render before the frame exists.
+ * CSS matches on), and what is on screen settles the rest. `wide` is the last resort,
+ * for a first render before the frame exists.
  */
 export function shellCollapsed(doc, wide) {
   const find = selector => (doc && typeof doc.querySelector === 'function' ? doc.querySelector(selector) : null)
   if (find('[data-sidebar-collapsed]')) return true
   const column = find('[class*="_sidebarCol"]')
-  if (column) return (column.getBoundingClientRect?.().width ?? 0) < 100
+  if (column) {
+    const box = column.getBoundingClientRect?.()
+    if (!box) return !wide
+    // Width alone cannot answer this on a phone: there the column keeps all 288 of its pixels
+    // while it sits off canvas under the frame's 56px track (measured on the device), so a
+    // width test reads "not collapsed" in the one case that matters -- and this fallback only
+    // exists for the case where the frame's attribute is gone, where being wrong means calling
+    // the band's collapse handle. That handle is the shell's toggle, so "collapse" is what folds
+    // and also what would pull the drawer *out*. Where the column actually is settles it: a rail
+    // is 56px wide, and an off-canvas column ends at or before the frame's own left edge.
+    if (box.right !== undefined && box.right <= 0) return true
+    return box.width < 100
+  }
   return !wide
 }
 

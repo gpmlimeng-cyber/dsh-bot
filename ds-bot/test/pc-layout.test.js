@@ -47,10 +47,10 @@ test('the band query is the one complement of the phone layout', () => {
   assert.equal(PC_QUERY, '(min-width:841px) and (max-width:1023px) and (orientation:landscape)')
 })
 
-const doc = ({ collapsed, columnWidth } = {}) => ({
+const doc = ({ collapsed, columnWidth, columnRight } = {}) => ({
   querySelector: (selector) => {
     if (selector.includes('data-sidebar-collapsed')) return collapsed ? {} : null
-    if (selector.includes('_sidebarCol')) return columnWidth === undefined ? null : { getBoundingClientRect: () => ({ width: columnWidth }) }
+    if (selector.includes('_sidebarCol')) return columnWidth === undefined ? null : { getBoundingClientRect: () => ({ width: columnWidth, right: columnRight ?? columnWidth }) }
     return null
   },
 })
@@ -65,6 +65,15 @@ test('without the attribute the column\u2019s rendered width settles it', () => 
   // true for the few hundred ms a fold takes -- the rail is 56px wide and the column 264+.
   assert.equal(shellCollapsed(doc({ columnWidth: 55.64 }), true), true)
   assert.equal(shellCollapsed(doc({ columnWidth: 280 }), false), false)
+})
+
+test('an off-canvas column is collapsed however wide it is', () => {
+  // The phone's column keeps its full 288px while it sits off canvas under the frame's 56px
+  // track (measured: rect [-288.4, 0, 288, 623]). Width alone would call that "not collapsed",
+  // and the fallback's only caller is the band's collapse handle -- the shell's toggle -- so a
+  // wrong "not collapsed" there folds nothing and pulls the drawer out instead.
+  assert.equal(shellCollapsed(doc({ columnWidth: 288, columnRight: 0 }), true), true)
+  assert.equal(shellCollapsed(doc({ columnWidth: 288, columnRight: 288 }), false), false)
 })
 
 test('with no frame at all the slot prop is the last resort', () => {

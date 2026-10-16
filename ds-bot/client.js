@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: cc7f6299
+// Source fingerprint: 512700ac
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -5585,7 +5585,12 @@ function shellCollapsed(doc, wide) {
   const find = (selector) => doc && typeof doc.querySelector === "function" ? doc.querySelector(selector) : null;
   if (find("[data-sidebar-collapsed]")) return true;
   const column = find('[class*="_sidebarCol"]');
-  if (column) return (column.getBoundingClientRect?.().width ?? 0) < 100;
+  if (column) {
+    const box = column.getBoundingClientRect?.();
+    if (!box) return !wide;
+    if (box.right !== void 0 && box.right <= 0) return true;
+    return box.width < 100;
+  }
   return !wide;
 }
 var PC_DETAILS_MAX = 280;
@@ -17626,7 +17631,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "cc7f6299" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "512700ac" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
