@@ -1362,7 +1362,12 @@ html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;b
    that strip -- the layer's own padding-top -- so everything inside it keeps the place it had. Only a
    page of the bar is named: a dialog over the conversation still shows it through the strip, and a
    desktop dialog is untouched. */
-html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-main)}
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-sidebar)}
+/* 发现 shows one dialog painted --bt-main, so the strip above that page is painted the same word. Its
+   title row carries no fill at all, which leaves the dialog's own colour showing through it (the two
+   pages' bases are different, so each says which one it is rather than sharing a guess). */
+html[data-bt-mobile] .bt-discover.bt-settings-layer[data-tabpage]{background:var(--bt-main)}
+html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}
@@ -1379,19 +1384,23 @@ html[data-bt-mobile] .bt-settings-top>.bt-icon-btn::after{content:"";position:ab
    than answering a tap with nothing. */
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn:disabled{opacity:.4;cursor:default}
 html[data-bt-mobile] .bt-settings-top h2{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0 60px;text-align:center;font-size:16px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
-/* One phone page, one colour -- and the colour is the page's own base, which on this skin is --bt-main:
-   the conversation, the tasks page, 伙伴, 发现 and both screens of the settings flow all sit on it, and
-   so do the strip the chrome reserves above them and their title row. --bt-sidebar is not the phone's
-   page colour: it belongs to the wide layout's 198px column (.bt-settings-nav's own base), where a
-   column beside a page is a sidebar. The title bar is the page under it, not a surface of its own, and
-   no rule adds a divider line. */
-html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-main)}
+/* One phone page, one colour -- and the colour is the page's own base. The settings list bases itself
+   on --bt-sidebar (its own rows are --bt-card above it), so its title row and the strip the chrome
+   reserves above it wear that same word (styles.js, the layer's strip below). The title bar is the
+   page under it, not a surface of its own, and no rule adds a divider line. */
+html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}
+/* The second screen of that flow is not the list: it is the dialog itself, painted --bt-main (.bt-settings
+   above) with the list hidden, so its title row is --bt-main. The strip has to move with the screen it
+   sits over, or the list's --bt-sidebar stays up there as a band over a --bt-main page -- the very seam
+   the list was fixed for, one screen further in. Same word, so both the skin's own default palette and
+   any theme keep the pair equal without a second declaration. */
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]:has(.bt-settings[data-screen=page]){background:var(--bt-main)}
 /* That bar replaces the wide dialog's head and its floating close. */
 html[data-bt-mobile] .bt-settings-head,
 html[data-bt-mobile] .bt-settings-close{display:none}
 /* The list is cards now, and it scrolls: rows plus headings no longer fit a phone. */
-html[data-bt-mobile] .bt-settings-nav{width:100%;flex:1;overflow-y:auto;border-right:0;background:var(--bt-main);padding:8px max(12px,calc((100% - var(--bt-set-max,100%))/2)) max(16px,env(safe-area-inset-bottom))}
+html[data-bt-mobile] .bt-settings-nav{width:100%;flex:1;overflow-y:auto;border-right:0;padding:8px max(12px,calc((100% - var(--bt-set-max,100%))/2)) max(16px,env(safe-area-inset-bottom))}
 /* The glide thumb belongs to the wide dialog's column, where it parks behind the row
    matching [aria-current]. On a phone the list is the top level and no row is current --
    the row that opens a page is not that page -- so it has nothing to park on. */
