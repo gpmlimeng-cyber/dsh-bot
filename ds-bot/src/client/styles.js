@@ -264,11 +264,6 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11p
    horizontal one for the close gesture; contain stops a flick at the end of the list from
    chaining into whatever is behind the drawer. */
 html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:contain}
-.bt-side-foot{display:flex;align-items:center;gap:8px;flex:none;padding-top:8px}
-/* The drawer's bottom row: the account/settings launcher on the left, Connect plugins
-   taking the rest, the order the shell's own footer area uses. The connect button is a
-   full-width row under that area's rules; here it takes what the launcher leaves. */
-.bt-side-foot .bt-connect-foot{width:auto;flex:1 1 auto;min-width:0}
 .bt-connect{flex:1;height:36px;border-radius:999px;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background-color .12s ease}
 
 @media (hover:hover){

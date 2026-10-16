@@ -391,18 +391,15 @@ export function TeamSidebar(props) {
   // so the class must keep the rail form while the drawer is open (only the row
   // content follows `listWide`).
   //
-  // The bottom row is the shell's own sidebar footer — the account/settings launcher and
-  // Connect plugins — which the shell renders in a separate area of the sidebar column
-  // (`sidebar.footer.action`), not in the section this component owns. On a phone that
-  // column is off-canvas, so the footer did not travel with the drawer and the list ended
-  // in empty space: that is the "bottom is missing" report. The drawer used to render both
-  // components here; the plugin entry went away (user, 2026-10-17 -- it is a setting, and the
-  // discover page and the composer's plus menu both open it), so the drawer now carries only
-  // the account key, which is also the drawer's one mark of who is speaking here. What the
-  // plugin page owes the reader is said inside that page instead (index.js registers
-  // PluginCompatNote into plugins.detail.section).
-  const drawerFoot = mobile ? h('div', { className: 'bt-side-foot' },
-    h(AccountLauncher, { seat: false, actions })) : null
+  // The shell's own sidebar footer (the account/settings launcher and Connect plugins) lives in a
+  // separate area of the sidebar column (`sidebar.footer.action`), not in the section this
+  // component owns, and on a phone that column is off-canvas -- so the drawer never carried it and
+  // the list ended in empty space. The drawer then grew a bottom row of its own with both
+  // components, and the user took it back row by row: the plugin entry first, then the account key
+  // (2026-10-17, "the one at the bottom left, I don't want it"). The drawer is now just the list.
+  // Nothing is unreachable: the account menu is in 我的 -> 全部设置, the plugin page is on the
+  // discover card and in the composer's plus menu, and the plugin page carries its own note.
+  //
   // The PC band draws the phone drawer's top row: the same hamburger, then the search field,
   // then New (the row itself is built below). The hamburger is not a child of that row — on
   // a phone it lives in the floating bar, and the band draws that same bar box holding
@@ -470,8 +467,7 @@ export function TeamSidebar(props) {
         ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
         : entry.kind === 'room'
           ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
-          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))),
-    drawerFoot)
+          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))))
   return h(Fragment, null,
     createPortal(h('button', { type: 'button', className: 'bt-mobile-scrim', 'data-open': mobileOpen || undefined, 'aria-label': t('Close navigation'), tabIndex: mobileOpen ? 0 : -1, onClick: actions.closeMobileNav }), document.body),
     // The drawer cannot live inside the shell's sidebar column: below the shell's

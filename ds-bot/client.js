@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 87ad1f4d
+// Source fingerprint: 0d2f416c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2327,11 +2327,6 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-row{justify-content:flex-start;gap:11p
    horizontal one for the close gesture; contain stops a flick at the end of the list from
    chaining into whatever is behind the drawer. */
 html[data-bt-mobile] .bt-side.bt-rail .bt-list{width:100%;overscroll-behavior:contain}
-.bt-side-foot{display:flex;align-items:center;gap:8px;flex:none;padding-top:8px}
-/* The drawer's bottom row: the account/settings launcher on the left, Connect plugins
-   taking the rest, the order the shell's own footer area uses. The connect button is a
-   full-width row under that area's rules; here it takes what the launcher leaves. */
-.bt-side-foot .bt-connect-foot{width:auto;flex:1 1 auto;min-width:0}
 .bt-connect{flex:1;height:36px;border-radius:999px;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background-color .12s ease}
 
 @media (hover:hover){
@@ -8267,11 +8262,6 @@ function TeamSidebar(props) {
   const onTouchEnd = () => {
     drag.current = null;
   };
-  const drawerFoot = mobile ? (0, import_react13.createElement)(
-    "div",
-    { className: "bt-side-foot" },
-    (0, import_react13.createElement)(AccountLauncher, { seat: false, actions })
-  ) : null;
   const drawerChrome = mobile || pc;
   const pcFolded = shellCollapsed(document, wide);
   const pcNav = pc ? (0, import_react13.createElement)(NavToggle, {
@@ -8340,8 +8330,7 @@ function TeamSidebar(props) {
       { ref: listRef, className: "bt-list", role: "region", "aria-label": t("Bot list") },
       main ? (0, import_react13.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react13.createElement)("div", { className: "bt-hint" }, t("Setting up your Main Bot…")),
       order.map((entry) => entry.kind === "bot" ? (0, import_react13.createElement)(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true }) : entry.kind === "room" ? (0, import_react13.createElement)(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true }) : (0, import_react13.createElement)(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true }))
-    ),
-    drawerFoot
+    )
   );
   return (0, import_react13.createElement)(
     import_react13.Fragment,
@@ -17809,7 +17798,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "87ad1f4d" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "0d2f416c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
