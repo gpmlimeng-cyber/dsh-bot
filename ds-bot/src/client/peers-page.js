@@ -18,7 +18,7 @@ import { createElement as h, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BotMark, RoomAvatar } from './mark.js'
 import { modelOf } from './model-ref.js'
-import { ChevronRightIcon, PlusIcon, SearchIcon } from './icons.js'
+import { CheckIcon, ChevronRightIcon, PlusIcon, SearchIcon } from './icons.js'
 import { useMobile } from './mobile.js'
 import { isMainOf } from './sources.js'
 import { t } from './i18n.js'
@@ -64,7 +64,13 @@ export function PeersPage({ useRoster, useUi, actions }) {
   const mobile = useMobile()
   if (!open || !mobile) return null
   const groups = peersRooms(roster.rooms, query)
-  const shown = peersList(roster.bots, query)
+  // The Main Bots are their own group at the top, and the list below holds everyone else: a contact
+  // is listed once, under the heading that says what it is -- which is what 我的 -> Bot settings does
+  // with its page list, and the same reason its rows are read in groups. `seated` is the sidebar's
+  // own place: the first Main Bot (roster.mainBotId), the one every Main Bot powers hang off.
+  const mains = peersList(roster.bots.filter(bot => isMainOf(roster, bot.id)), query)
+  const shown = peersList(roster.bots.filter(bot => !isMainOf(roster, bot.id)), query)
+  const seated = roster.mainBotId ?? null
   // Back to the conversation first, then the chat: one tap leaves this page, it does
   // not stack a second one on it. A details pane goes with it: a row opens a conversation, not a
   // settings screen, and openSession does not close one that was already up -- on the phone that
@@ -87,6 +93,48 @@ export function PeersPage({ useRoster, useUi, actions }) {
   const section = (label, rows) => h('section', { className: 'bt-settings-group' },
     h('h3', { className: 'bt-settings-group-head' }, label),
     h('div', { className: 'bt-settings-group-card', role: 'list' }, rows))
+  // One Bot's row, the same in both of that Bot's groups. `seat` is the 主 Bot group's own row: its
+  // right end is the control that moves the sidebar's place to this Bot, and it carries no chevron
+  // and no 主 Bot tag -- the heading above says that much, and the control says the rest.
+  const botRow = (bot, seat = false) => {
+    const model = peersModel(bot, roster)
+    // The folder it works in: its own when it has one, and the team workspace's own word when it has
+    // none (which is the usual case -- a Bot works in the team's folder unless someone gave it
+    // another). That word is the settings row's own (folder-menu.js), so the two read the same.
+    const folder = peersFolder(bot.workDir) ?? t('Team workspace')
+    const held = seat && seated === bot.id
+    return h('div', { key: bot.id, className: 'bt-peers-item', role: 'listitem' },
+      h('button', {
+        type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openBot(bot.id),
+      },
+      h(BotMark, { bot, size: 36 }),
+      h('span', { className: 'bt-peers-body' },
+        h('span', { className: 'bt-peers-name-row' },
+          h('span', { className: 'bt-peers-name' }, bot.name),
+          bot.role ? h('span', { className: 'bt-tag' }, bot.role) : null,
+          !seat && isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null),
+        h('span', { className: 'bt-peers-desc' },
+          model ? h('span', { className: 'bt-peers-text' }, model) : null,
+          // The two values are told apart by one mark, and it is a mark rather than a value: it keeps
+          // its own width, so a long model and a long folder are what give way (each with its own
+          // ellipsis) and the mark between them is never what is cut. It is drawn only when there are
+          // two values to tell apart, and the group's one-value line has none.
+          model ? h('span', { className: 'bt-peers-sep', 'aria-hidden': true }, '·') : null,
+          h('span', { className: 'bt-peers-text' }, folder))),
+      // The chevron is inside the row, where it always was: the row opens the Bot's page. The 主 Bot
+      // group's rows wear the control instead, and the control is the row's SIBLING -- a button
+      // cannot hold a button -- so it is the item that carries it, not the row.
+      seat ? null : h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))),
+      // The control: a toggle, pressed on the Bot that holds the sidebar's own place, and pressing it
+      // moves that place here -- the host's own `set-main` with `primary` (roster.js, which moves the
+      // Bot to the front of mainBotIds: the tile), not a route invented for this page.
+      seat ? h('button', {
+        type: 'button', className: 'bt-peers-set', 'aria-pressed': held ? 'true' : undefined,
+        'aria-label': t('Make Main Bot'), title: t('Make Main Bot'),
+        'data-seat': held ? '' : undefined,
+        onClick: () => actions.setMain(bot.id, true, { primary: true }),
+      }, h(CheckIcon)) : null)
+  }
   return createPortal(h('div', { className: 'bt-peers', role: 'region', 'aria-label': t('Peers') },
     h('div', { className: 'bt-peers-top' },
       // 新建, and it is the drawer's own entry rather than a second door of its own: the same label
@@ -110,15 +158,16 @@ export function PeersPage({ useRoster, useUi, actions }) {
           placeholder: t('Search'), value: query, 'aria-label': t('Search'),
           onChange: event => setQuery(event.target.value),
         }))),
-    // Both sections live in the page's one scroller, in that order: the group chats, then the
-    // people. The wrapper carries the list item, the way the members list does: a button that
-    // declared itself a list item would stop being announced as a button.
+    // Every section lives in the page's one scroller, in that order: the Main Bots, then the group
+    // chats, then the rest of the people. The wrapper carries the list item, the way the members
+    // list does: a button that declared itself a list item would stop being announced as a button.
     //
     // A row is two lines: the name with its labels beside it, and the line of description under
     // it. What is a label is drawn as one (the skin's own .bt-tag: a Bot's role, and the Main Bot
     // badge -- which only a Main Bot has), and it belongs on the name's own line; what is a value
     // is small plain text (the model it runs on, the folder it works in) and belongs below.
     h('div', { className: 'bt-peers-list' },
+      mains.length > 0 ? section(t('Main Bot'), mains.map(bot => botRow(bot, true))) : null,
       groups.length > 0 ? section(t('Groups'), groups.map(room => {
         const count = (room.members ?? []).length
         return h('div', { key: room.id, className: 'bt-peers-item', role: 'listitem' },
@@ -134,34 +183,8 @@ export function PeersPage({ useRoster, useUi, actions }) {
               h('span', { className: 'bt-peers-text' }, t('{count} members', { count })))),
           h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))
       })) : null,
-      shown.length > 0 ? section(t('Peers'), shown.map(bot => {
-        const model = peersModel(bot, roster)
-        // The folder it works in: its own when it has one, and the team workspace's own word when
-        // it has none (which is the usual case -- a Bot works in the team's folder unless someone
-        // gave it another). That word is the settings row's own (folder-menu.js), so the two read
-        // the same; the real path behind it is a host call, and a list line does not make one.
-        const folder = peersFolder(bot.workDir) ?? t('Team workspace')
-        return h('div', { key: bot.id, className: 'bt-peers-item', role: 'listitem' },
-          h('button', {
-            type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openBot(bot.id),
-          },
-          h(BotMark, { bot, size: 36 }),
-          h('span', { className: 'bt-peers-body' },
-            h('span', { className: 'bt-peers-name-row' },
-              h('span', { className: 'bt-peers-name' }, bot.name),
-              bot.role ? h('span', { className: 'bt-tag' }, bot.role) : null,
-              isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null),
-            h('span', { className: 'bt-peers-desc' },
-              model ? h('span', { className: 'bt-peers-text' }, model) : null,
-              // The two values are told apart by one mark, and it is a mark rather than a value: it
-              // keeps its own width, so a long model and a long folder are what give way (each with
-              // its own ellipsis) and the mark between them is never what is cut. It is drawn only
-              // when there are two values to tell apart, and the group's one-value line has none.
-              model ? h('span', { className: 'bt-peers-sep', 'aria-hidden': true }, '·') : null,
-              h('span', { className: 'bt-peers-text' }, folder))),
-          h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))
-      })) : null,
-      groups.length === 0 && shown.length === 0
+      shown.length > 0 ? section(t('Peers'), shown.map(bot => botRow(bot))) : null,
+      mains.length === 0 && groups.length === 0 && shown.length === 0
         ? h('div', { className: 'bt-peers-empty', role: 'status' }, t('Nothing matches'))
         : null)), document.body)
 }
@@ -185,7 +208,8 @@ html[data-bt-mobile] .bt-peers-top{flex:none;display:flex;flex-direction:column;
    live here. */
 html[data-bt-mobile] .bt-peers-new{flex:0 0 40px;width:40px;height:40px;margin-left:auto}
 html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
+html[data-bt-mobile] .bt-peers-item{display:flex;align-items:center;gap:8px}
+html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
 /* The two lines a row reads in: the name with its labels, then the description under it. The pair
@@ -211,6 +235,13 @@ html[data-bt-mobile] .bt-peers-sep{flex:none}
    and it stays vertically centred on a row of two lines rather than riding the first one. */
 html[data-bt-mobile] .bt-peers-go{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-3)}
 html[data-bt-mobile] .bt-peers-empty{padding:24px 12px;font-size:14px;line-height:21px;color:var(--bt-ink-3)}
+/* The 主 Bot group's control, sitting where a chevron sits on every other row: it is the row's
+   sibling (a button cannot hold a button), so it keeps its own width and the row's text is what
+   gives way. Pressed is the Bot that holds the sidebar's own place, and the check says the same
+   thing the pressed state does for a reader who is looking rather than listening. */
+html[data-bt-mobile] .bt-peers-set{flex:none;width:32px;height:32px;margin-right:2px;padding:0;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+html[data-bt-mobile] .bt-peers-set>svg{width:16px;height:16px}
+html[data-bt-mobile] .bt-peers-set[aria-pressed=true]{background:var(--bt-active);color:var(--bt-ink)}
 /* The page carries its own title, and the pill belongs to the conversation behind it. */
 html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 `
