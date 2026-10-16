@@ -1,3 +1,8 @@
+// NOTE for the npm script: on this machine's Node (v24) the runner must also be given
+// `--experimental-test-isolation=none` (package.json's `test` does). This file's import is
+// evaluated before the runner parses its own options, and without that switch every worker dies
+// with `expected absolute path: "--test-concurrency=0"` -- 83 files, none of them running.
+
 // Tests import web-search.js outside a dsh profile, so its @deepseek-ai peers resolve from a
 // DeepSeek Harness, as a profile would supply them: DSH_HARNESS, else the packages that
 // `npm run harness` installs in dev/harness, else the nearest deepseek-harness/ checkout in a
