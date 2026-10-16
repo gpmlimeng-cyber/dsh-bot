@@ -106,18 +106,37 @@ const toneOf = (name) => {
   return 'doc'
 }
 
-// The workspace a delivered file came out of, named the way a reader asks about it rather
-// than spelled out as an absolute path -- the path is what a reader cannot act on. A root is
-// matched on its tail, so both the /data/user/0/... and the /data/data/... spelling of one
-// machine answer the same, and the longest row wins. A file from anywhere else falls back to
-// the folder it sits in, which is short and at least says which pile it belongs to.
+// The workspace a delivered file came out of, named the way a reader asks about it rather than spelled
+// out as an absolute path -- the path is what a reader cannot act on.
+//
+// The value the user asked for is the *configured* one: the folder a Bot (or the group chat) was given
+// as its work_dir, which the roster carries (`bot.workDir`, `room.workDir`). When a file really is
+// under that folder, its name is what the row says -- not the subdirectory the file happens to sit in
+// ('deliverables' under the team workspace is a folder, not the workspace).
+//
+// A file from somewhere else keeps saying where it actually is: the known roots below are matched on
+// their tail (so both the /data/user/0/... and the /data/data/... spelling of one machine answer the
+// same), and anything else falls back to the folder it sits in, which is short and at least says which
+// pile it belongs to. The panel's own list is a team-wide record with no owner on it, so it has no
+// configured folder to read and takes this second path for every row.
 const WORKSPACES = [
   ['.dsh/bot/workspace', 'DSH workspace'],
   ['repos/dsh-bot/ds-bot', 'DSBot'],
   ['repos/dsh-bot', 'DSBot'],
   ['repos/DeepSeek-Bot', 'DSBot'],
 ]
-const workspaceOf = (path) => {
+const workspaceName = (dir) => {
+  const trimmed = String(dir).replace(/\/+$/, '')
+  for (const [root, name] of WORKSPACES) {
+    if (trimmed === root || trimmed.endsWith(`/${root}`)) return t(name)
+  }
+  const tail = trimmed.split('/').filter(Boolean).pop()
+  return tail === undefined ? t('Workspace') : tail
+}
+const workspaceOf = (path, dir) => {
+  if (typeof dir === 'string' && dir !== '' && (path === dir || path.startsWith(`${dir.replace(/\/+$/, '')}/`))) {
+    return workspaceName(dir)
+  }
   for (const [root, name] of WORKSPACES) {
     if (path.includes(`${root}/`)) return t(name)
   }
@@ -136,11 +155,11 @@ const sizesOf = new Map()
 // what kind of file it is, how big it is, and which workspace it came out of -- the second
 // line the user asked for. The kind and the workspace are in the path and show at once; the
 // size joins them when the host answers, so the line is never blank and never a bare path.
-const metaOf = (file) => {
+const metaOf = (file, workDir = null) => {
   const parts = [wordFor(file.path)]
   const size = sizesOf.get(file.path)
   if (Number.isFinite(size)) parts.push(fileSizeText(size))
-  parts.push(workspaceOf(file.path))
+  parts.push(workspaceOf(file.path, workDir))
   return parts.join(' · ')
 }
 
@@ -324,7 +343,7 @@ function DeliverableCard({ file, actions, meta, role }) {
  * shape the host sends for a group reply -- `[{ sessionId, seq, files }]` -- and a file
  * carries its own `index` when the source already knows it.
  */
-export function DeliverableCards({ deliverables, actions, metaOf = null, list = false }) {
+export function DeliverableCards({ deliverables, actions, metaOf = null, list = false, workDir = null }) {
   const files = (deliverables ?? [])
     .flatMap(entry => (entry?.files ?? []).map((file, position) => ({
       path: file?.path,
@@ -345,7 +364,7 @@ export function DeliverableCards({ deliverables, actions, metaOf = null, list = 
       key: file.sessionId === undefined ? file.path : `${file.sessionId}:${file.seq}:${file.index}`,
       file,
       actions,
-      meta: metaOf?.(file),
+      meta: metaOf?.(file, workDir),
       role: list ? 'listitem' : undefined,
     })))
 }

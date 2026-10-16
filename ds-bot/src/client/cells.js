@@ -184,7 +184,7 @@ function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey
     h('span', { className: 'bt-group-name', style: { color: inkText(colorOf(bot)) } }, bot.name,
       room?.admin === bot.id ? h('span', { className: 'bt-group-role' }, t('Admin')) : null),
     h(Bubbles, { texts, roster, selfId: bot.id, actions, sessionId: room?.id, msgKey, useUi, lead }),
-    h(DeliverableCards, { deliverables, actions }))
+    h(DeliverableCards, { deliverables, actions, workDir: room?.workDir ?? bot.workDir }))
 }
 
 // A member's messages in a row, as one block under its name: what it says while it
@@ -474,7 +474,7 @@ export const unseenSince = (visit, time) => typeof visit?.seen === 'number' && t
 // sits right before the next turn's first row, so both the separator for a pause between
 // turns and the cards of the files this turn handed over render here -- in every
 // conversation, a group's own replies drawing theirs under the reply that carried them.
-export function TurnTailCell({ turn: location, sessionId, useTurnClock, useUi, actions }) {
+export function TurnTailCell({ turn: location, sessionId, useRoster, useTurnClock, useUi, actions }) {
   const turn = location.turn
   // DSH builds the tail from the turn's end, so it is there.
   const time = location.end.time
@@ -491,10 +491,18 @@ export function TurnTailCell({ turn: location, sessionId, useTurnClock, useUi, a
     const start = nextTurnStart(state[sessionId] ?? {}, turn)
     return start !== undefined && start > visit.seen && start <= visit.entered
   })
+  // The framework's cell bag carries this hook (the same one every other cell here takes); a unit
+  // test that builds this cell by hand may leave it out, and then a row simply has no configured
+  // folder to name and keeps the folder the file actually sits in.
+  const roster = useRoster?.()
+  // The workspace a delivered file came out of is the session's own configured folder: a Bot's
+  // work_dir, or the group chat's when this is a room. The panel's team-wide list has no such
+  // owner on its records, so it keeps naming the folders it can see (deliverables.js).
+  const workDir = roster?.byId?.[sessionId]?.workDir ?? roster?.roomsById?.[sessionId]?.workDir ?? null
   const delivered = turnDeliverables(location, sessionId)
   if (!label && !fresh && delivered.length === 0) return null
   return h(Fragment, null,
-    delivered.length > 0 ? h(DeliverableCards, { deliverables: delivered, actions }) : null,
+    delivered.length > 0 ? h(DeliverableCards, { deliverables: delivered, actions, workDir }) : null,
     label ? h('div', { className: 'bt-time-sep', role: 'separator' }, label) : null,
     fresh ? h(NewDivider) : null)
 }

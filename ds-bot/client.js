@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: b76bc3cd
+// Source fingerprint: 99a23b07
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -5458,7 +5458,18 @@ var WORKSPACES = [
   ["repos/dsh-bot", "DSBot"],
   ["repos/DeepSeek-Bot", "DSBot"]
 ];
-var workspaceOf = (path) => {
+var workspaceName = (dir) => {
+  const trimmed2 = String(dir).replace(/\/+$/, "");
+  for (const [root, name] of WORKSPACES) {
+    if (trimmed2 === root || trimmed2.endsWith(`/${root}`)) return t(name);
+  }
+  const tail = trimmed2.split("/").filter(Boolean).pop();
+  return tail === void 0 ? t("Workspace") : tail;
+};
+var workspaceOf = (path, dir) => {
+  if (typeof dir === "string" && dir !== "" && (path === dir || path.startsWith(`${dir.replace(/\/+$/, "")}/`))) {
+    return workspaceName(dir);
+  }
   for (const [root, name] of WORKSPACES) {
     if (path.includes(`${root}/`)) return t(name);
   }
@@ -5467,11 +5478,11 @@ var workspaceOf = (path) => {
   return folder === "" ? t("Workspace") : folder;
 };
 var sizesOf = /* @__PURE__ */ new Map();
-var metaOf = (file) => {
+var metaOf = (file, workDir = null) => {
   const parts = [wordFor(file.path)];
   const size = sizesOf.get(file.path);
   if (Number.isFinite(size)) parts.push((0, import_dsh_client_ui_primitives2.fileSizeText)(size));
-  parts.push(workspaceOf(file.path));
+  parts.push(workspaceOf(file.path, workDir));
   return parts.join(" · ");
 };
 var exitsSentence = (shared2) => shared2 !== null && shared2 !== void 0 ? t("Could not open it here. The copy is at {path}", { path: shared2 }) : t("Could not open it here. Copy the path and open the copy under {folder}", { folder: PHONE_COPY_HINT });
@@ -5617,7 +5628,7 @@ function DeliverableCard({ file, actions, meta, role }) {
     failure ? (0, import_react8.createElement)("span", { className: "bt-dcard-hint", role: "status" }, exitsSentence(failure.shared)) : null
   );
 }
-function DeliverableCards({ deliverables, actions, metaOf: metaOf2 = null, list = false }) {
+function DeliverableCards({ deliverables, actions, metaOf: metaOf2 = null, list = false, workDir = null }) {
   const files = (deliverables ?? []).flatMap((entry) => (entry?.files ?? []).map((file, position) => ({
     path: file?.path,
     description: typeof file?.description === "string" ? file.description : void 0,
@@ -5638,7 +5649,7 @@ function DeliverableCards({ deliverables, actions, metaOf: metaOf2 = null, list 
       key: file.sessionId === void 0 ? file.path : `${file.sessionId}:${file.seq}:${file.index}`,
       file,
       actions,
-      meta: metaOf2?.(file),
+      meta: metaOf2?.(file, workDir),
       role: list ? "listitem" : void 0
     }))
   );
@@ -6057,7 +6068,7 @@ function GroupMessage({ bot, text, texts: texts2 = [text], room: room2, roster, 
       room2?.admin === bot.id ? (0, import_react9.createElement)("span", { className: "bt-group-role" }, t("Admin")) : null
     ),
     (0, import_react9.createElement)(Bubbles, { texts: texts2, roster, selfId: bot.id, actions, sessionId: room2?.id, msgKey, useUi, lead }),
-    (0, import_react9.createElement)(DeliverableCards, { deliverables, actions })
+    (0, import_react9.createElement)(DeliverableCards, { deliverables, actions, workDir: room2?.workDir ?? bot.workDir })
   );
 }
 function stackReplies(replies) {
@@ -6316,7 +6327,7 @@ function openingTurn(turns, firstTurns, hiddenTurns) {
   return listed.includes(turn) && earlier.every((entry) => hiddenTurns?.includes(entry)) ? { turn, start } : null;
 }
 var unseenSince = (visit, time) => typeof visit?.seen === "number" && time > visit.seen && time <= visit.entered;
-function TurnTailCell({ turn: location2, sessionId, useTurnClock, useUi, actions }) {
+function TurnTailCell({ turn: location2, sessionId, useRoster, useTurnClock, useUi, actions }) {
   const turn = location2.turn;
   const time = location2.end.time;
   (0, import_react9.useEffect)(() => {
@@ -6332,12 +6343,14 @@ function TurnTailCell({ turn: location2, sessionId, useTurnClock, useUi, actions
     const start = nextTurnStart(state[sessionId] ?? {}, turn);
     return start !== void 0 && start > visit.seen && start <= visit.entered;
   });
+  const roster = useRoster?.();
+  const workDir = roster?.byId?.[sessionId]?.workDir ?? roster?.roomsById?.[sessionId]?.workDir ?? null;
   const delivered = turnDeliverables(location2, sessionId);
   if (!label && !fresh && delivered.length === 0) return null;
   return (0, import_react9.createElement)(
     import_react9.Fragment,
     null,
-    delivered.length > 0 ? (0, import_react9.createElement)(DeliverableCards, { deliverables: delivered, actions }) : null,
+    delivered.length > 0 ? (0, import_react9.createElement)(DeliverableCards, { deliverables: delivered, actions, workDir }) : null,
     label ? (0, import_react9.createElement)("div", { className: "bt-time-sep", role: "separator" }, label) : null,
     fresh ? (0, import_react9.createElement)(NewDivider) : null
   );
@@ -16966,7 +16979,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "b76bc3cd" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "99a23b07" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

@@ -49,14 +49,14 @@ test('the list keeps the message cards, and changes only their second line', () 
   // The second line is the one thing the panel changes: a message says what the file is, the
   // list names its kind, how big it is and which workspace it came from, naming the workspace
   // rather than spelling its absolute path out.
-  assert.ok(list.includes('const metaOf = (file) => {'), 'the list’s line is its own shape')
+  assert.ok(list.includes('const metaOf = (file, workDir = null) => {'), 'the list’s line is its own shape')
   assert.ok(list.includes("const parts = [wordFor(file.path)]"), 'it opens with the kind')
   assert.ok(list.includes('if (Number.isFinite(size)) parts.push(fileSizeText(size))'), 'the size joins it when the read answers')
-  assert.ok(list.includes('parts.push(workspaceOf(file.path))'), 'and the workspace closes it')
+  assert.ok(list.includes('parts.push(workspaceOf(file.path, workDir))'), 'and the workspace closes it')
   assert.ok(list.includes("return parts.join(' · ')"), 'joined the reference way')
   assert.ok(list.includes("const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')"), 'the kind is a translated word, not the extension')
   assert.ok(list.includes("import { fileExtension, fileSizeText, ImageLightbox, Menu }"), 'and the size is the platform’s own formatter')
-  assert.ok(list.includes('meta: metaOf?.(file)'), 'and the card is handed it')
+  assert.ok(list.includes('meta: metaOf?.(file, workDir)'), 'and the card is handed it')
   // The size is the host's, and this client's only read of a delivered file is the one the
   // preview opens with -- so no new host action, and no restart to see the line.
   assert.ok(list.includes('answer = await ask.current?.presentFile?.(entry.path)'), 'one read per row, through the preview’s own read')

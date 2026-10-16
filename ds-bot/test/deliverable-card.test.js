@@ -325,7 +325,9 @@ test('a preview is held outside the message, so a new message cannot close it', 
 
 test('the card is wired to the host action that answers for delivered files', () => {
   assert.ok(read('index.js').includes("presentFile: path => call('present-file', { path })"), 'the client exposes the action')
-  assert.ok(read('cells.js').includes('h(DeliverableCards, { deliverables, actions })'), 'the group reply hands the card its actions')
+  // The group reply hands the cards its actions and the folder the files came out of: the room's own
+  // work_dir when it has one, the speaking Bot's otherwise (deliverables.js names it).
+  assert.ok(read('cells.js').includes('h(DeliverableCards, { deliverables, actions, workDir: room?.workDir ?? bot.workDir })'), 'the group reply hands the card its actions and its workspace')
 })
 
 // The third way out, for a phone: hand the file to another app. The shell exposes its own
@@ -403,9 +405,9 @@ test('a lost focus goes back to the same card, and a restored one is left alone'
 // which is what keeps the list to this turn's files instead of every file ever delivered.
 test('a turn that delivered files ends with the cards, in every conversation', () => {
   const cells = read('cells.js')
-  assert.ok(cells.includes('export function TurnTailCell({ turn: location, sessionId, useTurnClock, useUi, actions })'), 'the turn tail is where they hang')
+  assert.ok(cells.includes('export function TurnTailCell({ turn: location, sessionId, useRoster, useTurnClock, useUi, actions })'), 'the turn tail is where they hang, and it reads the roster for the session\'s configured folder')
   assert.ok(cells.includes("const presented = location?.data?.get?.('deliverables')?.presented"), 'the per-turn record is read off the turn itself')
-  assert.ok(cells.includes('h(DeliverableCards, { deliverables: delivered, actions })'), 'and drawn with the one card list, actions and all')
+  assert.ok(cells.includes('h(DeliverableCards, { deliverables: delivered, actions, workDir })'), 'and drawn with the one card list, actions, the workspace and all')
   assert.ok(cells.includes('if (!label && !fresh && delivered.length === 0) return null'), 'a turn with neither a gap nor a delivery draws nothing')
   assert.ok(cells.includes('bySequence.get(seq).push({ path: file.path, description: file.description, index: file.index })'), 'each file keeps the index the engine opens it by')
   // Two surfaces drawing from the same record would show two sets of cards, so the
@@ -420,9 +422,9 @@ test('a turn that delivered files ends with the cards, in every conversation', (
 // the panel a row of its own again.
 test('the message cards and the panel’s list are one component', () => {
   const source = card.join('\n')
-  assert.ok(source.includes('export function DeliverableCards({ deliverables, actions, metaOf = null, list = false })'), 'one card list, two callers')
+  assert.ok(source.includes('export function DeliverableCards({ deliverables, actions, metaOf = null, list = false, workDir = null })'), 'one card list, two callers')
   assert.ok(source.includes("h('div', { className: 'bt-dcards', role: list ? 'list' : undefined },"), 'and the panel’s list still announces itself')
-  assert.ok(source.includes('meta: metaOf?.(file)'), 'the second line is the caller’s')
+  assert.ok(source.includes('meta: metaOf?.(file, workDir)'), 'the second line is the caller’s, and so is the workspace it names')
   assert.ok(source.includes('index: Number.isInteger(file?.index) ? file.index : position'), 'a file that carries coordinates keeps them')
   assert.ok(!source.includes('bt-prod-row'), 'no second row shape survives')
 })
@@ -451,4 +453,24 @@ test('the title bar is 56px, its controls 48px, and no rule sizes a drawing', ()
   // The reserve for the centred name is the two controls, their padding and their gaps, so a
   // long name never slides under one.
   assert.ok(previewRule('.bt-preview-name{').includes('max-width:calc(100% - 136px)'), 'a long name never slides under a control')
+})
+
+test('the second line names the configured workspace, and where a file is when it is not under it', () => {
+  const source = card.join('\n')
+  // The value the user asked for is the folder a Bot -- or a group chat -- was given as its work_dir,
+  // which the roster carries. A file really under it is named by that folder, not by whatever
+  // subdirectory it happens to sit in ('deliverables' under the team workspace is a folder).
+  assert.ok(source.includes('const workspaceName = (dir) => {'), 'a configured folder gets a name of its own')
+  assert.ok(source.includes('if (trimmed === root || trimmed.endsWith(`/${root}`)) return t(name)'), 'a known root keeps the label this skin gave it')
+  assert.ok(source.includes("const tail = trimmed.split('/').filter(Boolean).pop()"), "and anything else is the folder name itself")
+  assert.ok(source.includes("if (typeof dir === 'string' && dir !== '' && (path === dir || path.startsWith(`${dir.replace(/\\/+$/, '')}/`))) {"), 'a file under it is that workspace')
+  assert.ok(source.includes('return workspaceName(dir)'), "named by the folder, not by the file's subdirectory")
+  // A file from anywhere else keeps saying where it actually is: no name is invented for it.
+  assert.ok(source.includes("if (path.includes(`${root}/`)) return t(name)"), 'the known roots still answer for files outside every configured folder')
+  assert.ok(source.includes("const folder = at === -1 ? '' : basename(path.slice(0, at))"), 'and otherwise it is the folder the file sits in')
+  // The two callers: the chat cards pass the session's folder, the panel's team-wide list has none to
+  // pass -- its records carry no owner at all.
+  assert.ok(read('cells.js').includes('const workDir = roster?.byId?.[sessionId]?.workDir ?? roster?.roomsById?.[sessionId]?.workDir ?? null'), "a card row reads the configured folder off the roster")
+  assert.ok(read('cells.js').includes('workDir: room?.workDir ?? bot.workDir'), "a group reply takes the room folder when it has one")
+  assert.ok(!read('deliverables.js').includes('h(DeliverableCards, { deliverables: rows, actions, list: true, metaOf, workDir'), "while the panel list hands none, having none to hand")
 })
