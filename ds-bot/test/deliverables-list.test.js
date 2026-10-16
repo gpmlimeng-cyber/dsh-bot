@@ -182,20 +182,17 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   assert.ok(!list.includes('批量操作') && !list.includes('Batch actions'), 'no empty action bar')
 })
 
-test('on a phone or a small tablet the panel is the screen itself, not a centred card', () => {
-  // A phone gets the panel full bleed (the un-band rule above does the width); the medium band -- a
-  // small tablet, and the width the sheet test just armed itself against -- was left floating at
-  // 70vw, which is the card the user photographed. It is now that screen's own page: the chrome
-  // strip is the panel's padding-top rather than a band of somebody else's colour, and a border-box
-  // because the panel is otherwise content-box, where that padding would push its foot off screen.
+test('in every mobile band the panel is the screen itself, not a centred card', () => {
+  // The medium band floated the panel at 70vw with two top corners and a shadow -- a card over
+  // somebody else's page, which is the one the user photographed. The override is gone rather than
+  // retuned: the plain mobile rule already makes the panel the width of the screen, and in every
+  // band it paints the strip the hidden bar no longer covers (the rule asserted below).
   const styles = read('styles.js')
-  const rule = 'html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:0!important;right:0!important;width:100%!important;top:0;bottom:0;box-sizing:border-box;border-left:0;border-radius:0;box-shadow:none;padding-top:var(--dsh-frame-chrome-top,0px)}'
-  assert.ok(styles.includes(rule), 'the medium band is the page, strip to foot')
-  // And that page must not out-rank the sheet, which overrides exactly this geometry by weight.
-  assert.ok(!/top:[^;]*!important|bottom:[^;]*!important|border-radius:[^;]*!important|padding-top:[^;]*!important/.test(rule), 'never !important on the geometry the sheet owns')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-panel{left:0;right:0;bottom:0;width:100%!important;z-index:96;border-left:0}'), 'and the un-banded phone panel is still the plain full-width one')
+  assert.ok(!styles.includes('data-bt-size=medium] .bt-panel'), 'no band floats the panel again')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-panel{left:0;right:0;bottom:0;width:100%!important;z-index:96;border-left:0}'), 'the phone rule is the page: full width, no hairline, no corner of its own')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-pane,\nhtml[data-bt-mobile] .bt-panel{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px)}'), 'and it, with every pane, paints the strip the bar no longer covers')
   assert.ok(styles.includes('html[data-bt-mobile][data-bt-size=expanded] .bt-panel{left:auto;right:0;width:var(--bt-detail-w)!important;border-left:.5px solid var(--bt-line-2)}'), 'the expanded right-hand column is untouched')
-  assert.ok(!styles.includes('70vw'), 'no 70vw card is left anywhere in the sheet')
+  assert.ok(!styles.includes('width:70vw') && !styles.includes('left:15vw'), 'no 70vw card is left in any declaration of the sheet')
 })
 
 test('every kind of file the list can name is translated', () => {

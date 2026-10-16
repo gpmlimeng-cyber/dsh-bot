@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 3a115b35
+// Source fingerprint: e76d6b1a
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3340,6 +3340,16 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width
    these layers carries its own top, so a translucent band across it would cover nothing and
    belong to nothing. The four pages hide the veil in the component instead (nav-bar.js),
    where the page on screen is known. */
+/* And, having hidden both, each of these two opaque full-screen surfaces paints the strip the chrome
+   reserves itself: the panes (New..., the exchange, voice and the browser) and the details column run
+   from the very first pixel and move their own content down by exactly that strip (border-box, or the
+   padding would push their foot off the screen). Neither names a colour here -- both already paint
+   --bt-main, the surface the user is looking at. Until this they started below the strip, so the band
+   above them was whatever the shell had painted behind it: the leftover the user read as the status
+   bar not matching the page, and the one the pages were fixed for further down this sheet. Floating
+   surfaces are deliberately not in this rule -- their band belongs to their own scrim, not to a page. */
+html[data-bt-mobile] .bt-pane,
+html[data-bt-mobile] .bt-panel{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px)}
 html[data-bt-mobile] body:has(.bt-pane) :is(.bt-mobile-bar,.bt-topfade),
 html[data-bt-mobile] body:has(.bt-panel) :is(.bt-mobile-bar,.bt-topfade),
 html[data-bt-mobile] body:has(.bt-mem-layer) :is(.bt-mobile-bar,.bt-topfade),
@@ -3475,15 +3485,13 @@ html[data-bt-mobile] .bt-set-row{padding:12px;min-height:52px}
 /* Medium and expanded are the same skin with room, and nothing here can reach the
    desktop: every rule needs data-bt-mobile, and mobile.js writes data-bt-size only while
    that flag is on. Above 1024px this file is exactly what it was. */
-/* Medium: the panel is the only thing on screen, so it is that screen — a page, the way
-   我的 -> 全部设置 draws one, not a floating card. It runs from the first pixel (the chrome's
-   own strip sits above the content, so the panel pads its top by the same token the settings
-   layer does — border-box, or that padding would push its foot off the viewport) to the foot,
-   with no gutters, no top corners and no shadow.
-   Only the width carries !important here, against the plain mobile .bt-panel above; top,
-   bottom, radius and padding stay beaten by weight on purpose, so the 全部产物 sheet
-   (browser-pane.js, one attribute heavier) still rises from the foot with its own corners. */
-html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:0!important;right:0!important;width:100%!important;top:0;bottom:0;box-sizing:border-box;border-left:0;border-radius:0;box-shadow:none;padding-top:var(--dsh-frame-chrome-top,0px)}
+/* The medium band used to float the panel at 70vw with two rounded top corners, a hairline down the
+   left and a shadow -- a card over somebody else's page, which is what the user photographed and
+   reported as a broken screen. It is gone rather than retuned: the plain mobile rule further down
+   already makes the panel the width of the screen, and a half-folded screen wants the very page a
+   phone gets, not a narrower one. Nothing is lost by dropping it -- the base .bt-panel declares no
+   radius and no shadow either, so with this rule out of the way the panel is a page in every mobile
+   band, and the 全部产物 sheet keeps beating it by weight. Expanded keeps its column below. */
 /* Expanded: there is room for the conversation and the panel at once, so the panel is a
    right-hand column again and the column keeps its 480px instead of being covered.
    The reservation is for the panel, so it is gated on the panel being there: without the
@@ -16926,7 +16934,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "3a115b35" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "e76d6b1a" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

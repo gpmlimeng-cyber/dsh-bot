@@ -201,6 +201,12 @@ test('the page is a surface of its own, one at a time', () => {
   // maps --dsh-frame-chrome-top to --bt-top-inset on a phone, and the layer's inset reads it.
   assert.ok(styles.includes('.bt-settings-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;'), 'the layer starts at the chrome top')
   assert.ok(styles.includes('html[data-bt-mobile]{--dsh-frame-chrome-top:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px)))}'), 'which is the status bar\'s inset on a phone')
+  // Every opaque surface that hides that bar -- the panes (New..., the exchange, voice, the browser)
+  // and the details column -- then owns the strip itself, or the band above it is whatever the shell
+  // painted behind (the leftover the user read as the status bar not matching the page).
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-pane,\nhtml[data-bt-mobile] .bt-panel{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px)}'), 'a pane and the details column paint the strip and clear it')
+  assert.ok(styles.includes('.bt-pane{position:fixed;top:var(--dsh-frame-chrome-top,0px);'), 'and the desktop pane keeps the shell\'s own top')
+  assert.ok(!/\n\.bt-pane\{[^}]*padding-top/.test(styles), 'so the strip is a phone rule, not a desktop one')
   assert.ok(!read('discover-page.js').includes('var(--bt-fade-h'), 'so this page reserves no veil height')
   assert.ok(styles.includes('body:has(.bt-discover) :is(.bt-mobile-bar,.bt-topfade)'), 'and 发现 is named in the list as well')
   assert.ok(styles.includes('body:has(.bt-subback) :is(.bt-mobile-bar,.bt-topfade)'), 'and so is the strip, which is no layer of the skin\'s')
