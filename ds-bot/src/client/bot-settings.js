@@ -268,15 +268,24 @@ label.bt-bs-row{cursor:text}
 .bt-bs-label{font-size:13px;line-height:18px;font-weight:500}
 .bt-bs-row .bt-model-trigger{flex:none;max-width:58%}
 .bt-bs-input{flex:0 1 220px;width:0;min-width:96px;height:30px;box-sizing:border-box;margin:-4px -6px -4px 0;padding:0 8px;border:1px solid transparent;border-radius:8px;background:none;color:var(--bt-ink);font:inherit;font-size:13px;text-align:right;outline:none;transition:background-color .12s ease,border-color .12s ease}
+
+@media (hover:hover){
 .bt-bs-input:hover{background:var(--bt-hover)}
+}
 .bt-bs-input:focus{background:var(--bt-main);border-color:var(--bt-line-2);text-align:left}
 .bt-bs-input::placeholder{color:var(--bt-ink-3)}
 .bt-bs-stack{flex-direction:column;align-items:stretch;gap:8px}
 .bt-bs-area{flex:none;width:auto;min-height:112px;height:auto;margin:0 -6px -4px;padding:8px;line-height:19px;text-align:left;resize:vertical;background:var(--bt-hover)}
+
+@media (hover:hover){
 .bt-bs-area:hover{background:var(--bt-active)}
+}
 .bt-bs-danger .bt-bs-label{color:#c21d2e}
 .bt-bs-danger[data-confirm]{background:color-mix(in srgb,#e02135 8%,transparent)}
+
+@media (hover:hover){
 .bt-bs-danger[data-confirm]:hover{background:color-mix(in srgb,#e02135 12%,transparent)}
+}
 .bt-switch{position:relative;flex:none;width:36px;height:20px;padding:0;border:0;border-radius:999px;background:var(--bt-line-2);cursor:pointer;transition:background-color .2s ease}
 .bt-switch[aria-checked=true]{background:var(--bt-accent)}
 .bt-switch:disabled{opacity:.45;cursor:default}

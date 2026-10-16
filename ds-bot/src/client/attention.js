@@ -141,7 +141,10 @@ export function NeedsYou({ useRoster, useWork, useUi, actions, inBar = false }) 
 
 export const ATTENTION_CSS = `
 .bt-attention{position:relative;flex:none;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px 0 8px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12px;line-height:1;cursor:pointer;transition:background-color .12s ease}
+
+@media (hover:hover){
 .bt-attention:hover{background:var(--bt-active)}
+}
 .bt-attention[aria-expanded=true]{background:var(--bt-active)}
 .bt-attention svg{width:13px;height:13px;flex:none;color:var(--bt-ink-2)}
 .bt-attention-count{font-variant-numeric:tabular-nums;font-weight:600}
@@ -150,7 +153,10 @@ export const ATTENTION_CSS = `
    the finger's 44x40 and the group's own press answer. The count becomes a chip on the bell
    instead of a word beside it, which is what makes it one seat rather than a second pill. */
 .bt-mobile-acts .bt-attention{position:relative;width:44px;height:40px;padding:0;gap:0;border:0;border-radius:0;background:none;box-shadow:none;color:var(--bt-ink);pointer-events:auto}
+
+@media (hover:hover){
 .bt-mobile-acts .bt-attention:hover{background:var(--bt-hover)}
+}
 .bt-mobile-acts .bt-attention[aria-expanded=true]{background:var(--bt-active)}
 .bt-mobile-acts .bt-attention:active{transform:scale(.96)}
 .bt-mobile-acts .bt-attention svg{width:18px;height:18px;color:currentColor}
@@ -158,7 +164,10 @@ export const ATTENTION_CSS = `
 .bt-attention-pop{position:fixed;z-index:70;min-width:240px;max-width:340px;padding:6px;border-radius:12px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 10px 20px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);display:flex;flex-direction:column;gap:2px;transform-origin:top right;animation:bt-attention-in .16s cubic-bezier(.2,0,0,1);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;box-sizing:border-box}
 @keyframes bt-attention-in{from{opacity:0;transform:translateY(-4px) scale(.98)}}
 .bt-attention-row{display:flex;align-items:center;gap:8px;width:100%;padding:7px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer}
+
+@media (hover:hover){
 .bt-attention-row:hover{background:var(--bt-hover)}
+}
 .bt-attention-kind{flex:none;font-size:10.5px;line-height:14px;padding:2px 6px;border-radius:6px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);white-space:nowrap}
 .bt-attention-row[data-kind=question] .bt-attention-kind{background:color-mix(in srgb,var(--bt-accent,#4d6bfe) 14%,transparent);color:var(--bt-accent,#4d6bfe)}
 .bt-attention-row[data-kind=approval] .bt-attention-kind{background:color-mix(in srgb,var(--bt-star,#ff9800) 16%,transparent);color:color-mix(in srgb,var(--bt-star,#ff9800) 80%,var(--bt-ink))}

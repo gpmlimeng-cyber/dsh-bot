@@ -72,7 +72,10 @@ export function AccountPage({ account, onChange }) {
 // the card and the face above the fields are declared here.
 export const ACCOUNT_CSS = `
 html[data-bt-mobile] .bt-account-card{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;margin:0 0 14px;padding:10px 12px;border:1px solid var(--bt-line);border-radius:16px;background:var(--bt-card);color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer;box-sizing:border-box}
+
+@media (hover:hover){
 html[data-bt-mobile] .bt-account-card:hover{background:var(--bt-hover)}
+}
 html[data-bt-mobile] .bt-account-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
 html[data-bt-mobile] .bt-account-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;line-height:21px}
 html[data-bt-mobile] .bt-account-detail{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:16px;color:var(--bt-ink-3)}

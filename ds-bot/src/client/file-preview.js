@@ -143,7 +143,10 @@ export const FILE_PREVIEW_CSS = `
 .bt-fp-bar input::placeholder{color:var(--bt-ink-3)}
 .bt-fp-bar input:focus{background:var(--bt-main);box-shadow:0 0 0 1px var(--bt-line-2)}
 .bt-fp-open{flex:none;width:30px;height:30px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+
+@media (hover:hover){
 .bt-fp-open:hover{background:var(--bt-hover);color:var(--bt-ink)}
+}
 .bt-fp-open:disabled{opacity:.4;cursor:default;background:none}
 .bt-fp-open svg{width:15px;height:15px}
 .bt-fp-body{flex:1;min-height:0;overflow:auto;padding:10px 12px 14px}
@@ -178,7 +181,10 @@ export const FILE_PREVIEW_CSS = `
    the 18px these controls were measured to. Nothing here sizes an icon or pins a width. */
 .bt-preview-head{position:relative;display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 10px;border-bottom:.5px solid var(--bt-line)}
 .bt-preview-back{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+
+@media (hover:hover){
 .bt-preview-back:hover{background:var(--bt-hover);color:var(--bt-ink)}
+}
 /* The bar's back arrow is Lucide's chevron-left: 6x12 units of a 24-unit grid, so the 33px
    box it brings paints 9.8x18.0 of ink. The box and the stroke are the glyph's. */
 /* Centred over the bar itself, so the name is in the middle whatever the two ends hold.
@@ -187,7 +193,10 @@ export const FILE_PREVIEW_CSS = `
 .bt-preview-name{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:calc(100% - 136px);font-size:17px;line-height:24px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-preview-menu{margin-left:auto}
 .bt-preview-more{flex:none;width:48px;height:48px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+
+@media (hover:hover){
 .bt-preview-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
+}
 /* The dots are Lucide's ellipsis: three r=1 circles, the one glyph here that keeps Lucide's own
    stroke -- pinned at 1.5px its 5.5px dots would each carry a 2.5px hole. Its 33px box lands
    5.5px dots in a 24.8px row. A row of dots has no height to grow -- its ink is the dot diameter

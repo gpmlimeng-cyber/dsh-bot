@@ -197,7 +197,10 @@ export function useMemberWork(room, useWork) {
 export const MEMBER_CSS = `
 .bt-mw-dock{display:flex;justify-content:center;margin:0 auto 8px;pointer-events:none}
 .bt-mw-pill{pointer-events:auto;position:relative;display:inline-flex;align-items:center;flex:none;box-sizing:border-box;height:32px;max-width:100%;padding:0;border:0;border-radius:999px;overflow:hidden;background:var(--bt-main);box-shadow:var(--bt-float-shadow);color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer;animation:bt-mw-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .18s ease-out backwards;transition:background-color .12s ease,${spring(SPRING_SHAPE, 'width')},${spring(SPRING_TAP, 'scale')}}
+
+@media (hover:hover){
 .bt-mw-pill:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))}
+}
 /* On a phone the capsule does not end on an edge: its fill and its shadow move to a layer of its own,
    which is feathered at the four sides, so the card dissolves into what is behind it instead of
    drawing a line across the strip. That line was the ring the shadow used to open with
@@ -209,8 +212,14 @@ export const MEMBER_CSS = `
    10px a side and 8px top and bottom of a 32px capsule leaves 16px of solid fill down the middle; if
    the capsule starts to look washed, the vertical band is the one to halve. */
 html[data-bt-mobile] .bt-mw-pill{background:none;box-shadow:none;isolation:isolate}
+
+@media (hover:hover){
 html[data-bt-mobile] .bt-mw-pill:hover{background:none}
+}
+
+@media (hover:hover){
 html[data-bt-mobile] .bt-mw-pill:hover::before{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))}
+}
 html[data-bt-mobile] .bt-mw-pill::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:999px;background:var(--bt-main);box-shadow:var(--bt-float-shadow);-webkit-mask-image:linear-gradient(to right,transparent 0,#000 10px,#000 calc(100% - 10px),transparent 100%),linear-gradient(to bottom,transparent 0,#000 8px,#000 calc(100% - 8px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 10px,#000 calc(100% - 10px),transparent 100%),linear-gradient(to bottom,transparent 0,#000 8px,#000 calc(100% - 8px),transparent 100%);-webkit-mask-composite:source-in;mask-composite:intersect}
 /* The blur only where the engine admits to it, and the condition is asked in the standard spelling
    alone: this device supports it (Chrome 153), but its own support query answers false for the
@@ -240,7 +249,10 @@ body[data-ds-dark-theme] .bt-mw-ask{color:#f0b84a}
 .bt-members{display:flex;flex-direction:column;gap:2px;margin:0 -8px}
 .bt-member{display:flex;flex-direction:column;border-radius:12px;animation:bt-rise .18s ease-out backwards}
 .bt-member-row{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 8px;border-radius:12px;transition:background-color .12s ease}
+
+@media (hover:hover){
 .bt-member-row:hover{background:var(--bt-hover)}
+}
 .bt-member-open{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:8px 0;border:0;background:none;color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer}
 .bt-member-open>.bt-mark{flex:none}
 .bt-member-text{display:flex;flex-direction:column;min-width:0;gap:1px}
@@ -251,7 +263,10 @@ body[data-ds-dark-theme] .bt-mw-ask{color:#f0b84a}
 .bt-member-state.bt-mw-ask{color:#b7791f}
 body[data-ds-dark-theme] .bt-member-state.bt-mw-ask{color:#f0b84a}
 .bt-member-stop{flex:none;height:26px;padding:0 11px;border:0;border-radius:13px;background:var(--bt-main);box-shadow:inset 0 0 0 .5px var(--bt-line-2);color:var(--bt-ink-2);font:inherit;font-size:12px;cursor:pointer;transition:background-color .12s ease,color .12s ease,${spring(SPRING_TAP, 'scale')}}
+
+@media (hover:hover){
 .bt-member-stop:hover{background:var(--bt-active);color:var(--bt-ink)}
+}
 .bt-member-stop:active:not(:disabled){scale:.94}
 .bt-member-stop:disabled{opacity:.5;cursor:default}
 .bt-member-cards{display:flex;flex-direction:column;gap:6px;padding:2px 8px 8px 50px}

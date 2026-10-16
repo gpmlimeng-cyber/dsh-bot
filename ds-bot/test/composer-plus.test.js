@@ -30,8 +30,10 @@ test('the add button is a bare glyph, with no fill and no hairline of its own', 
   // so a 32px button would grow the card and move the dock that was just measured.
   assert.ok(plus.includes('width:28px') && plus.includes('height:28px'), 'a 28px target')
   // Feedback stays: held and open-then-closed are different from rest, or the button would
-  // answer nothing at all.
-  assert.ok(rule('.bt-plus:hover,.bt-plus[aria-expanded=true]{').includes('background:'), 'a light tint when it is live')
+  // answer nothing at all. The two are separate rules now -- the expanded state has to work under a
+  // finger, and a hover belongs to a pointer (every hover in this skin lives in (hover:hover)).
+  assert.ok(rule('.bt-plus[aria-expanded=true]{').includes('background:'), 'a light tint while it is open')
+  assert.ok(lines.includes('.bt-plus:hover{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}'), 'and the same tint for a pointer, inside the pointer block')
 })
 
 test('and it is still the button that opens the add menu', () => {

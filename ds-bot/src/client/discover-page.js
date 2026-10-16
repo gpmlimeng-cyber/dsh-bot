@@ -122,6 +122,9 @@ export const DISCOVER_CSS = `
    this page's: the discover page and this strip are both named in the list in styles.js. */
 html[data-bt-mobile] .bt-subback{position:fixed;top:0;left:0;right:0;height:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 56px);box-sizing:border-box;padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px 0;z-index:96;display:flex;align-items:center;background:var(--bt-main);pointer-events:none}
 html[data-bt-mobile] .bt-subback-btn{pointer-events:auto;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+
+@media (hover:hover){
 html[data-bt-mobile] .bt-subback-btn:hover{background:var(--bt-hover)}
+}
 html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 `

@@ -758,7 +758,10 @@ export function BotReturn({ wide, useSurface, actions }) {
 // Agent mode has none of the shell-group styles, so the return button carries its own.
 export const RETURN_CSS = `
 .bt-return{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border:0;border-radius:999px;background:none;color:inherit;font:inherit;font-size:14px;line-height:20px;cursor:pointer;transition:background-color .12s ease}
+
+@media (hover:hover){
 .bt-return:hover{background:rgba(127,127,127,.14)}
+}
 .bt-return:active{transform:scale(.96)}
 .bt-return .bt-mark{display:inline-flex;flex:none;line-height:0}
 .bt-return .bt-mark svg{width:100%;height:100%;overflow:visible}
@@ -779,7 +782,10 @@ export function BrandName() {
 // shell's footer classes are CSS-module names, so they match on their stems.
 export const SIDEBAR_CSS = `
 .bt-side-top .bt-brand{cursor:default;padding-left:6px}
+
+@media (hover:hover){
 .bt-side-top .bt-brand:hover{background:none}
+}
 .bt-brand .bt-mark{flex:none}
 .bt-pin{flex:none;display:inline-flex;color:var(--bt-ink-3)}
 .bt-rail .bt-row{position:relative}
@@ -806,9 +812,15 @@ export const SIDEBAR_CSS = `
 .bt-update-error{margin-top:8px;font-size:12px;line-height:17px;color:#c21d2e;overflow-wrap:anywhere;max-height:90px;overflow:auto}
 .bt-update-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px}
 .bt-update-notes{margin-right:auto;font-size:12.5px;color:var(--bt-ink-2);text-decoration:none}
+
+@media (hover:hover){
 .bt-update-notes:hover{color:var(--bt-ink);text-decoration:underline}
+}
 .bt-update-go{height:30px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-accent,#4D6BFE);color:var(--bt-accent-ink,#fff);font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .12s ease,transform .12s ease}
+
+@media (hover:hover){
 .bt-update-go:hover:not(:disabled){opacity:.9}
+}
 .bt-update-go:active:not(:disabled){transform:scale(.96)}
 .bt-update-go:disabled{opacity:.6;cursor:default}
 .bt-update-dsh:not(:first-child){margin-top:12px;padding-top:12px;border-top:.5px solid var(--bt-line-2)}
@@ -823,7 +835,10 @@ export const SIDEBAR_CSS = `
 .bt-agent-sub[data-open]{grid-template-rows:1fr}
 .bt-agent-sub-in{overflow:hidden;min-height:0;margin-left:44px}
 .bt-agent-sub-row{display:flex;align-items:center;gap:8px;width:100%;padding:5px 10px 5px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:20px;text-align:left;cursor:pointer}
+
+@media (hover:hover){
 .bt-agent-sub-row:hover{background:var(--bt-hover);color:var(--bt-ink)}
+}
 .bt-agent-sub-row[aria-current=page]{background:var(--bt-hover);color:var(--bt-ink);font-weight:500}
 .bt-agent-sub-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-agent-sub-time{flex:none;font-size:11px;color:var(--bt-ink-3)}

@@ -271,11 +271,17 @@ function SignInHost({ entry, actions }) {
 
 export const MODEL_CSS = `
 .bt-model-trigger{display:inline-flex;align-items:center;gap:8px;max-width:100%;min-width:0;height:auto;min-height:32px;padding:4px 8px 4px 10px;border:0;border-radius:8px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;text-align:left;cursor:pointer;transition:background-color .12s ease}
-.bt-model-trigger:hover,.bt-model-trigger[aria-expanded=true]{background:var(--bt-active)}
+.bt-model-trigger[aria-expanded=true]{background:var(--bt-active)}
+@media (hover:hover){
+.bt-model-trigger:hover{background:var(--bt-active)}
+}
 .bt-model-trigger:focus-visible{outline:2px solid var(--bt-accent);outline-offset:1px}
 .bt-model-trigger[data-missing] .bt-model-provider{color:#c21d2e}
 .bt-model-trigger[data-wide]{display:flex;width:100%;min-height:48px;padding:7px 12px;justify-content:space-between;border-radius:12px;background:var(--bt-card);box-shadow:inset 0 0 0 1px var(--bt-line)}
-.bt-model-trigger[data-wide]:hover,.bt-model-trigger[data-wide][aria-expanded=true]{background:var(--bt-hover)}
+.bt-model-trigger[data-wide][aria-expanded=true]{background:var(--bt-hover)}
+@media (hover:hover){
+.bt-model-trigger[data-wide]:hover{background:var(--bt-hover)}
+}
 .bt-model-copy{display:flex;flex-direction:column;min-width:0}
 .bt-model-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-model-provider{font-size:11px;line-height:14px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -293,7 +299,10 @@ export const MODEL_CSS = `
 .bt-model-choice-provider{padding-top:4px;font-size:12px;line-height:16px;font-weight:500;color:var(--bt-ink-2);overflow-wrap:anywhere}
 .bt-model-choice-chips{display:flex;flex-wrap:wrap;gap:6px}
 .bt-model-chip{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:5px 12px;border:.5px solid var(--bt-line-2);border-radius:999px;background:var(--bt-surface,transparent);color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;cursor:pointer;transition:background-color .12s ease,border-color .12s ease}
+
+@media (hover:hover){
 .bt-model-chip:hover:not(:disabled){background:var(--bt-hover)}
+}
 .bt-model-chip:focus-visible{outline:2px solid var(--bt-accent);outline-offset:1px}
 .bt-model-chip-quiet{color:var(--bt-ink-2)}
 .bt-model-chip svg{width:14px;height:14px}

@@ -617,7 +617,10 @@ html[data-bt-mobile] .bt-sheet-grip{position:relative;flex:none;display:flex;ali
    out of the drag's way, and only on the phone (a desktop column closes through its back arrow). */
 .bt-sheet-close{display:none}
 html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:2;align-items:center;justify-content:center;width:48px;height:48px;padding:0;border:0;border-radius:14px;background:none;color:var(--bt-ink-2);cursor:pointer;touch-action:manipulation}
+
+@media (hover:hover){
 html[data-bt-mobile] .bt-sheet-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
+}
 /* The press, for a finger: it is gone the moment the finger is, which is what makes it different
    from the hover highlight an Android tap leaves stuck behind it. */
 html[data-bt-mobile] .bt-sheet-close:active{background:var(--bt-active);color:var(--bt-ink)}
@@ -661,7 +664,10 @@ export const BROWSER_CSS = `
 .bt-ptabs-in>.bt-ptab-bot[aria-selected=true]{background:transparent}
 .bt-ptabs-in::-webkit-scrollbar{display:none}
 .bt-ptab{position:relative;z-index:1;display:inline-flex;align-items:center;gap:6px;height:32px;max-width:180px;padding:0 8px;flex:none;border:0;border-radius:9px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer;white-space:nowrap;transition:color .12s ease}
+
+@media (hover:hover){
 .bt-ptab:hover{color:var(--bt-ink)}
+}
 .bt-ptab[aria-selected=true]{color:var(--bt-ink)}
 .bt-ptab-bot{padding:0 7px}
 .bt-ptab-bot .bt-mark{flex:none}
@@ -672,10 +678,19 @@ export const BROWSER_CSS = `
 .bt-ptab-globe svg{width:14px;height:14px}
 .bt-ptab-title{max-width:140px;overflow:hidden;text-overflow:ellipsis}
 .bt-ptab-x{flex:none;width:16px;height:16px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;line-height:1;color:var(--bt-ink-3);opacity:0;transition:opacity .12s ease,background-color .12s ease}
-.bt-ptab:hover .bt-ptab-x,.bt-ptab[aria-selected=true] .bt-ptab-x{opacity:1}
+.bt-ptab[aria-selected=true] .bt-ptab-x{opacity:1}
+@media (hover:hover){
+.bt-ptab:hover .bt-ptab-x{opacity:1}
+}
+
+@media (hover:hover){
 .bt-ptab-x:hover{background:var(--bt-active);color:var(--bt-ink)}
+}
 .bt-ptab-new{position:relative;z-index:1;flex:none;width:28px;height:32px;border:0;border-radius:9px;background:none;color:var(--bt-ink-3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+
+@media (hover:hover){
 .bt-ptab-new:hover{color:var(--bt-ink)}
+}
 .bt-ptab-new svg{width:15px;height:15px}
 .bt-ptab-files{position:relative;z-index:1;flex:none;padding:0 7px;gap:5px}
 .bt-ptab-files svg{width:15px;height:15px;flex:none}
@@ -690,7 +705,10 @@ export const BROWSER_CSS = `
 .bt-browser-bar{position:relative;display:flex;align-items:center;gap:2px;height:52px;padding:0 10px 0 12px;flex:none;border-bottom:.5px solid var(--bt-line)}
 .bt-browser-bar .bt-icon-btn:disabled{opacity:.35;cursor:default;background:none}
 .bt-browser-address{flex:1;min-width:0;display:flex;align-items:center;gap:6px;height:32px;margin:0 4px;padding:0 12px;border-radius:999px;background:var(--bt-hover);border:.5px solid transparent;transition:background-color .12s ease,border-color .12s ease,box-shadow .12s ease}
+
+@media (hover:hover){
 .bt-browser-address:hover{background:var(--bt-active)}
+}
 .bt-browser-address[data-editing]{background:var(--bt-main);border-color:var(--bt-line-2);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
 .bt-browser-scheme{display:inline-flex;color:var(--bt-ink-3);flex:none}
 .bt-browser-scheme svg{width:14px;height:14px}
@@ -705,7 +723,10 @@ export const BROWSER_CSS = `
 .bt-browser-empty-title{font-size:15px;line-height:22px;font-weight:500;margin-top:6px}
 .bt-browser-empty-text{max-width:300px;font-size:13px;line-height:19px;color:var(--bt-ink-2);overflow-wrap:anywhere}
 .bt-browser-retry{margin-top:6px;height:32px;padding:0 14px;border-radius:999px;border:.5px solid var(--bt-line-2);background:var(--bt-main);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
+
+@media (hover:hover){
 .bt-browser-retry:hover{background:var(--bt-hover)}
+}
 .bt-bcards{display:flex;flex-direction:column;gap:12px}
 .bt-bcard{position:relative;border:.5px solid var(--bt-line-2);border-radius:12px;overflow:hidden;background:var(--bt-main);animation:bt-bcard-in .24s cubic-bezier(.16,1,.3,1) both;transition:border-color .12s ease,box-shadow .12s ease}
 @keyframes bt-bcard-in{from{opacity:0;filter:blur(4px);transform:translateY(4px)}}
@@ -722,9 +743,15 @@ export const BROWSER_CSS = `
 .bt-bcard-title{flex:1;min-width:0;font-size:12.5px;line-height:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--bt-ink)}
 .bt-bcard-host{flex:none;font-size:11px;line-height:15px;color:var(--bt-ink-3);max-width:38%;overflow:hidden;text-overflow:ellipsis}
 .bt-bcard-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border:0;border-radius:7px;background:color-mix(in srgb,var(--bt-main) 88%,transparent);color:var(--bt-ink-2);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;opacity:0;transition:opacity .12s ease;backdrop-filter:blur(4px)}
+
+@media (hover:hover){
 .bt-bcard:hover .bt-bcard-x{opacity:1}
+}
 .bt-bcard-new{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border:.5px dashed var(--bt-line-2);border-radius:12px;background:none;color:var(--bt-ink-3);font:inherit;font-size:12.5px;cursor:pointer}
+
+@media (hover:hover){
 .bt-bcard-new:hover{color:var(--bt-ink);border-color:var(--bt-ink-3)}
+}
 .bt-bcard-new svg{width:14px;height:14px}
 .bt-browser-empty-mark{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
 @media (prefers-reduced-motion:reduce){.bt-ptabs,.bt-panel-view,.bt-bcard,.bt-ptab-name{animation:none}}

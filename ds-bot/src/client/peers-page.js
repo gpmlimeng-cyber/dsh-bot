@@ -252,7 +252,10 @@ html[data-bt-mobile] .bt-peers-main:active{opacity:.55}
 html[data-bt-mobile] .bt-peers-main[aria-pressed=true]{color:var(--bt-star)}
 html[data-bt-mobile] .bt-peers-main:disabled{opacity:.4;cursor:default}
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
+
+@media (hover:hover){
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
+}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
 /* The 群聊 door's face, in the box a Bot's avatar takes (36px) so every row's text starts at the
    same x: the same cluster a group chat wears, drawn from the roster's first Bots. */

@@ -21,7 +21,9 @@ import { test } from 'node:test'
 
 const lines = readFileSync(new URL('../src/client/styles.js', import.meta.url), 'utf8').split('\n')
 const band = ':is(html[data-bt-mobile],html[data-bt-pc])'
-const press = 'linear-gradient(var(--bt-active),var(--bt-active))'
+// One name for the press tint, so a change of feedback is one value; it aliases --bt-active, the
+// token the sheet already defines for a held control.
+const press = 'linear-gradient(var(--bt-press),var(--bt-press))'
 
 test('the platform tap highlight is cancelled once, on both touch bands, and inherited', () => {
   const declared = lines.filter(line => line.includes('-webkit-tap-highlight-color'))
@@ -48,6 +50,9 @@ test('the press tint covers buttons and the role-based rows, on press only', () 
   // there is a block of colour under the thumb, which is the change the user called out.
   // They dim their own glyph instead (nav-bar.js), so the bar and the page keep their colour.
   assert.ok(rule.includes(':not(.bt-nav-tab)'), rule)
+  const declared = lines.filter(line => line.includes('--bt-press:'))
+  assert.equal(declared.length, 1, 'one definition for the tint')
+  assert.ok(declared[0].includes('--bt-press:var(--bt-active)'), 'and it is the held-control colour it names')
 })
 
 test('reduced motion drops the press scale and leaves the press colour alone', () => {

@@ -262,7 +262,10 @@ export const SCHEDULE_CSS = `
 .bt-task-off .bt-set-hint{max-width:380px}
 .bt-task-list{display:flex;flex-direction:column;gap:2px}
 .bt-task-line{display:flex;align-items:center;gap:8px;width:100%;min-width:0;padding:6px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink);font:inherit;font-size:13px;text-align:left;cursor:pointer;transition:background-color .12s ease}
+
+@media (hover:hover){
 .bt-task-line:hover{background:var(--bt-hover)}
+}
 .bt-task-line svg{flex:none;color:var(--bt-ink-3)}
 .bt-task-line-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-task-line-when{flex:none;font-size:12px;color:var(--bt-ink-3)}
