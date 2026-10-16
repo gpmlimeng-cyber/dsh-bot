@@ -146,3 +146,20 @@ test('a tab close is always there on a phone, and the panel drag band is not', (
   const grip = all.find(rule => rule.selector === 'html[data-bt-mobile] .bt-panel-grip')
   assert.ok(grip && /display:none/.test(grip.body), 'the drag band still straddles the left edge of the phone screen')
 })
+
+test('reduced motion ends the phone\u2019s motion without removing it', () => {
+  // `animation:none` and a zero duration are the same thing to the eye and a different thing to the
+  // script: three listeners wait for animationend (activity-row.js:54/75, browser-pane.js:556,
+  // mark.js:70), so the backstop shortens instead of deleting, and bounds anything looping.
+  const styles = uncommented(read('styles.js'))
+  const at = styles.lastIndexOf('@media (prefers-reduced-motion:reduce){\n:is(html[data-bt-mobile],html[data-bt-pc]) *{')
+  assert.ok(at > -1, 'the phone has no reduced-motion backstop')
+  const block = styles.slice(at, styles.indexOf('}', styles.indexOf('{', at) + 1))
+  assert.ok(/animation-duration:\.01ms!important/.test(block), 'the backstop does not end animations at .01ms')
+  assert.ok(/animation-iteration-count:1!important/.test(block), 'a looping animation is not bounded')
+  assert.ok(/transition-duration:\.01ms!important/.test(block), 'the backstop does not end transitions')
+  assert.ok(!/animation:none|animation-duration:0/.test(block), 'a removed animation never fires animationend -- the panel, the activity row and the mark would stick')
+  for (const [file, needle] of [['styles.js', '.bt-mark *{animation-duration:.01ms!important'], ['usage-page.js', '.bt-us *,.bt-us *::before{animation-duration:.01ms!important']]) {
+    assert.ok(read(file).includes(needle), `${file}: a reduced-motion block still removes animations outright, and a listener under it would never hear back`)
+  }
+})

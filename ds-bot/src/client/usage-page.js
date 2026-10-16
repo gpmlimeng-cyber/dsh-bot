@@ -768,5 +768,5 @@ button.bt-us-row:hover{background:var(--bt-hover)}
 @keyframes bt-us-ring{from{stroke-dasharray:0 ${Math.ceil(RING)}}}
 @keyframes bt-us-pulse{50%{opacity:.25}}
 @keyframes bt-us-shine{from{background-position:200% 0}to{background-position:-200% 0}}
-@media (prefers-reduced-motion:reduce){.bt-us *,.bt-us *::before{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){.bt-us *,.bt-us *::before{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 `

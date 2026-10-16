@@ -168,7 +168,7 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 /* Idle clip: two .26s blinks (lid to 3%, then a 6% overshoot) at 1.48s and 3.46s. */
 @keyframes bt-blink-idle{0%,29.6%,35%,69.2%,74.6%,100%{transform:scaleY(1)}32.2%,71.8%{transform:scaleY(.03)}33.8%,73.4%{transform:scaleY(1.06)}}
 @keyframes bt-blink{0%,42%,50%,100%{transform:scaleY(1)}46%{transform:scaleY(.03)}48%{transform:scaleY(1.06)}}
-@media (prefers-reduced-motion:reduce){.bt-mark *{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){.bt-mark *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 .bt-badge{position:absolute;right:0;bottom:0;width:12px;height:12px;border-radius:50%;corner-shape:round;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1.5px var(--bt-sidebar)}
 .bt-badge-admin{background:color-mix(in srgb,var(--bt-star) 82%,var(--bt-sidebar))}
 .bt-badge-admin svg{width:7px;height:7px}
@@ -1392,6 +1392,16 @@ html[data-bt-pc] .bt-side.bt-rail{margin-top:0}
 @media (prefers-reduced-motion:reduce){
 :is(html[data-bt-mobile],html[data-bt-pc]) :is(button,[role="button"],[role="tab"],[role="option"],[role="menuitem"]):active{transform:none;scale:none}
 }
+/* The phone's reduced-motion backstop: every animation and transition ends at once instead of being
+   removed. Not "none": three places listen for animationend (activity-row.js, the panel in
+   browser-pane.js, the mark in mark.js) and a duration of zero is a callback that never comes -- the
+   state those handlers settle would stick. .01ms is instant to the eye and still fires, and
+   iteration-count 1 bounds anything that was looping. A rule that genuinely flashes a frame can name
+   itself back in beside this one, with the reason written down. */
+@media (prefers-reduced-motion:reduce){
+:is(html[data-bt-mobile],html[data-bt-pc]) *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
 /* And a control a thumb has just used keeps no ring afterwards: an Android tap can leave :focus on
    the element it hit, and the UA outline that comes with it is the same "still lit after the tap"
    the press tint replaced. Keyboard focus is untouched -- :focus-visible keeps its ring, and the
