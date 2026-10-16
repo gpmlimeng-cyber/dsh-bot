@@ -250,7 +250,7 @@ test('every rule is a phone rule, and the page hands the shell nothing but the s
   // what says so, and it is what keeps a dialog over the conversation a dialog.
   assert.ok(discover.includes("className: 'bt-settings-layer bt-discover', 'data-tabpage': ''"), 'this page is one of the four pages, and says so')
   assert.ok(read('settings.js').includes("'data-tabpage': tab ? '' : undefined"), '我的 carries the marker when a tab opened it')
-  assert.ok(index.includes('settings: { page, id, tab: door === null ? (state.settings?.tab ?? false) : door === \'tab\' }'), 'the door is remembered, and kept by every step inside Settings')
+  assert.ok(index.includes("settings: { page, id, tab: door === null ? (state.settings?.tab ?? false) : door === 'tab', back: state.settings?.back ?? null }"), 'the door is remembered, and kept by every step inside Settings')
   assert.ok(nav.includes("actions.openSettings('general', null, 'tab')"), 'the 我的 tab comes through the tab door')
   assert.ok(index.includes("settings: { page: key, id: null, tab: true }"), 'and so does every row of this list')
   assert.ok(read('overlays.js').includes('tab: settings.tab === true'), 'which the layer is handed')

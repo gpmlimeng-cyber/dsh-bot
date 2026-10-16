@@ -6,11 +6,14 @@
 //
 // The same book holds the group chats, under their own heading, because a group is a
 // conversation the user starts from the same place a 1:1 chat is: whoever the roster lists is
-// listed here, and a row opens that conversation -- a group and a Bot are the same kind of
-// Session, so one door serves both.
+// listed here.
 //
-// A row opens that chat and lands back on the conversation; the page closes first, so the bar
-// and the main view agree on which of the four pages is on screen.
+// The two kinds of row do not open the same thing, and that is the user's own division: an address
+// book's entry for a person is that person's own page, so a Bot's row opens its settings page --
+// the same one its 「编辑 Bot」 menu entry opens, name, label, model and folder -- and the group's
+// row opens the group chat, because a group has no page of its own. Either way the page closes
+// first (the layer is drawn under it on a phone), and a Bot's settings come back to this list
+// rather than past it: the way back is the `back` the layer carries (index.js).
 import { createElement as h, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BotMark, RoomAvatar } from './mark.js'
@@ -71,6 +74,12 @@ export function PeersPage({ useRoster, useUi, actions }) {
     actions.selectPanel(null)
     actions.closePanel()
     actions.openSession(id)
+  }
+  // A Bot's row opens that Bot's own settings page instead: the page closes on the way (the layer
+  // is drawn under this one, z 60 against 79, so it could not be seen over it), and the action
+  // remembers that the way back is this list rather than the conversation.
+  const openBot = (id) => {
+    actions.openBotSettings(id)
   }
   // One section per kind of contact, in 我的 -> 全部设置's own shape: the heading over the card, the
   // rows inside it (styles.js, the phone's group rules). A section with no rows is not drawn at all,
@@ -134,7 +143,7 @@ export function PeersPage({ useRoster, useUi, actions }) {
         const folder = peersFolder(bot.workDir) ?? t('Team workspace')
         return h('div', { key: bot.id, className: 'bt-peers-item', role: 'listitem' },
           h('button', {
-            type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openChat(bot.id),
+            type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openBot(bot.id),
           },
           h(BotMark, { bot, size: 36 }),
           h('span', { className: 'bt-peers-body' },

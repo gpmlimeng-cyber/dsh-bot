@@ -246,17 +246,28 @@ test('a group is a row of its own kind, under its own heading', () => {
   assert.ok(empty.startsWith("className: 'bt-peers-empty', role: 'status' }, t('Nothing matches')"), 'one empty line for both kinds of contact')
 })
 
-test('a row opens that chat and lands back on the conversation', () => {
-  const open = peers.slice(peers.indexOf('const openChat ='), peers.indexOf('return createPortal'))
+test('a group\'s row opens the chat, a Bot\'s row opens that Bot\'s page', () => {
+  // The two rows open two different things, and that is the user's own division: a group has no page
+  // of its own, so its row opens the group chat -- the same door the sidebar's group row uses.
+  const open = peers.slice(peers.indexOf('const openChat ='), peers.indexOf('// A Bot\'s row opens'))
   assert.match(open, /actions\.closePeers\(\)[\s\S]*actions\.selectPanel\(null\)[\s\S]*actions\.closePanel\(\)[\s\S]*actions\.openSession\(id\)/, open)
   // The details pane is closed on the way: it is full-screen on the phone (z 96, over the bar), so a
   // settings screen left open is what the user arrives at instead of the chat. openSession keeps one.
   assert.ok(open.includes('actions.closePanel()'), 'no settings pane survives the tap')
-  assert.ok(open.includes('openSession(id)'), 'and the tap ends in the conversation')
-  // A group is the same kind of Session a Bot is, and the sidebar's own group row opens it through
-  // the same call (RoomRow, sidebar.js): one door, whichever row was tapped.
-  assert.ok(peers.includes('onClick: () => openChat(room.id)') && peers.includes('onClick: () => openChat(bot.id)'), 'both rows take the one door')
+  assert.ok(open.includes('openSession(id)'), 'and the group tap ends in the conversation')
+  assert.ok(peers.includes('onClick: () => openChat(room.id)'), 'the group row takes that door')
   assert.ok(sidebar.includes("'data-room-id': id, onClick: () => actions.openSession(id)"), 'which is the door the sidebar\'s group row uses')
+  // A Bot's row is a person's entry in an address book: it opens that Bot's own settings page, the
+  // one its 「编辑 Bot」 menu entry opens -- name, label, model, folder -- and not its chat.
+  assert.ok(peers.includes('onClick: () => openBot(bot.id)'), 'the Bot row opens the page')
+  const botDoor = peers.slice(peers.indexOf('const openBot ='), peers.indexOf('return createPortal'))
+  assert.ok(botDoor.includes('actions.openBotSettings(id)'), 'through the one action that opens it from here')
+  assert.ok(peers.includes("className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openBot(bot.id)"), 'and that is the row it is on')
+  // That action is the Bot's settings page (the same page 编辑 Bot asks for), drawn as a page of the
+  // bar's own flow, and it remembers that closing it lands back on this list.
+  assert.match(index, /openBotSettings: \(id\) => \{[\s\S]*peer[\s\S]*settings: \{ page: 'bots', id, tab: true, back: 'peers' \}/, 'the page, marked as one, with the way back')
+  assert.ok(index.includes("if (state.settings.back === 'peers')") && index.includes('settings: null, peers: true'), 'which closeSettings reads')
+  assert.ok(index.includes("back: state.settings?.back ?? null"), 'and every step inside keeps, so a row opened after a drill-in still closes onto this list')
 })
 
 test('the header\'s new button is the drawer\'s own entry, not a second door', () => {

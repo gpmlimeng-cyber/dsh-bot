@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 6c5b0c5b
+// Source fingerprint: 2dabd70c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16125,6 +16125,9 @@ function PeersPage({ useRoster, useUi, actions }) {
     actions.closePanel();
     actions.openSession(id);
   };
+  const openBot = (id) => {
+    actions.openBotSettings(id);
+  };
   const section = (label, rows) => (0, import_react40.createElement)(
     "section",
     { className: "bt-settings-group" },
@@ -16225,7 +16228,7 @@ function PeersPage({ useRoster, useUi, actions }) {
               type: "button",
               className: "bt-peers-row",
               "data-bot-id": bot.id,
-              onClick: () => openChat(bot.id)
+              onClick: () => openBot(bot.id)
             },
             (0, import_react40.createElement)(BotMark, { bot, size: 36 }),
             (0, import_react40.createElement)(
@@ -16395,7 +16398,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "6c5b0c5b" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "2dabd70c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16890,8 +16893,17 @@ function apply(ctx) {
     // page into a dialog mid-flow, where the entrance would replay over the page being read. The two
     // are drawn differently on a phone (styles.js, [data-tabpage]), and the difference is the one the
     // user reported: a dialog fades in over what it covers, and what it covers is the tab it replaces.
+    // `back` is carried the same way and for the same reason: whichever surface opened this layer
+    // says where closing it lands (closeSettings reads it), and a step inside keeps that answer.
     openSettings: (page = "general", id = null, door = null) => {
-      ui2.set((state) => ({ ...state, settings: { page, id, tab: door === null ? state.settings?.tab ?? false : door === "tab" }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false }));
+      ui2.set((state) => ({ ...state, settings: { page, id, tab: door === null ? state.settings?.tab ?? false : door === "tab", back: state.settings?.back ?? null }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false }));
+    },
+    // A Bot's settings opened from the 伙伴 list: that list is a page of its own and the layer is
+    // drawn under it, so the list steps aside for it -- and the way back is the list, not the
+    // conversation the list would otherwise leave behind (closeSettings reads `back`). It is a page
+    // of the bar's own flow, so it is drawn as one: `tab` (styles.js).
+    openBotSettings: (id) => {
+      ui2.set((state) => ({ ...state, peers: false, discover: false, discoverPanel: null, settings: { page: "bots", id, tab: true, back: "peers" }, menu: null, palette: null, newChat: null, mobileNav: false }));
     },
     // On an upright phone the four pages of the bottom bar are peers of each other, so
     // closing one lands on the conversation rather than on whatever page was behind it:
@@ -16904,6 +16916,11 @@ function apply(ctx) {
       if (state.settings === null) return;
       if (state.discoverPanel !== null) {
         ui2.set((current) => ({ ...current, settings: null, discover: true, discoverPanel: null }));
+        if (isPortraitNav()) ctx.layout.selectPanel(null);
+        return;
+      }
+      if (state.settings.back === "peers") {
+        ui2.set((current) => ({ ...current, settings: null, peers: true }));
         if (isPortraitNav()) ctx.layout.selectPanel(null);
         return;
       }
