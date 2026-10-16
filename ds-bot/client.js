@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: e76d6b1a
+// Source fingerprint: 2d8e248e
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -8928,13 +8928,11 @@ var PANEL_SHEET_CSS = `
    conversation: full width, glued to the bottom, two rounded top corners and a handle that says
    where it came from, as tall as its list asks for up to 85% of the screen and scrolling inside.
    The desktop column is untouched -- every rule of the sheet is on the phone.
-   The :not() is load-bearing, not decoration. styles.js holds the phone width bands for this panel
-   (html[data-bt-mobile][data-bt-size=medium] .bt-panel is that screen's own page: top 0, no corners,
-   no shadow, and a padding-top for the chrome strip), so without the extra attribute the sheet would
-   be flattened into a full-bleed page it is not: an html[data-bt-mobile] .bt-panel[data-view=products]
-   weighs exactly as much as that band and CONVERSATION_CSS is injected after this one (index.js), so
-   a tie would hand it the page geometry. One more attribute in the selector settles it by weight
-   instead of by injection order. */
+   The :not() is load-bearing: in the expanded band this panel is the right-hand column, not a sheet,
+   and that is the selector saying so. On a phone it also puts the sheet above the page rule that makes
+   every mobile band full width (styles.js) -- the band that once tied with a plain selector (the panel
+   floated at 70vw there) is gone, so the extra attribute is belt and braces rather than the tie-breaker
+   it was first written for. Kept either way: dropping it would draw a sheet in the column's band. */
 html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;padding-top:0;border-left:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3);overflow:hidden;animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)}
 html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out .2s cubic-bezier(.4,0,1,1) forwards}
 /* The band a thumb grabs is 44 tall and draws nothing; the pill inside it is the 4px the eye sees.
@@ -16934,7 +16932,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "e76d6b1a" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "2d8e248e" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
