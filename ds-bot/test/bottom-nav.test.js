@@ -263,13 +263,20 @@ test('the bar has no frame at all, and wears the page colour', () => {
 // The conversation's drawer, which the hamburger opens. It is not the 伙伴 page any more --
 // that one is its own full-screen surface (peers-page.js), and the bar stays on it, so the
 // drawer keeps covering the screen from the top edge and giving the bar's height back.
-test('the conversation\'s drawer starts at the top edge and carries the inset itself', () => {
+test('the conversation\'s drawer starts at the top edge and carries its own inset', () => {
   // A drawer that started below the status bar's inset left that band showing the page behind
   // it -- the seam the user reported while the drawer was the 伙伴 page.
   const page = css.find(line => line.startsWith(GATE + ' .bt-side.bt-rail{'))
   assert.ok(page, 'the drawer rule')
   assert.ok(page.includes('top:0'), page)
-  assert.ok(page.includes('padding-top:var(--bt-fade-h,calc(var(--bt-top-inset'), 'the strip\'s own height, from its one definition, with the strip-less fallback')
+  assert.ok(page.includes('padding-top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px)'), 'the inset plus the base rule\'s own 10px, and nothing else')
+  // What this surface must not read is the veil's height. --bt-fade-h is the *conversation's*
+  // strip -- the pill row's lower edge plus a 6px margin, inset + 56 -- because that is the page
+  // with a transcript to fade. A list has nothing under its top row: borrowed from there, the
+  // height simply became blank space, and the user reported it as a spare empty row at the top
+  // of the list (the drawer's padding-top measured 107 on the device where its own inset + 10 is
+  // 61). One definition, one meaning -- the transcript below keeps the token.
+  assert.ok(!page.includes('--bt-fade-h'), 'the list does not reserve the conversation veil\'s height')
   // The bar's own height is still given back at the foot of the same surface.
   assert.ok(page.includes('padding-bottom:calc(var(--bt-nav-h)'), page)
 })
@@ -278,7 +285,13 @@ test('the conversation\'s drawer starts at the top edge and carries the inset it
 // drawer (`ui.mobileNav`), which is what it did before; the 伙伴 tab has its own page now.
 test('the hamburger stays, and still opens the conversation drawer', () => {
   assert.ok(!nav.includes('.bt-mobile-nav{opacity:0'), 'the hamburger is not hidden any more')
-  assert.ok(css.some(line => line.includes('body:has(.bt-side.bt-rail[data-mobile-open]) .bt-mobile-bar{display:none}')), 'the drawer carries no bar of its own')
+  // The drawer is a full-screen page of its own, so it drops both of the conversation's
+  // floating pieces: the bar, and the veil above it. The veil is the conversation's strip --
+  // page-coloured, --bt-fade-h tall, drawn over whatever stands behind the bar -- and over the
+  // drawer it only tinted the drawer's own top with the wrong colour. Keeping that page's
+  // content out of it is what made it reserve the veil's height as blank space, which is the
+  // empty row the user reported; with the veil gone it keeps its own inset instead.
+  assert.ok(css.some(line => line.includes('body:has(.bt-side.bt-rail[data-mobile-open]) :is(.bt-mobile-bar,.bt-topfade){display:none}')), 'the drawer carries neither the bar nor the veil')
   const header = read('header.js')
   assert.ok(header.includes('onToggle: () => actions.toggleMobileNav()'), 'the hamburger toggles the nav state')
   const sidebar = read('sidebar.js')
@@ -457,15 +470,20 @@ test('the transcript scrolls under the strip, and still arrives clear of it', ()
   assert.ok(scroll.includes('padding-top:var(--bt-fade-h'), scroll)
   assert.ok(scroll.includes('+ 10px)'), `with the strip-less phone's old inset as the fallback: ${scroll}`)
   // One definition for the strip's height, read by the surfaces that actually carry a veil: the
-  // frost itself and the transcript it dims. 伙伴 and 发现 have no veil over them, so their heads
-  // start at the status bar's own inset instead -- a second copy of the strip's height is how the
-  // two drift apart.
+  // frost itself and the transcript it dims -- and by nothing else. 伙伴 and 发现 have no veil over
+  // them, so their heads start at the status bar's own inset instead; the list page made the same
+  // mistake once, borrowing the veil's height for a page with nothing to fade, and the space it
+  // reserved came back as the empty row the user reported. A second copy of the strip's height is
+  // how the two drift apart, and a second *reader* is how a list ends up wearing a transcript's
+  // band.
   const declared = css.filter(line => line.includes('--bt-fade-h:'))
   assert.equal(declared.length, 1, `declared once, found ${declared.length}`)
   assert.ok(declared[0].includes('--bt-fade-h:calc(var(--bt-top-inset') && declared[0].includes('+ 56px)'), declared[0])
   const readers = ['nav-bar.js', 'styles.js']
     .flatMap(name => read(name).split('\n').filter(line => line.includes('var(--bt-fade-h')))
-  assert.ok(readers.length >= 3, `the veil and the transcript read it, found ${readers.length}`)
+  assert.equal(readers.length, 2, `the veil and the transcript read it, and only they, found ${readers.length}`)
+  assert.ok(readers.some(line => line.includes('.bt-topfade{')), 'the frost itself')
+  assert.ok(readers.some(line => line.includes('_scroll')), 'and the transcript it dims')
   for (const line of readers) assert.ok(line.includes('var(--bt-fade-h'), line)
   for (const page of ['peers-page.js']) {
     assert.ok(read(page).includes('padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px'), `${page} starts at the status bar's own inset`)

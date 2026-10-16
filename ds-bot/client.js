@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 512700ac
+// Source fingerprint: 10d5127b
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -17215,16 +17215,31 @@ html[data-bt-mobile][data-bt-portrait] body:has(.bt-palette-layer) .bt-nav{displ
    in its own padding, rather than starting below it: with the floating bar hidden on this
    page, the band above the page showed the conversation behind it — the seam the user
    reported — and the inset plus the base rule's own 10px puts the top row exactly where it
-   was. The 12px side padding comes from the base rule and is left alone. */
-html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail{top:0;padding-top:var(--bt-fade-h,calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px));width:100%;padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap));border-right:0;box-shadow:none}
+   was. The 12px side padding comes from the base rule and is left alone.
+
+   That inset is the page's own and nothing else's. --bt-fade-h is the veil's height on the
+   *conversation* — the pill row's lower edge plus a 6px margin, inset + 56 — because that is
+   the page with a transcript to fade. A list has nothing under its top row, so reading the
+   veil's height here simply reserved the pill row as blank space: the drawer's padding-top
+   measured 107 on the device where this page's own inset + 10 is 61, and the user reported
+   the gap as a spare empty row at the top of the list. One definition, one meaning: the veil
+   keeps --bt-fade-h, this page keeps its inset (test/bottom-nav.test.js holds the line). */
+html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail{top:0;padding-top:calc(var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) + 10px);width:100%;padding-bottom:calc(var(--bt-nav-h) + var(--bt-nav-gap));border-right:0;box-shadow:none}
 html[data-bt-mobile][data-bt-portrait] .bt-side.bt-rail[data-mobile-open] .bt-side-top{padding-left:0}
 html[data-bt-mobile][data-bt-portrait] .bt-mobile-scrim{display:none}
 /* The hamburger stays on the conversation (the user asked for it back): it toggles the
    conversation's own drawer, ui.mobileNav, which is a state of its own -- the 伙伴 tab
    opens its own full page instead, and the drawer is closed on the way (nav-bar.js go()).
    The page carries no hamburger either: the whole bar goes while it is up, because that
-   page has its own top row and the pill belongs to the conversation behind it. */
-html[data-bt-mobile][data-bt-portrait] body:has(.bt-side.bt-rail[data-mobile-open]) .bt-mobile-bar{display:none}
+   page has its own top row and the pill belongs to the conversation behind it.
+   The veil goes with it, for the same reason the other full-screen surfaces drop theirs
+   (body:has(.bt-peers/.bt-discover/.bt-pane/…) above): it is the *conversation's* strip --
+   page-coloured, --bt-fade-h tall, drawn over whatever stands behind the bar -- and over
+   this page it did nothing but tint the drawer's own top with the wrong colour. Keeping the
+   drawer's content clear of it was what made that page reserve the veil's height as blank
+   space (the empty row the user reported): with the veil gone the page keeps its own inset
+   (the rule near the top of this page) and its first row starts there. */
+html[data-bt-mobile][data-bt-portrait] body:has(.bt-side.bt-rail[data-mobile-open]) :is(.bt-mobile-bar,.bt-topfade){display:none}
 /* While the keyboard is up the bar goes and the 56px it reserved goes with it, so the
    composer sits on the keyboard's top edge instead of floating a bar's height above it --
    which is exactly what the phone showed. The flag is published by mobile.js, which reads
@@ -17631,7 +17646,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "512700ac" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "10d5127b" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
