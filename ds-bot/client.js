@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: d6602030
+// Source fingerprint: a4369292
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -9364,8 +9364,10 @@ function useEscape(onClose) {
   }, []);
 }
 function usePaneLeft() {
+  const mobile = useMobile();
   const [paneLeft, setPaneLeft] = (0, import_react15.useState)(280);
   (0, import_react15.useLayoutEffect)(() => {
+    if (mobile) return void 0;
     const column = document.querySelector('[class*="_footArea"]')?.parentElement;
     if (!column) return void 0;
     const measure = () => setPaneLeft((current) => {
@@ -9376,8 +9378,8 @@ function usePaneLeft() {
     const observer = new ResizeObserver(measure);
     observer.observe(column);
     return () => observer.disconnect();
-  }, []);
-  return paneLeft;
+  }, [mobile]);
+  return mobile ? 0 : paneLeft;
 }
 
 // src/client/set-rows.js
@@ -17364,7 +17366,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "d6602030" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "a4369292" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
