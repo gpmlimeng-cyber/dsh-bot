@@ -481,3 +481,15 @@ test('a finger gets a press, and nothing that stays behind it', () => {
   assert.ok(!styles.some(line => line.startsWith('.bt-dcard:active')), 'no press rule for a pointer, which already has its hover')
   assert.ok(source.slice(source.indexOf('@media (hover:hover){'), source.indexOf('.bt-dcard-hit:focus-visible')).includes('.bt-dcard:hover{background:var(--bt-hover)}'), 'and the pointer highlight is still the pointer block\'s own')
 })
+
+test('a phone pane is pinned to the edge, and the details column is not', () => {
+  const source = styles.join('\n')
+  // The offset these layers used to receive was an inline style, so only an !important can outrank it;
+  // usePaneLeft answers 0 on this band now and this is the guard behind it.
+  assert.ok(styles.some(line => line.startsWith('html[data-bt-mobile] .bt-pane,')), 'the belt names these layers')
+  assert.ok(source.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{left:0!important}'), 'the tab page and the panes are pinned to the screen edge')
+  // The details column is left out on purpose: expanded keeps it as a right-hand column, and an
+  // !important 0 would take that place away.
+  assert.ok(!source.includes('html[data-bt-mobile] .bt-panel{left:0!important}'), 'the details column keeps the place the expanded band gives it')
+  assert.ok(styles.some(line => line.startsWith('html[data-bt-mobile][data-bt-size=expanded] .bt-panel{left:auto;right:0;')), 'which is still a right-hand column')
+})

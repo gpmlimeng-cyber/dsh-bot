@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 1af63f6b
+// Source fingerprint: cbcfbdcd
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3520,6 +3520,14 @@ html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 40px;width
    surfaces are deliberately not in this rule -- their band belongs to their own scrim, not to a page. */
 html[data-bt-mobile] .bt-pane,
 html[data-bt-mobile] .bt-panel{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px)}
+/* A phone's pane starts at the screen's edge, and this is the belt to the hook's braces: the offset the
+   hook used to hand these layers arrives as an *inline* style, which no rule of ours can outrank without
+   !important. usePaneLeft answers 0 on this band now, so this is a guard against another path writing
+   that inline left again -- the bug it prevents was a whole page arriving at x=280.
+   The details column is deliberately not in this list: in the expanded band it is a right-hand column
+   (left:auto), and an !important 0 here would take its place away. */
+html[data-bt-mobile] .bt-pane,
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]{left:0!important}
 html[data-bt-mobile] body:has(.bt-pane) :is(.bt-mobile-bar,.bt-topfade),
 html[data-bt-mobile] body:has(.bt-panel) :is(.bt-mobile-bar,.bt-topfade),
 html[data-bt-mobile] body:has(.bt-mem-layer) :is(.bt-mobile-bar,.bt-topfade),
@@ -17356,7 +17364,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "1af63f6b" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "cbcfbdcd" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
