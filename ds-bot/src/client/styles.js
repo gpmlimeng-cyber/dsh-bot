@@ -487,6 +487,18 @@ button.bt-q-opt:active{background:var(--bt-active)}
 .bt-q-submit{background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-q-submit-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing} backwards,bt-veil-in .16s ease-out backwards}
 @keyframes bt-q-submit-in{from{transform:translateX(8px) scale(.9)}}
 
+/* The decision bar (decide.js): one ask from the room's admin, above the composer where the hand
+   already is. It is not a card in the transcript -- the user asked for a place to tap, not for
+   something that pushes the conversation around. Every option is its own 44px box on a phone: the
+   floor this skin holds every other control to, and the lint sweeps this rule like any other. */
+.bt-decide{display:flex;flex-direction:column;gap:8px;margin:0 0 8px;padding:10px 12px;border:.5px solid var(--bt-line-2);border-radius:14px;background:var(--bt-card)}
+.bt-decide-title{font-size:13px;line-height:18px;color:var(--bt-ink)}
+.bt-decide-opts{display:flex;flex-wrap:wrap;gap:8px}
+.bt-decide-opt{min-height:44px;padding:0 16px;border:.5px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer;transition:background-color .12s ease}
+@media (hover:hover){
+.bt-decide-opt:hover{background:var(--bt-hover)}
+}
+
 @media (hover:hover){
 .bt-q-submit:hover:not(:disabled){opacity:.86}
 }

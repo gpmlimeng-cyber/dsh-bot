@@ -2,6 +2,7 @@ import { createElement as h, Fragment, useEffect, useLayoutEffect, useMemo, useR
 import { createPortal } from 'react-dom'
 import { MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
 import { pathImagesFor } from './media.js'
+import { parseDecision, stripDecision } from './decide-text.js'
 import { inkText } from './inks.js'
 import { linkMentions, mentionTarget, dayLabel, contentText, stripHeader, isHiddenTurn, isRelayContext, relaysBefore, relayPart, commRunOf, toolName, toolArgs, reminderPrompts } from './text.js'
 import { SmileIcon, ReplyIcon, DotsIcon, CheckIcon, DownloadIcon, CopyIcon, MemoryIcon } from './icons.js'
@@ -643,8 +644,18 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
   const speakerDoing = useWork?.(work => (work.bots?.[live.speaking]?.tool ? workPhrase(work.bots[live.speaking]) : undefined)) ?? undefined
   if (replies.length === 0 && pending.length === 0) return null
   const room = roster.roomsById[sessionId]
+  // A decision the room admin asks for rides the bar above the composer instead of the transcript
+  // (decide.js has the protocol): the block comes out of the reply it was written in, and the newest
+  // one wins. Only the admin's own replies are read this way -- anyone else's block stays text.
+  const items = stackReplies(replies)
+  const ask = items
+    .filter(item => room !== undefined && item.reply.kind === undefined && item.reply.botId === room.admin)
+    .map(item => parseDecision(item.texts[0]))
+    .filter(decision => decision !== null)
+    .at(-1) ?? null
+  useEffect(() => { if (ask !== null) actions.proposeDecision?.(sessionId, ask) }, [ask?.key, sessionId])
   return h('div', { className: 'bt-group-replies' },
-    stackReplies(replies).map(({ reply, index, texts, deliverables }) => {
+    items.map(({ reply, index, texts, deliverables }) => {
       const bot = roster.byId[reply.botId] ?? { id: reply.botId, name: reply.name, color: reply.color ?? 'gray' }
       if (reply.kind === 'user') {
         return h('div', { key: `user-${index}`, className: 'bt-urow' }, h('div', { className: 'bt-ububble' },
@@ -675,7 +686,10 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
       if (reply.kind === 'stopped') {
         return h('div', { key: `${reply.botId}-${index}`, className: 'bt-event' }, t("You stopped {name}'s work", { name: bot.name }))
       }
-      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, deliverables })
+      // A reply that was nothing but a decision has nothing left to draw: the bar carries it.
+      const drawn = texts.map(stripDecision).filter(text => text !== '')
+      if (drawn.length === 0) return null
+      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts: drawn, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, deliverables })
     }),
     pending.map((id) => {
       const bot = roster.byId[id]

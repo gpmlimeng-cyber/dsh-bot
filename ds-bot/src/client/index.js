@@ -15,6 +15,7 @@ import { CHATS_SOURCE, atSources } from './at-menu.js'
 import { VOICE_BUNDLE } from './speech.js'
 import { sameVersion } from './dsh-offer.js'
 import { AnsweredCell, QuestionCard, QuestionDock } from './questions.js'
+import { DecisionDock } from './decide.js'
 import { AssistantCell, TriggerCell, TurnProcessCell, Nothing, TurnTailCell, ToolCell } from './cells.js'
 import { Overlays } from './overlays.js'
 import { createBotBrowsers, serveBrowserReads } from './bot-browsers.js'
@@ -68,7 +69,7 @@ export function apply(ctx) {
   try { seenAt = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '{}') ?? {} } catch { seenAt = {} }
   // `details` is the panel's subject (a Session id); `view` picks details or the
   // subject Bot's browser inside it.
-  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, peers: false, discover: false, discoverPanel: null, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false })
+  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, mobileNav: false, peers: false, discover: false, discoverPanel: null, toast: null, signIn: null, renameAgent: null, unread: savedUnread, reactions: savedReactions, visits: {}, preview: null, lightbox: null, products: false, decision: null })
   // Bot mode paints the whole team surface; Agent mode withdraws every slot and
   // style so the shell's own interface returns. `plain` stays false until a Bot-mode
   // view hosts a plain session, which drops only the conversation replacements.
@@ -691,6 +692,17 @@ export function apply(ctx) {
     updateRoom: (id, patch) => after(call('update-room', { id, ...patch })),
     send: (sessionId, text) => after(call('send', { sessionId: partFor(sessionId), text })),
     answerQuestion: (sessionId, questionId, answer) => after(call('answer-question', { sessionId: partFor(sessionId), questionId, answer })),
+    // The decision bar (decide.js). One ask at a time, and the answer is the user's own message in
+    // that room: the same host path every one of our own sends takes -- `send` prompts the session
+    // (`ctx.sessionController.prompt`, mode queue) -- so the room sees a `user` reply, the team can
+    // act on it, and the audit trail is the transcript itself.
+    proposeDecision: (sessionId, decision) => ui.set(state => (state.decision !== null && state.decision.key === decision.key && state.decision.sessionId === sessionId
+      ? state
+      : { ...state, decision: { ...decision, sessionId } })),
+    answerDecision: async (sessionId, label) => {
+      ui.set(state => (state.decision === null ? state : { ...state, decision: null }))
+      try { await actions.send(sessionId, label) } catch (failure) { actions.reportError(failure, 'decision') }
+    },
     dismissQuestion: sessionId => after(call('dismiss-question', { sessionId })),
     answerApproval: (id, choice) => after(call('approval-answer', { id, choice })),
     stopMemberWork: (roomId, botId) => after(call('stop-member-work', { roomId, botId })),
@@ -1092,6 +1104,7 @@ export function apply(ctx) {
     shadow('conversation.input.dock', { id: 'bot-model', order: -110, inject: face }, ModelChoiceDock),
     shadow('conversation.input.dock', { id: 'bot-question', order: -100, inject: face }, QuestionDock),
     shadow('conversation.input.dock', { id: 'bot-secret', order: -90, inject: face }, SecretDock),
+    shadow('conversation.input.dock', { id: 'bot-decision', order: -95, inject: face }, DecisionDock),
   ]
   // The return button belongs to neither group: it renders only in Agent mode.
   ctx.effect(() => {
