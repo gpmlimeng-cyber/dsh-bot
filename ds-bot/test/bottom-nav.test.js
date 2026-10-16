@@ -282,6 +282,24 @@ test('the hamburger stays, and still opens the conversation drawer', () => {
   assert.ok(sidebar.includes('const mobileOpen = useUi(value => value.mobileNav === true)'), 'and that state is what renders the drawer')
 })
 
+// The "needs you" count is a seat of the bar's right-hand group on a phone, not a second pill
+// beside the first: in the pill's row it inherited .bt-head's pointer-events:none and no tap
+// ever reached it, and it drew its own skin next to the group's.
+test('the needs-you count is a seat of the bar\'s right-hand group on a phone', () => {
+  const header = read('header.js')
+  assert.ok(header.includes("useWork && useUi && !mobile ? h(NeedsYou, { useRoster, useWork, useUi, actions }) : null"), 'the pill row keeps it only off the phone')
+  const acts = header.slice(header.indexOf("className: 'bt-mobile-acts'"))
+  assert.ok(acts.includes('h(NeedsYou, { useRoster, useWork, useUi, actions, inBar: true })'), 'and the bar draws it as one of its seats')
+  const attention = read('attention.js')
+  assert.ok(attention.includes("className: inBar ? 'bt-mobile-act bt-attention' : 'bt-attention'"), 'which is the group\'s own class plus its own')
+  // The group sets pointer-events on its members; the seat has to be one of them, and it keeps a
+  // finger's 44px inside the frame's 40.
+  assert.ok(attention.includes('.bt-mobile-acts .bt-attention{position:relative;width:44px;height:40px;'), 'the seat is finger-sized and re-enables its own taps')
+  assert.ok(attention.includes('pointer-events:auto'), 'with the group\'s tap opened again')
+  // And the bar gives the pill room for the extra seat rather than letting the two overlap.
+  assert.ok(read('styles.js').includes('.bt-mobile-bar:has(.bt-mobile-acts .bt-attention){--bt-mobile-clear:148px}'), 'the bar\'s clearance grows with the group')
+})
+
 test('a popup menu is drawn over the bar', () => {
   // The menus clamp to the viewport bottom (context-menu.js), so a long-press on one of
   // the last rows lands under a 56px bar that takes the taps there.

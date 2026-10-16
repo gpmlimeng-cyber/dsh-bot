@@ -1459,11 +1459,16 @@ html[data-bt-mobile][data-bt-size=expanded] .bt-settings-group{margin-top:0}
 /* The hamburger sits on the screen's left edge, the group on its right; both are out of
    flow, so neither can push the pill off centre. */
 .bt-mobile-nav{position:absolute;left:12px;top:10px;z-index:31;width:40px;height:40px}
-/* The right pair is one component: the frame carries the shared skin, the two 44px buttons
-   inside drop all of theirs, and nothing separates them — so the outline is continuous
-   around both halves. overflow:hidden clips a button's own hover fill inside the frame's
-   arc. 89x40 outer, its right edge 101px in, still inside the 104px clearance above. */
+/* The right group is one component: the frame carries the shared skin, the 44px seats inside
+   drop all of theirs, and nothing separates them — so the outline is continuous around the whole
+   group. overflow:hidden clips a seat's own hover fill inside the frame's arc. Its width is its
+   seats (two, or three when a phone has something waiting for the user), and the bar's own
+   clearance follows that count so the pill and the group can never overlap. */
 .bt-mobile-acts{position:absolute;right:12px;top:10px;z-index:31;display:flex;align-items:stretch;pointer-events:auto;box-sizing:border-box;height:40px;overflow:hidden}
+/* 104 = 12 right inset + the two-seat 89px group + 3 of air. With the "needs you" seat (44) the
+   group is 133 wide, so the pill keeps its distance: 148 = 12 + 133 + 3. The pill reads this as a
+   max-width, so a session name that fits today is untouched. */
+.bt-mobile-bar:has(.bt-mobile-acts .bt-attention){--bt-mobile-clear:148px}
 .bt-mobile-acts .bt-mobile-act{width:44px;border:0;border-radius:0;background:none;box-shadow:none}
 .bt-mobile-acts .bt-mobile-act:hover{background:var(--bt-hover)}
 .bt-mobile-nav:active,.bt-mobile-act:active{transform:scale(.96)}
@@ -1508,25 +1513,25 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-c
    the shell defines --dsh-chat-content-width on its own body and sizes its width handle
    from it, so overriding it here collapsed that handle. Only the bubble cap is ours. */
 [class*="_body"]:has(> [class*="_scrollBody"]){--bt-bubble-max:min(calc(var(--dsh-chat-content-width,748px) * .702),82%)}
-/* A Bot's bubble in a hand sits between two equal gaps: the 30px its avatar column takes on
-   the left, and the same 30px left over on the right, so the pair reads as centred without
-   moving the avatar or where the text starts. The column takes 30px off the row's measure and
-   the bubble then fills what the avatar column leaves, which lands the bubble's right edge
-   exactly 30px inside the row -- the arithmetic the user asked for, and the reason the value is
-   expressed as a subtraction rather than a share. (Only the wrapper consumes the cap: the
-   bubble inside a line is deliberately uncapped, see the .bt-msg-line>.bt-bubble rule.) Only the
-   Bot's own row is touched, and only in a group, where an avatar column is what holds the left:
-   the user's side and a one-to-one chat keep the base cap. */
-html[data-bt-mobile][data-bt-size=compact] [class*="_body"]:has(> [class*="_scrollBody"]) .bt-astack[data-lead]{--bt-bubble-max:calc(100% - 30px)}
+/* The narrow bands -- a hand, and the small tablet held upright -- asked for bubbles as wide as
+   the input card: the card is that same column less its 16px gutters and a row runs inside those
+   gutters, so the row's own measure is the answer, and the bubble's left edge is already on the
+   line (the rows are left-aligned; the user's own row keeps its right edge and grows left). A
+   group's row gives its avatar column back, 30px, the same 30px .bt-astack[data-lead]>.bt-msg
+   carries as a start margin. A wider band keeps the share above: there the tools stand beside the
+   bubble, and a row asking for the whole measure pushed them past the viewport (the page scrolled
+   sideways), which is why the tools move under the bubble on these bands too. */
+html[data-bt-mobile]:not([data-bt-size=expanded]) [class*="_body"]:has(> [class*="_scrollBody"]){--bt-bubble-max:min(var(--dsh-chat-content-width,748px),100%)}
+html[data-bt-mobile]:not([data-bt-size=expanded]) [class*="_body"]:has(> [class*="_scrollBody"]) .bt-astack[data-lead]{--bt-bubble-max:calc(100% - 30px)}
 /* On a hand the three tools sit under the bubble rather than beside it: there is no hover to
    chase, and beside the bubble they eat the text's width (at the widest cap they even reached
    past the viewport and made the page scroll sideways). They stay absolutely positioned, so a
    hidden toolbar still reserves no room, and they hang under the bubble's left corner; a
    group's avatar column is stepped over so they line up with the bubble. The hover bridge that
    existed for the sideways placement has nothing left to bridge. */
-html[data-bt-mobile][data-bt-size=compact] .bt-tools{top:100%;left:0;margin:6px 0 0;transform:none}
-html[data-bt-mobile][data-bt-size=compact] .bt-astack[data-lead] .bt-tools{left:30px}
-html[data-bt-mobile][data-bt-size=compact] .bt-tools::after{display:none}
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-tools{top:100%;left:0;margin:6px 0 0;transform:none}
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-astack[data-lead] .bt-tools{left:30px}
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-tools::after{display:none}
 header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 [class*="_body"]:has(> [class*="_scrollBody"]){--dsh-chat-content-width:min(960px,100%)}
 /* The shell writes the column's width on the conversation root at every resize, only to

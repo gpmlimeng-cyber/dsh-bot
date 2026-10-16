@@ -130,7 +130,10 @@ export function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, u
     h(MemoryNotice, { shown: memoryNotice }),
     h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
-    useWork && useUi ? h(NeedsYou, { useRoster, useWork, useUi, actions }) : null,
+    // A phone keeps this out of the pill's row and gives it a seat in the bar's right-hand group
+    // instead (below): in that row it was a second pill beside the first, and its own tap was
+    // swallowed -- .bt-head is pointer-events:none so the transcript scrolls under the pill.
+    useWork && useUi && !mobile ? h(NeedsYou, { useRoster, useWork, useUi, actions }) : null,
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, actions }))
   if (!mobile) return head
@@ -167,6 +170,9 @@ export function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, u
       h(NavToggle, { open: mobileNavOpen, onToggle: () => actions.toggleMobileNav() }),
       head,
       h('div', { className: 'bt-mobile-acts' },
+        // The one control here that is not always there: a phone's "needs you" count, drawn as a
+        // seat of this group rather than a pill of its own (attention.js).
+        useWork && useUi ? h(NeedsYou, { useRoster, useWork, useUi, actions, inBar: true }) : null,
         h('button', {
           type: 'button', className: 'bt-mobile-act',
           'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new'),
