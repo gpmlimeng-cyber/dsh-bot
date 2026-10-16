@@ -52,6 +52,7 @@
 
 **标准**：颜色一律读 `body` 上的 `--bt-*`（`styles.js:62`，token 块；深色档在同处 `:63`）。**一个颜色一个 token**；中性色（`#000`/`#fff`、r=g=b 的 rgb/rgba，用于阴影与遮罩）除外；值一模一样的色只能活在 token 块和两份调色板（`themes.js`/`inks.js`）里。浮起件的表面只用共享声明，不另造一套。
 **判据**：`test/no-literal-colour.test.js`——扫全部 client 模块、跳注释，token 块与调色板放行；**两个不在 CSS 里的值在 ALLOW 表里各带一条理由**（`characters.js` 头像里那支 SVG、`settings.js` 强调色输入框的默认值）；豁免失效也红。
+**`--bt-ink-3` 只许非文本**（实测对比度 **2.30:1**，连大字 3:1 都不到）：图标、分隔、装饰、禁用态的辅助线；凡承载**文字**（含 `::placeholder`）一律用 `--bt-ink-2`（**4.77:1**，过 AA 正文）。对比度实测：`--bt-ink` 17.96 · `--bt-ink-2` 4.77 · `--bt-ink-3` 2.30。
 **反例**：新写一条 `color:#e02135`（该读 `var(--bt-danger)`）；把品牌蓝写成主题强调色——每套主题 accent 都不同（claude `#d97757`、sky `#1e86ff`），DeepSeek 标记会跟着变色，凡"不随主题走"的固定色要给它自己的 token（如 `--bt-brand`）。
 **未落**：一个语义色若要在深色档取**另一个值**，得在 `styles.js:63` 的 `body[data-ds-dark-theme]` 里补一份覆盖——现在这 14 个 token 都只在 `body`（`:62`）定义，深档不覆盖，因此两套主题同值（与改前逐字一致）。
 

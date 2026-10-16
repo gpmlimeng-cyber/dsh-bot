@@ -78,7 +78,7 @@ html[data-bt-mobile] .bt-account-card:hover{background:var(--bt-hover)}
 }
 html[data-bt-mobile] .bt-account-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
 html[data-bt-mobile] .bt-account-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;line-height:21px}
-html[data-bt-mobile] .bt-account-detail{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-account-detail{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:16px;color:var(--bt-ink-2)}
 html[data-bt-mobile] .bt-account-go{flex:none;margin-left:auto;display:inline-flex;align-items:center;color:var(--bt-ink-3)}
 .bt-account-head{display:flex;justify-content:center;padding:4px 0 18px}
 .bt-account-acts{display:flex;flex-direction:column;gap:10px;margin-top:4px}

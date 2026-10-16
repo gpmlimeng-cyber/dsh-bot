@@ -214,7 +214,7 @@ html[data-bt-mobile] .bt-peers-section-head>.bt-peers-section-label{margin:0;pad
    pixels it carries above and below are touch area rather than something seen. Colour sits one step
    further back than a row's (--bt-ink-3), with only the chosen level in ink. */
 html[data-bt-mobile] .bt-motion-mini{width:auto;flex:none;height:28px;box-sizing:border-box;align-items:center}
-html[data-bt-mobile] .bt-motion-mini button{min-width:44px;height:44px;font-size:12px;line-height:16px;color:var(--bt-ink-3);-webkit-tap-highlight-color:transparent}
+html[data-bt-mobile] .bt-motion-mini button{min-width:44px;height:44px;font-size:12px;line-height:16px;color:var(--bt-ink-2);-webkit-tap-highlight-color:transparent}
 html[data-bt-mobile] .bt-motion-mini button[aria-pressed=true]{color:var(--bt-ink)}
 /* A thumb, not a pointer: the answer to a press is drawn the moment it lands, and it goes on the
    levels rather than on the button -- the button's own box is 44 tall against a 28px pill, so a tint
@@ -278,7 +278,7 @@ html[data-bt-mobile] .bt-peers-name-row{display:flex;flex-wrap:nowrap;align-item
 html[data-bt-mobile] .bt-peers-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* The description line: the second level of the two, in the skin's own small second-level colour,
    and one line of values whatever it holds. */
-html[data-bt-mobile] .bt-peers-desc{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-peers-desc{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-2)}
 /* A value is the part that gives way: the labels and the chevron keep their width, and the model
    and the folder ellipsise -- the folder last, since it is the one that can be longest. */
 html[data-bt-mobile] .bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -290,7 +290,7 @@ html[data-bt-mobile] .bt-peers-sep{flex:none}
    way -- so it lands at the row's own 10px however long the count or the name is. It is drawn inside
    the row's button now (the door's rule above), which is what makes the centimetre it takes clickable. */
 html[data-bt-mobile] .bt-peers-go{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-3)}
-html[data-bt-mobile] .bt-peers-empty{padding:24px 12px;font-size:14px;line-height:21px;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-peers-empty{padding:24px 12px;font-size:14px;line-height:21px;color:var(--bt-ink-2)}
 /* The page carries its own title, and the pill belongs to the conversation behind it. */
 html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 `

@@ -113,8 +113,8 @@ export const USER_MESSAGE_CSS = `
 .bt-ufile-icon{flex:none;width:28px;height:28px}
 .bt-ufile-text{display:flex;flex-direction:column;min-width:0}
 .bt-ufile-name{font-size:14px;line-height:22px;font-weight:500;color:var(--bt-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bt-ufile-meta{font-size:12px;line-height:15px;color:var(--bt-ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bt-urefs{font-size:13px;line-height:18px;color:var(--bt-ink-3)}
+.bt-ufile-meta{font-size:12px;line-height:15px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bt-urefs{font-size:13px;line-height:18px;color:var(--bt-ink-2)}
 .bt-utools{display:flex;flex:none;gap:2px;opacity:0;visibility:hidden;transition:opacity .12s ease,visibility .12s}
 .bt-umsg:focus-within .bt-utools{opacity:1;visibility:visible}
 @media (hover:hover){

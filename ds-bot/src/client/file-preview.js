@@ -140,7 +140,7 @@ export const FILE_PREVIEW_CSS = `
 .bt-fp{--bt-fp-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .bt-fp-bar{display:flex;align-items:center;gap:6px;height:44px;flex:none;padding:0 10px 0 12px;border-bottom:.5px solid var(--bt-line)}
 .bt-fp-bar input{flex:1;min-width:0;height:30px;margin:0;padding:0 10px;border:0;border-radius:8px;outline:none;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12.5px;font-family:var(--bt-fp-mono)}
-.bt-fp-bar input::placeholder{color:var(--bt-ink-3)}
+.bt-fp-bar input::placeholder{color:var(--bt-ink-2)}
 .bt-fp-bar input:focus{background:var(--bt-main);box-shadow:0 0 0 1px var(--bt-line-2)}
 .bt-fp-open{flex:none;width:30px;height:30px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 
@@ -151,20 +151,20 @@ export const FILE_PREVIEW_CSS = `
 .bt-fp-open svg{width:15px;height:15px}
 .bt-fp-body{flex:1;min-height:0;overflow:auto;padding:10px 12px 14px}
 .bt-fp-error{padding:8px 12px;color:var(--bt-danger);font-size:12px;line-height:16px;flex:none}
-.bt-fp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--bt-ink-3);text-align:center;padding:24px}
+.bt-fp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--bt-ink-2);text-align:center;padding:24px}
 .bt-fp-empty svg{width:22px;height:22px}
 .bt-fp-empty-title{font-size:13px;line-height:18px;font-weight:500;color:var(--bt-ink-2)}
 .bt-fp-empty-text{max-width:260px;font-size:12px;line-height:17px;overflow-wrap:anywhere}
-.bt-fp-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin-top:4px;font-size:11.5px;line-height:15px;color:var(--bt-ink-3)}
+.bt-fp-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin-top:4px;font-size:11.5px;line-height:15px;color:var(--bt-ink-2)}
 .bt-fp-markdown [class*="_markdown"]{color:inherit}
 .bt-fp-text{font-family:var(--bt-fp-mono);font-size:12.5px;line-height:19px;color:var(--bt-ink)}
 .bt-fp-line{display:flex;gap:8px}
-.bt-fp-num{flex:none;width:26px;text-align:right;color:var(--bt-ink-3);font-variant-numeric:tabular-nums;user-select:none;-webkit-user-select:none}
+.bt-fp-num{flex:none;width:26px;text-align:right;color:var(--bt-ink-2);font-variant-numeric:tabular-nums;user-select:none;-webkit-user-select:none}
 .bt-fp-code{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
-.bt-fp-cut{margin-top:10px;padding:6px 8px;border-radius:8px;background:var(--bt-hover);color:var(--bt-ink-3);font-size:11.5px;line-height:15px}
+.bt-fp-cut{margin-top:10px;padding:6px 8px;border-radius:8px;background:var(--bt-hover);color:var(--bt-ink-2);font-size:11.5px;line-height:15px}
 .bt-fp-image{display:flex;align-items:flex-start;justify-content:center;padding:14px}
 .bt-fp-image img{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain}
-.bt-fp-foot{flex:none;padding:6px 12px 8px;border-top:.5px solid var(--bt-line);font-size:11.5px;line-height:15px;color:var(--bt-ink-3);font-family:var(--bt-fp-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-fp-foot{flex:none;padding:6px 12px 8px;border-top:.5px solid var(--bt-line);font-size:11.5px;line-height:15px;color:var(--bt-ink-2);font-family:var(--bt-fp-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* A delivered file's own page in the panel (deliverables.js): a title bar -- back on the
    left, the name centred, the "···" menu on the right -- the file, and the exits. The
    panel carries the shape: full screen on a phone, the right column on a desktop, so

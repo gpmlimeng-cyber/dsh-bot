@@ -172,7 +172,7 @@ export const ATTENTION_CSS = `
 .bt-attention-row[data-kind=question] .bt-attention-kind{background:color-mix(in srgb,var(--bt-accent) 14%,transparent);color:var(--bt-accent)}
 .bt-attention-row[data-kind=approval] .bt-attention-kind{background:color-mix(in srgb,var(--bt-star) 16%,transparent);color:color-mix(in srgb,var(--bt-star) 80%,var(--bt-ink))}
 .bt-attention-title{flex:1;min-width:0;font-size:12.5px;line-height:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-attention-where{flex:none;max-width:32%;font-size:11px;line-height:15px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-attention-where{flex:none;max-width:32%;font-size:11px;line-height:15px;color:var(--bt-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-attention-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
 .bt-attention-go svg{width:11px;height:11px}
 .bt-attention-empty{padding:14px 12px;font-size:12.5px;line-height:17px;color:var(--bt-ink-2);text-align:center}

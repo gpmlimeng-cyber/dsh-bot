@@ -98,7 +98,7 @@ export const FOLDER_CSS = `
 .bt-folder-view{display:flex;flex-direction:column;gap:2px;animation:bt-veil-in .14s ease-out}
 .bt-folder-copy{flex:1;display:flex;flex-direction:column;min-width:0}
 .bt-folder-copy .bt-menu-label{flex:none}
-.bt-folder-path{min-width:0;font-size:11px;line-height:14px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-folder-path{min-width:0;font-size:11px;line-height:14px;color:var(--bt-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-folder-here{padding:0 8px 4px;white-space:normal;overflow-wrap:anywhere}
 .bt-menu .bt-folder-back{color:var(--bt-ink-2);font-weight:500}
 .bt-folder-input{height:30px;margin:2px 4px;padding:0 8px;border:1px solid var(--bt-line-2);border-radius:8px;background:var(--bt-main);color:var(--bt-ink);font:inherit;font-size:13px;outline:none;box-sizing:border-box}

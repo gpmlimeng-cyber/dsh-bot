@@ -638,7 +638,7 @@ html[data-bt-mobile] .bt-panel[data-dragging-sheet]{animation:none;transition:no
 html[data-bt-mobile] .bt-sheet-head{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;height:auto;min-height:56px;padding:0 12px}
 html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:none;min-width:0;text-align:left;font-size:15px;line-height:21px}
 /* The second line: what the page is, one step quieter and on the name's own left edge. */
-html[data-bt-mobile] .bt-sheet-head .bt-preview-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-sheet-head .bt-preview-hint{font-size:12px;line-height:16px;color:var(--bt-ink-2)}
 /* The scrim a sheet is dismissed with: the skin's own .bt-scrim class (its colour and fade live in
    styles.js, declared once) placed by this rule, under the sheet (96) and over the bar (95, which
    the scrim follows in the document). A desktop column draws none: its rule says so. */
@@ -687,7 +687,7 @@ export const BROWSER_CSS = `
 @media (hover:hover){
 .bt-ptab-x:hover{background:var(--bt-active);color:var(--bt-ink)}
 }
-.bt-ptab-new{position:relative;z-index:1;flex:none;width:28px;height:32px;border:0;border-radius:9px;background:none;color:var(--bt-ink-3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bt-ptab-new{position:relative;z-index:1;flex:none;width:28px;height:32px;border:0;border-radius:9px;background:none;color:var(--bt-ink-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 
 @media (hover:hover){
 .bt-ptab-new:hover{color:var(--bt-ink)}
@@ -711,10 +711,10 @@ export const BROWSER_CSS = `
 .bt-browser-address:hover{background:var(--bt-active)}
 }
 .bt-browser-address[data-editing]{background:var(--bt-main);border-color:var(--bt-line-2);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
-.bt-browser-scheme{display:inline-flex;color:var(--bt-ink-3);flex:none}
+.bt-browser-scheme{display:inline-flex;color:var(--bt-ink-2);flex:none}
 .bt-browser-scheme svg{width:14px;height:14px}
 .bt-browser-address input{flex:1;min-width:0;border:0;background:none;outline:none;color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;padding:0;text-overflow:ellipsis}
-.bt-browser-address input::placeholder{color:var(--bt-ink-3)}
+.bt-browser-address input::placeholder{color:var(--bt-ink-2)}
 .bt-browser-progress{position:absolute;left:0;right:0;bottom:-1px;height:2px;overflow:hidden;pointer-events:none}
 .bt-browser-progress::after{content:"";position:absolute;inset:0;width:40%;background:var(--bt-accent);border-radius:2px;animation:bt-browser-load 1.1s cubic-bezier(.4,0,.2,1) infinite}
 @keyframes bt-browser-load{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
@@ -733,7 +733,7 @@ export const BROWSER_CSS = `
 @keyframes bt-bcard-in{from{opacity:0;filter:blur(4px);transform:translateY(4px)}}
 .bt-bcard[data-active]{border-color:var(--bt-accent);box-shadow:0 0 0 1px var(--bt-accent)}
 .bt-bcard-shot{position:relative;display:block;width:100%;aspect-ratio:16/10;border:0;background:var(--bt-hover);padding:0;cursor:pointer}
-.bt-bcard-blank{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--bt-ink-3);font-size:12px}
+.bt-bcard-blank{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--bt-ink-2);font-size:12px}
 .bt-bcard-blank svg{width:20px;height:20px}
 .bt-bcard-preview{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;padding:14px 16px;text-align:left;background:linear-gradient(to bottom,var(--bt-main),var(--bt-hover));overflow:hidden}
 .bt-bcard-ptitle{font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -742,7 +742,7 @@ export const BROWSER_CSS = `
 .bt-bcard-fav{width:14px;height:14px;flex:none;border-radius:3px;color:var(--bt-ink-3)}
 .bt-bcard-row svg.bt-bcard-fav{width:14px;height:14px}
 .bt-bcard-title{flex:1;min-width:0;font-size:12.5px;line-height:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--bt-ink)}
-.bt-bcard-host{flex:none;font-size:11px;line-height:15px;color:var(--bt-ink-3);max-width:38%;overflow:hidden;text-overflow:ellipsis}
+.bt-bcard-host{flex:none;font-size:11px;line-height:15px;color:var(--bt-ink-2);max-width:38%;overflow:hidden;text-overflow:ellipsis}
 .bt-bcard-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border:0;border-radius:7px;background:color-mix(in srgb,var(--bt-main) 88%,transparent);color:var(--bt-ink-2);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;opacity:0;transition:opacity .12s ease;backdrop-filter:blur(4px)}
 
 @media (hover:hover){
@@ -754,7 +754,7 @@ export const BROWSER_CSS = `
    offset hands the box's extra size outward, and opacity is 1 for good. Its blur goes with it -- 4px
    of backdrop-filter behind a 22px chip was a GPU cost for nothing. */
 html[data-bt-mobile] .bt-bcard-x{top:-5px;right:-5px;width:44px;height:44px;padding:11px;box-sizing:border-box;background-clip:content-box;opacity:1;backdrop-filter:none}
-.bt-bcard-new{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border:.5px dashed var(--bt-line-2);border-radius:12px;background:none;color:var(--bt-ink-3);font:inherit;font-size:12.5px;cursor:pointer}
+.bt-bcard-new{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border:.5px dashed var(--bt-line-2);border-radius:12px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer}
 
 @media (hover:hover){
 .bt-bcard-new:hover{color:var(--bt-ink);border-color:var(--bt-ink-3)}

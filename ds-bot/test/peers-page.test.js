@@ -164,7 +164,7 @@ test('the page is a header row and one scroller of labelled cards', () => {
   assert.ok(code('set-rows.js').includes('export function MotionControl('), 'and it is the control the Bots page draws')
   assert.ok(code('set-rows.js').includes('motionOf(roster)') && code('set-rows.js').includes('export function motionOf('), 'reading the one value both places read')
   // Secondary or not, this heading is used with a thumb: the control keeps a finger's hit area, and
-  // its colour sits one step further back than a row's (--bt-ink-3), with only the chosen level in ink.
+  // its colour sits one step further back than a row's (--bt-ink-2, the quietest ink allowed to carry text), with only the chosen level in ink.
   // The user found the first cut too tall, so the pill is drawn at the heading's own height (28) while
   // the segment's own box stays 44 -- and that box stands in the heading's own 8px of padding, since a
   // box overflowing a row inside the list would be cut off by the list's scroller.
@@ -243,7 +243,7 @@ test('a label sits on the name\'s line and a value on the line below it', () => 
   const sheet = code('peers-page.js')
   assert.ok(sheet.includes('.bt-peers-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}'), 'the body stacks them')
   assert.ok(sheet.includes('.bt-peers-name-row{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden}'), 'the name line keeps the name and its labels in one row, whatever the room')
-  assert.ok(sheet.includes('.bt-peers-desc{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}'), 'the description is one small second-level line')
+  assert.ok(sheet.includes('.bt-peers-desc{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-2)}'), 'the description is one small second-level line')
   assert.ok(sheet.includes('.bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'and a value gives way rather than widening the row')
   assert.ok(sheet.includes('.bt-peers-sep{flex:none}'), 'and the mark between them never shrinks, so it cannot be squeezed out')
   assert.ok(sheet.includes('.bt-peers-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'the name is the item that gives way')
