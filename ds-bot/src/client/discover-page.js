@@ -7,10 +7,11 @@
 //
 // One surface at a time, like the peers page: opening this page closes the others, and the rows
 // close it on the way to what they open.
-import { createElement as h, useEffect } from 'react'
+import { createElement as h, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronLeftIcon, ChevronRightIcon, FluentClockIcon, FluentDataUsageIcon, FluentKeyIcon, FluentOptionsIcon, FluentPlugConnectedIcon, FluentPuzzlePieceIcon } from './icons.js'
-import { useEscape, usePaneLeft } from './overlay-hooks.js'
+import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
+import { usePaneLeft } from './overlay-hooks.js'
 import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
 
@@ -58,8 +59,14 @@ export function DiscoverPage({ useUi, actions }) {
   const panel = useUi(value => value.discoverPanel ?? null)
   const mobile = useMobile()
   const paneLeft = usePaneLeft()
-  useEscape(() => (panel !== null ? actions.closeDiscoverRow() : actions.closeDiscover()))
-  if (!open || !mobile) return null
+  // This layer is up on a phone only -- on a wide screen the line below renders nothing -- and
+  // useModalLayer has to be told exactly when the dialog appears: a hook that mounted while there
+  // was no element to read would never run again, and this page would lose Esc without a word. So
+  // `shown` is the one value both the hook and the render read.
+  const shown = open && mobile
+  const dialogRef = useRef(null)
+  useModalLayer(dialogRef, shown, () => (panel !== null ? actions.closeDiscoverRow() : actions.closeDiscover()))
+  if (!shown) return null
   // The whole page is 我的 -> 全部设置's own structure: the same layer, dialog, centred 52px head,
   // scrolling body, group cards and item rows, so the two pages are one design rather than two that
   // resemble each other. The list only brings its own rows and the one marker below; how a page
@@ -71,7 +78,7 @@ export function DiscoverPage({ useUi, actions }) {
   // tab opened it (settings.js, `tab`), so the two are drawn alike without either restating the rule.
   return createPortal(h('div', { className: 'bt-settings-layer bt-discover', 'data-tabpage': '', style: { left: paneLeft } },
     h('div', { className: 'bt-scrim', onMouseDown: () => actions.closeDiscover() }),
-    h('div', { className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('Discover'), 'data-screen': 'list' },
+    h('div', { ref: dialogRef, className: 'bt-settings', role: 'dialog', 'aria-modal': true, 'aria-label': t('Discover'), 'data-screen': 'list' },
       h('div', { className: 'bt-settings-top' }, h('h2', null, t('Discover'))),
       h('div', { className: 'bt-settings-scroll' }, DISCOVER_CARDS.map((rows, card) => h('section', {
         key: `card:${card}`, className: 'bt-settings-group',

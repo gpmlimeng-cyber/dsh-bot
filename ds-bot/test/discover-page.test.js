@@ -147,7 +147,7 @@ test('the second level carries the strip a shell panel does not draw', () => {
   // page's for the page's whole life -- so on the list the key hit a no-op and did nothing. There is
   // no separate "leave the page altogether" action any more; nothing calls one.
   assert.match(discover, /const panel = useUi\(value => value\.discoverPanel \?\? null\)/, 'the page reads the second level')
-  assert.match(discover, /useEscape\(\(\) => \(panel !== null \? actions\.closeDiscoverRow\(\) : actions\.closeDiscover\(\)\)\)/, 'and one handler leaves the level the state says is up')
+  assert.match(discover, /useModalLayer\(dialogRef, shown, \(\) => \(panel !== null \? actions\.closeDiscoverRow\(\) : actions\.closeDiscover\(\)\)\)/, 'and one handler leaves the level the state says is up')
   assert.ok(!back.includes('useEscape'), 'the strip registers no Escape of its own')
   assert.ok(!index.includes('closeDiscoverPage'), 'and there is no action left that skips a level')
   assert.match(index, /closeDiscoverRow: \(\) => \{[\s\S]*actions\.selectPanel\(null\)[\s\S]*discoverPanel: null, discover: true/, 'back: the panel goes and the list returns')

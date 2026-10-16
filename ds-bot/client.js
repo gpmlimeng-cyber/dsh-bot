@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 68b8f38c
+// Source fingerprint: 3ef2650f
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -17486,6 +17486,7 @@ html[data-bt-mobile] body:has(.bt-peers) .bt-mobile-bar{display:none}
 // src/client/discover-page.js
 var import_react44 = require("react");
 var import_react_dom14 = require("react-dom");
+var import_dsh_client_ui_primitives12 = require("@deepseek-ai/dsh-client-ui-primitives");
 var DISCOVER_CARDS = [
   [
     ["plugins", "Plugin manager", FluentPuzzlePieceIcon]
@@ -17507,15 +17508,17 @@ function DiscoverPage({ useUi, actions }) {
   const panel = useUi((value) => value.discoverPanel ?? null);
   const mobile = useMobile();
   const paneLeft = usePaneLeft();
-  useEscape(() => panel !== null ? actions.closeDiscoverRow() : actions.closeDiscover());
-  if (!open || !mobile) return null;
+  const shown = open && mobile;
+  const dialogRef = (0, import_react44.useRef)(null);
+  (0, import_dsh_client_ui_primitives12.useModalLayer)(dialogRef, shown, () => panel !== null ? actions.closeDiscoverRow() : actions.closeDiscover());
+  if (!shown) return null;
   return (0, import_react_dom14.createPortal)((0, import_react44.createElement)(
     "div",
     { className: "bt-settings-layer bt-discover", "data-tabpage": "", style: { left: paneLeft } },
     (0, import_react44.createElement)("div", { className: "bt-scrim", onMouseDown: () => actions.closeDiscover() }),
     (0, import_react44.createElement)(
       "div",
-      { className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("Discover"), "data-screen": "list" },
+      { ref: dialogRef, className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("Discover"), "data-screen": "list" },
       (0, import_react44.createElement)("div", { className: "bt-settings-top" }, (0, import_react44.createElement)("h2", null, t("Discover"))),
       (0, import_react44.createElement)("div", { className: "bt-settings-scroll" }, DISCOVER_CARDS.map((rows, card) => (0, import_react44.createElement)(
         "section",
@@ -17582,7 +17585,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "68b8f38c" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "3ef2650f" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
