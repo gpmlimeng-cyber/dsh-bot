@@ -26,7 +26,7 @@ const nav = code('nav-bar.js')
 const sidebar = code('sidebar.js')
 const header = code('header.js')
 
-const { peersList, peersModel, peersFolder, PeersPage } = await (async () => {
+const { peersList, peersMainsFirst, peersModel, peersFolder, PeersPage } = await (async () => {
   const bundle = await build({
     entryPoints: [fileURLToPath(new URL('../src/client/peers-page.js', import.meta.url))],
     bundle: true, format: 'cjs', platform: 'node', write: false,
@@ -134,9 +134,12 @@ test('the page is a header row and one scroller of labelled cards', () => {
   const partOf = (child) => classList(child)[0] ?? (typeof child === 'string' ? child : '(node)')
   const parts = (node) => plain(node.children.filter(child => child !== null && child !== undefined).map(partOf))
   assert.deepEqual(findAll(tree, 'bt-peers-desc').map(parts), [
-    ['bt-peers-text', 'bt-peers-sep', 'bt-peers-text'],
     ['bt-peers-text'],
+    ['bt-peers-text', 'bt-peers-sep', 'bt-peers-text'],
   ], 'the mark appears between two values and nowhere else')
+  // ...and the rows are drawn with the Main Bot first, which is why the order above is that way.
+  const botRows = findAll(tree, 'bt-peers-row').filter(row => row.props['data-bot-id'])
+  assert.deepEqual(plain(botRows.map(row => row.props['data-bot-id'])), ['b2', 'b1'], 'the Main Bot leads the list')
 })
 
 test('a label sits on the name\'s line and a value on the line below it', () => {
@@ -181,6 +184,16 @@ test('a label sits on the name\'s line and a value on the line below it', () => 
   // cannot move it.
   assert.ok(sheet.includes('.bt-peers-go{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-3)}'), 'the chevron pins itself to the row\'s end')
   assert.ok(sheet.includes('.bt-peers-row{display:flex;align-items:center;gap:12px;'), 'on a row that centres it vertically')
+})
+
+test('the Main Bots are listed first, and nobody else moves', () => {
+  // A stable partition: the Main Bots (roster.mainBotIds, the skin's own rule) take the front in the
+  // order they came in, and every other Bot keeps its place after them -- the roster is never reordered.
+  const bots = [{ id: 'a' }, { id: 'm1' }, { id: 'b' }, { id: 'm2' }, { id: 'c' }]
+  assert.deepEqual(plain(peersMainsFirst(bots, { mainBotIds: ['m2'] }).map(bot => bot.id)), ['m2', 'a', 'm1', 'b', 'c'], 'the Main Bot leads, the rest keep their order')
+  assert.deepEqual(plain(peersMainsFirst(bots, { mainBotIds: ['a', 'm1', 'm2'] }).map(bot => bot.id)), ['a', 'm1', 'm2', 'b', 'c'], 'several Main Bots keep the order they are listed in')
+  assert.deepEqual(plain(peersMainsFirst(bots, { mainBotIds: [] }).map(bot => bot.id)), ['a', 'm1', 'b', 'm2', 'c'], 'and with no Main Bot the list is left as it was')
+  assert.deepEqual(bots.map(bot => bot.id), ['a', 'm1', 'b', 'm2', 'c'], 'the roster itself is untouched')
 })
 
 test('a row is a Bot with its role and a chevron, not a conversation', () => {

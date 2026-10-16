@@ -30,6 +30,13 @@ export function peersList(bots, query) {
   return wanted === '' ? byName : byName.filter(bot => (bot?.name ?? '').toLowerCase().includes(wanted))
 }
 
+// The order that list is drawn in: the Main Bots first, then everyone else, each side keeping the
+// order it came in with -- a stable partition, so the roster itself is never reordered and no contact
+// moves because of another. Exported so the order can be checked without a DOM.
+export function peersMainsFirst(bots, roster) {
+  return [...bots.filter(bot => isMainOf(roster, bot.id)), ...bots.filter(bot => !isMainOf(roster, bot.id))]
+}
+
 // The two values a row's description line carries as text, exported for the same reason the list
 // is: what a line says should be checkable without a DOM.
 //
@@ -52,7 +59,9 @@ export function PeersPage({ useRoster, useUi, actions }) {
   const [query, setQuery] = useState('')
   const mobile = useMobile()
   if (!open || !mobile) return null
-  const shown = peersList(roster.bots, query)
+  // Filtered by the box, then ordered with the Main Bots first: the user's own order for this list,
+  // and a partition rather than a second section (the Main Bot tag still says which rows they are).
+  const shown = peersMainsFirst(peersList(roster.bots, query), roster)
   // How many group chats there are, read the way that page reads it itself (settings.js, its own
   // title): every room the roster lists -- so the door and the page it opens can never disagree.
   const rooms = (roster.rooms ?? []).length

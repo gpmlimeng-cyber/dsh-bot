@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 4bc688d4
+// Source fingerprint: 1bd1618d
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16120,6 +16120,9 @@ function peersList(bots, query2) {
   const byName = [...bots ?? []].sort((a, b) => (a?.name ?? "").localeCompare(b?.name ?? ""));
   return wanted === "" ? byName : byName.filter((bot) => (bot?.name ?? "").toLowerCase().includes(wanted));
 }
+function peersMainsFirst(bots, roster) {
+  return [...bots.filter((bot) => isMainOf(roster, bot.id)), ...bots.filter((bot) => !isMainOf(roster, bot.id))];
+}
 function peersModel(bot, roster) {
   return modelOf(bot, roster)?.name ?? null;
 }
@@ -16133,7 +16136,7 @@ function PeersPage({ useRoster, useUi, actions }) {
   const [query2, setQuery] = (0, import_react40.useState)("");
   const mobile = useMobile();
   if (!open || !mobile) return null;
-  const shown = peersList(roster.bots, query2);
+  const shown = peersMainsFirst(peersList(roster.bots, query2), roster);
   const rooms = (roster.rooms ?? []).length;
   const team = (roster.bots ?? []).slice(0, 4);
   const openPage = (page, id = null) => {
@@ -16406,7 +16409,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "4bc688d4" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "1bd1618d" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
