@@ -62,6 +62,11 @@
 **认版**：读 `<html data-bt-src>`（`client.js` 里是 `__DS_BOT_SRC__`），它就是源码指纹；指纹只覆盖 `src/client/**`（`scripts/build-client.mjs:26-41`），所以只改 `docs/` 或 `test/` **不会**让指纹变，页面不会因此需要重载。
 **复现**：`npm run build` 后必须跑 `node scripts/build-client.mjs --check`（两者都要 `ESBUILD_BINARY_PATH`），`--check` 比的是整文件。
 **量 DOM**：要摸壳自己的件时用前缀选择器——壳的类名是哈希过的（`[class*="_toBottomSlot"]`，`styles.js:2036`），按源码里的字面类名去 query 会找不到。
+**先让状态稳定，再取证**（同一条原则的两个实例，各踩过一次）：
+- **网络**：采 `api/file?path=` 这类请求记录之前先 `performance.clearResourceTimings()`。这页的 resource 缓冲会满到浏览器上限（实测 250 条，`/api/bot` 与 `android/dir-pick/poll` 一直在写），旧条目被挤掉，**查不到 ≠ 没发生**。
+- **视觉/像素**：浮层类读数（遮罩、入场、淡出、拖拽中的尺寸）一律**等动画结束（≥250ms）再采**，或连拍取后一帧。本皮肤 `.bt-scrim` 是 `animation:bt-fade .22s`（`styles.js:738`）、抽屉是 `bt-sheet-in .26s`（`browser-pane.js:623`），打开瞬间采到的就是"还没画上"的那一帧：某帧读全屏 `252`（未压暗）曾据此报了一个假 bug，稳定复测 `171 = 252×0.68` 才是真值。
+- **报数标单位**：WebView 截图的坐标是**物理像素 = CSS × dpr**（本机 425 CSS → 1169 宽，dpr 2.75），CSS 与物理混着报会让人把 `34` 和 `93` 读成矛盾；状态栏那一条在本机是**页面自己铺的**（同样会被遮罩压暗），不是"系统层压不到"。
+- **一帧不算证据**：凡结论是"没画 / 没生效 / 没发生"，必须在**同一状态的稳定帧**复测一次再上报。
 
 ## 9. 变更流程
 
