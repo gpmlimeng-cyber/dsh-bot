@@ -237,9 +237,16 @@ test('a Bot\'s row opens that Bot\'s page, the 群聊 door opens the group chats
   assert.ok(peers.includes("onClick: () => openPage('groups')"), 'and the 群聊 row asks for the group chats\' list -- 我的 -> 群聊, which is the page the user pointed at')
   // That action is the Bot\'s settings page (the same page 编辑 Bot asks for) or the groups list,
   // drawn as a page of the bar\'s own flow, and it remembers that closing it lands back here.
-  assert.match(index, /openPeerPage: \(page, id = null\) => \{[\s\S]*settings: \{ page, id, tab: true, back: 'peers' \}/, 'the page, marked as one, with the way back')
-  assert.ok(index.includes("if (state.settings.back === 'peers')") && index.includes('settings: null, peers: true'), 'which closeSettings reads')
-  assert.ok(index.includes("back: state.settings?.back ?? null"), 'and every step inside keeps, so a page opened after a drill-in still closes onto this list')
+  assert.match(index, /openPeerPage: \(page, id = null\) => \{[\s\S]*settings: \{ page, id, tab: true, from: 'peers' \}/, 'the page, marked as one, with the way back')
+  assert.ok(index.includes("if (state.settings.from === 'peers')") && index.includes('settings: null, peers: true'), 'which closeSettings reads')
+  assert.ok(index.includes("from: state.settings?.from ?? null"), 'and every step inside keeps it, so a page opened after a drill-in still leaves onto this list')
+  // The phone's own back arrow follows that record too: on a page with nothing above it (the group
+  // chats' list) it leaves Settings the way it came in, and a page reached from Settings' own list
+  // still shows that list.
+  assert.ok(code('settings.js').includes('if (back !== null) { actions.openSettings(shown); return }'), 'the arrow goes up a level when there is one')
+  assert.ok(code('settings.js').includes('if (from !== null) close()'), 'and otherwise leaves by the door it came in through')
+  assert.ok(code('settings.js').includes('else setScreen(\'list\')'), 'while a page with no door shows the list it came from')
+  assert.ok(code('overlays.js').includes('from: settings.from ?? null'), 'which the layer is handed')
   assert.ok(peers.includes("'data-screen'") === false, 'neither page is redrawn here: the key is all this page knows')
   // The group chats' page is Settings' own, and its title bar's right-hand control is that page's
   // action: the two buttons that both left the page (left = one step back, right = close Settings)

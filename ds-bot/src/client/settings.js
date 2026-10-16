@@ -170,7 +170,7 @@ function GroupsPage({ roster, actions, run, creating, setCreating, mobile }) {
 // and the skin draws the two differently (styles.js): a page appears, a dialog fades in over the
 // conversation it covers. Every step inside Settings is still that same surface, so the rows and the
 // back arrow keep whichever door the layer came in through.
-export function SettingsDialog({ page, id, tab = false, roster, actions, useUpdate, leaving = false }) {
+export function SettingsDialog({ page, id, tab = false, from = null, roster, actions, useUpdate, leaving = false }) {
   const [error, setError] = useState('')
   const close = useCallback(() => actions.closeSettings(), [])
   const run = promise => Promise.resolve(promise)
@@ -213,7 +213,14 @@ export function SettingsDialog({ page, id, tab = false, roster, actions, useUpda
   // The phone's title bar is drawn once, outside both screens, so it does not move when
   // the list hands over to a page. Back goes up one level; from the list, which is the
   // top level, it leaves Settings. The wide dialog keeps its own head inside the column.
-  const stepBack = () => { if (back === null) setScreen('list'); else actions.openSettings(shown) }
+  // The arrow goes up one level; a page with nothing above it leaves Settings the way it came in.
+  // `from` is that way in (index.js): a page opened from the 伙伴 list returns to that list, and one
+  // reached from Settings' own list shows that list -- the page the user actually came through.
+  const stepBack = () => {
+    if (back !== null) { actions.openSettings(shown); return }
+    if (from !== null) close()
+    else setScreen('list')
+  }
   // Escape goes up one level, exactly as the back arrow does: a page inside Settings returns to
   // Settings' own list rather than leaving it, and only the list itself leaves. Opened from 发现,
   // that leave is what lands back on 发现's own list (closeSettings reads the row it came from).

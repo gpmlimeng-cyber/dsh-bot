@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 807abe72
+// Source fingerprint: 4bc688d4
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -14596,7 +14596,7 @@ function GroupsPage({ roster, actions, run, creating, setCreating, mobile }) {
     )
   ];
 }
-function SettingsDialog({ page, id, tab = false, roster, actions, useUpdate, leaving = false }) {
+function SettingsDialog({ page, id, tab = false, from = null, roster, actions, useUpdate, leaving = false }) {
   const [error, setError] = (0, import_react35.useState)("");
   const close = (0, import_react35.useCallback)(() => actions.closeSettings(), []);
   const run = (promise) => Promise.resolve(promise).then(() => {
@@ -14629,8 +14629,12 @@ function SettingsDialog({ page, id, tab = false, roster, actions, useUpdate, lea
   if (shown === "usage" && !usageOpened) setUsageOpened(true);
   const errorLine = error ? (0, import_react35.createElement)("div", { className: "bt-error", role: "alert", style: { padding: 0 } }, error) : null;
   const stepBack = () => {
-    if (back === null) setScreen("list");
-    else actions.openSettings(shown);
+    if (back !== null) {
+      actions.openSettings(shown);
+      return;
+    }
+    if (from !== null) close();
+    else setScreen("list");
   };
   useEscape(() => {
     if (screen === "list") close();
@@ -14923,7 +14927,7 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
     ui2.exchange ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(ExchangeDialog, { pair: ui2.exchange, roster, actions }), document.body) : null,
     ui2.voice ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(VoiceMode, { key: ui2.voice, sessionId: ui2.voice, roster, actions, useSessions, useSessionStatus }), document.body) : null,
     menu ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(ContextMenu, { key: `${menu.kind ?? ""}:${menu.id}:${menu.x}:${menu.y}`, menu, roster, actions, leaving: menuLeaving }), document.body) : null,
-    settings ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(SettingsDialog, { page: settings.page, id: settings.id, tab: settings.tab === true, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
+    settings ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(SettingsDialog, { page: settings.page, id: settings.id, tab: settings.tab === true, from: settings.from ?? null, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
     memory && roster.byId[memory] ? (0, import_react_dom11.createPortal)((0, import_react37.createElement)(MemoryDialog, { key: memory, bot: roster.byId[memory], actions, leaving: memoryLeaving }), document.body) : null,
     // A delivered picture reads its bytes first, then opens the platform's own image
     // preview. A read that cannot show it as a picture hands over to the preview page,
@@ -15938,7 +15942,7 @@ function BottomNav({ useUi, useNav, actions }) {
   const mobile = useMobile();
   const portrait = usePortrait();
   if (!mobile || !portrait) return null;
-  const active = ui2.discover || ui2.discoverPanel !== null ? "plugins" : ui2.settings ? ui2.settings.back === "peers" ? "peers" : "me" : ui2.peers ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
+  const active = ui2.discover || ui2.discoverPanel !== null ? "plugins" : ui2.settings ? ui2.settings.from === "peers" ? "peers" : "me" : ui2.peers ? "peers" : nav.panel === "plugins" ? "plugins" : nav.panel === null ? "tasks" : null;
   const go = (id) => {
     if (active === id) return;
     if (id === "tasks") {
@@ -16402,7 +16406,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "807abe72" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "4bc688d4" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16897,19 +16901,22 @@ function apply(ctx) {
     // page into a dialog mid-flow, where the entrance would replay over the page being read. The two
     // are drawn differently on a phone (styles.js, [data-tabpage]), and the difference is the one the
     // user reported: a dialog fades in over what it covers, and what it covers is the tab it replaces.
-    // `back` is carried the same way and for the same reason: whichever surface opened this layer
-    // says where closing it lands (closeSettings reads it), and a step inside keeps that answer.
+    // `from` is carried the same way and for the same reason: whichever surface opened this layer
+    // says where leaving it lands (closeSettings reads it, and so does the phone's back arrow --
+    // settings.js), and a step inside keeps that answer. It names a surface, not a level: the level
+    // above a page is what `back` labels, and the two are read by different controls.
     openSettings: (page = "general", id = null, door = null) => {
-      ui2.set((state) => ({ ...state, settings: { page, id, tab: door === null ? state.settings?.tab ?? false : door === "tab", back: state.settings?.back ?? null }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false }));
+      ui2.set((state) => ({ ...state, settings: { page, id, tab: door === null ? state.settings?.tab ?? false : door === "tab", from: state.settings?.from ?? null }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false }));
     },
     // A page of Settings opened from the 伙伴 list -- one Bot's own page (`bots` + its id, the same
     // one its 「编辑 Bot」 menu entry opens) or the group chats' list (`groups`, which is the page the
     // user asked 群聊 to lead to). That list is a page of its own and the layer is drawn under it, so
-    // the list steps aside for it -- and the way back is the list, not the conversation the list
-    // would otherwise leave behind (closeSettings reads `back`). It is a page of the bar's own flow,
-    // so it is drawn as one: `tab` (styles.js).
+    // the list steps aside for it, and `from: 'peers'` is the record of where it came in through:
+    // leaving it -- by the phone's back arrow or by closing Settings -- lands back on the list rather
+    // than on the conversation the list would otherwise leave behind. It is a page of the bar's own
+    // flow, so it is drawn as one: `tab` (styles.js).
     openPeerPage: (page, id = null) => {
-      ui2.set((state) => ({ ...state, peers: false, discover: false, discoverPanel: null, settings: { page, id, tab: true, back: "peers" }, menu: null, palette: null, newChat: null, mobileNav: false }));
+      ui2.set((state) => ({ ...state, peers: false, discover: false, discoverPanel: null, settings: { page, id, tab: true, from: "peers" }, menu: null, palette: null, newChat: null, mobileNav: false }));
     },
     // On an upright phone the four pages of the bottom bar are peers of each other, so
     // closing one lands on the conversation rather than on whatever page was behind it:
@@ -16925,7 +16932,7 @@ function apply(ctx) {
         if (isPortraitNav()) ctx.layout.selectPanel(null);
         return;
       }
-      if (state.settings.back === "peers") {
+      if (state.settings.from === "peers") {
         ui2.set((current) => ({ ...current, settings: null, peers: true }));
         if (isPortraitNav()) ctx.layout.selectPanel(null);
         return;

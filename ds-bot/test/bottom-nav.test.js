@@ -162,8 +162,8 @@ test('each tab reads the page it belongs to, and never keeps a selection of its 
   // ...and 我的 only for a Settings page opened anywhere else: one opened from this list keeps the
   // light here (the layer carries the door it came through, index.js openPeerPage), so the bar never
   // says the user came in through a page they never opened.
-  assert.ok(chain.includes("ui.settings ? (ui.settings.back === 'peers' ? 'peers' : 'me')"), 'then Settings, on the tab that opened it')
-  assert.ok(chain.indexOf("back === 'peers'") > chain.indexOf('ui.settings'), 'and only where the layer recorded that door')
+  assert.ok(chain.includes("ui.settings ? (ui.settings.from === 'peers' ? 'peers' : 'me')"), 'then Settings, on the tab that opened it')
+  assert.ok(chain.indexOf("from === 'peers'") > chain.indexOf('ui.settings'), 'and only where the layer recorded that door')
   assert.match(chain, /ui\.peers \? 'peers'/, 'the peers page wins next')
   assert.ok(!chain.includes('mobileNav'), 'the drawer no longer stands in for the peers page')
   assert.ok(nav.includes(": nav.panel === 'plugins' ? 'plugins'"), 'then the shell panel')
