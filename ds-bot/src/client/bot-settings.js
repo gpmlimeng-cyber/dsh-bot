@@ -280,7 +280,7 @@ label.bt-bs-row{cursor:text}
 @media (hover:hover){
 .bt-bs-area:hover{background:var(--bt-active)}
 }
-.bt-bs-danger .bt-bs-label{color:var(--bt-danger-deep)}
+.bt-bs-danger .bt-bs-label{color:var(--bt-danger)}
 .bt-bs-danger[data-confirm]{background:color-mix(in srgb,var(--bt-danger) 8%,transparent)}
 
 @media (hover:hover){

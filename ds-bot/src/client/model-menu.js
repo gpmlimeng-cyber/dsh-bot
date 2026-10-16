@@ -276,7 +276,7 @@ export const MODEL_CSS = `
 .bt-model-trigger:hover{background:var(--bt-active)}
 }
 .bt-model-trigger:focus-visible{outline:2px solid var(--bt-accent);outline-offset:1px}
-.bt-model-trigger[data-missing] .bt-model-provider{color:var(--bt-danger-deep)}
+.bt-model-trigger[data-missing] .bt-model-provider{color:var(--bt-danger)}
 .bt-model-trigger[data-wide]{display:flex;width:100%;min-height:48px;padding:7px 12px;justify-content:space-between;border-radius:12px;background:var(--bt-card);box-shadow:inset 0 0 0 1px var(--bt-line)}
 .bt-model-trigger[data-wide][aria-expanded=true]{background:var(--bt-hover)}
 @media (hover:hover){

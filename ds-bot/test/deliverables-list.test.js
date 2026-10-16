@@ -177,7 +177,7 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   assert.ok(index.includes("import { BROWSER_CSS, PANEL_SHEET_CSS } from './browser-pane.js'"), 'the installer takes it')
   assert.ok(index.includes("installCompiledStyles(PANEL_SHEET_CSS, 'panel-sheet'),"), 'and installs it')
   const at = index.indexOf("installCompiledStyles(PANEL_SHEET_CSS")
-  const conditional = index.indexOf('browsers ? installCompiledStyles(BROWSER_CSS')
+  const conditional = index.indexOf('browsers ? () => installCompiledStyles(BROWSER_CSS')
   assert.ok(at > 0 && conditional > at, 'before the conditional browser block, in the same list')
   assert.ok(!pane.slice(pane.indexOf('export const BROWSER_CSS')).includes('data-view=products'), 'with no copy left inside the conditional one')
   // Two more panel-common pieces a phone uses went the same way (measured: they were swallowed too).

@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon, PlusIcon, DotsBoldIcon, ChevronLeftIcon } from './icons.js'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, MenuIcon, PlusIcon, DotsBoldIcon, ChevronLeftIcon, SidePanelIcon } from './icons.js'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { useMobile } from './mobile.js'
 import { ActivityIndicator } from './activity-row.js'
@@ -139,7 +139,11 @@ export function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, u
     // swallowed -- .bt-head is pointer-events:none so the transcript scrolls under the pill.
     useWork && useUi && !mobile ? h(NeedsYou, { useRoster, useWork, useUi, actions }) : null,
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
-    h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, actions }))
+    h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, actions }),
+    // DSH's way into its right sidebar sits in the session header this pill replaces.
+    actions.hasRightSidebar?.()
+      ? h('button', { type: 'button', className: 'bt-icon-btn bt-head-side', 'data-bt-right-sidebar': '', 'aria-label': t('Show or hide the right sidebar'), title: t('Right sidebar'), onClick: () => actions.toggleRightSidebar() }, h(SidePanelIcon))
+      : null)
   if (!mobile) return head
   // The right-hand group mirrors the hamburger: a new chat, then the subject's own menu.
   // The menu is the very one the sidebar rows open (actions.openMenu), so it reuses the

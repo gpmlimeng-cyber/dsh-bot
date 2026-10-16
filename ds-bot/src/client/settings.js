@@ -248,7 +248,7 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
   const backLabel = screen === 'list' ? t('Close settings') : back ?? t(BACK_TO[from] ?? 'Back to all settings')
   return h('div', { className: 'bt-settings-layer', 'data-tabpage': tab ? '' : undefined, 'data-leaving': leaving || undefined },
     h('div', { className: 'bt-scrim', onMouseDown: close }),
-    h('div', { ref: dialogRef, className: 'bt-settings', role: 'dialog', 'aria-modal': true, ...SHELL_OVERLAY, 'aria-label': t('DS Bot settings'), 'data-wide': shown === 'usage' ? '' : undefined, 'data-screen': mobile ? screen : undefined },
+    h('div', { ref: dialogRef, className: 'bt-settings', role: 'dialog', 'aria-modal': true, ...SHELL_OVERLAY, 'aria-label': t('DS Bot settings'), 'data-screen': mobile ? screen : undefined },
       // Phone only: back, the title centred on the dialog rather than on the space left
       // between the two side buttons, and the close. A wider button on one side cannot
       // pull the title off centre because it is out of their flow. The close is drawn

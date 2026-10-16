@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { FishLogo, IconPinOutlineRegular, IconCloseOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
-import { PlusIcon, SearchIcon, GaugeIcon, PlugIcon, ClockIcon, GearIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon } from './icons.js'
+import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, PlugIcon, ClockIcon, GearIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon } from './icons.js'
 import { MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
@@ -77,6 +77,11 @@ const useGroupWork = (useWork, pick) => (useWork ? useWork(work => JSON.stringif
 const workKeys = text => JSON.parse(text)
 const doingOf = ({ tool, said, note, target, switching }) => ({ tool, said, note, target, switching })
 const workLine = (lead, doing, more) => h(Shimmer, null, `${lead} · ${workPhrase(doing)}…${more > 0 ? ` +${more}` : ''}`)
+// The Bots and groups a Bot waits for (handoffs.js), by the names they have now.
+const waitingFor = (roster, waits) => {
+  const names = [...(waits?.bots ?? []).map(id => roster.byId[id]?.name), ...(waits?.rooms ?? []).map(id => roster.roomsById[id]?.name)].filter(Boolean)
+  return names.length === 0 ? '' : t('Waiting for {names}', { names: names.join(t(' and ')) })
+}
 
 function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, drawer, marked }) {
   const id = bot.id
@@ -97,6 +102,8 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   const away = !running && groups.length > 0
   const state = botState(running || away, doing, alert)
   const awayLine = away ? workLine(roster.roomsById[groups[0].id]?.name ?? t('a group chat'), groups[0], groups.length - 1) : null
+  const waits = workKeys(useWork ? useWork(work => JSON.stringify(work.waiting?.[id] ?? null)) : 'null')
+  const waitsFor = state === 'waiting' ? waitingFor(roster, waits) : ''
   if (bot.hidden && !active && !main) return null
   const onContextMenu = (event) => {
     event.preventDefault()
@@ -105,7 +112,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   // Pinned is a state of the row, so the mark rides the avatar in every layout -- the tile
   // included, which used to drop it (the 伙伴 grid showed no pin at all).
   const pinned = bot.pinned === true
-  const label = [bot.name, main ? t('Main Bot') : '', pinned ? t('Pinned') : '', running || away ? t('Working') : '', approval ? t('Waiting for your approval') : alert ? t('Waiting for your answer') : '', unread ? t('Unread activity') : ''].filter(Boolean).join(', ')
+  const label = [bot.name, main ? t('Main Bot') : '', pinned ? t('Pinned') : '', running || away ? t('Working') : '', waitsFor, approval ? t('Waiting for your approval') : alert ? t('Waiting for your answer') : '', unread ? t('Unread activity') : ''].filter(Boolean).join(', ')
   // The wide column seats the Main Bot in its own tile, with the shortcuts that float
   // around it. The phone drawer renders that same wide list, so the tile followed it and
   // a 60px centred tile sat among 36px rows; the drawer wants the ordinary row, and the
@@ -128,7 +135,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
     h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name),
       pinned ? h(PinMark) : null,
       h(RowMeta, { at })),
-    h(RowSub, { preview: awayLine ?? preview, count: countOf(roster, [part, ...(bot.parts ?? [])]) })) : null,
+    h(RowSub, { preview: awayLine || waitsFor || preview, count: countOf(roster, [part, ...(bot.parts ?? [])]) })) : null,
   wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
 }
 
@@ -457,7 +464,9 @@ export function TeamSidebar(props) {
             'aria-label': t('Close navigation'), title: t('Close navigation'),
             onClick: actions.closeMobileNav,
           }, h(IconCloseOutlineRegular))
-        : null)
+        : null,
+      // DSH's own key for the wide column, in the same round seat: it folds the sidebar away.
+      h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)))
       : h(Fragment, null,
           h(UpdateButton, { useUpdate: props.useUpdate, actions }),
           h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon))),
@@ -812,7 +821,7 @@ export function BrandName() {
   return h('span', { style: { fontWeight: 600, fontSize: 14 } }, 'DS Bot')
 }
 
-// With the whale holding the settings seat, the footer row is just the account menu
+// With the whale holding the settings seat, the Bot row is just the account menu
 // and Connect plugins; FooterAccount only shows when the seat went to no one. The
 // shell's footer classes are CSS-module names, so they match on their stems.
 export const SIDEBAR_CSS = `
@@ -825,10 +834,10 @@ export const SIDEBAR_CSS = `
 .bt-pin{flex:none;display:inline-flex;color:color-mix(in srgb,var(--bt-ink) 75%,transparent)}
 .bt-pin svg{width:12px;height:12px}
 .bt-side-close svg{width:20px;height:20px}
-[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"],[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"]>div{display:contents!important}
-.bt-foot-account{order:-1;flex:none;display:inline-flex}
-[class*="_footArea"]:has(.bt-foot-account) .bt-connect-foot{order:0;flex:1 1 auto;min-width:0;width:auto}
-[class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"]{order:1;flex:none}
+[class*="_footArea"]:has(.bt-foot-account){grid-template-columns:auto minmax(0,1fr) auto;column-gap:6px}
+[class*="_footArea"]>[class*="_footerActions"]>div>.bt-foot-account{grid-column:1;order:1;display:inline-flex}
+[class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"]>div>.bt-connect-wrap{grid-column:2}
+[class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"]{grid-column:3}
 [class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"] button[class*="_trigger"] [class*="_label"]{display:none!important}
 
 /* The update cloud springs in when a newer DS Bot shows up; its arrow drops in a
@@ -844,7 +853,7 @@ export const SIDEBAR_CSS = `
 @keyframes bt-update-pop{from{opacity:0;transform:scale(.96);filter:blur(4px)}}
 .bt-update-title{font-size:14px;line-height:20px;font-weight:600}
 .bt-update-text{margin-top:2px;font-size:12.5px;line-height:18px;color:var(--bt-ink-2)}
-.bt-update-error{margin-top:8px;font-size:12px;line-height:17px;color:var(--bt-danger-deep);overflow-wrap:anywhere;max-height:90px;overflow:auto}
+.bt-update-error{margin-top:8px;font-size:12px;line-height:17px;color:var(--bt-danger);overflow-wrap:anywhere;max-height:90px;overflow:auto}
 .bt-update-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px}
 .bt-update-notes{margin-right:auto;font-size:12.5px;color:var(--bt-ink-2);text-decoration:none}
 

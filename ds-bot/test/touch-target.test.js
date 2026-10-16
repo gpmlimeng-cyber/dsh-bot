@@ -86,6 +86,7 @@ const KEYS = [
 // stops naming an offender is reported too: a stale reason rots exactly like a missing one.
 const EXEMPT = new Map([
   ['.bt-tool', 'the phone rule gives it 44 (audit 批②); the global box is the wide layout\'s'],
+  ['.bt-head-side', 'the phone rule gives it 44 (audit 批②); the global box is the wide layout\'s'],
   ['.bt-palette-clear', 'the phone rule gives it 44 (audit 批②); the global box is the wide layout\'s'],
   ['.bt-us-month-nav', 'the phone rule gives it 44 (audit 批②); the global box is the wide layout\'s'],
   ['.bt-mobile-acts .bt-attention', 'the phone rule gives it 44 (audit 批②); the global box is the wide layout\'s'],

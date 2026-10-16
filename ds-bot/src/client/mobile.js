@@ -245,7 +245,7 @@ export function watchMobile() {
 
 /** Reactive view of the same breakpoint, for the components that portal. */
 export function useMobile() {
-  const [mobile, setMobile] = useState(() => media()?.matches === true)
+  const [mobile, setMobile] = useState(media()?.matches === true)
   useEffect(() => {
     const mql = media()
     if (!mql) return undefined
