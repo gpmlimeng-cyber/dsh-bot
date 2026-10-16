@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 2a2017b2
+// Source fingerprint: 1af01539
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -607,10 +607,10 @@ var ZH = {
   "Close preview": "关闭预览",
   "Image preview": "图片预览",
   "File preview": "文件预览",
-  "All deliverables": "交付物",
-  "No deliverables yet": "还没有交付物",
+  "All deliverables": "我收到的文件",
+  "No deliverables yet": "还没有收到文件",
   "Files a Bot hands over are listed here.": "机器人交付的文件会列在这里。",
-  "Only files delivered since this run started are listed.": "只显示本次启动以来交付过的文件。",
+  "Only files delivered since this run started are listed.": "这次打开 App 之后收到的文件都在这",
   "This list could not be read": "这份列表读不出来",
   Source: "源码",
   "Open navigation": "打开导航",
@@ -17776,7 +17776,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "2a2017b2" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "1af01539" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
