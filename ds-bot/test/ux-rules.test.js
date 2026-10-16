@@ -171,7 +171,7 @@ test('a layer that hands its Esc to the shell\u2019s modal machinery says it is 
   // guard Lead asked for: convert a layer, mark it, or the test says so.
   const files = readdirSync(DIR).filter(name => name.endsWith('.js'))
   const users = files.filter(name => read(name).includes('useModalLayer(')).sort()
-  assert.deepEqual(users, ['palette.js'], `the layers converted so far are not the ones expected: ${users.join(', ')}`)
+  assert.deepEqual(users, ['memory-panel.js', 'palette.js'], `the layers converted so far are not the ones expected: ${users.join(', ')}`)
   for (const name of users) {
     const source = read(name)
     assert.ok(source.includes("'aria-modal': true"), `${name} calls useModalLayer without marking its dialog aria-modal -- it would have no Esc`)

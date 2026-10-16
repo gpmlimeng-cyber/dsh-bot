@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 4b5b68a3
+// Source fingerprint: 23469420
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -10677,6 +10677,7 @@ function BotCapabilitiesCard({ bot, roster, actions, run, Card: Card2, SwitchRow
 
 // src/client/memory-panel.js
 var import_react21 = require("react");
+var import_dsh_client_ui_primitives5 = require("@deepseek-ai/dsh-client-ui-primitives");
 var POLL_MS2 = 1500;
 var MENU_EXIT_MS2 = 120;
 var counts = /* @__PURE__ */ new Map();
@@ -10929,7 +10930,8 @@ function MemoryDialog({ bot, actions, leaving = false }) {
   const inputRef = (0, import_react21.useRef)(null);
   const now = useNow(3e4);
   const close = (0, import_react21.useCallback)(() => actions.closeMemory(), []);
-  useEscape(close);
+  const dialogRef = (0, import_react21.useRef)(null);
+  (0, import_dsh_client_ui_primitives5.useModalLayer)(dialogRef, true, close);
   (0, import_react21.useEffect)(() => {
     if (!menu) return void 0;
     const onDown = (event) => {
@@ -10998,7 +11000,7 @@ function MemoryDialog({ bot, actions, leaving = false }) {
     (0, import_react21.createElement)("div", { className: "bt-scrim bt-mem-scrim", onMouseDown: close }),
     (0, import_react21.createElement)(
       "div",
-      { className: "bt-mem", role: "dialog", "aria-modal": true, "aria-label": t("{name}'s memory", { name: bot.name }) },
+      { ref: dialogRef, className: "bt-mem", role: "dialog", "aria-modal": true, "aria-label": t("{name}'s memory", { name: bot.name }) },
       (0, import_react21.createElement)(
         "div",
         { className: "bt-mem-head" },
@@ -12028,7 +12030,7 @@ body[data-ds-dark-theme] .bt-member-state.bt-mw-ask{color:var(--bt-warn-ink-dark
 // src/client/details-drawer.js
 var import_react26 = require("react");
 var import_react_dom9 = require("react-dom");
-var import_dsh_client_ui_primitives5 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives6 = require("@deepseek-ai/dsh-client-ui-primitives");
 function transcriptOf(list, id, name, hiddenTurns = []) {
   const outline = list.projectionsBySession?.[id]?.values?.turnOutline ?? list.byId[id]?.projectionValues?.turnOutline;
   if (!Array.isArray(outline)) return "";
@@ -12135,8 +12137,8 @@ function About({ text, title = "About" }) {
 }
 function StatPopover({ anchorRef, open, onClose, title, rows }) {
   const panelRef = (0, import_react26.useRef)(null);
-  const pos = (0, import_dsh_client_ui_primitives5.useAnchoredPosition)({ open, anchorRef, panelRef, side: "top", align: "end", gap: 8, margin: 12 });
-  (0, import_dsh_client_ui_primitives5.useDismissOnOutsidePointer)(anchorRef, open, (value) => {
+  const pos = (0, import_dsh_client_ui_primitives6.useAnchoredPosition)({ open, anchorRef, panelRef, side: "top", align: "end", gap: 8, margin: 12 });
+  (0, import_dsh_client_ui_primitives6.useDismissOnOutsidePointer)(anchorRef, open, (value) => {
     if (!value) onClose();
   }, panelRef);
   useEscape(open ? onClose : () => {
@@ -12934,7 +12936,7 @@ function turnDetector({ loud = 0.12, quiet = 0.06, quietMs = 1200 } = {}) {
 
 // src/client/palette.js
 var import_react28 = require("react");
-var import_dsh_client_ui_primitives6 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives7 = require("@deepseek-ai/dsh-client-ui-primitives");
 var PALETTE_EXIT_MS = 160;
 function CommandPalette({ start, token, roster, actions, useSessions }) {
   const [query2, setQuery] = (0, import_react28.useState)(start ?? "");
@@ -12947,7 +12949,7 @@ function CommandPalette({ start, token, roster, actions, useSessions }) {
     setTimeout(() => actions.closePalette(token), PALETTE_EXIT_MS);
   };
   const dialogRef = (0, import_react28.useRef)(null);
-  (0, import_dsh_client_ui_primitives6.useModalLayer)(dialogRef, true, close);
+  (0, import_dsh_client_ui_primitives7.useModalLayer)(dialogRef, true, close);
   const ids = [...roster.bots.map(currentPart), ...roster.rooms.map((item) => item.id)];
   const found = useSessions((list) => {
     if (wanted.length < 2) return "[]";
@@ -13000,7 +13002,7 @@ function CommandPalette({ start, token, roster, actions, useSessions }) {
   if (people.length) sections.push([t("Bots"), people]);
   const agents = (roster.agents ?? []).filter(() => matchesName("DSH Agent")).map((agent) => ({
     key: agent.id,
-    avatar: (0, import_react28.createElement)("span", { className: "bt-palette-agent" }, (0, import_react28.createElement)(import_dsh_client_ui_primitives6.FishLogo, { size: 18 })),
+    avatar: (0, import_react28.createElement)("span", { className: "bt-palette-agent" }, (0, import_react28.createElement)(import_dsh_client_ui_primitives7.FishLogo, { size: 18 })),
     title: "DSH Agent",
     subtitle: t("Plain dsh session"),
     run: () => actions.openAgent(agent.id)
@@ -13296,7 +13298,7 @@ function CreateBot({ roster, actions, start, brief = "", onBack, canGoBack, onCr
 
 // src/client/new-chat.js
 var import_react30 = require("react");
-var import_dsh_client_ui_primitives7 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives8 = require("@deepseek-ai/dsh-client-ui-primitives");
 function NewChat({ mode, roster, actions }) {
   const [query2, setQuery] = (0, import_react30.useState)("");
   const [picked, setPicked] = (0, import_react30.useState)([]);
@@ -13400,7 +13402,7 @@ function NewChat({ mode, roster, actions }) {
       inputRef.current?.focus();
     } });
     if ((roster.agents ?? []).length === 0) {
-      options.push({ key: "agent", icon: (0, import_react30.createElement)(import_dsh_client_ui_primitives7.FishLogo, { size: 16 }), label: t("Add DSH Agent"), run: () => run(async () => {
+      options.push({ key: "agent", icon: (0, import_react30.createElement)(import_dsh_client_ui_primitives8.FishLogo, { size: 16 }), label: t("Add DSH Agent"), run: () => run(async () => {
         await actions.addAgent();
         close();
       }) });
@@ -17574,7 +17576,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "4b5b68a3" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "23469420" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
