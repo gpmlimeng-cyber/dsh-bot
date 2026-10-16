@@ -1525,13 +1525,14 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%;max-width:var(--dsh-c
 /* The narrow bands -- a hand, and the small tablet held upright -- asked for bubbles as wide as
    the input card: the card is that same column less its 16px gutters and a row runs inside those
    gutters, so the row's own measure is the answer, and the bubble's left edge is already on the
-   line (the rows are left-aligned; the user's own row keeps its right edge and grows left). A
-   group's row gives its avatar column back, 30px, the same 30px .bt-astack[data-lead]>.bt-msg
-   carries as a start margin. A wider band keeps the share above: there the tools stand beside the
-   bubble, and a row asking for the whole measure pushed them past the viewport (the page scrolled
-   sideways), which is why the tools move under the bubble on these bands too. */
+   line (the rows are left-aligned; the user's own row hugs the same edge). A group's own avatar
+   column is not taken off here: it sits INSIDE the row (.bt-msg-line holds the 22px mark and its
+   8px gutter), so the bubble is indented by it already -- subtracting it would shorten the row by
+   the same 30px twice and leave the bubble 30px short of the card's right edge, measured. A wider
+   band keeps the share above: there the tools stand beside the bubble, and a row asking for the
+   whole measure pushed them past the viewport (the page scrolled sideways), which is why the tools
+   move under the bubble on these bands too. */
 html[data-bt-mobile]:not([data-bt-size=expanded]) [class*="_body"]:has(> [class*="_scrollBody"]){--bt-bubble-max:min(var(--dsh-chat-content-width,748px),100%)}
-html[data-bt-mobile]:not([data-bt-size=expanded]) [class*="_body"]:has(> [class*="_scrollBody"]) .bt-astack[data-lead]{--bt-bubble-max:calc(100% - 30px)}
 /* On a hand the three tools sit under the bubble rather than beside it: there is no hover to
    chase, and beside the bubble they eat the text's width (at the widest cap they even reached
    past the viewport and made the page scroll sideways). They stay absolutely positioned, so a

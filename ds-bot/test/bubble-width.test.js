@@ -21,21 +21,22 @@ const narrow = 'html[data-bt-mobile]:not([data-bt-size=expanded])'
 const mobile = 'html[data-bt-mobile]'
 const domain = '[class*="_body"]:has(> [class*="_scrollBody"])'
 
-test('the share cap keeps its own rule, and only a group Bot row takes 30px off', () => {
+test('the share cap keeps its own rule, and no row subtracts the avatar column', () => {
   const cap = styles.filter(line => line.startsWith(`${domain}{--bt-bubble-max`))
   assert.equal(cap.length, 1)
   assert.ok(cap[0].includes('.702'), cap[0])
-  const row = styles.filter(line => line.includes('{--bt-bubble-max:calc(100% - 30px)}'))
-  assert.equal(row.length, 1, 'the subtraction is declared once')
-  // The avatar column is what holds the left margin: without one the row would be indented on
-  // one side only, so a one-to-one chat keeps the cap above.
-  assert.equal(row[0], `${narrow} ${domain} .bt-astack[data-lead]{--bt-bubble-max:calc(100% - 30px)}`)
+  // The avatar column lives inside the row (.bt-msg-line holds the 22px mark and its 8px gutter),
+  // so it indents the bubble by itself: a rule that took those 30px off the row as well measured
+  // 30px short of the card's right edge, which is why no such rule exists now.
+  assert.equal(styles.filter(line => line.includes('{--bt-bubble-max:calc(100% - 30px)}')).length, 0, 'the subtraction is gone')
+  assert.ok(styles.some(line => line.startsWith('.bt-msg-line{position:relative;display:flex;')), 'the row is where the avatar sits')
+  assert.ok(styles.includes('.bt-astack[data-lead]>.bt-msg{max-width:var(--bt-bubble-max)}'), 'and a group row reads the same cap as any other')
 })
 
 test('only the narrow bands of the mobile layout take it, never a desktop window', () => {
   for (const line of [...styles, ...messages]) {
-    if (!line.includes('--bt-bubble-max:calc(100%')) continue
-    assert.ok(line.startsWith(narrow), line)
+    if (!/--bt-bubble-max:[^;]*%/.test(line)) continue
+    assert.ok(line.startsWith(narrow) || line.startsWith(`${domain}{`), line)
   }
   // The whole measure is asked for on those bands only, and always as the row's own 100%.
   const whole = styles.filter(line => line.includes('--bt-bubble-max:min(var(--dsh-chat-content-width,748px),100%)'))
