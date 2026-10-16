@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 684e159f
+// Source fingerprint: eba3a7e3
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3279,12 +3279,13 @@ var CONVERSATION_CSS = `
 [data-step-process]>[data-step-process-body]{display:block!important;content-visibility:visible!important;max-height:none!important;overflow:visible!important;mask-image:none!important;scrollbar-gutter:auto!important}
 :is([data-step-process],[data-turn-process-hidden])[hidden]{content-visibility:visible!important}
 [class*="_flowItem"]:has(> [data-slot="conversation.chat.node"]:empty){display:none!important}
-/* The shell draws its own tool row into the very cell our relay content goes in, so once the replies
-   are there the cell is not empty and the rule above no longer hides it: the user saw the shell's
-   "工具调用 group_relay · {}" line sitting above the group's messages. data-tool is the shell's own hook
-   -- the tool's name, on its row's root -- so this hides that one row, by name, and touches no other
-   tool: read and bash keep the shell's rows, which is where they belong. */
-[data-slot="conversation.chat.node"] [data-tool="group_relay"]{display:none!important}
+/* The shell draws its own row for the relay, and it is a live event rather than a line of history:
+   the target showed 71 of them while the room worked and 0 after a reload, one behind every reply,
+   which is what pushed the messages out of sight. data-tool is the shell's own hook -- the tool's
+   name, on its row's root -- so this hides that one row by name. It is not scoped to a container:
+   the live row is not the node we shadow, and the relay is only ever called in a group chat, so the
+   name alone cannot catch anything else. read and bash keep the shell's rows, where those belong. */
+[data-tool="group_relay"]{display:none!important}
 [class*="_header"]:has(.bt-head){border-bottom-color:transparent!important;box-shadow:none!important}
 /* The transcript runs under a floating header pill. */
 header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;right:0;z-index:8;display:flex!important;padding:10px 0 0!important;background:transparent!important;pointer-events:none;justify-content:center}
@@ -17797,7 +17798,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "684e159f" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "eba3a7e3" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

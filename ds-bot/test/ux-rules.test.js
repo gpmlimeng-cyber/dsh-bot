@@ -325,8 +325,8 @@ test('the shell\'s own relay row is hidden, by the tool name the shell puts on i
   const styles = read('styles.js')
   assert.ok(styles.includes('[class*="_flowItem"]:has(> [data-slot="conversation.chat.node"]:empty){display:none!important}'),
     'a cell with nothing in it is still hidden whole')
-  assert.ok(styles.includes('[data-slot="conversation.chat.node"] [data-tool="group_relay"]{display:none!important}'),
-    'and the relay\'s own row is hidden by name, inside the transcript')
+  assert.ok(styles.includes('[data-tool="group_relay"]{display:none!important}'),
+    'and the relay\'s own live row is hidden by name -- not scoped to the cell we shadow, because the live row is not that node')
   // Only the relay: every other tool keeps the shell's row, which is where those belong.
   for (const tool of ['read', 'bash']) assert.ok(!styles.includes(`[data-tool="${tool}"]`), `${tool} keeps its row`)
 })
