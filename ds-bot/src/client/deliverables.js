@@ -16,7 +16,7 @@
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { FluentArchiveIcon, FluentCodeIcon, FluentDocumentIcon, FluentImageIcon, FluentPdfIcon, FluentTableIcon } from './icons.js'
+import { VividCsvMark, VividDocumentMark, VividGzMark, VividImageMark, VividMarkdownMark, VividPdfMark, VividSevenZipMark, VividTarMark, VividTextMark, VividXlsMark, VividXlsxMark, VividZipMark } from './icons.js'
 import { LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { useMobile } from './mobile.js'
@@ -83,27 +83,25 @@ const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')
 // so the kinds are Fluent's artwork (icons.js, copied from @fluentui/svg-icons like the rest of that
 // family), and the words that say which kind it is stay in the line under the name, once.
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'tif', 'tiff'])
-const MEDIA_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv', 'avi', 'mp3', 'wav', 'm4a', 'ogg', 'flac'])
-const ARCHIVE_EXTENSIONS = new Set(['zip', 'tar', 'gz', 'tgz', '7z', 'rar'])
-const CODE_EXTENSIONS = new Set(['html', 'htm', 'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'py', 'go', 'rs', 'java', 'c', 'h', 'cpp', 'css', 'json', 'yml', 'yaml', 'toml', 'sh', 'sql', 'xml'])
-const TABLE_EXTENSIONS = new Set(['csv', 'tsv', 'xls', 'xlsx', 'ods'])
-// The drawing for a file: its kind when one of these fits, a document when none does -- which is what
-// markdown, a text file, a font and everything unfamiliar are to a reader.
+// The drawing for a file, one row per mark we carry (icons.js, the vivid set): the extension has to
+// match one exactly, because each of those drawings has its own type word baked into it -- the csv
+// mark reads "CSV". Anything else is the generic document, which is what an unfamiliar extension is
+// to a reader. A picture is the exception: its mark names the kind rather than the extension, so
+// every image extension takes it.
 const iconOf = (name) => {
   const extension = fileExtension(name).toLowerCase()
-  if (IMAGE_EXTENSIONS.has(extension)) return FluentImageIcon
-  if (CODE_EXTENSIONS.has(extension)) return FluentCodeIcon
-  if (TABLE_EXTENSIONS.has(extension)) return FluentTableIcon
-  if (extension === 'pdf') return FluentPdfIcon
-  if (ARCHIVE_EXTENSIONS.has(extension)) return FluentArchiveIcon
-  return FluentDocumentIcon
-}
-const toneOf = (name) => {
-  const extension = fileExtension(name).toLowerCase()
-  if (IMAGE_EXTENSIONS.has(extension)) return 'image'
-  if (MEDIA_EXTENSIONS.has(extension)) return 'media'
-  if (ARCHIVE_EXTENSIONS.has(extension) || extension === '') return 'plain'
-  return 'doc'
+  if (IMAGE_EXTENSIONS.has(extension)) return VividImageMark
+  if (extension === 'pdf') return VividPdfMark
+  if (extension === 'md') return VividMarkdownMark
+  if (extension === 'txt') return VividTextMark
+  if (extension === 'csv') return VividCsvMark
+  if (extension === 'xls') return VividXlsMark
+  if (extension === 'xlsx') return VividXlsxMark
+  if (extension === 'zip') return VividZipMark
+  if (extension === 'tar') return VividTarMark
+  if (extension === 'gz') return VividGzMark
+  if (extension === '7z') return VividSevenZipMark
+  return VividDocumentMark
 }
 
 // The workspace a delivered file came out of, named the way a reader asks about it rather
@@ -310,7 +308,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         'aria-label': `${t('Preview')} ${name}`,
         onClick: preview,
       }),
-      h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h(iconOf(name))),
+      h('span', { className: 'bt-dcard-ico', 'aria-hidden': true }, h(iconOf(name))),
       h('span', { className: 'bt-dcard-copy' },
         h('span', { className: 'bt-dcard-name' }, name),
         h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name))),
