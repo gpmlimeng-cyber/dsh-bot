@@ -4,7 +4,8 @@ import { MicIcon, CloseIcon } from './icons.js'
 import { BotMark, RoomAvatar } from './mark.js'
 import { speechApi, useDictation } from './composer.js'
 import { Shimmer } from './cells.js'
-import { useEscape, usePaneLeft } from './overlay-hooks.js'
+import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
+import { usePaneLeft } from './overlay-hooks.js'
 import { t } from './i18n.js'
 import { openCapture, speechCatalog, transcribeWave, turnDetector } from './speech.js'
 
@@ -83,7 +84,11 @@ export function VoiceMode({ sessionId, roster, actions, useSessions, useSessionS
   const turn = useRef(0)
   const paneLeft = usePaneLeft()
   const close = () => { turn.current += 1; window.speechSynthesis?.cancel(); actions.closeVoice() }
-  useEscape(close)
+  // Esc, the focus trap and the focus handed back on close are the shell's modal machinery, which
+  // reads the dialog through the ref below -- without the ref this stage would lose Esc silently
+  // (test/ux-rules.test.js holds the two lines together).
+  const dialogRef = useRef(null)
+  useModalLayer(dialogRef, true, close)
   const submit = (text) => {
     setHeard(text)
     setPhase('thinking')
@@ -211,7 +216,7 @@ export function VoiceMode({ sessionId, roster, actions, useSessions, useSessionS
   const caption = phase === 'speaking' ? said : heard
   const shownNote = note || dictation.note
   return h('div', { className: 'bt-pane bt-voice-pane', style: { left: paneLeft } },
-    h('div', { className: 'bt-voice-stage', role: 'dialog', 'aria-label': t('Voice chat with {name}', { name }), 'data-phase': phase === 'transcribing' ? 'thinking' : phase },
+    h('div', { ref: dialogRef, className: 'bt-voice-stage', role: 'dialog', 'aria-modal': true, 'aria-label': t('Voice chat with {name}', { name }), 'data-phase': phase === 'transcribing' ? 'thinking' : phase },
       h('div', { className: 'bt-voice-orb', style: { '--bt-level': level } },
         h('span', { className: 'bt-voice-ring', 'aria-hidden': true }),
         h('span', { className: 'bt-voice-ring bt-voice-ring-2', 'aria-hidden': true }),

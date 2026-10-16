@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: f593c669
+// Source fingerprint: 68b8f38c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -13555,6 +13555,7 @@ ${listed}`, { axis: "y", ...QUICK_EDGES });
 
 // src/client/exchange.js
 var import_react31 = require("react");
+var import_dsh_client_ui_primitives9 = require("@deepseek-ai/dsh-client-ui-primitives");
 var SHEET_EXIT_MS = 220;
 function ExchangeDialog({ pair, roster, actions }) {
   const [entries2, setEntries] = (0, import_react31.useState)(null);
@@ -13564,7 +13565,8 @@ function ExchangeDialog({ pair, roster, actions }) {
     setLeaving(true);
     setTimeout(() => actions.closeOverlay(), SHEET_EXIT_MS);
   };
-  useEscape(close);
+  const dialogRef = (0, import_react31.useRef)(null);
+  (0, import_dsh_client_ui_primitives9.useModalLayer)(dialogRef, true, close);
   (0, import_react31.useEffect)(() => {
     let stop = false;
     let timer;
@@ -13594,7 +13596,7 @@ function ExchangeDialog({ pair, roster, actions }) {
     { className: "bt-pane bt-exchange", style: { left: paneLeft }, "data-leaving": leaving || void 0 },
     (0, import_react31.createElement)(
       "div",
-      { className: "bt-dialog", role: "dialog", "aria-label": t("Bot exchange") },
+      { ref: dialogRef, className: "bt-dialog", role: "dialog", "aria-modal": true, "aria-label": t("Bot exchange") },
       (0, import_react31.createElement)("div", { className: "bt-head" }, (0, import_react31.createElement)(
         "span",
         { className: "bt-pill", style: { cursor: "default" } },
@@ -13631,6 +13633,7 @@ function ExchangeDialog({ pair, roster, actions }) {
 
 // src/client/voice.js
 var import_react32 = require("react");
+var import_dsh_client_ui_primitives10 = require("@deepseek-ai/dsh-client-ui-primitives");
 var plainSpeech = (text) => stripHeader(text).replace(/```[\s\S]*?```/g, " ").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`#>|~-]+/g, " ").replace(/\s+/g, " ").trim();
 var VOICE_LABELS = {
   listening: "Listening",
@@ -13711,7 +13714,8 @@ function VoiceMode({ sessionId, roster, actions, useSessions, useSessionStatus }
     window.speechSynthesis?.cancel();
     actions.closeVoice();
   };
-  useEscape(close);
+  const dialogRef = (0, import_react32.useRef)(null);
+  (0, import_dsh_client_ui_primitives10.useModalLayer)(dialogRef, true, close);
   const submit = (text) => {
     setHeard(text);
     setPhase("thinking");
@@ -13857,7 +13861,7 @@ function VoiceMode({ sessionId, roster, actions, useSessions, useSessionStatus }
     { className: "bt-pane bt-voice-pane", style: { left: paneLeft } },
     (0, import_react32.createElement)(
       "div",
-      { className: "bt-voice-stage", role: "dialog", "aria-label": t("Voice chat with {name}", { name }), "data-phase": phase === "transcribing" ? "thinking" : phase },
+      { ref: dialogRef, className: "bt-voice-stage", role: "dialog", "aria-modal": true, "aria-label": t("Voice chat with {name}", { name }), "data-phase": phase === "transcribing" ? "thinking" : phase },
       (0, import_react32.createElement)(
         "div",
         { className: "bt-voice-orb", style: { "--bt-level": level } },
@@ -15477,7 +15481,7 @@ body:not([data-bt-motion=quiet]) .bt-about-mark:hover .bt-mark[data-live][data-s
 
 // src/client/settings.js
 var import_react38 = require("react");
-var import_dsh_client_ui_primitives9 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives11 = require("@deepseek-ai/dsh-client-ui-primitives");
 var capitalize2 = (word) => word[0].toUpperCase() + word.slice(1);
 var SETTINGS_PAGES = [["general", "General"], ["bots", "Bots"], ["groups", "Group chats"], ["account", "Account settings"], ["connectors", "Connectors"], ["capabilities", "Capabilities"], ["schedules", "Scheduled tasks"], ["usage", "Usage"], ["secrets", "Secrets"], ["feedback", "Feedback"], ["about", "About DS Bot"]];
 var BACK_TO = { peers: "Back to Peers" };
@@ -15699,7 +15703,7 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
     else setScreen("list");
   };
   const dialogRef = (0, import_react38.useRef)(null);
-  (0, import_dsh_client_ui_primitives9.useModalLayer)(dialogRef, true, () => {
+  (0, import_dsh_client_ui_primitives11.useModalLayer)(dialogRef, true, () => {
     if (screen === "list") close();
     else stepBack();
   });
@@ -17578,7 +17582,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "f593c669" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "68b8f38c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
