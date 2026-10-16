@@ -238,3 +238,16 @@ test('a leaving panel is inert, so a browser can both hide it and let its focus 
   assert.ok(pane.includes("inert: leaving ? '' : undefined"), 'the panel goes inert while it leaves')
   assert.ok(!pane.includes("'aria-hidden': leaving"), 'and nothing hides it with aria-hidden while it holds the focus')
 })
+
+test('the list has an entry the user can see, not only the long-press menu', () => {
+  // The only door used to be the last item of a sidebar row's long-press menu, which the user
+  // reported as having no entry at all ("there is no entry I can see"). Settings' list carries it
+  // now, as an action row beside Harness settings: it closes Settings and opens the panel, which is
+  // a layer of its own.
+  const settings = read('settings.js')
+  assert.ok(settings.includes("title: t('All deliverables')"), 'the row says what it opens')
+  assert.ok(settings.includes('onClick: () => { close(); actions.openProducts?.() }'), 'it opens the panel and leaves Settings behind')
+  assert.ok(settings.includes('IconDeliverDocRegular'), 'with Fluent\'s deliverable mark, not a hand-drawn one')
+  assert.ok(index.includes("actions.openProducts = () => ui.set(state => ({ ...state, products: true, preview: null, lightbox: null, view: 'products', menu: null }))"), 'the same action the long-press menu calls')
+  assert.ok(!settings.includes("'products', 'All deliverables'"), 'and it is not a settings page: there is nothing to configure on it')
+})

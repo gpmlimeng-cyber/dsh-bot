@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: f8fbde80
+// Source fingerprint: 6a2d2184
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -15896,6 +15896,19 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
                 actions.openSettings(key);
               }
             }, (0, import_react38.createElement)(PAGE_ICONS[key]), (0, import_react38.createElement)("span", { className: "bt-settings-name" }, t(PAGE_TEXT[key])), (0, import_react38.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react38.createElement)(ChevronRightIcon)))),
+            // 全部产物 used to have one door only: long-press a row in the sidebar and pick the
+            // last entry of its menu. The user's report was exactly that -- "there is no entry I
+            // can see". It is a surface rather than a setting, so it is an action row like Harness
+            // settings below it, and it closes Settings on the way (the panel is its own layer).
+            index === SETTINGS_GROUPS.length - 1 ? (0, import_react38.createElement)("button", {
+              type: "button",
+              className: "bt-settings-item bt-settings-shell",
+              title: t("All deliverables"),
+              onClick: () => {
+                close();
+                actions.openProducts?.();
+              }
+            }, (0, import_react38.createElement)(import_dsh_client_ui_primitives13.IconDeliverDocRegular), (0, import_react38.createElement)("span", { className: "bt-settings-name" }, t("All deliverables")), (0, import_react38.createElement)("span", { className: "bt-set-go", "aria-hidden": true }, (0, import_react38.createElement)(ChevronRightIcon))) : null,
             // Harness settings is the last row of the last card: on the wide dialog it
             // keeps the margin that holds it at the foot of the column.
             index === SETTINGS_GROUPS.length - 1 ? (0, import_react38.createElement)("button", {
@@ -17707,7 +17720,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "f8fbde80" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "6a2d2184" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

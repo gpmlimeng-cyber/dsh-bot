@@ -8,7 +8,7 @@ import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon,
 import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
 import { openHarnessSettings } from './sidebar.js'
 import { useMobile } from './mobile.js'
-import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconDeliverDocRegular, useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useEscape } from './overlay-hooks.js'
 import { BotSettingsForm } from './bot-settings.js'
 import { MOTIONS, MotionSection, SetRow, SetSection } from './set-rows.js'
@@ -292,6 +292,14 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
               'aria-current': !mobile && shown === key ? 'page' : undefined,
               onClick: () => { setScreen('page'); actions.openSettings(key) },
             }, h(PAGE_ICONS[key]), h('span', { className: 'bt-settings-name' }, t(PAGE_TEXT[key])), h('span', { className: 'bt-set-go', 'aria-hidden': true }, h(ChevronRightIcon)))),
+            // 全部产物 used to have one door only: long-press a row in the sidebar and pick the
+            // last entry of its menu. The user's report was exactly that -- "there is no entry I
+            // can see". It is a surface rather than a setting, so it is an action row like Harness
+            // settings below it, and it closes Settings on the way (the panel is its own layer).
+            index === SETTINGS_GROUPS.length - 1 ? h('button', {
+              type: 'button', className: 'bt-settings-item bt-settings-shell', title: t('All deliverables'),
+              onClick: () => { close(); actions.openProducts?.() },
+            }, h(IconDeliverDocRegular), h('span', { className: 'bt-settings-name' }, t('All deliverables')), h('span', { className: 'bt-set-go', 'aria-hidden': true }, h(ChevronRightIcon))) : null,
             // Harness settings is the last row of the last card: on the wide dialog it
             // keeps the margin that holds it at the foot of the column.
             index === SETTINGS_GROUPS.length - 1 ? h('button', {
