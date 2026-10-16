@@ -370,3 +370,27 @@ test('a delivered file is copied out for another app, and never over a file alre
   assert.equal((await call('present-share', { path: notes })).value.path, join(shared, 'NOTES (2)'))
 })
 
+
+// The panel is a team-wide record, so a row has to be able to say whose file it is: the name of the
+// Bot that handed it over is kept with the path, and survives a restart the same way the path does.
+test('a delivered file remembers which Bot handed it over', async (t) => {
+  const outside = mkdtempSync(join(tmpdir(), 'ds-bot-delivered-by-'))
+  t.after(() => rmSync(outside, { recursive: true, force: true, maxRetries: 5 }))
+  const report = join(outside, 'by.md')
+  writeFileSync(report, '# By\n\nBody.')
+  const first = start()
+  await first.rt.rememberDelivered([report], '研究分析')
+  const list = (await first.call('list-delivered')).value
+  assert.equal(list.files[0].by, '研究分析', 'the list says who handed it over')
+  const body = readFileSync(join(first.home, 'delivered.json'), 'utf8')
+  assert.equal(JSON.parse(body).files[0].by, '研究分析', 'and the saved list keeps it')
+  first.stop()
+  const restarted = start({ home: withList(t, body) })
+  t.after(() => restarted.stop())
+  const until = Date.now() + 2000
+  while (restarted.rt.deliveredCount() === 0 && Date.now() < until) await new Promise(resolve => setImmediate(resolve))
+  assert.equal((await restarted.call('list-delivered')).value.files[0].by, '研究分析', 'still there after a restart')
+  // A delivery with no Bot behind it (a caller that does not know) keeps the old shape.
+  await restarted.rt.rememberDelivered([report])
+  assert.deepEqual(Object.keys((await restarted.call('list-delivered')).value.files[0]).sort(), ['at', 'path'])
+})

@@ -223,14 +223,16 @@ export function install(rt) {
   const deliveredPath = join(home, 'delivered.json')
   const delivered = new Map()
   let saving = Promise.resolve()
-  const keep = (path, at = Date.now()) => {
+  // `by` is the name of the Bot that handed the file over, kept with the path: the panel is a
+  // team-wide record, and "whose file is this" is the one thing a list of paths cannot say.
+  const keep = (path, at = Date.now(), by) => {
     delivered.delete(path)
-    delivered.set(path, at)
+    delivered.set(path, { at, ...(by === undefined || by === '' ? {} : { by }) })
     while (delivered.size > DELIVERED_MAX) delivered.delete(delivered.keys().next().value)
   }
   const saveDelivered = () => {
     saving = saving.then(async () => {
-      const body = JSON.stringify({ version: 1, files: [...delivered].map(([path, at]) => ({ path, at })) })
+      const body = JSON.stringify({ version: 1, files: [...delivered].map(([path, info]) => ({ path, at: info.at, ...(info.by === undefined ? {} : { by: info.by }) })) })
       // Written beside the real file and renamed over it, so a reader never sees half a
       // JSON document, and created 0600: the paths a team delivered are its own business.
       const temporary = `${deliveredPath}.tmp`
@@ -244,12 +246,12 @@ export function install(rt) {
     }).catch(() => {})
     return saving
   }
-  const rememberDelivered = (paths) => {
+  const rememberDelivered = (paths, by) => {
     if (!Array.isArray(paths)) return undefined
     let remembered = false
     for (const path of paths) {
       if (typeof path !== 'string' || path === '') continue
-      keep(path)
+      keep(path, Date.now(), by)
       remembered = true
     }
     return remembered ? saveDelivered() : undefined
@@ -261,7 +263,7 @@ export function install(rt) {
       for (const entry of parsed.files) {
         if (typeof entry?.path !== 'string' || entry.path === '') continue
         // The saved time is kept when it is there: it is what a later expiry would use.
-        keep(entry.path, Number.isFinite(entry.at) ? entry.at : Date.now())
+        keep(entry.path, Number.isFinite(entry.at) ? entry.at : Date.now(), typeof entry.by === 'string' ? entry.by : undefined)
       }
     } catch {
       // No list yet, or one this host cannot read: the window simply starts empty.
@@ -286,7 +288,7 @@ export function install(rt) {
   // same millisecond still come back in the order they happened.
   const deliveredList = () => [...delivered]
     .reverse()
-    .map(([path, at]) => ({ path, at }))
+    .map(([path, info]) => ({ path, at: info.at, ...(info.by === undefined ? {} : { by: info.by }) }))
     .sort((one, two) => two.at - one.at)
 
   // Where a copy goes so the phone can hand the file to another app: the shell's

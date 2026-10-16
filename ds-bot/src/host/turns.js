@@ -445,7 +445,7 @@ export function install(rt) {
         // What a Bot hands over usually sits outside the team workspace, where the
         // panel's own reader refuses it by design. Remembering these exact paths is what
         // lets a phone open a file that was just delivered, and nothing else.
-        rt.rememberDelivered?.(data.files.map(file => file?.path))
+        rt.rememberDelivered?.(data.files.map(file => file?.path), rt.botOf(rt.selfOf(id))?.name)
         break
       }
       case 'turn/end': {
