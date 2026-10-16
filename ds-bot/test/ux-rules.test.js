@@ -163,3 +163,18 @@ test('reduced motion ends the phone\u2019s motion without removing it', () => {
     assert.ok(read(file).includes(needle), `${file}: a reduced-motion block still removes animations outright, and a listener under it would never hear back`)
   }
 })
+
+test('a layer that hands its Esc to the shell\u2019s modal machinery says it is a modal', () => {
+  // useModalLayer(ref, open, onClose) finds the dialog through the ref it is given, and the shell's
+  // modalSelector is '[role="dialog"][aria-modal="true"], [role="menu"]' -- so a layer that calls it
+  // without aria-modal loses Esc (and gains no focus trap) with nothing to show for it. This is the
+  // guard Lead asked for: convert a layer, mark it, or the test says so.
+  const files = readdirSync(DIR).filter(name => name.endsWith('.js'))
+  const users = files.filter(name => read(name).includes('useModalLayer('))
+  assert.deepEqual(users, ['palette.js'], `the layers converted so far are not the ones expected: ${users.join(', ')}`)
+  for (const name of users) {
+    assert.ok(read(name).includes("'aria-modal': true"), `${name} calls useModalLayer without marking its dialog aria-modal -- it would have no Esc`)
+    const ref = /const (\w+) = useRef\(null\)/.exec(read(name))
+    assert.ok(ref && read(name).includes(`ref: ${ref[1]}`), `${name} never attaches the ref useModalLayer needs, so the hook has no dialog to read`)
+  }
+})

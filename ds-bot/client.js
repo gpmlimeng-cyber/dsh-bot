@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: f258615e
+// Source fingerprint: e1c4bd3b
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -12948,7 +12948,8 @@ function CommandPalette({ start, token, roster, actions, useSessions }) {
     setLeaving(true);
     setTimeout(() => actions.closePalette(token), PALETTE_EXIT_MS);
   };
-  useEscape(close);
+  const dialogRef = (0, import_react28.useRef)(null);
+  (0, import_dsh_client_ui_primitives6.useModalLayer)(dialogRef, true, close);
   const ids = [...roster.bots.map(currentPart), ...roster.rooms.map((item) => item.id)];
   const found = useSessions((list) => {
     if (wanted.length < 2) return "[]";
@@ -13048,7 +13049,7 @@ ${shown}`, { axis: "y", ...QUICK_EDGES });
     (0, import_react28.createElement)("div", { className: "bt-backdrop", onMouseDown: close }),
     (0, import_react28.createElement)(
       "div",
-      { className: "bt-palette", role: "dialog", "aria-label": t("Search"), "aria-modal": true },
+      { ref: dialogRef, className: "bt-palette", role: "dialog", "aria-label": t("Search"), "aria-modal": true },
       (0, import_react28.createElement)(
         "div",
         { className: "bt-palette-head" },
@@ -17575,7 +17576,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "f258615e" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "e1c4bd3b" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

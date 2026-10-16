@@ -1,10 +1,9 @@
-import { createElement as h, Fragment, useEffect, useState } from 'react'
-import { FishLogo } from '@deepseek-ai/dsh-client-ui-primitives'
+import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
+import { FishLogo, useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
 import { isMainOf } from './sources.js'
 import { currentPart, stripHeader } from './text.js'
 import { PlusIcon, SearchIcon, PeopleIcon, CloseIcon, GearIcon } from './icons.js'
 import { BotAvatar, RoomAvatar } from './mark.js'
-import { useEscape } from './overlay-hooks.js'
 import { QUICK_EDGES, useFlip, useGlide } from './motion.js'
 import { t } from './i18n.js'
 
@@ -22,7 +21,12 @@ export function CommandPalette({ start, token, roster, actions, useSessions }) {
     setLeaving(true)
     setTimeout(() => actions.closePalette(token), PALETTE_EXIT_MS)
   }
-  useEscape(close)
+  // The layer's Esc, its focus trap and the focus it gives back on close are the shell's own modal
+  // machinery now, not a keydown listener of ours: useModalLayer reads the dialog element it is given,
+  // which is why the ref below is load-bearing -- without it this layer would have no Esc at all and
+  // nothing would say so (test/ux-rules.test.js keeps that from happening quietly).
+  const dialogRef = useRef(null)
+  useModalLayer(dialogRef, true, close)
   const ids = [...roster.bots.map(currentPart), ...roster.rooms.map(item => item.id)]
   const found = useSessions((list) => {
     if (wanted.length < 2) return '[]'
@@ -101,7 +105,7 @@ export function CommandPalette({ start, token, roster, actions, useSessions }) {
   let index = -1
   return h('div', { className: 'bt-palette-layer', 'data-leaving': leaving || undefined },
     h('div', { className: 'bt-backdrop', onMouseDown: close }),
-    h('div', { className: 'bt-palette', role: 'dialog', 'aria-label': t('Search'), 'aria-modal': true },
+    h('div', { ref: dialogRef, className: 'bt-palette', role: 'dialog', 'aria-label': t('Search'), 'aria-modal': true },
       h('div', { className: 'bt-palette-head' },
         h('span', { className: 'bt-palette-glyph', 'aria-hidden': true }, h(SearchIcon)),
         h('input', {
