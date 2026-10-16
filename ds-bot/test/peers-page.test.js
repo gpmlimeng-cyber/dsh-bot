@@ -106,24 +106,25 @@ test('the page is a header row and one scroller of labelled cards', () => {
   assert.equal(rows.length, 3, 'the door and one row per Bot')
   const kidsOf = (node) => plain(node.children.filter(child => child !== null && child !== undefined).map(child => classList(child)[0] ?? '(mark)'))
   assert.deepEqual(rows.map(kidsOf), [
-    ['bt-peers-icon', 'bt-peers-body', 'bt-row-count'],
+    ['bt-peers-icon', 'bt-peers-body', 'bt-row-count', 'bt-peers-go'],
     ['(mark)', 'bt-peers-body'],
     ['(mark)', 'bt-peers-body'],
-  ], 'the door wears the section icon and its count, a Bot its own mark')
-  // The row's own controls are its SIBLINGS -- a button cannot hold a button -- and the item lays them
-  // out on one line: the chevron on every row, and the Main Bot switch in front of it where a Bot has
-  // one. A sibling inside a block used to wrap onto a line of its own (the stray chevron the user
-  // reported); the item's flex row is what keeps them beside the text.
+  ], 'the door wears the section icon, its count and the arrow inside it; a Bot its own mark')
+  // A Bot's control is its SIBLING -- a button cannot hold a button -- and the item lays the two out on
+  // one line. The door is the other way round: its arrow is not a control but part of the row, so it is
+  // drawn inside the button and the whole row answers the tap. Outside, it did not: the user's thumb
+  // found the arrow itself and nothing happened.
   const items = findAll(tree, 'bt-peers-item')
   assert.equal(items.length, 3, 'one item per row')
   const childName = (node) => classList(node)[0] ?? node?.props?.label ?? '(mark)'
   // The door keeps its chevron -- a door is a way somewhere. A Bot's row does not: the user asked for
   // it away, and the whole row is what opens that Bot's page.
   assert.deepEqual(plain(items.map(item => item.children.filter(Boolean).map(childName))), [
-    ['bt-peers-row', 'bt-peers-go'],
+    ['bt-peers-row'],
     ['bt-peers-row', 'bt-peers-main'],
     ['bt-peers-row', 'bt-peers-main'],
-  ], 'the door has a chevron, a Bot has only its Main Bot action')
+  ], 'the door\'s arrow travels inside its row, a Bot has only its Main Bot action beside it')
+  assert.ok(classList(items[0]).includes('bt-peers-door'), 'and the door\'s item is the one its own rule speaks for')
   // One action per Bot row: pressed on the Main Bot, plain on the other, and out of reach for the only
   // Main Bot there is (the host refuses to leave the team with none).
   const mains = items.flatMap(item => item.children).filter(node => classList(node).includes('bt-peers-main'))
@@ -223,7 +224,7 @@ test('a label sits on the name\'s line and a value on the line below it', () => 
   assert.ok(peers.includes("isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null"), 'and Main Bot is a tag, only on a Main Bot')
   assert.ok(peers.includes("import { isMainOf } from './sources.js'"), 'read from the roster\'s own rule')
   const from = peers.indexOf("className: 'bt-peers-row', 'data-bot-id'")
-  const botRow = peers.slice(from, peers.indexOf("h('span', { className: 'bt-peers-go'", from))
+  const botRow = peers.slice(from, peers.indexOf("className: 'bt-peers-main'", from))
   const firstLine = botRow.slice(0, botRow.indexOf("className: 'bt-peers-desc'"))
   const secondLine = botRow.slice(botRow.indexOf("className: 'bt-peers-desc'"))
   assert.ok(firstLine.includes("bt-tag' }, bot.role") && firstLine.includes("t('Main Bot')"), 'both tags are on the name\'s line')
@@ -248,10 +249,12 @@ test('a label sits on the name\'s line and a value on the line below it', () => 
   assert.ok(sheet.includes('.bt-peers-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'the name is the item that gives way')
   const tags = code('styles.js').match(/\.bt-tag\{[^}]*\}/)[0]
   assert.ok(tags.includes('flex:none') && tags.includes('white-space:nowrap'), 'and the skin\'s own tag never shrinks and never wraps')
-  // The chevron is the row's right edge: it is pushed there by its own margin, it keeps its own
-  // width, and the text side gives way -- so every row shows it at one x, and a long model or folder
-  // cannot move it.
+  // The chevron is the row's right edge: it is pushed there by its own margin, it keeps its own width,
+  // and the text side gives way -- so it lands at the row's own 10px however long the name or the count
+  // is. It sits inside the row's button, which is what makes its own centimetre clickable: the door's
+  // item keeps no inset of its own, so the button reaches it.
   assert.ok(sheet.includes('.bt-peers-go{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-3)}'), 'the chevron pins itself to the row\'s end')
+  assert.ok(sheet.includes('.bt-peers-door{padding-right:0}'), 'on a door whose row reaches all the way to it')
   assert.ok(sheet.includes('.bt-peers-row{display:flex;align-items:center;gap:12px;'), 'on a row that centres it vertically')
 })
 

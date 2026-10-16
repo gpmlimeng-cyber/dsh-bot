@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 1805eeff
+// Source fingerprint: 7c64a04c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16393,7 +16393,7 @@ function PeersPage({ useRoster, useUi, actions }) {
       { className: "bt-peers-list" },
       section(t("Group chats"), [(0, import_react42.createElement)(
         "div",
-        { key: "groups", className: "bt-peers-item", role: "listitem" },
+        { key: "groups", className: "bt-peers-item bt-peers-door", role: "listitem" },
         (0, import_react42.createElement)(
           "button",
           {
@@ -16410,9 +16410,12 @@ function PeersPage({ useRoster, useUi, actions }) {
           ),
           // The count, in the skin's own number badge (the sidebar's own), before the chevron: the
           // same number that page's title carries, so a user who counts them finds the same answer.
-          (0, import_react42.createElement)("span", { className: "bt-row-count", title: t("Group chats · {count}", { count: rooms }) }, String(rooms))
-        ),
-        (0, import_react42.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react42.createElement)(ChevronRightIcon))
+          (0, import_react42.createElement)("span", { className: "bt-row-count", title: t("Group chats · {count}", { count: rooms }) }, String(rooms)),
+          // The arrow is INSIDE the row, unlike a Bot's own control -- a chevron is not a button, and the
+          // row is what opens the page, so the centimetre it takes has to answer the tap too. Outside, it
+          // did not: the user's thumb found the arrow and nothing happened.
+          (0, import_react42.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react42.createElement)(ChevronRightIcon))
+        )
       )]),
       shown.length > 0 ? section(t("Peers"), shown.map((bot) => {
         const model = peersModel(bot, roster);
@@ -16520,6 +16523,10 @@ html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;o
    squeezed (so a long name, model or folder gives way instead). The trailing control keeps the row's
    own 10px inset, which its padding gave it while it was inside the button. */
 html[data-bt-mobile] .bt-peers-item{display:flex;align-items:center;gap:8px;padding-right:10px}
+/* The 群聊 door has no control beside its row, only the arrow inside it: it keeps no inset of its own,
+   so the button is the whole row -- the arrow's centimetre included -- and the arrow lands where the
+   Bot rows' own control does, at the row's 10px, which the button's padding gives it. */
+html[data-bt-mobile] .bt-peers-door{padding-right:0}
 /* The Main Bot action: 44px of finger, in the row rather than beside it, and the crown is the whole
    of it -- the user asked the plate away, so which row holds the role is read from the drawing (the
    row's filled crown against the others' line crown, a step back in --bt-ink-3) rather than from a plate
@@ -16554,8 +16561,8 @@ html[data-bt-mobile] .bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;te
 html[data-bt-mobile] .bt-peers-sep{flex:none}
 /* The chevron is the row's edge, not a thing floating at the end of the text: it is pushed to the
    right end of the row by its own margin, it keeps its own width, and the text side is what gives
-   way. So every row shows it at the same x -- whatever the name, the model or the folder says --
-   and it stays vertically centred on a row of two lines rather than riding the first one. */
+   way -- so it lands at the row's own 10px however long the count or the name is. It is drawn inside
+   the row's button now (the door's rule above), which is what makes the centimetre it takes clickable. */
 html[data-bt-mobile] .bt-peers-go{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-3)}
 html[data-bt-mobile] .bt-peers-empty{padding:24px 12px;font-size:14px;line-height:21px;color:var(--bt-ink-3)}
 /* The page carries its own title, and the pill belongs to the conversation behind it. */
@@ -16654,7 +16661,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "1805eeff" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "7c64a04c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
