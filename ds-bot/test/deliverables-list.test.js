@@ -55,7 +55,7 @@ test('the list keeps the message cards, and changes only their second line', () 
   assert.ok(list.includes('parts.push(workspaceOf(file.path, workDir))'), 'and the workspace closes it')
   assert.ok(list.includes("return parts.join(' · ')"), 'joined the reference way')
   assert.ok(list.includes("const wordFor = (path) => t(TYPE_WORDS[fileExtension(basename(path))] ?? 'File')"), 'the kind is a translated word, not the extension')
-  assert.ok(list.includes("import { fileExtension, fileSizeText, ImageLightbox, Menu }"), 'and the size is the platform’s own formatter')
+  assert.ok(list.includes("import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu }"), 'and the size is the platform’s own formatter')
   assert.ok(list.includes('meta: metaOf?.(file, workDir)'), 'and the card is handed it')
   // The size is the host's, and this client's only read of a delivered file is the one the
   // preview opens with -- so no new host action, and no restart to see the line.

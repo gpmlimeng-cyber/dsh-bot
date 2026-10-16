@@ -15,8 +15,7 @@
 // goes to shared storage first, since no other app can read the app's own), or copy the
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
-import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { FluentArchiveIcon, FluentCodeIcon, FluentDocumentIcon, FluentImageIcon, FluentPdfIcon, FluentTableIcon } from './icons.js'
+import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
 import { LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { useMobile } from './mobile.js'
@@ -87,17 +86,15 @@ const MEDIA_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv', 'avi', 'mp3', 'wa
 const ARCHIVE_EXTENSIONS = new Set(['zip', 'tar', 'gz', 'tgz', '7z', 'rar'])
 const CODE_EXTENSIONS = new Set(['html', 'htm', 'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'py', 'go', 'rs', 'java', 'c', 'h', 'cpp', 'css', 'json', 'yml', 'yaml', 'toml', 'sh', 'sql', 'xml'])
 const TABLE_EXTENSIONS = new Set(['csv', 'tsv', 'xls', 'xlsx', 'ods'])
-// The drawing for a file: its kind when one of these fits, a document when none does -- which is what
-// markdown, a text file, a font and everything unfamiliar are to a reader.
-const iconOf = (name) => {
-  const extension = fileExtension(name).toLowerCase()
-  if (IMAGE_EXTENSIONS.has(extension)) return FluentImageIcon
-  if (CODE_EXTENSIONS.has(extension)) return FluentCodeIcon
-  if (TABLE_EXTENSIONS.has(extension)) return FluentTableIcon
-  if (extension === 'pdf') return FluentPdfIcon
-  if (ARCHIVE_EXTENSIONS.has(extension)) return FluentArchiveIcon
-  return FluentDocumentIcon
-}
+// The drawing for a file is DSH's own: `FileTypeIcon` classifies the path into its twelve kinds and
+// forty-eight code subtypes and draws the matching glyph, with everything it does not know falling back
+// to `other`. This skin carried a suffix table of its own until now; it is gone, because a second table
+// can only disagree with the first one, and the official set is the one the rest of DSH draws.
+//
+// The mark is one colour here -- the tone below -- rather than the component's own twelve category
+// colours: --dsh-file-type-icon-color is the component's documented single-colour override, and this
+// skin's cards are flat and toned, not coloured plates.
+const FileMark = ({ path, size = 28 }) => h(FileTypeIcon, { path, size })
 const toneOf = (name) => {
   const extension = fileExtension(name).toLowerCase()
   if (IMAGE_EXTENSIONS.has(extension)) return 'image'
@@ -329,7 +326,7 @@ function DeliverableCard({ file, actions, meta, role }) {
         'aria-label': `${t('Preview')} ${name}`,
         onClick: preview,
       }),
-      h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h(iconOf(name))),
+      h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h(FileMark, { path: file.path })),
       h('span', { className: 'bt-dcard-copy' },
         h('span', { className: 'bt-dcard-name' }, name),
         h('span', { className: 'bt-dcard-desc' }, meta ?? metaText(file, name))),

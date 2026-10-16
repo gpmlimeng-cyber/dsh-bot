@@ -361,15 +361,19 @@ html[data-bt-mobile] .bt-dcard-hit:focus-visible{box-shadow:none;outline:none}
 html[data-bt-mobile] .bt-dcard:has(.bt-dcard-hit:active){background:var(--bt-active)}
 html[data-bt-mobile] .bt-settings-item:active,
 html[data-bt-mobile] .bt-peers-row:active{background:var(--bt-active)}
-/* The kind's mark is the drawing itself: flat, one colour, and no plate behind it -- the tinted square
-   the user asked away (it made Fluent's own flat artwork read as a badge). The colour still says which
-   kind it is, so the word under the name is not the only thing doing that work. */
-.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;color:var(--bt-type-ink);--bt-type-ink:var(--bt-ink-2)}
+/* The kind's mark is DSH's own glyph (FileTypeIcon): a 28px square, which is the size that component
+   draws its twelve kinds and forty-eight code subtypes at. One colour, from the tone classes below --
+   the component's documented --dsh-file-type-icon-color is the single-colour override, so the mark
+   carries this skin's tone rather than the official category colours (a coloured plate is the thing the
+   user asked away). No plate behind it: the drawing is the mark. */
+.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;color:var(--bt-type-ink);--bt-type-ink:var(--bt-ink-2);--dsh-file-type-icon-color:var(--bt-type-ink)}
 .bt-dcard-ico-doc{--bt-type-ink:var(--bt-accent)}
 .bt-dcard-ico-image{--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))}
 .bt-dcard-ico-media{--bt-type-ink:color-mix(in srgb,var(--bt-star) 88%,var(--bt-ink))}
 .bt-dcard-ico-plain{--bt-type-ink:var(--bt-ink-2)}
-.bt-dcard-ico>svg{width:24px;height:24px}
+/* The component sets its own size; this keeps a caller that forgets the prop from letting the svg fall
+   back to the browser's default box. */
+.bt-dcard-ico>svg{width:28px;height:28px}
 /* The two lines take the weight and the sizes of the delivery list the user pointed at: the
    name is a step larger and carries medium weight, the second line a step down in the
    quiet grey, and the two sit tight against each other -- 21 + 1 + 17 = 39px of the tile's

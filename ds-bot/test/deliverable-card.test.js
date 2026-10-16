@@ -40,7 +40,7 @@ test('the tile is DSH-shaped: 60px tall, a 24px flat mark, one hit target over i
   assert.ok(tile.includes('height:60px'), tile)
   assert.ok(tile.includes('border-radius:10px'), tile)
   const icon = rule('.bt-dcard-ico{')
-  assert.ok(icon.includes('width:24px') && icon.includes('height:24px'), icon)
+  assert.ok(icon.includes('width:28px') && icon.includes('height:28px'), icon)
   assert.ok(!icon.includes('background:') && !icon.includes('border-radius:'), 'and the mark is the drawing itself, with no plate behind it')
   const hit = rule('.bt-dcard-hit{')
   assert.ok(hit.includes('position:absolute') && hit.includes('inset:0'), hit)
@@ -61,7 +61,7 @@ test('the name and its metadata keep their two sizes, and nothing swaps places o
   assert.ok(rule('.bt-dcard{').includes('height:60px'), 'the tile does not grow with the type')
   // The type mark is a 40px tinted square with the extension in it: the name and the line
   // under it keep their room, since the square has not grown.
-  assert.ok(rule('.bt-dcard-ico{').includes('width:24px') && rule('.bt-dcard-ico{').includes('height:24px'), 'the type mark is the drawing itself, at the size the row was measured with')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:28px') && rule('.bt-dcard-ico{').includes('height:28px'), 'the type mark is the official glyph\'s own 28px box')
   // The second line used to be replaced by the word "Preview" while the pointer was on the
   // card. A tap anywhere on the card says that now, so the line stays where it is.
   assert.ok(!styles.includes('.bt-dcard-peek'), 'the hover-only word is gone')
@@ -116,7 +116,7 @@ test('the card’s exits are one "···", the same control in every list', () =
   assert.ok(rule('.bt-dcard-menu{').includes('flex:none'), 'the one control neither shrinks nor wraps')
   assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the row never wraps into a second row the 60px tile would clip')
   assert.ok(rule('.bt-dcard-acts{').includes('justify-content:flex-end'), 'and is held at the card’s right end')
-  assert.ok(rule('.bt-dcard-ico{').includes('width:24px'), 'the kind\u2019s mark it sits beside is unchanged')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:28px'), 'the kind\u2019s mark it sits beside is unchanged')
   // No word is painted on the card: a label that used to be a button's child would be one.
   for (const painted of [": t('Open with another app'))", ": t('Copy path'))", "t('Path')"]) {
     assert.ok(!source.includes(painted), `${painted} is not painted on the card`)
@@ -177,36 +177,30 @@ test('two columns fold to one when the card column is narrow', () => {
   assert.ok(styles.includes('@container (width<=620px){.bt-dcards{grid-template-columns:minmax(0,1fr)}}'))
 })
 
-test('the type mark is the kind\u2019s own drawing in a tinted square, not letters', () => {
+test('the type mark is DSH\u2019s own glyph, one colour, with no table of ours', () => {
   const source = card.join('\n')
-  assert.ok(source.includes("h('span', { className: `bt-dcard-ico bt-dcard-ico-${toneOf(name)}`, 'aria-hidden': true }, h(iconOf(name)))"), 'the square holds the kind\u2019s drawing')
-  assert.ok(!source.includes('badgeOf') && !source.includes('EXT_ALIASES'), 'no letters are written into it any more')
-  assert.ok(!source.includes('bt-dcard-type'), 'and the rule that drew them is gone')
-  // The map, kind by kind: the reader\u2019s kinds, not a mime table -- a picture, code, a sheet, a pdf,
-  // a zip, and a document for everything else (markdown included, which is a document to a reader).
-  assert.ok(source.includes("const CODE_EXTENSIONS = new Set(['html', 'htm', 'js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'py', 'go', 'rs', 'java', 'c', 'h', 'cpp', 'css', 'json', 'yml', 'yaml', 'toml', 'sh', 'sql', 'xml'])"), 'code has its own kind')
-  assert.ok(source.includes("const TABLE_EXTENSIONS = new Set(['csv', 'tsv', 'xls', 'xlsx', 'ods'])"), 'so does a sheet')
-  for (const [test, icon] of [['IMAGE_EXTENSIONS.has(extension)', 'FluentImageIcon'], ['CODE_EXTENSIONS.has(extension)', 'FluentCodeIcon'], ['TABLE_EXTENSIONS.has(extension)', 'FluentTableIcon'], ["extension === 'pdf'", 'FluentPdfIcon'], ['ARCHIVE_EXTENSIONS.has(extension)', 'FluentArchiveIcon']]) {
-    assert.ok(source.includes(`if (${test}) return ${icon}`), `${icon} answers ${test}`)
+  // The mark is the product's own component: it classifies the path into its twelve kinds and
+  // forty-eight code subtypes and draws the glyph, with anything unknown falling back to `other`.
+  // This skin used to keep a suffix table for the same job; a second table can only disagree with the
+  // first, so it is gone and the path is handed over as it is.
+  assert.ok(source.includes("import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'"), 'the official component is imported from the entry this file already used')
+  assert.ok(source.includes('const FileMark = ({ path, size = 28 }) => h(FileTypeIcon, { path, size })'), 'one wrapper, the path in and the glyph out')
+  assert.ok(source.includes('h(FileMark, { path: file.path })'), 'and the card hands it the path')
+  for (const gone of ['iconOf', 'FluentDocumentIcon', 'FluentImageIcon', 'FluentCodeIcon', 'FluentTableIcon', 'FluentPdfIcon', 'FluentArchiveIcon']) {
+    assert.ok(!source.includes(gone), `${gone} is not a second opinion about a file type any more`)
   }
-  assert.ok(source.includes('return FluentDocumentIcon'), 'and a document is what is left')
-  // Every glyph is Fluent\u2019s own artwork at 20, from the one 20-grid factory in icons.js.
-  const icons = read('icons.js')
-  assert.ok(icons.includes('const fluentIcon20 = d => function FluentIcon20()'), 'one factory for the 20 grid')
-  for (const icon of ['FluentDocumentIcon', 'FluentImageIcon', 'FluentCodeIcon', 'FluentTableIcon', 'FluentPdfIcon', 'FluentArchiveIcon']) {
-    assert.ok(icons.includes(`export const ${icon} = fluentIcon20(`), `${icon} is Fluent\u2019s artwork, not a drawing of ours`)
-  }
-  // The tint says what kind of thing it is, before either line under it is read.
-  assert.ok(source.includes("const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'tif', 'tiff'])"), 'pictures are their own tone')
-  assert.ok(source.includes("const MEDIA_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'mkv', 'avi', 'mp3', 'wav', 'm4a', 'ogg', 'flac'])"), 'and recordings')
-  assert.ok(source.includes("if (IMAGE_EXTENSIONS.has(extension)) return 'image'") && source.includes("return 'doc'"), 'with documents as the default')
-  assert.ok(rule('.bt-dcard-ico-image{').includes('--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))'), 'the picture tone is the palette\u2019s green, mixed into the ink so it reads on both themes')
-  assert.ok(rule('.bt-dcard-ico-doc{').includes('--bt-type-ink:var(--bt-accent)'), 'and a document is the shell\u2019s accent')
-  // Flat: the glyph is the whole mark -- no plate, no border, one colour from the kind's tint.
-  assert.ok(rule('.bt-dcard-ico{').includes('color:var(--bt-type-ink)') && !rule('.bt-dcard-ico{').includes('background:'), 'the drawing is the mark, with nothing behind it')
+  // One colour, from this skin's tone, through the component's documented single-colour override --
+  // not the official category colours, which would put a coloured plate back under the glyph.
+  assert.ok(rule('.bt-dcard-ico{').includes('--dsh-file-type-icon-color:var(--bt-type-ink)'), 'the mark reads the tone the card sets')
+  assert.ok(rule('.bt-dcard-ico{').includes('color:var(--bt-type-ink)'), 'and that tone is the colour language here')
+  // The tone classes remain the set of colours a mark can be drawn in.
+  assert.ok(rule('.bt-dcard-ico-doc{').includes('--bt-type-ink:var(--bt-accent)'), 'a document is the accent')
+  assert.ok(rule('.bt-dcard-ico-image{').includes('--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))'), 'a picture the palette\u2019s green')
+  // Flat: the glyph is the whole mark -- no plate, no border, and the slot is the glyph's own 28.
+  assert.ok(!rule('.bt-dcard-ico{').includes('background:'), 'the drawing is the mark, with nothing behind it')
   assert.ok(!rule('.bt-dcard-ico{').includes('border:') && !rule('.bt-dcard-ico{').includes('border-radius:'), 'and no outline or plate of its own')
-  assert.ok(rule('.bt-dcard-ico{').includes('width:24px') && rule('.bt-dcard-ico{').includes('height:24px'), 'the row keeps its 24px mark')
-  assert.ok(rule('.bt-dcard-ico>svg{').includes('width:24px') && rule('.bt-dcard-ico>svg{').includes('height:24px'), 'and the drawing is the 24px the row was measured with')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:28px') && rule('.bt-dcard-ico{').includes('height:28px'), 'a 28px box, which is the size that component draws at')
+  assert.ok(rule('.bt-dcard-ico>svg{').includes('width:28px') && rule('.bt-dcard-ico>svg{').includes('height:28px'), 'and the glyph fills it whatever a caller passes')
 })
 
 test('the card keeps no selected look on a phone, and a keyboard keeps its ring', () => {
@@ -368,7 +362,7 @@ test('the preview page’s title bar is back, the name, and one more menu', () =
   // behaviour the card’s row of buttons runs: one definition, two chromes.
   // The sheet's close is added to the same import line (the list's own head draws it), so the
   // assertion reads the Lucide names themselves rather than the whole line.
-  assert.ok(source.includes("import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'") && source.includes("LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'"), 'the menu is the platform’s, and every glyph in it is Lucide’s data')
+  assert.ok(source.includes("import { FileTypeIcon, fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'") && source.includes("LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'"), 'the menu is the platform’s, and every glyph in it is Lucide’s data')
   assert.ok(source.includes('export function useDeliverableExits(file, actions, onFailed)'), 'the exits are defined once')
   assert.equal(source.split('useDeliverableExits(file, actions, onFailed)').length - 1, 3, 'and used by both chromes')
   assert.ok(source.includes("h(Menu, {"), 'the page’s exits are a menu')
