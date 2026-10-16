@@ -327,7 +327,10 @@ html[data-bt-mobile] .bt-dcard-hit:focus-visible{box-shadow:none;outline:none}
    it is read. The box stays the 40px it has always been, so the two lines beside it keep
    their room; the tones come from the palette the rest of the app is drawn with, and each
    one mixes its hue into the ink so it stays legible on both themes. */
-.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;box-sizing:border-box;width:40px;height:40px;display:grid;place-items:center;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--bt-type-ink) 12%,transparent);color:var(--bt-type-ink);--bt-type-ink:var(--bt-ink-2)}
+/* The kind's mark is the drawing itself: flat, one colour, and no plate behind it -- the tinted square
+   the user asked away (it made Fluent's own flat artwork read as a badge). The colour still says which
+   kind it is, so the word under the name is not the only thing doing that work. */
+.bt-dcard-ico{position:relative;z-index:2;pointer-events:none;flex:none;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;color:var(--bt-type-ink);--bt-type-ink:var(--bt-ink-2)}
 .bt-dcard-ico-doc{--bt-type-ink:var(--bt-accent)}
 .bt-dcard-ico-image{--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))}
 .bt-dcard-ico-media{--bt-type-ink:color-mix(in srgb,var(--bt-star) 88%,var(--bt-ink))}

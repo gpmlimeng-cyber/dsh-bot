@@ -35,12 +35,13 @@ const previewRule = (prefix) => {
   return found[0]
 }
 
-test('the tile is DSH-shaped: 60px tall, a 40px type tile, one hit target over it', () => {
+test('the tile is DSH-shaped: 60px tall, a 24px flat mark, one hit target over it', () => {
   const tile = rule('.bt-dcard{')
   assert.ok(tile.includes('height:60px'), tile)
   assert.ok(tile.includes('border-radius:10px'), tile)
   const icon = rule('.bt-dcard-ico{')
-  assert.ok(icon.includes('width:40px') && icon.includes('height:40px'), icon)
+  assert.ok(icon.includes('width:24px') && icon.includes('height:24px'), icon)
+  assert.ok(!icon.includes('background:') && !icon.includes('border-radius:'), 'and the mark is the drawing itself, with no plate behind it')
   const hit = rule('.bt-dcard-hit{')
   assert.ok(hit.includes('position:absolute') && hit.includes('inset:0'), hit)
   // The hit target is the only thing in the card that takes a pointer, so a tap on the
@@ -60,7 +61,7 @@ test('the name and its metadata keep their two sizes, and nothing swaps places o
   assert.ok(rule('.bt-dcard{').includes('height:60px'), 'the tile does not grow with the type')
   // The type mark is a 40px tinted square with the extension in it: the name and the line
   // under it keep their room, since the square has not grown.
-  assert.ok(rule('.bt-dcard-ico{').includes('width:40px') && rule('.bt-dcard-ico{').includes('height:40px'), 'the type mark is the same 40px square')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:24px') && rule('.bt-dcard-ico{').includes('height:24px'), 'the type mark is the drawing itself, at the size the row was measured with')
   // The second line used to be replaced by the word "Preview" while the pointer was on the
   // card. A tap anywhere on the card says that now, so the line stays where it is.
   assert.ok(!styles.includes('.bt-dcard-peek'), 'the hover-only word is gone')
@@ -115,7 +116,7 @@ test('the card’s exits are one "···", the same control in every list', () =
   assert.ok(rule('.bt-dcard-menu{').includes('flex:none'), 'the one control neither shrinks nor wraps')
   assert.ok(rule('.bt-dcard-acts{').includes('flex-wrap:nowrap'), 'the row never wraps into a second row the 60px tile would clip')
   assert.ok(rule('.bt-dcard-acts{').includes('justify-content:flex-end'), 'and is held at the card’s right end')
-  assert.ok(rule('.bt-dcard-ico{').includes('width:40px'), 'the 40px type tile it sits beside is unchanged')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:24px'), 'the kind\u2019s mark it sits beside is unchanged')
   // No word is painted on the card: a label that used to be a button's child would be one.
   for (const painted of [": t('Open with another app'))", ": t('Copy path'))", "t('Path')"]) {
     assert.ok(!source.includes(painted), `${painted} is not painted on the card`)
@@ -201,9 +202,10 @@ test('the type mark is the kind\u2019s own drawing in a tinted square, not lette
   assert.ok(source.includes("if (IMAGE_EXTENSIONS.has(extension)) return 'image'") && source.includes("return 'doc'"), 'with documents as the default')
   assert.ok(rule('.bt-dcard-ico-image{').includes('--bt-type-ink:color-mix(in srgb,var(--bt-green) 82%,var(--bt-ink))'), 'the picture tone is the palette\u2019s green, mixed into the ink so it reads on both themes')
   assert.ok(rule('.bt-dcard-ico-doc{').includes('--bt-type-ink:var(--bt-accent)'), 'and a document is the shell\u2019s accent')
-  assert.ok(rule('.bt-dcard-ico{').includes('width:40px') && rule('.bt-dcard-ico{').includes('height:40px'), 'the square stays the 40px the row was built around')
-  assert.ok(rule('.bt-dcard-ico{').includes('background:color-mix(in srgb,var(--bt-type-ink) 12%,transparent)'), 'and carries the tint, not a border')
-  assert.ok(!rule('.bt-dcard-ico{').includes('border:'), 'with no outline around it')
+  // Flat: the glyph is the whole mark -- no plate, no border, one colour from the kind's tint.
+  assert.ok(rule('.bt-dcard-ico{').includes('color:var(--bt-type-ink)') && !rule('.bt-dcard-ico{').includes('background:'), 'the drawing is the mark, with nothing behind it')
+  assert.ok(!rule('.bt-dcard-ico{').includes('border:') && !rule('.bt-dcard-ico{').includes('border-radius:'), 'and no outline or plate of its own')
+  assert.ok(rule('.bt-dcard-ico{').includes('width:24px') && rule('.bt-dcard-ico{').includes('height:24px'), 'the row keeps its 24px mark')
   assert.ok(rule('.bt-dcard-ico>svg{').includes('width:24px') && rule('.bt-dcard-ico>svg{').includes('height:24px'), 'and the drawing is the 24px the row was measured with')
 })
 
