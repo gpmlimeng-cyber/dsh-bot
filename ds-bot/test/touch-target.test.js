@@ -86,7 +86,56 @@ const KEYS = [
 // stops naming an offender is reported too: a stale reason rots exactly like a missing one.
 const EXEMPT = new Map([
   ['html[data-bt-mobile] .bt-sheet-handle', 'not a target: the 4px pill the eye sees; the 44px band around it (.bt-sheet-grip) is what a thumb grabs'],
-  ['html[data-bt-mobile] .bt-peers-icon', 'not a target: the 群聊 door\u2019s avatar, aria-hidden, sized to a Bot row\u2019s own avatar; the row is the target'],
+])
+
+/** Shapes that are never a target of their own, whatever they measure: a dot, a rule, a glyph, a
+ *  decoration, a spinner, or a picture inside a row that is itself the thing you press. Widening the
+ *  sweep to every rule the phone ends up with (below) is what makes this list necessary -- and the
+ *  shapes are what keeps it short enough to read. */
+const NOT_A_TARGET = [
+  /::(before|after)$/,                    // a decoration: it paints, it is not in the accessibility tree
+  /\s(svg|i|b|em|span)$/,                 // a mark drawn inside a target
+  /svg\./,                                // a drawn mark with its own class
+  /-dot$|-spin$|-badge$|-star$|-warn$|-sep$|-slash$|-ico$|-icon$|-glyph$|-ava$|-you$|-tick$|-lock$|-sr$/,
+  /\.bt-badge-working$|\.bt-admin-star$|\.bt-unread$|\.bt-connector-mark$|\.bt-dcard-ico$|\.bt-theme-chip i$/,
+  /\.bt-settings-close$/,                 // the wide dialog's close: hidden on the phone
+]
+
+/** The phone's small targets, named one by one so they can be worked through (audit 批②). Every one of
+ *  them is a real target: it is here only until it gets its box, and the list is checked for stale
+ *  entries exactly like EXEMPT -- fix it, delete its line, and the test tells you if a line was left
+ *  behind after the rule changed under it. */
+const WORKLIST = new Map([
+['.bt-mobile-acts .bt-attention', '44×40'],
+  ['.bt-switch', '36×20'],
+  ['.bt-ptab-fav', '14×14'],
+  ['.bt-ptab-x', '16×16'],
+  ['.bt-ptab-new', '28×32'],
+  ['.bt-bcard-fav', '14×14'],
+  ['.bt-bcard-x', '22×22'],
+  ['.bt-fp-open', '30×30'],
+  ['.bt-task-day', '30×30'],
+  ['.bt-round', '36×36'],
+  ['.bt-nc-plus', '34×34'],
+  ['.bt-nc-send', '34×34'],
+  ['.bt-swatch', '22×22'],
+  ['.bt-avatar-pencil', '22×22'],
+  ['.bt-icon-btn', '28×28'],
+  ['.bt-tool', '24×24'],
+  ['.bt-palette-clear', '18×18'],
+  ['.bt-palette-lead', '24×24'],
+  ['.bt-palette-cmd', '24×24'],
+  ['.bt-palette-agent', '24×24'],
+  ['.bt-account', '36×36'],
+  ['.bt-theme-chip', '46×30'],
+  ['.bt-mem-head .bt-icon-btn', '32×32'],
+  ['.bt-mem-reply .bt-icon-btn', '24×24'],
+  ['.bt-mobile-left .bt-mobile-nav', '44×40'],
+  ['[data-chat-flow-kind=user] [class*="_actions"] button', '24×24'],
+  ['.bt-news-x', '20×20'],
+  ['.bt-us-month-nav', '28×28'],
+  ['.bt-us-day>b', '28×28'],
+  ['.bt-us-stub', '4×4'],
 ])
 
 test('every title-bar icon key is the one shape: 48px of finger, no fill, a 12px press, a 22px glyph', () => {
@@ -109,20 +158,24 @@ test('every title-bar icon key is the one shape: 48px of finger, no fill, a 12px
   assert.ok(read('styles.js').includes(':active:not(:disabled):not(.bt-swatch-default):not(.bt-nav-tab){background-image:linear-gradient(var(--bt-press),var(--bt-press))!important'), 'and the one press tint still reaches every button on the phone band')
 })
 
-test('no rule the phone band draws declares a target under the floor', () => {
+test('no rule the phone ends up with declares a target under the floor', () => {
+  // The phone's effective sheet is the global rules plus the banded ones -- every rule that is not the
+  // desktop band's. Scanning only the rules that spell out html[data-bt-mobile] left the whole global
+  // section blind, which is where most of the small boxes live (Lead's dispatch for 批②).
   const offenders = rules()
-    .filter(rule => rule.selector.includes('data-bt-mobile'))
+    .filter(rule => !rule.selector.includes('data-bt-pc'))
     .map(rule => ({ ...rule, declared: box(rule.body) }))
     .filter(rule => rule.declared)
     // A glyph is a drawing inside a target, not a target: its subject is an <svg>.
     .filter(rule => !/(^|\s|>)svg\s*$/.test(rule.selector))
+    .filter(rule => !NOT_A_TARGET.some(pattern => pattern.test(rule.selector)))
     .filter(rule => rule.declared.width < FLOOR || rule.declared.height < FLOOR)
 
-  const stale = [...EXEMPT.keys()].filter(selector => !offenders.some(rule => rule.selector === selector))
+  const stale = [...EXEMPT.keys(), ...WORKLIST.keys()].filter(selector => !offenders.some(rule => rule.selector === selector))
   assert.deepEqual(stale, [], `an exemption that no longer names an offender is hiding nothing: ${stale.join(', ')}`)
 
   const found = offenders
-    .filter(rule => !EXEMPT.has(rule.selector))
+    .filter(rule => !EXEMPT.has(rule.selector) && !WORKLIST.has(rule.selector))
     .map(rule => `${rule.file}:${rule.line} ${rule.selector} ${rule.declared.width}×${rule.declared.height}`)
-  assert.deepEqual(found, [], `a target under ${FLOOR}px on the phone band: give it the box, or write the reason into EXEMPT`)
+  assert.deepEqual(found, [], `a target under ${FLOOR}px on the phone: give it the box, or write the reason into EXEMPT`)
 })
