@@ -121,10 +121,15 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   assert.ok(pane.includes(`${sheet}[data-leaving]{`), 'and the exit reads from the same selector')
   assert.ok(!pane.includes('\nhtml[data-bt-mobile] .bt-panel[data-view=products]{'), 'never spelled without it')
   assert.ok(pane.includes('border-radius:18px 18px 0 0'), 'with the two top corners rounded')
-  assert.ok(pane.includes('animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)'), 'sliding up from below')
-  assert.ok(pane.includes('@keyframes bt-sheet-in{from{transform:translateY(100%)}to{transform:none}}'), 'the entrance')
-  assert.ok(pane.includes('@keyframes bt-sheet-out{from{transform:none}to{transform:translateY(100%)}}'), 'and the exit, which a leaving sheet takes')
-  assert.ok(pane.includes(`${sheet}[data-leaving]{animation:bt-sheet-out`), 'on the way out too')
+  assert.ok(pane.includes('animation:bt-products-in .26s cubic-bezier(.2,0,0,1)'), 'sliding up from below')
+  assert.ok(pane.includes('@keyframes bt-products-in{from{transform:translateY(100%)}to{transform:none}}'), 'the entrance')
+  assert.ok(pane.includes('@keyframes bt-products-out{from{transform:none}to{transform:translateY(100%)}}'), 'and the exit, which a leaving sheet takes')
+  assert.ok(pane.includes(`${sheet}[data-leaving]{animation:bt-products-out`), 'on the way out too')
+  // One name, one definition. @keyframes are resolved by document order rather than by selector
+  // weight, so while this sheet borrowed bt-sheet-in/out (the skin keeps that pair for .bt-exchange,
+  // styles.js:576-577) its direction was decided by whichever stylesheet was injected last.
+  assert.ok(!pane.includes('@keyframes bt-sheet-') && !pane.includes('animation:bt-sheet-'), 'the sheet does not borrow the exchange\'s animation names')
+  assert.ok(read('styles.js').includes('@keyframes bt-sheet-in{from{transform:translateY(24px)}}') && read('styles.js').includes('@keyframes bt-sheet-out{to{opacity:0;transform:translateY(16px);filter:blur(4px)}}'), 'and the exchange keeps the pair it was written for')
   // A handle says where it came from; the scrim above it dismisses it, and only a phone draws one.
   assert.ok(pane.includes("view === 'products'\n      ? h('div', {"), 'the handle is drawn only for this view')
   assert.ok(pane.includes("view === 'products' ? h('div', { className: 'bt-scrim bt-panel-scrim', onClick: () => actions.closeProducts?.() }) : null"), 'the scrim closes it, and it is the skin\'s own scrim class')

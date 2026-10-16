@@ -620,8 +620,8 @@ export const PANEL_SHEET_CSS = `
    every mobile band full width (styles.js) -- the band that once tied with a plain selector (the panel
    floated at 70vw there) is gone, so the extra attribute is belt and braces rather than the tie-breaker
    it was first written for. Kept either way: dropping it would draw a sheet in the column's band. */
-html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;padding-top:0;border-left:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3);overflow:hidden;animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)}
-html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out .2s cubic-bezier(.4,0,1,1) forwards}
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;padding-top:0;border-left:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3);overflow:hidden;animation:bt-products-in .26s cubic-bezier(.2,0,0,1)}
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products][data-leaving]{animation:bt-products-out .2s cubic-bezier(.4,0,1,1) forwards}
 /* The band a thumb grabs is 44 tall and draws nothing; the pill inside it is the 4px the eye sees.
    touch-action:none keeps the page's own scroll out of the gesture. */
 html[data-bt-mobile] .bt-sheet-grip{position:relative;flex:none;display:flex;align-items:center;justify-content:center;height:44px;touch-action:none;cursor:grab}
@@ -656,8 +656,13 @@ html[data-bt-mobile] .bt-sheet-head .bt-preview-hint{font-size:12px;line-height:
    the scrim follows in the document). A desktop column draws none: its rule says so. */
 .bt-panel-scrim{display:none}
 html[data-bt-mobile] .bt-panel-scrim{display:block;position:fixed;inset:0;z-index:95}
-@keyframes bt-sheet-in{from{transform:translateY(100%)}to{transform:none}}
-@keyframes bt-sheet-out{from{transform:none}to{transform:translateY(100%)}}
+/* The sheet's own pair, named for the sheet. @keyframes are resolved by document order, not by
+   selector weight: the skin defines bt-sheet-in/out for .bt-exchange (styles.js:576-577), and while
+   both sheets shared those names this one's direction was decided by whichever stylesheet happened
+   to be injected last -- the same trap the selector above avoids with its extra attribute. A name
+   defined once cannot be read from the wrong place. */
+@keyframes bt-products-in{from{transform:translateY(100%)}to{transform:none}}
+@keyframes bt-products-out{from{transform:none}to{transform:translateY(100%)}}
 @media (prefers-reduced-motion:reduce){html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{animation:bt-fade .12s ease-out}}
 /* The panel's own view column, and the state it is in while a drag settles. Both are used on every
    profile -- a phone draws the panel too -- so they live here rather than in the block that needs
