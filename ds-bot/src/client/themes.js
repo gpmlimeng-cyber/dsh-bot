@@ -56,10 +56,18 @@ export function themeVars(mode, dark, accent = mode.accent) {
 }
 const declarations = vars => Object.entries(vars).map(([name, value]) => `${name}:${value}`).join(';')
 // `html body` outranks the base sheet's `body` rules without !important.
+//
+// A theme MAY leave out `dark` -- the app it copies may have no dark mode at all. Then no dark
+// block is emitted and the base sheet's own `body[data-ds-dark-theme]{}` stands in, which holds the
+// default theme's dark values (page-colour.test.js keeps the two in step): a real dark mode, not
+// the light one pushed into the dark. Writing a dark mode nobody measured is the one thing the
+// user ruled out, so the honest shape is the one that says nothing.
 export const themeCss = (theme, accent) => `html body{${declarations(themeVars(theme.light, false, accent ?? theme.light.accent))}}
-html body[data-ds-dark-theme]{${declarations(themeVars(theme.dark, true, accent ?? theme.dark.accent))}}
+${theme.dark === undefined ? '' : `html body[data-ds-dark-theme]{${declarations(themeVars(theme.dark, true, accent ?? theme.dark.accent))}}`}
 ${theme.css ?? ''}`
-export const shellTokens = ({ light, dark }) => ({
+// The same fallback for the shell's tokens, so a light-only theme in a dark shell keeps the
+// default dark surfaces rather than the light ones.
+export const shellTokens = ({ light, dark = THEMES.deepseek.dark }) => ({
   '--dsw-alias-bg-base': { light: light.bg, dark: dark.bg },
   '--dsw-specific-sidebar-fill': { light: light.sidebar, dark: dark.sidebar },
   '--dsw-specific-input-major': { light: light.bg, dark: dark.sidebar },
@@ -105,9 +113,13 @@ export function registerShape(id, shape) {
 export function registerTheme(id, theme) {
   if (typeof id !== 'string' || !/^[a-z][\w-]{0,31}$/.test(id)) throw new Error('Theme ids are lowercase words')
   for (const mode of ['light', 'dark']) {
-    for (const key of THEME_KEYS) if (!isHex(theme?.[mode]?.[key])) throw new Error(`Theme ${mode}.${key} must be a #rrggbb color`)
+    const colors = theme?.[mode]
+    // Only the light mode is required: a theme whose app has no dark mode says nothing about
+    // dark, and the dark layer keeps the default theme's (see themeCss).
+    if (colors === undefined && mode === 'dark') continue
+    for (const key of THEME_KEYS) if (!isHex(colors?.[key])) throw new Error(`Theme ${mode}.${key} must be a #rrggbb color`)
     for (const key of THEME_OPTIONAL_KEYS) {
-      const value = theme?.[mode]?.[key]
+      const value = colors?.[key]
       if (value !== undefined && !isHex(value)) throw new Error(`Theme ${mode}.${key} must be a #rrggbb color`)
     }
   }

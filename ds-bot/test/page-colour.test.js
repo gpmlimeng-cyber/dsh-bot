@@ -8,7 +8,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { THEMES, registerTheme, themeCss, themeVars } from '../src/client/themes.js'
+import { THEMES, allThemes, registerTheme, shellTokens, themeCss, themeVars } from '../src/client/themes.js'
 
 const read = (name) => readFileSync(new URL(`../src/client/${name}`, import.meta.url), 'utf8')
 const styles = read('styles.js').split('\n')
@@ -80,6 +80,27 @@ test('a theme may name the bottom bar\'s pair, and every built-in theme leaves i
   // leaves nothing behind (it throws before the theme is stored).
   assert.throws(() => registerTheme('optional-check', { label: 'x', light: { ...THEMES.deepseek.light, navInk: 'grey' }, dark: THEMES.deepseek.dark }),
     /light\.navInk must be a #rrggbb color/)
+})
+
+// A theme for an app with no dark mode ships none: no dark block, so the base sheet's own -- the
+// default theme's dark values -- stands in. That is the fallback the user asked for instead of a
+// dark mode invented from the light one.
+test('a light-only theme leaves the dark layer to the default theme', () => {
+  const lightOnly = themeCss({ label: 'x', light: THEMES.deepseek.light })
+  assert.ok(lightOnly.split('\n').some(line => line.startsWith('html body{')), 'the light layer is drawn')
+  assert.equal(lightOnly.split('\n').some(line => line.startsWith('html body[data-ds-dark-theme]{')), false,
+    'and nothing dark: the base sheet\'s own dark values are what the dark shell reads')
+  assert.ok(themeCss(THEMES.deepseek).split('\n').some(line => line.startsWith('html body[data-ds-dark-theme]{')),
+    'a theme with both modes is untouched')
+  assert.deepEqual(shellTokens({ light: THEMES.deepseek.light }), shellTokens(THEMES.deepseek),
+    'the shell tokens fall back the same way, rather than throwing on the missing mode')
+  const release = registerTheme('light-only-check', { label: 'x', light: THEMES.deepseek.light })
+  try {
+    assert.equal(allThemes()['light-only-check'].dark, undefined, 'it registers with light alone')
+  } finally {
+    release()
+  }
+  assert.equal('light-only-check' in allThemes(), false, 'and the check leaves no theme behind')
 })
 
 const light = styles.find(line => line.startsWith('body{--bt-nav-ink:'))

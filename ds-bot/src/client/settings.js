@@ -53,6 +53,11 @@ function GeneralPage({ roster, actions, run }) {
   const prefs = roster.prefs ?? {}
   const themes = allThemes()
   const current = themes[prefs.theme] ? prefs.theme : 'deepseek'
+  // A theme whose app has no dark mode ships none, and the dark shell keeps the default dark
+  // values; saying so in the row is the difference between a choice and a missing feature.
+  const themeHint = themes[current].dark === undefined
+    ? `${t('Colors on this device only.')} ${t('Dark mode is not available for this theme.')}`
+    : t('Colors on this device only.')
   // The colour the custom-accent field starts on when the user has never picked one. It has to be
   // the same value --bt-accent carries (styles.js, the token block): this is the only place the
   // skin's accent is written out of CSS, and two accents that drift apart are the bug.
@@ -66,7 +71,7 @@ function GeneralPage({ roster, actions, run }) {
   }
   return [
     h(SetSection, { key: 'look', title: t('Appearance') },
-      h(SetRow, { label: t('Theme'), hint: t('Colors on this device only.') },
+      h(SetRow, { label: t('Theme'), hint: themeHint },
         h('select', { className: 'bt-select', 'aria-label': t('Theme'), value: current, onChange: event => run(actions.setPrefs({ theme: event.target.value })) },
           Object.entries(themes).map(([id, theme]) => h('option', { key: id, value: id }, t(theme.label))))),
       h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },

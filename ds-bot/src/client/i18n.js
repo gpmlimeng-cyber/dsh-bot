@@ -352,6 +352,7 @@ const ZH = {
   Appearance: '外观',
   Theme: '主题',
   'Colors on this device only.': '只改这台设备的配色。',
+  'Dark mode is not available for this theme.': '深色档暂缺，深色下用默认深色主题。',
   Accent: '强调色',
   'Unread marks, badges, and the brand mark.': '未读标记、徽标和品牌标志。',
   'Theme accent': '主题强调色',

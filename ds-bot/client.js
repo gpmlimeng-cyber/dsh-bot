@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: dde43d5b
+// Source fingerprint: 88bbd62c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -414,6 +414,7 @@ var ZH = {
   Appearance: "外观",
   Theme: "主题",
   "Colors on this device only.": "只改这台设备的配色。",
+  "Dark mode is not available for this theme.": "深色档暂缺，深色下用默认深色主题。",
   Accent: "强调色",
   "Unread marks, badges, and the brand mark.": "未读标记、徽标和品牌标志。",
   "Theme accent": "主题强调色",
@@ -1474,9 +1475,9 @@ function themeVars(mode, dark, accent = mode.accent) {
 }
 var declarations = (vars) => Object.entries(vars).map(([name, value]) => `${name}:${value}`).join(";");
 var themeCss = (theme, accent) => `html body{${declarations(themeVars(theme.light, false, accent ?? theme.light.accent))}}
-html body[data-ds-dark-theme]{${declarations(themeVars(theme.dark, true, accent ?? theme.dark.accent))}}
+${theme.dark === void 0 ? "" : `html body[data-ds-dark-theme]{${declarations(themeVars(theme.dark, true, accent ?? theme.dark.accent))}}`}
 ${theme.css ?? ""}`;
-var shellTokens = ({ light, dark }) => ({
+var shellTokens = ({ light, dark = THEMES.deepseek.dark }) => ({
   "--dsw-alias-bg-base": { light: light.bg, dark: dark.bg },
   "--dsw-specific-sidebar-fill": { light: light.sidebar, dark: dark.sidebar },
   "--dsw-specific-input-major": { light: light.bg, dark: dark.sidebar },
@@ -1518,9 +1519,11 @@ function registerShape(id, shape) {
 function registerTheme(id, theme) {
   if (typeof id !== "string" || !/^[a-z][\w-]{0,31}$/.test(id)) throw new Error("Theme ids are lowercase words");
   for (const mode of ["light", "dark"]) {
-    for (const key of THEME_KEYS) if (!isHex(theme?.[mode]?.[key])) throw new Error(`Theme ${mode}.${key} must be a #rrggbb color`);
+    const colors = theme?.[mode];
+    if (colors === void 0 && mode === "dark") continue;
+    for (const key of THEME_KEYS) if (!isHex(colors?.[key])) throw new Error(`Theme ${mode}.${key} must be a #rrggbb color`);
     for (const key of THEME_OPTIONAL_KEYS) {
-      const value = theme?.[mode]?.[key];
+      const value = colors?.[key];
       if (value !== void 0 && !isHex(value)) throw new Error(`Theme ${mode}.${key} must be a #rrggbb color`);
     }
   }
@@ -15631,6 +15634,7 @@ function GeneralPage({ roster, actions, run }) {
   const prefs = roster.prefs ?? {};
   const themes = allThemes();
   const current = themes[prefs.theme] ? prefs.theme : "deepseek";
+  const themeHint = themes[current].dark === void 0 ? `${t("Colors on this device only.")} ${t("Dark mode is not available for this theme.")}` : t("Colors on this device only.");
   const [custom, setCustom] = (0, import_react38.useState)(prefs.accent ?? "#4d6bfe");
   const timer = (0, import_react38.useRef)(0);
   (0, import_react38.useEffect)(() => () => clearTimeout(timer.current), []);
@@ -15645,7 +15649,7 @@ function GeneralPage({ roster, actions, run }) {
       { key: "look", title: t("Appearance") },
       (0, import_react38.createElement)(
         SetRow,
-        { label: t("Theme"), hint: t("Colors on this device only.") },
+        { label: t("Theme"), hint: themeHint },
         (0, import_react38.createElement)(
           "select",
           { className: "bt-select", "aria-label": t("Theme"), value: current, onChange: (event) => run(actions.setPrefs({ theme: event.target.value })) },
@@ -17750,7 +17754,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "dde43d5b" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "88bbd62c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
