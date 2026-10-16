@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 2d8e248e
+// Source fingerprint: a37fe469
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3416,6 +3416,12 @@ html[data-bt-mobile] .bt-settings-top h2{position:absolute;left:0;right:0;top:50
    page under it, not a surface of its own, and no rule adds a divider line. */
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}
+/* The second screen of that flow is not the list: it is the dialog itself, painted --bt-main (.bt-settings
+   above) with the list hidden, so its title row is --bt-main. The strip has to move with the screen it
+   sits over, or the list's --bt-sidebar stays up there as a band over a --bt-main page -- the very seam
+   the list was fixed for, one screen further in. Same word, so both the skin's own default palette and
+   any theme keep the pair equal without a second declaration. */
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]:has(.bt-settings[data-screen=page]){background:var(--bt-main)}
 /* That bar replaces the wide dialog's head and its floating close. */
 html[data-bt-mobile] .bt-settings-head,
 html[data-bt-mobile] .bt-settings-close{display:none}
@@ -16932,7 +16938,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "2d8e248e" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "a37fe469" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

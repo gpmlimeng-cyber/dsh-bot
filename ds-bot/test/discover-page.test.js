@@ -34,7 +34,6 @@ const rows = cards.flat()
 const panelRows = [...discover.slice(discover.indexOf('export const PANEL_ROWS')).match(/\[[^\]]*\]/)[0]
   .matchAll(/'([a-z]+)'/g)].map(match => match[1])
 
-test('the list is three cards of doors that already exist, with no headings', () => {
 test('a tab page\u2019s strip is the colour of the surface that page shows', () => {
   // The user saw a band under the status bar on 全部设置 (live read: --bt-main #ffffff above, --bt-sidebar
   // #f9f9f9 below, and #141414 against #1b1b1b in the dark palette). The two pages under this layer do
@@ -43,6 +42,10 @@ test('a tab page\u2019s strip is the colour of the surface that page shows', () 
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-sidebar)}'), 'the strip follows the settings list\u2019s own base')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}'), 'and so does that list\u2019s title row')
   assert.ok(styles.includes('.bt-settings-nav{position:relative;width:198px;flex:none;padding:16px 8px;border-right:.5px solid var(--bt-line);display:flex;flex-direction:column;gap:2px;background:var(--bt-sidebar);box-sizing:border-box}'), 'which is the colour the list itself already wears')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}'), 'which is the colour that screen\u2019s title row wears')
+  // And the strip follows the screen: the second screen of the flow is the dialog itself (--bt-main), so
+  // leaving the list's --bt-sidebar up there would be the same seam one screen further in.
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]:has(.bt-settings[data-screen=page]){background:var(--bt-main)}'), 'the page screen says its own word too')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-discover.bt-settings-layer[data-tabpage]{background:var(--bt-main)}'), '发现\u2019s strip follows its own dialog instead')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}'), 'and its title row leaves the dialog\u2019s colour showing')
   // The frost is the conversation's own: it is drawn on the tasks tab alone (nav-bar.js), so nothing
@@ -50,6 +53,9 @@ test('a tab page\u2019s strip is the colour of the surface that page shows', () 
   assert.ok(navForTopfade.includes("active === 'tasks' ? h('div', { className: 'bt-topfade', 'aria-hidden': true }) : null"), 'the veil belongs to the conversation')
 })
 
+// It used to be written inside the test above, which made its failures read as that test's. Same file,
+// and neither test's assertions changed.
+test('the list is three cards of doors that already exist, with no headings', () => {
   // 插件 ｜ 连接器·能力·定时任务·密钥 ｜ 用量 -- the user's own grouping, in this order, one card per group.
   assert.deepEqual(cards.map(card => card.length), [1, 4, 1], 'three cards, 1/4/1 rows')
   assert.deepEqual(rows.map(row => row[0]), ['plugins', 'connectors', 'capabilities', 'schedules', 'secrets', 'usage'], 'the rows, in order')
