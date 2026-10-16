@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: c33a9b17
+// Source fingerprint: 3a115b35
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3475,9 +3475,15 @@ html[data-bt-mobile] .bt-set-row{padding:12px;min-height:52px}
 /* Medium and expanded are the same skin with room, and nothing here can reach the
    desktop: every rule needs data-bt-mobile, and mobile.js writes data-bt-size only while
    that flag is on. Above 1024px this file is exactly what it was. */
-/* Medium: the panel is still the only thing on screen, but on a half-folded screen a
-   full-bleed sheet wastes the width it has — it floats centred at 70vw instead. */
-html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:15vw;right:15vw;width:70vw!important;border-left:.5px solid var(--bt-line-2);border-radius:16px 16px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3)}
+/* Medium: the panel is the only thing on screen, so it is that screen — a page, the way
+   我的 -> 全部设置 draws one, not a floating card. It runs from the first pixel (the chrome's
+   own strip sits above the content, so the panel pads its top by the same token the settings
+   layer does — border-box, or that padding would push its foot off the viewport) to the foot,
+   with no gutters, no top corners and no shadow.
+   Only the width carries !important here, against the plain mobile .bt-panel above; top,
+   bottom, radius and padding stay beaten by weight on purpose, so the 全部产物 sheet
+   (browser-pane.js, one attribute heavier) still rises from the foot with its own corners. */
+html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:0!important;right:0!important;width:100%!important;top:0;bottom:0;box-sizing:border-box;border-left:0;border-radius:0;box-shadow:none;padding-top:var(--dsh-frame-chrome-top,0px)}
 /* Expanded: there is room for the conversation and the panel at once, so the panel is a
    right-hand column again and the column keeps its 480px instead of being covered.
    The reservation is for the panel, so it is gated on the panel being there: without the
@@ -8915,12 +8921,13 @@ var PANEL_SHEET_CSS = `
    where it came from, as tall as its list asks for up to 85% of the screen and scrolling inside.
    The desktop column is untouched -- every rule of the sheet is on the phone.
    The :not() is load-bearing, not decoration. styles.js holds the phone width bands for this panel
-   (html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:15vw;right:15vw;width:70vw!important}),
-   and that line weighs exactly as much as a plain html[data-bt-mobile] .bt-panel[data-view=products]:
-   ties in the cascade go to whichever sheet came last, CONVERSATION_CSS is injected after this one
-   (index.js), and the sheet was therefore drawn as the centred 70vw card the user photographed. One
-   more attribute in the selector settles it by weight instead of by injection order. */
-html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;border-left:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3);overflow:hidden;animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)}
+   (html[data-bt-mobile][data-bt-size=medium] .bt-panel is that screen's own page: top 0, no corners,
+   no shadow, and a padding-top for the chrome strip), so without the extra attribute the sheet would
+   be flattened into a full-bleed page it is not: an html[data-bt-mobile] .bt-panel[data-view=products]
+   weighs exactly as much as that band and CONVERSATION_CSS is injected after this one (index.js), so
+   a tie would hand it the page geometry. One more attribute in the selector settles it by weight
+   instead of by injection order. */
+html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;padding-top:0;border-left:0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3);overflow:hidden;animation:bt-sheet-in .26s cubic-bezier(.2,0,0,1)}
 html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out .2s cubic-bezier(.4,0,1,1) forwards}
 /* The band a thumb grabs is 44 tall and draws nothing; the pill inside it is the 4px the eye sees.
    touch-action:none keeps the page's own scroll out of the gesture. */
@@ -16919,7 +16926,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "c33a9b17" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "3a115b35" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

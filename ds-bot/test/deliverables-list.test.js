@@ -114,10 +114,10 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   // The sheet's own shape: the width of the screen, glued to the foot, as tall as its list asks
   // for up to 85% of the viewport -- and a sliding entrance rather than the column's fade.
   // The selector carries one attribute more than the phone width bands in styles.js
-  // (html[data-bt-mobile][data-bt-size=medium] .bt-panel{…width:70vw!important}): a tie there goes to
-  // whichever sheet is injected last, and that one is -- measured -- so the weight is load-bearing.
+  // (html[data-bt-mobile][data-bt-size=medium] .bt-panel is that screen's own page): a tie there goes
+  // to whichever sheet is injected last, and that one is -- measured -- so the weight is load-bearing.
   const sheet = 'html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]'
-  assert.ok(pane.includes(`${sheet}{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;`), 'full width, at the foot, 85% at most, beating the 70vw band by weight')
+  assert.ok(pane.includes(`${sheet}{top:auto;bottom:0;left:0!important;right:0!important;width:100%!important;height:auto;max-height:85vh;padding-top:0;`), 'full width, at the foot, 85% at most, and no page padding, beating the page band by weight')
   assert.ok(pane.includes(`${sheet}[data-leaving]{`), 'and the exit reads from the same selector')
   assert.ok(!pane.includes('\nhtml[data-bt-mobile] .bt-panel[data-view=products]{'), 'never spelled without it')
   assert.ok(pane.includes('border-radius:18px 18px 0 0'), 'with the two top corners rounded')
@@ -180,6 +180,22 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   assert.ok(conditionalBlock.includes('.bt-panel-ghost{position:absolute;top:44px;'), 'the ghost column stays behind the bridge')
   // Nothing invented behind a batch-action bar: the reference has one, this skin has no such command.
   assert.ok(!list.includes('批量操作') && !list.includes('Batch actions'), 'no empty action bar')
+})
+
+test('on a phone or a small tablet the panel is the screen itself, not a centred card', () => {
+  // A phone gets the panel full bleed (the un-band rule above does the width); the medium band -- a
+  // small tablet, and the width the sheet test just armed itself against -- was left floating at
+  // 70vw, which is the card the user photographed. It is now that screen's own page: the chrome
+  // strip is the panel's padding-top rather than a band of somebody else's colour, and a border-box
+  // because the panel is otherwise content-box, where that padding would push its foot off screen.
+  const styles = read('styles.js')
+  const rule = 'html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:0!important;right:0!important;width:100%!important;top:0;bottom:0;box-sizing:border-box;border-left:0;border-radius:0;box-shadow:none;padding-top:var(--dsh-frame-chrome-top,0px)}'
+  assert.ok(styles.includes(rule), 'the medium band is the page, strip to foot')
+  // And that page must not out-rank the sheet, which overrides exactly this geometry by weight.
+  assert.ok(!/top:[^;]*!important|bottom:[^;]*!important|border-radius:[^;]*!important|padding-top:[^;]*!important/.test(rule), 'never !important on the geometry the sheet owns')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-panel{left:0;right:0;bottom:0;width:100%!important;z-index:96;border-left:0}'), 'and the un-banded phone panel is still the plain full-width one')
+  assert.ok(styles.includes('html[data-bt-mobile][data-bt-size=expanded] .bt-panel{left:auto;right:0;width:var(--bt-detail-w)!important;border-left:.5px solid var(--bt-line-2)}'), 'the expanded right-hand column is untouched')
+  assert.ok(!styles.includes('70vw'), 'no 70vw card is left anywhere in the sheet')
 })
 
 test('every kind of file the list can name is translated', () => {

@@ -1449,9 +1449,15 @@ html[data-bt-mobile] .bt-set-row{padding:12px;min-height:52px}
 /* Medium and expanded are the same skin with room, and nothing here can reach the
    desktop: every rule needs data-bt-mobile, and mobile.js writes data-bt-size only while
    that flag is on. Above 1024px this file is exactly what it was. */
-/* Medium: the panel is still the only thing on screen, but on a half-folded screen a
-   full-bleed sheet wastes the width it has — it floats centred at 70vw instead. */
-html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:15vw;right:15vw;width:70vw!important;border-left:.5px solid var(--bt-line-2);border-radius:16px 16px 0 0;box-shadow:0 -12px 40px -12px rgba(0,0,0,.3)}
+/* Medium: the panel is the only thing on screen, so it is that screen — a page, the way
+   我的 -> 全部设置 draws one, not a floating card. It runs from the first pixel (the chrome's
+   own strip sits above the content, so the panel pads its top by the same token the settings
+   layer does — border-box, or that padding would push its foot off the viewport) to the foot,
+   with no gutters, no top corners and no shadow.
+   Only the width carries !important here, against the plain mobile .bt-panel above; top,
+   bottom, radius and padding stay beaten by weight on purpose, so the 全部产物 sheet
+   (browser-pane.js, one attribute heavier) still rises from the foot with its own corners. */
+html[data-bt-mobile][data-bt-size=medium] .bt-panel{left:0!important;right:0!important;width:100%!important;top:0;bottom:0;box-sizing:border-box;border-left:0;border-radius:0;box-shadow:none;padding-top:var(--dsh-frame-chrome-top,0px)}
 /* Expanded: there is room for the conversation and the panel at once, so the panel is a
    right-hand column again and the column keeps its 480px instead of being covered.
    The reservation is for the panel, so it is gated on the panel being there: without the
