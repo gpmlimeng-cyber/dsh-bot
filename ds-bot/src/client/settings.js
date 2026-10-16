@@ -1,6 +1,7 @@
 import { createElement as h, useCallback, useEffect, useRef, useState } from 'react'
 import { ACCENT_INKS, INKS } from './inks.js'
 import { isMainOf } from './sources.js'
+import { AccountCard, AccountPage, loadAccount, saveAccount } from './account.js'
 import { allThemes } from './themes.js'
 import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, InfoIcon, PlugIcon, PlusIcon, SlidersIcon, SETTINGS_ICONS } from './icons.js'
 import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
@@ -24,7 +25,9 @@ const capitalize = word => word[0].toUpperCase() + word.slice(1)
 
 // Settings dialog: a 198px page list beside the page. Bots and group chats each list
 // their members, and one opens on its own settings form. Usage widens the dialog.
-const SETTINGS_PAGES = [['general', 'General'], ['bots', 'Bots'], ['groups', 'Group chats'], ['connectors', 'Connectors'], ['capabilities', 'Capabilities'], ['schedules', 'Scheduled tasks'], ['usage', 'Usage'], ['secrets', 'Secrets'], ['feedback', 'Feedback'], ['about', 'About DS Bot']]
+// `account` is a page without a row of its own: 我的's account card opens it (account.js), the way the
+// 群聊 door opens the group chats' page. It is listed here so the dialog knows the page exists.
+const SETTINGS_PAGES = [['general', 'General'], ['bots', 'Bots'], ['groups', 'Group chats'], ['account', 'Account settings'], ['connectors', 'Connectors'], ['capabilities', 'Capabilities'], ['schedules', 'Scheduled tasks'], ['usage', 'Usage'], ['secrets', 'Secrets'], ['feedback', 'Feedback'], ['about', 'About DS Bot']]
 // What the phone's back arrow is called, per door the layer came in through (index.js sets `from`):
 // the arrow's name and the arrow's action are one answer, so a button that returns to the 伙伴 list
 // is not named for Settings' own list. A new door adds one line here.
@@ -198,6 +201,14 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
   // puts it away: the form belongs to the visit, not to the dialog.
   const [creatingGroup, setCreatingGroup] = useState(false)
   useEffect(() => { setCreatingGroup(false) }, [shown])
+  // The user's own details, read once and saved on every change: this is a local record, not an
+  // account (account.js), so there is nothing to wait for and nothing to fail.
+  const [account, setAccount] = useState(() => loadAccount())
+  const updateAccount = (patch) => setAccount(current => {
+    const next = { ...current, ...patch }
+    saveAccount(next)
+    return next
+  })
   const nav = useGlide(shown, { axis: 'y' })
   // A page enters from the right when it is one level in, from the left when it comes
   // back out, and from below beside it. Usage keeps its own entrance and its data
@@ -263,6 +274,10 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
       // upstream settings panel (data-dsh-settings-dialog) and reflows its nav into a
       // horizontal tab strip. The accessible role is unchanged.
       h('div', { ref: nav.box, role: 'navigation', className: 'bt-settings-nav', 'aria-label': t('Settings pages') },
+        // 我的's own top card, above the page list: who the user is on this device, and the door to the
+        // page that edits it. Only the phone draws this list as a page of its own -- the wide dialog's
+        // 198px column has the account in its footer launcher instead.
+        mobile ? h(AccountCard, { account, onOpen: () => actions.openSettings('account') }) : null,
         h('span', { ref: nav.thumb, className: 'bt-thumb', 'aria-hidden': true }),
         SETTINGS_GROUPS.map(([group, keys], index) => h('section', { key: group, className: 'bt-settings-group' },
           h('h3', { className: 'bt-settings-group-head' }, t(group)),
@@ -295,6 +310,7 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
         shown === 'usage' ? null : h('div', { key: pageKey, className: 'bt-settings-scroll bt-settings-page', 'data-move': last.current.move },
           errorLine,
           shown === 'general' ? h(GeneralPage, { roster, actions, run }) : null,
+          shown === 'account' ? h(AccountPage, { account, onChange: updateAccount }) : null,
           bot ? h('div', { className: 'bt-settings-form' }, h(BotSettingsForm, { key: bot.id, bot, roster, actions, run })) : null,
           shown === 'bots' && !bot ? h(BotsPage, { roster, actions, run }) : null,
           room ? h('div', { className: 'bt-settings-form' }, h(GroupSettingsForm, { key: room.id, room, roster, actions, run })) : null,

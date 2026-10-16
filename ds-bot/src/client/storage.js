@@ -10,6 +10,8 @@ export const STORAGE = {
   agentSessions: 'ds-bot:agent-sessions',
   browserWidth: 'ds-bot:browser-width',
   browsers: 'ds-bot.browser.v2',
+  // The account the user keeps for themselves on this device: a name, a phone number and an email.
+  account: 'ds-bot:account',
 }
 
 // Newest legacy name first: when both exist, the more recent value wins.

@@ -376,6 +376,19 @@ const ZH = {
   // And Settings' own list, which is where a page with nothing above it and no door behind it returns
   // (the 群聊 item on that list is one) -- named the way the other two are, "back to X".
   'Back to all settings': '返回全部设置',
+  // The account the user keeps for themselves (account.js): 我的's own top card and the page behind it.
+  // Nothing here signs in -- these are the words for the values and for the two controls that wait
+  // for an account system that does not exist yet.
+  'Account settings': '账号设置',
+  'Not signed in': '未登录',
+  Nickname: '昵称',
+  Phone: '手机号',
+  Email: '邮箱',
+  'Your name': '你的名字',
+  'Kept on this device.': '只保存在这台设备上。',
+  'Sign out': '退出登录',
+  'Delete account': '注销账号',
+  'Signing in is not available yet': '登录功能暂未开放',
   'Back to the list': '返回列表',
   'Close settings': '关闭设置',
 

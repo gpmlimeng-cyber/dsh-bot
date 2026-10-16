@@ -41,6 +41,7 @@ import { noticeApprovals } from './approval-notices.js'
 import { BottomNav, NAV_CSS } from './nav-bar.js'
 import { PeersPage, PEERS_CSS } from './peers-page.js'
 import { DiscoverBack, DiscoverPage, DISCOVER_CSS, PANEL_ROWS } from './discover-page.js'
+import { ACCOUNT_CSS } from './account.js'
 
 export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
 
@@ -1031,6 +1032,7 @@ export function apply(ctx) {
     installCompiledStyles(ATTENTION_CSS, 'attention'),
     installCompiledStyles(NAV_CSS, 'bottom-nav'),
     installCompiledStyles(PEERS_CSS, 'peers'),
+    installCompiledStyles(ACCOUNT_CSS, 'account'),
     installCompiledStyles(DISCOVER_CSS, 'discover'),
     installTheme(),
     shadow('sidebar.workspaces', { priority: -10, inject: face }, TeamSidebar),
