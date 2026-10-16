@@ -714,6 +714,7 @@ const ZH = {
   "Open this Bot's browser": '打开这个 Bot 的浏览器',
   "{name}'s browser": '{name} 的浏览器',
   'Resize panel': '调整面板宽度',
+  'Resize the sheet': '拖动调整高度',
   '{name} read this page': '{name} 读了这个页面',
   "{name}'s browser. {name} can read the page shown here.": '{name} 的浏览器。{name} 能读取这里显示的页面。',
   Back: '后退',

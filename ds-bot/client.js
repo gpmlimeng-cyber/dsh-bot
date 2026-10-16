@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: dbfcc454
+// Source fingerprint: 83b06514
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -764,6 +764,7 @@ var ZH = {
   "Open this Bot's browser": "打开这个 Bot 的浏览器",
   "{name}'s browser": "{name} 的浏览器",
   "Resize panel": "调整面板宽度",
+  "Resize the sheet": "拖动调整高度",
   "{name} read this page": "{name} 读了这个页面",
   "{name}'s browser. {name} can read the page shown here.": "{name} 的浏览器。{name} 能读取这里显示的页面。",
   Back: "后退",
@@ -16855,7 +16856,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "dbfcc454" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "83b06514" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
