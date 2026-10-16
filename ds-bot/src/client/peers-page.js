@@ -18,7 +18,7 @@ import { createPortal } from 'react-dom'
 import { BotMark, RoomAvatar } from './mark.js'
 import { MotionControl } from './set-rows.js'
 import { modelOf } from './model-ref.js'
-import { ChevronRightIcon, FluentStarFilledIcon, FluentStarIcon, PlusIcon, SearchIcon } from './icons.js'
+import { ChevronRightIcon, FluentCrownFilledIcon, FluentCrownIcon, PlusIcon, SearchIcon } from './icons.js'
 import { useMobile } from './mobile.js'
 import { isMainOf } from './sources.js'
 import { t } from './i18n.js'
@@ -145,8 +145,8 @@ export function PeersPage({ useRoster, useUi, actions }) {
         // The Main Bot control is the row's sibling, never its child -- a button cannot hold a button --
         // and it is the row's own action rather than the settings page's small switch: a finger-sized
         // target (44px, this page is a phone's), pressed in place, with the state drawn on it. What is
-        // drawn is one star in two weights -- Fluent's filled star on the row that holds the role, its
-        // line star on the others -- and nothing behind them: the user asked the plate away, so the
+        // drawn is one crown in two weights -- Fluent's filled crown on the row that holds the role, its
+        // line crown on the others -- and nothing behind them: the user asked the plate away, so the
         // drawing says which row it is. The one exception is the only Main Bot there is: the host
         // refuses to leave the team with none (roster.js), so its control says so.
         const isMain = isMainOf(roster, bot.id)
@@ -177,7 +177,7 @@ export function PeersPage({ useRoster, useUi, actions }) {
             'aria-label': t('Main Bot'),
             title: onlyMain ? t('The only Main Bot. To hand the role to another Bot, use Main Bot on the Bots page.') : t('Main Bot'),
             onClick: () => { void actions.setMain(bot.id, !isMain) },
-          }, h(isMain ? FluentStarFilledIcon : FluentStarIcon)))
+          }, h(isMain ? FluentCrownFilledIcon : FluentCrownIcon)))
       }), h(MotionControl, { roster, actions, run, className: 'bt-motion-mini' })) : null,
       shown.length === 0
         ? h('div', { className: 'bt-peers-empty', role: 'status' }, t('Nothing matches'))
@@ -235,9 +235,9 @@ html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;o
    squeezed (so a long name, model or folder gives way instead). The trailing control keeps the row's
    own 10px inset, which its padding gave it while it was inside the button. */
 html[data-bt-mobile] .bt-peers-item{display:flex;align-items:center;gap:8px;padding-right:10px}
-/* The Main Bot action: 44px of finger, in the row rather than beside it, and the star is the whole of
-   it -- the user asked the plate away, so which row holds the role is read from the drawing (the row's
-   filled star against the others' line star, a step back in --bt-ink-3) rather than from a filled
+/* The Main Bot action: 44px of finger, in the row rather than beside it, and the crown is the whole
+   of it -- the user asked the plate away, so which row holds the role is read from the drawing (the
+   row's filled crown against the others' line crown, a step back in --bt-ink-3) rather than from a plate
    control. A press answers the thumb by dimming that glyph, which lands at once and draws no block. */
 html[data-bt-mobile] .bt-peers-main{flex:none;width:44px;height:44px;padding:0;border:0;border-radius:999px;background:none;color:var(--bt-ink-3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
 html[data-bt-mobile] .bt-peers-main>svg{width:20px;height:20px}
