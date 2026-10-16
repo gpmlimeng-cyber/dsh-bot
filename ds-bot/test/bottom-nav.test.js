@@ -94,8 +94,12 @@ test('each page is Fluent\u2019s regular and Fluent\u2019s fill, credited where 
   assert.equal(icons.split('const fluentNavIcon = (d, box = FLUENT_NAV_BOX)').length - 1, 1, 'one Fluent factory')
   assert.ok(icons.includes("viewBox: '0 0 24 24'"), 'on Fluent\u2019s 24 grid')
   // Eight for the bar's four pages -- a regular and a solid each -- and six more for the rows of the
-  // 发现 page (discover-page.js), which wear the same family: fourteen, one factory, one grid.
-  assert.equal((icons.match(/export const Fluent\w+/g) ?? []).length, 14, 'the bar\'s four pairs, plus the six rows of 发现')
+  // 发现 page (discover-page.js), which wear the same family: fourteen on Fluent's 24 grid, one factory.
+  // The Main Bot's star (伙伴) is the family's other grid: Fluent draws Star at 20, so its regular and
+  // filled pair come with a factory of their own -- sixteen Fluent exports, two factories, two grids.
+  assert.equal((icons.match(/export const Fluent\w+/g) ?? []).length, 16, 'the bar\'s four pairs, the six rows of 发现, and the star pair')
+  assert.ok(icons.includes("const fluentStarIcon = d => function FluentStarIcon()"), 'which draws on Fluent\'s 20 grid')
+  assert.ok(icons.includes("viewBox: '0 0 20 20'"), 'at the size that file carries')
   for (const dead of ['Phosphor Icons (MIT)', 'phosphorIcon', 'PHOSPHOR_BOX', 'ionicon(', 'Ionicons (MIT)', 'IonChatbubbleIcon', 'IonPeopleIcon', 'fluentIcon']) {
     assert.ok(!icons.includes(dead), `${dead} is gone with the family it belonged to`)
   }

@@ -131,13 +131,18 @@ test('the page is a header row and one scroller of labelled cards', () => {
   // plain() is JSON, so an attribute that is not set reads as null: unpressed is an absence.
   assert.deepEqual(plain(mains.map(node => node.props['aria-pressed'])), ['true', null], 'pressed on the Main Bot, unpressed on the other')
   assert.deepEqual(plain(mains.map(node => node.props.disabled)), [true, false], 'and the only Main Bot cannot hand the role away from itself')
-  assert.ok(mains.every(node => node.children.some(child => typeof child === 'object' && child !== null)), 'each carries the star the badge wears')
+  assert.ok(mains.every(node => node.children.some(child => typeof child === 'object' && child !== null)), 'each carries its star')
   // A phone's control: 44px of finger, a state that is drawn as well as announced, and an answer to the
-  // tap itself rather than to a hover.
+  // tap itself rather than to a hover. What is drawn is one Fluent star in two weights -- filled on the
+  // row that holds the role, the line star on the others -- and the user asked the plate behind it away,
+  // so the press answers by dimming the glyph rather than by drawing a block.
   const sheet = code('peers-page.js')
   assert.ok(sheet.includes('.bt-peers-main{flex:none;width:44px;height:44px;'), 'the target is finger-sized')
-  assert.ok(sheet.includes('.bt-peers-main[aria-pressed=true]{background:var(--bt-active);color:var(--bt-star)}'), 'and shows its state with the star the badge uses')
-  assert.ok(sheet.includes('.bt-peers-main:active{background:var(--bt-active)}'), 'answering the tap at once')
+  assert.ok(sheet.includes('.bt-peers-main[aria-pressed=true]{color:var(--bt-star)}'), 'the row that holds the role says so in the colour the badge wears')
+  assert.ok(!sheet.includes('.bt-peers-main[aria-pressed=true]{background:') && !sheet.includes('.bt-peers-main:active{background:'), 'with no plate behind the star, on its state or on a press')
+  assert.ok(sheet.includes('.bt-peers-main:active{opacity:.55}'), 'answering the tap at once, on the glyph itself')
+  assert.ok(peers.includes('h(isMain ? FluentStarFilledIcon : FluentStarIcon)'), 'and the two weights are the Fluent pair')
+  assert.ok(code('icons.js').includes('export const FluentStarFilledIcon = fluentStarIcon(') && code('icons.js').includes('export const FluentStarIcon = fluentStarIcon('), 'copied from Fluent\'s own artwork rather than drawn here')
   // Nothing here animates on its own: every row wears the skin's own mark, and the skin already
   // silences marks under prefers-reduced-motion (which is what this device asks for).
   assert.ok(code('styles.js').includes('@media (prefers-reduced-motion:reduce){.bt-mark *{animation:none!important;transition:none!important}}'), 'the skin silences the marks')
