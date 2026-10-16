@@ -277,6 +277,25 @@ export function install(rt) {
             throw error
           }
           await rt.save()
+          // A mirrored card was answered in the room, and the answer itself goes to the Session that
+          // asked -- so without a line here the room shows nothing and the user cannot tell whether
+          // their tap counted. The receipt is the label they chose, sent as their own message (the
+          // same shape the decision bar had), which is also what wakes the room for it. Its failure
+          // must not lose the answer that already landed.
+          if (question.mirrorOf !== undefined) {
+            const custom = typeof body.answer?.custom === 'string' ? body.answer.custom.trim() : ''
+            const chosen = (Array.isArray(body.answer?.selected) ? body.answer.selected : []).filter(label => typeof label === 'string')
+            const receipt = [...chosen, ...(custom === '' ? [] : [custom])].join('、')
+            if (receipt !== '') {
+              try {
+                await ctx.sessionController.prompt({
+                  requestId: randomUUID(), sessionId, mode: 'queue', content: [{ type: 'text', text: receipt }],
+                }, AbortSignal.timeout(30_000))
+              } catch (error) {
+                rt.warn('ds-bot: the receipt in %s could not be sent: %s', sessionId, rt.redactSecrets(String(error)))
+              }
+            }
+          }
           return ok(true)
         }
         case 'send': {

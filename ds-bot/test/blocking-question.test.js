@@ -32,6 +32,7 @@ async function setup({ served = ['read', 'ask_user', QUESTION], goals } = {}) {
   const agents = new Map()
   const hidden = []
   const sent = []
+  const prompts = []
   let sessions = 0
   const created = agent => Promise.all((ctx.listeners.get('agent/created') ?? []).map(listener => listener({ agent })))
   const agentFor = async (id) => {
@@ -66,6 +67,8 @@ async function setup({ served = ['read', 'ask_user', QUESTION], goals } = {}) {
       create: async () => ({ sessionId: `new${++sessions}` }),
       resolveAgent: async id => ({ agent: await agentFor(id) }),
       selectModel: async () => {},
+      // A mirrored answer leaves a receipt as the user's own message in the room.
+      prompt: async request => { prompts.push(request) },
     },
     sessionTitle: { rename: async () => {} },
     sessions: { flush: async () => {} },
@@ -94,7 +97,7 @@ async function setup({ served = ['read', 'ask_user', QUESTION], goals } = {}) {
     await ctx.dispose()
     rmSync(home, { recursive: true, force: true, maxRetries: 5 })
   }
-  return { ctx, rt, ask, post, agentFor, hidden, hiddenIn, guard, sent, stop }
+  return { ctx, rt, ask, post, agentFor, hidden, hiddenIn, guard, sent, prompts, stop }
 }
 
 // DSH's goal service, holding one goal per Session; block() records what was asked.
@@ -230,7 +233,7 @@ test('without DSH\'s goal service a goal change is left alone', async (t) => {
 // to land where the user never looks. The room carries the card now; the answer still belongs
 // to the Session that asked.
 test('a card asked in a group chat waits in the room and answers the Session that asked', async (t) => {
-  const { rt, ask, post, sent, stop } = await setup()
+  const { rt, ask, post, sent, prompts, stop } = await setup()
   t.after(stop)
   assert.match(await ask('room-writer'), /card is on screen/)
   const card = rt.state.questions.room
@@ -245,10 +248,13 @@ test('a card asked in a group chat waits in the room and answers the Session tha
   assert.deepEqual(rt.state.questions, {})
   assert.deepEqual(sent.map(entry => entry.sessionId), ['room-writer'])
   assert.match(sent[0].message.content[0].text, /"selected":\["Lookout"\]/)
+  // And the room keeps a line of its own: the answer went to the hidden Session, so this is what the
+  // user sees to know their tap counted.
+  assert.deepEqual(prompts.map(request => [request.sessionId, request.content[0].text]), [['room', 'Lookout']])
 })
 
 test('a card in a Bot\'s own chat stays on its own Session, with no copy in any room', async (t) => {
-  const { rt, ask, post, sent, stop } = await setup()
+  const { rt, ask, post, sent, prompts, stop } = await setup()
   t.after(stop)
   await ask('writer')
   const card = rt.state.questions.writer
@@ -259,6 +265,7 @@ test('a card in a Bot\'s own chat stays on its own Session, with no copy in any 
   await post('answer-question', { sessionId: 'writer', questionId: card.id, answer: { selected: ['Lookout'] } })
   assert.deepEqual(rt.state.questions, {})
   assert.deepEqual(sent.map(entry => entry.sessionId), ['writer'])
+  assert.deepEqual(prompts, [], 'a 1:1 answer posts nothing into any room')
 })
 
 test('dismissing a room\'s card, or deleting the room, leaves no copy behind', async (t) => {
