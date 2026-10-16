@@ -130,13 +130,21 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   // The head is the sheet's: name from the edge, close at the other end.
   assert.ok(list.includes('const mobile = useMobile()'), 'the list knows the band through the shared hook')
   assert.ok(list.includes("close ? 'bt-preview-head bt-sheet-head' : 'bt-preview-head'"), 'and asks the head for its sheet form')
-  assert.ok(list.includes("h('button', { type: 'button', className: 'bt-preview-back bt-sheet-close', onClick: onClose, 'aria-label': t('Close'), title: t('Close') }, h(CloseIcon))"), 'which is a close, not the preview page\'s back arrow')
+  assert.ok(list.includes('close ? null : children'), 'where the name stands alone -- the way out is the corner button')
+  // The corner button: 44px of finger at the sheet's top right, on the handle's own row, and it
+  // never starts the drag it sits in.
+  assert.ok(pane.includes("className: 'bt-sheet-close', 'aria-label': t('Close'), title: t('Close'),"), 'the close is a button of its own')
+  assert.ok(pane.includes('onPointerDown: (event) => event.stopPropagation(),'), 'which does not begin a drag')
+  assert.ok(pane.includes("onClick: () => actions.closeProducts?.(),") && pane.includes("}, h(CloseIcon)))"), 'and it closes the sheet')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:2px;top:50%;transform:translateY(-50%);'), 'pinned to the right corner of that row')
+  assert.ok(pane.includes('.bt-sheet-close{display:none}'), 'while a desktop column keeps its back arrow')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-back{display:none}'), 'the sheet\'s title row draws the name alone')
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:1;min-width:0;text-align:left}'), 'the name reads from the edge there')
   // The handle drags the sheet's height: 44px of band over a 4px pill, a floor and a ceiling, a
   // close when the drag goes well past the floor, and nothing remembered between openings.
   assert.ok(pane.includes("className: 'bt-sheet-grip', role: 'separator', 'aria-orientation': 'horizontal'"), 'the band is the separator a thumb grabs')
   assert.ok(pane.includes("h('span', { className: 'bt-sheet-handle', 'aria-hidden': true })"), 'with the thin pill inside it')
-  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-grip{flex:none;display:flex;align-items:center;justify-content:center;height:44px;touch-action:none;cursor:grab}'), '44 tall, and the gesture is the handle\'s (touch-action)')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-grip{position:relative;flex:none;display:flex;align-items:center;justify-content:center;height:44px;touch-action:none;cursor:grab}'), '44 tall, positioned for the corner close, and the gesture is the handle\'s (touch-action)')
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-handle{width:36px;height:4px;'), 'the pill itself stays 36x4')
   assert.ok(pane.includes('onPointerDown: startSheetDrag'), 'the band starts the drag')
   assert.ok(pane.includes('const SHEET_MIN_VH = 30') && pane.includes('const SHEET_MAX_VH = 85'), 'between 30% and 85% of the window')

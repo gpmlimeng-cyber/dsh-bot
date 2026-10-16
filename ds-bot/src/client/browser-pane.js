@@ -561,7 +561,16 @@ export function BotPanel({ pane, leaving, roster, actions, useSessions, useSessi
       ? h('div', {
           className: 'bt-sheet-grip', role: 'separator', 'aria-orientation': 'horizontal',
           'aria-label': t('Resize the sheet'), onPointerDown: startSheetDrag,
-        }, h('span', { className: 'bt-sheet-handle', 'aria-hidden': true }))
+        },
+        h('span', { className: 'bt-sheet-handle', 'aria-hidden': true }),
+        // The way out sits in the sheet's top-right corner, on the handle's own row: the handle
+        // stays centred there and the title below is left-aligned, which is what the user asked for.
+        // It takes no part in the drag (a press on it stops before the row's own handler).
+        h('button', {
+          type: 'button', className: 'bt-sheet-close', 'aria-label': t('Close'), title: t('Close'),
+          onPointerDown: (event) => event.stopPropagation(),
+          onClick: () => actions.closeProducts?.(),
+        }, h(CloseIcon)))
       : null,
     // On a phone the panel is full screen and already carries a close button in the corner
     // the desktop layout puts its own controls, so it adds none of its own.
@@ -604,7 +613,16 @@ html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products]{
 html[data-bt-mobile]:not([data-bt-size=expanded]) .bt-panel[data-view=products][data-leaving]{animation:bt-sheet-out .2s cubic-bezier(.4,0,1,1) forwards}
 /* The band a thumb grabs is 44 tall and draws nothing; the pill inside it is the 4px the eye sees.
    touch-action:none keeps the page's own scroll out of the gesture. */
-html[data-bt-mobile] .bt-sheet-grip{flex:none;display:flex;align-items:center;justify-content:center;height:44px;touch-action:none;cursor:grab}
+html[data-bt-mobile] .bt-sheet-grip{position:relative;flex:none;display:flex;align-items:center;justify-content:center;height:44px;touch-action:none;cursor:grab}
+/* The close of the sheet: the top-right corner of the row the handle sits in -- 44px of finger,
+   out of the drag's way, and only on the phone (a desktop column closes through its back arrow). */
+.bt-sheet-close{display:none}
+html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:2px;top:50%;transform:translateY(-50%);align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:0;border-radius:12px;background:none;color:var(--bt-ink-2);cursor:pointer;touch-action:manipulation}
+html[data-bt-mobile] .bt-sheet-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
+html[data-bt-mobile] .bt-sheet-close svg{width:18px;height:18px}
+/* On the sheet the title row holds the name alone: the arrow is the preview page's, and the close
+   is up in the corner above it. */
+html[data-bt-mobile] .bt-sheet-head .bt-preview-back{display:none}
 html[data-bt-mobile] .bt-sheet-grip:active{cursor:grabbing}
 html[data-bt-mobile] .bt-sheet-handle{width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
 /* While a finger is on it the sheet follows that finger exactly: nothing eases behind it. */

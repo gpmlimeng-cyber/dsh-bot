@@ -16,7 +16,7 @@
 // path for the phone's file manager.
 import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
 import { fileExtension, fileSizeText, ImageLightbox, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { CloseIcon, LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'
+import { LucideCheckIcon, LucideChevronLeftIcon, LucideCopyIcon, LucideEllipsisIcon, LucideExternalLinkIcon } from './icons.js'
 import { FileView } from './file-preview.js'
 import { useMobile } from './mobile.js'
 import { t } from './i18n.js'
@@ -417,16 +417,16 @@ export function DeliveredPreview({ file, actions, onClose }) {
  * The title bar both panel pages open with: the way back, what is being shown, and
  * whatever that page puts beside the two (a page's source toggle, and nothing else).
  */
-// The head a preview and the deliverables list share. `close` is the phone's sheet: a sheet came up
-// from the foot and slides back down, so its way out is a close at the far end and its name reads
-// from the edge -- the panel's own back arrow belongs to the preview page, which is a level down.
+// The head a preview and the deliverables list share. `close` marks the phone's sheet: its name
+// reads from the edge, its own way out is the corner button of the handle row above (browser-pane.js),
+// and the back arrow -- the preview page's own -- is hidden there by CSS.
 function PreviewHead({ name, onClose, children, close = false }) {
   return h('div', { className: close ? 'bt-preview-head bt-sheet-head' : 'bt-preview-head' },
-    close ? null : h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(LucideChevronLeftIcon)),
+    h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(LucideChevronLeftIcon)),
     h('span', { className: 'bt-preview-name' }, name),
-    close
-      ? h('button', { type: 'button', className: 'bt-preview-back bt-sheet-close', onClick: onClose, 'aria-label': t('Close'), title: t('Close') }, h(CloseIcon))
-      : children)
+    // A sheet's own way out is the corner button of its handle row (browser-pane.js); the arrow here
+    // is the preview page's, and the sheet's CSS hides it rather than the tree deciding twice.
+    close ? null : children)
 }
 
 /**
