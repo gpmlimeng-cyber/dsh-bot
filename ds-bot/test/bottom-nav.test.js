@@ -134,7 +134,7 @@ test('the four names are dictionary copy, shared with the accessible name', () =
   for (const row of rows) assert.ok(!/[\u4e00-\u9fff]/.test(row), `no Chinese baked into ${row.trim()}`)
   assert.equal((nav.match(/t\(label\)/g) ?? []).length, 2, 'one translated string, drawn once and named once')
   const i18n = read('i18n.js')
-  for (const [key, zh] of [['Chats', '任务'], ['Peers', '伙伴'], ['Discover', '发现'], ['Me', '我的']]) {
+  for (const [key, zh] of [['Chats', '聊天'], ['Peers', '伙伴'], ['Discover', '发现'], ['Me', '我的']]) {
     assert.ok(i18n.includes(`${key}: '${zh}'`), `${key} carries its Chinese copy`)
   }
   // The table ships Chinese only: the key text IS the English copy and the host locale

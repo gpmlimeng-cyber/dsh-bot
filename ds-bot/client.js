@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 02af8618
+// Source fingerprint: 5e2cd656
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -64,7 +64,7 @@ var ZH = {
   Usage: "用量",
   Account: "账户",
   // The phone's bottom bar (nav-bar.js). Four page names and the bar's own label.
-  Chats: "任务",
+  Chats: "聊天",
   Peers: "伙伴",
   // The 伙伴 page's own two sections (peers-page.js), in the words the rest of the skin already
   // uses for a group chat and for the people on the team.
@@ -607,7 +607,7 @@ var ZH = {
   "Close preview": "关闭预览",
   "Image preview": "图片预览",
   "File preview": "文件预览",
-  "All deliverables": "全部产物",
+  "All deliverables": "交付物",
   "No deliverables yet": "还没有产物",
   "Files a Bot hands over are listed here.": "机器人交付的文件会列在这里。",
   "Only files delivered since this run started are listed.": "只显示本次启动以来交付过的文件。",
@@ -17776,7 +17776,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "02af8618" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "5e2cd656" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

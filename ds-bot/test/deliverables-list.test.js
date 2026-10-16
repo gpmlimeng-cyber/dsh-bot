@@ -21,7 +21,7 @@ test('the more menu offers the team’s deliverables, and the entry is translate
   assert.ok(menu.includes("[t('All deliverables'), FolderIcon, () => actions.openProducts()]"), 'the menu has the entry')
   assert.ok(menu.includes("import { GearIcon, PinIcon"), 'and it draws an icon like its neighbours')
   assert.ok(menu.includes('FolderIcon }'), 'the folder icon is the one it draws')
-  assert.ok(i18n.includes("'All deliverables': '全部产物'"), 'the entry is translated')
+  assert.ok(i18n.includes("'All deliverables': '交付物'"), 'the entry is translated')
   assert.ok(index.includes('actions.openProducts = '), 'the action behind it exists')
 })
 
