@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: d2e0d565
+// Source fingerprint: b6e4c259
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2624,6 +2624,11 @@ button.bt-q-opt:active{background:var(--bt-active)}
 @keyframes bt-pane-in{from{transform:translateX(100%)}}
 [class*="_centerCol"]{transition:margin-right $${SPRING_SHAPE.duration}ms $${SPRING_SHAPE.easing}}
 .bt-panel-grip{position:absolute;left:-5px;top:0;bottom:0;width:8px;cursor:col-resize;z-index:3;touch-action:none}
+/* A phone has nothing to resize: the panel fills the screen, so an 8px band straddling its left edge
+   is a strip that eats the gesture there for no width at all -- and the left edge is where Android's
+   own back gesture lives (audit F4). The element stays in the tree (the component still renders it on
+   its own terms); on the phone it is not there. */
+html[data-bt-mobile] .bt-panel-grip{display:none}
 .bt-panel[data-dragging] .bt-panel-grip{background:linear-gradient(to right,transparent 4px,var(--bt-line-2) 4px,var(--bt-line-2) 6px,transparent 6px)}
 @media (hover:hover){
 .bt-panel-grip:hover{background:linear-gradient(to right,transparent 4px,var(--bt-line-2) 4px,var(--bt-line-2) 6px,transparent 6px)}
@@ -9376,6 +9381,12 @@ var BROWSER_CSS = `
 @media (hover:hover){
 .bt-bcard:hover .bt-bcard-x{opacity:1}
 }
+/* On a phone the close is there without being hovered -- a touch device has no hover, and a key that
+   only shows on hover reads as a key that is not there (audit F1). It is 44px of finger with the same
+   22px chip drawn in the middle: padding plus background-clip keep the chip its own size, the -5px
+   offset hands the box's extra size outward, and opacity is 1 for good. Its blur goes with it -- 4px
+   of backdrop-filter behind a 22px chip was a GPU cost for nothing. */
+html[data-bt-mobile] .bt-bcard-x{top:-5px;right:-5px;width:44px;height:44px;padding:11px;box-sizing:border-box;background-clip:content-box;opacity:1;backdrop-filter:none}
 .bt-bcard-new{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border:.5px dashed var(--bt-line-2);border-radius:12px;background:none;color:var(--bt-ink-3);font:inherit;font-size:12.5px;cursor:pointer}
 
 @media (hover:hover){
@@ -17413,7 +17424,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "d2e0d565" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "b6e4c259" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

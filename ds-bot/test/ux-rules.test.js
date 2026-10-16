@@ -132,3 +132,17 @@ test('our own targets sized by their content get the floor on a phone', () => {
   const line = base && /line-height:(\d+)px/.exec(base.body)
   assert.ok(pad && line && Number(pad[1]) * 2 + Number(line[1]) >= 44, `the Show-more family is ${pad?.[1]}px of padding around a ${line?.[1]}px line, under the 44px floor`)
 })
+
+test('a tab close is always there on a phone, and the panel drag band is not', () => {
+  // Audit F1 / F4. A touch device has no hover, so a close that only appears on hover is a close that is
+  // not there; and a phone that fills the screen with the panel has nothing to resize, so the 8px band
+  // straddling its left edge only eats the gesture where Android's own back gesture lives.
+  const all = rules()
+  const close = all.find(rule => rule.selector === 'html[data-bt-mobile] .bt-bcard-x')
+  assert.ok(close, 'the tab close has no phone rule of its own, so it stays hidden until hovered')
+  assert.ok(/opacity:1/.test(close.body), 'the close is still drawn only on hover')
+  assert.ok(/width:44px/.test(close.body) && /height:44px/.test(close.body), 'the close is not a 44px target on a phone')
+  assert.ok(/backdrop-filter:none/.test(close.body), 'the close keeps its blur on a phone')
+  const grip = all.find(rule => rule.selector === 'html[data-bt-mobile] .bt-panel-grip')
+  assert.ok(grip && /display:none/.test(grip.body), 'the drag band still straddles the left edge of the phone screen')
+})

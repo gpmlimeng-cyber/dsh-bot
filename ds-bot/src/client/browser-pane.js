@@ -748,6 +748,12 @@ export const BROWSER_CSS = `
 @media (hover:hover){
 .bt-bcard:hover .bt-bcard-x{opacity:1}
 }
+/* On a phone the close is there without being hovered -- a touch device has no hover, and a key that
+   only shows on hover reads as a key that is not there (audit F1). It is 44px of finger with the same
+   22px chip drawn in the middle: padding plus background-clip keep the chip its own size, the -5px
+   offset hands the box's extra size outward, and opacity is 1 for good. Its blur goes with it -- 4px
+   of backdrop-filter behind a 22px chip was a GPU cost for nothing. */
+html[data-bt-mobile] .bt-bcard-x{top:-5px;right:-5px;width:44px;height:44px;padding:11px;box-sizing:border-box;background-clip:content-box;opacity:1;backdrop-filter:none}
 .bt-bcard-new{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border:.5px dashed var(--bt-line-2);border-radius:12px;background:none;color:var(--bt-ink-3);font:inherit;font-size:12.5px;cursor:pointer}
 
 @media (hover:hover){
