@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 8241590d
+// Source fingerprint: b8c13e28
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3371,7 +3371,12 @@ html[data-bt-mobile] .bt-settings{flex-direction:column;width:100%;height:100%;b
    that strip -- the layer's own padding-top -- so everything inside it keeps the place it had. Only a
    page of the bar is named: a dialog over the conversation still shows it through the strip, and a
    desktop dialog is untouched. */
-html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-main)}
+html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-sidebar)}
+/* 发现 shows one dialog painted --bt-main, so the strip above that page is painted the same word. Its
+   title row carries no fill at all, which leaves the dialog's own colour showing through it (the two
+   pages' bases are different, so each says which one it is rather than sharing a guess). */
+html[data-bt-mobile] .bt-discover.bt-settings-layer[data-tabpage]{background:var(--bt-main)}
+html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}
@@ -3388,15 +3393,11 @@ html[data-bt-mobile] .bt-settings-top>.bt-icon-btn::after{content:"";position:ab
    than answering a tap with nothing. */
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn:disabled{opacity:.4;cursor:default}
 html[data-bt-mobile] .bt-settings-top h2{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0 60px;text-align:center;font-size:16px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
-/* One phone page, one colour. A phone shows one screen at a time, so the list and the page it opens
-   are the same surface, and both wear the page's own --bt-main -- the colour the layer's strip (0 ..
-   --dsh-frame-chrome-top) and the status-bar frost already use. The list screen used to base itself on
-   --bt-sidebar instead, which is the wide dialog's 198px column colour and legitimate there; on a phone
-   it left the title row a shade off the strip above it in the dark palette (#1b1b1b against #141414),
-   which is the band the user saw under the status bar, and the same reason 发现's row read as one. Each
-   screen names its own base, so the seam cannot come back, and no rule adds a divider line. */
-html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-nav{background:var(--bt-main)}
-html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-main)}
+/* One phone page, one colour -- and the colour is the page's own base. The settings list bases itself
+   on --bt-sidebar (its own rows are --bt-card above it), so its title row and the strip the chrome
+   reserves above it wear that same word (styles.js, the layer's strip below). The title bar is the
+   page under it, not a surface of its own, and no rule adds a divider line. */
+html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}
 /* That bar replaces the wide dialog's head and its floating close. */
 html[data-bt-mobile] .bt-settings-head,
@@ -16911,7 +16912,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "8241590d" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "b8c13e28" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

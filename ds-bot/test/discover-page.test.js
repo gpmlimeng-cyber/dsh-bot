@@ -16,6 +16,7 @@ const code = (name) => read(name).split('\n').filter(line => !line.trim().starts
 const discover = code('discover-page.js')
 const index = code('index.js')
 const nav = code('nav-bar.js')
+const navForTopfade = read('nav-bar.js')
 const sidebar = code('sidebar.js')
 const styles = code('styles.js')
 
@@ -34,15 +35,19 @@ const panelRows = [...discover.slice(discover.indexOf('export const PANEL_ROWS')
   .matchAll(/'([a-z]+)'/g)].map(match => match[1])
 
 test('the list is three cards of doors that already exist, with no headings', () => {
-test('a phone\u2019s settings page is one colour, the strip above it included', () => {
-  // The user saw a band under the status bar on 发现 and then on 全部设置: the list screen based itself
-  // on --bt-sidebar (the wide dialog's column colour) while the layer's strip and the status-bar frost
-  // are --bt-main, and the two only match in the light palette (#fcfcfc against #1b1b1b in the dark).
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-main)}'), 'the title row names the page\u2019s own colour')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-nav{background:var(--bt-main)}'), 'and so does the list under it')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-main)}'), 'which is the colour the layer\u2019s strip already paints')
-  assert.ok(!styles.includes('.bt-discover .bt-settings[data-screen=list] .bt-settings-top'), 'so no page needs a rule of its own for it')
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}'), 'and a page screen keeps the same one')
+test('a tab page\u2019s strip is the colour of the surface that page shows', () => {
+  // The user saw a band under the status bar on 全部设置 (live read: --bt-main #ffffff above, --bt-sidebar
+  // #f9f9f9 below, and #141414 against #1b1b1b in the dark palette). The two pages under this layer do
+  // not share a base -- the settings list is the sidebar colour with --bt-card rows on it, and 发现 is
+  // one dialog painted --bt-main -- so each says which word its strip wears.
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-sidebar)}'), 'the strip follows the settings list\u2019s own base')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}'), 'and so does that list\u2019s title row')
+  assert.ok(styles.includes('.bt-settings-nav{position:relative;width:198px;flex:none;padding:16px 8px;border-right:.5px solid var(--bt-line);display:flex;flex-direction:column;gap:2px;background:var(--bt-sidebar);box-sizing:border-box}'), 'which is the colour the list itself already wears')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-discover.bt-settings-layer[data-tabpage]{background:var(--bt-main)}'), '发现\u2019s strip follows its own dialog instead')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}'), 'and its title row leaves the dialog\u2019s colour showing')
+  // The frost is the conversation's own: it is drawn on the tasks tab alone (nav-bar.js), so nothing
+  // here needs a second word for it.
+  assert.ok(navForTopfade.includes("active === 'tasks' ? h('div', { className: 'bt-topfade', 'aria-hidden': true }) : null"), 'the veil belongs to the conversation')
 })
 
   // 插件 ｜ 连接器·能力·定时任务·密钥 ｜ 用量 -- the user's own grouping, in this order, one card per group.
@@ -267,7 +272,7 @@ test('every rule is a phone rule, and the page hands the shell nothing but the s
   assert.ok(read('overlays.js').includes('tab: settings.tab === true'), 'which the layer is handed')
   // And it paints the strip the chrome reserves, so the band above the page is the page's own colour
   // instead of the shell's leftover: the dialog moves down by exactly that strip.
-  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-main)}'), "the page paints from the screen's top edge")
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]{top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px);background:var(--bt-sidebar)}'), "the page paints from the screen's top edge, in the settings list's own colour (发现 overrides it with its dialog's)")
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}'), 'the phone plays no entrance for it, and beats the reduced-motion fade that would otherwise stand in for one')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}'), 'and no exit')
   assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}'), 'and draws no veil')
