@@ -56,9 +56,11 @@ test('a tab page\u2019s strip is the colour of the surface that page shows', () 
   assert.ok(read('peers-page.js').includes('padding:var(--bt-top-inset,var(--dsh-mobile-top-inset,env(safe-area-inset-top,0px))) 12px calc(var(--bt-nav-h) + var(--bt-nav-gap));background:var(--bt-sidebar)'), '伙伴 keeps the colour it was designed with')
   assert.ok(read('peers-page.js').includes('body:has(.bt-peers) .bt-mobile-bar{display:none}'), 'its sheet hides the bar over it')
   assert.ok(styles.includes('html[data-bt-mobile] body:has(.bt-peers) :is(.bt-mobile-bar,.bt-topfade),'), 'and the skin hides the veil too, which is the one that was left up')
-  // A dialog's scrim is the whole screen's: the layer holds the strip in its own padding so its dialog
-  // stays put, and the scrim -- absolute, inset 0, against the padding edge -- now covers the strip.
-  assert.ok(styles.includes('html[data-bt-mobile] :is(.bt-palette-layer,.bt-mem-layer),\nhtml[data-bt-mobile] .bt-settings-layer:not([data-tabpage]){top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px)}'), 'a floating layer dims the strip as well')
+  // A dialog's scrim is the whole screen's. The layer keeps its own top, so the scrim is fixed rather
+  // than absolute -- absolute filled only the layer and left the strip undimmed. Padding the layer
+  // instead would have moved a centred dialog (`.bt-palette` is absolute at top:50%).
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings-layer:not([data-tabpage])>.bt-scrim,\nhtml[data-bt-mobile] .bt-palette-layer>.bt-backdrop,\nhtml[data-bt-mobile] .bt-mem-layer>.bt-scrim{position:fixed;inset:0}'), 'a floating layer dims the strip as well')
+  assert.ok(!styles.includes('html[data-bt-mobile] .bt-settings-layer:not([data-tabpage]){top:0'), 'and none of those layers is padded, which would move its dialog')
   // The frost is the conversation's own: it is drawn on the tasks tab alone (nav-bar.js), so nothing
   // here needs a second word for it.
   assert.ok(navForTopfade.includes("active === 'tasks' ? h('div', { className: 'bt-topfade', 'aria-hidden': true }) : null"), 'the veil belongs to the conversation')

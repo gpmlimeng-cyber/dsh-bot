@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: e75ab0c3
+// Source fingerprint: 22d801d1
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3401,13 +3401,15 @@ html[data-bt-mobile] .bt-discover.bt-settings-layer[data-tabpage]{background:var
 html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-settings{animation:none!important}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage]>.bt-scrim{display:none}
-/* A floating dialog's scrim is the whole screen's, so it too starts at the first pixel. The layer
-   keeps the strip's height in its own padding -- which leaves its dialog exactly where it was, since
-   the centring happens in the same box either way -- while the scrim it holds is positioned against
-   the padding edge (absolute, inset 0), so it now covers the strip as well. That is the band that used
-   to stay undimmed behind a dialog, over whatever the page under it happened to be. */
-html[data-bt-mobile] :is(.bt-palette-layer,.bt-mem-layer),
-html[data-bt-mobile] .bt-settings-layer:not([data-tabpage]){top:0;box-sizing:border-box;padding-top:var(--dsh-frame-chrome-top,0px)}
+/* A floating dialog's scrim is the whole screen's, so it too starts at the first pixel: the layers
+   below keep their own top (the strip's height, because their dialog is placed against the page under
+   it) and the scrim is fixed, like the sheet's own (.bt-panel-scrim), rather than absolute and filling
+   only the layer. That reaches 0..strip without moving anything -- padding the layer instead would have
+   taken the same 46px off its containing block, which a centred box (the command palette,
+   absolute at top:50%) reads as a 23px drop. The settings page's own scrim stays hidden. */
+html[data-bt-mobile] .bt-settings-layer:not([data-tabpage])>.bt-scrim,
+html[data-bt-mobile] .bt-palette-layer>.bt-backdrop,
+html[data-bt-mobile] .bt-mem-layer>.bt-scrim{position:fixed;inset:0}
 html[data-bt-mobile] .bt-settings-layer[data-tabpage][data-leaving]{opacity:0;transition:none}
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-main,
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:none}
@@ -16954,7 +16956,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "e75ab0c3" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "22d801d1" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
