@@ -72,11 +72,12 @@
 
 **标准**：先读后改、最小改动；改完 `npm run build` + `node scripts/build-client.mjs --check` + 全量测试（带 `ESBUILD_BINARY_PATH`）；一项一提交、报产物指纹；只推 `better-sidebar`、不推 `main`，push 前先问用户并扫密钥。
 
-## 10. 群里的抉择条（`ds-decide` 协议）
+## 10. 群里的抉择（`ds-decide` 协议）
 
-**它是什么**：用户在群里要的不是"卡片"，是**一个能点的位置**。所以抉择不进聊天记录，而是输入框上方一条 `待你决策` 的条：一句标题 + 2–4 个选项，点一下就**以用户身份往这个房间发一条消息**，条随即消失（`decide.js` + `decide-text.js`）。
+**它是什么**：用户在群里要的不是"卡片"，是**一个能点的位置**。所以抉择**不新开界面**：它并进右上那颗已有的「需要你」按钮（`attention.js` 的 `NeedsYou`/`NeedsYouPop`）——
+有抉择时那颗按钮自然出现（计数 0 不渲染的老行为不变，抉择本身让计数≥1），列表里多一行「**等你决定**：<标题>」，展开就是 2–4 个可点选项，点一下就**以用户身份往这个房间发一条消息**，那条随即消失。它不进聊天记录、不占位、不挤阅读。
 
-**谁能写**：**只有房间管理员（Lead）自己的回复**会被读成抉择；别人写的同类围栏**原样当文本**渲染——否则成员 Bot 就能借用户的口说话。判据写在读回复的地方：`cells.js` 里 `reply.botId === room.admin`。
+**谁能写**：**只有房间管理员（Lead）自己的回复**会被读成抉择；别人写的同类围栏**原样当文本**渲染——否则成员 Bot 就能借用户的口说话。判据在 `cells.js`：`reply.kind === undefined && reply.botId === room.admin`。
 
 **怎么写**（围栏内容是 JSON）：
 
@@ -89,9 +90,8 @@
 - `title` 必填、非空；`options` 必填，**2–4 个**（少于 2 不是选择，多于 4 是菜单）；选项可以是字符串或 `{ "label": "…" }`。
 - 围栏之外的同一条回复照常渲染（先说一句、再贴围栏，正文都保留）。
 
-**回退行为（不许吞消息）**：没围栏、JSON 坏了、标题空、选项数不合规 ⇒ **不认作抉择**，整段**原样进聊天记录**（`stripDecision` 只在能读出抉择时才把围栏摘掉）。只写围栏一条回复 ⇒ 该条在记录里不占位（正文已空）。
+**回退行为（不许吞消息）**：没围栏、JSON 坏了、标题空、选项数不合规 ⇒ **不认作抉择**，整段**原样进聊天记录**（`stripDecision` 只在能读出抉择时才摘围栏）。只写围栏一条回复 ⇒ 该条在记录里不占位。
 
-**回传通路**：`actions.answerDecision(roomId, label)` → `actions.send(roomId, label)` → 宿主 `send` → `ctx.sessionController.prompt({ …, mode: 'queue' })`。即"用户发的那条"和我们自己发消息**同一条路**，全队可见、聊天记录本身就是审计。
+**回传通路**：`actions.answerDecision(roomId, label)` → `actions.send(roomId, label)` → 宿主 `send` → `ctx.sessionController.prompt({ …, mode: 'queue' })`。即"用户发的那条"和我们自己发消息**同一条路**，全队可见、聊天记录本身就是审计。（先试过壳的 `ctx.conversation.send`，最后用自家这条，少一层依赖。）
 
-**规范约束**：选项按钮是 44px 的盒子（手机档底线，`touch-target` lint 会扫这条规则）；hover 只写在 `@media (hover:hover)` 里；`proposeDecision` 同一时刻只留一条（按 `key` 去重），且只有它所属房间会渲染它。
-
+**规范约束**：选项按钮是 44px 的盒子（手机档底线，`touch-target` lint 会扫这条规则）；`proposeDecision` 同一时刻只留一条（按 `key` 去重）；协议解析在 `decide-text.js`（无 react 依赖，可直测），渲染在 `attention.js`。

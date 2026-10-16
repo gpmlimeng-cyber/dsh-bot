@@ -22,7 +22,7 @@ const ChevronIcon = () => h('svg', { width: 12, height: 12, viewBox: '0 0 20 20'
  * @param {Object} unread per Session id, whether replies landed unseen
  * @param {{byId:Object, roomsById:Object}} indexed the roster's Session index
  */
-export function needsYou(roster, work, unread, indexed) {
+export function needsYou(roster, work, unread, indexed, decision = null) {
   const nameOf = (id) => {
     const bot = indexed.byId[id]
     if (bot !== undefined) return { name: bot.name, id: bot.id }
@@ -31,6 +31,13 @@ export function needsYou(roster, work, unread, indexed) {
     return { name: t('Bot'), id }
   }
   const items = []
+  // A decision the room admin asked for takes the first seat: it is the one thing here the user
+  // has to answer for the team to move, and it is also what makes the bell appear at all when
+  // nothing else is waiting (index.js holds one at a time; cells.js only reads the admin's own).
+  if (decision !== null && decision !== undefined) {
+    const { name, id } = nameOf(decision.sessionId)
+    items.push({ kind: 'decision', open: decision.sessionId, title: decision.title, where: name, botId: id, options: decision.options ?? [] })
+  }
   for (const [sessionId, question] of Object.entries(roster.questions ?? {})) {
     const { name, id } = nameOf(sessionId)
     items.push({
@@ -70,14 +77,14 @@ export function needsYou(roster, work, unread, indexed) {
     const { name } = nameOf(id)
     items.push({ kind: 'unread', open: id, title: t('Someone replied'), where: name, botId: id })
   }
-  const rank = { question: 0, approval: 1, secret: 2, unread: 3 }
+  const rank = { decision: 0, question: 1, approval: 2, secret: 3, unread: 4 }
   return items.sort((one, two) => rank[one.kind] - rank[two.kind] || one.where.localeCompare(two.where))
 }
 
 // One popover, fixed under the header's right edge. `anchor` is the button; the items
 // and their labels come from `needsYou`. Dismiss on outside press or Escape, like the
 // message menus do.
-function NeedsYouPop({ anchor, items, onClose, onOpen }) {
+function NeedsYouPop({ anchor, items, onClose, onOpen, onDecide }) {
   const pop = useRef(null)
   useEffect(() => {
     const onDown = (event) => {
@@ -92,9 +99,21 @@ function NeedsYouPop({ anchor, items, onClose, onOpen }) {
   const box = anchor.current?.getBoundingClientRect()
   const top = (box?.bottom ?? 0) + 6
   const right = window.innerWidth - (box?.right ?? 0)
-  const label = { question: t('Waiting for your answer'), approval: t('Waiting for your approval'), secret: t('Waiting for a key'), unread: t('Someone replied') }
+  const label = { decision: t('Waiting for your decision'), question: t('Waiting for your answer'), approval: t('Waiting for your approval'), secret: t('Waiting for a key'), unread: t('Someone replied') }
   return createPortal(h('div', { className: 'bt-attention-pop', ref: pop, role: 'dialog', 'aria-label': t('Needs you'), style: { top: `${top}px`, right: `${right}px` } },
-    items.map(item => h('button', {
+    // A decision is the one row that does not open something: its options are the answer, so the
+    // row itself is not a button and each option is one.
+    items.map(item => item.kind === 'decision'
+      ? h('div', { key: `decision:${item.open}:${item.title}`, className: 'bt-attention-row bt-attention-decide', 'data-kind': 'decision' },
+          h('span', { className: 'bt-attention-kind' }, label.decision),
+          h('span', { className: 'bt-attention-title' }, item.title),
+          h('span', { className: 'bt-attention-where' }, item.where),
+          h('div', { className: 'bt-attention-opts', role: 'group', 'aria-label': item.title },
+            (item.options ?? []).map(option => h('button', {
+              key: option, type: 'button', className: 'bt-attention-opt',
+              onClick: () => onDecide(item.open, option),
+            }, option))))
+      : h('button', {
       key: `${item.kind}:${item.open}:${item.title}`,
       type: 'button', className: 'bt-attention-row', 'data-kind': item.kind,
       onClick: () => { onClose(); onOpen(item.open) },
@@ -115,13 +134,14 @@ export function NeedsYou({ useRoster, useWork, useUi, actions, inBar = false }) 
   const roster = useRoster(value => value)
   const approvals = useWork(work => work.approvals ?? [])
   const unread = useUi(state => state.unread ?? {})
+  const decision = useUi(state => state.decision ?? null)
   const [open, setOpen] = useState(false)
   const anchor = useRef(null)
   // Cached, so the store selector keeps a stable reference between reads: a fresh
   // object per read is the one shape useSyncExternalStore cannot take.
   const rosterView = useRoster(value => value)
   const indexed = useMemo(() => ({ byId: rosterView.byId, roomsById: rosterView.roomsById }), [rosterView.byId, rosterView.roomsById])
-  const items = needsYou(roster, { approvals }, unread, indexed)
+  const items = needsYou(roster, { approvals }, unread, indexed, decision)
   if (items.length === 0) return null
   return h(Fragment, null,
     h('button', {
@@ -136,7 +156,12 @@ export function NeedsYou({ useRoster, useWork, useUi, actions, inBar = false }) 
     },
       h(BellIcon),
       h('span', { className: 'bt-attention-count' }, items.length > 9 ? '9+' : String(items.length))),
-    open ? h(NeedsYouPop, { anchor, items, onClose: () => setOpen(false), onOpen: id => actions.openSession(id) }) : null)
+    open ? h(NeedsYouPop, {
+      anchor, items, onClose: () => setOpen(false), onOpen: id => actions.openSession(id),
+      // The answer is the user's own message in that room (index.js: actions.send), so it goes
+      // through the same door every send does, and the pop closes behind it.
+      onDecide: (sessionId, option) => { setOpen(false); void actions.answerDecision(sessionId, option) },
+    }) : null)
 }
 
 export const ATTENTION_CSS = `
@@ -173,6 +198,13 @@ html[data-bt-mobile] .bt-mobile-acts .bt-attention{height:44px}
 .bt-attention-row[data-kind=question] .bt-attention-kind{background:color-mix(in srgb,var(--bt-accent) 14%,transparent);color:var(--bt-accent)}
 .bt-attention-row[data-kind=approval] .bt-attention-kind{background:color-mix(in srgb,var(--bt-star) 16%,transparent);color:color-mix(in srgb,var(--bt-star) 80%,var(--bt-ink))}
 .bt-attention-title{flex:1;min-width:0;font-size:12.5px;line-height:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* A decision's row: the title line on top, then the options the user actually taps. Each option is
+   a 44px box -- the floor this skin holds every control to, scanned by the touch-target lint like
+   any other rule. */
+.bt-attention-decide{flex-direction:column;align-items:stretch;gap:6px;cursor:default}
+.bt-attention-decide .bt-attention-kind{background:color-mix(in srgb,var(--bt-accent) 14%,transparent);color:var(--bt-accent)}
+.bt-attention-opts{display:flex;flex-wrap:wrap;gap:8px}
+.bt-attention-opt{min-height:44px;padding:0 16px;border:.5px solid var(--bt-line-2);border-radius:999px;background:var(--bt-main);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
 .bt-attention-where{flex:none;max-width:32%;font-size:11px;line-height:15px;color:var(--bt-ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-attention-go{flex:none;display:inline-flex;color:var(--bt-ink-3)}
 .bt-attention-go svg{width:11px;height:11px}

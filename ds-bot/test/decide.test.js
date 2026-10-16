@@ -13,7 +13,7 @@
 //   * the option buttons carry the skin's 44px floor (styles.js) and the bar is registered in the
 //     composer's own dock above the input.
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { DECISION_MAX, DECISION_MIN, parseDecision, stripDecision } from '../src/client/decide-text.js'
 
@@ -55,17 +55,25 @@ test('only the room admin\'s own reply can raise the bar', () => {
   assert.ok(cells.includes('texts.map(stripDecision)'), 'the block comes out of what the transcript draws')
 })
 
-test('the bar hangs above the composer, answers through our own send, and keeps the 44px floor', () => {
+test('the ask lands in the bell the user already has, not in a new surface', () => {
+  // The user's own correction: the top-right "needs you" button is already the place they look, so
+  // the decision joins it instead of a bar of its own above the composer. It takes the first seat
+  // (it is what makes the bell appear when nothing else is waiting), its row carries the options as
+  // tappable 44px boxes, and the answer goes through our own send.
+  const attention = read('attention.js')
+  assert.ok(attention.includes('export function needsYou(roster, work, unread, indexed, decision = null)'), 'the bell\'s items take the decision')
+  assert.ok(attention.includes("kind: 'decision', open: decision.sessionId"), 'as an item of its own kind, bound to its room')
+  assert.ok(attention.includes('const rank = { decision: 0, question: 1, approval: 2, secret: 3, unread: 4 }'), 'first: everything else here can wait')
+  assert.ok(attention.includes("'Waiting for your decision'"), 'and it says what it is')
+  assert.ok(attention.includes("? h('div', { key: `decision:${item.open}:${item.title}`, className: 'bt-attention-row bt-attention-decide'"), 'the row itself is not a button: the options are')
+  assert.ok(attention.includes('onClick: () => onDecide(item.open, option)'), 'each option answers')
+  assert.ok(attention.includes('void actions.answerDecision(sessionId, option)'), 'through the same action as before')
   const index = read('index.js')
-  assert.ok(index.includes("shadow('conversation.input.dock', { id: 'bot-decision', order: -95, inject: face }, DecisionDock)"), 'registered in the composer dock')
-  assert.ok(index.includes('import { DecisionDock } from \'./decide.js\''), 'and imported')
-  assert.ok(index.includes('answerDecision: async (sessionId, label) => {'), 'the answer is one action')
-  assert.ok(index.includes('await actions.send(sessionId, label)'), 'sent as the user: our own host send, the same path every other send takes')
-  assert.ok(/proposeDecision: \(sessionId, decision\) => ui\.set\(/.test(index), 'and the store holds one bar at a time')
-  const decide = read('decide.js')
-  assert.ok(decide.includes('decision.sessionId !== sessionId'), 'a bar belongs to the room it was asked in')
-  const styles = read('styles.js')
-  const option = styles.split('\n').find(line => line.includes('.bt-decide-opt{'))
+  assert.ok(index.includes('answerDecision: async (sessionId, label) => {'), 'which sends as the user')
+  assert.ok(index.includes('await actions.send(sessionId, label)'), 'our own host send, the path every send takes')
+  assert.ok(!index.includes("id: 'bot-decision'"), 'no bar above the composer any more')
+  assert.ok(!readdirSync(new URL('../src/client/', import.meta.url)).includes('decide.js'), 'and no second component left behind')
+  const styles = read('attention.js')
+  const option = styles.split('\n').find(line => line.includes('.bt-attention-opt{'))
   assert.ok(option && option.includes('min-height:44px'), 'the option is a 44px box: the floor this skin holds every control to')
-  assert.ok(!option.includes(':hover'), 'no hover in the base rule: hover belongs to pointer devices only')
 })

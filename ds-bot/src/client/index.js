@@ -15,7 +15,6 @@ import { CHATS_SOURCE, atSources } from './at-menu.js'
 import { VOICE_BUNDLE } from './speech.js'
 import { sameVersion } from './dsh-offer.js'
 import { AnsweredCell, QuestionCard, QuestionDock } from './questions.js'
-import { DecisionDock } from './decide.js'
 import { AssistantCell, TriggerCell, TurnProcessCell, Nothing, TurnTailCell, ToolCell } from './cells.js'
 import { Overlays } from './overlays.js'
 import { createBotBrowsers, serveBrowserReads } from './bot-browsers.js'
@@ -1104,7 +1103,6 @@ export function apply(ctx) {
     shadow('conversation.input.dock', { id: 'bot-model', order: -110, inject: face }, ModelChoiceDock),
     shadow('conversation.input.dock', { id: 'bot-question', order: -100, inject: face }, QuestionDock),
     shadow('conversation.input.dock', { id: 'bot-secret', order: -90, inject: face }, SecretDock),
-    shadow('conversation.input.dock', { id: 'bot-decision', order: -95, inject: face }, DecisionDock),
   ]
   // The return button belongs to neither group: it renders only in Agent mode.
   ctx.effect(() => {
