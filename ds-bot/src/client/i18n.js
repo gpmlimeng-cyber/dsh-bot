@@ -346,7 +346,10 @@ const ZH = {
 
   // Settings dialog
   General: '通用',
-  Bots: 'Bot',
+  // One thing, one name: the Bots page, the bar's tab and this collection are 伙伴 everywhere (the
+  // user's report -- 我的 called the same page 我的 -> Bot while the bar called it 伙伴). A single
+  // one of them is still a Bot (Bot / 一个 Bot / Choose a Bot…).
+  Bots: '伙伴',
   'Group chats': '群聊',
   Secrets: '密钥',
   Appearance: '外观',
@@ -357,7 +360,7 @@ const ZH = {
   'Unread marks, badges, and the brand mark.': '未读标记、徽标和品牌标志。',
   'Theme accent': '主题强调色',
   'Custom accent': '自定义强调色',
-  'Bots · {count}': 'Bot · {count}',
+  'Bots · {count}': '伙伴 · {count}',
   'First in the sidebar. Pick another Bot to hand it the role; {name} then stops being a Main Bot.': '排在侧栏最上面。选另一个 Bot 就会把主 Bot 交给它，{name} 随之不再是主 Bot。',
   'Choose a Bot…': '选择一个 Bot…',
   'Also a Main Bot.': '也是主 Bot。',

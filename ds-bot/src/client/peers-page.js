@@ -85,11 +85,16 @@ export function PeersPage({ useRoster, useUi, actions }) {
   // A heading that carries a control beside its name draws one row for the two (伙伴, which offers the
   // animation level there): the name keeps the section head's own type, the control keeps its own
   // width, and neither is what gives way.
+  // `label === null` draws the card with no heading: a heading over a section whose only row carries
+  // the same words reads like the row drawn twice (the user's report; the settings index renamed
+  // General to Common for the same reason). The card and its list role stay either way.
   const section = (label, rows, beside) => h('section', { className: 'bt-settings-group' },
-    beside
-      ? h('div', { className: 'bt-settings-group-head bt-peers-section-head' },
-        h('h3', { className: 'bt-peers-section-label' }, label), beside)
-      : h('h3', { className: 'bt-settings-group-head' }, label),
+    label === null
+      ? null
+      : beside
+        ? h('div', { className: 'bt-settings-group-head bt-peers-section-head' },
+          h('h3', { className: 'bt-peers-section-label' }, label), beside)
+        : h('h3', { className: 'bt-settings-group-head' }, label),
     h('div', { className: 'bt-settings-group-card', role: 'list' }, rows))
   return createPortal(h('div', { className: 'bt-peers', role: 'region', 'aria-label': t('Peers') },
     h('div', { className: 'bt-peers-top' },
@@ -124,7 +129,8 @@ export function PeersPage({ useRoster, useUi, actions }) {
     // search says: it is not a contact to match against, and the list behind it has a search of its
     // own.
     h('div', { className: 'bt-peers-list' },
-      section(t('Group chats'), [h('div', { key: 'groups', className: 'bt-peers-item bt-peers-door', role: 'listitem' },
+      // No heading: the row below is the page, and it is already called that (U8).
+      section(null, [h('div', { key: 'groups', className: 'bt-peers-item bt-peers-door', role: 'listitem' },
         h('button', {
           type: 'button', className: 'bt-peers-row', 'data-page': 'groups', onClick: () => openPage('groups'),
         },

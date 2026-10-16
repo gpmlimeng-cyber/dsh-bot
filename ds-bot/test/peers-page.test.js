@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url'
 import { runInNewContext } from 'node:vm'
 import { build } from 'esbuild'
 import { test } from 'node:test'
+import { DICTIONARY } from '../src/client/i18n.js'
 
 const read = (name) => readFileSync(new URL(`../src/client/${name}`, import.meta.url), 'utf8')
 const code = (name) => read(name).split('\n').filter(line => !line.trim().startsWith('//')).join('\n')
@@ -161,7 +162,9 @@ test('the page is a header row and one scroller of labelled cards', () => {
   // component (set-rows.js), so the two places cannot come to read two values.
   assert.ok(!peers.includes('h(MotionSection,'), 'the animation level is no longer a section at the end of the list')
   const heads = findAll(tree, 'bt-settings-group-head')
-  assert.equal(heads.length, 2, 'one heading per section')
+  // The group-chat door carries no heading of its own: 群聊 over a single row called 群聊 read as the
+  // row drawn twice (U8), so only 伙伴's section is headed.
+  assert.equal(heads.length, 1, 'the one section that needs a heading is 伙伴\'s')
   const peerHeads = findAll(tree, 'bt-peers-section-head')
   assert.equal(peerHeads.length, 1, 'and 伙伴\'s heading is the one that carries a control')
   const headKids = plain(peerHeads[0].children.map(child => classList(child)[0] ?? '(control)'))
@@ -298,8 +301,9 @@ test('a row is a Bot with its role and a chevron, not a conversation', () => {
 test('the group chats are one door, not a second copy of their page', () => {
   // The user asked for 群聊 to lead to the group-chat list page (我的 -> 群聊, settings.js) rather than
   // to list the groups here: this page opens that page and copies none of it -- no group rows, no
-  // 新建群聊 button, no member counts.
-  assert.ok(peers.includes("section(t('Group chats'), ["), 'one section, holding one row')
+  // 新建群聊 button, no member counts. And it carries no heading: 「群聊」 over a single row named
+  // 「群聊」 read as the row drawn twice (U8), the way the settings index renamed General to Common.
+  assert.ok(peers.includes('section(null, ['), 'one section, holding one row, with no heading of its own')
   assert.ok(peers.includes("className: 'bt-peers-row', 'data-page': 'groups', onClick: () => openPage('groups')"), 'the door names the page it opens and asks for it')
   // Its face is the team's: the roster's first four Bots in the same cluster a group chat wears --
   // one drawing, asked for by a list of Bots instead of by a room (mark.js, RoomAvatar).
@@ -318,6 +322,17 @@ test('the group chats are one door, not a second copy of their page', () => {
   assert.ok(peers.includes('shown.length > 0 ? section('), 'the people are drawn only when the search leaves someone')
   const empty = peers.slice(peers.indexOf("className: 'bt-peers-empty'"))
   assert.ok(empty.startsWith("className: 'bt-peers-empty', role: 'status' }, t('Nothing matches')"), 'and one empty line covers a search that matches nobody')
+})
+
+test('one thing keeps one name: the collection is 伙伴 wherever it is named', () => {
+  // U8. The bar and this page said 伙伴 while 我的's own row and the palette's group said Bot -- the
+  // same collection under two names, and the user asked for one. The dictionary is where that is
+  // settled, so the two keys and the counted title are held to it; a single one of them is a Bot.
+  assert.equal(DICTIONARY.zh.Peers, '伙伴', 'the bar and this page')
+  assert.equal(DICTIONARY.zh.Bots, '伙伴', '我的\'s own row, and the palette\'s group')
+  assert.equal(DICTIONARY.zh['Bots · {count}'], '伙伴 · {count}', 'and the heading inside that page')
+  assert.equal(DICTIONARY.zh.Bot, 'Bot', 'one of them is still a Bot, not a 伙伴')
+  assert.equal(DICTIONARY.zh['a Bot'], '一个 Bot')
 })
 
 test('a Bot\'s row opens that Bot\'s page, the 群聊 door opens the group chats\'', () => {

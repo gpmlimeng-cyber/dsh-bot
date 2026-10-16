@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 88bbd62c
+// Source fingerprint: 0e5886b0
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -408,7 +408,10 @@ var ZH = {
   Moonlight: "月光",
   // Settings dialog
   General: "通用",
-  Bots: "Bot",
+  // One thing, one name: the Bots page, the bar's tab and this collection are 伙伴 everywhere (the
+  // user's report -- 我的 called the same page 我的 -> Bot while the bar called it 伙伴). A single
+  // one of them is still a Bot (Bot / 一个 Bot / Choose a Bot…).
+  Bots: "伙伴",
   "Group chats": "群聊",
   Secrets: "密钥",
   Appearance: "外观",
@@ -419,7 +422,7 @@ var ZH = {
   "Unread marks, badges, and the brand mark.": "未读标记、徽标和品牌标志。",
   "Theme accent": "主题强调色",
   "Custom accent": "自定义强调色",
-  "Bots · {count}": "Bot · {count}",
+  "Bots · {count}": "伙伴 · {count}",
   "First in the sidebar. Pick another Bot to hand it the role; {name} then stops being a Main Bot.": "排在侧栏最上面。选另一个 Bot 就会把主 Bot 交给它，{name} 随之不再是主 Bot。",
   "Choose a Bot…": "选择一个 Bot…",
   "Also a Main Bot.": "也是主 Bot。",
@@ -17402,7 +17405,7 @@ function PeersPage({ useRoster, useUi, actions }) {
   const section = (label, rows, beside) => (0, import_react43.createElement)(
     "section",
     { className: "bt-settings-group" },
-    beside ? (0, import_react43.createElement)(
+    label === null ? null : beside ? (0, import_react43.createElement)(
       "div",
       { className: "bt-settings-group-head bt-peers-section-head" },
       (0, import_react43.createElement)("h3", { className: "bt-peers-section-label" }, label),
@@ -17463,7 +17466,8 @@ function PeersPage({ useRoster, useUi, actions }) {
     (0, import_react43.createElement)(
       "div",
       { className: "bt-peers-list" },
-      section(t("Group chats"), [(0, import_react43.createElement)(
+      // No heading: the row below is the page, and it is already called that (U8).
+      section(null, [(0, import_react43.createElement)(
         "div",
         { key: "groups", className: "bt-peers-item bt-peers-door", role: "listitem" },
         (0, import_react43.createElement)(
@@ -17754,7 +17758,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "88bbd62c" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "0e5886b0" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
