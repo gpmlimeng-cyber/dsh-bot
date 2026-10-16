@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 6536da90
+// Source fingerprint: 1f0bc5ca
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16437,8 +16437,7 @@ function PeersPage({ useRoster, useUi, actions }) {
             onClick: () => {
               void actions.setMain(bot.id, !isMain);
             }
-          }, (0, import_react42.createElement)(StarLineIcon)),
-          (0, import_react42.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react42.createElement)(ChevronRightIcon))
+          }, (0, import_react42.createElement)(StarLineIcon))
         );
       })) : null,
       shown.length === 0 ? (0, import_react42.createElement)("div", { className: "bt-peers-empty", role: "status" }, t("Nothing matches")) : null,
@@ -16464,9 +16463,10 @@ html[data-bt-mobile] .bt-peers-top{flex:none;display:flex;flex-direction:column;
    live here. */
 html[data-bt-mobile] .bt-peers-new{flex:0 0 40px;width:40px;height:40px;margin-left:auto}
 html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-/* The row and its own controls share one line: the row takes what they leave, and neither the switch
-   nor the chevron is ever squeezed (so a long name, model or folder gives way instead). */
-html[data-bt-mobile] .bt-peers-item{display:flex;align-items:center;gap:8px}
+/* The row and its own controls share one line: the row takes what they leave, and the control is never
+   squeezed (so a long name, model or folder gives way instead). The trailing control keeps the row's
+   own 10px inset, which its padding gave it while it was inside the button. */
+html[data-bt-mobile] .bt-peers-item{display:flex;align-items:center;gap:8px;padding-right:10px}
 /* The Main Bot action: 44px of finger, in the row rather than beside it, pressed where it is read.
    Its state is drawn (the star the avatar's own Main Bot badge wears) as well as announced, and a
    tap tint answers at once -- this page is used with a thumb, not a pointer. */
@@ -16600,7 +16600,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "6536da90" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "1f0bc5ca" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

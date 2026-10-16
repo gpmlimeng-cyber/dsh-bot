@@ -117,11 +117,13 @@ test('the page is a header row and one scroller of labelled cards', () => {
   const items = findAll(tree, 'bt-peers-item')
   assert.equal(items.length, 3, 'one item per row')
   const childName = (node) => classList(node)[0] ?? node?.props?.label ?? '(mark)'
+  // The door keeps its chevron -- a door is a way somewhere. A Bot's row does not: the user asked for
+  // it away, and the whole row is what opens that Bot's page.
   assert.deepEqual(plain(items.map(item => item.children.filter(Boolean).map(childName))), [
     ['bt-peers-row', 'bt-peers-go'],
-    ['bt-peers-row', 'bt-peers-main', 'bt-peers-go'],
-    ['bt-peers-row', 'bt-peers-main', 'bt-peers-go'],
-  ], 'the door has a chevron, a Bot has its Main Bot action and a chevron')
+    ['bt-peers-row', 'bt-peers-main'],
+    ['bt-peers-row', 'bt-peers-main'],
+  ], 'the door has a chevron, a Bot has only its Main Bot action')
   // One action per Bot row: pressed on the Main Bot, plain on the other, and out of reach for the only
   // Main Bot there is (the host refuses to leave the team with none).
   const mains = items.flatMap(item => item.children).filter(node => classList(node).includes('bt-peers-main'))

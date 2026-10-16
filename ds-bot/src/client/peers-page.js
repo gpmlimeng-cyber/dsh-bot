@@ -166,8 +166,7 @@ export function PeersPage({ useRoster, useUi, actions }) {
             'aria-label': t('Main Bot'),
             title: onlyMain ? t('The only Main Bot. To hand the role to another Bot, use Main Bot on the Bots page.') : t('Main Bot'),
             onClick: () => { void actions.setMain(bot.id, !isMain) },
-          }, h(StarLineIcon)),
-          h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon)))
+          }, h(StarLineIcon)))
       })) : null,
       shown.length === 0
         ? h('div', { className: 'bt-peers-empty', role: 'status' }, t('Nothing matches'))
@@ -197,9 +196,10 @@ html[data-bt-mobile] .bt-peers-top{flex:none;display:flex;flex-direction:column;
    live here. */
 html[data-bt-mobile] .bt-peers-new{flex:0 0 40px;width:40px;height:40px;margin-left:auto}
 html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-/* The row and its own controls share one line: the row takes what they leave, and neither the switch
-   nor the chevron is ever squeezed (so a long name, model or folder gives way instead). */
-html[data-bt-mobile] .bt-peers-item{display:flex;align-items:center;gap:8px}
+/* The row and its own controls share one line: the row takes what they leave, and the control is never
+   squeezed (so a long name, model or folder gives way instead). The trailing control keeps the row's
+   own 10px inset, which its padding gave it while it was inside the button. */
+html[data-bt-mobile] .bt-peers-item{display:flex;align-items:center;gap:8px;padding-right:10px}
 /* The Main Bot action: 44px of finger, in the row rather than beside it, pressed where it is read.
    Its state is drawn (the star the avatar's own Main Bot badge wears) as well as announced, and a
    tap tint answers at once -- this page is used with a thumb, not a pointer. */
