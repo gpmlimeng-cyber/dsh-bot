@@ -230,6 +230,18 @@ test('a Bot\'s row opens that Bot\'s page, the 群聊 door opens the group chats
   assert.ok(index.includes("if (state.settings.back === 'peers')") && index.includes('settings: null, peers: true'), 'which closeSettings reads')
   assert.ok(index.includes("back: state.settings?.back ?? null"), 'and every step inside keeps, so a page opened after a drill-in still closes onto this list')
   assert.ok(peers.includes("'data-screen'") === false, 'neither page is redrawn here: the key is all this page knows')
+  // The group chats' page is Settings' own, and its title bar's right-hand control is that page's
+  // action: the two buttons that both left the page (left = one step back, right = close Settings)
+  // became one that stays and does the work -- and the row the wide dialog uses is kept for it,
+  // because that dialog has no bar to raise the form from.
+  const settingsPage = code('settings.js')
+  assert.ok(settingsPage.includes("shown === 'groups' && !room ? h('button', {"), 'the bar knows this page')
+  assert.ok(settingsPage.includes("'aria-label': t('Create group chat'), title: roster.bots.length < 2 ? t('A group chat needs at least two Bots') : t('Create group chat')"), 'and offers the page\'s own action, guarded the way that row was')
+  assert.ok(settingsPage.includes('disabled: roster.bots.length < 2') && settingsPage.includes('onClick: () => setCreatingGroup(true)'), 'which raises the same form')
+  assert.ok(settingsPage.includes(": mobile ? null : h('div', { key: 'new', className: 'bt-actions' },"), 'the list\'s row is the wide dialog\'s own')
+  assert.ok(settingsPage.includes('h(GroupsPage, { roster, actions, run, creating: creatingGroup, setCreating: setCreatingGroup, mobile })'), 'and one form answers both doors')
+  assert.ok(settingsPage.includes('useEffect(() => { setCreatingGroup(false) }, [shown])'), 'leaving the page puts the form away')
+  assert.ok(code('styles.js').includes('.bt-settings-top>.bt-icon-btn:disabled{opacity:.4;cursor:default}'), 'a control the page cannot use yet says so')
 })
 
 test('the header\'s new button is the drawer\'s own entry, not a second door', () => {

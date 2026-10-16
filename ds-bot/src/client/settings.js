@@ -137,12 +137,13 @@ function BotsPage({ roster, actions, run }) {
   ]
 }
 
-function GroupsPage({ roster, actions, run }) {
-  const [creating, setCreating] = useState(false)
+function GroupsPage({ roster, actions, run, creating, setCreating, mobile }) {
   return [
     creating
       ? h(NewGroupForm, { key: 'create', roster, actions, run, onCancel: () => setCreating(false), onCreated: room => actions.openSettings('groups', room.id) })
-      : h('div', { key: 'new', className: 'bt-actions' },
+      // The row is the wide dialog's own door to the form: a phone raises it from the bar instead
+      // (styles.js, the title row), so the same control is not drawn twice there.
+      : mobile ? null : h('div', { key: 'new', className: 'bt-actions' },
           h('button', { type: 'button', className: 'bt-soft bt-soft-sm bt-with-icon', disabled: roster.bots.length < 2, title: roster.bots.length < 2 ? t('A group chat needs at least two Bots') : undefined, onClick: () => setCreating(true) }, h(PlusIcon), t('Create group chat'))),
     h(SetSection, { key: 'groups', title: t('Group chats · {count}', { count: roster.rooms.length }) },
       roster.rooms.length === 0
@@ -188,6 +189,11 @@ export function SettingsDialog({ page, id, tab = false, roster, actions, useUpda
   // the plus menu -- it starts there; opened from the account launcher, which asks for
   // General and nothing more, it starts on the list.
   const [screen, setScreen] = useState(shown !== 'general' || (id ?? null) !== null ? 'page' : 'list')
+  // The group chats' create form, raised by the phone bar's own control (the row that used to hold it
+  // is gone there) and by the wide dialog's row (which has no bar to raise it from). Leaving the page
+  // puts it away: the form belongs to the visit, not to the dialog.
+  const [creatingGroup, setCreatingGroup] = useState(false)
+  useEffect(() => { setCreatingGroup(false) }, [shown])
   const nav = useGlide(shown, { axis: 'y' })
   // A page enters from the right when it is one level in, from the left when it comes
   // back out, and from below beside it. Usage keeps its own entrance and its data
@@ -228,7 +234,17 @@ export function SettingsDialog({ page, id, tab = false, roster, actions, useUpda
           onClick: () => { if (screen === 'list') close(); else stepBack() },
         }, h(ChevronLeftIcon)),
         h('h2', null, screen === 'list' ? t('All settings') : pageTitle),
-        screen === 'list' ? null : h('button', { type: 'button', className: 'bt-icon-btn', 'aria-label': t('Close settings'), title: t('Close settings'), onClick: close }, h(CloseIcon))),
+        // The right-hand control: on the group chats' list it is that page's own action -- the same
+        // one the list's row carries on the wide dialog -- and everywhere else it still closes
+        // Settings. Two buttons that both left the page was the user's complaint: the left one
+        // already goes back, so the right one now does the page's work instead.
+        screen === 'list' ? null
+          : shown === 'groups' && !room ? h('button', {
+            type: 'button', className: 'bt-icon-btn', 'aria-label': t('Create group chat'), title: roster.bots.length < 2 ? t('A group chat needs at least two Bots') : t('Create group chat'),
+            disabled: roster.bots.length < 2,
+            onClick: () => setCreatingGroup(true),
+          }, h(PlusIcon))
+            : h('button', { type: 'button', className: 'bt-icon-btn', 'aria-label': t('Close settings'), title: t('Close settings'), onClick: close }, h(CloseIcon))),
       // A div with role="navigation" rather than a <nav>: the Android responsive skin
       // tags the first [role=dialog][aria-modal] holding a direct nav child as the
       // upstream settings panel (data-dsh-settings-dialog) and reflows its nav into a
@@ -269,7 +285,7 @@ export function SettingsDialog({ page, id, tab = false, roster, actions, useUpda
           bot ? h('div', { className: 'bt-settings-form' }, h(BotSettingsForm, { key: bot.id, bot, roster, actions, run })) : null,
           shown === 'bots' && !bot ? h(BotsPage, { roster, actions, run }) : null,
           room ? h('div', { className: 'bt-settings-form' }, h(GroupSettingsForm, { key: room.id, room, roster, actions, run })) : null,
-          shown === 'groups' && !room ? h(GroupsPage, { roster, actions, run }) : null,
+          shown === 'groups' && !room ? h(GroupsPage, { roster, actions, run, creating: creatingGroup, setCreating: setCreatingGroup, mobile }) : null,
           shown === 'connectors' ? h(ConnectorsPage, { roster, actions }) : null,
           shown === 'capabilities' ? h(CapabilitiesPage, { roster, actions, run }) : null,
           shown === 'schedules' ? h(SchedulesPage, { roster, actions, start: id ?? undefined }) : null,

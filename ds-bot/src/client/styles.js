@@ -1338,6 +1338,9 @@ html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:non
 html[data-bt-mobile] .bt-settings-top{position:relative;flex:none;display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 12px;box-sizing:border-box}
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn{position:relative;flex:none;width:40px;height:40px;background:var(--bt-hover)}
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn::after{content:"";position:absolute;inset:-2px}
+/* A control the page cannot use yet (the group chats' + with fewer than two Bots) says so rather
+   than answering a tap with nothing. */
+html[data-bt-mobile] .bt-settings-top>.bt-icon-btn:disabled{opacity:.4;cursor:default}
 html[data-bt-mobile] .bt-settings-top h2{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0 60px;text-align:center;font-size:16px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 /* The title bar is the page under it, not a surface of its own. It inherited the dialog's
    --bt-main, which on the list screen is not the colour there: the list's base is the

@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 0fdfb5e8
+// Source fingerprint: 27bb489c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3342,6 +3342,9 @@ html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-nav{display:non
 html[data-bt-mobile] .bt-settings-top{position:relative;flex:none;display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 12px;box-sizing:border-box}
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn{position:relative;flex:none;width:40px;height:40px;background:var(--bt-hover)}
 html[data-bt-mobile] .bt-settings-top>.bt-icon-btn::after{content:"";position:absolute;inset:-2px}
+/* A control the page cannot use yet (the group chats' + with fewer than two Bots) says so rather
+   than answering a tap with nothing. */
+html[data-bt-mobile] .bt-settings-top>.bt-icon-btn:disabled{opacity:.4;cursor:default}
 html[data-bt-mobile] .bt-settings-top h2{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);margin:0;padding:0 60px;text-align:center;font-size:16px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 /* The title bar is the page under it, not a surface of its own. It inherited the dialog's
    --bt-main, which on the list screen is not the colour there: the list's base is the
@@ -14563,10 +14566,9 @@ function BotsPage({ roster, actions, run }) {
     )
   ];
 }
-function GroupsPage({ roster, actions, run }) {
-  const [creating, setCreating] = (0, import_react35.useState)(false);
+function GroupsPage({ roster, actions, run, creating, setCreating, mobile }) {
   return [
-    creating ? (0, import_react35.createElement)(NewGroupForm, { key: "create", roster, actions, run, onCancel: () => setCreating(false), onCreated: (room2) => actions.openSettings("groups", room2.id) }) : (0, import_react35.createElement)(
+    creating ? (0, import_react35.createElement)(NewGroupForm, { key: "create", roster, actions, run, onCancel: () => setCreating(false), onCreated: (room2) => actions.openSettings("groups", room2.id) }) : mobile ? null : (0, import_react35.createElement)(
       "div",
       { key: "new", className: "bt-actions" },
       (0, import_react35.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm bt-with-icon", disabled: roster.bots.length < 2, title: roster.bots.length < 2 ? t("A group chat needs at least two Bots") : void 0, onClick: () => setCreating(true) }, (0, import_react35.createElement)(PlusIcon), t("Create group chat"))
@@ -14612,6 +14614,10 @@ function SettingsDialog({ page, id, tab = false, roster, actions, useUpdate, lea
   const back = bot ? t("Back to Bots") : room2 ? t("Back to group chats") : usageFocus ? t("All usage") : null;
   const mobile = useMobile();
   const [screen, setScreen] = (0, import_react35.useState)(shown !== "general" || (id ?? null) !== null ? "page" : "list");
+  const [creatingGroup, setCreatingGroup] = (0, import_react35.useState)(false);
+  (0, import_react35.useEffect)(() => {
+    setCreatingGroup(false);
+  }, [shown]);
   const nav = useGlide(shown, { axis: "y" });
   const pageKey = `${shown}:${bot?.id ?? room2?.id ?? ""}`;
   const depth = bot || room2 ? 1 : 0;
@@ -14658,7 +14664,18 @@ function SettingsDialog({ page, id, tab = false, roster, actions, useUpdate, lea
           }
         }, (0, import_react35.createElement)(ChevronLeftIcon)),
         (0, import_react35.createElement)("h2", null, screen === "list" ? t("All settings") : pageTitle),
-        screen === "list" ? null : (0, import_react35.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": t("Close settings"), title: t("Close settings"), onClick: close }, (0, import_react35.createElement)(CloseIcon))
+        // The right-hand control: on the group chats' list it is that page's own action -- the same
+        // one the list's row carries on the wide dialog -- and everywhere else it still closes
+        // Settings. Two buttons that both left the page was the user's complaint: the left one
+        // already goes back, so the right one now does the page's work instead.
+        screen === "list" ? null : shown === "groups" && !room2 ? (0, import_react35.createElement)("button", {
+          type: "button",
+          className: "bt-icon-btn",
+          "aria-label": t("Create group chat"),
+          title: roster.bots.length < 2 ? t("A group chat needs at least two Bots") : t("Create group chat"),
+          disabled: roster.bots.length < 2,
+          onClick: () => setCreatingGroup(true)
+        }, (0, import_react35.createElement)(PlusIcon)) : (0, import_react35.createElement)("button", { type: "button", className: "bt-icon-btn", "aria-label": t("Close settings"), title: t("Close settings"), onClick: close }, (0, import_react35.createElement)(CloseIcon))
       ),
       // A div with role="navigation" rather than a <nav>: the Android responsive skin
       // tags the first [role=dialog][aria-modal] holding a direct nav child as the
@@ -14729,7 +14746,7 @@ function SettingsDialog({ page, id, tab = false, roster, actions, useUpdate, lea
           bot ? (0, import_react35.createElement)("div", { className: "bt-settings-form" }, (0, import_react35.createElement)(BotSettingsForm, { key: bot.id, bot, roster, actions, run })) : null,
           shown === "bots" && !bot ? (0, import_react35.createElement)(BotsPage, { roster, actions, run }) : null,
           room2 ? (0, import_react35.createElement)("div", { className: "bt-settings-form" }, (0, import_react35.createElement)(GroupSettingsForm, { key: room2.id, room: room2, roster, actions, run })) : null,
-          shown === "groups" && !room2 ? (0, import_react35.createElement)(GroupsPage, { roster, actions, run }) : null,
+          shown === "groups" && !room2 ? (0, import_react35.createElement)(GroupsPage, { roster, actions, run, creating: creatingGroup, setCreating: setCreatingGroup, mobile }) : null,
           shown === "connectors" ? (0, import_react35.createElement)(ConnectorsPage, { roster, actions }) : null,
           shown === "capabilities" ? (0, import_react35.createElement)(CapabilitiesPage, { roster, actions, run }) : null,
           shown === "schedules" ? (0, import_react35.createElement)(SchedulesPage, { roster, actions, start: id ?? void 0 }) : null,
@@ -16385,7 +16402,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "0fdfb5e8" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "27bb489c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
