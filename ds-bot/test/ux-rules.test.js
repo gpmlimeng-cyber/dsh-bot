@@ -325,8 +325,15 @@ test('the shell\'s own relay row is hidden, by the tool name the shell puts on i
   const styles = read('styles.js')
   assert.ok(styles.includes('[class*="_flowItem"]:has(> [data-slot="conversation.chat.node"]:empty){display:none!important}'),
     'a cell with nothing in it is still hidden whole')
-  assert.ok(styles.includes('[data-tool="group_relay"]{display:none!important}'),
-    'and the relay\'s own live row is hidden by name -- not scoped to the cell we shadow, because the live row is not that node')
+  // The row carries no data-tool (the target's outerHTML has data-chat-call-id and
+  // data-chat-anchor-key only), so the hook is the id this host gives a relay call itself. Both sides
+  // are read here, so the marker cannot drift away from the rule that hides it.
+  const hostFile = name => readFileSync(new URL(`../src/host/${name}`, import.meta.url), 'utf8')
+  assert.ok(hostFile('groups.js').includes("`toolu_relay_${randomUUID().replace(/-/g, '')}`"), 'the host names every relay call with its own marker')
+  assert.ok(styles.includes('[data-chat-call-id^="toolu_relay_"]{display:none!important}'),
+    'and the rule hides exactly those rows, by that marker -- not by a hashed class or a shell attribute')
+  assert.ok(styles.includes('[data-chat-anchor-key^="call:toolu_relay_"]{display:none!important}'),
+    'the anchor key the same row carries is covered too')
   // Only the relay: every other tool keeps the shell's row, which is where those belong.
   for (const tool of ['read', 'bash']) assert.ok(!styles.includes(`[data-tool="${tool}"]`), `${tool} keeps its row`)
 })
