@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: b57e9fe2
+// Source fingerprint: dc46131c
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -3394,6 +3394,11 @@ html[data-bt-mobile] .bt-settings-top h2{position:absolute;left:0;right:0;top:50
    while the list scrolled under it. Each screen names its own base, so the seam cannot come
    back, and no rule adds a divider line. */
 html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}
+/* 发现's title row carries no fill of its own: the page under it already has the colour, and the two
+   tokens only look alike in the light palette (--bt-sidebar #fcfcfc against --bt-main #fcfcfc; in the
+   dark one they are #1b1b1b and #141414), so the row read as a band across the top of that page and
+   nowhere else. 我的 keeps its own: there the row is the list's own header, over the list. */
+html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}
 html[data-bt-mobile] .bt-settings[data-screen=page] .bt-settings-top{background:var(--bt-main)}
 /* That bar replaces the wide dialog's head and its floating close. */
 html[data-bt-mobile] .bt-settings-head,
@@ -16908,7 +16913,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "b57e9fe2" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "dc46131c" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

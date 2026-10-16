@@ -34,6 +34,16 @@ const panelRows = [...discover.slice(discover.indexOf('export const PANEL_ROWS')
   .matchAll(/'([a-z]+)'/g)].map(match => match[1])
 
 test('the list is three cards of doors that already exist, with no headings', () => {
+test('发现\u2019s title row draws no band of its own', () => {
+  // The user saw a band across the top of that page and nowhere else: the list screen's title row is
+  // filled with --bt-sidebar while the page under it is --bt-main, and the two tokens only match in
+  // the light palette (#fcfcfc; in the dark one they are #1b1b1b and #141414).
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-settings[data-screen=list] .bt-settings-top{background:var(--bt-sidebar)}'), 'the rule every list screen wears')
+  assert.ok(styles.includes('html[data-bt-mobile] .bt-discover .bt-settings[data-screen=list] .bt-settings-top{background:transparent}'), 'cleared for this page alone')
+  const cleared = styles.split('\n').filter(line => line.includes('bt-settings-top{background:transparent}'))
+  assert.equal(cleared.length, 1, 'and only this page clears it')
+})
+
   // 插件 ｜ 连接器·能力·定时任务·密钥 ｜ 用量 -- the user's own grouping, in this order, one card per group.
   assert.deepEqual(cards.map(card => card.length), [1, 4, 1], 'three cards, 1/4/1 rows')
   assert.deepEqual(rows.map(row => row[0]), ['plugins', 'connectors', 'capabilities', 'schedules', 'secrets', 'usage'], 'the rows, in order')
