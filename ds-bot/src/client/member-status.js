@@ -212,9 +212,12 @@ html[data-bt-mobile] .bt-mw-pill{background:none;box-shadow:none;isolation:isola
 html[data-bt-mobile] .bt-mw-pill:hover{background:none}
 html[data-bt-mobile] .bt-mw-pill:hover::before{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))}
 html[data-bt-mobile] .bt-mw-pill::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:999px;background:var(--bt-main);box-shadow:var(--bt-float-shadow);-webkit-mask-image:linear-gradient(to right,transparent 0,#000 10px,#000 calc(100% - 10px),transparent 100%),linear-gradient(to bottom,transparent 0,#000 8px,#000 calc(100% - 8px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 10px,#000 calc(100% - 10px),transparent 100%),linear-gradient(to bottom,transparent 0,#000 8px,#000 calc(100% - 8px),transparent 100%);-webkit-mask-composite:source-in;mask-composite:intersect}
-/* Both spellings, and the blur only where the engine admits to it: an engine that cannot blur still
-   gets the feather above, so the fallback is a soft edge rather than a hard one. */
-@supports (backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px)){
+/* The blur only where the engine admits to it, and the condition is asked in the standard spelling
+   alone: this device supports it (Chrome 153), but its own support query answers false for the
+   -webkit- spelling even though a declaration in that spelling works, so an "or" here would only be
+   noise. The property itself is written both ways below. An engine without the filter keeps the
+   feather above, so the fallback is a soft edge rather than a hard one. */
+@supports (backdrop-filter:blur(2px)){
 html[data-bt-mobile] .bt-mw-pill::before{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 }
 .bt-mw-pill:active{scale:.97}

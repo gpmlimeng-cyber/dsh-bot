@@ -109,7 +109,7 @@ test('the capsule ends in a feathered edge rather than a line, on a phone only',
   assert.ok(layer.includes('mask-image:linear-gradient(to right,') && layer.includes('mask-composite:intersect') && layer.includes('-webkit-mask-composite:source-in'), 'in both spellings, standard and WebKit')
   // The blur rides that layer, so it shows in the feathered band only -- and an engine without it keeps
   // the feather, which is the fallback rather than a hard edge.
-  assert.ok(css.includes('@supports (backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px)){'), 'the blur is asked for, not assumed')
+  assert.ok(css.includes('@supports (backdrop-filter:blur(2px)){'), 'the blur is asked for, not assumed -- and in the standard spelling, which is the one the engine answers for')
   assert.ok(css.includes('html[data-bt-mobile] .bt-mw-pill::before{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}'), 'at 10px on the same layer')
   assert.ok(!/^\.bt-mw-pill::before\{/m.test(css), 'and none of it leaves the phone band')
 })
