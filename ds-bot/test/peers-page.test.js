@@ -26,7 +26,7 @@ const nav = code('nav-bar.js')
 const sidebar = code('sidebar.js')
 const header = code('header.js')
 
-const { peersList, peersRooms, peersModel, peersFolder, PeersPage } = await (async () => {
+const { peersList, peersModel, peersFolder, PeersPage } = await (async () => {
   const bundle = await build({
     entryPoints: [fileURLToPath(new URL('../src/client/peers-page.js', import.meta.url))],
     bundle: true, format: 'cjs', platform: 'node', write: false,
@@ -86,46 +86,41 @@ test('the list is Bots by name, narrowed by what is typed', () => {
   assert.deepEqual(bots.map(bot => bot.id), ['b', 'a', 'c'], 'and sorting does not reorder the roster in place')
 })
 
-test('the same book holds the group chats, read the same way', () => {
-  const rooms = [{ id: 'z', name: 'Zulu' }, { id: 'a', name: 'alpha' }, { id: 'h', name: 'Hidden', hidden: true }]
-  assert.deepEqual(plain(peersRooms(rooms, '').map(room => room.id)), ['a', 'z'], 'by name, and a room the user hid from the sidebar stays hidden')
-  assert.deepEqual(plain(peersRooms(rooms, 'LU').map(room => room.id)), ['z'], 'the same substring match, trimmed and case-folded')
-  assert.deepEqual(plain(peersRooms(rooms, 'zzz')), [], 'no match, no rows')
-  assert.deepEqual(plain(peersRooms(undefined, '')), [], 'an empty roster is not a crash')
-  assert.deepEqual(rooms.map(room => room.id), ['z', 'a', 'h'], 'and nothing is reordered in place')
-})
-
 test('the page is a header row and one scroller of labelled cards', () => {
-  // The tree the component draws, read as a tree: the header row is the first child of the page
-  // and NOTHING of the list lives inside it -- a list inside the header would be content under the
-  // search field, which is what a card crossing that seam looks like.
+  // The tree the component draws, read as a tree: the header row is the first child of the page and
+  // NOTHING of the list lives inside it -- a list inside the header would be content under the search
+  // field, which is what a card crossing that seam looks like.
   const tree = render(ROSTER)
   assert.deepEqual(plain(tree.children.map(classList)), [['bt-peers-top'], ['bt-peers-list']], 'the header, then the scroller')
   const top = findAll(tree, 'bt-peers-top')[0]
   assert.deepEqual(plain(findAll(top, 'bt-peers-list')), [], 'no list inside the header row')
   assert.equal(findAll(top, 'bt-settings-top').length, 1, 'the header holds the title row')
   assert.equal(findAll(top, 'bt-side-search').length, 1, 'and the search field')
-  // Three cards, one per section of contacts: the group chats, then the people.
+  // Two cards: the group chats' door, then the people.
   const cards = findAll(tree, 'bt-settings-group-card')
   assert.equal(cards.length, 2, 'one card per section')
-  assert.deepEqual(plain(cards.map(card => card.children.length)), [1, 2], 'one group row, two Bot rows')
-  // And one button per contact, with the chevron INSIDE it, after the body: a chevron outside the
-  // button is a chevron on a line of its own, under the row it belongs to.
+  assert.deepEqual(plain(cards.map(card => card.children.length)), [1, 2], 'the door, then each Bot')
+  // The chevron is INSIDE the row, after the body: outside it, it is a chevron on a line of its own,
+  // under the row it belongs to. The door's own mark is the icon its settings row carries.
   const rows = findAll(tree, 'bt-peers-row')
-  assert.equal(rows.length, 3, 'one row per contact')
-  for (const row of rows) {
-    const kids = plain(row.children.map(node => classList(node)[0] ?? '(mark)'))
-    assert.deepEqual(kids, ['(mark)', 'bt-peers-body', 'bt-peers-go'], 'mark, the two lines, the chevron -- all inside the button')
-  }
-  assert.deepEqual(plain(findAll(tree, 'bt-peers-go').map(node => classList(node))), [['bt-peers-go'], ['bt-peers-go'], ['bt-peers-go']], 'three of them, one per row')
-  // What a description line is made of, row by row: a group has one value, a Bot with a model has
-  // two and says so with the one mark between them, and a Bot without a model has one value and
-  // therefore no mark -- a leading separator is not a separator.
+  assert.equal(rows.length, 3, 'the door and one row per Bot')
+  const kidsOf = (node) => plain(node.children.filter(child => child !== null && child !== undefined).map(child => classList(child)[0] ?? '(mark)'))
+  assert.deepEqual(rows.map(kidsOf), [
+    ['bt-peers-icon', 'bt-peers-body', 'bt-peers-go'],
+    ['(mark)', 'bt-peers-body', 'bt-peers-go'],
+    ['(mark)', 'bt-peers-body', 'bt-peers-go'],
+  ], 'the door wears the section icon, a Bot its own mark; the chevron is inside every row')
+  // The door names the page it opens, and that page is 我的 -> 群聊: the key is the settings page's own.
+  const door = rows.find(row => row.props['data-page'] === 'groups')
+  assert.ok(door, 'the door carries the page it opens')
+  assert.ok(code('settings.js').includes("['groups', 'Group chats']"), 'which is the page key 我的 -> 群聊 uses')
+  assert.equal(findAll(door, 'bt-peers-desc').length, 0, 'and the door says one thing, so it has no second line')
+  // What a description line is made of, row by row: a Bot with a model has two values and says so
+  // with the one mark between them, and a Bot without a model has one value and therefore no mark --
+  // a leading separator is not a separator.
   const partOf = (child) => classList(child)[0] ?? (typeof child === 'string' ? child : '(node)')
   const parts = (node) => plain(node.children.filter(child => child !== null && child !== undefined).map(partOf))
-  const descriptions = findAll(tree, 'bt-peers-desc').map(parts)
-  assert.deepEqual(descriptions, [
-    ['bt-peers-text'],
+  assert.deepEqual(findAll(tree, 'bt-peers-desc').map(parts), [
     ['bt-peers-text', 'bt-peers-sep', 'bt-peers-text'],
     ['bt-peers-text'],
   ], 'the mark appears between two values and nowhere else')
@@ -133,12 +128,12 @@ test('the page is a header row and one scroller of labelled cards', () => {
 
 test('a label sits on the name\'s line and a value on the line below it', () => {
   // The name and the description are the two lines of one body, and the body takes what the
-  // chevron leaves: a row is the avatar, the body, the chevron -- nothing floats between them.
+  // chevron leaves: a row is the mark, the body, the chevron -- nothing floats between them.
   assert.ok(peers.includes("className: 'bt-peers-body' }"), 'the row has a two-line body')
   assert.ok(peers.includes("className: 'bt-peers-name-row' }"), 'whose first line holds the name and its labels')
   assert.ok(peers.includes("className: 'bt-peers-desc' }"), 'and whose second is the description')
-  // What is a label is drawn as one, in the skin's own tag, and it belongs beside the name: the
-  // role, and the Main Bot badge -- which only a Main Bot gets, read from the roster's own list.
+  // What is a label is drawn as one, in the skin's own tag, and it belongs beside the name: the role,
+  // and the Main Bot badge -- which only a Main Bot gets, read from the roster's own list.
   assert.ok(peers.includes("h('span', { className: 'bt-tag' }, bot.role)"), 'the role is a tag')
   assert.ok(peers.includes("isMainOf(roster, bot.id) ? h('span', { className: 'bt-tag' }, t('Main Bot')) : null"), 'and Main Bot is a tag, only on a Main Bot')
   assert.ok(peers.includes("import { isMainOf } from './sources.js'"), 'read from the roster\'s own rule')
@@ -148,58 +143,31 @@ test('a label sits on the name\'s line and a value on the line below it', () => 
   const secondLine = botRow.slice(botRow.indexOf("className: 'bt-peers-desc'"))
   assert.ok(firstLine.includes("bt-tag' }, bot.role") && firstLine.includes("t('Main Bot')"), 'both tags are on the name\'s line')
   assert.ok(!secondLine.includes('bt-tag'), 'and none is left down on the description')
-  // What is a value is small text on the line below, and only values: the model, and the folder.
   assert.ok(secondLine.includes("model ? h('span', { className: 'bt-peers-text' }, model) : null"), 'the model is text')
-  // The folder is always said: the Bot's own last segment when it has one, and the team workspace's
-  // own word from 我的 -> Bot settings when it has none -- which is the usual case, and what the
-  // settings row shows, so the two read the same line.
-  assert.ok(peers.includes('peersFolder(bot.workDir) ?? t(\'Team workspace\')'), 'the folder falls back to the settings row\'s own word')
-  // One fixed mark tells the two values apart, and it is not a value: it keeps its own width, so a
-  // long model or a long folder is what gives way. The group's line has one value, so it has none.
-  assert.ok(peers.includes("h('span', { className: 'bt-peers-sep', 'aria-hidden': true }, '·')"), 'the values are separated by one fixed mark')
-  assert.ok(code('peers-page.js').includes('.bt-peers-sep{flex:none}'), 'which never shrinks, so it cannot be squeezed out')
-  const groupDesc = peers.slice(peers.indexOf("className: 'bt-peers-desc' },"), peers.indexOf("const model = peersModel"))
-  assert.ok(!groupDesc.includes('bt-peers-sep'), 'and a line with one value carries no separator')
-  assert.ok(secondLine.includes("h('span', { className: 'bt-peers-text' }, folder)"), 'and is always drawn')
+  assert.ok(secondLine.includes("h('span', { className: 'bt-peers-text' }, folder)"), 'and the folder is always drawn')
   assert.ok(!secondLine.includes('folder ?'), 'with no gap where it has nothing of its own')
-  assert.ok(code('folder-menu.js').includes("t('Team workspace')"), 'which is the word that settings row uses')
-  // The model is read the way the settings page reads it -- one rule, in the leaf both reach --
-  // rather than a second copy of the catalog lookup here.
+  // The folder falls back to the settings row's own word, and the model to that page's own rule; the
+  // one mark between two values keeps its width, so the values are what give way.
+  assert.ok(peers.includes("peersFolder(bot.workDir) ?? t('Team workspace')"), 'the folder falls back to the settings row\'s own word')
+  assert.ok(code('folder-menu.js').includes("t('Team workspace')"), 'which is that row\'s word')
   assert.ok(peers.includes("import { modelOf } from './model-ref.js'"), 'the model comes from the shared rule')
   assert.ok(code('model-menu.js').includes("export { modelOf }"), 'which the picker re-exports for its own callers')
   assert.ok(!peers.includes('bot.model.split'), 'and nothing here re-derives it')
-  // A group is not one Bot's conversation, so it has no model, no folder and no role: its second
-  // line says how many members it has, and its first is the name alone.
-  assert.ok(peers.includes('const count = (room.members ?? []).length') && peers.includes("t('{count} members', { count })"), 'a group says its members')
-  assert.ok(peers.includes("className: 'bt-peers-name-row' }, h('span', { className: 'bt-peers-name' }, room.name)"), 'and the group\'s name line carries no label')
-  // Two lines of one row, so the row is taller than the one line it was: the skin says how tall.
+  assert.ok(peers.includes("h('span', { className: 'bt-peers-sep', 'aria-hidden': true }, '·')"), 'the two values are separated by one fixed mark')
   const sheet = code('peers-page.js')
   assert.ok(sheet.includes('.bt-peers-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}'), 'the body stacks them')
   assert.ok(sheet.includes('.bt-peers-name-row{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden}'), 'the name line keeps the name and its labels in one row, whatever the room')
   assert.ok(sheet.includes('.bt-peers-desc{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:12px;line-height:16px;color:var(--bt-ink-3)}'), 'the description is one small second-level line')
   assert.ok(sheet.includes('.bt-peers-text{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'and a value gives way rather than widening the row')
-  // Neither line wraps and neither line overflows: every text in them is nowrap with its own
-  // ellipsis, the labels keep their width (the skin's .bt-tag is flex:none), and the one flexible
-  // item -- the name -- is the one that is cut short first.
+  assert.ok(sheet.includes('.bt-peers-sep{flex:none}'), 'and the mark between them never shrinks, so it cannot be squeezed out')
   assert.ok(sheet.includes('.bt-peers-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'), 'the name is the item that gives way')
-  // The chevron is the row's right edge: it is pushed there by its own margin, it keeps its own
-  // width, and the text side gives way -- so all five rows show it at one x, and a long model or
-  // folder cannot move it.
   const tags = code('styles.js').match(/\.bt-tag\{[^}]*\}/)[0]
   assert.ok(tags.includes('flex:none') && tags.includes('white-space:nowrap'), 'and the skin\'s own tag never shrinks and never wraps')
+  // The chevron is the row's right edge: it is pushed there by its own margin, it keeps its own
+  // width, and the text side gives way -- so every row shows it at one x, and a long model or folder
+  // cannot move it.
   assert.ok(sheet.includes('.bt-peers-go{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-3)}'), 'the chevron pins itself to the row\'s end')
   assert.ok(sheet.includes('.bt-peers-row{display:flex;align-items:center;gap:12px;'), 'on a row that centres it vertically')
-})
-
-test('the model and the folder are read as names, not as the raw roster', () => {
-  assert.equal(peersModel({ model: 'deepseek/deepseek-chat' }, { models: [] }), 'deepseek-chat', 'the ref\'s last segment when the catalog has no entry')
-  assert.equal(peersModel({ model: 'deepseek/deepseek-chat' }, { models: [{ ref: 'deepseek/deepseek-chat', name: 'DeepSeek Chat' }] }), 'DeepSeek Chat', 'the catalog\'s own name when it is served')
-  assert.equal(peersModel({ appliedModel: 'a/b' }, { models: [] }), 'b', 'and the model it last ran on counts')
-  assert.equal(peersModel({}, { models: [] }), null, 'no model, no text')
-  assert.equal(peersFolder('/data/user/0/home/repos/dsh-bot/'), 'dsh-bot', 'the folder keeps its last segment, trailing slashes and all')
-  assert.equal(peersFolder('dsh-bot'), 'dsh-bot', 'a bare name is already one')
-  assert.equal(peersFolder('/'), null, 'a path with no folder in it says nothing')
-  assert.equal(peersFolder(undefined), null, 'and a Bot with no folder says nothing')
 })
 
 test('a row is a Bot with its role and a chevron, not a conversation', () => {
@@ -219,55 +187,43 @@ test('a row is a Bot with its role and a chevron, not a conversation', () => {
   }
   // The data is the roster the rest of the skin reads, and the filter is the only transform.
   assert.ok(peers.includes('peersList(roster.bots, query)'), 'the roster, filtered')
-  assert.ok(peers.includes('peersRooms(roster.rooms, query)'), 'both rosters, by the one box')
   assert.ok(!peers.includes('fetch(') && !peers.includes('call('), 'nothing new is fetched')
 })
 
-test('a group is a row of its own kind, under its own heading', () => {
-  // A group row is the same row shape as a Bot's -- wrapper, button, name, chevron -- with the
-  // group's own mark and id, and without a role tag (a group has no role to carry).
-  const group = peers.slice(peers.indexOf("className: 'bt-peers-row', 'data-room-id': room.id"), peers.indexOf("className: 'bt-peers-row', 'data-bot-id'"))
-  assert.ok(group.includes('h(RoomAvatar, { room, roster, size: 36 })'), 'the group\'s own avatar')
-  assert.ok(group.includes("h('span', { className: 'bt-peers-name' }, room.name)"), 'and its name')
-  assert.ok(!group.includes('bt-tag'), 'with no role beside it')
-  assert.ok(group.includes('h(ChevronRightIcon)'), 'and the same chevron')
-  // Two sections, in 我的 -> 全部设置's own shape: a heading over a card, the rows inside it. The
-  // list role sits on the card, so one section is one list rather than a list of everything.
+test('the group chats are one door, not a second copy of their page', () => {
+  // The user asked for 群聊 to lead to the group-chat list page (我的 -> 群聊, settings.js) rather than
+  // to list the groups here: this page opens that page and copies none of it -- no group rows, no
+  // 新建群聊 button, no member counts.
+  assert.ok(peers.includes("section(t('Group chats'), ["), 'one section, holding one row')
+  assert.ok(peers.includes("className: 'bt-peers-row', 'data-page': 'groups', onClick: () => openPage('groups')"), 'the door names the page it opens and asks for it')
+  assert.ok(peers.includes("h('span', { className: 'bt-peers-icon', 'aria-hidden': true }, h(SETTINGS_ICONS.groups))"), "and wears the icon that page's own settings row wears")
+  assert.ok(peers.includes("section(t('Peers'), shown.map"), 'then the people')
+  for (const gone of ['RoomAvatar', 'data-room-id', '{count} members', 'room.members', 'peersRooms']) {
+    assert.ok(!peers.includes(gone), `${gone} was the list this page no longer draws`)
+  }
+  // The page's own list still holds the shape 我的 -> 全部设置 draws: a section, a heading, a card.
   assert.ok(peers.includes("h('section', { className: 'bt-settings-group' },"), 'the section is the skin\'s group')
   assert.ok(peers.includes("h('h3', { className: 'bt-settings-group-head' }, label)"), 'with its heading')
   assert.ok(peers.includes("h('div', { className: 'bt-settings-group-card', role: 'list' }, rows)"), 'and its card carrying the list')
-  assert.ok(peers.includes("section(t('Groups'), groups.map"), 'the group chats come first')
-  assert.ok(peers.includes("section(t('Peers'), shown.map"), 'then the people')
-  assert.ok(!peers.includes("className: 'bt-peers-list', role: 'list'"), 'the page is no longer one flat list')
-  // A section with nothing in it is not drawn, and the empty line covers both: a heading over an
-  // empty card reads as a fault, and a search that matches one side should not draw the other.
-  assert.ok(peers.includes('groups.length > 0 ? section(') && peers.includes('shown.length > 0 ? section('), 'each section is drawn only when it has rows')
+  assert.ok(!peers.includes("className: 'bt-peers-list', role: 'list'"), 'the page is not one flat list')
+  assert.ok(peers.includes('shown.length > 0 ? section('), 'the people are drawn only when the search leaves someone')
   const empty = peers.slice(peers.indexOf("className: 'bt-peers-empty'"))
-  assert.ok(empty.startsWith("className: 'bt-peers-empty', role: 'status' }, t('Nothing matches')"), 'one empty line for both kinds of contact')
+  assert.ok(empty.startsWith("className: 'bt-peers-empty', role: 'status' }, t('Nothing matches')"), 'and one empty line covers a search that matches nobody')
 })
 
-test('a group\'s row opens the chat, a Bot\'s row opens that Bot\'s page', () => {
-  // The two rows open two different things, and that is the user's own division: a group has no page
-  // of its own, so its row opens the group chat -- the same door the sidebar's group row uses.
-  const open = peers.slice(peers.indexOf('const openChat ='), peers.indexOf('// A Bot\'s row opens'))
-  assert.match(open, /actions\.closePeers\(\)[\s\S]*actions\.selectPanel\(null\)[\s\S]*actions\.closePanel\(\)[\s\S]*actions\.openSession\(id\)/, open)
-  // The details pane is closed on the way: it is full-screen on the phone (z 96, over the bar), so a
-  // settings screen left open is what the user arrives at instead of the chat. openSession keeps one.
-  assert.ok(open.includes('actions.closePanel()'), 'no settings pane survives the tap')
-  assert.ok(open.includes('openSession(id)'), 'and the group tap ends in the conversation')
-  assert.ok(peers.includes('onClick: () => openChat(room.id)'), 'the group row takes that door')
-  assert.ok(sidebar.includes("'data-room-id': id, onClick: () => actions.openSession(id)"), 'which is the door the sidebar\'s group row uses')
-  // A Bot's row is a person's entry in an address book: it opens that Bot's own settings page, the
-  // one its 「编辑 Bot」 menu entry opens -- name, label, model, folder -- and not its chat.
-  assert.ok(peers.includes('onClick: () => openBot(bot.id)'), 'the Bot row opens the page')
-  const botDoor = peers.slice(peers.indexOf('const openBot ='), peers.indexOf('return createPortal'))
-  assert.ok(botDoor.includes('actions.openBotSettings(id)'), 'through the one action that opens it from here')
-  assert.ok(peers.includes("className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openBot(bot.id)"), 'and that is the row it is on')
-  // That action is the Bot's settings page (the same page 编辑 Bot asks for), drawn as a page of the
-  // bar's own flow, and it remembers that closing it lands back on this list.
-  assert.match(index, /openBotSettings: \(id\) => \{[\s\S]*peer[\s\S]*settings: \{ page: 'bots', id, tab: true, back: 'peers' \}/, 'the page, marked as one, with the way back')
+test('a Bot\'s row opens that Bot\'s page, the 群聊 door opens the group chats\'', () => {
+  // Both go through one action -- openPeerPage -- because both are Settings pages opened from this
+  // list, and neither is redrawn here.
+  const door = peers.slice(peers.indexOf('const openPage ='), peers.indexOf('return createPortal'))
+  assert.ok(door.includes('actions.openPeerPage(page, id)'), 'one door for both')
+  assert.ok(peers.includes("onClick: () => openPage('bots', bot.id)"), 'a Bot\'s row asks for that Bot\'s page')
+  assert.ok(peers.includes("onClick: () => openPage('groups')"), 'and the 群聊 row asks for the group chats\' list -- 我的 -> 群聊, which is the page the user pointed at')
+  // That action is the Bot\'s settings page (the same page 编辑 Bot asks for) or the groups list,
+  // drawn as a page of the bar\'s own flow, and it remembers that closing it lands back here.
+  assert.match(index, /openPeerPage: \(page, id = null\) => \{[\s\S]*settings: \{ page, id, tab: true, back: 'peers' \}/, 'the page, marked as one, with the way back')
   assert.ok(index.includes("if (state.settings.back === 'peers')") && index.includes('settings: null, peers: true'), 'which closeSettings reads')
-  assert.ok(index.includes("back: state.settings?.back ?? null"), 'and every step inside keeps, so a row opened after a drill-in still closes onto this list')
+  assert.ok(index.includes("back: state.settings?.back ?? null"), 'and every step inside keeps, so a page opened after a drill-in still closes onto this list')
+  assert.ok(peers.includes("'data-screen'") === false, 'neither page is redrawn here: the key is all this page knows')
 })
 
 test('the header\'s new button is the drawer\'s own entry, not a second door', () => {

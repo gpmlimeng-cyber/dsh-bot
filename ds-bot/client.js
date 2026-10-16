@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 2dabd70c
+// Source fingerprint: e822e09e
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -16099,11 +16099,6 @@ function peersList(bots, query2) {
   const byName = [...bots ?? []].sort((a, b) => (a?.name ?? "").localeCompare(b?.name ?? ""));
   return wanted === "" ? byName : byName.filter((bot) => (bot?.name ?? "").toLowerCase().includes(wanted));
 }
-function peersRooms(rooms, query2) {
-  const wanted = query2.trim().toLowerCase();
-  const byName = [...rooms ?? []].filter((room2) => room2?.hidden !== true).sort((a, b) => (a?.name ?? "").localeCompare(b?.name ?? ""));
-  return wanted === "" ? byName : byName.filter((room2) => (room2?.name ?? "").toLowerCase().includes(wanted));
-}
 function peersModel(bot, roster) {
   return modelOf(bot, roster)?.name ?? null;
 }
@@ -16117,16 +16112,9 @@ function PeersPage({ useRoster, useUi, actions }) {
   const [query2, setQuery] = (0, import_react40.useState)("");
   const mobile = useMobile();
   if (!open || !mobile) return null;
-  const groups = peersRooms(roster.rooms, query2);
   const shown = peersList(roster.bots, query2);
-  const openChat = (id) => {
-    actions.closePeers();
-    actions.selectPanel(null);
-    actions.closePanel();
-    actions.openSession(id);
-  };
-  const openBot = (id) => {
-    actions.openBotSettings(id);
+  const openPage = (page, id = null) => {
+    actions.openPeerPage(page, id);
   };
   const section = (label, rows) => (0, import_react40.createElement)(
     "section",
@@ -16175,47 +16163,37 @@ function PeersPage({ useRoster, useUi, actions }) {
         })
       )
     ),
-    // Both sections live in the page's one scroller, in that order: the group chats, then the
-    // people. The wrapper carries the list item, the way the members list does: a button that
-    // declared itself a list item would stop being announced as a button.
+    // The page's one scroller: the group chats' door, then the people. The wrapper carries the list
+    // item, the way the members list does: a button that declared itself a list item would stop
+    // being announced as a button.
     //
-    // A row is two lines: the name with its labels beside it, and the line of description under
-    // it. What is a label is drawn as one (the skin's own .bt-tag: a Bot's role, and the Main Bot
-    // badge -- which only a Main Bot has), and it belongs on the name's own line; what is a value
-    // is small plain text (the model it runs on, the folder it works in) and belongs below.
+    // The door is a row like any other -- one line, because it names a page rather than a contact --
+    // and it wears the icon 我的 -> 群聊's own row wears for it (SETTINGS_ICONS), so the two read as
+    // the same door. It is drawn whatever the search says: it is not a contact to match against, and
+    // the list behind it has a search box of its own.
     (0, import_react40.createElement)(
       "div",
       { className: "bt-peers-list" },
-      groups.length > 0 ? section(t("Groups"), groups.map((room2) => {
-        const count = (room2.members ?? []).length;
-        return (0, import_react40.createElement)(
-          "div",
-          { key: room2.id, className: "bt-peers-item", role: "listitem" },
+      section(t("Group chats"), [(0, import_react40.createElement)(
+        "div",
+        { key: "groups", className: "bt-peers-item", role: "listitem" },
+        (0, import_react40.createElement)(
+          "button",
+          {
+            type: "button",
+            className: "bt-peers-row",
+            "data-page": "groups",
+            onClick: () => openPage("groups")
+          },
+          (0, import_react40.createElement)("span", { className: "bt-peers-icon", "aria-hidden": true }, (0, import_react40.createElement)(SETTINGS_ICONS.groups)),
           (0, import_react40.createElement)(
-            "button",
-            {
-              type: "button",
-              className: "bt-peers-row",
-              "data-room-id": room2.id,
-              onClick: () => openChat(room2.id)
-            },
-            (0, import_react40.createElement)(RoomAvatar, { room: room2, roster, size: 36 }),
-            (0, import_react40.createElement)(
-              "span",
-              { className: "bt-peers-body" },
-              (0, import_react40.createElement)("span", { className: "bt-peers-name-row" }, (0, import_react40.createElement)("span", { className: "bt-peers-name" }, room2.name)),
-              // A group has no model and no folder -- it is not one Bot's conversation -- but it does
-              // have members, which is the one thing worth a line under its name.
-              (0, import_react40.createElement)(
-                "span",
-                { className: "bt-peers-desc" },
-                (0, import_react40.createElement)("span", { className: "bt-peers-text" }, t("{count} members", { count }))
-              )
-            ),
-            (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
-          )
-        );
-      })) : null,
+            "span",
+            { className: "bt-peers-body" },
+            (0, import_react40.createElement)("span", { className: "bt-peers-name-row" }, (0, import_react40.createElement)("span", { className: "bt-peers-name" }, t("Group chats")))
+          ),
+          (0, import_react40.createElement)("span", { className: "bt-peers-go", "aria-hidden": true }, (0, import_react40.createElement)(ChevronRightIcon))
+        )
+      )]),
       shown.length > 0 ? section(t("Peers"), shown.map((bot) => {
         const model = peersModel(bot, roster);
         const folder = peersFolder(bot.workDir) ?? t("Team workspace");
@@ -16228,7 +16206,7 @@ function PeersPage({ useRoster, useUi, actions }) {
               type: "button",
               className: "bt-peers-row",
               "data-bot-id": bot.id,
-              onClick: () => openBot(bot.id)
+              onClick: () => openPage("bots", bot.id)
             },
             (0, import_react40.createElement)(BotMark, { bot, size: 36 }),
             (0, import_react40.createElement)(
@@ -16257,7 +16235,7 @@ function PeersPage({ useRoster, useUi, actions }) {
           )
         );
       })) : null,
-      groups.length === 0 && shown.length === 0 ? (0, import_react40.createElement)("div", { className: "bt-peers-empty", role: "status" }, t("Nothing matches")) : null
+      shown.length === 0 ? (0, import_react40.createElement)("div", { className: "bt-peers-empty", role: "status" }, t("Nothing matches")) : null
     )
   ), document.body);
 }
@@ -16279,6 +16257,11 @@ html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;o
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
+/* The 群聊 door's glyph, in the box a Bot's avatar takes (36px) so every row's text starts at the
+   same x, and at the 24px 我的 -> 全部设置 draws its own row icons at -- the same icon, the same
+   size, so the two doors read as one. */
+html[data-bt-mobile] .bt-peers-icon{flex:none;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-2)}
+html[data-bt-mobile] .bt-peers-icon>svg{width:24px;height:24px}
 /* The two lines a row reads in: the name with its labels, then the description under it. The pair
    takes what the chevron leaves, and neither line ever wraps: a line that runs out of room cuts its
    own text with an ellipsis instead of becoming two. The name gives way first (it is the flexible
@@ -16398,7 +16381,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "2dabd70c" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "e822e09e" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -16898,12 +16881,14 @@ function apply(ctx) {
     openSettings: (page = "general", id = null, door = null) => {
       ui2.set((state) => ({ ...state, settings: { page, id, tab: door === null ? state.settings?.tab ?? false : door === "tab", back: state.settings?.back ?? null }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false }));
     },
-    // A Bot's settings opened from the 伙伴 list: that list is a page of its own and the layer is
-    // drawn under it, so the list steps aside for it -- and the way back is the list, not the
-    // conversation the list would otherwise leave behind (closeSettings reads `back`). It is a page
-    // of the bar's own flow, so it is drawn as one: `tab` (styles.js).
-    openBotSettings: (id) => {
-      ui2.set((state) => ({ ...state, peers: false, discover: false, discoverPanel: null, settings: { page: "bots", id, tab: true, back: "peers" }, menu: null, palette: null, newChat: null, mobileNav: false }));
+    // A page of Settings opened from the 伙伴 list -- one Bot's own page (`bots` + its id, the same
+    // one its 「编辑 Bot」 menu entry opens) or the group chats' list (`groups`, which is the page the
+    // user asked 群聊 to lead to). That list is a page of its own and the layer is drawn under it, so
+    // the list steps aside for it -- and the way back is the list, not the conversation the list
+    // would otherwise leave behind (closeSettings reads `back`). It is a page of the bar's own flow,
+    // so it is drawn as one: `tab` (styles.js).
+    openPeerPage: (page, id = null) => {
+      ui2.set((state) => ({ ...state, peers: false, discover: false, discoverPanel: null, settings: { page, id, tab: true, back: "peers" }, menu: null, palette: null, newChat: null, mobileNav: false }));
     },
     // On an upright phone the four pages of the bottom bar are peers of each other, so
     // closing one lands on the conversation rather than on whatever page was behind it:

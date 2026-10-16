@@ -4,21 +4,20 @@
 // pinyin table), no collapsible sections, no add-a-friend actions. Whoever is on the team is
 // whoever the roster says, so nothing here fetches anything.
 //
-// The same book holds the group chats, under their own heading, because a group is a
-// conversation the user starts from the same place a 1:1 chat is: whoever the roster lists is
-// listed here.
+// The group chats are a door rather than a list: they have a page of their own (我的 -> 群聊,
+// settings.js, which lists them and offers 新建群聊), and this page opens it instead of drawing a
+// second copy of it -- the same rule the rest of this skin follows.
 //
-// The two kinds of row do not open the same thing, and that is the user's own division: an address
-// book's entry for a person is that person's own page, so a Bot's row opens its settings page --
-// the same one its 「编辑 Bot」 menu entry opens, name, label, model and folder -- and the group's
-// row opens the group chat, because a group has no page of its own. Either way the page closes
-// first (the layer is drawn under it on a phone), and a Bot's settings come back to this list
-// rather than past it: the way back is the `back` the layer carries (index.js).
+// A Bot's row opens that Bot's own settings page: an address book's entry for a person is that
+// person's page, not their chat, and it is the page its 「编辑 Bot」 menu entry opens -- name, label,
+// model and folder. The page closes first (the layer is drawn under it on a phone), and both door
+// and row come back to this list rather than past it: the way back is the `back` the layer carries
+// (index.js).
 import { createElement as h, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { BotMark, RoomAvatar } from './mark.js'
+import { BotMark } from './mark.js'
 import { modelOf } from './model-ref.js'
-import { ChevronRightIcon, PlusIcon, SearchIcon } from './icons.js'
+import { ChevronRightIcon, PlusIcon, SearchIcon, SETTINGS_ICONS } from './icons.js'
 import { useMobile } from './mobile.js'
 import { isMainOf } from './sources.js'
 import { t } from './i18n.js'
@@ -31,18 +30,8 @@ export function peersList(bots, query) {
   return wanted === '' ? byName : byName.filter(bot => (bot?.name ?? '').toLowerCase().includes(wanted))
 }
 
-// The other half of that list, read the same way: the group chats by name, narrowed by the same
-// query -- the box filters both sections at once. The ones the user hid from the sidebar stay
-// hidden, with one difference: the sidebar keeps a hidden conversation visible while it is the one
-// on screen, and this page is not a conversation, so there is nothing to keep.
-export function peersRooms(rooms, query) {
-  const wanted = query.trim().toLowerCase()
-  const byName = [...(rooms ?? [])].filter(room => room?.hidden !== true).sort((a, b) => (a?.name ?? '').localeCompare(b?.name ?? ''))
-  return wanted === '' ? byName : byName.filter(room => (room?.name ?? '').toLowerCase().includes(wanted))
-}
-
-// The two values a row's description line carries as text, exported for the same reason the two
-// lists are: what a line says should be checkable without a DOM.
+// The two values a row's description line carries as text, exported for the same reason the list
+// is: what a line says should be checkable without a DOM.
 //
 // The model is read the way 我的 -> Bot settings reads it (modelOf): the served model's own name,
 // falling back to the id's last segment, and nothing at all when the Bot has no model yet.
@@ -63,23 +52,13 @@ export function PeersPage({ useRoster, useUi, actions }) {
   const [query, setQuery] = useState('')
   const mobile = useMobile()
   if (!open || !mobile) return null
-  const groups = peersRooms(roster.rooms, query)
   const shown = peersList(roster.bots, query)
-  // Back to the conversation first, then the chat: one tap leaves this page, it does
-  // not stack a second one on it. A details pane goes with it: a row opens a conversation, not a
-  // settings screen, and openSession does not close one that was already up -- on the phone that
-  // pane is full-screen (z 96, over the bar), so it is what the user sees instead of the chat.
-  const openChat = (id) => {
-    actions.closePeers()
-    actions.selectPanel(null)
-    actions.closePanel()
-    actions.openSession(id)
-  }
-  // A Bot's row opens that Bot's own settings page instead: the page closes on the way (the layer
-  // is drawn under this one, z 60 against 79, so it could not be seen over it), and the action
-  // remembers that the way back is this list rather than the conversation.
-  const openBot = (id) => {
-    actions.openBotSettings(id)
+  // A page of Settings, opened from here: the list steps aside for it (the layer is drawn under this
+  // one, z 60 against 79, so it could not be seen over it), and the action remembers that the way
+  // back is this list rather than the conversation. One door, two pages under it -- a Bot's own page
+  // (我的 -> Bot, one Bot) and the group chats' list (我的 -> 群聊) -- and neither is redrawn here.
+  const openPage = (page, id = null) => {
+    actions.openPeerPage(page, id)
   }
   // One section per kind of contact, in 我的 -> 全部设置's own shape: the heading over the card, the
   // rows inside it (styles.js, the phone's group rules). A section with no rows is not drawn at all,
@@ -110,30 +89,23 @@ export function PeersPage({ useRoster, useUi, actions }) {
           placeholder: t('Search'), value: query, 'aria-label': t('Search'),
           onChange: event => setQuery(event.target.value),
         }))),
-    // Both sections live in the page's one scroller, in that order: the group chats, then the
-    // people. The wrapper carries the list item, the way the members list does: a button that
-    // declared itself a list item would stop being announced as a button.
+    // The page's one scroller: the group chats' door, then the people. The wrapper carries the list
+    // item, the way the members list does: a button that declared itself a list item would stop
+    // being announced as a button.
     //
-    // A row is two lines: the name with its labels beside it, and the line of description under
-    // it. What is a label is drawn as one (the skin's own .bt-tag: a Bot's role, and the Main Bot
-    // badge -- which only a Main Bot has), and it belongs on the name's own line; what is a value
-    // is small plain text (the model it runs on, the folder it works in) and belongs below.
+    // The door is a row like any other -- one line, because it names a page rather than a contact --
+    // and it wears the icon 我的 -> 群聊's own row wears for it (SETTINGS_ICONS), so the two read as
+    // the same door. It is drawn whatever the search says: it is not a contact to match against, and
+    // the list behind it has a search box of its own.
     h('div', { className: 'bt-peers-list' },
-      groups.length > 0 ? section(t('Groups'), groups.map(room => {
-        const count = (room.members ?? []).length
-        return h('div', { key: room.id, className: 'bt-peers-item', role: 'listitem' },
-          h('button', {
-            type: 'button', className: 'bt-peers-row', 'data-room-id': room.id, onClick: () => openChat(room.id),
-          },
-          h(RoomAvatar, { room, roster, size: 36 }),
-          h('span', { className: 'bt-peers-body' },
-            h('span', { className: 'bt-peers-name-row' }, h('span', { className: 'bt-peers-name' }, room.name)),
-            // A group has no model and no folder -- it is not one Bot's conversation -- but it does
-            // have members, which is the one thing worth a line under its name.
-            h('span', { className: 'bt-peers-desc' },
-              h('span', { className: 'bt-peers-text' }, t('{count} members', { count })))),
-          h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))
-      })) : null,
+      section(t('Group chats'), [h('div', { key: 'groups', className: 'bt-peers-item', role: 'listitem' },
+        h('button', {
+          type: 'button', className: 'bt-peers-row', 'data-page': 'groups', onClick: () => openPage('groups'),
+        },
+        h('span', { className: 'bt-peers-icon', 'aria-hidden': true }, h(SETTINGS_ICONS.groups)),
+        h('span', { className: 'bt-peers-body' },
+          h('span', { className: 'bt-peers-name-row' }, h('span', { className: 'bt-peers-name' }, t('Group chats')))),
+        h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))]),
       shown.length > 0 ? section(t('Peers'), shown.map(bot => {
         const model = peersModel(bot, roster)
         // The folder it works in: its own when it has one, and the team workspace's own word when
@@ -143,7 +115,7 @@ export function PeersPage({ useRoster, useUi, actions }) {
         const folder = peersFolder(bot.workDir) ?? t('Team workspace')
         return h('div', { key: bot.id, className: 'bt-peers-item', role: 'listitem' },
           h('button', {
-            type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openBot(bot.id),
+            type: 'button', className: 'bt-peers-row', 'data-bot-id': bot.id, onClick: () => openPage('bots', bot.id),
           },
           h(BotMark, { bot, size: 36 }),
           h('span', { className: 'bt-peers-body' },
@@ -161,7 +133,7 @@ export function PeersPage({ useRoster, useUi, actions }) {
               h('span', { className: 'bt-peers-text' }, folder))),
           h('span', { className: 'bt-peers-go', 'aria-hidden': true }, h(ChevronRightIcon))))
       })) : null,
-      groups.length === 0 && shown.length === 0
+      shown.length === 0
         ? h('div', { className: 'bt-peers-empty', role: 'status' }, t('Nothing matches'))
         : null)), document.body)
 }
@@ -188,6 +160,11 @@ html[data-bt-mobile] .bt-peers-list{flex:1 1 auto;min-height:0;overflow-y:auto;o
 html[data-bt-mobile] .bt-peers-row{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:8px 10px;border:0;border-radius:12px;background:none;color:var(--bt-ink);font:inherit;font-size:15px;line-height:21px;text-align:left;cursor:pointer;box-sizing:border-box}
 html[data-bt-mobile] .bt-peers-row:hover{background:var(--bt-hover)}
 html[data-bt-mobile] .bt-peers-row>.bt-mark{flex:none}
+/* The 群聊 door's glyph, in the box a Bot's avatar takes (36px) so every row's text starts at the
+   same x, and at the 24px 我的 -> 全部设置 draws its own row icons at -- the same icon, the same
+   size, so the two doors read as one. */
+html[data-bt-mobile] .bt-peers-icon{flex:none;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;color:var(--bt-ink-2)}
+html[data-bt-mobile] .bt-peers-icon>svg{width:24px;height:24px}
 /* The two lines a row reads in: the name with its labels, then the description under it. The pair
    takes what the chevron leaves, and neither line ever wraps: a line that runs out of room cuts its
    own text with an ellipsis instead of becoming two. The name gives way first (it is the flexible

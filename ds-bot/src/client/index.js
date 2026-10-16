@@ -515,11 +515,13 @@ export function apply(ctx) {
     // `back` is carried the same way and for the same reason: whichever surface opened this layer
     // says where closing it lands (closeSettings reads it), and a step inside keeps that answer.
     openSettings: (page = 'general', id = null, door = null) => { ui.set(state => ({ ...state, settings: { page, id, tab: door === null ? (state.settings?.tab ?? false) : door === 'tab', back: state.settings?.back ?? null }, menu: null, palette: null, newChat: null, mobileNav: false, peers: false })) },
-    // A Bot's settings opened from the 伙伴 list: that list is a page of its own and the layer is
-    // drawn under it, so the list steps aside for it -- and the way back is the list, not the
-    // conversation the list would otherwise leave behind (closeSettings reads `back`). It is a page
-    // of the bar's own flow, so it is drawn as one: `tab` (styles.js).
-    openBotSettings: (id) => { ui.set(state => ({ ...state, peers: false, discover: false, discoverPanel: null, settings: { page: 'bots', id, tab: true, back: 'peers' }, menu: null, palette: null, newChat: null, mobileNav: false })) },
+    // A page of Settings opened from the 伙伴 list -- one Bot's own page (`bots` + its id, the same
+    // one its 「编辑 Bot」 menu entry opens) or the group chats' list (`groups`, which is the page the
+    // user asked 群聊 to lead to). That list is a page of its own and the layer is drawn under it, so
+    // the list steps aside for it -- and the way back is the list, not the conversation the list
+    // would otherwise leave behind (closeSettings reads `back`). It is a page of the bar's own flow,
+    // so it is drawn as one: `tab` (styles.js).
+    openPeerPage: (page, id = null) => { ui.set(state => ({ ...state, peers: false, discover: false, discoverPanel: null, settings: { page, id, tab: true, back: 'peers' }, menu: null, palette: null, newChat: null, mobileNav: false })) },
     // On an upright phone the four pages of the bottom bar are peers of each other, so
     // closing one lands on the conversation rather than on whatever page was behind it:
     // the bar is the only navigator there and must never come back to a page the user has
@@ -538,7 +540,7 @@ export function apply(ctx) {
       }
       // And one opened from the 伙伴 list lands on that list, for the same reason: the user came in
       // through it, so closing the page must not skip past it to the conversation. The layer carries
-      // that answer while it is up (openBotSettings), so a step inside it keeps it too.
+      // that answer while it is up (openPeerPage), so a step inside it keeps it too.
       if (state.settings.back === 'peers') {
         ui.set(current => ({ ...current, settings: null, peers: true }))
         if (isPortraitNav()) ctx.layout.selectPanel(null)
