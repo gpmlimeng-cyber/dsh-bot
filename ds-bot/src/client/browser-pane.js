@@ -629,7 +629,10 @@ html[data-bt-mobile] .bt-sheet-handle{width:36px;height:4px;border-radius:999px;
 html[data-bt-mobile] .bt-panel[data-dragging-sheet]{animation:none;transition:none}
 /* The sheet's title bar reads left to right: the name from the edge, the close at the other one
    (the panel's own arrow stays where a preview's head is). */
-html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:1;min-width:0;text-align:left}
+html[data-bt-mobile] .bt-sheet-head{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;height:auto;min-height:56px;padding:0 12px}
+html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:none;min-width:0;text-align:left;font-size:15px;line-height:21px}
+/* The second line: what the page is, one step quieter and on the name's own left edge. */
+html[data-bt-mobile] .bt-sheet-head .bt-preview-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3)}
 /* The scrim a sheet is dismissed with: the skin's own .bt-scrim class (its colour and fade live in
    styles.js, declared once) placed by this rule, under the sheet (96) and over the bar (95, which
    the scrim follows in the document). A desktop column draws none: its rule says so. */

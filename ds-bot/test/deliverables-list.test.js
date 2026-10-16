@@ -77,8 +77,13 @@ test('an empty list and a list that cannot be read each say so, in the reader’
   assert.ok(list.includes("t('No deliverables yet')"), 'the empty state is written')
   assert.ok(list.includes("t('This list could not be read')"), 'and so is a failed read')
   // The list is not backfilled, so a short one is the truth rather than a bug: it says so.
-  assert.ok(list.includes("h('div', { className: 'bt-prod-note' }, t('Only files delivered since this run started are listed.'))"), 'the list says it is not backfilled')
-  assert.ok(preview.includes('.bt-prod-note{'), 'and that line is styled with the panel’s own rules')
+  // That it is not backfilled is a line under the page's own name (the user asked the separate row
+  // above the list away): the head takes a `hint`, and the sheet's CSS stacks the two lines.
+  assert.ok(list.includes("hint: t('Only files delivered since this run started are listed.')"), 'the head carries the line')
+  assert.ok(list.includes("hint ? h('span', { className: 'bt-preview-hint' }, hint) : null"), 'drawn under the name')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;height:auto;min-height:56px;padding:0 12px}'), 'the sheet\'s title row stacks them, from the same left edge')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3)}'), 'in the second level\'s own small type')
+  assert.ok(!list.includes('bt-prod-note') && !preview.includes('.bt-prod-note{'), 'and the row of its own is gone, not kept in two places')
   assert.ok(list.includes("if (!Array.isArray(answer?.files)) { setState('failed'); return }"), 'a shape the host did not send is not listed')
   assert.ok(i18n.includes("'No deliverables yet': '还没有产物'"), 'the empty state is translated')
   assert.ok(i18n.includes("'This list could not be read': '这份列表读不出来'"), 'and the failure')
@@ -99,8 +104,8 @@ test('the panel is the one a preview opens in, title bar and all', () => {
   assert.ok(pane.includes("view !== 'preview' && view !== 'products'"), 'the strip is skipped for it')
   assert.ok(pane.includes("h(DeliveredList, { actions: panelActions, onClose: () => actions.closeProducts?.() })"), 'the list is what the panel renders')
   assert.ok(pane.includes('view === \'products\' ? t(\'All deliverables\')'), 'and it is labelled')
-  assert.ok(list.includes("h(PreviewHead, { name: t('All deliverables'), onClose, close: mobile })"), 'with the same title bar component as the preview page')
-  assert.ok(list.includes('function PreviewHead({ name, onClose, children, close = false })'), 'one title bar definition, shared by both pages')
+  assert.ok(list.includes("h(PreviewHead, { name: t('All deliverables'), onClose, close: mobile, hint: t('Only files delivered since this run started are listed.') })"), 'with the same title bar component as the preview page')
+  assert.ok(list.includes('function PreviewHead({ name, onClose, children, close = false, hint })'), 'one title bar definition, shared by both pages')
   const previewUses = list.split('h(PreviewHead, ').length - 1
   assert.equal(previewUses, 2, 'and both pages use it')
 })
@@ -139,7 +144,7 @@ test('on a phone the list slides up from the foot: full width, rounded top, a ha
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-close{display:inline-flex;position:absolute;right:2px;top:50%;transform:translateY(-50%);'), 'pinned to the right corner of that row')
   assert.ok(pane.includes('.bt-sheet-close{display:none}'), 'while a desktop column keeps its back arrow')
   assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-back{display:none}'), 'the sheet\'s title row draws the name alone')
-  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:1;min-width:0;text-align:left}'), 'the name reads from the edge there')
+  assert.ok(pane.includes('html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:none;min-width:0;text-align:left;font-size:15px;line-height:21px}'), 'the name reads from the edge there')
   // The handle drags the sheet's height: 44px of band over a 4px pill, a floor and a ceiling, a
   // close when the drag goes well past the floor, and nothing remembered between openings.
   assert.ok(pane.includes("className: 'bt-sheet-grip', role: 'separator', 'aria-orientation': 'horizontal'"), 'the band is the separator a thumb grabs')

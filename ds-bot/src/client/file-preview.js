@@ -203,7 +203,6 @@ export const FILE_PREVIEW_CSS = `
    message's avatar indent, one to a row, under the line that says what the list is. */
 .bt-products{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:6px}
 .bt-products>.bt-fp-empty{flex:1}
-.bt-prod-note{flex:none;padding:4px 10px 8px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
 /* The list's rows sit closer than the message's two-column grid: the reference list is a
    stack of tiles, not a grid, so 10px of gap read as a gap rather than as rhythm. */
 .bt-products .bt-dcards{margin-left:0;grid-template-columns:minmax(0,1fr);gap:6px;padding:0 2px 6px}

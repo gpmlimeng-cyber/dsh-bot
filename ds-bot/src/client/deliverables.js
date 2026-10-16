@@ -425,10 +425,13 @@ export function DeliveredPreview({ file, actions, onClose }) {
 // The head a preview and the deliverables list share. `close` marks the phone's sheet: its name
 // reads from the edge, its own way out is the corner button of the handle row above (browser-pane.js),
 // and the back arrow -- the preview page's own -- is hidden there by CSS.
-function PreviewHead({ name, onClose, children, close = false }) {
+function PreviewHead({ name, onClose, children, close = false, hint }) {
   return h('div', { className: close ? 'bt-preview-head bt-sheet-head' : 'bt-preview-head' },
     h('button', { type: 'button', className: 'bt-preview-back', onClick: onClose, 'aria-label': t('Back'), title: t('Back') }, h(LucideChevronLeftIcon)),
     h('span', { className: 'bt-preview-name' }, name),
+    // What is worth saying about the whole page sits under its name, in the second level's own type:
+    // the user asked the list's own line away rather than a row of its own above it.
+    hint ? h('span', { className: 'bt-preview-hint' }, hint) : null,
     // A sheet's own way out is the corner button of its handle row (browser-pane.js); the arrow here
     // is the preview page's, and the sheet's CSS hides it rather than the tree deciding twice.
     close ? null : children)
@@ -497,16 +500,16 @@ export function DeliveredList({ actions, onClose }) {
     : state === 'failed'
       ? h('div', { className: 'bt-products' }, h('div', { className: 'bt-fp-empty' }, h('div', { className: 'bt-fp-empty-title', role: 'status' }, t('This list could not be read'))))
       : h('div', { className: 'bt-products' },
-          // The list is what this host saw delivered, and it is not backfilled: a short
-          // list is the truth rather than a bug, so it says so above itself.
-          h('div', { className: 'bt-prod-note' }, t('Only files delivered since this run started are listed.')),
           files.length === 0
             ? h('div', { className: 'bt-fp-empty' },
                 h('div', { className: 'bt-fp-empty-title' }, t('No deliverables yet')),
                 h('div', { className: 'bt-fp-empty-text' }, t('Files a Bot hands over are listed here.')))
             : h(DeliverableCards, { deliverables: rows, actions, list: true, metaOf }))
   return h(Fragment, null,
-    h(PreviewHead, { name: t('All deliverables'), onClose, close: mobile }),
+    // The list is what this host saw delivered, and it is not backfilled: a short list is the truth
+    // rather than a bug, so the page says so under its own name (a row of its own above the list was
+    // what the user asked away).
+    h(PreviewHead, { name: t('All deliverables'), onClose, close: mobile, hint: t('Only files delivered since this run started are listed.') }),
     body)
 }
 

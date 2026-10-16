@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: badd4945
+// Source fingerprint: 192284f0
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -5105,7 +5105,6 @@ var FILE_PREVIEW_CSS = `
    message's avatar indent, one to a row, under the line that says what the list is. */
 .bt-products{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:6px}
 .bt-products>.bt-fp-empty{flex:1}
-.bt-prod-note{flex:none;padding:4px 10px 8px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
 /* The list's rows sit closer than the message's two-column grid: the reference list is a
    stack of tiles, not a grid, so 10px of gap read as a gap rather than as rhythm. */
 .bt-products .bt-dcards{margin-left:0;grid-template-columns:minmax(0,1fr);gap:6px;padding:0 2px 6px}
@@ -5655,12 +5654,15 @@ function DeliveredPreview({ file, actions, onClose }) {
     ) : null
   );
 }
-function PreviewHead({ name, onClose, children, close = false }) {
+function PreviewHead({ name, onClose, children, close = false, hint }) {
   return (0, import_react8.createElement)(
     "div",
     { className: close ? "bt-preview-head bt-sheet-head" : "bt-preview-head" },
     (0, import_react8.createElement)("button", { type: "button", className: "bt-preview-back", onClick: onClose, "aria-label": t("Back"), title: t("Back") }, (0, import_react8.createElement)(LucideChevronLeftIcon)),
     (0, import_react8.createElement)("span", { className: "bt-preview-name" }, name),
+    // What is worth saying about the whole page sits under its name, in the second level's own type:
+    // the user asked the list's own line away rather than a row of its own above it.
+    hint ? (0, import_react8.createElement)("span", { className: "bt-preview-hint" }, hint) : null,
     // A sheet's own way out is the corner button of its handle row (browser-pane.js); the arrow here
     // is the preview page's, and the sheet's CSS hides it rather than the tree deciding twice.
     close ? null : children
@@ -5717,9 +5719,6 @@ function DeliveredList({ actions, onClose }) {
   const body = state === "reading" ? (0, import_react8.createElement)("div", { className: "bt-products" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty-title" }, t("Loading…")))) : state === "failed" ? (0, import_react8.createElement)("div", { className: "bt-products" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty" }, (0, import_react8.createElement)("div", { className: "bt-fp-empty-title", role: "status" }, t("This list could not be read")))) : (0, import_react8.createElement)(
     "div",
     { className: "bt-products" },
-    // The list is what this host saw delivered, and it is not backfilled: a short
-    // list is the truth rather than a bug, so it says so above itself.
-    (0, import_react8.createElement)("div", { className: "bt-prod-note" }, t("Only files delivered since this run started are listed.")),
     files.length === 0 ? (0, import_react8.createElement)(
       "div",
       { className: "bt-fp-empty" },
@@ -5730,7 +5729,10 @@ function DeliveredList({ actions, onClose }) {
   return (0, import_react8.createElement)(
     import_react8.Fragment,
     null,
-    (0, import_react8.createElement)(PreviewHead, { name: t("All deliverables"), onClose, close: mobile }),
+    // The list is what this host saw delivered, and it is not backfilled: a short list is the truth
+    // rather than a bug, so the page says so under its own name (a row of its own above the list was
+    // what the user asked away).
+    (0, import_react8.createElement)(PreviewHead, { name: t("All deliverables"), onClose, close: mobile, hint: t("Only files delivered since this run started are listed.") }),
     body
   );
 }
@@ -8921,7 +8923,10 @@ html[data-bt-mobile] .bt-sheet-handle{width:36px;height:4px;border-radius:999px;
 html[data-bt-mobile] .bt-panel[data-dragging-sheet]{animation:none;transition:none}
 /* The sheet's title bar reads left to right: the name from the edge, the close at the other one
    (the panel's own arrow stays where a preview's head is). */
-html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:1;min-width:0;text-align:left}
+html[data-bt-mobile] .bt-sheet-head{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;height:auto;min-height:56px;padding:0 12px}
+html[data-bt-mobile] .bt-sheet-head .bt-preview-name{position:static;transform:none;flex:none;min-width:0;text-align:left;font-size:15px;line-height:21px}
+/* The second line: what the page is, one step quieter and on the name's own left edge. */
+html[data-bt-mobile] .bt-sheet-head .bt-preview-hint{font-size:12px;line-height:16px;color:var(--bt-ink-3)}
 /* The scrim a sheet is dismissed with: the skin's own .bt-scrim class (its colour and fade live in
    styles.js, declared once) placed by this rule, under the sheet (96) and over the bar (95, which
    the scrim follows in the document). A desktop column draws none: its rule says so. */
@@ -16897,7 +16902,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "badd4945" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "192284f0" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
