@@ -142,7 +142,25 @@ test('the page is a header row and one scroller of labelled cards', () => {
   // silences marks under prefers-reduced-motion (which is what this device asks for).
   assert.ok(code('styles.js').includes('@media (prefers-reduced-motion:reduce){.bt-mark *{animation:none!important;transition:none!important}}'), 'the skin silences the marks')
   assert.ok(peers.includes('h(BotMark, { bot, size: 36 })'), 'and every row wears that same mark')
-  assert.ok(peers.includes('h(MotionSection, { roster, actions, run })'), 'the animation level is offered once, as the Bots page draws it')
+  // The animation level is offered at the 「伙伴」 heading's right end, as that list's own secondary
+  // action rather than a section of its own at the end of the list. It is the Bots page's own control
+  // component (set-rows.js), so the two places cannot come to read two values.
+  assert.ok(!peers.includes('h(MotionSection,'), 'the animation level is no longer a section at the end of the list')
+  const heads = findAll(tree, 'bt-settings-group-head')
+  assert.equal(heads.length, 2, 'one heading per section')
+  const peerHeads = findAll(tree, 'bt-peers-section-head')
+  assert.equal(peerHeads.length, 1, 'and 伙伴\'s heading is the one that carries a control')
+  const headKids = plain(peerHeads[0].children.map(child => classList(child)[0] ?? '(control)'))
+  assert.deepEqual(headKids, ['bt-peers-section-label', 'bt-motion-mini'], 'the name on the left, the control at its right end')
+  assert.equal(typeof peerHeads[0].children[1].type, 'function', 'which is the skin\'s own control, not a second one drawn here')
+  assert.ok(peers.includes("h(MotionControl, { roster, actions, run, className: 'bt-motion-mini' })"), 'drawn once, beside that heading')
+  assert.ok(code('set-rows.js').includes('export function MotionControl('), 'and it is the control the Bots page draws')
+  assert.ok(code('set-rows.js').includes('motionOf(roster)') && code('set-rows.js').includes('export function motionOf('), 'reading the one value both places read')
+  // Secondary or not, this heading is used with a thumb: the control keeps a finger's hit area, and
+  // its colour sits one step further back than a row's (--bt-ink-3), with only the chosen level in ink.
+  assert.ok(sheet.includes('.bt-motion-mini button{min-width:44px;height:44px;'), 'the control is finger-sized where it is drawn')
+  assert.ok(sheet.includes('.bt-motion-mini button[aria-pressed=true]{color:var(--bt-ink)}'), 'and the chosen level is the one drawn in ink')
+  assert.ok(sheet.includes('.bt-settings-group-head.bt-peers-section-head{display:flex;align-items:center;justify-content:space-between;'), 'the heading and the control share one row')
   // The door names the page it opens, and that page is 我的 -> 群聊: the key is the settings page's own.
   const door = rows.find(row => row.props['data-page'] === 'groups')
   assert.ok(door, 'the door carries the page it opens')

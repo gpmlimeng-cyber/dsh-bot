@@ -16,7 +16,7 @@
 import { createElement as h, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BotMark, RoomAvatar } from './mark.js'
-import { MotionSection } from './set-rows.js'
+import { MotionControl } from './set-rows.js'
 import { modelOf } from './model-ref.js'
 import { ChevronRightIcon, PlusIcon, SearchIcon, StarLineIcon } from './icons.js'
 import { useMobile } from './mobile.js'
@@ -81,8 +81,15 @@ export function PeersPage({ useRoster, useUi, actions }) {
   // One section per kind of contact, in 我的 -> 全部设置's own shape: the heading over the card, the
   // rows inside it (styles.js, the phone's group rules). A section with no rows is not drawn at all,
   // so a search that matches one side shows that side rather than a heading over nothing.
-  const section = (label, rows) => h('section', { className: 'bt-settings-group' },
-    h('h3', { className: 'bt-settings-group-head' }, label),
+  //
+  // A heading that carries a control beside its name draws one row for the two (伙伴, which offers the
+  // animation level there): the name keeps the section head's own type, the control keeps its own
+  // width, and neither is what gives way.
+  const section = (label, rows, beside) => h('section', { className: 'bt-settings-group' },
+    beside
+      ? h('div', { className: 'bt-settings-group-head bt-peers-section-head' },
+        h('h3', { className: 'bt-peers-section-label' }, label), beside)
+      : h('h3', { className: 'bt-settings-group-head' }, label),
     h('div', { className: 'bt-settings-group-card', role: 'list' }, rows))
   return createPortal(h('div', { className: 'bt-peers', role: 'region', 'aria-label': t('Peers') },
     h('div', { className: 'bt-peers-top' },
@@ -167,14 +174,10 @@ export function PeersPage({ useRoster, useUi, actions }) {
             title: onlyMain ? t('The only Main Bot. To hand the role to another Bot, use Main Bot on the Bots page.') : t('Main Bot'),
             onClick: () => { void actions.setMain(bot.id, !isMain) },
           }, h(StarLineIcon)))
-      })) : null,
+      }), h(MotionControl, { roster, actions, run, className: 'bt-motion-mini' })) : null,
       shown.length === 0
         ? h('div', { className: 'bt-peers-empty', role: 'status' }, t('Nothing matches'))
-        : null,
-      // The animation level is one setting for the whole skin -- index.js publishes it as
-      // body[data-bt-motion], and the marks above already animate at it -- so it is offered here as
-      // the Bots page's own control rather than a switch on every row.
-      h(MotionSection, { roster, actions, run }))), document.body)
+        : null)), document.body)
 }
 
 // The page covers the screen and carries the status bar's inset itself, from the status bar's own
@@ -189,6 +192,17 @@ html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;fl
    the bar itself. */
 html[data-bt-mobile][data-bt-keyboard] .bt-peers{padding-bottom:12px}
 html[data-bt-mobile] .bt-peers-top{flex:none;display:flex;flex-direction:column;gap:10px;padding-bottom:8px}
+/* The 「伙伴」 heading carries the animation level at its right end: one row of two things, the name
+   and the control. The name keeps the section head's own type -- it is an h3 inside a row now, since
+   the row holds the two -- and the control keeps its own width, so neither is what gives way. */
+html[data-bt-mobile] .bt-settings-group-head.bt-peers-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+html[data-bt-mobile] .bt-peers-section-head>.bt-peers-section-label{margin:0;padding:0;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-2)}
+/* The level is a secondary action, so it is the skin's own segmented control (the one 我的 -> Bots
+   offers, so the two read as one value) narrowed to what three short words need, with a finger's 44px
+   of height -- this heading is used with a thumb -- and one step further back in colour than a row. */
+html[data-bt-mobile] .bt-motion-mini{width:auto;flex:none}
+html[data-bt-mobile] .bt-motion-mini button{min-width:44px;height:44px;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-motion-mini button[aria-pressed=true]{color:var(--bt-ink)}
 /* The title row is 我的's own (styles.js: .bt-settings-top): the 52px bar with the name centred in
    it, out of the flow so the control beside it cannot pull it off centre. The button is a control
    of the chrome, so its surface (fill, hairline, radius, shadow) is the one shared declaration in

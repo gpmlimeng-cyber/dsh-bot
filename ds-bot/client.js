@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 1f0bc5ca
+// Source fingerprint: 11b33344
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -8856,22 +8856,33 @@ function Switch({ on, label, disabled, onChange }) {
   );
 }
 var MOTIONS = [["quiet", "Quiet"], ["normal", "Normal"], ["lively", "Lively"]];
+function motionOf(roster) {
+  const value = roster.prefs?.motion;
+  return value === "quiet" || value === "lively" ? value : "normal";
+}
+function MotionControl({ roster, actions, run, className }) {
+  const motion = motionOf(roster);
+  return (0, import_react16.createElement)(
+    Segmented,
+    { label: t("Bot animation"), value: motion, className: className ?? "bt-motion-seg" },
+    MOTIONS.map(([id, label]) => (0, import_react16.createElement)("button", {
+      key: id,
+      type: "button",
+      "aria-pressed": motion === id,
+      onClick: () => {
+        if (motion !== id) run(actions.setPrefs({ motion: id }));
+      }
+    }, t(label)))
+  );
+}
 function MotionSection({ roster, actions, run }) {
-  const motion = roster.prefs?.motion === "quiet" || roster.prefs?.motion === "lively" ? roster.prefs.motion : "normal";
   return (0, import_react16.createElement)(
     SetSection,
     { title: t("Animation") },
     (0, import_react16.createElement)(
       SetRow,
       { label: t("Bot animation") },
-      (0, import_react16.createElement)(Segmented, { label: t("Bot animation"), value: motion, className: "bt-motion-seg" }, MOTIONS.map(([id, label]) => (0, import_react16.createElement)("button", {
-        key: id,
-        type: "button",
-        "aria-pressed": motion === id,
-        onClick: () => {
-          if (motion !== id) run(actions.setPrefs({ motion: id }));
-        }
-      }, t(label))))
+      (0, import_react16.createElement)(MotionControl, { roster, actions, run })
     )
   );
 }
@@ -16305,10 +16316,15 @@ function PeersPage({ useRoster, useUi, actions }) {
   const openPage = (page, id = null) => {
     actions.openPeerPage(page, id);
   };
-  const section = (label, rows) => (0, import_react42.createElement)(
+  const section = (label, rows, beside) => (0, import_react42.createElement)(
     "section",
     { className: "bt-settings-group" },
-    (0, import_react42.createElement)("h3", { className: "bt-settings-group-head" }, label),
+    beside ? (0, import_react42.createElement)(
+      "div",
+      { className: "bt-settings-group-head bt-peers-section-head" },
+      (0, import_react42.createElement)("h3", { className: "bt-peers-section-label" }, label),
+      beside
+    ) : (0, import_react42.createElement)("h3", { className: "bt-settings-group-head" }, label),
     (0, import_react42.createElement)("div", { className: "bt-settings-group-card", role: "list" }, rows)
   );
   return (0, import_react_dom13.createPortal)((0, import_react42.createElement)(
@@ -16439,12 +16455,8 @@ function PeersPage({ useRoster, useUi, actions }) {
             }
           }, (0, import_react42.createElement)(StarLineIcon))
         );
-      })) : null,
-      shown.length === 0 ? (0, import_react42.createElement)("div", { className: "bt-peers-empty", role: "status" }, t("Nothing matches")) : null,
-      // The animation level is one setting for the whole skin -- index.js publishes it as
-      // body[data-bt-motion], and the marks above already animate at it -- so it is offered here as
-      // the Bots page's own control rather than a switch on every row.
-      (0, import_react42.createElement)(MotionSection, { roster, actions, run })
+      }), (0, import_react42.createElement)(MotionControl, { roster, actions, run, className: "bt-motion-mini" })) : null,
+      shown.length === 0 ? (0, import_react42.createElement)("div", { className: "bt-peers-empty", role: "status" }, t("Nothing matches")) : null
     )
   ), document.body);
 }
@@ -16456,6 +16468,17 @@ html[data-bt-mobile] .bt-peers{position:fixed;inset:0;z-index:79;display:flex;fl
    the bar itself. */
 html[data-bt-mobile][data-bt-keyboard] .bt-peers{padding-bottom:12px}
 html[data-bt-mobile] .bt-peers-top{flex:none;display:flex;flex-direction:column;gap:10px;padding-bottom:8px}
+/* The 「伙伴」 heading carries the animation level at its right end: one row of two things, the name
+   and the control. The name keeps the section head's own type -- it is an h3 inside a row now, since
+   the row holds the two -- and the control keeps its own width, so neither is what gives way. */
+html[data-bt-mobile] .bt-settings-group-head.bt-peers-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+html[data-bt-mobile] .bt-peers-section-head>.bt-peers-section-label{margin:0;padding:0;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-2)}
+/* The level is a secondary action, so it is the skin's own segmented control (the one 我的 -> Bots
+   offers, so the two read as one value) narrowed to what three short words need, with a finger's 44px
+   of height -- this heading is used with a thumb -- and one step further back in colour than a row. */
+html[data-bt-mobile] .bt-motion-mini{width:auto;flex:none}
+html[data-bt-mobile] .bt-motion-mini button{min-width:44px;height:44px;font-size:12px;line-height:16px;color:var(--bt-ink-3)}
+html[data-bt-mobile] .bt-motion-mini button[aria-pressed=true]{color:var(--bt-ink)}
 /* The title row is 我的's own (styles.js: .bt-settings-top): the 52px bar with the name centred in
    it, out of the flow so the control beside it cannot pull it off centre. The button is a control
    of the chrome, so its surface (fill, hairline, radius, shadow) is the one shared declaration in
@@ -16600,7 +16623,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "1f0bc5ca" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "11b33344" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
