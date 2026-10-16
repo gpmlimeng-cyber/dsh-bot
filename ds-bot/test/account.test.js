@@ -47,7 +47,11 @@ test('我的 carries the card, and the page behind it edits and keeps the values
   // The card sits at the top of the phone's own list -- which is what 我的 is there -- and opens the
   // account page: a page of Settings, opened the way any other is, so the back arrow lands on the
   // list it came from.
-  assert.ok(page.includes("mobile ? h(AccountCard, { account, onOpen: () => actions.openSettings('account') }) : null"), 'the card is the phone list\'s first child')
+  assert.ok(page.includes("mobile ? h(AccountCard, { account, onOpen: () => { setScreen('page'); actions.openSettings('account') } }) : null"), 'the card is the phone list\'s first child')
+  // Opened from the list it is drawn on, it has to step the phone's one screen across, exactly as the
+  // rows below it do: `screen` is read off the page only when the layer opens, so a card that asked for
+  // a page without saying so left the page container hidden behind the list (the bug the user hit).
+  assert.ok(page.includes("onClick: () => { setScreen('page'); actions.openSettings(key) }"), 'which is the step the list\'s own rows take')
   assert.ok(page.includes("['account', 'Account settings']"), 'and the page it opens is a page the dialog knows')
   assert.ok(!page.includes("['Team', ['bots', 'groups', 'account']]"), 'with no row of its own in the list')
   assert.ok(page.includes("shown === 'account' ? h(AccountPage, { account, onChange: updateAccount }) : null"), 'the page itself is drawn among the others')

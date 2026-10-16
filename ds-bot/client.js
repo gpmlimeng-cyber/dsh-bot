@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 91f7cd14
+// Source fingerprint: 56fd7456
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -14858,7 +14858,13 @@ function SettingsDialog({ page, id, tab = false, from = null, roster, actions, u
         // 我的's own top card, above the page list: who the user is on this device, and the door to the
         // page that edits it. Only the phone draws this list as a page of its own -- the wide dialog's
         // 198px column has the account in its footer launcher instead.
-        mobile ? (0, import_react37.createElement)(AccountCard, { account, onOpen: () => actions.openSettings("account") }) : null,
+        // The screen steps to the page the card opens, exactly as the rows below do: the phone shows one
+        // screen at a time, and `screen` is only read off the page at the moment the layer opens -- so a
+        // card that asked for a page without saying so left the container hidden (the row rule below).
+        mobile ? (0, import_react37.createElement)(AccountCard, { account, onOpen: () => {
+          setScreen("page");
+          actions.openSettings("account");
+        } }) : null,
         (0, import_react37.createElement)("span", { ref: nav.thumb, className: "bt-thumb", "aria-hidden": true }),
         SETTINGS_GROUPS.map(([group, keys], index) => (0, import_react37.createElement)(
           "section",
@@ -16640,7 +16646,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "91f7cd14" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "56fd7456" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

@@ -258,7 +258,10 @@ export function SettingsDialog({ page, id, tab = false, from = null, roster, act
         // 我的's own top card, above the page list: who the user is on this device, and the door to the
         // page that edits it. Only the phone draws this list as a page of its own -- the wide dialog's
         // 198px column has the account in its footer launcher instead.
-        mobile ? h(AccountCard, { account, onOpen: () => actions.openSettings('account') }) : null,
+        // The screen steps to the page the card opens, exactly as the rows below do: the phone shows one
+        // screen at a time, and `screen` is only read off the page at the moment the layer opens -- so a
+        // card that asked for a page without saying so left the container hidden (the row rule below).
+        mobile ? h(AccountCard, { account, onOpen: () => { setScreen('page'); actions.openSettings('account') } }) : null,
         h('span', { ref: nav.thumb, className: 'bt-thumb', 'aria-hidden': true }),
         SETTINGS_GROUPS.map(([group, keys], index) => h('section', { key: group, className: 'bt-settings-group' },
           h('h3', { className: 'bt-settings-group-head' }, t(group)),
