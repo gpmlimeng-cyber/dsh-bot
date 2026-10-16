@@ -31,6 +31,17 @@ export const THEMES = {
     light: { bg: '#faf9f5', sidebar: '#f3f0e8', bubble: '#ebe7dc', card: '#ffffff', text: '#1f1e1b', user: '#2b2a26', userText: '#faf9f5', accent: '#d97757' },
     dark: { bg: '#1f1e1b', sidebar: '#262521', bubble: '#34322d', card: '#2a2925', text: '#f3f0e8', user: '#f3f0e8', userText: '#1f1e1b', accent: '#e08a6d' },
   },
+  // WorkBuddy, sampled from the app itself (both of its modes: the phone is on light, the dark set was
+  // read from the app's own Dark). Two colours are deliberate adjustments, both to clear the 4.5:1
+  // floor this skin holds a control's text to -- the app's own unselected tab ink measured 4.35:1 in
+  // dark and 2.82:1 in light, so each is the nearest value that passes: dark takes the sampled
+  // placeholder ink (#838383), light takes this skin's own second-ink rule over the bar (text at 60%).
+  // Its Bot replies draw no bubble at all, so `bubble` is the page colour: the box stays, unseen.
+  workbuddy: {
+    label: 'WorkBuddy',
+    light: { bg: '#f8f8f8', sidebar: '#fafafa', bubble: '#f8f8f8', card: '#ffffff', text: '#191919', user: '#ebebeb', userText: '#212121', accent: '#00c29a', navOn: '#181818', navInk: '#727272' },
+    dark: { bg: '#1a1a1a', sidebar: '#1f1f1f', bubble: '#1a1a1a', card: '#242424', text: '#e3e3e3', user: '#383838', userText: '#e3e3e3', accent: '#00c29a', navOn: '#dfdfdf', navInk: '#838383' },
+  },
   moonlight: {
     label: 'Moonlight',
     light: { bg: '#f7f9fc', sidebar: '#eef2f8', bubble: '#e5ebf5', card: '#ffffff', text: '#121826', user: '#1e3a8a', userText: '#ffffff', accent: '#1e86ff' },

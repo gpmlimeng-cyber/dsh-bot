@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: eba3a7e3
+// Source fingerprint: ae17d203
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -406,6 +406,7 @@ var ZH = {
   Mono: "黑白",
   Paper: "纸张",
   Moonlight: "月光",
+  WorkBuddy: "WorkBuddy",
   // Settings dialog
   General: "通用",
   // One thing, one name: the Bots page, the bar's tab and this collection are 伙伴 everywhere (the
@@ -1449,6 +1450,17 @@ var THEMES = {
     label: "Paper",
     light: { bg: "#faf9f5", sidebar: "#f3f0e8", bubble: "#ebe7dc", card: "#ffffff", text: "#1f1e1b", user: "#2b2a26", userText: "#faf9f5", accent: "#d97757" },
     dark: { bg: "#1f1e1b", sidebar: "#262521", bubble: "#34322d", card: "#2a2925", text: "#f3f0e8", user: "#f3f0e8", userText: "#1f1e1b", accent: "#e08a6d" }
+  },
+  // WorkBuddy, sampled from the app itself (both of its modes: the phone is on light, the dark set was
+  // read from the app's own Dark). Two colours are deliberate adjustments, both to clear the 4.5:1
+  // floor this skin holds a control's text to -- the app's own unselected tab ink measured 4.35:1 in
+  // dark and 2.82:1 in light, so each is the nearest value that passes: dark takes the sampled
+  // placeholder ink (#838383), light takes this skin's own second-ink rule over the bar (text at 60%).
+  // Its Bot replies draw no bubble at all, so `bubble` is the page colour: the box stays, unseen.
+  workbuddy: {
+    label: "WorkBuddy",
+    light: { bg: "#f8f8f8", sidebar: "#fafafa", bubble: "#f8f8f8", card: "#ffffff", text: "#191919", user: "#ebebeb", userText: "#212121", accent: "#00c29a", navOn: "#181818", navInk: "#727272" },
+    dark: { bg: "#1a1a1a", sidebar: "#1f1f1f", bubble: "#1a1a1a", card: "#242424", text: "#e3e3e3", user: "#383838", userText: "#e3e3e3", accent: "#00c29a", navOn: "#dfdfdf", navInk: "#838383" }
   },
   moonlight: {
     label: "Moonlight",
@@ -17798,7 +17810,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "eba3a7e3" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "ae17d203" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");

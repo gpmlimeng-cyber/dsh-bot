@@ -9,6 +9,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { THEMES, allThemes, registerTheme, shellTokens, themeCss, themeVars } from '../src/client/themes.js'
+import { luminance } from '../src/client/inks.js'
 
 const read = (name) => readFileSync(new URL(`../src/client/${name}`, import.meta.url), 'utf8')
 const styles = read('styles.js').split('\n')
@@ -61,8 +62,11 @@ test('the tokens that live in one layer only are the documented ones', () => {
 // The bottom bar's pair is the one surface the user reads all day and the palette cannot derive
 // (it is sampled from their own app), so a theme may name it -- and one that says nothing keeps
 // the base sheet's values, which is what "no existing theme moves a pixel" means here.
-test('a theme may name the bottom bar\'s pair, and every built-in theme leaves it alone', () => {
-  for (const [id, theme] of Object.entries(THEMES)) {
+test('a theme may name the bottom bar\'s pair, and a theme that says nothing leaves it alone', () => {
+  // The four that predate the pair: they name none of it, so the base sheet's values stand (the fifth,
+  // WorkBuddy, is the theme that does name it -- it is held to the floor in the test below).
+  for (const id of ['deepseek', 'mono', 'paper', 'moonlight']) {
+    const theme = THEMES[id]
     for (const dark of [false, true]) {
       const vars = themeVars(dark ? theme.dark : theme.light, dark)
       assert.equal('--bt-nav-ink' in vars, false, `${id} ${dark ? 'dark' : 'light'}`)
@@ -80,6 +84,25 @@ test('a theme may name the bottom bar\'s pair, and every built-in theme leaves i
   // leaves nothing behind (it throws before the theme is stored).
   assert.throws(() => registerTheme('optional-check', { label: 'x', light: { ...THEMES.deepseek.light, navInk: 'grey' }, dark: THEMES.deepseek.dark }),
     /light\.navInk must be a #rrggbb color/)
+})
+
+// WorkBuddy names the bar's pair, and both of its values are adjustments: the app's own unselected ink
+// measured 4.35:1 in dark and 2.82:1 in light, under the floor this skin holds control text to. The
+// pair is the one theme value a reader can check arithmetically, so it is checked here.
+test('the theme that names the bottom bar\'s pair clears the floor, in both modes', () => {
+  const contrast = (one, two) => {
+    const [ink, paper] = [luminance(one), luminance(two)].sort((a, b) => b - a)
+    return (ink + 0.05) / (paper + 0.05)
+  }
+  const workbuddy = THEMES.workbuddy
+  assert.ok(workbuddy, 'the theme is registered')
+  for (const [mode, dark] of [[workbuddy.light, false], [workbuddy.dark, true]]) {
+    for (const key of ['navInk', 'navOn']) {
+      // The bar wears the page colour, so the page colour is the paper under both.
+      const ratio = contrast(mode[key], mode.bg)
+      assert.ok(ratio >= 4.5, `${key} ${dark ? 'dark' : 'light'}: ${ratio.toFixed(2)}:1`)
+    }
+  }
 })
 
 // A theme for an app with no dark mode ships none: no dark block, so the base sheet's own -- the
