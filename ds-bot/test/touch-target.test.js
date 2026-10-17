@@ -133,7 +133,6 @@ const WORKLIST = new Map([
   ['.bt-account', '36×36'],
   ['.bt-theme-chip', 'P2 -- 盒子就是画面，给 44 会改观感，需设计决定 (Lead: keep as a recorded debt)'],
   ['.bt-mem-head .bt-icon-btn', '32×32'],
-  ['[data-chat-flow-kind=user] [class*="_actions"] button', 'P2 -- 盒子就是画面，给 44 会改观感，需设计决定 (Lead: keep as a recorded debt)'],
   ['.bt-news-x', '20×20'],
   ['.bt-us-day>b', 'P2 -- 盒子就是画面，给 44 会改观感，需设计决定 (Lead: keep as a recorded debt)'],
   ['.bt-us-stub', '4×4'],

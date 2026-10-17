@@ -2082,26 +2082,12 @@ body[data-bt-room] [data-composer-card]:has(button[class*="_primary"]:disabled) 
 [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
 .bt-q{order:1}
 div:has(> nav [class*="_marks"]){display:none!important}
-/* Every user-side bubble (sent, steering mid-turn, not yet admitted, question replies)
-   takes its surface and its text from the one --bt-user pair: a skin that repaints
-   the host's bubble surface alone would otherwise leave the text unreadable. */
-[class*="_userRow"] [class*="_bubble"],[data-chat-flow-kind=question-reply] [class*="_bubble"],[data-chat-flow-kind=command-input] [class*="_bubble"]{background:var(--bt-user)!important;color:var(--bt-user-ink)!important;border-radius:18px!important;padding:7px 12px!important;font-size:var(--dsh-content-font-size,14px)!important;line-height:calc(var(--dsh-content-font-size,14px) + 8px)!important}
-[class*="_userRow"] [class*="_bubble"] [class*="_markdown"],[class*="_userRow"] [class*="_bubble"] a{color:inherit}
-/* Sent messages get the hover toolbar below; steering and unsent bubbles keep none. */
-[class*="_userRow"] [class*="_actions"]{display:none!important}
-[data-chat-flow-kind=user] [class*="_userRow"]{flex-direction:row-reverse;align-items:center;justify-content:flex-start}
-[data-chat-flow-kind=user] [class*="_actions"]{display:flex!important;height:24px!important;gap:2px!important;opacity:0!important;visibility:hidden;transition:opacity .12s ease,visibility .12s!important;flex:none}
-[data-chat-flow-kind=user] [class*="_userRow"]:focus-within [class*="_actions"]{opacity:1!important;visibility:visible}
-@media (hover:hover){
-[data-chat-flow-kind=user] [class*="_userRow"]:hover [class*="_actions"]{opacity:1!important;visibility:visible}
-}
-[data-chat-flow-kind=user] [class*="_actions"] [class*="_timeStart"]{display:none}
-[data-chat-flow-kind=user] [class*="_actions"] button{width:24px;height:24px;border-radius:6px;color:var(--bt-ink-2)}
-
-@media (hover:hover){
-[data-chat-flow-kind=user] [class*="_actions"] button:hover{background:var(--bt-hover);color:var(--bt-ink)}
-}
-[data-chat-flow-kind=user] [class*="_actions"] svg{width:15px;height:15px}
+/* User-side bubbles are drawn by our own cells now: sent and steering messages by
+   UserMessageCell (user-message.js, whose .bt-ubody carries the bubble's surface, the
+   --bt-user pair, 18px/7px 12px and the same type scale) and question replies by
+   AnsweredCell. The shell's _userRow rows, _bubble and _actions toolbar therefore
+   never render, so the rules that used to repaint them are gone with them; the copy key
+   lives in the cell as .bt-utools. */
 .bt-q-inline{display:flex;margin:4px 0 6px}
 [data-chat-flow-kind=assistant-step]+[data-step-process]:has(.bt-q-inline){margin-top:0!important}
 [data-chat-flow-kind=question-reply]:has(.bt-q-inline),[data-chat-group-key]:has([data-chat-flow-kind=question-reply] .bt-q-inline),[data-chat-group-key]:has(.bt-q-gone){margin-top:0!important}

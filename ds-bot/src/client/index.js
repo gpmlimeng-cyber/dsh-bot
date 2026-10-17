@@ -290,24 +290,21 @@ export function apply(ctx) {
     return roster.subscribe(sync)
   }, 'ds-bot: file previews')
 
-  // Mentions wear each Bot's color and character silhouette (or its photo). A message
-  // DSH still draws itself, while it waits to be sent or to join a running turn, shows
-  // "@Name" as a file reference; one whose label is a whole Bot name wears the Bot's
-  // mark there too (a name with a space is cut by DSH, so it stays as DSH draws it).
+  // Mentions wear each Bot's color and character silhouette (or its photo). The marks
+  // ride the links DSH's markdown draws (`MENTION_ORIGIN` hrefs); the shell's own user
+  // rows are all drawn by UserMessageCell now (user-message.js), whose "@Name" is the
+  // `.bt-umention` button there, so no `_userRow` chip selector is needed here.
   const installMentions = () => {
     const style = installStyles('', 'mentions')
     let last = ''
     const render = () => {
       const next = roster.getSnapshot().bots.map((bot) => {
         const anchor = `.bt-bubble a[href="${MENTION_ORIGIN}${bot.id}"]`
-        const chip = /\s/.test(bot.name) ? '' : `[class*="_userRow"] [data-ref-chip="file"][title="@${bot.name.replace(/["\\]/g, '\\$&')}" i]`
         const look = lookOf(bot)
-        const marks = chip ? `${anchor}::before,${chip}::before` : `${anchor}::before`
         const mark = look.image
-          ? `${marks}{background:center/cover url("${look.image}");-webkit-mask:none;mask:none;border-radius:50%}`
-          : `${marks}{background:${paintCss(look.color)};-webkit-mask-image:${maskOf(look.shape)};mask-image:${maskOf(look.shape)}}`
-        const chipBase = chip ? `${chip}{color:inherit;font-weight:600}${chip}>svg{display:none}${chip}::before{content:"";display:inline-block;flex:none;width:16px;height:16px;margin-right:3px;vertical-align:-3px;-webkit-mask:${DEFAULT_MASK} center/contain no-repeat;mask:${DEFAULT_MASK} center/contain no-repeat}` : ''
-        return `${anchor}{color:${inkText(look.color)}}${chipBase}${mark}`
+          ? `${anchor}::before{background:center/cover url("${look.image}");-webkit-mask:none;mask:none;border-radius:50%}`
+          : `${anchor}::before{background:${paintCss(look.color)};-webkit-mask-image:${maskOf(look.shape)};mask-image:${maskOf(look.shape)}}`
+        return `${anchor}{color:${inkText(look.color)}}${mark}`
       }).join('\n')
       if (next !== last) style.textContent = last = next
     }
