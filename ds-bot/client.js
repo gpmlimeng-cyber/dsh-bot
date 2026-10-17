@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 93aec4fa
+// Source fingerprint: b94381b5
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2920,7 +2920,15 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 .bt-connector-error{padding-left:48px;font-size:12px;line-height:16px;color:var(--bt-danger)}
 
 /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
-   shell offers them and CSS-module name suffixes elsewhere. */
+   shell offers them and CSS-module name suffixes elsewhere.
+   These four hide the shell's copies; they cannot be dropped even though the team view
+   draws the same things (sidebar.js:440 brand, :456 New key, :471 the wide column's key,
+   and the row list below): the slot fills only the shell sidebar's region area, and the
+   shell still renders its own logo row, new-chat key and panel list around it
+   (dsh-client-ui-sidebar/lib/client.js:253 logo row, :301 new chat, :327 panel list,
+   :341 the sidebar.workspaces slot). Occupying the slot never removes them, so without
+   these rules the sidebar shows two brands and two New keys. The tests pin each one
+   (test/sidebar-switch.test.js: new-chat and brand hidden, the Windows logo row). */
 [class*="_newSession"],nav[class*="_panelList"],[class*="_logoRow"]>[class*="_brand"],[class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
 /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
    collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
@@ -4165,26 +4173,12 @@ body[data-bt-room] [data-composer-card]:has(button[class*="_primary"]:disabled) 
 [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
 .bt-q{order:1}
 div:has(> nav [class*="_marks"]){display:none!important}
-/* Every user-side bubble (sent, steering mid-turn, not yet admitted, question replies)
-   takes its surface and its text from the one --bt-user pair: a skin that repaints
-   the host's bubble surface alone would otherwise leave the text unreadable. */
-[class*="_userRow"] [class*="_bubble"],[data-chat-flow-kind=question-reply] [class*="_bubble"],[data-chat-flow-kind=command-input] [class*="_bubble"]{background:var(--bt-user)!important;color:var(--bt-user-ink)!important;border-radius:18px!important;padding:7px 12px!important;font-size:var(--dsh-content-font-size,14px)!important;line-height:calc(var(--dsh-content-font-size,14px) + 8px)!important}
-[class*="_userRow"] [class*="_bubble"] [class*="_markdown"],[class*="_userRow"] [class*="_bubble"] a{color:inherit}
-/* Sent messages get the hover toolbar below; steering and unsent bubbles keep none. */
-[class*="_userRow"] [class*="_actions"]{display:none!important}
-[data-chat-flow-kind=user] [class*="_userRow"]{flex-direction:row-reverse;align-items:center;justify-content:flex-start}
-[data-chat-flow-kind=user] [class*="_actions"]{display:flex!important;height:24px!important;gap:2px!important;opacity:0!important;visibility:hidden;transition:opacity .12s ease,visibility .12s!important;flex:none}
-[data-chat-flow-kind=user] [class*="_userRow"]:focus-within [class*="_actions"]{opacity:1!important;visibility:visible}
-@media (hover:hover){
-[data-chat-flow-kind=user] [class*="_userRow"]:hover [class*="_actions"]{opacity:1!important;visibility:visible}
-}
-[data-chat-flow-kind=user] [class*="_actions"] [class*="_timeStart"]{display:none}
-[data-chat-flow-kind=user] [class*="_actions"] button{width:24px;height:24px;border-radius:6px;color:var(--bt-ink-2)}
-
-@media (hover:hover){
-[data-chat-flow-kind=user] [class*="_actions"] button:hover{background:var(--bt-hover);color:var(--bt-ink)}
-}
-[data-chat-flow-kind=user] [class*="_actions"] svg{width:15px;height:15px}
+/* User-side bubbles are drawn by our own cells now: sent and steering messages by
+   UserMessageCell (user-message.js, whose .bt-ubody carries the bubble's surface, the
+   --bt-user pair, 18px/7px 12px and the same type scale) and question replies by
+   AnsweredCell. The shell's _userRow rows, _bubble and _actions toolbar therefore
+   never render, so the rules that used to repaint them are gone with them; the copy key
+   lives in the cell as .bt-utools. */
 .bt-q-inline{display:flex;margin:4px 0 6px}
 [data-chat-flow-kind=assistant-step]+[data-step-process]:has(.bt-q-inline){margin-top:0!important}
 [data-chat-flow-kind=question-reply]:has(.bt-q-inline),[data-chat-group-key]:has([data-chat-flow-kind=question-reply] .bt-q-inline),[data-chat-group-key]:has(.bt-q-gone){margin-top:0!important}
@@ -17427,11 +17421,12 @@ var USER_MESSAGE_CSS = `
 .bt-ufile-name{font-size:14px;line-height:22px;font-weight:500;color:var(--bt-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-ufile-meta{font-size:12px;line-height:15px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-urefs{font-size:13px;line-height:18px;color:var(--bt-ink-2)}
-.bt-utools{display:flex;flex:none;gap:2px;opacity:0;visibility:hidden;transition:opacity .12s ease,visibility .12s}
+.bt-utools{display:flex;flex:none;gap:2px;height:24px;opacity:0;visibility:hidden;transition:opacity .12s ease,visibility .12s}
 .bt-umsg:focus-within .bt-utools{opacity:1;visibility:visible}
 @media (hover:hover){
 .bt-umsg:hover .bt-utools{opacity:1;visibility:visible}
 }
+.bt-utools .bt-tool svg{width:15px;height:15px}
 `;
 
 // src/client/approval-notices.js
@@ -18054,7 +18049,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "93aec4fa" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "b94381b5" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
@@ -18296,12 +18291,9 @@ function apply(ctx) {
     const render = () => {
       const next = roster.getSnapshot().bots.map((bot) => {
         const anchor = `.bt-bubble a[href="${MENTION_ORIGIN}${bot.id}"]`;
-        const chip = /\s/.test(bot.name) ? "" : `[class*="_userRow"] [data-ref-chip="file"][title="@${bot.name.replace(/["\\]/g, "\\$&")}" i]`;
         const look = lookOf(bot);
-        const marks = chip ? `${anchor}::before,${chip}::before` : `${anchor}::before`;
-        const mark = look.image ? `${marks}{background:center/cover url("${look.image}");-webkit-mask:none;mask:none;border-radius:50%}` : `${marks}{background:${paintCss(look.color)};-webkit-mask-image:${maskOf(look.shape)};mask-image:${maskOf(look.shape)}}`;
-        const chipBase = chip ? `${chip}{color:inherit;font-weight:600}${chip}>svg{display:none}${chip}::before{content:"";display:inline-block;flex:none;width:16px;height:16px;margin-right:3px;vertical-align:-3px;-webkit-mask:${DEFAULT_MASK} center/contain no-repeat;mask:${DEFAULT_MASK} center/contain no-repeat}` : "";
-        return `${anchor}{color:${inkText(look.color)}}${chipBase}${mark}`;
+        const mark = look.image ? `${anchor}::before{background:center/cover url("${look.image}");-webkit-mask:none;mask:none;border-radius:50%}` : `${anchor}::before{background:${paintCss(look.color)};-webkit-mask-image:${maskOf(look.shape)};mask-image:${maskOf(look.shape)}}`;
+        return `${anchor}{color:${inkText(look.color)}}${mark}`;
       }).join("\n");
       if (next !== last) style.textContent = last = next;
     };

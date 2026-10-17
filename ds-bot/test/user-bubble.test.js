@@ -153,7 +153,9 @@ test('a user message stays readable when a dark skin repaints the host bubble', 
   for (const id of ['deepseek', 'mono', 'paper', 'moonlight', 'workbuddy']) {
     const vars = { ...themeVars(allThemes()[id], true), ...DARK_SKIN }
     const page = vars['--bt-main']
-    for (const selector of ['.bt-ubody', '[class*="_userRow"] [class*="_bubble"]']) {
+    // The sent-message bubble is UserMessageCell's now (user-message.js); the shell's
+    // `_userRow` rows never render, so the cell's own rule is the one that must stay readable.
+    for (const selector of ['.bt-ubody']) {
       const { body } = ruleFor(selector)
       const paper = over(resolve(surface(body), vars), page)
       const ink = over(resolve(declared(body, 'color'), vars), paper)
@@ -162,8 +164,8 @@ test('a user message stays readable when a dark skin repaints the host bubble', 
   }
 })
 
-test('the surface wins over the host bubble rule that reads the skin variable', () => {
-  const { body } = ruleFor('[class*="_userRow"] [class*="_bubble"]')
-  assert.equal(surface(body), 'var(--bt-user)!important')
-  assert.equal(declared(body, 'color'), 'var(--bt-user-ink)!important')
+test('the user bubble reads the --bt-user pair, never the host bubble variable', () => {
+  const { body } = ruleFor('.bt-ubody')
+  assert.equal(surface(body), 'var(--bt-user)')
+  assert.equal(declared(body, 'color'), 'var(--bt-user-ink)')
 })
