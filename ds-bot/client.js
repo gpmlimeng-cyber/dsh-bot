@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: b94381b5
+// Source fingerprint: d048806b
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -7401,18 +7401,18 @@ function useRowEntrances(replacing) {
     };
   }, []);
 }
+var showsActivity = ({ running, streaming, relaying, bot }) => running && !streaming && !relaying && bot !== void 0;
 function ActivityIndicator({ sessionId, useRoster, useSessionStatus, useLive, useSession, actions }) {
   const roster = useRoster((value) => value);
   const running = useSessionStatus((map) => map.get(sessionId)?.running === true);
   const liveKey = useLive((state) => JSON.stringify(state[sessionId] ?? {}));
   const pendingInput = useSession((snapshot) => Math.max(0, ...(snapshot?.pendingSubmissions ?? []).filter((sub) => sub.placement !== "queued").map((sub) => sub.time)));
   const bot = roster.byId[sessionId];
-  const room2 = roster.roomsById[sessionId];
   const entries2 = (0, import_react11.useMemo)(() => Object.values(JSON.parse(liveKey)), [liveKey]);
   const streaming = entries2.some((entry) => entry.text);
   const tools = entries2.filter((entry) => !entry.text).sort((a, b) => a.at - b.at);
   const relaying = tools.some((entry) => entry.relay);
-  const visible = running && !streaming && !relaying && (bot !== void 0 || room2 !== void 0);
+  const visible = showsActivity({ running, streaming, relaying, bot });
   const tool = tools.at(-1);
   const inputRef = (0, import_react11.useRef)(0);
   const inputAt = Math.max(inputRef.current, pendingInput);
@@ -7477,7 +7477,7 @@ function ActivityIndicator({ sessionId, useRoster, useSessionStatus, useLive, us
   return (0, import_react_dom2.createPortal)((0, import_react11.createElement)(
     "div",
     { className: "bt-typing", "data-exiting": phase === "out" ? "" : void 0, "aria-hidden": true },
-    bot ? (0, import_react11.createElement)(BotMark, { bot, size: 28, state: markState.current, live: true, pokeable: true }) : (0, import_react11.createElement)(RoomAvatar, { room: room2, roster, size: 28 }),
+    (0, import_react11.createElement)(BotMark, { bot, size: 28, state: markState.current, live: true, pokeable: true }),
     (0, import_react11.createElement)(
       "span",
       { className: "bt-typing-text" },
@@ -18049,7 +18049,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "b94381b5" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "d048806b" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
