@@ -543,10 +543,11 @@ export function TurnTailCell({ turn: location, sessionId, useRoster, useTurnCloc
     const start = nextTurnStart(state[sessionId] ?? {}, turn)
     return start !== undefined && start > visit.seen && start <= visit.entered
   })
-  // The framework's cell bag carries this hook (the same one every other cell here takes); a unit
-  // test that builds this cell by hand may leave it out, and then a row simply has no configured
-  // folder to name and keeps the folder the file actually sits in.
-  const roster = useRoster?.()
+  // The framework's cell bag carries this hook (the same one every other cell here takes). It is a
+  // selector hook -- the entry's `hooks` sources arrive as SnapshotSelectorHooks -- so it takes its
+  // selector like every other call site does; calling it bare crashed the whole entry with
+  // "TypeError: l is not a function", once per turn tail, on the device.
+  const roster = useRoster?.(value => value)
   // The workspace a delivered file came out of is the session's own configured folder: a Bot's
   // work_dir, or the group chat's when this is a room. The panel's team-wide list has no such
   // owner on its records, so it keeps naming the folders it can see (deliverables.js).

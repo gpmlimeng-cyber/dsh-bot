@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { runInNewContext } from 'node:vm'
 import { build } from 'esbuild'
@@ -113,4 +114,38 @@ test('a Bot reply in its own chat stays whole up to 20,000 characters', () => {
   const long = Array.from({ length: 60 }, (_, index) => `Line ${index + 1} of a long answer.`).join('\n')
   assert.equal(reply(long), long)
   assert.equal(reply('w'.repeat(25_000)), 'w'.repeat(600))
+})
+
+// 庚: an entry's `hooks` sources reach the cell as SnapshotSelectorHooks (the slot system maps each
+// source to `use<N>` of that type), so a cell that calls one with no selector crashes its whole
+// entry. On the device that was "TypeError: l is not a function", once per turn tail, swallowed by
+// the slot's boundary -- taking the time separators, the unread divider and the tail's deliverable
+// cards with it. The stub below is the framework's own shape.
+test('the turn tail hands the roster hook its selector', () => {
+  effects.length = 0
+  const seen = []
+  const useRoster = (select) => {
+    assert.equal(typeof select, 'function', 'a bag hook takes a selector; a bare call is what a wrapper cannot survive')
+    seen.push(select)
+    return select(roster)
+  }
+  const out = TurnTailCell({
+    turn: finished,
+    sessionId: 'b',
+    useRoster,
+    useTurnClock: select => select({ b: { 3: { first: 1_000, end: 2_000 }, 4: { first: 2_000 + 60 * 60 * 1000 } } }),
+    useUi: () => undefined,
+    actions: { noteTurnTime() {} },
+  })
+  assert.equal(seen.length, 1)
+  assert.equal(seen[0](roster), roster)
+  assert.equal(find(out, node => node.props?.className === 'bt-time-sep').length, 1)
+})
+
+// The same shape in another cell would be equally invisible, so the source is swept for it: these
+// names all arrive through an entry's `inject` face (index.js's `hooks` bag).
+test('no cell calls a bag hook without its selector', () => {
+  const cells = readFileSync(new URL('../src/client/cells.js', import.meta.url), 'utf8')
+  const bag = /use(?:Nav|Roster|Ui|Activity|Work|MemoryNews|Registry|TurnClock|Live|Cards|BrowserPages|BrowserTabs|Surface|Update)(?:\?\.)?\(\)/g
+  assert.deepEqual(cells.match(bag) ?? [], [], 'a bag hook is a SnapshotSelectorHook: the bare call is what crashed the entry')
 })
