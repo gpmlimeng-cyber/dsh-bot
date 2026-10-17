@@ -689,13 +689,6 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
   const pending = done || !live.speaking ? [] : [live.speaking]
   const speakerTool = useWork?.(work => work.bots?.[live.speaking]?.tool) ?? undefined
   const speakerDoing = useWork?.(work => (work.bots?.[live.speaking]?.tool ? workPhrase(work.bots[live.speaking]) : undefined)) ?? undefined
-  // Nothing to draw yet is not "draw nothing": this cell is where the group's replies live, so an
-  // empty node hands the row back to the shell -- the raw `group_relay · {}` over the messages,
-  // which is the user's report. Nor is it a void: one short line says which of the two states this
-  // is, and it uses the event row the other group notices already wear.
-  if (replies.length === 0 && pending.length === 0) {
-    return h('div', { className: 'bt-event' }, t(done ? 'No replies in this round.' : 'Working on it…'))
-  }
   const room = roster.roomsById[sessionId]
   // A decision the room admin asks for rides the bar above the composer instead of the transcript
   // (decide.js has the protocol): the block comes out of the reply it was written in, and the newest
@@ -716,6 +709,14 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
     .filter(decision => !answered.includes(decision.key))
     .at(-1) ?? null
   useEffect(() => { if (ask !== null) actions.proposeDecision?.(sessionId, ask) }, [ask?.key, sessionId])
+  // An empty round still occupies our row -- returning nothing here would leave the relay with no
+  // line at all -- so one short line says which of the two states this is, in the event row the
+  // other group notices wear. It stays below every hook: a return above the effect above makes the
+  // hook count grow when the replies arrive, React refuses that render, and the shell retires this
+  // slot entry for the rest of the page (the raw `group_relay · {}` row takes the cell over).
+  if (replies.length === 0 && pending.length === 0) {
+    return h('div', { className: 'bt-event' }, t(done ? 'No replies in this round.' : 'Working on it…'))
+  }
   return h('div', { className: 'bt-group-replies' },
     items.map(({ reply, index, texts, deliverables }) => {
       const bot = roster.byId[reply.botId] ?? { id: reply.botId, name: reply.name, color: reply.color ?? 'gray' }

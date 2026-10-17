@@ -23,12 +23,23 @@ let effects = []
 const sets = []
 const Fragment = Symbol('Fragment')
 const h = (type, props, ...children) => ({ type, props: { ...props, children } })
+// React refuses a component whose hook count changes between its renders, and the
+// shell answers that crash by retiring the whole slot entry: the cell stops drawing
+// for the rest of the page, not just that node. The stub counts hooks per component
+// so a test can catch that shape -- a return sitting above a later hook.
+let hookOwner = null
+let phaseCounts = null
+const countHook = () => {
+  if (hookOwner !== null && phaseCounts !== null) phaseCounts.set(hookOwner, (phaseCounts.get(hookOwner) ?? 0) + 1)
+}
 const react = {
   createElement: h, Fragment,
-  useEffect: (effect) => { effects.push(effect) },
-  useLayoutEffect: (effect) => { effects.push(effect) },
-  useState: initial => [typeof initial === 'function' ? initial() : initial, value => sets.push(value)],
-  useMemo: make => make(), useRef: current => ({ current }), useId: () => 'card-id',
+  useEffect: (effect) => { countHook(); effects.push(effect) },
+  useLayoutEffect: (effect) => { countHook(); effects.push(effect) },
+  useState: initial => { countHook(); return [typeof initial === 'function' ? initial() : initial, value => sets.push(value)] },
+  useMemo: make => { countHook(); return make() },
+  useRef: current => { countHook(); return { current } },
+  useId: () => { countHook(); return 'card-id' },
 }
 const timers = new Set()
 const module = { exports: {} }
@@ -56,7 +67,13 @@ const expand = (node) => {
   if (node === null || node === undefined || typeof node === 'boolean') return null
   if (Array.isArray(node)) return node.map(expand)
   if (typeof node !== 'object') return node
-  if (typeof node.type === 'function') return expand(node.type(node.props))
+  if (typeof node.type === 'function') {
+    const owner = hookOwner
+    hookOwner = node.type
+    const out = node.type(node.props)
+    hookOwner = owner
+    return expand(out)
+  }
   return { ...node, props: { ...node.props, children: expand(node.props.children) } }
 }
 const text = (node) => {
@@ -105,6 +122,38 @@ const show = (root, options) => {
   return out
 }
 const shown = (root, options) => text(show(root, options))
+
+// A live turn renders the same cell twice: first while the round's result is still
+// to come, then with the replies in it. React counts hooks per component across
+// those renders, so both passes share one counter and the second may not grow.
+const phases = (first, second) => {
+  const sizes = new Map()
+  const run = (root) => {
+    phaseCounts = new Map()
+    try {
+      const out = expand(ToolCell(props(root)))
+      for (const [owner, n] of phaseCounts) {
+        const before = sizes.get(owner)
+        if (before === undefined) sizes.set(owner, n)
+        else if (before !== n) throw new Error(`Rendered ${n} hooks where the previous render had ${before}: ${owner.name || 'component'}`)
+      }
+      return out
+    } finally {
+      phaseCounts = null
+      effects = []
+    }
+  }
+  return { first: run(first), second: run(second) }
+}
+
+test('a relay that starts with nothing to show keeps its hook order when the replies arrive', () => {
+  const out = phases(
+    call('group_relay', 'relay-1', { running: true }),
+    call('group_relay', 'relay-1', { content: { replies: [{ botId: 'writer', text: 'Relay reply.' }] } }),
+  )
+  assert.match(text(out.first), /Working on it/)
+  assert.match(text(out.second), /Writer.*Relay reply\./)
+})
 
 // One finished call of every kind ToolCell draws, and what it shows.
 const BRANCHES = [
