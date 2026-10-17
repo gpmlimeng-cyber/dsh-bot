@@ -4,7 +4,7 @@
 // a report written after a restart still has them. Every text is cleaned of saved keys,
 // credential-like strings and the home folder before it is kept and again before it is
 // shown, because the report is meant for a public issue.
-import { readFileSync } from 'node:fs'
+import { readFileSync, realpathSync } from 'node:fs'
 import { appendFile, mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises'
 import { arch, homedir, platform, release } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -36,16 +36,39 @@ const CREDENTIALS = [
   [/(["']?(?:api[_-]?key|authorization|x-api-key|password|secret)["']?\s*[:=]\s*["']?)[^\s"',}]{6,}/gi, '$1[hidden]'],
 ]
 
+// One folder is spelled more than once on a device: `homedir()` can name an alias while a stack
+// trace carries the real path (on Android `/data/user/0/…` against `/data/data/…` are the same
+// directory), so replacing only the spelling this process was handed left a full home path in the
+// report. Every spelling in play is registered -- the real path included -- longest first, because
+// one spelling can be a prefix of another. Memoized: this runs for every log line.
+const spellingsOf = new Map()
+function homeSpellings(home) {
+  const cached = spellingsOf.get(home)
+  if (cached !== undefined) return cached
+  const paths = new Set([home])
+  try {
+    paths.add(realpathSync(home))
+  } catch {
+    // A home that cannot be resolved (already gone, or a caller's stand-in path) keeps its own.
+  }
+  const out = new Set()
+  for (const path of paths) {
+    if (typeof path !== 'string' || path.length <= 1) continue
+    out.add(path)
+    // JSON and Windows paths spell the same folder with forward or doubled slashes.
+    out.add(path.replace(/\\/g, '/'))
+    out.add(path.replace(/\\/g, '\\\\'))
+  }
+  const longestFirst = [...out].sort((a, b) => b.length - a.length)
+  spellingsOf.set(home, longestFirst)
+  return longestFirst
+}
+
 export function cleanText(text, { redact = value => value, home = homedir() } = {}) {
   let out = redact(String(text ?? ''))
   for (const [pattern, replacement] of CREDENTIALS) out = out.replace(pattern, replacement)
   if (home && home.length > 1) {
-    out = out.replace(new RegExp(quote(home), 'g'), '~')
-    // JSON and Windows paths spell the same folder with doubled or forward slashes.
-    const slashes = home.replace(/\\/g, '/')
-    if (slashes !== home) out = out.replace(new RegExp(quote(slashes), 'g'), '~')
-    const doubled = home.replace(/\\/g, '\\\\')
-    if (doubled !== home) out = out.replace(new RegExp(quote(doubled), 'g'), '~')
+    for (const spelling of homeSpellings(home)) out = out.replace(new RegExp(quote(spelling), 'g'), '~')
   }
   return out.length > TEXT_MAX ? `${out.slice(0, TEXT_MAX)}…` : out
 }
