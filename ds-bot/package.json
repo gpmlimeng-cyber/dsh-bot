@@ -1,23 +1,27 @@
 {
-  "name": "ds-bot",
-  "version": "0.1.7",
-  "description": "DS Bot: a team of long-lived Bots for DeepSeek Harness, with Main Bots, Bot-to-Bot messages and group chats",
+  "name": "@gpmlimeng-cyber/ds-bot-mobile",
+  "version": "0.2.0",
+  "description": "DS Bot Mobile: a team of long-lived Bots on DeepSeek Harness — Main Bots, Bot-to-Bot messages and group chats, with a mobile-first skin. Fork of Fei2411/DeepSeek-Bot (ds-bot).",
   "keywords": [
-    "dsh-plugin",
-    "deepseek-harness",
-    "dsh",
     "deepseek",
+    "deepseek-harness",
+    "harness",
+    "dsh",
+    "dsh-plugin",
     "bot",
-    "multi-agent",
-    "agents"
+    "bots",
+    "agents",
+    "team",
+    "group-chat",
+    "mobile"
   ],
-  "homepage": "https://github.com/Fei2411/DeepSeek-Bot#readme",
+  "homepage": "https://github.com/gpmlimeng-cyber/dsh-bot#readme",
   "bugs": {
-    "url": "https://github.com/Fei2411/DeepSeek-Bot/issues"
+    "url": "https://github.com/gpmlimeng-cyber/dsh-bot/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Fei2411/DeepSeek-Bot.git",
+    "url": "git+https://github.com/gpmlimeng-cyber/dsh-bot.git",
     "directory": "ds-bot"
   },
   "license": "Apache-2.0",
@@ -36,8 +40,10 @@
     "client.js",
     "web-search.js",
     "cordis.patch.yml",
+    "scripts/check-shell-contract.mjs",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "NOTICE"
   ],
   "scripts": {
     "prepack": "node scripts/build-client.mjs",
@@ -48,20 +54,58 @@
     "check": "sh dev/check.sh"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "*",
-    "@deepseek-ai/dsh-llm": "*",
-    "@deepseek-ai/dsh-tools": "*",
-    "@deepseek-ai/dsh-web": "*"
+    "@deepseek-ai/cordis": "~4.0.4",
+    "@deepseek-ai/dsh-llm": "^0.2.0-rc.1",
+    "@deepseek-ai/dsh-tools": "^0.2.0-rc.1",
+    "@deepseek-ai/dsh-web": "^0.2.0-rc.1",
+    "@deepseek-ai/dsh-client-ui-primitives": "^0.2.0-rc.1",
+    "react": "^18.2.0"
   },
   "dsh": {
-    "client": {
-      "platform": "web"
-    },
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    },
+    "engines": {
+      "dsh": ">=0.2.0-rc.1"
+    },
+    "compatibility": {
+      "dshReleases": {
+        "0.2.0-rc.2": "compatible"
+      }
     }
   },
   "devDependencies": {
     "esbuild": "0.28.2"
+  },
+  "author": "gpmlimeng-cyber",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-web": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-ui-primitives": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   }
 }
