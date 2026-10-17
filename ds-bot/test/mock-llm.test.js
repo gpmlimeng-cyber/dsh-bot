@@ -7,6 +7,11 @@ import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 const MOCK = fileURLToPath(new URL('../dev/mock-llm.mjs', import.meta.url))
+// The child is a Node script, and on this machine `process.execPath` is not node: it is
+// `/apex/com.android.runtime/bin/linker64`, the dynamic linker node itself is started through, so
+// spawning it with a .mjs argument exits 1 before the mock ever listens. `scripts/lint.mjs` resolves
+// the same way for the same reason; DSH_MOCK_NODE overrides it where PATH differs.
+const NODE = process.env.DSH_MOCK_NODE ?? (process.execPath.includes('linker64') ? 'node' : process.execPath)
 
 // One Anthropic-shaped request, its SSE reply folded into { text, tools }.
 async function call(url, messages, names = ['list_bots']) {
@@ -37,7 +42,7 @@ function fold(messages, out) {
 
 async function startMock(t) {
   const home = mkdtempSync(join(tmpdir(), 'dsb-mock-'))
-  const mock = spawn(process.execPath, [MOCK], {
+  const mock = spawn(NODE, [MOCK], {
     env: { ...process.env, MOCK_PORT: '0', MOCK_LOG: join(home, 'mock.jsonl'), MOCK_DELAY_MS: '5', MOCK_JITTER_MS: '0' },
   })
   t.after(() => { mock.kill(); rmSync(home, { recursive: true, force: true, maxRetries: 5 }) })
