@@ -40,6 +40,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "prepack": "node scripts/build-client.mjs",
     "build": "node scripts/build-client.mjs",
     "test": "node --import ./test/harness-resolve.mjs --experimental-test-isolation=none --test \"test/*.test.js\"",
     "lint": "node scripts/lint.mjs",
