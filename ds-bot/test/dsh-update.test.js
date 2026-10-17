@@ -11,7 +11,10 @@ afterEach(() => { globalThis.fetch = realFetch })
 
 // The dsh-update module alone: a stub loader says the running DSH version, a
 // stub plugin manager says how the bot was installed, and fetch is scripted.
+// 这些用例描述的是桌面/CI 行为（可一键升级）；Android 的"只读检查"由下面
+// 单独的一条用例覆盖，所以默认把 manualDshUpgrade 关掉。
 function start({ current = '0.1.0', source, answers = {}, app = false, spawn, config = {}, profileDir }) {
+  config = { manualDshUpgrade: false, ...config }
   const fetched = []
   const spawns = []
   const warnings = []
@@ -105,6 +108,8 @@ test('a git or local install asks the public repo\'s latest release for its decl
     assert.deepEqual(fetched, [
       'https://api.github.com/repos/gpmlimeng-cyber/dsh-bot/releases/latest',
       'https://raw.githubusercontent.com/gpmlimeng-cyber/dsh-bot/v9.0.0/ds-bot/package.json',
+      // 官方引擎最新版：固定查 npm registry 的 latest，与上面的插件来源分开
+      'https://registry.npmjs.org/@deepseek-ai/dsh/latest',
     ])
   }
 })
@@ -141,4 +146,23 @@ test('a failed npm install reports why and can be tried again', async () => {
   rt.dshUpdateStart()
   await flush()
   assert.equal((await rt.dshUpdateCheck()).phase, 'installed')
+})
+
+test('on Android the engine check is read-only: official version shown, no install offered', async () => {
+  const { rt } = start({
+    current: '0.1.0',
+    source: 'ds-bot@0.1.0',
+    answers: {
+      'https://registry.npmjs.org/@deepseek-ai/dsh/latest': { version: '9.9.9' },
+      'https://registry.npmjs.org/ds-bot/latest': { version: '0.1.0' },
+    },
+    config: { manualDshUpgrade: true },
+  })
+  const view = await rt.dshUpdateCheck()
+  assert.equal(view.manualOnly, true)
+  assert.equal(view.available, false, 'Android must never offer a one-click engine swap')
+  assert.deepEqual(view.official, {
+    version: '9.9.9',
+    releasesUrl: 'https://github.com/deepseek-ai/dsh/releases',
+  })
 })

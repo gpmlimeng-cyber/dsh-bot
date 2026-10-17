@@ -1,5 +1,13 @@
 # ds-bot
 
+> **Fork notice.** This is a secondary-development fork of
+> [Fei2411/DeepSeek-Bot](https://github.com/Fei2411/DeepSeek-Bot) (Apache-2.0), maintained at
+> [gpmlimeng-cyber/dsh-bot](https://github.com/gpmlimeng-cyber/dsh-bot). Upstream authorship and
+> licence are kept; the upstream release page, issues and install paths do **not** apply here.
+> Its primary use is the embedded copy shipped inside the **DeepBot** Android shell
+> ([gpmlimeng-cyber/DeepBot](https://github.com/gpmlimeng-cyber/DeepBot)), which pins this
+> repository by commit in its `versions.env`.
+
 The DS Bot plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (dsh). It turns dsh into a team of long-lived Bots that talk to you, to each other and in group chats. See the [project page](../README.md) for an overview, install steps and screenshots.
 
 > Early release (v0.1). Features, tools and the saved data format can still change.
@@ -35,8 +43,12 @@ Tested with dsh `0.2.0-rc.2` (Web and Desktop) on Linux.
 
 The [project page](../README.md#install) has the full steps for dsh Desktop and dsh Web. In short:
 
-- dsh Desktop: Settings → Plugins → add `ds-bot` (npm), a `.tgz` file, or `github:gpmlimeng-cyber/dsh-bot#v0.1.7&path:/ds-bot`.
-- Command line: `dsh plugin --profile desktop add ds-bot` (or `--profile web`).
+- dsh Desktop: Settings → Plugins → add `github:gpmlimeng-cyber/dsh-bot#<commit>&path:/ds-bot`,
+  where `<commit>` is the sha pinned by DeepBot's `versions.env` (`DSBOT_REF`).
+- Command line: `dsh plugin --profile web add github:gpmlimeng-cyber/dsh-bot#<commit>&path:/ds-bot`.
+
+> Pin a **commit**, not a branch: the same `versions.env` must rebuild the same plugin tomorrow.
+> This fork is not published to npm under an owned scope; install it from the repository.
 
 To work on the plugin from a checkout, add it to a dsh profile as a linked dependency and a bundle:
 
@@ -249,6 +261,24 @@ dev/check.sh                             # all checks (see below)
 | `dev/characters.mjs` | Builds the characters (small 3D models traced to outlines) into the `CHARACTERS` table in `src/client/characters.js` |
 | `dev/` | Mock model, test benches, smoke test, Desktop scripts, real-model tools (steward evaluation, logging pass-through) |
 
+## Differences from upstream
+
+This fork keeps upstream behaviour and adds what the DeepBot Android shell needs:
+
+1. **Repository metadata points here.** `repository.url` / `homepage` / `bugs` and the
+   diagnostics issue link resolve to `gpmlimeng-cyber/dsh-bot`, so the plugin's own update
+   check asks this repository instead of the upstream one.
+2. **The engine check is read-only on Android.** `src/host/dsh-update.js` asks the official
+   `@deepseek-ai/dsh` registry for the newest version and the GitHub releases page for notes,
+   but never offers a one-click swap there: the Android runtime needs a set of patches
+   (`koffi`/`node-pty` stubs, `require-builtin` JS fallback, `rgPath` prefix rewrite, `flock`,
+   `apiProxy`, `webview-polyfill`, collapsed sidebar width) that an upstream release does not
+   contain. Upgrading the engine means rebuilding the runtime in the DeepBot repository.
+   Desktop/CI keeps the one-click path (`config.manualDshUpgrade: false`).
+3. **Plugin updates still come from this fork**, separately from (2) — the two sources are
+   deliberately not the same function.
+
 ## License
 
-[Apache-2.0](LICENSE)
+[Apache-2.0](LICENSE). Upstream copyright and licence are preserved; see `LICENSE` and the
+fork notice above.

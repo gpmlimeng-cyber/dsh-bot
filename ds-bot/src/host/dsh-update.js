@@ -19,6 +19,17 @@ const PKG = JSON.parse(readFileSync(new URL('../../package.json', import.meta.ur
 const APP_BOOT = '@deepseek-ai/dsh-app-boot'
 const DSH_PACKAGE = '@deepseek-ai/dsh'
 
+// 引擎版本检查固定看官方上游，与插件自身的更新来源（我们自己的仓库）分开。
+// 两件事混在一个 repoSlug() 上会让"插件检查更新"跟着跳去官方，反过来也一样。
+const OFFICIAL_DSH_NPM = 'https://registry.npmjs.org/@deepseek-ai/dsh/latest'
+const OFFICIAL_DSH_RELEASES = 'https://github.com/deepseek-ai/dsh/releases'
+
+// Android 上**不提供一键升级引擎**：本机 runtime 靠一组安卓补丁（koffi/node-pty 桩、
+// require-builtin JS 回退、rgPath 前缀改写、flock、apiProxy、webview-polyfill、
+// collapsedWidth=0）才跑得起来，而官方 release 里没有这些补丁——直接替换只会得到
+// 一个起不来的引擎。这里只给出版本号与更新日志入口。
+const ANDROID_MANUAL_ONLY = process.platform === 'android'
+
 export function install(rt) {
   const { ctx, config } = rt
   const enabled = config.updateCheck !== false
@@ -26,7 +37,11 @@ export function install(rt) {
   const status = {
     current: null, verified: null, kind: 'npm', blockedBy: null,
     checkedAt: 0, phase: 'idle', installed: null, error: null,
+    // 官方引擎最新版（只读展示用）：{ version, releasesUrl }
+    official: null,
   }
+  // 是否只允许"查看官方版本"：Android 默认是；桌面/CI 可用 config 关掉以便一键升级
+  const manualOnly = config.manualDshUpgrade === false ? false : (config.manualDshUpgrade ?? ANDROID_MANUAL_ONLY)
   let target = null
   let checking = null
   let running = null
@@ -37,8 +52,10 @@ export function install(rt) {
   const view = () => ({
     current: status.current, verified: status.verified, kind: status.kind, blockedBy: status.blockedBy,
     checkedAt: status.checkedAt, phase: status.phase, installed: status.installed, error: status.error,
+    // 官方最新版与更新日志入口（只读）；manualOnly=true 时前端应只显示"查看官方版本"
+    official: status.official, manualOnly,
     // Nothing is offered without a current version to compare against.
-    available: status.phase !== 'installed' && target !== null && status.current !== null
+    available: !manualOnly && status.phase !== 'installed' && target !== null && status.current !== null
       && status.verified !== null && status.verified !== status.current && !blocked(),
   })
 
@@ -97,6 +114,19 @@ export function install(rt) {
     } catch { return null }
   }
 
+  /**
+   * 官方引擎最新版（只读）。来源是 npm registry 的 latest，不是我们仓库的 release：
+   * 引擎版本的权威来源是上游，插件版本的权威来源才是我们自己。
+   * 返回 null 表示查不到（离线/限流），此时前端只显示"未知"，不提供任何安装动作。
+   */
+  async function officialRelease() {
+    try {
+      const manifest = await fetchJson(OFFICIAL_DSH_NPM, { 'user-agent': `${PKG.name}/${PKG.version}` })
+      const version = cleanVersion(manifest?.version)
+      return version ? { version, releasesUrl: OFFICIAL_DSH_RELEASES } : null
+    } catch { return null }
+  }
+
   async function runCheck() {
     try {
       status.current = await currentDsh()
@@ -116,6 +146,7 @@ export function install(rt) {
       target = status.current !== null && status.verified !== null && status.verified !== status.current
         ? { version: status.verified }
         : null
+      status.official = await officialRelease()
       status.error = null
     } catch (error) {
       rt.warn('ds-bot: dsh update check failed: %s', error?.message ?? error)
