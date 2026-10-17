@@ -844,6 +844,12 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
 html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
 html[data-windows-titlebar] .bt-side-collapse,html[data-platform=darwin] .bt-side-collapse{display:none}
+/* #211's "collapse sidebar" is desktop semantics. A phone's drawer top row is our own deliberate
+   three -- search, New, and the close at the row's outer end -- so the shell's switch would be a
+   fourth key doing what .bt-side-close already does (the device read: a four-key row, the same
+   collapse either way). Hidden on the phone only, exactly as the shell hides it in a Windows title
+   bar and on macOS (line above); the wide column keeps the shell's key. */
+html[data-bt-mobile] .bt-side-collapse{display:none}
 /* The footer ends in the Bot row: the whale's settings seat, then Connect plugins. Every
    other plugin's entry takes a whole row above it, in the shell's order, so none of them
    squeezes the Bot row. */

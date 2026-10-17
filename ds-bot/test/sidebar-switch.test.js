@@ -52,16 +52,16 @@ const hiding = rules.filter(rule => /display:none/.test(rule.body))
 // The shell sidebar's own markup (dsh-client-ui-sidebar SidebarRoot), reduced to what the
 // team view reshapes: the switch is in the logo row, except in a macOS desktop window,
 // where it sits in the strip by the window buttons.
-function shell({ platform, collapsed }) {
+function shell({ platform, collapsed, mobile }) {
   const darwin = platform === 'mac'
   const toggle = '<button class="x_iconButton x_toggle" aria-label="Toggle sidebar"></button>'
-  const html = `<!doctype html><html${platform === 'windows' ? ' data-windows-titlebar' : ''}${darwin ? ' data-platform="darwin"' : ''}><body>
+  const html = `<!doctype html><html${mobile ? ' data-bt-mobile' : ''}${platform === 'windows' ? ' data-windows-titlebar' : ''}${darwin ? ' data-platform="darwin"' : ''}><body>
     <div${collapsed ? ' data-sidebar-collapsed="true"' : ''}>
       <div class="x_root${collapsed ? ' x_collapsed' : ''}">
         ${darwin ? `<div class="x_topStrip">${toggle}</div>` : ''}
         <div class="x_logoRow">${collapsed ? '' : '<button class="x_brand x_wide"></button>'}${darwin ? '' : toggle}</div>
         <div class="x_newSession"></div>
-        <div class="team">${collapsed ? '' : '<div class="bt-side-top"><button class="bt-round bt-side-collapse"></button></div>'}</div>
+        <div class="team">${collapsed ? '' : `<div class="bt-side-top"><button class="bt-round bt-side-collapse"></button>${mobile ? '<button class="bt-round bt-side-close"></button>' : ''}</div>`}</div>
         <div class="x_footArea"><span class="bt-foot-account"></span></div>
       </div>
     </div></body></html>`
@@ -72,7 +72,10 @@ function shell({ platform, collapsed }) {
     }
     return false
   }
-  const switches = [...document.querySelectorAll('.x_toggle, .bt-side-collapse')].filter(node => !hidden(node))
+  // The phone fixture also builds the drawer's own close (sidebar.js renders it in the drawer form),
+  // so the sweep counts it as a switch too; the other fixtures have no such button, so their counts
+  // are exactly what they were.
+  const switches = [...document.querySelectorAll('.x_toggle, .bt-side-collapse, .bt-side-close')].filter(node => !hidden(node))
   return { document, hidden, switches }
 }
 
@@ -92,6 +95,18 @@ for (const platform of ['web', 'windows', 'mac']) {
     })
   }
 }
+
+// A phone hides the shell's own collapse key (styles.js: #211's key collapses the same drawer the
+// row's own close does), so the drawer's top row is the one switch left. The collapsed cell of the
+// matrix above has no top row at all -- a closed drawer has no keys in it -- so this is its own
+// case rather than a third platform in that loop; the loop's assertions are untouched.
+test('an open drawer on a phone shows exactly one switch: ours, not the shell\'s', () => {
+  const { switches } = shell({ platform: 'web', collapsed: false, mobile: true })
+  assert.equal(switches.length, 1, `switches shown: ${switches.map(node => node.className).join(' | ') || 'none'}`)
+  const [shown] = switches
+  assert.equal(shown.classList.contains('bt-side-close'), true, 'the phone keeps the drawer\'s own close')
+  assert.equal(shown.classList.contains('bt-side-collapse'), false, 'and the shell\'s key is hidden by the phone rule')
+})
 
 test('an open sidebar has a button that collapses it; the rail leaves that to the shell', () => {
   const calls = []

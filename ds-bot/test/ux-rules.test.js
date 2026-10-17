@@ -290,6 +290,10 @@ test('an open drawer carries a visible close in its top row, beside search and N
   // close cannot drift from the two keys beside it.
   assert.ok(read('styles.js').includes('html[data-bt-mobile] .bt-side.bt-rail .bt-side-top .bt-round{flex:0 0 44px;width:44px;height:44px}'), 'the row\'s keys are 44px on a phone')
   assert.ok(read('styles.js').includes('.bt-round:active{transform:scale(.94)}'), 'and every one of them answers a press')
+  // The shell's own collapse key would be a fourth key in this row doing what this close does, so
+  // a phone hides it -- the same treatment the shell already gives it in a Windows title bar and
+  // on macOS. The wide column keeps it.
+  assert.ok(read('styles.js').includes('html[data-bt-mobile] .bt-side-collapse{display:none}'), 'the shell\'s collapse key is hidden on a phone')
   const glyph = sidebar.split('\n').find(line => line.includes('.bt-side-close svg{'))
   assert.ok(glyph, 'the glyph is sized by the skin, like every other Fluent icon')
   assert.ok(glyph.includes('width:20px;height:20px'))
