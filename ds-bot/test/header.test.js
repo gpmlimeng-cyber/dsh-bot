@@ -10,8 +10,20 @@ const bundle = await build({
   external: ['react', 'react-dom', '@deepseek-ai/dsh-client-ui-primitives'],
 })
 const module = { exports: {} }
+// A phone viewport, switched per test. mobile.js caches the object matchMedia hands it, so
+// `matches` is a live getter rather than a snapshot; document.body is what the bar's portal is
+// handed (the platform stub returns the node itself and never reads it).
+let phone = false
+const viewport = {
+  matchMedia: () => ({
+    get matches() { return phone },
+    addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {},
+  }),
+}
 runInNewContext(bundle.outputFiles[0].text, {
   module, exports: module.exports, URL, URLSearchParams, setTimeout, clearTimeout,
+  window: viewport,
+  document: { body: {}, addEventListener() {}, removeEventListener() {} },
   require: (name) => {
     const platform = {
       react: { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) }), useState: initial => [initial, () => {}], useEffect: () => {}, useRef: current => ({ current }), useLayoutEffect: () => {}, useMemo: make => make(), useCallback: fn => fn, Fragment: 'fragment' },
@@ -62,4 +74,17 @@ test('the Bot header has the right sidebar toggle that DSH keeps in the header i
 
 test('without DSH\'s right sidebar the Bot header shows no toggle', () => {
   assert.equal(sideButton(header({ hasRightSidebar: () => false, toggleRightSidebar: () => {} })), null)
+})
+
+// 丙 (styles.js): a 424px frame has no right column to toggle -- the shell's own rule wants 300px
+// beside a 400px centre -- so a phone draws no key even while the service is there. The wide
+// layout above keeps the shell's seat.
+test('a phone draws no right sidebar key even when the shell offers one', () => {
+  const previous = phone
+  phone = true
+  try {
+    assert.equal(sideButton(header({ hasRightSidebar: () => true, toggleRightSidebar: () => {} })), null)
+  } finally {
+    phone = previous
+  }
 })

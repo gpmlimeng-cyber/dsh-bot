@@ -140,8 +140,13 @@ export function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, u
     useWork && useUi && !mobile ? h(NeedsYou, { useRoster, useWork, useUi, actions }) : null,
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, actions }),
-    // DSH's way into its right sidebar sits in the session header this pill replaces.
-    actions.hasRightSidebar?.()
+    // DSH's way into its right sidebar sits in the session header this pill replaces. A phone
+    // draws no such key: at that width the shell's own column model gives the right sidebar zero
+    // width (its rule wants 300px beside a 400px centre), so the key would open something that
+    // cannot be seen -- a key that does nothing is worse than no key. The wide layout keeps the
+    // shell's seat. The ledger's "己" holds the recipe for the day the shell presents its narrow
+    // full-screen panel; the phone gets the key back then, geometry and all.
+    !mobile && actions.hasRightSidebar?.()
       ? h('button', { type: 'button', className: 'bt-icon-btn bt-head-side', 'data-bt-right-sidebar': '', 'aria-label': t('Show or hide the right sidebar'), title: t('Right sidebar'), onClick: () => actions.toggleRightSidebar() }, h(SidePanelIcon))
       : null)
   if (!mobile) return head

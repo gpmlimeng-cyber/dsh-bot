@@ -928,6 +928,9 @@ ${SKIN_FOOT}>div:has(> [data-slot="sidebar.settings"]){order:-1!important;flex:n
 /* 消息行内的工具键：24 的盒子只有 6px 圆角、没有填充，画面是盒子里的图标 —— 手机档给到 44 的命中，
    -10px 的 margin 把版式还给周围，图标大小不变。 */
 html[data-bt-mobile] .bt-tool{width:44px;height:44px;margin:-10px}
+/* 丙: a phone draws no right-sidebar key (header.js), so nothing reads this rule today. It stays
+   -- and so does the ledger's 己 next to it -- because the phone gets the key back the day the
+   shell presents its narrow full-screen panel, and it has to come back as a 44px target. */
 html[data-bt-mobile] .bt-head-side{width:44px;height:44px}.bt-tool[aria-expanded=true]{background:var(--bt-hover);color:var(--bt-ink)}
 @media (hover:hover){
 .bt-tool:hover{background:var(--bt-hover);color:var(--bt-ink)}
