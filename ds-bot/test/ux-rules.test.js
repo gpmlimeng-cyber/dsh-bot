@@ -274,14 +274,16 @@ test('the pinned mark sits after the name, in the one layout that has a name', (
   assert.ok(!sidebar.split('\n').some(line => line.includes('.bt-pin') && (line.includes('calc(50%') || line.includes('position:absolute'))), 'nothing places the pin from the row\'s own width')
 })
 
-test('an open drawer carries a visible close in its top row, beside search and New', () => {
+test('an open drawer carries a visible close in its top row, beside search and New, wearing the shell\'s own glyph', () => {
   // U1, the reported blocker: with the drawer open the bar that holds the hamburger is
   // `display:none`, the panel covers the screen with its scrim underneath, so "tap the empty
   // space" does not exist on a phone and the only non-key exit was an unhinted leftward swipe.
-  // The user asked for one visible close, in the top row next to the search field.
+  // The user asked for one visible close, in the top row next to the search field. Its glyph is
+  // the shell's own pane icon, by the user's own request ("reuse his icon"), so this file no
+  // longer expects a Fluent close here.
   const sidebar = read('sidebar.js')
-  assert.ok(sidebar.includes('IconCloseOutlineRegular'), 'Fluent\'s outline close: the same family and cut as the pin, not a drawn one')
-  const close = sidebar.match(/mobile\s*\?\s*h\('button',\s*\{([\s\S]*?)\},\s*h\(IconCloseOutlineRegular\)\)/)
+  assert.ok(!sidebar.includes('IconCloseOutlineRegular'), 'no second close drawn or imported: the shell\'s own glyph is reused')
+  const close = sidebar.match(/mobile\s*\?\s*h\('button',\s*\{([\s\S]*?)\},\s*h\(SidebarIcon\)\)/)
   assert.ok(close, 'the button belongs to the drawer form only — the wide column already has its hamburger')
   assert.match(close[1], /className: 'bt-round bt-side-close'/, 'the round seat the row\'s other keys use')
   assert.match(close[1], /'aria-label': t\('Close navigation'\)/, 'named like the hamburger that opens it')
@@ -295,8 +297,8 @@ test('an open drawer carries a visible close in its top row, beside search and N
   // on macOS. The wide column keeps it.
   assert.ok(read('styles.js').includes('html[data-bt-mobile] .bt-side-collapse{display:none}'), 'the shell\'s collapse key is hidden on a phone')
   const glyph = sidebar.split('\n').find(line => line.includes('.bt-side-close svg{'))
-  assert.ok(glyph, 'the glyph is sized by the skin, like every other Fluent icon')
-  assert.ok(glyph.includes('width:20px;height:20px'))
+  assert.ok(glyph, 'the glyph is sized by the skin, like the shell\'s own key one line down')
+  assert.ok(glyph.includes('width:16px;height:16px'), 'the shell draws this glyph at 16 (icons.js SidebarIcon)')
 })
 
 test('a term the user has not been taught is said in words, on screen', () => {
