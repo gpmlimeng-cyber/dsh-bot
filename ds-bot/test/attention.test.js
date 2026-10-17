@@ -2,7 +2,7 @@
 // in header.js): real React against jsdom, the way the browser mounts it. The pure
 // collection logic is covered separately below, over the esbuild bundle.
 import assert from 'node:assert/strict'
-import { test } from 'node:test'
+import { after, test } from 'node:test'
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
@@ -28,10 +28,26 @@ const reactDom = reactRequire('react-dom/client')
 
 // pretendToBeVisual supplies requestAnimationFrame, which the header's activity row uses.
 const dom = new JSDOM('<!doctype html><html><body><div id="root"></div><div id="portal"></div></body></html>', { url: 'https://ds-bot.test/', pretendToBeVisual: true })
+// These globals are the page this file mounts into, and they belong to this file alone: in one
+// process with `--test-isolation=none` a global left behind is a global another file's tests run
+// against (shared-map.test.js read this jsdom's localStorage and failed its own assertion). Every
+// key is captured before it is overwritten and put back when the file's tests finish.
+// `localStorage` is deliberately not among them: this file never needs the page's storage on the
+// process (`shared-map.js` falls back to `globalThis.localStorage` when a caller passes none, so a
+// jsdom storage left here broke shared-map.test.js's own assertion), and the sandbox below gets
+// the jsdom one explicitly.
+const PAGE_GLOBALS = ['window', 'document', 'navigator', 'getComputedStyle', 'HTMLElement', 'Element', 'Node', 'SVGElement']
+const pageGlobalsBefore = new Map(PAGE_GLOBALS.map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]))
+after(() => {
+  for (const key of PAGE_GLOBALS) {
+    const before = pageGlobalsBefore.get(key)
+    if (before === undefined) delete globalThis[key]
+    else Object.defineProperty(globalThis, key, before)
+  }
+})
 globalThis.window = dom.window
 globalThis.document = dom.window.document
 Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true })
-globalThis.localStorage = dom.window.localStorage
 globalThis.getComputedStyle = dom.window.getComputedStyle
 for (const key of ['HTMLElement', 'Element', 'Node', 'SVGElement']) globalThis[key] = dom.window[key]
 
