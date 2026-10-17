@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: ca78bb8a
+// Source fingerprint: 4897ef75
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -2928,6 +2928,12 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
 html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
 html[data-windows-titlebar] .bt-side-collapse,html[data-platform=darwin] .bt-side-collapse{display:none}
+/* #211's "collapse sidebar" is desktop semantics. A phone's drawer top row is our own deliberate
+   three -- search, New, and the close at the row's outer end -- so the shell's switch would be a
+   fourth key doing what .bt-side-close already does (the device read: a four-key row, the same
+   collapse either way). Hidden on the phone only, exactly as the shell hides it in a Windows title
+   bar and on macOS (line above); the wide column keeps the shell's key. */
+html[data-bt-mobile] .bt-side-collapse{display:none}
 /* The footer ends in the Bot row: the whale's settings seat, then Connect plugins. Every
    other plugin's entry takes a whole row above it, in the shell's order, so none of them
    squeezes the Bot row. */
@@ -3006,6 +3012,9 @@ ${SKIN_FOOT}>div:has(> [data-slot="sidebar.settings"]){order:-1!important;flex:n
 /* 消息行内的工具键：24 的盒子只有 6px 圆角、没有填充，画面是盒子里的图标 —— 手机档给到 44 的命中，
    -10px 的 margin 把版式还给周围，图标大小不变。 */
 html[data-bt-mobile] .bt-tool{width:44px;height:44px;margin:-10px}
+/* 丙: a phone draws no right-sidebar key (header.js), so nothing reads this rule today. It stays
+   -- and so does the ledger's 己 next to it -- because the phone gets the key back the day the
+   shell presents its narrow full-screen panel, and it has to come back as a 44px target. */
 html[data-bt-mobile] .bt-head-side{width:44px;height:44px}.bt-tool[aria-expanded=true]{background:var(--bt-hover);color:var(--bt-ink)}
 @media (hover:hover){
 .bt-tool:hover{background:var(--bt-hover);color:var(--bt-ink)}
@@ -7857,8 +7866,13 @@ function HeaderPill({ sessionId, betterSidebar, useRoster, useSessions, useSessi
     useWork && useUi && !mobile ? (0, import_react13.createElement)(NeedsYou, { useRoster, useWork, useUi, actions }) : null,
     (0, import_react13.createElement)(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     (0, import_react13.createElement)(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, actions }),
-    // DSH's way into its right sidebar sits in the session header this pill replaces.
-    actions.hasRightSidebar?.() ? (0, import_react13.createElement)("button", { type: "button", className: "bt-icon-btn bt-head-side", "data-bt-right-sidebar": "", "aria-label": t("Show or hide the right sidebar"), title: t("Right sidebar"), onClick: () => actions.toggleRightSidebar() }, (0, import_react13.createElement)(SidePanelIcon)) : null
+    // DSH's way into its right sidebar sits in the session header this pill replaces. A phone
+    // draws no such key: at that width the shell's own column model gives the right sidebar zero
+    // width (its rule wants 300px beside a 400px centre), so the key would open something that
+    // cannot be seen -- a key that does nothing is worse than no key. The wide layout keeps the
+    // shell's seat. The ledger's "己" holds the recipe for the day the shell presents its narrow
+    // full-screen panel; the phone gets the key back then, geometry and all.
+    !mobile && actions.hasRightSidebar?.() ? (0, import_react13.createElement)("button", { type: "button", className: "bt-icon-btn bt-head-side", "data-bt-right-sidebar": "", "aria-label": t("Show or hide the right sidebar"), title: t("Right sidebar"), onClick: () => actions.toggleRightSidebar() }, (0, import_react13.createElement)(SidePanelIcon)) : null
   );
   if (!mobile) return head;
   const agent = (roster.agents ?? []).find((entry) => entry.sessions?.includes(sessionId));
@@ -8495,15 +8509,17 @@ function TeamSidebar(props) {
       (0, import_react14.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react14.createElement)(PlusIcon)),
       // The drawer's own way out. The bar that holds the hamburger is `display:none` while the
       // drawer is open, the panel covers the whole screen with its scrim underneath, and the
-      // leftward swipe has no hint on it — so a phone had no visible exit at all. Fluent's
-      // outline close, in the same 44px round seat as New, at the row's outer end.
+      // leftward swipe has no hint on it — so a phone had no visible exit at all. The shell's own
+      // pane glyph, in the same 44px round seat as New, at the row's outer end: the user asked us
+      // to reuse his icon rather than draw another close, and it is the very glyph the shell's own
+      // collapse key draws one line down (icons.js SidebarIcon, 16px).
       mobile ? (0, import_react14.createElement)("button", {
         type: "button",
         className: "bt-round bt-side-close",
         "aria-label": t("Close navigation"),
         title: t("Close navigation"),
         onClick: actions.closeMobileNav
-      }, (0, import_react14.createElement)(import_dsh_client_ui_primitives4.IconCloseOutlineRegular)) : null,
+      }, (0, import_react14.createElement)(SidebarIcon)) : null,
       // DSH's own key for the wide column, in the same round seat: it folds the sidebar away.
       (0, import_react14.createElement)("button", { type: "button", className: "bt-round bt-side-collapse", "aria-label": t("Collapse sidebar"), title: t("Collapse sidebar"), onClick: () => actions.toggleSidebar() }, (0, import_react14.createElement)(SidebarIcon))
     ) : (0, import_react14.createElement)(
@@ -8913,7 +8929,7 @@ var SIDEBAR_CSS = `
 .bt-brand .bt-mark{flex:none}
 .bt-pin{flex:none;display:inline-flex;color:color-mix(in srgb,var(--bt-ink) 75%,transparent)}
 .bt-pin svg{width:12px;height:12px}
-.bt-side-close svg{width:20px;height:20px}
+.bt-side-close svg{width:16px;height:16px}
 [class*="_footArea"]:has(.bt-foot-account){grid-template-columns:auto minmax(0,1fr) auto;column-gap:6px}
 [class*="_footArea"]>[class*="_footerActions"]>div>.bt-foot-account{grid-column:1;order:1;display:inline-flex}
 [class*="_footArea"]:has(.bt-foot-account)>[class*="_footerActions"]>div>.bt-connect-wrap{grid-column:2}
@@ -18042,7 +18058,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "ca78bb8a" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "4897ef75" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
