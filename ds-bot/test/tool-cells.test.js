@@ -482,3 +482,12 @@ test('a reaction on a group post stays on that post, also after it draws again',
   reactOf(draw(first))('👍')
   assert.deepEqual([chips(draw(first)), chips(draw(sameTurn)), chips(draw(later))], [0, 0, 1])
 })
+
+// U13: those replies are part of this cell's own output, so they are on screen unless the skin hides
+// this row -- which the source sweep in ux-rules forbids.
+test('a group relay draws its replies in its own row', () => {
+  const relay = call('group_relay', 'call-u13:1', { content: { replies: [{ botId: 'writer', text: 'Relay reply.' }] } })
+  const tree = JSON.stringify(expand(ToolCell(props(relay))))
+  assert.ok(tree.includes('bt-group-replies'), 'the row the replies live in')
+  assert.ok(tree.includes('Relay reply.'), 'and the reply itself inside it')
+})

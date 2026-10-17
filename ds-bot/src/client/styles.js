@@ -1260,13 +1260,9 @@ export const CONVERSATION_CSS = `
 [data-step-process]>[data-step-process-body]{display:block!important;content-visibility:visible!important;max-height:none!important;overflow:visible!important;mask-image:none!important;scrollbar-gutter:auto!important}
 :is([data-step-process],[data-turn-process-hidden])[hidden]{content-visibility:visible!important}
 [class*="_flowItem"]:has(> [data-slot="conversation.chat.node"]:empty){display:none!important}
-/* The shell draws a row of its own for the relay, one behind every reply, and it pushed the group's
-   messages out of sight (the user's report). It carries no data-tool -- the target's own outerHTML
-   has data-chat-call-id and data-chat-anchor-key only -- so the hook is the id we give that call
-   ourselves (groups.js builds every relay call as toolu_relay_ plus a uuid). That marker is ours, so this
-   hides the relay's row and nothing else: read and bash keep the shell's rows, where those belong. */
-[data-chat-call-id^="toolu_relay_"]{display:none!important}
-[data-chat-anchor-key^="call:toolu_relay_"]{display:none!important}
+/* Nothing here may hide the row a group relay draws. That row is where the whole group answer
+   lives (ToolCell -> case 'group_relay' -> GroupReplies, upstream's own shape), so a rule keyed on
+   the call id hid every reply a room produced: the host's log had them, the screen did not. U13. */
 [class*="_header"]:has(.bt-head){border-bottom-color:transparent!important;box-shadow:none!important}
 /* The transcript runs under a floating header pill. */
 header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;right:0;z-index:8;display:flex!important;padding:10px 0 0!important;background:transparent!important;pointer-events:none;justify-content:center}

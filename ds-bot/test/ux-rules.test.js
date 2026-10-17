@@ -323,23 +323,27 @@ test('a term the user has not been taught is said in words, on screen', () => {
   assert.ok(dictionary.includes("'Compaction and handoff: a chat too long to keep whole is summarised so the work can go on.':"), 'and so is the chart line')
 })
 
-test('the shell\'s own relay row is hidden, by the tool name the shell puts on it', () => {
-  // U13's real shape (the user's report, and the target's DOM): the shell draws its own tool row into
-  // the same node our relay content goes in, so `:empty` does not hide it once the replies are there.
-  // The row's root carries `data-tool` with the tool's name -- the shell's own hook, not a CSS-module
-  // hash that changes every build -- so the row is hidden by name.
+test('the shell\'s own relay row is not hidden: the group\'s replies are drawn in it', () => {
+  // U13, and the user's instruction to follow upstream's shape: upstream ships no rule that hides a
+  // relay call's row (no `toolu_relay_` hit anywhere in upstream/main), because ToolCell draws the
+  // group's whole answer inside it (case 'group_relay' -> GroupReplies). Our rule hid that row with
+  // everything in it: the host logged every reply, the screen showed none.
   const styles = read('styles.js')
   assert.ok(styles.includes('[class*="_flowItem"]:has(> [data-slot="conversation.chat.node"]:empty){display:none!important}'),
     'a cell with nothing in it is still hidden whole')
-  // The row carries no data-tool (the target's outerHTML has data-chat-call-id and
-  // data-chat-anchor-key only), so the hook is the id this host gives a relay call itself. Both sides
-  // are read here, so the marker cannot drift away from the rule that hides it.
+  assert.equal(styles.includes('toolu_relay_'), false, 'no rule keys on the relay call id')
+  assert.equal(styles.includes('data-chat-call-id'), false, 'and none hides the chat call row itself')
+  // The host still gives every relay call its own marker, which other code may lean on: only the
+  // hiding is gone, and that is what let the replies back onto the screen.
   const hostFile = name => readFileSync(new URL(`../src/host/${name}`, import.meta.url), 'utf8')
-  assert.ok(hostFile('groups.js').includes("`toolu_relay_${randomUUID().replace(/-/g, '')}`"), 'the host names every relay call with its own marker')
-  assert.ok(styles.includes('[data-chat-call-id^="toolu_relay_"]{display:none!important}'),
-    'and the rule hides exactly those rows, by that marker -- not by a hashed class or a shell attribute')
-  assert.ok(styles.includes('[data-chat-anchor-key^="call:toolu_relay_"]{display:none!important}'),
-    'the anchor key the same row carries is covered too')
-  // Only the relay: every other tool keeps the shell's row, which is where those belong.
-  for (const tool of ['read', 'bash']) assert.ok(!styles.includes(`[data-tool="${tool}"]`), `${tool} keeps its row`)
+  assert.ok(hostFile('groups.js').includes("`toolu_relay_${randomUUID().replace(/-/g, '')}`"), 'the host still names every relay call with its own marker')
+})
+
+// U13: a group's whole answer is drawn inside the row its relay call owns (ToolCell ->
+// case 'group_relay' -> GroupReplies, the shape upstream ships). A rule keyed on that call's id
+// hid every reply a room produced: the host's log had them, the screen did not.
+test('nothing hides the row a group relay draws its replies in', () => {
+  const styles = read('styles.js')
+  assert.equal(styles.includes('toolu_relay_'), false, 'no rule may key on the relay call id')
+  assert.equal(/data-chat-call-id[^{]*\{[^}]*display:none/.test(styles), false, 'and none may hide the chat call row itself')
 })
