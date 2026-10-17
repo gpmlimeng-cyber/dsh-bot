@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: ffbadf43
+// Source fingerprint: 93aec4fa
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -7123,9 +7123,6 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
   const pending = done || !live.speaking ? [] : [live.speaking];
   const speakerTool = useWork?.((work) => work.bots?.[live.speaking]?.tool) ?? void 0;
   const speakerDoing = useWork?.((work) => work.bots?.[live.speaking]?.tool ? workPhrase(work.bots[live.speaking]) : void 0) ?? void 0;
-  if (replies.length === 0 && pending.length === 0) {
-    return (0, import_react10.createElement)("div", { className: "bt-event" }, t(done ? "No replies in this round." : "Working on it…"));
-  }
   const room2 = roster.roomsById[sessionId];
   const items = stackReplies(replies);
   const answered = roster.decisions?.[sessionId] ?? [];
@@ -7135,6 +7132,9 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
   (0, import_react10.useEffect)(() => {
     if (ask !== null) actions.proposeDecision?.(sessionId, ask);
   }, [ask?.key, sessionId]);
+  if (replies.length === 0 && pending.length === 0) {
+    return (0, import_react10.createElement)("div", { className: "bt-event" }, t(done ? "No replies in this round." : "Working on it…"));
+  }
   return (0, import_react10.createElement)(
     "div",
     { className: "bt-group-replies" },
@@ -18054,7 +18054,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "ffbadf43" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "93aec4fa" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
