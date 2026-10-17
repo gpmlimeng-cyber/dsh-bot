@@ -1,5 +1,5 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
-// Source fingerprint: 4897ef75
+// Source fingerprint: a2ccf04a
 window.__ModuleLoader__.load({
   id: 'ds-bot',
   factory: (require) => {
@@ -6988,7 +6988,7 @@ function TurnTailCell({ turn: location2, sessionId, useRoster, useTurnClock, use
     const start = nextTurnStart(state[sessionId] ?? {}, turn);
     return start !== void 0 && start > visit.seen && start <= visit.entered;
   });
-  const roster = useRoster?.();
+  const roster = useRoster?.((value) => value);
   const workDir = roster?.byId?.[sessionId]?.workDir ?? roster?.roomsById?.[sessionId]?.workDir ?? null;
   const delivered = turnDeliverables(location2, sessionId);
   if (!label && !fresh && delivered.length === 0) return null;
@@ -18058,7 +18058,7 @@ html[data-bt-mobile] .bt-subback-btn>svg{width:22px;height:22px}
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  document.documentElement.dataset.btSrc = true ? "4897ef75" : "unbuilt";
+  document.documentElement.dataset.btSrc = true ? "a2ccf04a" : "unbuilt";
   ctx.effect(() => {
     watchMobile();
   }, "ds-bot: mobile layout flag");
