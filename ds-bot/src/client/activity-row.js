@@ -1,6 +1,6 @@
 import { createElement as h, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { BotMark, RoomAvatar } from './mark.js'
+import { BotMark } from './mark.js'
 import { Shimmer, PHRASES } from './cells.js'
 import { reducedMotion } from './motion.js'
 import { t } from './i18n.js'
@@ -81,6 +81,19 @@ function useRowEntrances(replacing) {
   }, [])
 }
 
+// Whether the header's activity row shows at all. A Bot's own turn gets it; a room's
+// does not. A room's turn is the relay -- an internal round that only fans out to its
+// members -- and the room avatar saying "thinking" read as a second, fake participant
+// (the user's report: a group avatar appeared before the admin answered). The members
+// still show their own typing rows, which come from the relay's pending list in
+// cells.js, not from here.
+//
+// This is our one deliberate deviation from the official skin: activity-row.js is
+// otherwise byte-identical to upstream/main, whose `visible` also accepted a room
+// (`bot !== undefined || room !== undefined`, present since 41710f6, "Publish DS Bot
+// 0.1.0"). The user asked for the room row to go; the deviation is intentional.
+export const showsActivity = ({ running, streaming, relaying, bot }) => running && !streaming && !relaying && bot !== undefined
+
 export function ActivityIndicator({ sessionId, useRoster, useSessionStatus, useLive, useSession, actions }) {
   const roster = useRoster(value => value)
   const running = useSessionStatus(map => map.get(sessionId)?.running === true)
@@ -90,13 +103,12 @@ export function ActivityIndicator({ sessionId, useRoster, useSessionStatus, useL
   const pendingInput = useSession(snapshot => Math.max(0, ...(snapshot?.pendingSubmissions ?? [])
     .filter(sub => sub.placement !== 'queued').map(sub => sub.time)))
   const bot = roster.byId[sessionId]
-  const room = roster.roomsById[sessionId]
   const entries = useMemo(() => Object.values(JSON.parse(liveKey)), [liveKey])
   const streaming = entries.some(entry => entry.text)
   const tools = entries.filter(entry => !entry.text).sort((a, b) => a.at - b.at)
   // Group chats show who is typing on their own while members speak.
   const relaying = tools.some(entry => entry.relay)
-  const visible = running && !streaming && !relaying && (bot !== undefined || room !== undefined)
+  const visible = showsActivity({ running, streaming, relaying, bot })
   const tool = tools.at(-1)
   const inputRef = useRef(0)
   // A steer keeps the run going, so nothing else resets the row: fresh input is
@@ -161,7 +173,7 @@ export function ActivityIndicator({ sessionId, useRoster, useSessionStatus, useL
   if (!host || phase === null || !shown) return null
   const elapsed = now - shown.at >= 60000 ? elapsedLabel(now - shown.at) : null
   return createPortal(h('div', { className: 'bt-typing', 'data-exiting': phase === 'out' ? '' : undefined, 'aria-hidden': true },
-    bot ? h(BotMark, { bot, size: 28, state: markState.current, live: true, pokeable: true }) : h(RoomAvatar, { room, roster, size: 28 }),
+    h(BotMark, { bot, size: 28, state: markState.current, live: true, pokeable: true }),
     h('span', { className: 'bt-typing-text' },
       h('span', { key: `${shown.key}:${shown.at}`, className: 'bt-typing-label' },
         h(Shimmer, null, `${shown.text}…`),
