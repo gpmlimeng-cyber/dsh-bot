@@ -26,9 +26,16 @@ const react = {
   useMemo: make => make(), useRef: current => ({ current }), useId: () => 'id',
 }
 const module = { exports: {} }
+// The rail's own form portals its scrim into the document body (sidebar.js), so the module under
+// test gets a DOM the way the browser gives it one. `shell()` builds one per case for the CSS
+// sweep; this one serves the component, whose render reads `document.body` either way.
+const page = new JSDOM('<!doctype html><html><body></body></html>')
 runInNewContext(outputFiles[0].text, {
   module, exports: module.exports,
-  require: name => (name === 'react' ? react : {}),
+  document: page.window.document,
+  window: page.window,
+  // The rail portals its scrim; the stub returns the node itself, as the other cell tests do.
+  require: name => (name === 'react' ? react : name === 'react-dom' ? { createPortal: node => node } : {}),
 })
 const { SHELL_CSS, SIDEBAR_CSS, TeamSidebar } = module.exports
 
