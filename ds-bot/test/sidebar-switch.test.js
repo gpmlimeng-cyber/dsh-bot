@@ -22,7 +22,7 @@ const { outputFiles } = await build({
 })
 const react = {
   createElement: (type, props, ...children) => ({ type, props: { ...props, children } }), Fragment: Symbol('Fragment'),
-  useEffect() {}, useLayoutEffect() {}, useState: initial => [initial, () => {}],
+  useEffect() {}, useLayoutEffect() {}, useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}],
   useMemo: make => make(), useRef: current => ({ current }), useId: () => 'id',
 }
 const module = { exports: {} }
@@ -164,4 +164,35 @@ test('the shell footer is a grid wherever the shell shows it', () => {
       assert.equal(grid, !(platform === 'windows' && collapsed), `${platform} ${collapsed ? 'collapsed' : 'open'}`)
     }
   }
+})
+
+// 第一档 ③: the team's own sidebar draws the brand, the New key and the rows the shell's
+// chrome drew, which is what lets styles.js:840 keep the shell's copies hidden instead of
+// restoring them. The shell renders those copies around the slot in every version we ship
+// against (sidebar side of dsh-client-ui-sidebar), so "the slot is taken" is not the same
+// as "the shell stopped drawing them".
+test('the team sidebar draws its own brand, New key and rows', () => {
+  const chief = { id: 'chief', name: 'Chief', sessionId: 'chief', createdAt: 1 }
+  const writer = { id: 'writer', name: 'Writer', createdAt: 2 }
+  const roster = { bots: [chief, writer], rooms: [], agents: [], byId: { chief, writer }, roomsById: {}, mainBotId: 'writer', ready: true, exchangeTurns: {}, questions: {} }
+  const props = {
+    wide: true,
+    useRoster: pick => pick(roster), useUi: pick => pick({ unread: {}, mobileNav: false }), useRegistry: pick => pick({}),
+    useSessions: pick => pick({ ids: ['chief', 'writer'], byId: { chief: { updatedAt: 1 }, writer: { updatedAt: 2 } } }),
+    useUpdate: () => ({}),
+    useSessionStatus: pick => pick(new Map()),
+    useSessionRetainInfo: (id, pick) => pick({}),
+    useActivity: pick => pick({}),
+    useWork: pick => pick({ approvals: [], rooms: {}, waiting: {} }),
+    actions: { toggleSidebar() {}, openSession() {}, openNewChat() {} },
+  }
+  const find = (node, match) => {
+    if (Array.isArray(node)) return node.flatMap(child => find(child, match))
+    if (!node || typeof node !== 'object') return []
+    return [...(match(node) ? [node] : []), ...find(node.props?.children, match)]
+  }
+  const tree = TeamSidebar(props)
+  assert.equal(find(tree, node => node.props?.className === 'bt-brand').length, 1, 'the brand is ours')
+  assert.equal(find(tree, node => node.type === 'button' && node.props?.['aria-label'] === 'New…').length >= 1, true, 'the New key is ours')
+  assert.equal(find(tree, node => typeof node.type === 'function' && node.type.name === 'BotRow').length, 2, 'both Bots get a row')
 })

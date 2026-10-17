@@ -836,7 +836,15 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 .bt-connector-error{padding-left:48px;font-size:12px;line-height:16px;color:var(--bt-danger)}
 
 /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
-   shell offers them and CSS-module name suffixes elsewhere. */
+   shell offers them and CSS-module name suffixes elsewhere.
+   These four hide the shell's copies; they cannot be dropped even though the team view
+   draws the same things (sidebar.js:440 brand, :456 New key, :471 the wide column's key,
+   and the row list below): the slot fills only the shell sidebar's region area, and the
+   shell still renders its own logo row, new-chat key and panel list around it
+   (dsh-client-ui-sidebar/lib/client.js:253 logo row, :301 new chat, :327 panel list,
+   :341 the sidebar.workspaces slot). Occupying the slot never removes them, so without
+   these rules the sidebar shows two brands and two New keys. The tests pin each one
+   (test/sidebar-switch.test.js: new-chat and brand hidden, the Windows logo row). */
 [class*="_newSession"],nav[class*="_panelList"],[class*="_logoRow"]>[class*="_brand"],[class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
 /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
    collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
