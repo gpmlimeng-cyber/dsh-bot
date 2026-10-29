@@ -1,5 +1,6 @@
 import { countCards, heldCardKey } from './sources.js'
 import { noteClientError } from './diagnostics.js'
+import { dismissDrawerIfOpen } from './drawer-dismiss.js'
 
 // The actions every window that draws the Bot views shares: dialogs and panels (the `ui`
 // source), requests to the host, and the notes the transcript keeps. The shell around the
@@ -13,8 +14,8 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     ui.set(state => ({ ...state, details: sessionId, view: 'side', side: chatId ?? null, renaming: false, tab: null }))
   }
   return {
-    openNewChat: (mode) => { ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null })) },
-    openPalette: (query = '') => { ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null })) },
+    openNewChat: (mode, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null })) },
+    openPalette: (query = '', opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null })) },
     // The token keeps a late exit timer from closing a palette opened again since.
     closePalette: (token) => { ui.set(state => (state.palette && (token === undefined || state.palette.token === token) ? { ...state, palette: null } : state)) },
     openExchange: (a, b) => { if (a && b) ui.set(state => ({ ...state, exchange: [a, b] })) },
@@ -43,11 +44,11 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     // Opening the conversation would move focus to its composer and blur the name field.
     renameBot: (id) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: true, tab: null })) },
     // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
-    openSettings: (page = 'general', id = null) => { ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null })) },
+    openSettings: (page = 'general', id = null, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null })) },
     closeSettings: () => { ui.set(state => (state.settings ? { ...state, settings: null } : state)) },
     openMemory: (id) => { ui.set(state => ({ ...state, memory: id, menu: null, palette: null })) },
     closeMemory: () => { ui.set(state => (state.memory ? { ...state, memory: null } : state)) },
-    openConnectors: () => { ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null })) },
+    openConnectors: (opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null })) },
     setPanelView: (view) => {
       if (view !== 'details' && view !== 'browser' && view !== 'side') return
       ui.set(state => (state.details && state.view !== view ? { ...state, view } : state))

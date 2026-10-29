@@ -1532,6 +1532,18 @@ function countCards(state, sessionId, callIds, delta) {
   return { ...state, [sessionId]: own };
 }
 
+// src/client/drawer-dismiss.js
+var collapse = null;
+function holdDrawerDismiss(fn) {
+  collapse = fn;
+  return () => {
+    if (collapse === fn) collapse = null;
+  };
+}
+function dismissDrawerIfOpen(fromDrawer) {
+  if (fromDrawer === true) collapse?.();
+}
+
 // src/client/team-actions.js
 function teamActions({ call: call2, after, partFor, roster, ui: ui2, live, cards, heldCards, turnClock }) {
   const memoryOf = (id) => roster.getSnapshot().roomsById[id] ? { roomId: id } : { botId: id };
@@ -1539,10 +1551,12 @@ function teamActions({ call: call2, after, partFor, roster, ui: ui2, live, cards
     ui2.set((state) => ({ ...state, details: sessionId, view: "side", side: chatId ?? null, renaming: false, tab: null }));
   };
   return {
-    openNewChat: (mode) => {
+    openNewChat: (mode, opts) => {
+      dismissDrawerIfOpen(opts?.fromDrawer);
       ui2.set((state) => ({ ...state, newChat: mode, menu: null, palette: null }));
     },
-    openPalette: (query = "") => {
+    openPalette: (query = "", opts) => {
+      dismissDrawerIfOpen(opts?.fromDrawer);
       ui2.set((state) => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null }));
     },
     // The token keeps a late exit timer from closing a palette opened again since.
@@ -1583,7 +1597,8 @@ function teamActions({ call: call2, after, partFor, roster, ui: ui2, live, cards
       ui2.set((state) => ({ ...state, details: id, view: "details", renaming: true, tab: null }));
     },
     // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
-    openSettings: (page = "general", id = null) => {
+    openSettings: (page = "general", id = null, opts) => {
+      dismissDrawerIfOpen(opts?.fromDrawer);
       ui2.set((state) => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null }));
     },
     closeSettings: () => {
@@ -1595,7 +1610,8 @@ function teamActions({ call: call2, after, partFor, roster, ui: ui2, live, cards
     closeMemory: () => {
       ui2.set((state) => state.memory ? { ...state, memory: null } : state);
     },
-    openConnectors: () => {
+    openConnectors: (opts) => {
+      dismissDrawerIfOpen(opts?.fromDrawer);
       ui2.set((state) => ({ ...state, settings: { page: "connectors", id: null }, menu: null, palette: null, newChat: null }));
     },
     setPanelView: (view) => {
@@ -3245,6 +3261,15 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
    overflows a short viewport in either orientation (a landscape phone is 844 wide and
    a 640 max-width query misses it). A long window simply never scrolls. */
 .bt-avedit{max-height:calc(100dvh - 96px);overflow-y:auto}
+/* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
+   into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
+   that same plugin's marker rather than a width: the marker means "drawer form", where the
+   native button is gone. It is a private attribute of dsh-web-mobile used for visibility
+   only — if it is ever renamed the button stops showing (a safe failure) and the native one
+   returns, so two hangers never appear at once. */
+.bt-menu-btn{display:none;position:absolute;left:0;top:0;width:44px;height:44px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:none;color:var(--bt-ink);pointer-events:auto;cursor:pointer}
+.bt-menu-btn:hover{background:var(--bt-hover)}
+html:has([data-mobile-nav="frame"]) .bt-menu-btn{display:flex}
 `;
 var CONVERSATION_CSS = `
 .bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:calc(var(--bt-msg-w) * 100%)}
@@ -8848,6 +8873,14 @@ function TeamSidebar(props) {
   (0, import_react15.useLayoutEffect)(() => {
     closing.current = false;
   });
+  const collapseDrawer = (0, import_react15.useRef)(null);
+  collapseDrawer.current = () => {
+    if (!wide || window.innerWidth >= 1024 || closing.current) return;
+    closing.current = true;
+    expandSidebar?.();
+    actions.toggleSidebar();
+  };
+  (0, import_react15.useEffect)(() => holdDrawerDismiss(() => collapseDrawer.current?.()), []);
   const roster = useRoster((value) => value);
   const markedUnread = useUi((value) => value.unread);
   props.useRegistry((value) => value);
@@ -8883,14 +8916,16 @@ function TeamSidebar(props) {
     openSession: (id) => navigate(actions.openSession, id),
     openAgent: (id) => navigate(actions.openAgent, id),
     openAgentSession: (id) => navigate(actions.openAgentSession, id),
-    newAgentSession: (id) => navigate(actions.newAgentSession, id)
+    newAgentSession: (id) => navigate(actions.newAgentSession, id),
+    // A row's menu opens its page above the drawer, so the drawer collapses first.
+    openSettings: (page, id) => actions.openSettings(page, id, { fromDrawer: true })
   };
   const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide };
   const typeToSearch = (event) => {
     if (event.defaultPrevented || event.key.length !== 1 || event.key === " " || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return;
     if (event.target instanceof Element && event.target.closest("input,textarea,[contenteditable]")) return;
     event.preventDefault();
-    actions.openPalette(event.key);
+    actions.openPalette(event.key, { fromDrawer: true });
   };
   return (0, import_react15.createElement)(
     "div",
@@ -8900,14 +8935,14 @@ function TeamSidebar(props) {
       { className: "bt-side-top" },
       (0, import_react15.createElement)("span", { className: "bt-brand" }, (0, import_react15.createElement)(BrandMark, { size: 22 }), (0, import_react15.createElement)(BrandName)),
       (0, import_react15.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
-      (0, import_react15.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Search"), title: t("Search"), onClick: () => actions.openPalette() }, (0, import_react15.createElement)(SearchIcon)),
-      (0, import_react15.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react15.createElement)(PlusIcon)),
+      (0, import_react15.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Search"), title: t("Search"), onClick: () => actions.openPalette("", { fromDrawer: true }) }, (0, import_react15.createElement)(SearchIcon)),
+      (0, import_react15.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new", { fromDrawer: true }) }, (0, import_react15.createElement)(PlusIcon)),
       (0, import_react15.createElement)("button", { type: "button", className: "bt-round bt-side-collapse", "aria-label": t("Collapse sidebar"), title: t("Collapse sidebar"), onClick: () => actions.toggleSidebar() }, (0, import_react15.createElement)(SidebarIcon))
     ) : (0, import_react15.createElement)(
       import_react15.Fragment,
       null,
       (0, import_react15.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
-      (0, import_react15.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react15.createElement)(PlusIcon))
+      (0, import_react15.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new", { fromDrawer: true }) }, (0, import_react15.createElement)(PlusIcon))
     ),
     wide && roster.readOnly ? (0, import_react15.createElement)("div", { className: "bt-hint bt-read-only", role: "status" }, hostText(roster.readOnly)) : null,
     (0, import_react15.createElement)(
@@ -9091,7 +9126,14 @@ function pressSettingsShortcut() {
 var NO_SUBSCRIBE = () => () => {
 };
 var NO_SNAPSHOT = () => null;
-function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions }) {
+function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions: baseActions }) {
+  const drawerSeat = seat === false ? { fromDrawer: true } : void 0;
+  const actions = {
+    ...baseActions,
+    openSettings: (page, id) => baseActions.openSettings(page, id, drawerSeat),
+    openConnectors: () => baseActions.openConnectors(drawerSeat),
+    selectPanel: (id) => baseActions.selectPanel(id, drawerSeat)
+  };
   const [open, setOpen] = (0, import_react15.useState)(false);
   (0, import_react15.useLayoutEffect)(() => {
     if (!seat) return void 0;
@@ -9193,7 +9235,7 @@ function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboardi
   }, [open]);
   const groups = [
     [
-      [t("Usage"), GaugeIcon, () => actions.openSettings("usage")],
+      [t("Usage"), GaugeIcon, () => actions.openSettings("usage", null, { fromDrawer: true })],
       [t("Connectors"), ConnectorIcon, () => actions.openConnectors()],
       [t("Automation tasks"), ClockIcon, () => actions.selectPanel("schedules")],
       [t("Bot settings"), GearIcon, () => actions.openSettings("general")]
@@ -9449,6 +9491,9 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
   return (0, import_react16.createElement)(
     "div",
     { className: "bt-head" },
+    // dsh-web-mobile's own sidebar toggle renders into a slot this plugin shadows, so it
+    // never mounts on a phone. This is that missing entry: narrow screens only, and it
+    // only toggles the shell's sidebar, which is where the drawer lives.
     (0, import_react16.createElement)(
       "button",
       {
@@ -9466,6 +9511,13 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
       (0, import_react16.createElement)("span", { className: "bt-pill-go", "aria-hidden": true }, (0, import_react16.createElement)(GoArrow))
     ),
     (0, import_react16.createElement)("span", { className: "bt-sr", role: "status" }, memoryNotice ? t("Memory updated") : ""),
+    (0, import_react16.createElement)("button", {
+      type: "button",
+      className: "bt-menu-btn",
+      "aria-label": t("Expand sidebar"),
+      title: t("Expand sidebar"),
+      onClick: () => actions.toggleSidebar()
+    }, (0, import_react16.createElement)(SidebarIcon, { size: 20 })),
     (0, import_react16.createElement)(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     (0, import_react16.createElement)(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions })
   );
@@ -18033,7 +18085,7 @@ function readPage(limits) {
   const stats = { nodes: 0, frames: 0 };
   let chars = 0;
   let stop = "";
-  const collapse = (value) => String(value || "").replace(/\s+/g, " ").trim();
+  const collapse2 = (value) => String(value || "").replace(/\s+/g, " ").trim();
   const isSecret = (el) => {
     if (el.localName !== "input" && el.localName !== "textarea") return false;
     const auto = String(el.getAttribute("autocomplete") || "").toLowerCase();
@@ -18079,13 +18131,13 @@ function readPage(limits) {
     const secret = isSecret(el);
     if (el.href) item.href = String(el.href);
     if ((el.localName === "input" || el.localName === "textarea") && !secret && !NO_VALUE_TYPES.has(el.type) && el.value) item.value = String(el.value).slice(0, 120);
-    if (el.localName === "select" && el.selectedOptions?.length) item.value = collapse([...el.selectedOptions].map((option) => option.label || option.text).join(", ")).slice(0, 120);
+    if (el.localName === "select" && el.selectedOptions?.length) item.value = collapse2([...el.selectedOptions].map((option) => option.label || option.text).join(", ")).slice(0, 120);
     if (el.checked) item.checked = true;
     if (el.disabled) item.disabled = true;
     items.push(item);
     return { item, number: items.length, secret };
   };
-  const nameOf = (el, text2, secret) => collapse(
+  const nameOf = (el, text2, secret) => collapse2(
     el.getAttribute("aria-label") || text2 || (el.localName === "input" && !secret && NO_VALUE_TYPES.has(el.type) ? el.value : "") || el.getAttribute("placeholder") || el.title || el.getAttribute("alt") || el.querySelector?.("img[alt]")?.alt || el.getAttribute("name") || ""
   ).slice(0, 80);
   const fenced = (code, lang) => {
@@ -18206,7 +18258,7 @@ Table: ${caption}` : ""}${keep(out.join("\n"))}`;
 
 `;
     stats.frames += 1;
-    const title = collapse(el.title || doc.title);
+    const title = collapse2(el.title || doc.title);
     const body2 = doc.body ? block(children(doc.body, { ...ctx, frames: ctx.frames + 1, depth: ctx.depth + 1, shown: true, pre: false })) : "";
     return keep(`[iframe: ${title ? `${title} (${address})` : address}]
 ${body2 || "(no text)"}
@@ -18247,7 +18299,7 @@ ${body2 || "(no text)"}
     if (tag === "br") return "\n";
     if (tag === "hr") return "\n\n---\n\n";
     if (tag === "img") {
-      const alt = collapse(el.getAttribute("alt"));
+      const alt = collapse2(el.getAttribute("alt"));
       return shown && alt ? `[image: ${alt}]` : "";
     }
     if (tag === "canvas") {
@@ -18261,7 +18313,7 @@ ${body2 || "(no text)"}
     const found = itemFor(el, style);
     const mark = found ? `[#${found.number}]` : "";
     if (tag === "input" || tag === "textarea" || tag === "select") {
-      if (found) found.item.name = nameOf(el, tag === "select" ? "" : el.labels?.[0] ? collapse(el.labels[0].textContent) : "", found.secret);
+      if (found) found.item.name = nameOf(el, tag === "select" ? "" : el.labels?.[0] ? collapse2(el.labels[0].textContent) : "", found.secret);
       return mark ? ` ${mark} ` : "";
     }
     let body2;
@@ -19667,7 +19719,8 @@ function apply(ctx) {
       const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id);
       show2(target);
     },
-    selectPanel: (id) => {
+    selectPanel: (id, opts) => {
+      dismissDrawerIfOpen(opts?.fromDrawer);
       ctx.layout.selectPanel(id);
     },
     toggleSidebar: () => {

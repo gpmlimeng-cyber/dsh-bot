@@ -10,6 +10,7 @@ import { reducedMotion } from './activity-row.js'
 import { Shimmer, workPhrase } from './cells.js'
 import { springEasing, SPRING_SHAPE, useViewport, viewBottom } from './motion.js'
 import { hostText, t } from './i18n.js'
+import { holdDrawerDismiss } from './drawer-dismiss.js'
 import { showsDshRow } from './dsh-offer.js'
 
 // -------------------------------------------------------------------------
@@ -253,6 +254,16 @@ export function TeamSidebar(props) {
   const listRef = useRef(null)
   const closing = useRef(false)
   useLayoutEffect(() => { closing.current = false })
+  // The collapse lives here because this component alone knows `wide` and the latch that
+  // `navigate` uses; entries inside the drawer ask for it (see drawer-dismiss.js).
+  const collapseDrawer = useRef(null)
+  collapseDrawer.current = () => {
+    if (!wide || window.innerWidth >= 1024 || closing.current) return
+    closing.current = true
+    expandSidebar?.()
+    actions.toggleSidebar()
+  }
+  useEffect(() => holdDrawerDismiss(() => collapseDrawer.current?.()), [])
   const roster = useRoster(value => value)
   const markedUnread = useUi(value => value.unread)
   props.useRegistry(value => value)
@@ -292,6 +303,8 @@ export function TeamSidebar(props) {
     openAgent: id => navigate(actions.openAgent, id),
     openAgentSession: id => navigate(actions.openAgentSession, id),
     newAgentSession: id => navigate(actions.newAgentSession, id),
+    // A row's menu opens its page above the drawer, so the drawer collapses first.
+    openSettings: (page, id) => actions.openSettings(page, id, { fromDrawer: true }),
   }
   const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
   // Typing while the sidebar has focus starts a search.
@@ -299,18 +312,18 @@ export function TeamSidebar(props) {
     if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
     if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
     event.preventDefault()
-    actions.openPalette(event.key)
+    actions.openPalette(event.key, { fromDrawer: true })
   }
   return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
     wide ? h('div', { className: 'bt-side-top' },
       h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
-      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
-      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
+      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette('', { fromDrawer: true }) }, h(SearchIcon)),
+      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon)),
       h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)))
       : h(Fragment, null,
           h(UpdateButton, { useUpdate: props.useUpdate, actions }),
-          h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon))),
+          h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon))),
     wide && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
     h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
       main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
@@ -483,7 +496,17 @@ const NO_SNAPSHOT = () => null
 // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
 // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
 // back in Agent mode; FooterAccount stands in while no seat exists at all.
-export function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions }) {
+export function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions: baseActions }) {
+  // This menu sits in the drawer (the shell's settings seat renders the same component
+  // with the drawer closed, where the collapse is a no-op), so its page entries collapse
+  // the drawer on the way. Wrapped here so the entries keep their own shape.
+  const drawerSeat = seat === false ? { fromDrawer: true } : undefined
+  const actions = {
+    ...baseActions,
+    openSettings: (page, id) => baseActions.openSettings(page, id, drawerSeat),
+    openConnectors: () => baseActions.openConnectors(drawerSeat),
+    selectPanel: id => baseActions.selectPanel(id, drawerSeat),
+  }
   const [open, setOpen] = useState(false)
   useLayoutEffect(() => {
     if (!seat) return undefined
@@ -565,7 +588,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
   }, [open])
   const groups = [
     [
-      [t('Usage'), GaugeIcon, () => actions.openSettings('usage')],
+      [t('Usage'), GaugeIcon, () => actions.openSettings('usage', null, { fromDrawer: true })],
       [t('Connectors'), ConnectorIcon, () => actions.openConnectors()],
       [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
       [t('Bot settings'), GearIcon, () => actions.openSettings('general')],

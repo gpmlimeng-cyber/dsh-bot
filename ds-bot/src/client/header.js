@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon } from './icons.js'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, SidebarIcon } from './icons.js'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { ActivityIndicator } from './activity-row.js'
 import { clockLabel, openingTurn, unseenSince } from './cells.js'
@@ -98,6 +98,9 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
   }, [Boolean(room)])
   const memoryNotice = !away && notice && changed !== null && roster.memory !== false
   return h('div', { className: 'bt-head' },
+    // dsh-web-mobile's own sidebar toggle renders into a slot this plugin shadows, so it
+    // never mounts on a phone. This is that missing entry: narrow screens only, and it
+    // only toggles the shell's sidebar, which is where the drawer lives.
     h('button', {
       type: 'button', className: 'bt-pill', 'aria-expanded': away ? undefined : detailsOpen, 'data-memory': memoryNotice ? 'updated' : undefined,
       'aria-label': away ? t('Back to chat') : memoryNotice ? t('Memory updated. Open {name}\'s memory', { name: roster.byId[changed]?.name ?? name }) : t('View conversation details'),
@@ -110,6 +113,10 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h(MemoryNotice, { shown: memoryNotice }),
     h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
+    h('button', {
+      type: 'button', className: 'bt-menu-btn', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'),
+      onClick: () => actions.toggleSidebar(),
+    }, h(SidebarIcon, { size: 20 })),
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions }))
 }

@@ -3,6 +3,7 @@ import { isHex, inkText, paintCss } from './inks.js'
 import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
 import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
 import { teamActions } from './team-actions.js'
+import { dismissDrawerIfOpen } from './drawer-dismiss.js'
 import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
 import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
@@ -476,7 +477,7 @@ export function apply(ctx) {
       const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
       show(target)
     },
-    selectPanel: (id) => { ctx.layout.selectPanel(id) },
+    selectPanel: (id, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ctx.layout.selectPanel(id) },
     toggleSidebar: () => { ctx.layout.toggleSidebar() },
     // Agent mode hands the surface back to the shell; everything open on the Bot
     // surface closes first so nothing stale reopens on the way back.

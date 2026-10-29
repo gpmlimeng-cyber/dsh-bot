@@ -891,6 +891,15 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
    overflows a short viewport in either orientation (a landscape phone is 844 wide and
    a 640 max-width query misses it). A long window simply never scrolls. */
 .bt-avedit{max-height:calc(100dvh - 96px);overflow-y:auto}
+/* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
+   into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
+   that same plugin's marker rather than a width: the marker means "drawer form", where the
+   native button is gone. It is a private attribute of dsh-web-mobile used for visibility
+   only — if it is ever renamed the button stops showing (a safe failure) and the native one
+   returns, so two hangers never appear at once. */
+.bt-menu-btn{display:none;position:absolute;left:0;top:0;width:44px;height:44px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:none;color:var(--bt-ink);pointer-events:auto;cursor:pointer}
+.bt-menu-btn:hover{background:var(--bt-hover)}
+html:has([data-mobile-nav="frame"]) .bt-menu-btn{display:flex}
 `
 
 export const CONVERSATION_CSS = `
