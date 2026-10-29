@@ -1007,6 +1007,7 @@ var ZH = {
   "Its group conversation could not open, so it starts a new one next time": "它的群聊会话打不开，下次会换一个新的",
   // The composer's +
   "Add files": "添加文件",
+  "Add image": "添加图片",
   "Reference a chat": "引用对话",
   "Chat with {name}": "与 {name} 的对话",
   "Scheduled task": "定时任务",
@@ -3883,6 +3884,7 @@ function BigDotsIcon() {
     (0, import_react3.createElement)("path", { d: "M4 10h.01M10 10h.01M16 10h.01", stroke: "currentColor", strokeWidth: 3.2, strokeLinecap: "round" })
   );
 }
+var ImageIcon = lineIcon(["M4 4.5h12v11H4z", "M4 12l3.5-3.5 3 3 2-2 3.5 3.5", "M7.75 8h.01"]);
 var CheckIcon = lineIcon(["M4.5 10.5l3.5 3.5 7.5-8"]);
 var GlobeIcon = lineIcon(["M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z", "M3 10h14", "M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z"]);
 var ArrowDownIcon = lineIcon(["M10 4v12", "M5 11l5 5 5-5"]);
@@ -14300,6 +14302,20 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     setOpen(null);
     fileInput()?.click();
   };
+  const attachImage = () => {
+    setOpen(null);
+    const input = fileInput();
+    if (!input) return;
+    const previous = input.getAttribute("accept");
+    input.setAttribute("accept", "image/*");
+    const restore = () => {
+      if (previous === null) input.removeAttribute("accept");
+      else input.setAttribute("accept", previous);
+    };
+    input.addEventListener("change", restore, { once: true });
+    window.addEventListener("focus", () => setTimeout(restore, 500), { once: true });
+    input.click();
+  };
   const schedule = () => {
     setOpen(null);
     actions.openSettings("schedules", target);
@@ -14339,6 +14355,7 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
         "data-leaving": leaving || void 0
       },
       shown.files ? (0, import_react31.createElement)("button", { type: "button", role: "menuitem", onClick: attach }, (0, import_react31.createElement)(PaperclipIcon), (0, import_react31.createElement)("span", { className: "bt-menu-label" }, t("Add files"))) : null,
+      shown.files ? (0, import_react31.createElement)("button", { type: "button", role: "menuitem", onClick: attachImage }, (0, import_react31.createElement)(ImageIcon), (0, import_react31.createElement)("span", { className: "bt-menu-label" }, t("Add image"))) : null,
       canReference ? (0, import_react31.createElement)("button", { type: "button", role: "menuitem", onMouseDown: keepComposerFocus, onClick: reference }, (0, import_react31.createElement)(ChatsIcon), (0, import_react31.createElement)("span", { className: "bt-menu-label" }, t("Reference a chat"))) : null,
       (0, import_react31.createElement)("button", { type: "button", role: "menuitem", onClick: schedule }, (0, import_react31.createElement)(ClockIcon), (0, import_react31.createElement)("span", { className: "bt-menu-label" }, t("Scheduled task")))
     ), document.body) : null

@@ -1,6 +1,6 @@
 import { createElement as h, Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChatsIcon, ClockIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
+import { ChatsIcon, ClockIcon, ImageIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
 import { BotMark } from './mark.js'
 import { useLinger, useViewport, viewBottom } from './motion.js'
 import { t } from './i18n.js'
@@ -133,6 +133,22 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     setOpen(null)
     fileInput()?.click()
   }
+  // Images take the same composer picker; only its accept filter changes for this one
+  // open, and it goes back whichever way the dialog ends (change, or a focus return).
+  const attachImage = () => {
+    setOpen(null)
+    const input = fileInput()
+    if (!input) return
+    const previous = input.getAttribute('accept')
+    input.setAttribute('accept', 'image/*')
+    const restore = () => {
+      if (previous === null) input.removeAttribute('accept')
+      else input.setAttribute('accept', previous)
+    }
+    input.addEventListener('change', restore, { once: true })
+    window.addEventListener('focus', () => setTimeout(restore, 500), { once: true })
+    input.click()
+  }
   const schedule = () => {
     setOpen(null)
     actions.openSettings('schedules', target)
@@ -161,6 +177,7 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       style: place ?? {}, 'data-leaving': leaving || undefined,
     },
     shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attach }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
+    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attachImage }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
     canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
     h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
 }

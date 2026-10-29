@@ -960,6 +960,7 @@ const ZH = {
   'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
   // The composer's +
   'Add files': '添加文件',
+  'Add image': '添加图片',
   'Reference a chat': '引用对话',
   'Chat with {name}': '与 {name} 的对话',
   'Scheduled task': '定时任务',
