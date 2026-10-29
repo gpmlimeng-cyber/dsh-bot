@@ -3262,8 +3262,10 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
    a 640 max-width query misses it). A long window simply never scrolls. */
 .bt-avedit{max-height:calc(100dvh - 96px);overflow-y:auto}
 /* This renderer does not give border-radius its round default: a 50% radius alone paints a
-   rounded square. Every circular control in this plugin already pairs the two, so the whole
-   surface declares it once here and the shell's own buttons follow. */
+   rounded square. The shell ships the whole surface as superellipse(1.5) through this one
+   variable, so a round corner everywhere is one variable, not a pile of !important rules:
+   sizes, colours and layout stay exactly as the shell set them. */
+html:root{--dsw-corner-shape:round}
 /* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
    into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
    that same plugin's marker rather than a width: the marker means "drawer form", where the
