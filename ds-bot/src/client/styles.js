@@ -895,6 +895,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
    rounded square. Every circular control in this plugin already pairs the two, so the whole
    surface declares it once here and the shell's own buttons follow. */
 button,[role="button"],[role="tab"],[role="menuitem"]{corner-shape:round}
+*,*::before,*::after{corner-shape:round!important}
 /* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
    into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
    that same plugin's marker rather than a width: the marker means "drawer form", where the
