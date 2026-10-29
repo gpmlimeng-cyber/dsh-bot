@@ -57,6 +57,16 @@ export function CloudDownloadIcon({ done = false }) {
 export const SmileIcon = lineIcon(['M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z', 'M7.3 11.6a3.4 3.4 0 0 0 5.4 0', 'M7.75 8.25h.01M12.25 8.25h.01'])
 export const ReplyIcon = lineIcon(['M8 5L4 9l4 4', 'M4 9h7.5a4.5 4.5 0 0 1 4.5 4.5V15'])
 export const DotsIcon = lineIcon(['M5 10h.01M10 10h.01M15 10h.01'])
+// The two-line menu mark the reference app uses for its drawer, at display weight.
+export function MenuLinesIcon() {
+  return h('svg', { width: 20, height: 20, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', 'aria-hidden': true },
+    h('path', { d: 'M4 7.5h12M4 12.5h12' }))
+}
+// The same dots as DotsIcon, drawn larger for the session header's button.
+export function BigDotsIcon() {
+  return h('svg', { width: 20, height: 20, viewBox: '0 0 20 20', 'aria-hidden': true },
+    h('path', { d: 'M5 10h.01M10 10h.01M15 10h.01', stroke: 'currentColor', strokeWidth: 2.6, strokeLinecap: 'round' }))
+}
 export const CheckIcon = lineIcon(['M4.5 10.5l3.5 3.5 7.5-8'])
 export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
 export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])

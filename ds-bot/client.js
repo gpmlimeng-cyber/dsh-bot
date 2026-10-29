@@ -3276,7 +3276,7 @@ html:root{--dsw-corner-shape:round}
    native button is gone. It is a private attribute of dsh-web-mobile used for visibility
    only — if it is ever renamed the button stops showing (a safe failure) and the native one
    returns, so two hangers never appear at once. */
-.bt-head-btn{display:none;position:absolute;left:-32px;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:color-mix(in srgb,var(--bt-main) 72%,transparent);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bt-head-btn{display:none;position:absolute;left:0;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:color-mix(in srgb,var(--bt-main) 72%,transparent);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .bt-head-btn:hover,.bt-head-btn:active{background:var(--bt-hover)}
 .bt-head-btn:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}
 /* 32px is the circle; a finger still gets 44. Grow up, down and left only, so the pill
@@ -3869,6 +3869,20 @@ function CloudDownloadIcon({ done = false }) {
 var SmileIcon = lineIcon(["M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z", "M7.3 11.6a3.4 3.4 0 0 0 5.4 0", "M7.75 8.25h.01M12.25 8.25h.01"]);
 var ReplyIcon = lineIcon(["M8 5L4 9l4 4", "M4 9h7.5a4.5 4.5 0 0 1 4.5 4.5V15"]);
 var DotsIcon = lineIcon(["M5 10h.01M10 10h.01M15 10h.01"]);
+function MenuLinesIcon() {
+  return (0, import_react3.createElement)(
+    "svg",
+    { width: 20, height: 20, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", "aria-hidden": true },
+    (0, import_react3.createElement)("path", { d: "M4 7.5h12M4 12.5h12" })
+  );
+}
+function BigDotsIcon() {
+  return (0, import_react3.createElement)(
+    "svg",
+    { width: 20, height: 20, viewBox: "0 0 20 20", "aria-hidden": true },
+    (0, import_react3.createElement)("path", { d: "M5 10h.01M10 10h.01M15 10h.01", stroke: "currentColor", strokeWidth: 2.6, strokeLinecap: "round" })
+  );
+}
 var CheckIcon = lineIcon(["M4.5 10.5l3.5 3.5 7.5-8"]);
 var GlobeIcon = lineIcon(["M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z", "M3 10h14", "M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z"]);
 var ArrowDownIcon = lineIcon(["M10 4v12", "M5 11l5 5 5-5"]);
@@ -12901,7 +12915,7 @@ var chatRoom = {
 var shortAddress = (url) => String(url ?? "").replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, "");
 var reducedMotion2 = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 var tabLabel = (page) => page.title || shortAddress(page.url) || t("New tab");
-function PanelMenu({ items, className, "aria-label": label }) {
+function PanelMenu({ items, className, icon: icon2, "aria-label": label }) {
   const [open, setOpen] = (0, import_react29.useState)(false);
   const wrap = (0, import_react29.useRef)(null);
   (0, import_react29.useEffect)(() => {
@@ -12933,7 +12947,7 @@ function PanelMenu({ items, className, "aria-label": label }) {
       "aria-haspopup": "menu",
       "aria-expanded": open,
       onClick: () => setOpen((value) => !value)
-    }, (0, import_react29.createElement)(DotsIcon)),
+    }, (0, import_react29.createElement)(icon2 ?? DotsIcon)),
     open ? (0, import_react29.createElement)(
       "div",
       { className: "bt-pmenu-pop", role: "menu" },
@@ -13878,7 +13892,6 @@ var BROWSER_CSS = `
 // src/client/header.js
 var import_react30 = require("react");
 var import_react_dom7 = require("react-dom");
-var import_dsh_client_ui_primitives2 = require("@deepseek-ai/dsh-client-ui-primitives");
 var GoArrow = () => (0, import_react30.createElement)("svg", { width: 14, height: 14, viewBox: "-12 -12 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true }, (0, import_react30.createElement)("path", { d: "M-7 0H7M2 -5L7 0L2 5" }));
 var MEMORY_NOTICE_MS = 3200;
 var noNews = (select) => select({});
@@ -13986,7 +13999,7 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
       "aria-label": t("Expand sidebar"),
       title: t("Expand sidebar"),
       onClick: () => actions.toggleSidebar()
-    }, (0, import_react30.createElement)(import_dsh_client_ui_primitives2.IconPanelLeftOutlineRegular, { size: 16 })),
+    }, (0, import_react30.createElement)(MenuLinesIcon)),
     (0, import_react30.createElement)(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     (0, import_react30.createElement)(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions })
   );
@@ -14004,7 +14017,7 @@ function SessionMenu({ sessionId, bot, room: room2, roster, actions }) {
     items.push({ key: "rename-agent", icon: PencilIcon, label: t("Rename"), onPick: () => actions.beginAgentRename(sessionId) });
     items.push({ key: "archive", icon: TrashIcon, label: t("Archive"), onPick: () => actions.archiveAgentSession(agent.id, sessionId) });
   }
-  return (0, import_react30.createElement)(PanelMenu, { items, className: "bt-head-btn", "aria-label": t("Session actions") });
+  return (0, import_react30.createElement)(PanelMenu, { items, className: "bt-head-btn", icon: BigDotsIcon, "aria-label": t("Session actions") });
 }
 function useTranscriptView() {
   const [view, setView] = (0, import_react30.useState)(null);

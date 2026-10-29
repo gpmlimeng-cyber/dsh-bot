@@ -906,7 +906,7 @@ html:root{--dsw-corner-shape:round}
    native button is gone. It is a private attribute of dsh-web-mobile used for visibility
    only — if it is ever renamed the button stops showing (a safe failure) and the native one
    returns, so two hangers never appear at once. */
-.bt-head-btn{display:none;position:absolute;left:-32px;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:color-mix(in srgb,var(--bt-main) 72%,transparent);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bt-head-btn{display:none;position:absolute;left:0;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:color-mix(in srgb,var(--bt-main) 72%,transparent);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .bt-head-btn:hover,.bt-head-btn:active{background:var(--bt-hover)}
 .bt-head-btn:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}
 /* 32px is the circle; a finger still gets 44. Grow up, down and left only, so the pill

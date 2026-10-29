@@ -1,8 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, PencilIcon, PinIcon, TrashIcon } from './icons.js'
-import { IconPanelLeftOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, PencilIcon, PinIcon, TrashIcon, MenuLinesIcon, BigDotsIcon } from './icons.js'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { ActivityIndicator } from './activity-row.js'
 import { clockLabel, openingTurn, unseenSince } from './cells.js'
@@ -119,7 +118,7 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h('button', {
       type: 'button', className: 'bt-head-btn', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'),
       onClick: () => actions.toggleSidebar(),
-    }, h(IconPanelLeftOutlineRegular, { size: 16 })),
+    }, h(MenuLinesIcon)),
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions }))
 }
@@ -140,7 +139,7 @@ function SessionMenu({ sessionId, bot, room, roster, actions }) {
     items.push({ key: 'rename-agent', icon: PencilIcon, label: t('Rename'), onPick: () => actions.beginAgentRename(sessionId) })
     items.push({ key: 'archive', icon: TrashIcon, label: t('Archive'), onPick: () => actions.archiveAgentSession(agent.id, sessionId) })
   }
-  return h(PanelMenu, { items, className: 'bt-head-btn', 'aria-label': t('Session actions') })
+  return h(PanelMenu, { items, className: 'bt-head-btn', icon: BigDotsIcon, 'aria-label': t('Session actions') })
 }
 
 // New-message pills. "N new messages ↓" takes Back to bottom's place when

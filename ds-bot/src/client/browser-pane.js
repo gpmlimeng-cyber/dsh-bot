@@ -125,7 +125,7 @@ const tabLabel = page => page.title || shortAddress(page.url) || t('New tab')
 // The `···` popover anchored to its button. `items` holds {key, icon, label,
 // onPick} and {sep:true} entries; Escape or a click outside closes it. The
 // callers hide the button when the list is empty.
-export function PanelMenu({ items, className, 'aria-label': label }) {
+export function PanelMenu({ items, className, icon, 'aria-label': label }) {
   const [open, setOpen] = useState(false)
   const wrap = useRef(null)
   useEffect(() => {
@@ -145,7 +145,7 @@ export function PanelMenu({ items, className, 'aria-label': label }) {
     h('button', {
       type: 'button', className, 'aria-label': label, title: label,
       'aria-haspopup': 'menu', 'aria-expanded': open, onClick: () => setOpen(value => !value),
-    }, h(DotsIcon)),
+    }, h(icon ?? DotsIcon)),
     open ? h('div', { className: 'bt-pmenu-pop', role: 'menu' },
       items.map((item, index) => (item.sep
         ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
