@@ -1028,6 +1028,12 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
    sat a couple of pixels high inside the 44px box. Equal 6px insets centre it exactly; the
    attribute is repeated so this beats whichever rule pinned the top to 2px. */
 [data-composer-card][data-composer-card][data-composer-card]{padding:2px 7.5px!important}
+/* The voice-input control the shell puts at the far right of the composer draws an 18px
+   mark on a bare seat. This surface asks for the fuller microphone used elsewhere, so the
+   shell's glyph is hidden and the mark is painted through a mask: it takes the button's own
+   colour, which keeps it right in light and dark themes alike. */
+[data-composer-card] button[aria-label*="voice input" i]>svg{display:none}
+[data-composer-card] button[aria-label*="voice input" i]{background-color:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='7.25' y='2' width='5.5' height='10' rx='2.75' fill='%23000' stroke='none'/%3E%3Cpath d='M4.75 9.5a5.25 5.25 0 0 0 10.5 0'/%3E%3Cpath d='M10 14.75v2.75M7 17.5h6'/%3E%3C/svg%3E") center/20px 20px no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='7.25' y='2' width='5.5' height='10' rx='2.75' fill='%23000' stroke='none'/%3E%3Cpath d='M4.75 9.5a5.25 5.25 0 0 0 10.5 0'/%3E%3Cpath d='M10 14.75v2.75M7 17.5h6'/%3E%3C/svg%3E") center/20px 20px no-repeat}
 /* The card centers its children, but a child that carries its own alignment still rides
    the top of the row; pin every direct child's cross-axis alignment to the same centre. */
 [data-composer-card]>*{align-self:center!important}
