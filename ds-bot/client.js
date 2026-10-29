@@ -3412,7 +3412,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 [data-composer-placeholder]::before{content:var(--bt-placeholder,"Message")!important;display:block!important;font-size:14px!important;line-height:24px!important;color:color-mix(in srgb,var(--bt-ink) 36%,transparent)!important}
 /* The team's "+" (ComposerPlus) takes the seat of the shell's command-menu button. */
 [data-composer-card] button[class*="_add"]{display:none!important}
-.bt-plus{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bt-ink) 5%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink-2);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, "scale")}}
+.bt-plus{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bt-ink) 9%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line-2);color:var(--bt-ink);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, "scale")}}
 .bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
 .bt-plus:active{scale:.9}
 .bt-plus svg{width:14px;height:14px;transition:${spring(SPRING_POP, "rotate")}}
