@@ -1,7 +1,8 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, SidebarIcon } from './icons.js'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon } from './icons.js'
+import { IconPanelLeftOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { ActivityIndicator } from './activity-row.js'
 import { clockLabel, openingTurn, unseenSince } from './cells.js'
@@ -116,7 +117,7 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h('button', {
       type: 'button', className: 'bt-menu-btn', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'),
       onClick: () => actions.toggleSidebar(),
-    }, h(SidebarIcon, { size: 20 })),
+    }, h(IconPanelLeftOutlineRegular, { size: 16 })),
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions }))
 }

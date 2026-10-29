@@ -897,8 +897,12 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
    native button is gone. It is a private attribute of dsh-web-mobile used for visibility
    only — if it is ever renamed the button stops showing (a safe failure) and the native one
    returns, so two hangers never appear at once. */
-.bt-menu-btn{display:none;position:absolute;left:0;top:0;width:44px;height:44px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:none;color:var(--bt-ink);pointer-events:auto;cursor:pointer}
-.bt-menu-btn:hover{background:var(--bt-hover)}
+.bt-menu-btn{display:none;position:absolute;left:8px;top:12px;width:28px;height:28px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:transparent;color:var(--dsw-alias-label-secondary,inherit);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bt-menu-btn:hover,.bt-menu-btn:active{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.06))}
+.bt-menu-btn:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}
+/* 28px like the shell's own toggle, but a finger gets 44: grow up, down and left only, so
+   the pill beside it keeps its space. */
+.bt-menu-btn::after{content:'';position:absolute;inset:-8px 0 -8px -8px}
 html:has([data-mobile-nav="frame"]) .bt-menu-btn{display:flex}
 `
 

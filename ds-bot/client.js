@@ -3267,8 +3267,12 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
    native button is gone. It is a private attribute of dsh-web-mobile used for visibility
    only — if it is ever renamed the button stops showing (a safe failure) and the native one
    returns, so two hangers never appear at once. */
-.bt-menu-btn{display:none;position:absolute;left:0;top:0;width:44px;height:44px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:none;color:var(--bt-ink);pointer-events:auto;cursor:pointer}
-.bt-menu-btn:hover{background:var(--bt-hover)}
+.bt-menu-btn{display:none;position:absolute;left:8px;top:12px;width:28px;height:28px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:transparent;color:var(--dsw-alias-label-secondary,inherit);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bt-menu-btn:hover,.bt-menu-btn:active{background:var(--dsw-alias-interactive-bg-hover,rgba(0,0,0,.06))}
+.bt-menu-btn:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}
+/* 28px like the shell's own toggle, but a finger gets 44: grow up, down and left only, so
+   the pill beside it keeps its space. */
+.bt-menu-btn::after{content:'';position:absolute;inset:-8px 0 -8px -8px}
 html:has([data-mobile-nav="frame"]) .bt-menu-btn{display:flex}
 `;
 var CONVERSATION_CSS = `
@@ -9411,6 +9415,7 @@ var SIDEBAR_CSS = `
 // src/client/header.js
 var import_react16 = require("react");
 var import_react_dom4 = require("react-dom");
+var import_dsh_client_ui_primitives2 = require("@deepseek-ai/dsh-client-ui-primitives");
 var GoArrow = () => (0, import_react16.createElement)("svg", { width: 14, height: 14, viewBox: "-12 -12 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true }, (0, import_react16.createElement)("path", { d: "M-7 0H7M2 -5L7 0L2 5" }));
 var MEMORY_NOTICE_MS = 3200;
 var noNews = (select) => select({});
@@ -9517,7 +9522,7 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
       "aria-label": t("Expand sidebar"),
       title: t("Expand sidebar"),
       onClick: () => actions.toggleSidebar()
-    }, (0, import_react16.createElement)(SidebarIcon, { size: 20 })),
+    }, (0, import_react16.createElement)(import_dsh_client_ui_primitives2.IconPanelLeftOutlineRegular, { size: 16 })),
     (0, import_react16.createElement)(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     (0, import_react16.createElement)(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions })
   );
