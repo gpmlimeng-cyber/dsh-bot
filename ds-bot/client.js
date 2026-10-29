@@ -3873,7 +3873,7 @@ function MenuLinesIcon() {
   return (0, import_react3.createElement)(
     "svg",
     { width: 20, height: 20, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", "aria-hidden": true },
-    (0, import_react3.createElement)("path", { d: "M4 7.5h12M4 12.5h12" })
+    (0, import_react3.createElement)("path", { d: "M4 7.5h12M4 12.5h8" })
   );
 }
 function BigDotsIcon() {
