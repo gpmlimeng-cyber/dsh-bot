@@ -1044,6 +1044,10 @@ const ZH = {
   'Up one level': '上一级',
   'No folders inside.': '里面没有文件夹。',
   'Some folders are not shown.': '还有一些文件夹没有显示。',
+
+  // Local patch (design/ds-bot-patches.md): appended, so it never collides with an
+  // upstream edit to the entries above.
+  Gaze: '凝视',
 }
 
 // Host errors stay English, since Bots read them too; they are translated where the

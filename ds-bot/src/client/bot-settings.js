@@ -4,6 +4,7 @@ import { CHARACTERS, PICKER_SHAPES, PICKER_COLUMNS, CHARACTER_COLORS, SHAPES, ha
 import { isMainOf } from './sources.js'
 import { PencilIcon, ChevronRightIcon } from './icons.js'
 import { lookOf, BotMark } from './mark.js'
+import { GAZE } from './gaze.js'
 import { ModelMenu, modelOf } from './model-menu.js'
 import { FolderMenu } from './folder-menu.js'
 import { BotSchedules } from './schedules.js'
@@ -96,6 +97,15 @@ export function CharacterGrid({ look, hasPhoto = false, onShape, onColor }) {
     }, h('span', { style: { background: paintCss(color) } })))))
 }
 
+// The Gaze faces that ship with the plugin, one click away in both avatar pickers.
+export function GazeRow({ current, onPick }) {
+  return h('div', { className: 'bt-shape-row', role: 'group', 'aria-label': t('Gaze') }, GAZE.map(entry => h('button', {
+    key: entry.id, type: 'button', className: 'bt-shape', title: entry.id, 'aria-label': entry.id,
+    'aria-pressed': current === entry.image,
+    onClick: () => onPick(entry.image),
+  }, h('span', { style: { width: 36, height: 36 } }, h('img', { className: 'bt-mark-img', src: entry.image, alt: '', draggable: false })))))
+}
+
 // The avatar editor: the Bot tab picks a character (every click saves), the
 // Upload tab takes a photo, the Library tab picks one the user imported before, and
 // Reset returns to the look the Bot id gives.
@@ -138,11 +148,13 @@ function AvatarEditor({ bot, actions, run, onClose }) {
         type: 'button', className: 'bt-avedit-tab bt-avedit-reset', title: t('Reset character to default'),
         onClick: () => run(actions.updateBot(bot.id, { avatar: null, color: null })),
       }, t('Reset'))),
-    tab === 'bot' ? h(CharacterGrid, {
-      look, hasPhoto,
-      onShape: shape => run(actions.updateBot(bot.id, { avatar: { shape } })),
-      onColor: color => run(actions.updateBot(bot.id, { color })),
-    }) : null,
+    tab === 'bot' ? h(Fragment, null,
+      h(CharacterGrid, {
+        look, hasPhoto,
+        onShape: shape => run(actions.updateBot(bot.id, { avatar: { shape } })),
+        onColor: color => run(actions.updateBot(bot.id, { color })),
+      }),
+      h(GazeRow, { current: look.image, onPick: image => run(actions.updateBot(bot.id, { avatar: { ...bot.avatar, image } })) })) : null,
     tab === 'upload' ? h('div', {
       className: 'bt-dropzone', 'data-over': over || undefined,
       onDragOver: (event) => { event.preventDefault(); setOver(true) },

@@ -883,6 +883,14 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 @media (max-width:640px) and (pointer:coarse){
   .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
 }
+/* Local patches (design/ds-bot-patches.md). Appended rather than edited into the rules
+   above, so an upstream change to those rules cannot conflict: same specificity, later
+   wins. Both only touch what this plugin renders itself. */
+.bt-mark-img{box-shadow:none}
+/* Unconditional: the overlay is absolutely placed under the avatar button, so it
+   overflows a short viewport in either orientation (a landscape phone is 844 wide and
+   a 640 max-width query misses it). A long window simply never scrolls. */
+.bt-avedit{max-height:calc(100dvh - 96px);overflow-y:auto}
 `
 
 export const CONVERSATION_CSS = `
@@ -1134,6 +1142,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-btw-answer p{margin:0}
 .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
 @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
+/* Local patch: the composer's four small controls get a finger-sized target on touch.
+   The send button restates !important because it is set that way above. */
+@media (pointer:coarse){
+  .bt-plus,.bt-mic,.bt-voice{width:32px;height:32px}
+  [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important}
+}
 `
 
 // -------------------------------------------------------------------------
