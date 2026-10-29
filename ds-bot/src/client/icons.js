@@ -65,8 +65,8 @@ export function MenuLinesIcon() {
 }
 // The same dots as DotsIcon, drawn larger for the session header's button.
 export function BigDotsIcon() {
-  return h('svg', { width: 20, height: 20, viewBox: '0 0 20 20', 'aria-hidden': true },
-    h('path', { d: 'M5 10h.01M10 10h.01M15 10h.01', stroke: 'currentColor', strokeWidth: 2.6, strokeLinecap: 'round' }))
+  return h('svg', { width: 22, height: 22, viewBox: '0 0 20 20', 'aria-hidden': true },
+    h('path', { d: 'M4 10h.01M10 10h.01M16 10h.01', stroke: 'currentColor', strokeWidth: 3.2, strokeLinecap: 'round' }))
 }
 export const CheckIcon = lineIcon(['M4.5 10.5l3.5 3.5 7.5-8'])
 export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])

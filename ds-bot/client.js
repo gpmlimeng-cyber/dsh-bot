@@ -3879,8 +3879,8 @@ function MenuLinesIcon() {
 function BigDotsIcon() {
   return (0, import_react3.createElement)(
     "svg",
-    { width: 20, height: 20, viewBox: "0 0 20 20", "aria-hidden": true },
-    (0, import_react3.createElement)("path", { d: "M5 10h.01M10 10h.01M15 10h.01", stroke: "currentColor", strokeWidth: 2.6, strokeLinecap: "round" })
+    { width: 22, height: 22, viewBox: "0 0 20 20", "aria-hidden": true },
+    (0, import_react3.createElement)("path", { d: "M4 10h.01M10 10h.01M16 10h.01", stroke: "currentColor", strokeWidth: 3.2, strokeLinecap: "round" })
   );
 }
 var CheckIcon = lineIcon(["M4.5 10.5l3.5 3.5 7.5-8"]);
