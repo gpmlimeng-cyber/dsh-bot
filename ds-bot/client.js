@@ -3506,7 +3506,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-q-dock .bt-q{margin:0 auto 8px}
 [class*="_toBottomSlot"]{justify-content:center!important;padding-right:0!important}
 [data-conversation-scroll] [class*="_toBottomSlot"]{bottom:calc(var(--dsh-composer-height,152px) + 8px)!important}
-[class*="_toBottomSlot"]>button{width:36px!important;height:36px!important;margin-top:-36px!important;background:var(--bt-main)!important;color:var(--bt-ink)!important;box-shadow:0 0 0 .5px var(--bt-line-2),0 2px 8px -2px rgba(0,0,0,.12)!important;animation:bt-tobottom-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out;transition:background-color .12s ease,${spring(SPRING_TAP, "scale")}}
+[class*="_toBottomSlot"]>button{width:36px!important;height:36px!important;margin-top:-36px!important;background:color-mix(in srgb,var(--bt-main) 72%,transparent)!important;color:var(--bt-ink)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)!important;animation:bt-tobottom-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out;transition:background-color .12s ease,${spring(SPRING_TAP, "scale")}}
 [class*="_toBottomSlot"]>button:active{scale:.9}
 [class*="_toBottomSlot"]>button:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))!important}
 [class*="_toBottomSlot"]>button svg{display:none}
