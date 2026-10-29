@@ -3444,8 +3444,8 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 [data-composer-card] button[class*="_primary"]:disabled{display:none!important}
 [data-composer-dock]{display:none!important}
 .bt-mic,.bt-voice{flex:none;width:28px;height:28px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, "scale")}}
-.bt-mic{background:color-mix(in srgb,var(--bt-ink) 5%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink-2)}
-.bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
+.bt-mic{background:transparent;box-shadow:none;color:var(--bt-ink)}
+.bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 8%,transparent);color:var(--bt-ink)}
 .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
 @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
 .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
@@ -3835,12 +3835,13 @@ function PeopleIcon() {
 function ArrowUpIcon() {
   return (0, import_react3.createElement)("svg", { width: 16, height: 16, viewBox: "0 0 20 20", "aria-hidden": true }, (0, import_react3.createElement)("path", { d: "M10 16V4M5 9l5-5 5 5", stroke: "currentColor", strokeWidth: 1.8, fill: "none", strokeLinecap: "round", strokeLinejoin: "round" }));
 }
-function MicIcon({ size = 16 }) {
+function MicIcon({ size = 22 }) {
   return (0, import_react3.createElement)(
     "svg",
-    { width: size, height: size, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", "aria-hidden": true },
-    (0, import_react3.createElement)("rect", { x: 7, y: 2.5, width: 6, height: 10, rx: 3, fill: "currentColor", stroke: "none" }),
-    (0, import_react3.createElement)("path", { d: "M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5" })
+    { width: size, height: size, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", "aria-hidden": true },
+    (0, import_react3.createElement)("rect", { x: 7.25, y: 2, width: 5.5, height: 10, rx: 2.75, fill: "currentColor", stroke: "none" }),
+    (0, import_react3.createElement)("path", { d: "M4.75 9.5a5.25 5.25 0 0 0 10.5 0" }),
+    (0, import_react3.createElement)("path", { d: "M10 14.75v2.75M7 17.5h6" })
   );
 }
 function WaveIcon({ size = 16 }) {

@@ -18,10 +18,11 @@ export function PeopleIcon() {
 export function ArrowUpIcon() {
   return h('svg', { width: 16, height: 16, viewBox: '0 0 20 20', 'aria-hidden': true }, h('path', { d: 'M10 16V4M5 9l5-5 5 5', stroke: 'currentColor', strokeWidth: 1.8, fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' }))
 }
-export function MicIcon({ size = 16 }) {
-  return h('svg', { width: size, height: size, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', 'aria-hidden': true },
-    h('rect', { x: 7, y: 2.5, width: 6, height: 10, rx: 3, fill: 'currentColor', stroke: 'none' }),
-    h('path', { d: 'M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5' }))
+export function MicIcon({ size = 22 }) {
+  return h('svg', { width: size, height: size, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', 'aria-hidden': true },
+    h('rect', { x: 7.25, y: 2, width: 5.5, height: 10, rx: 2.75, fill: 'currentColor', stroke: 'none' }),
+    h('path', { d: 'M4.75 9.5a5.25 5.25 0 0 0 10.5 0' }),
+    h('path', { d: 'M10 14.75v2.75M7 17.5h6' }))
 }
 // The voice-chat glyph: five bars of a level meter.
 export function WaveIcon({ size = 16 }) {
