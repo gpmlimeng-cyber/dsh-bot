@@ -2524,7 +2524,7 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
    row flush with the status bar. Give the row a little air back, but only where that
    plugin owns the header: on a desktop window the host padding is still there. */
 html:has([data-mobile-nav="frame"]) .bt-head{margin-top:8px}
-.bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:36px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
+.bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:36px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 72%,transparent);border:0;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
 .bt-pill:active{transform:scale(.965)}
 .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
