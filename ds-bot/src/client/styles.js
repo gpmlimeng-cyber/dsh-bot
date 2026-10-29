@@ -324,11 +324,16 @@ button.bt-q-opt:active{background:var(--bt-active)}
 
 /* On a phone the new-chat pane hosts Create Bot, and a popover anchored to the composer
    leaves that form squeezed into a column. Lift it into a bottom sheet instead. */
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){top:auto!important;left:0!important;right:0!important;width:auto;max-height:88vh;max-height:88dvh;border-radius:20px 20px 0 0;padding-bottom:calc(var(--bt-sheet-foot,0px) + env(safe-area-inset-bottom,0px));box-sizing:border-box;box-shadow:0 0 0 100vmax rgba(0,0,0,.32),0 -1px 0 var(--bt-line),0 -12px 40px -16px rgba(0,0,0,.24);overflow:hidden}
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){top:auto!important;left:0!important;right:0!important;width:auto;height:var(--bt-sheet-h,auto);max-height:var(--bt-sheet-h,88dvh);border-radius:20px 20px 0 0;padding-bottom:calc(var(--bt-sheet-foot,0px) + env(safe-area-inset-bottom,0px));box-sizing:border-box;box-shadow:0 -1px 0 var(--bt-line),0 -12px 40px -16px rgba(0,0,0,.24);overflow:hidden}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){animation:bt-sheet-in .42s cubic-bezier(.32,.9,.24,1) both,bt-veil-in .18s ease-out both}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head{position:relative;padding-top:15px;border-bottom:0}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-body{padding:2px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.bt-sheet-catcher,.bt-sheet-grip{display:none}
+html:has([data-mobile-nav="frame"]) .bt-sheet-catcher{display:block;position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.32);animation:bt-veil-in .18s ease-out both}
+html:has([data-mobile-nav="frame"]) .bt-sheet-grip{display:block;position:absolute;left:0;right:0;top:0;height:16px;z-index:3;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent}
+html:has([data-mobile-nav="frame"]) .bt-pane[data-dragging]{animation:none;cursor:grabbing}
+html:has([data-mobile-nav="frame"]) .bt-pane[data-dragging] .bt-create-card{animation:none}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-to{position:relative;padding-top:15px;border-bottom:0}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-to::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-drop{position:static;left:auto;top:auto;width:auto;max-height:none;flex:1 1 auto;min-height:0;padding:0 6px calc(8px + env(safe-area-inset-bottom,0px));border:0;border-radius:0;background:transparent;box-shadow:none;overflow-y:auto;transform-origin:50% 0}

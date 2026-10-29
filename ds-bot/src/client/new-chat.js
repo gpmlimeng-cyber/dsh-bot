@@ -1,4 +1,4 @@
-import { createElement as h, useEffect, useRef, useState } from 'react'
+import { Fragment, createElement as h, useEffect, useRef, useState } from 'react'
 import { FishLogo } from './dsh-primitives.js'
 import { PlusIcon, PeopleIcon, ArrowUpIcon } from './icons.js'
 import { AdminStar, BotMark } from './mark.js'
@@ -6,6 +6,43 @@ import { useEscape, usePaneLeft } from './overlay-hooks.js'
 import { CreateBot } from './create-bot.js'
 import { QUICK_EDGES, useFlip, useGlide, useMorph } from './motion.js'
 import { t } from './i18n.js'
+
+// The pane is a bottom sheet on a phone: a drag on its grip stretches it (the list inside
+// then scrolls), and it may not grow past the visible area.
+function useSheetGrip(ref) {
+  useEffect(() => {
+    const pane = ref.current
+    const grip = pane?.querySelector('.bt-sheet-grip')
+    if (!pane || !grip || !document.querySelector('[data-mobile-nav="frame"]')) return undefined
+    const down = (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return
+      event.preventDefault()
+      const from = pane.getBoundingClientRect().height
+      const y0 = event.clientY
+      const ceiling = Math.min(window.visualViewport?.height ?? window.innerHeight, window.innerHeight) * 0.96
+      pane.dataset.dragging = '1'
+      const move = (ev) => {
+        const next = Math.max(180, Math.min(ceiling, from + (y0 - ev.clientY)))
+        pane.style.setProperty('--bt-sheet-h', `${Math.round(next)}px`)
+      }
+      const up = () => {
+        delete pane.dataset.dragging
+        removeEventListener('pointermove', move)
+        removeEventListener('pointerup', up)
+        removeEventListener('pointercancel', up)
+      }
+      addEventListener('pointermove', move)
+      addEventListener('pointerup', up)
+      addEventListener('pointercancel', up)
+    }
+    grip.addEventListener('pointerdown', down)
+    return () => {
+      grip.removeEventListener('pointerdown', down)
+      pane.style.removeProperty('--bt-sheet-h')
+      delete pane.dataset.dragging
+    }
+  }, [])
+}
 
 // The sheet sits on the composer, but a phone keyboard shrinks only the visible area and
 // leaves the composer behind it. Measure the composer while it is on screen and reserve
@@ -42,6 +79,8 @@ function useSheetFoot() {
 
 export function NewChat({ mode, roster, actions }) {
   useSheetFoot()
+  const paneRef = useRef(null)
+  useSheetGrip(paneRef)
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState([])
   const [group, setGroup] = useState(mode === 'group')
@@ -146,12 +185,15 @@ export function NewChat({ mode, roster, actions }) {
   const drop = useRef(null)
   useMorph(drop, listed)
   if (draft) {
-    return h('div', { className: 'bt-pane', style: { left: paneLeft } },
+    return h(Fragment, null,
+      h('div', { className: 'bt-sheet-catcher', onClick: close }),
+      h('div', { ref: paneRef, className: 'bt-pane', style: { left: paneLeft } },
+        h('div', { className: 'bt-sheet-grip', 'aria-hidden': true }),
       h(CreateBot, {
         roster, actions, start: draft, brief: message.trim(), canGoBack: draft.fromList,
         onBack: draft.fromList ? () => { setDraft(null); setTimeout(() => inputRef.current?.focus()) } : close,
         onCreated: created,
-      }))
+      })))
   }
   const adminBot = admin === null ? undefined : roster.byId[admin]
   const recipients = adminBot ? [adminBot, ...pickedBots] : pickedBots
@@ -160,7 +202,10 @@ export function NewChat({ mode, roster, actions }) {
     if (picked.length > 0) setPicked(current => current.slice(0, -1))
     else if (admin !== null) setAdmin(null)
   }
-  return h('div', { className: 'bt-pane', style: { left: paneLeft } },
+  return h(Fragment, null,
+    h('div', { className: 'bt-sheet-catcher', onClick: close }),
+    h('div', { ref: paneRef, className: 'bt-pane', style: { left: paneLeft } },
+      h('div', { className: 'bt-sheet-grip', 'aria-hidden': true }),
     h('div', { className: 'bt-newchat', role: 'dialog', 'aria-label': mode === 'search' ? t('Search') : t('New chat') },
       h('div', { className: 'bt-to' },
         h('span', { className: 'bt-to-label' }, t('To:')),
@@ -210,5 +255,5 @@ export function NewChat({ mode, roster, actions }) {
               if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); sendMessage() }
             },
           }),
-          h('button', { type: 'button', className: 'bt-nc-send', 'aria-label': t('Send message'), disabled: busy || message.trim() === '' || picked.length === 0, onClick: sendMessage }, h(ArrowUpIcon))))))
+          h('button', { type: 'button', className: 'bt-nc-send', 'aria-label': t('Send message'), disabled: busy || message.trim() === '' || picked.length === 0, onClick: sendMessage }, h(ArrowUpIcon)))))))
 }

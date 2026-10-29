@@ -2695,11 +2695,16 @@ button.bt-q-opt:active{background:var(--bt-active)}
 
 /* On a phone the new-chat pane hosts Create Bot, and a popover anchored to the composer
    leaves that form squeezed into a column. Lift it into a bottom sheet instead. */
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){top:auto!important;left:0!important;right:0!important;width:auto;max-height:88vh;max-height:88dvh;border-radius:20px 20px 0 0;padding-bottom:calc(var(--bt-sheet-foot,0px) + env(safe-area-inset-bottom,0px));box-sizing:border-box;box-shadow:0 0 0 100vmax rgba(0,0,0,.32),0 -1px 0 var(--bt-line),0 -12px 40px -16px rgba(0,0,0,.24);overflow:hidden}
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){top:auto!important;left:0!important;right:0!important;width:auto;height:var(--bt-sheet-h,auto);max-height:var(--bt-sheet-h,88dvh);border-radius:20px 20px 0 0;padding-bottom:calc(var(--bt-sheet-foot,0px) + env(safe-area-inset-bottom,0px));box-sizing:border-box;box-shadow:0 -1px 0 var(--bt-line),0 -12px 40px -16px rgba(0,0,0,.24);overflow:hidden}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){animation:bt-sheet-in .42s cubic-bezier(.32,.9,.24,1) both,bt-veil-in .18s ease-out both}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head{position:relative;padding-top:15px;border-bottom:0}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-body{padding:2px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.bt-sheet-catcher,.bt-sheet-grip{display:none}
+html:has([data-mobile-nav="frame"]) .bt-sheet-catcher{display:block;position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.32);animation:bt-veil-in .18s ease-out both}
+html:has([data-mobile-nav="frame"]) .bt-sheet-grip{display:block;position:absolute;left:0;right:0;top:0;height:16px;z-index:3;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent}
+html:has([data-mobile-nav="frame"]) .bt-pane[data-dragging]{animation:none;cursor:grabbing}
+html:has([data-mobile-nav="frame"]) .bt-pane[data-dragging] .bt-create-card{animation:none}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-to{position:relative;padding-top:15px;border-bottom:0}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-to::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-drop{position:static;left:auto;top:auto;width:auto;max-height:none;flex:1 1 auto;min-height:0;padding:0 6px calc(8px + env(safe-area-inset-bottom,0px));border:0;border-radius:0;background:transparent;box-shadow:none;overflow-y:auto;transform-origin:50% 0}
@@ -15102,6 +15107,40 @@ function CreateBot({ roster, actions, start, brief = "", onBack, canGoBack, onCr
 
 // src/client/new-chat.js
 var import_react34 = require("react");
+function useSheetGrip(ref) {
+  (0, import_react34.useEffect)(() => {
+    const pane = ref.current;
+    const grip = pane?.querySelector(".bt-sheet-grip");
+    if (!pane || !grip || !document.querySelector('[data-mobile-nav="frame"]')) return void 0;
+    const down = (event) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      event.preventDefault();
+      const from = pane.getBoundingClientRect().height;
+      const y0 = event.clientY;
+      const ceiling = Math.min(window.visualViewport?.height ?? window.innerHeight, window.innerHeight) * 0.96;
+      pane.dataset.dragging = "1";
+      const move = (ev) => {
+        const next = Math.max(180, Math.min(ceiling, from + (y0 - ev.clientY)));
+        pane.style.setProperty("--bt-sheet-h", `${Math.round(next)}px`);
+      };
+      const up = () => {
+        delete pane.dataset.dragging;
+        removeEventListener("pointermove", move);
+        removeEventListener("pointerup", up);
+        removeEventListener("pointercancel", up);
+      };
+      addEventListener("pointermove", move);
+      addEventListener("pointerup", up);
+      addEventListener("pointercancel", up);
+    };
+    grip.addEventListener("pointerdown", down);
+    return () => {
+      grip.removeEventListener("pointerdown", down);
+      pane.style.removeProperty("--bt-sheet-h");
+      delete pane.dataset.dragging;
+    };
+  }, []);
+}
 function useSheetFoot() {
   (0, import_react34.useEffect)(() => {
     if (!document.querySelector('[data-mobile-nav="frame"]')) return void 0;
@@ -15133,6 +15172,8 @@ function useSheetFoot() {
 }
 function NewChat({ mode, roster, actions }) {
   useSheetFoot();
+  const paneRef = (0, import_react34.useRef)(null);
+  useSheetGrip(paneRef);
   const [query, setQuery] = (0, import_react34.useState)("");
   const [picked, setPicked] = (0, import_react34.useState)([]);
   const [group, setGroup] = (0, import_react34.useState)(mode === "group");
@@ -15254,20 +15295,26 @@ ${listed}`, { axis: "y", ...QUICK_EDGES });
   useMorph(drop, listed);
   if (draft) {
     return (0, import_react34.createElement)(
-      "div",
-      { className: "bt-pane", style: { left: paneLeft } },
-      (0, import_react34.createElement)(CreateBot, {
-        roster,
-        actions,
-        start: draft,
-        brief: message.trim(),
-        canGoBack: draft.fromList,
-        onBack: draft.fromList ? () => {
-          setDraft(null);
-          setTimeout(() => inputRef.current?.focus());
-        } : close,
-        onCreated: created
-      })
+      import_react34.Fragment,
+      null,
+      (0, import_react34.createElement)("div", { className: "bt-sheet-catcher", onClick: close }),
+      (0, import_react34.createElement)(
+        "div",
+        { ref: paneRef, className: "bt-pane", style: { left: paneLeft } },
+        (0, import_react34.createElement)("div", { className: "bt-sheet-grip", "aria-hidden": true }),
+        (0, import_react34.createElement)(CreateBot, {
+          roster,
+          actions,
+          start: draft,
+          brief: message.trim(),
+          canGoBack: draft.fromList,
+          onBack: draft.fromList ? () => {
+            setDraft(null);
+            setTimeout(() => inputRef.current?.focus());
+          } : close,
+          onCreated: created
+        })
+      )
     );
   }
   const adminBot = admin === null ? void 0 : roster.byId[admin];
@@ -15278,108 +15325,114 @@ ${listed}`, { axis: "y", ...QUICK_EDGES });
     else if (admin !== null) setAdmin(null);
   };
   return (0, import_react34.createElement)(
-    "div",
-    { className: "bt-pane", style: { left: paneLeft } },
+    import_react34.Fragment,
+    null,
+    (0, import_react34.createElement)("div", { className: "bt-sheet-catcher", onClick: close }),
     (0, import_react34.createElement)(
       "div",
-      { className: "bt-newchat", role: "dialog", "aria-label": mode === "search" ? t("Search") : t("New chat") },
+      { ref: paneRef, className: "bt-pane", style: { left: paneLeft } },
+      (0, import_react34.createElement)("div", { className: "bt-sheet-grip", "aria-hidden": true }),
       (0, import_react34.createElement)(
         "div",
-        { className: "bt-to" },
-        (0, import_react34.createElement)("span", { className: "bt-to-label" }, t("To:")),
-        adminBot ? (0, import_react34.createElement)(
-          "span",
-          { key: adminBot.id, className: "bt-token bt-token-admin", title: t("Admin") },
-          (0, import_react34.createElement)(BotMark, { bot: adminBot, size: 16 }),
-          adminBot.name,
-          (0, import_react34.createElement)(AdminStar),
-          (0, import_react34.createElement)("button", { type: "button", "aria-label": t("Remove {name}", { name: adminBot.name }), onClick: () => setAdmin(null) }, "×")
-        ) : null,
-        choosingAdmin ? (0, import_react34.createElement)("span", { className: "bt-to-star", "aria-hidden": true }, (0, import_react34.createElement)(AdminStar)) : null,
-        pickedBots.map((bot) => (0, import_react34.createElement)(
-          "span",
-          { key: bot.id, className: "bt-token" },
-          (0, import_react34.createElement)(BotMark, { bot, size: 16 }),
-          bot.name,
-          (0, import_react34.createElement)("button", { type: "button", "aria-label": t("Remove {name}", { name: bot.name }), onClick: () => setPicked((current) => current.filter((id) => id !== bot.id)) }, "×")
-        )),
-        (0, import_react34.createElement)("input", {
-          ref: inputRef,
-          autoFocus: true,
-          value: query,
-          "aria-label": t("Recipient"),
-          placeholder: mode === "search" ? t("Search Bots…") : choosingAdmin ? t("Choose the group admin") : group ? t("Who to chat with…") : t("Start a chat with…"),
-          onChange: (event) => {
-            setQuery(event.target.value);
-            setCursor(0);
-          },
-          onKeyDown: (event) => {
-            if (event.nativeEvent.isComposing) return;
-            if (event.key === "ArrowDown") {
-              event.preventDefault();
-              setCursor(Math.min(active + 1, options.length - 1));
-            } else if (event.key === "ArrowUp") {
-              event.preventDefault();
-              setCursor(Math.max(active - 1, 0));
-            } else if (event.key === "Enter" && options[active]) {
-              event.preventDefault();
-              options[active].run();
-            } else if (event.key === "Backspace" && query === "") unpick();
-          }
-        }),
-        group && admin !== null ? (0, import_react34.createElement)("button", {
-          type: "button",
-          className: "bt-send bt-to-create",
-          disabled: busy || picked.length === 0,
-          title: picked.length === 0 ? t("Add at least one more Bot") : void 0,
-          onClick: createGroup
-        }, t("Create group chat")) : null,
-        (0, import_react34.createElement)("button", { type: "button", className: "bt-x", "aria-label": t("Close new chat"), onClick: close }, "×")
-      ),
-      (0, import_react34.createElement)("div", { ref: drop, className: "bt-drop" }, (0, import_react34.createElement)(
-        "div",
-        { ref: glide.box, role: "listbox", "aria-label": t("Recipients"), className: "bt-drop-list" },
-        (0, import_react34.createElement)("span", { ref: glide.thumb, className: "bt-thumb", "aria-hidden": true }),
-        options.length === 0 ? (0, import_react34.createElement)("div", { className: "bt-hint" }, mode === "search" ? t("No Bots match") : t("Type a name to create a Bot")) : options.map((option, index) => (0, import_react34.createElement)(
-          "button",
-          {
-            key: option.key,
-            type: "button",
-            role: "option",
-            className: "bt-option",
-            "aria-selected": index === active,
-            "data-flip": option.key,
-            onMouseEnter: () => setCursor(index),
-            onClick: option.run
-          },
-          option.bot ? (0, import_react34.createElement)(BotMark, { bot: option.bot, size: 22 }) : (0, import_react34.createElement)("span", { className: "bt-option-icon" }, option.icon),
-          (0, import_react34.createElement)("span", { className: "bt-option-label" }, option.label),
-          option.hint && index === active ? (0, import_react34.createElement)("span", { className: "bt-option-hint" }, option.hint) : null
-        ))
-      )),
-      (0, import_react34.createElement)("div", { className: "bt-nc-spacer" }),
-      error ? (0, import_react34.createElement)("div", { className: "bt-error" }, error) : null,
-      (0, import_react34.createElement)(
-        "div",
-        { className: "bt-nc-compose" },
+        { className: "bt-newchat", role: "dialog", "aria-label": mode === "search" ? t("Search") : t("New chat") },
         (0, import_react34.createElement)(
           "div",
-          { className: "bt-nc-card" },
-          (0, import_react34.createElement)("span", { className: "bt-nc-plus", "aria-hidden": true }, (0, import_react34.createElement)(PlusIcon)),
-          (0, import_react34.createElement)("textarea", {
-            rows: 1,
-            value: message,
-            placeholder,
-            "aria-label": placeholder,
-            onChange: (event) => setMessage(event.target.value),
+          { className: "bt-to" },
+          (0, import_react34.createElement)("span", { className: "bt-to-label" }, t("To:")),
+          adminBot ? (0, import_react34.createElement)(
+            "span",
+            { key: adminBot.id, className: "bt-token bt-token-admin", title: t("Admin") },
+            (0, import_react34.createElement)(BotMark, { bot: adminBot, size: 16 }),
+            adminBot.name,
+            (0, import_react34.createElement)(AdminStar),
+            (0, import_react34.createElement)("button", { type: "button", "aria-label": t("Remove {name}", { name: adminBot.name }), onClick: () => setAdmin(null) }, "×")
+          ) : null,
+          choosingAdmin ? (0, import_react34.createElement)("span", { className: "bt-to-star", "aria-hidden": true }, (0, import_react34.createElement)(AdminStar)) : null,
+          pickedBots.map((bot) => (0, import_react34.createElement)(
+            "span",
+            { key: bot.id, className: "bt-token" },
+            (0, import_react34.createElement)(BotMark, { bot, size: 16 }),
+            bot.name,
+            (0, import_react34.createElement)("button", { type: "button", "aria-label": t("Remove {name}", { name: bot.name }), onClick: () => setPicked((current) => current.filter((id) => id !== bot.id)) }, "×")
+          )),
+          (0, import_react34.createElement)("input", {
+            ref: inputRef,
+            autoFocus: true,
+            value: query,
+            "aria-label": t("Recipient"),
+            placeholder: mode === "search" ? t("Search Bots…") : choosingAdmin ? t("Choose the group admin") : group ? t("Who to chat with…") : t("Start a chat with…"),
+            onChange: (event) => {
+              setQuery(event.target.value);
+              setCursor(0);
+            },
             onKeyDown: (event) => {
-              if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+              if (event.nativeEvent.isComposing) return;
+              if (event.key === "ArrowDown") {
                 event.preventDefault();
-                sendMessage();
-              }
+                setCursor(Math.min(active + 1, options.length - 1));
+              } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                setCursor(Math.max(active - 1, 0));
+              } else if (event.key === "Enter" && options[active]) {
+                event.preventDefault();
+                options[active].run();
+              } else if (event.key === "Backspace" && query === "") unpick();
             }
           }),
-          (0, import_react34.createElement)("button", { type: "button", className: "bt-nc-send", "aria-label": t("Send message"), disabled: busy || message.trim() === "" || picked.length === 0, onClick: sendMessage }, (0, import_react34.createElement)(ArrowUpIcon))
+          group && admin !== null ? (0, import_react34.createElement)("button", {
+            type: "button",
+            className: "bt-send bt-to-create",
+            disabled: busy || picked.length === 0,
+            title: picked.length === 0 ? t("Add at least one more Bot") : void 0,
+            onClick: createGroup
+          }, t("Create group chat")) : null,
+          (0, import_react34.createElement)("button", { type: "button", className: "bt-x", "aria-label": t("Close new chat"), onClick: close }, "×")
+        ),
+        (0, import_react34.createElement)("div", { ref: drop, className: "bt-drop" }, (0, import_react34.createElement)(
+          "div",
+          { ref: glide.box, role: "listbox", "aria-label": t("Recipients"), className: "bt-drop-list" },
+          (0, import_react34.createElement)("span", { ref: glide.thumb, className: "bt-thumb", "aria-hidden": true }),
+          options.length === 0 ? (0, import_react34.createElement)("div", { className: "bt-hint" }, mode === "search" ? t("No Bots match") : t("Type a name to create a Bot")) : options.map((option, index) => (0, import_react34.createElement)(
+            "button",
+            {
+              key: option.key,
+              type: "button",
+              role: "option",
+              className: "bt-option",
+              "aria-selected": index === active,
+              "data-flip": option.key,
+              onMouseEnter: () => setCursor(index),
+              onClick: option.run
+            },
+            option.bot ? (0, import_react34.createElement)(BotMark, { bot: option.bot, size: 22 }) : (0, import_react34.createElement)("span", { className: "bt-option-icon" }, option.icon),
+            (0, import_react34.createElement)("span", { className: "bt-option-label" }, option.label),
+            option.hint && index === active ? (0, import_react34.createElement)("span", { className: "bt-option-hint" }, option.hint) : null
+          ))
+        )),
+        (0, import_react34.createElement)("div", { className: "bt-nc-spacer" }),
+        error ? (0, import_react34.createElement)("div", { className: "bt-error" }, error) : null,
+        (0, import_react34.createElement)(
+          "div",
+          { className: "bt-nc-compose" },
+          (0, import_react34.createElement)(
+            "div",
+            { className: "bt-nc-card" },
+            (0, import_react34.createElement)("span", { className: "bt-nc-plus", "aria-hidden": true }, (0, import_react34.createElement)(PlusIcon)),
+            (0, import_react34.createElement)("textarea", {
+              rows: 1,
+              value: message,
+              placeholder,
+              "aria-label": placeholder,
+              onChange: (event) => setMessage(event.target.value),
+              onKeyDown: (event) => {
+                if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                  event.preventDefault();
+                  sendMessage();
+                }
+              }
+            }),
+            (0, import_react34.createElement)("button", { type: "button", className: "bt-nc-send", "aria-label": t("Send message"), disabled: busy || message.trim() === "" || picked.length === 0, onClick: sendMessage }, (0, import_react34.createElement)(ArrowUpIcon))
+          )
         )
       )
     )
