@@ -2695,7 +2695,7 @@ button.bt-q-opt:active{background:var(--bt-active)}
 
 /* On a phone the new-chat pane hosts Create Bot, and a popover anchored to the composer
    leaves that form squeezed into a column. Lift it into a bottom sheet instead. */
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){top:auto!important;left:0!important;right:0!important;width:auto;max-height:88vh;border-radius:20px 20px 0 0;padding-bottom:calc(60px + env(safe-area-inset-bottom,0px));box-sizing:border-box;box-shadow:0 0 0 100vmax rgba(0,0,0,.32),0 -1px 0 var(--bt-line),0 -12px 40px -16px rgba(0,0,0,.24);overflow:hidden}
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){top:auto!important;left:0!important;right:0!important;width:auto;max-height:88vh;max-height:88dvh;border-radius:20px 20px 0 0;padding-bottom:calc(var(--bt-sheet-foot,0px) + env(safe-area-inset-bottom,0px));box-sizing:border-box;box-shadow:0 0 0 100vmax rgba(0,0,0,.32),0 -1px 0 var(--bt-line),0 -12px 40px -16px rgba(0,0,0,.24);overflow:hidden}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){animation:bt-sheet-in .42s cubic-bezier(.32,.9,.24,1) both,bt-veil-in .18s ease-out both}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head{position:relative;padding-top:15px;border-bottom:0}
 html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
@@ -15102,7 +15102,37 @@ function CreateBot({ roster, actions, start, brief = "", onBack, canGoBack, onCr
 
 // src/client/new-chat.js
 var import_react34 = require("react");
+function useSheetFoot() {
+  (0, import_react34.useEffect)(() => {
+    if (!document.querySelector('[data-mobile-nav="frame"]')) return void 0;
+    const root = document.documentElement;
+    const sync = () => {
+      const card = document.querySelector("[data-composer-card]");
+      const box = card?.closest('[class*="_root"]') ?? card;
+      const visible = (window.visualViewport?.height ?? window.innerHeight) + 1;
+      const rect = box?.getBoundingClientRect();
+      const foot = rect && rect.bottom <= visible ? Math.ceil(rect.height) : 0;
+      root.style.setProperty("--bt-sheet-foot", `${foot}px`);
+    };
+    sync();
+    const viewport = window.visualViewport;
+    addEventListener("resize", sync);
+    addEventListener("focusin", sync);
+    addEventListener("focusout", sync);
+    viewport?.addEventListener("resize", sync);
+    viewport?.addEventListener("scroll", sync);
+    return () => {
+      removeEventListener("resize", sync);
+      removeEventListener("focusin", sync);
+      removeEventListener("focusout", sync);
+      viewport?.removeEventListener("resize", sync);
+      viewport?.removeEventListener("scroll", sync);
+      root.style.removeProperty("--bt-sheet-foot");
+    };
+  }, []);
+}
 function NewChat({ mode, roster, actions }) {
+  useSheetFoot();
   const [query, setQuery] = (0, import_react34.useState)("");
   const [picked, setPicked] = (0, import_react34.useState)([]);
   const [group, setGroup] = (0, import_react34.useState)(mode === "group");

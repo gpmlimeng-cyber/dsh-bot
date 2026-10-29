@@ -1,4 +1,4 @@
-import { createElement as h, useRef, useState } from 'react'
+import { createElement as h, useEffect, useRef, useState } from 'react'
 import { FishLogo } from './dsh-primitives.js'
 import { PlusIcon, PeopleIcon, ArrowUpIcon } from './icons.js'
 import { AdminStar, BotMark } from './mark.js'
@@ -7,7 +7,41 @@ import { CreateBot } from './create-bot.js'
 import { QUICK_EDGES, useFlip, useGlide, useMorph } from './motion.js'
 import { t } from './i18n.js'
 
+// The sheet sits on the composer, but a phone keyboard shrinks only the visible area and
+// leaves the composer behind it. Measure the composer while it is on screen and reserve
+// exactly that much; once it is behind the keyboard the sheet goes flush against it.
+function useSheetFoot() {
+  useEffect(() => {
+    if (!document.querySelector('[data-mobile-nav="frame"]')) return undefined
+    const root = document.documentElement
+    const sync = () => {
+      const card = document.querySelector('[data-composer-card]')
+      const box = card?.closest('[class*="_root"]') ?? card
+      const visible = (window.visualViewport?.height ?? window.innerHeight) + 1
+      const rect = box?.getBoundingClientRect()
+      const foot = rect && rect.bottom <= visible ? Math.ceil(rect.height) : 0
+      root.style.setProperty('--bt-sheet-foot', `${foot}px`)
+    }
+    sync()
+    const viewport = window.visualViewport
+    addEventListener('resize', sync)
+    addEventListener('focusin', sync)
+    addEventListener('focusout', sync)
+    viewport?.addEventListener('resize', sync)
+    viewport?.addEventListener('scroll', sync)
+    return () => {
+      removeEventListener('resize', sync)
+      removeEventListener('focusin', sync)
+      removeEventListener('focusout', sync)
+      viewport?.removeEventListener('resize', sync)
+      viewport?.removeEventListener('scroll', sync)
+      root.style.removeProperty('--bt-sheet-foot')
+    }
+  }, [])
+}
+
 export function NewChat({ mode, roster, actions }) {
+  useSheetFoot()
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState([])
   const [group, setGroup] = useState(mode === 'group')
