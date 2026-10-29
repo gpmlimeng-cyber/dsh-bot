@@ -3398,6 +3398,9 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
    sat a couple of pixels high inside the 44px box. Equal 6px insets centre it exactly; the
    attribute is repeated so this beats whichever rule pinned the top to 2px. */
 [data-composer-card][data-composer-card][data-composer-card]{padding:2px 7.5px!important}
+/* The shell lifts its primary send button 2px to suit its own row; in this card the plus,
+   the mic and the card's centre line all agree, so that lift leaves the send button high. */
+[data-composer-card] [class*="_primary"]{transform:none!important}
 /* The voice-input control the shell puts at the far right of the composer draws an 18px
    mark on a bare seat. This surface asks for the fuller microphone used elsewhere, so the
    shell's glyph is hidden and the mark is painted through a mask: it takes the button's own
