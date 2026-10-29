@@ -3394,6 +3394,10 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
 [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:0!important;min-height:44px!important;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:color-mix(in srgb,var(--bt-main) 88%,transparent)!important;border:0!important;box-shadow:0 6px 18px -6px rgba(0,0,0,.10),0 2px 5px rgba(0,0,0,.045),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
 [data-composer-card]:hover,[data-composer-card]:focus-within{background:color-mix(in srgb,var(--bt-main) 96%,transparent)!important}
+/* The card was measuring 2px of top padding against 7.5px at the bottom, so its 32px row
+   sat a couple of pixels high inside the 44px box. Equal 6px insets centre it exactly; the
+   attribute is repeated so this beats whichever rule pinned the top to 2px. */
+[data-composer-card][data-composer-card][data-composer-card]{padding:2px 7.5px!important}
 /* The card centers its children, but a child that carries its own alignment still rides
    the top of the row; pin every direct child's cross-axis alignment to the same centre. */
 [data-composer-card]>*{align-self:center!important}
