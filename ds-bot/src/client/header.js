@@ -1,13 +1,14 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon } from './icons.js'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, PencilIcon, PinIcon, TrashIcon } from './icons.js'
 import { IconPanelLeftOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { ActivityIndicator } from './activity-row.js'
 import { clockLabel, openingTurn, unseenSince } from './cells.js'
 import { viewBottom } from './motion.js'
 import { t } from './i18n.js'
+import { PanelMenu } from './browser-pane.js'
 
 // -------------------------------------------------------------------------
 // Conversation header
@@ -113,13 +114,33 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h('span', { className: 'bt-pill-name' }, away ? t('Back to chat') : bot?.name ?? room?.name ?? (title || t('New chat'))),
     h(MemoryNotice, { shown: memoryNotice }),
     h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
+    h(SessionMenu, { sessionId, bot, room, roster, actions }),
     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
     h('button', {
-      type: 'button', className: 'bt-menu-btn', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'),
+      type: 'button', className: 'bt-head-btn', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'),
       onClick: () => actions.toggleSidebar(),
     }, h(IconPanelLeftOutlineRegular, { size: 16 })),
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions }))
+}
+
+// The session's own actions, at the drawer button's mirror position. Only the entries that
+// exist for this session kind appear: a Bot has a memory, an Agent Session can be archived,
+// a group chat has neither.
+function SessionMenu({ sessionId, bot, room, roster, actions }) {
+  const agent = Object.values(roster.agentsById ?? {}).find(entry => (entry.sessions ?? []).includes(sessionId))
+  const subject = bot?.id ?? room?.id
+  const items = []
+  if (subject !== undefined) {
+    items.push({ key: 'rename', icon: PencilIcon, label: bot ? t('Rename Bot') : t('Rename'), onPick: () => actions.renameBot(subject) })
+    items.push({ key: 'pin', icon: PinIcon, label: (bot ?? room).pinned ? t('Unpin') : t('Pin'), onPick: () => actions.setFlags(subject, { pinned: !(bot ?? room).pinned }) })
+  }
+  if (bot !== undefined) items.push({ key: 'memory', icon: MemoryIcon, label: t('Memory'), onPick: () => actions.openMemory(bot.id) })
+  if (agent !== undefined) {
+    items.push({ key: 'rename-agent', icon: PencilIcon, label: t('Rename'), onPick: () => actions.beginAgentRename(sessionId) })
+    items.push({ key: 'archive', icon: TrashIcon, label: t('Archive'), onPick: () => actions.archiveAgentSession(agent.id, sessionId) })
+  }
+  return h(PanelMenu, { items, className: 'bt-head-btn', 'aria-label': t('Session actions') })
 }
 
 // New-message pills. "N new messages ↓" takes Back to bottom's place when
