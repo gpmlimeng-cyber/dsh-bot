@@ -906,23 +906,23 @@ html:root{--dsw-corner-shape:round}
    native button is gone. It is a private attribute of dsh-web-mobile used for visibility
    only — if it is ever renamed the button stops showing (a safe failure) and the native one
    returns, so two hangers never appear at once. */
-.bt-head-btn{display:none;position:absolute;left:8px;top:4px;width:32px;height:32px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:.5px solid var(--bt-line-2);border-radius:50%;corner-shape:round;background:var(--bt-main);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--dsw-alias-label-secondary,inherit);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bt-head-btn{display:none;position:absolute;left:8px;top:0;width:40px;height:40px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:.5px solid var(--bt-line-2);border-radius:50%;corner-shape:round;background:var(--bt-main);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--dsw-alias-label-secondary,inherit);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .bt-head-btn:hover,.bt-head-btn:active{background:var(--bt-hover)}
 .bt-head-btn:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}
 /* 32px is the circle; a finger still gets 44. Grow up, down and left only, so the pill
    beside it keeps its space. */
-.bt-head-btn::after{content:'';position:absolute;inset:-6px 0 -6px -6px}
+.bt-head-btn::after{content:'';position:absolute;inset:-2px 0 -2px -2px}
 html:has([data-mobile-nav="frame"]) .bt-head-btn{display:flex}
 /* The session menu sits at the mirror position. The popover is the panel menu's own, which
    already opens right-aligned below its button. */
-.bt-head>.bt-pmenu{position:absolute;right:8px;top:4px;display:none}
+.bt-head>.bt-pmenu{position:absolute;right:8px;top:0;display:none}
 .bt-head>.bt-pmenu .bt-head-btn{position:static;left:auto}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{display:inline-flex}
 /* The head is pointer-events:none and the panel menu never restated it, so without this
    the popover paints but no item can be tapped. */
 .bt-head>.bt-pmenu .bt-pmenu-pop{pointer-events:auto}
 /* The left button's hit area grows rightwards; this one mirrors it so it never reaches the pill. */
-.bt-head>.bt-pmenu .bt-head-btn::after{inset:-6px -6px -6px 0}
+.bt-head>.bt-pmenu .bt-head-btn::after{inset:-2px -2px -2px 0}
 `
 
 export const CONVERSATION_CSS = `
