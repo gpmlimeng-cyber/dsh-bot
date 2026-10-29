@@ -85,7 +85,7 @@ export function ComposerVoice({ sessionId, inputActions, actions, useUi }) {
     h('button', {
       type: 'button', className: 'bt-voice', 'aria-label': t('Start voice chat'), title: t('Voice chat'),
       onMouseDown: keepComposerFocus, onClick: () => actions.openVoice(sessionId),
-    }, h(WaveIcon, { size: 18 })),
+    }, h(WaveIcon)),
     dictation.note ? h('span', { className: 'bt-mic-note', role: 'status' }, dictation.note) : null)
 }
 

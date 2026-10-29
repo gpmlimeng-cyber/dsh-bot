@@ -25,9 +25,9 @@ export function MicIcon({ size = 22 }) {
     h('path', { d: 'M10 14.75v2.75M7 17.5h6' }))
 }
 // The voice-chat glyph: five bars of a level meter.
-export function WaveIcon({ size = 16 }) {
+export function WaveIcon({ size = 22 }) {
   return h('svg', { width: size, height: size, viewBox: '0 0 20 20', fill: 'currentColor', 'aria-hidden': true },
-    [[3, 7.5, 5], [6.5, 4.5, 11], [10, 2.5, 15], [13.5, 5.5, 9], [17, 8, 4]].map(([x, y, height]) => h('rect', { key: x, x: x - 1, y, width: 2, height, rx: 1 })))
+    [[3.75, 7, 6], [7, 4.5, 11], [10, 2, 16], [13, 4.5, 11], [16.25, 7, 6]].map(([x, y, height]) => h('rect', { key: x, x: x - 1.25, y, width: 2.5, height, rx: 1.25 })))
 }
 
 export function ShareIcon() {

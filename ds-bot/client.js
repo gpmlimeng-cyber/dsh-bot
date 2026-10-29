@@ -3844,11 +3844,11 @@ function MicIcon({ size = 22 }) {
     (0, import_react3.createElement)("path", { d: "M10 14.75v2.75M7 17.5h6" })
   );
 }
-function WaveIcon({ size = 16 }) {
+function WaveIcon({ size = 22 }) {
   return (0, import_react3.createElement)(
     "svg",
     { width: size, height: size, viewBox: "0 0 20 20", fill: "currentColor", "aria-hidden": true },
-    [[3, 7.5, 5], [6.5, 4.5, 11], [10, 2.5, 15], [13.5, 5.5, 9], [17, 8, 4]].map(([x, y, height]) => (0, import_react3.createElement)("rect", { key: x, x: x - 1, y, width: 2, height, rx: 1 }))
+    [[3.75, 7, 6], [7, 4.5, 11], [10, 2, 16], [13, 4.5, 11], [16.25, 7, 6]].map(([x, y, height]) => (0, import_react3.createElement)("rect", { key: x, x: x - 1.25, y, width: 2.5, height, rx: 1.25 }))
   );
 }
 function ShareIcon() {
@@ -14262,7 +14262,7 @@ function ComposerVoice({ sessionId, inputActions, actions, useUi }) {
       title: t("Voice chat"),
       onMouseDown: keepComposerFocus,
       onClick: () => actions.openVoice(sessionId)
-    }, (0, import_react31.createElement)(WaveIcon, { size: 18 })),
+    }, (0, import_react31.createElement)(WaveIcon)),
     dictation.note ? (0, import_react31.createElement)("span", { className: "bt-mic-note", role: "status" }, dictation.note) : null
   );
 }
