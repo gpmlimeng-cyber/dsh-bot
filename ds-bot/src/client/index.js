@@ -1214,7 +1214,7 @@ export function apply(ctx) {
         bandActions.className = 'bt-band-actions'
       }
       bandActions.style.cssText = inDrawer()
-        ? 'position:static;display:flex;align-items:center;gap:2px;margin-left:2px'
+        ? 'position:static;display:flex;align-items:center;gap:2px;margin-left:auto'
         : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`
       bandActions.textContent = ''
       // In the shell's own view these three do what the shell's own controls do, so the row
