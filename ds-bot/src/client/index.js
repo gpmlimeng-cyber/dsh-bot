@@ -1136,10 +1136,10 @@ export function apply(ctx) {
       const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue('--dsh-frame-chrome-top')) || 0
       const mode = surface.getSnapshot().mode
       // Clear of the traffic lights: past them in the window, at the edge without one.
-      // On a Mac window the traffic lights and the host's own brand take the left corner, so
-      // the control clears them; everywhere else it sits 15px from the window's left edge.
+      // A Mac window's traffic lights end about 64px in; the control sits 15px after them.
+      // Everywhere else it sits 15px from the window's left edge.
       const mac = /Mac/i.test(navigator.platform || navigator.userAgent)
-      const left = mac && chrome >= 24 ? 184 : 15
+      const left = mac && chrome >= 24 ? 79 : 15
       // A few pixels lower than the band's own centre, so the control sits on the traffic
       // lights' horizontal line instead of above it.
       const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 7) : 12
