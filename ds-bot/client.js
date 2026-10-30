@@ -3422,12 +3422,12 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 }
 @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
 @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
-html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:0!important;min-height:44px!important;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;border:0!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
+html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:0!important;min-height:44px!important;border-radius:26px!important;padding:7.5px!important;box-sizing:border-box;border:0!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, "border-radius")}!important}
 html:has([data-mobile-nav="frame"]) [data-composer-card]:hover,html:has([data-mobile-nav="frame"]) [data-composer-card]:focus-within{background:color-mix(in srgb,var(--bt-main) 96%,transparent)!important}
 /* The card was measuring 2px of top padding against 7.5px at the bottom, so its 32px row
    sat a couple of pixels high inside the 44px box. Equal 6px insets centre it exactly; the
    attribute is repeated so this beats whichever rule pinned the top to 2px. */
-html:has([data-mobile-nav="frame"]) [data-composer-card][data-composer-card][data-composer-card]{padding:2px 7.5px!important}
+html:has([data-mobile-nav="frame"]) [data-composer-card][data-composer-card][data-composer-card]{padding:6px 12px!important}
 /* The shell lifts its primary send button 2px to suit its own row; in this card the plus,
    the mic and the card's centre line all agree, so that lift leaves the send button high. */
 [data-composer-card] [class*="_primary"]{transform:none!important}
@@ -3453,7 +3453,7 @@ html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus) [data-mob
    surfaces want one capsule instead, so the card turns into a row and the shell's row is
    flattened, its children ordered round the input. The phone frame restates its own
    padding, radius and colours on the card above. */
-html:not(:has([data-mobile-nav="frame"])) [data-composer-card]{flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;padding:6px 8px!important}
+html:not(:has([data-mobile-nav="frame"])) [data-composer-card]{flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;padding:6px 8px!important;border-radius:24px!important}
 [data-composer-card]>[class*="_row"]{display:contents!important}
 [data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:center!important;margin:0!important}
 [data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0!important}
@@ -3463,13 +3463,13 @@ html:not(:has([data-mobile-nav="frame"])) [data-composer-card]{flex-direction:ro
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] > [class*="_rail"])>[data-input-scroll]{order:1!important;flex:0 0 100%!important;margin:0 0 6px!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] > [class*="_rail"]) [class*="_tools"]{order:2!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] > [class*="_rail"]) [class*="_trailing"]{margin-left:auto!important}
-/* 20px line box: the caret is drawn at the line height, so a 24px box gave it four pixels
-   more than the 14px placeholder text it sits beside. */
-[data-composer-card] [data-composer-input]{min-height:20px!important;line-height:20px!important;padding:2px 0!important}
+/* The line box is the caret: at 15px on a 24px line the caret stands the same height as the
+   text it sits beside, which is what the reference capsule does. */
+[data-composer-card] [data-composer-input]{min-height:24px!important;line-height:24px!important;font-size:15px!important;padding:0!important}
 [data-composer-card] [data-composer-placeholder]{left:0!important;top:0!important}
 [data-composer-placeholder]{font-size:0!important;line-height:0!important}
 /* The name sits on ::before so that ::after stays free for other composer skins. */
-[data-composer-placeholder]::before{content:var(--bt-placeholder,"Message")!important;display:block!important;font-size:14px!important;line-height:20px!important;color:color-mix(in srgb,var(--bt-ink) 36%,transparent)!important}
+[data-composer-placeholder]::before{content:var(--bt-placeholder,"Message")!important;display:block!important;font-size:15px!important;line-height:24px!important;color:color-mix(in srgb,var(--bt-ink) 36%,transparent)!important}
 /* The team's "+" (ComposerPlus) takes the seat of the shell's command-menu button. */
 html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_add"]{display:none!important}
 /* The desktop composer keeps the shell's own controls: the "+" that opens its command
