@@ -117,18 +117,35 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-stack-more{font-size:11px;line-height:16px;color:var(--bt-ink-3);margin-left:3px!important}
 
 .bt-side{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;gap:2px;padding:0 12px 8px 0;color:var(--bt-ink);font-family:var(--bt-font)}
+.bt-surface{position:relative;display:inline-flex;min-width:0;margin-right:auto}
+/* The trigger is the same capsule as the header's model picker: a 30px pill on the shared
+   floating surface, the name at 13px and a quiet chevron after it. */
+.bt-surface .bt-brand{height:30px;margin:0;padding:0 9px 0 12px;gap:6px;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);font-size:13px;line-height:18px;font-weight:600;letter-spacing:0;cursor:pointer;transition:background-color .12s ease}
+.bt-surface .bt-brand:hover,.bt-surface .bt-brand[aria-expanded=true]{background:var(--bt-float-hover)}
+.bt-surface-label{font-size:13px;line-height:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;color:var(--bt-ink)}
+.bt-surface-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;color:var(--bt-ink-2)}
+.bt-surface-mark svg{width:16px;height:16px}
+.bt-surface-caret{display:inline-flex;align-items:center;margin-left:0;color:var(--bt-ink-3)}
+.bt-surface-caret svg{width:13px;height:13px}
+.bt-surface-menu{position:absolute;left:0;top:calc(100% + 6px);z-index:30;display:flex;flex-direction:column;gap:1px;width:212px;padding:6px;border-radius:14px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 20px 44px -22px rgba(0,0,0,.4)}
+.bt-surface-title{padding:5px 8px 4px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
+.bt-surface-item{display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;text-align:left;cursor:pointer;color:var(--bt-ink)}
+.bt-surface-item:hover{background:var(--bt-hover)}
+.bt-surface-name{flex:1 1 auto;min-width:0;font-size:13px;line-height:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-surface-tick{flex:none;display:inline-flex;color:var(--bt-accent)}
+.bt-surface-tick svg{width:15px;height:15px}
+.bt-surface .bt-model-caret{flex:none;color:var(--bt-ink-3);transition:transform .16s ease}
+.bt-surface .bt-brand[aria-expanded=true] .bt-model-caret{transform:rotate(180deg)}
+/* Where the shell's logo sits in its own view, the two modes stay put and both stay visible. */
+.bt-modebar{position:fixed;left:8px;top:calc(var(--dsh-frame-chrome-top,0px) + 12px);z-index:41;display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 10px 24px -14px rgba(0,0,0,.35)}
+.bt-modebar button{height:26px;padding:0 10px;border:0;border-radius:999px;background:none;font:inherit;font-size:12px;line-height:26px;color:var(--bt-ink-2);cursor:pointer;white-space:nowrap}
+.bt-modebar button:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-modebar button[aria-selected=true]{background:var(--bt-active);color:var(--bt-ink);font-weight:600}
 .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
 /* Pinned to the window's top edge, the row only paints; its own controls stay clickable. */
 /* The sidebar's own controls sit a size below the panel buttons: 32px, where the round
    buttons elsewhere are 36. */
 .bt-side-top .bt-round{width:32px;height:32px}
-/* The caption row has room for three marks, not three cards: plain icons, a 2px gap. */
-html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top{gap:2px}
-html[data-platform=darwin] .bt-side-top .bt-round,html[data-windows-titlebar] .bt-side-top .bt-round{width:28px;height:28px;background:none;box-shadow:none}
-html[data-platform=darwin] .bt-side-top .bt-round:hover,html[data-windows-titlebar] .bt-side-top .bt-round:hover{background:var(--bt-hover)}
-/* The row shares the caption band with the window's own controls: pulled up into it and
-   indented past the traffic lights, so the brand starts where they end. */
-html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top{height:var(--bt-side-band,38px);padding:0 8px 0 var(--bt-side-indent,0px);margin-top:calc(-1 * var(--bt-side-lift,0px))}
 .bt-brand{display:inline-flex;align-items:center;gap:6px;margin-right:auto;padding:4px 8px 4px 4px;border:0;border-radius:8px;background:none;cursor:pointer;font-family:inherit;font-size:15px;line-height:20px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink);white-space:nowrap}
 .bt-brand-whale{display:inline-flex;color:var(--bt-accent)}
 .bt-round{width:36px;height:36px;border-radius:50%;border:0;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .12s ease,transform .12s ease}
@@ -157,6 +174,19 @@ html body[data-bt-density=roomy] .bt-row{min-height:62px}
 html body[data-bt-density=roomy] .bt-tile{padding:8px 10px 6px}
 html body[data-bt-density=roomy] .bt-market-card{padding:12px}
 html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy] .bt-market-cat{height:36px}
+.bt-sec-row{position:relative;display:flex;align-items:center;gap:2px}
+.bt-sec-row .bt-sec{flex:1 1 auto;min-width:0}
+.bt-sec-more{flex:none;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;background:none;color:var(--bt-ink-3);cursor:pointer;opacity:0}
+.bt-sec-row:hover .bt-sec-more,.bt-sec-more[aria-expanded=true]{opacity:1}
+.bt-sec-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-sec-menu{position:absolute;right:4px;top:24px;z-index:8;display:flex;flex-direction:column;min-width:150px;padding:4px;border-radius:10px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 12px 28px -12px rgba(0,0,0,.28)}
+.bt-sec-menu button{display:flex;align-items:center;gap:8px;height:28px;padding:0 8px;border:0;border-radius:7px;background:none;font:inherit;font-size:13px;color:var(--bt-ink-2);text-align:left;cursor:pointer;white-space:nowrap}
+.bt-sec-menu button:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-sec-menu button.bt-danger{color:var(--bt-danger)}
+.bt-sec-input{flex:1 1 auto;min-width:0;height:24px;margin:6px 8px 0;padding:0 6px;border:1px solid var(--bt-line-2);border-radius:7px;background:var(--bt-card);font:inherit;font-size:12px;color:var(--bt-ink);outline:none}
+.bt-sec-new{display:flex;align-items:center;gap:6px;width:100%;height:30px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;color:var(--bt-ink-3);cursor:pointer;text-align:left}
+.bt-sec-new:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
+.bt-sec-new svg{width:14px;height:14px}
 /* A section heading over its rows: small, quiet, and folding on a click. */
 .bt-sec{display:flex;align-items:center;gap:5px;width:100%;height:26px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:11px;line-height:16px;letter-spacing:.02em;color:var(--bt-ink-3);cursor:pointer;text-align:left}
 .bt-sec:hover{background:var(--bt-hover);color:var(--bt-ink-2)}

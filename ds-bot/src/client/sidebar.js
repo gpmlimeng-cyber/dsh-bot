@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { FishLogo } from './dsh-primitives.js'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
-import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon } from './icons.js'
+import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon, CheckIcon, PeopleIcon, TerminalIcon } from './icons.js'
 import { MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
@@ -14,6 +14,9 @@ import { MarketPanel } from './market.js'
 import { holdDrawerDismiss } from './drawer-dismiss.js'
 import { showsDshRow } from './dsh-offer.js'
 import { STORAGE } from './storage.js'
+import { readArrangement, writeArrangement } from './sidebar-groups.js'
+import { readMode } from './surface.js'
+import { Caret } from './model-menu.js'
 
 // -------------------------------------------------------------------------
 // Sidebar
@@ -86,6 +89,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   return h('button', {
     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
     'data-bot-id': id, title: wide ? undefined : bot.name, onClick: () => actions.openSession(id), onContextMenu,
+    draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', id); event.dataTransfer.effectAllowed = 'move' },
   },
   h(BotAvatar, { bot, size: 36, state, main }),
   pinned && !wide ? h(PinMark) : null,
@@ -116,6 +120,7 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
     'data-room-id': id, onClick: () => actions.openSession(id),
     onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'room', id, x: event.clientX, y: event.clientY }) },
+    draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', id); event.dataTransfer.effectAllowed = 'move' },
   },
   h(RoomAvatar, { room, roster, size: 36 }),
   pinned && !wide ? h(PinMark) : null,
@@ -216,6 +221,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
     h('button', {
       type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
       'data-agent-id': agent.id, title: wide ? undefined : 'DSH Agent', onClick: () => actions.openAgent(agent.id),
+      draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', agent.id); event.dataTransfer.effectAllowed = 'move' },
       onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'agent', id: agent.id, x: event.clientX, y: event.clientY }) },
     },
     h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: 22 })),
@@ -257,29 +263,54 @@ function useListGlide(listRef, layout, key) {
   }, [layout, key])
 }
 
+// The brand is the way between the two surfaces: the Bot team's own screen, or the shell's
+// professional session view. It reads like a workspace switcher, with the current one ticked.
+function SurfaceMenu({ actions }) {
+  const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState(() => readMode())
+  const box = useRef(null)
+  useEffect(() => {
+    if (!open) return undefined
+    const onDown = (event) => { if (!(event.target instanceof Element) || !event.target.closest('.bt-surface-menu') && !event.target.closest('.bt-brand')) setOpen(false) }
+    const onKey = (event) => { if (event.key === 'Escape') setOpen(false) }
+    window.addEventListener('mousedown', onDown)
+    window.addEventListener('keydown', onKey)
+    return () => { window.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey) }
+  }, [open])
+  const choices = [
+    { id: 'bot', name: t('Bot mode'), detail: t('The Bot team, its chats and its groups.'), icon: PeopleIcon },
+    { id: 'agent', name: t('DSH mode'), detail: t('The shell\'s own session view, tools and panels.'), icon: TerminalIcon },
+  ]
+  const current = choices.find(choice => choice.id === mode) ?? choices[0]
+  const pick = (id) => { setMode(id); setOpen(false); actions.setSurface?.(id) }
+  return h('span', { ref: box, className: 'bt-surface' },
+    h('button', {
+      type: 'button', className: 'bt-brand', 'aria-haspopup': 'menu', 'aria-expanded': open,
+      onClick: () => setOpen((value) => !value),
+    },
+    // The same anatomy as the model picker: a mark, the name, and a quiet chevron.
+    h('span', { className: 'bt-surface-mark', 'aria-hidden': true }, h(current.icon)),
+    h('span', { className: 'bt-surface-label' }, current.name),
+    h(Caret)),
+    open
+      ? h('div', { className: 'bt-surface-menu', role: 'menu', 'aria-label': t('Modes') },
+        h('div', { className: 'bt-surface-title' }, t('Modes')),
+        ...choices.map(choice => h('button', {
+          key: choice.id, type: 'button', role: 'menuitemradio', 'aria-checked': mode === choice.id,
+          className: 'bt-surface-item', 'data-on': mode === choice.id ? '' : undefined,
+          onClick: () => pick(choice.id),
+        },
+        h('span', { className: 'bt-surface-name' }, choice.name),
+        mode === choice.id ? h('span', { className: 'bt-surface-tick', 'aria-hidden': true }, h(CheckIcon)) : null)))
+      : null)
+}
+
 export function TeamSidebar(props) {
   const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
   const [market, setMarket] = useState(false)
   const listRef = useRef(null)
-  // The desktop window reserves a band for its own controls; when it does, the row rides
-  // that band and indents past them. Measured once, so a browser without the band is left
-  // alone instead of being pushed off the top.
-  // The desktop window reserves a band for its own controls; when it does, the row rides
-  // that band and indents past them. Measured from the row's own offset, and applied by the
-  // platform rules in the stylesheet, so a browser without the band is left alone.
-  useLayoutEffect(() => {
-    const row = listRef.current?.parentElement?.querySelector('.bt-side-top')
-    if (!row) return
-    row.removeAttribute('data-floating')
-    row.style.position = ''
-    row.style.zIndex = ''
-    row.style.pointerEvents = ''
-    const reserved = row.getBoundingClientRect().top
-    const lift = reserved > 0 ? Math.min(reserved, 64) : 0
-    row.style.setProperty('--bt-side-lift', lift ? `${lift}px` : '0px')
-    row.style.setProperty('--bt-side-indent', lift ? '78px' : '0px')
-    row.style.setProperty('--bt-side-band', lift ? `${Math.max(lift, 38)}px` : '38px')
-  })
+  // The caption row looks the same in the window and in a browser: the desktop build carries
+  // its own controls in a band above, and this row is not asked to join it any more.
   const closing = useRef(false)
   useLayoutEffect(() => { closing.current = false })
   // The collapse lives here because this component alone knows `wide` and the latch that
@@ -310,17 +341,71 @@ export function TeamSidebar(props) {
     ]
     return entries.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at)
   }, [roster, updated])
-  // Sections, as the reference product draws them: pinned first, then Bots, then group
-  // chats. A section with nothing in it is not drawn at all.
+  const main = roster.byId[roster.mainBotId]
+  // Sections, as the reference product draws them: pinned first, the user's own groups, then
+  // whatever is left over under Bots and Group chats. A built-in section with nothing in it
+  // is not drawn; a group the user made always is, so an empty one can still be filled.
+  const [arrange, setArrange] = useState(readArrangement)
+  useEffect(() => {
+    const reload = () => setArrange(readArrangement())
+    window.addEventListener('ds-bot:groups', reload)
+    return () => window.removeEventListener('ds-bot:groups', reload)
+  }, [])
+  const [renamingSection, setRenamingSection] = useState(null)
+  const [sectionMenu, setSectionMenu] = useState(null)
   const sections = useMemo(() => {
     const pinned = order.filter(entry => entry.item.pinned)
+    // The Main Bot's row otherwise sits above every section; once it is put in a group it
+    // belongs to that group like any other row.
+    const mainAssigned = main ? arrange.assign[main.id] : undefined
     const rest = order.filter(entry => !entry.item.pinned)
+    if (main && mainAssigned) rest.unshift({ kind: 'bot', item: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt })
+    const inGroup = (id) => rest.filter(entry => arrange.assign[entry.item.id] === id)
+    const assigned = new Set(Object.keys(arrange.assign))
+    const loose = rest.filter(entry => !assigned.has(entry.item.id))
+    const custom = arrange.groups.map(group => ({ id: group.id, name: group.name, custom: true, collapsed: group.collapsed, entries: inGroup(group.id) }))
     return [
       { id: 'top', name: t('Top'), entries: pinned },
-      { id: 'bots', name: t('Bots'), entries: rest.filter(entry => entry.kind !== 'room') },
-      { id: 'rooms', name: t('Group chats'), entries: rest.filter(entry => entry.kind === 'room') },
-    ].filter(section => section.entries.length > 0)
-  }, [order, t])
+      ...custom,
+      { id: 'bots', name: t('Bots'), entries: loose.filter(entry => entry.kind !== 'room') },
+      { id: 'rooms', name: t('Group chats'), entries: loose.filter(entry => entry.kind === 'room') },
+    ].filter(section => section.entries.length > 0 || section.custom)
+  }, [order, arrange, t, main, updated])
+  const changeArrange = (next) => {
+    setArrange(next)
+    writeArrangement(next)
+  }
+  const addGroup = () => {
+    const id = `g${Date.now().toString(36)}`
+    changeArrange({ ...arrange, groups: arrange.groups.concat({ id, name: t('New section'), collapsed: false }) })
+    setRenamingSection(id)
+  }
+  const renameGroup = (id, name) => {
+    const clean = name.trim().slice(0, 24)
+    changeArrange({ ...arrange, groups: arrange.groups.map(group => (group.id === id ? { ...group, name: clean || group.name } : group)) })
+    setRenamingSection(null)
+  }
+  const deleteGroup = (id) => {
+    const assign = { ...arrange.assign }
+    for (const entryId of Object.keys(assign)) if (assign[entryId] === id) delete assign[entryId]
+    changeArrange({ groups: arrange.groups.filter(group => group.id !== id), assign })
+    setSectionMenu(null)
+  }
+  const assignTo = (entryId, groupId) => {
+    const assign = { ...arrange.assign }
+    if (groupId) assign[entryId] = groupId
+    else delete assign[entryId]
+    changeArrange({ ...arrange, assign })
+  }
+  const foldGroup = (id) => changeArrange({ ...arrange, groups: arrange.groups.map(group => (group.id === id ? { ...group, collapsed: !group.collapsed } : group)) })
+  const isFolded = (section) => (section.custom ? section.collapsed === true : folded[section.id] === true)
+  const foldSection = (section) => (section.custom ? foldGroup(section.id) : toggleSection(section.id))
+  const dropOn = (event, section) => {
+    const entryId = event.dataTransfer?.getData('text/plain') ?? ''
+    if (!entryId) return
+    event.preventDefault()
+    assignTo(entryId, section.custom ? section.id : null)
+  }
   const [folded, setFolded] = useState(() => {
     try { return JSON.parse(localStorage.getItem(STORAGE.folded) ?? '{}') ?? {} } catch { return {} }
   })
@@ -329,7 +414,6 @@ export function TeamSidebar(props) {
     try { localStorage.setItem(STORAGE.folded, JSON.stringify(next)) } catch { /* storage unavailable */ }
     return next
   })
-  const main = roster.byId[roster.mainBotId]
   useListGlide(listRef, wide, order.map(entry => entry.item.id).join(','))
   useLandOnMainBot(roster, useSessions, actions)
   // The shell keeps wide content during its collapse fade. Normalize through its
@@ -363,7 +447,7 @@ export function TeamSidebar(props) {
   }
   return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
     wide ? h('div', { className: 'bt-side-top' },
-      h('span', { className: 'bt-brand' }, h(BrandName)),
+      h(SurfaceMenu, { actions }),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
       h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette('', { fromDrawer: true }) }, h(SearchIcon)),
       h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon)),
@@ -375,22 +459,50 @@ export function TeamSidebar(props) {
           h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon))),
     wide && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
     h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
-      main ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
+      main && !arrange.assign[main.id] ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true }) : roster.ready || main ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
       ...sections.flatMap(section => [
-        h('button', {
-          key: `section:${section.id}`, type: 'button', className: 'bt-sec',
-          'aria-expanded': folded[section.id] !== true,
-          onClick: () => toggleSection(section.id),
+        h('div', {
+          key: `section:${section.id}`, className: 'bt-sec-row',
+          onDragOver: (event) => { if (event.dataTransfer?.types?.includes('text/plain')) { event.preventDefault(); event.dataTransfer.dropEffect = 'move' } },
+          onDrop: (event) => dropOn(event, section),
         },
-        h('span', { className: 'bt-sec-caret', 'data-open': folded[section.id] !== true ? '' : undefined, 'aria-hidden': true }, h(ChevronRightIcon)),
-        h('span', { className: 'bt-sec-name' }, section.name),
-        h('span', { className: 'bt-sec-count' }, String(section.entries.length))),
-        ...(folded[section.id] === true ? [] : section.entries.map(entry => (entry.kind === 'bot'
+        renamingSection === section.id
+          ? h('input', {
+            className: 'bt-sec-input', autoFocus: true, defaultValue: section.name, 'aria-label': t('Section name'),
+            onClick: (event) => event.stopPropagation(),
+            onBlur: (event) => renameGroup(section.id, event.target.value),
+            onKeyDown: (event) => {
+              if (event.key === 'Enter') { event.preventDefault(); renameGroup(section.id, event.currentTarget.value) }
+              if (event.key === 'Escape') { event.stopPropagation(); setRenamingSection(null) }
+            },
+          })
+          : h('button', {
+            type: 'button', className: 'bt-sec',
+            'aria-expanded': !isFolded(section),
+            onClick: () => foldSection(section),
+          },
+          h('span', { className: 'bt-sec-caret', 'data-open': !isFolded(section) ? '' : undefined, 'aria-hidden': true }, h(ChevronRightIcon)),
+          h('span', { className: 'bt-sec-name' }, section.name),
+          h('span', { className: 'bt-sec-count' }, String(section.entries.length))),
+        section.custom
+          ? h('button', {
+            type: 'button', className: 'bt-sec-more', 'aria-label': t('Section options'), 'aria-expanded': sectionMenu === section.id,
+            onClick: (event) => { event.stopPropagation(); setSectionMenu((open) => (open === section.id ? null : section.id)) },
+          }, h(MoreDotsIcon))
+          : null,
+        sectionMenu === section.id
+          ? h('div', { className: 'bt-sec-menu', role: 'menu' },
+            h('button', { type: 'button', role: 'menuitem', onClick: () => { setSectionMenu(null); setRenamingSection(section.id) } }, h(PencilIcon), t('Rename section')),
+            h('button', { type: 'button', role: 'menuitem', className: 'bt-danger', onClick: () => deleteGroup(section.id) }, h(TrashIcon), t('Delete section')))
+          : null),
+        ...(isFolded(section) ? [] : section.entries.map(entry => (entry.kind === 'bot'
           ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
           : entry.kind === 'room'
             ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
             : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })))),
-      ])),
+      ]),
+      h('button', { key: 'new-group', type: 'button', className: 'bt-sec-new', onClick: addGroup },
+        h(PlusIcon), h('span', null, t('New section')))),
     h('div', { className: 'bt-side-foot' },
       h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
         h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),

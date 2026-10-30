@@ -1,10 +1,11 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { isMainOf } from './sources.js'
 import { currentPart } from './text.js'
-import { GearIcon, PinIcon, UnreadIcon, PencilIcon, StarLineIcon, CopyIcon, HideIcon, TrashIcon, DuplicateIcon } from './icons.js'
+import { GearIcon, PinIcon, UnreadIcon, PencilIcon, StarLineIcon, CopyIcon, HideIcon, TrashIcon, DuplicateIcon, FolderIcon } from './icons.js'
 import { useEscape } from './overlay-hooks.js'
 import { useViewport, viewBottom } from './motion.js'
 import { t } from './i18n.js'
+import { readArrangement, writeArrangement } from './sidebar-groups.js'
 
 export function ContextMenu({ menu, roster, actions, leaving = false }) {
   useEscape(() => actions.closeMenu())
@@ -26,6 +27,7 @@ export function ContextMenu({ menu, roster, actions, leaving = false }) {
   const room = roster.roomsById[menu.id]
   const entry = bot ?? room
   if (entry === undefined) return null
+  const arrangement = readArrangement()
   const isMainBot = isMainOf(roster, menu.id)
   const isTile = roster.mainBotId === menu.id
   const mainCount = (roster.mainBotIds ?? []).length
@@ -43,6 +45,19 @@ export function ContextMenu({ menu, roster, actions, leaving = false }) {
       bot && !isMainBot ? [t('Make Main Bot'), StarLineIcon, () => actions.setMain(bot.id, true)] : null,
       bot && isMainBot && mainCount > 1 ? [t('Remove Main Bot role'), StarLineIcon, () => actions.setMain(bot.id, false)] : null,
     ],
+    // The same groups the sidebar draws: one entry per section, plus the way back out.
+    arrangement.groups.length || arrangement.assign[menu.id]
+      ? [[
+        ...arrangement.groups.map(group => [group.name, FolderIcon, () => {
+          writeArrangement({ ...arrangement, assign: { ...arrangement.assign, [menu.id]: group.id } })
+        }]),
+        arrangement.assign[menu.id] ? [t('Remove from section'), FolderIcon, () => {
+          const assign = { ...arrangement.assign }
+          delete assign[menu.id]
+          writeArrangement({ ...arrangement, assign })
+        }] : null,
+      ].filter(Boolean)]
+      : [],
     [[t('Copy conversation ID'), CopyIcon, () => navigator.clipboard?.writeText(bot ? currentPart(bot) : menu.id)]],
     [
       isMainBot ? null : [t('Hide from sidebar'), HideIcon, () => actions.setFlags(menu.id, { hidden: true })],

@@ -1091,7 +1091,39 @@ export function apply(ctx) {
       groups.remount('shell')
       verifyTimer = setTimeout(verifySidebar, 250)
     }
+    // In the shell's own view its logo sits alone in the top-left corner; the mode row takes
+    // that corner over, so both ways back and forth stay one click away and never move.
+    let modeBar = null
+    const paintModeBar = () => {
+      const mode = surface.getSnapshot().mode
+      if (mode !== 'agent') {
+        if (modeBar) { modeBar.remove(); modeBar = null }
+        return
+      }
+      if (!modeBar) {
+        // Styled inline: the plugin's stylesheet belongs to the Bot surface and is gone here.
+        modeBar = document.createElement('div')
+        modeBar.className = 'bt-modebar'
+        modeBar.setAttribute('role', 'tablist')
+        modeBar.setAttribute('aria-label', t('Modes'))
+        modeBar.style.cssText = 'position:fixed;left:8px;top:calc(var(--dsh-frame-chrome-top,0px) + 12px);z-index:41;display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--bt-main,#fcfcfc);box-shadow:0 0 0 .5px rgba(20,20,20,.14),0 10px 24px -14px rgba(0,0,0,.35)'
+        document.body.appendChild(modeBar)
+      }
+      modeBar.textContent = ''
+      for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
+        const selected = mode === id
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.setAttribute('role', 'tab')
+        button.setAttribute('aria-selected', String(selected))
+        button.textContent = label
+        button.style.cssText = `height:26px;padding:0 10px;border:0;border-radius:999px;font:inherit;font-size:12px;line-height:26px;cursor:pointer;white-space:nowrap;background:${selected ? 'rgba(119,119,119,.17)' : 'transparent'};color:var(--bt-ink,#141414);font-weight:${selected ? 600 : 400}`
+        button.addEventListener('click', () => actions.setSurface(id))
+        modeBar.appendChild(button)
+      }
+    }
     const reconcile = () => {
+      paintModeBar()
       groups.reconcile(groupsFor(surface.getSnapshot()))
       clearTimeout(verifyTimer)
       verifyAttempts = 0
@@ -1103,6 +1135,7 @@ export function apply(ctx) {
     return () => {
       unsub()
       clearTimeout(verifyTimer)
+      if (modeBar) { modeBar.remove(); modeBar = null }
       groups.dispose()
     }
   }, 'ds-bot: surface')
