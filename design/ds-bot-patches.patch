@@ -177,6 +177,28 @@ index 3956f8f..40a05f4 100644
      // The library is a block of its own under the look, not a part of the button row.
      library ? h(AvatarLibraryPanel, { actions, onPick: entry => { setImage(entry.image); setLibrary(false) } }) : null,
      h('label', { className: 'bt-field' },
+diff --git a/ds-bot/src/client/details-drawer.js b/ds-bot/src/client/details-drawer.js
+index cdd9dba..da0f77d 100644
+--- a/ds-bot/src/client/details-drawer.js
++++ b/ds-bot/src/client/details-drawer.js
+@@ -1,7 +1,7 @@
+ import { createElement as h, Fragment, useEffect, useRef, useState } from 'react'
+ import { isMainOf } from './sources.js'
+ import { HEADER, currentPart, runStatsOf, stripHeader, usageOf } from './text.js'
+-import { PlusIcon, ShareIcon, CloseIcon, ChevronLeftIcon, GearIcon } from './icons.js'
++import { PlusIcon, ShareIcon, CloseIcon, ChevronLeftIcon, GearIcon, MoreDotsIcon } from './icons.js'
+ import { botState, BotMark, BotAvatar } from './mark.js'
+ import { GlobeIcon, Favicon, PanelMenu, menuItemFor } from './browser-pane.js'
+ import { drawerMenuKeys } from './side-model.js'
+@@ -230,7 +230,7 @@ export function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, ro
+   }).map(key => menuItemFor(key, actions, sessionId))
+   const top = h('div', { className: 'bt-drawer-top', 'data-move': side },
+     bot || room ? h('button', { type: 'button', className: 'bt-round', 'aria-label': bot ? t('Edit Bot') : t('Group settings'), title: bot ? t('Edit Bot') : t('Group settings'), 'data-info-row': 'settings', onClick: () => setView('settings') }, h(GearIcon)) : null,
+-    more.length > 0 ? h('span', { 'data-info-row': 'more' }, h(PanelMenu, { items: more, className: 'bt-round', 'aria-label': t('More') })) : null,
++    more.length > 0 ? h('span', { 'data-info-row': 'more' }, h(PanelMenu, { items: more, className: 'bt-round', icon: MoreDotsIcon, 'aria-label': t('More') })) : null,
+     bot || room ? h('button', { type: 'button', className: 'bt-round', 'aria-label': copied ? t('Copied conversation') : t('Share conversation'), title: copied ? t('Copied') : t('Copy conversation as Markdown'), onClick: share }, copied ? h('span', { key: 'copied', className: 'bt-pop-in' }, '✓') : h(ShareIcon)) : null,
+     hasStrip ? null : h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Close details'), onClick: close }, h(CloseIcon)))
+   if (!bot && !room) {
 diff --git a/ds-bot/src/client/drawer-dismiss.js b/ds-bot/src/client/drawer-dismiss.js
 new file mode 100644
 index 0000000..8fca0d0
@@ -272,10 +294,10 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 32ba8c9..398f451 100644
+index 32ba8c9..24cfac8 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,31 @@ const ZH = {
+@@ -18,6 +18,51 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
@@ -289,6 +311,26 @@ index 32ba8c9..398f451 100644
 +  'Disabled': '已停用',
 +  'Open the page that manages plugins': '打开插件管理页',
 +  'The plugin catalogue is the shell own page.': '插件目录是宿主自己的页面。',
++  'Search plugins': '搜索插件',
++  'Could not connect': '连接失败',
++  'Labels': '标签',
++  '{count} labels': '{count} 个标签',
++  'Sort:': '排序：',
++  'Sort': '排序',
++  'Refresh': '刷新',
++  'Plugin market': '插件市场',
++  'Install': '安装',
++  'Installing…': '安装中…',
++  'No plugin matches this search': '没有符合这个搜索的插件',
++  'Reading the plugin index…': '正在读取插件索引…',
++  '{count} plugins': '{count} 个插件',
++  'Browse the plugin markets this Harness lists': '浏览宿主已配置的插件市场',
++  'Default order': '默认顺序',
++  'Smart picks': '✨ 智能推荐',
++  'GitHub stars': 'GitHub 星标数',
++  'Random': '随机资源',
++  'Newest first': '最新发布',
++
 +  'Open it': '打开',
 +  'Skills': '技能',
 +  'Installed': '已安装',
@@ -307,7 +349,7 @@ index 32ba8c9..398f451 100644
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
    'Quiet': '安静',
-@@ -918,6 +943,10 @@ const ZH = {
+@@ -918,6 +963,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -318,7 +360,7 @@ index 32ba8c9..398f451 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -960,6 +989,7 @@ const ZH = {
+@@ -960,6 +1009,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -326,7 +368,7 @@ index 32ba8c9..398f451 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1044,6 +1074,10 @@ const ZH = {
+@@ -1044,6 +1094,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -395,7 +437,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..d7ead16 100644
+index daf7dd4..ffa51fe 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,6 +3,7 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -406,7 +448,7 @@ index daf7dd4..d7ead16 100644
  import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
  import { MENTION_ORIGIN, currentPart } from './text.js'
  import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
-@@ -476,8 +477,49 @@ export function apply(ctx) {
+@@ -476,8 +477,115 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
@@ -442,6 +484,72 @@ index daf7dd4..d7ead16 100644
 +        }))
 +        .sort((a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name))
 +    },
++    // The shell's plugin market: its configured indexes, one page of the discover list,
++    // and the categories, labels and sort keys the index itself declares. Installing goes
++    // through the shell's package manager, so a plugin lands exactly as its own page would
++    // put it; nothing about the profile is written here.
++    pluginsMarket: async (query = {}) => {
++      const unwrap = (answer) => {
++        let value = answer
++        for (let i = 0; i < 5 && value && typeof value === 'object' && 'ok' in value; i += 1) value = value.value
++        return value
++      }
++      const market = ctx.get('remote.pluginMarket')
++      if (!market) return null
++      const indexes = unwrap(await market.listIndexes()) ?? []
++      const url = query.index ?? indexes[0]?.url
++      if (!url) return null
++      const answer = await market.search(url, {
++        sort: query.sort ?? { kind: 'index' },
++        offset: query.offset ?? 0,
++        limit: query.limit ?? 24,
++        ...(query.text ? { text: query.text } : {}),
++        ...(query.category ? { category: query.category } : {}),
++        ...(query.labels?.length ? { labels: query.labels } : {}),
++        ...(query.refresh ? { refresh: true } : {}),
++      })
++      const page = unwrap(answer)
++      if (!page || page.ok === false || !Array.isArray(page.entries)) return null
++      const zh = language().startsWith('zh')
++      const pick = (text) => (text && typeof text === 'object' ? (zh ? text.zh : text.en) ?? text.en ?? text.zh : text)
++      const metadata = page.metadata ?? {}
++      const labelNames = Object.fromEntries(Object.entries(metadata.labels ?? {}).map(([id, label]) => [id, pick(label?.title) ?? id]))
++      const names = (group) => Object.entries(group ?? {}).map(([id, entry]) => ({ id, name: pick(entry?.title) ?? id }))
++      return {
++        index: { url, name: pick(page.title) ?? url, note: pick(page.description) ?? '' },
++        indexes: indexes.map((entry) => ({ url: entry.url, name: pick(entry.title) ?? entry.url })),
++        categories: names(metadata.categories),
++        labels: names(metadata.labels),
++        sorts: names(metadata.sortKeys),
++        total: page.total ?? 0,
++        nextOffset: page.nextOffset ?? null,
++        entries: page.entries.map((entry) => {
++          const version = (entry.versions ?? []).find((item) => item.version === entry.defaultVersion) ?? entry.versions?.[0]
++          return {
++            id: entry.name,
++            name: pick(entry.title) ?? entry.name,
++            detail: pick(entry.description) ?? '',
++            icon: entry.icon,
++            author: entry.author,
++            version: entry.defaultVersion ?? version?.version,
++            published: version?.publishTimestamp ? version.publishTimestamp * 1000 : null,
++            category: entry.metadata?.category,
++            labels: (entry.metadata?.labels ?? []).map((id) => ({ id, name: labelNames[id] ?? id })),
++            stars: entry.metadata?.sortKeys?.['github-stars'],
++            status: entry.installation?.status ?? 'not-installed',
++            compatible: version?.compatibility?.compatible !== false,
++            spec: version?.install?.spec,
++            registry: version?.install?.registry,
++          }
++        }),
++      }
++    },
++    installMarketPlugin: async (spec, registry) => {
++      const manager = ctx.get('remote.pluginManager')
++      if (!manager?.installBundle || !spec) return false
++      const answer = await manager.installBundle(spec, registry ? { registry } : undefined)
++      return answer?.ok !== false && answer?.value?.ok !== false
++    },
 +    setPluginEnabled: async (id, enabled) => {
 +      const manager = ctx.get('remote.pluginManager')
 +      if (manager?.setPluginEnabled) await manager.setPluginEnabled(id, enabled)
@@ -459,19 +567,24 @@ index daf7dd4..d7ead16 100644
      setSurface: (mode) => {
 diff --git a/ds-bot/src/client/market.js b/ds-bot/src/client/market.js
 new file mode 100644
-index 0000000..7d21e08
+index 0000000..9134942
 --- /dev/null
 +++ b/ds-bot/src/client/market.js
-@@ -0,0 +1,172 @@
+@@ -0,0 +1,424 @@
 +import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
 +import { createPortal } from 'react-dom'
-+import { t } from './i18n.js'
-+import { CloseIcon, SearchIcon, PlusIcon, GearIcon, GlobeIcon, TerminalIcon, FolderIcon, MemoryIcon } from './icons.js'
++import { dateLocale, t } from './i18n.js'
++import { CloseIcon, SearchIcon, PlusIcon, PlugIcon, GearIcon, GlobeIcon, TerminalIcon, FolderIcon, MemoryIcon } from './icons.js'
 +
 +// The market takes the main content area rather than a dialog: a rail of categories on the
 +// left, the installed list under it, and the catalogue or one entry's detail on the right.
 +// The pages that already own these settings stay where they are; every action here opens
 +// them, so nothing about connectors, capabilities or plugins changes underneath.
++//
++// The plugin catalogue is the shell's plugin-market index, drawn the way its own Discover
++// tab draws it: its remotes hand us the index, the categories, labels and sort keys it
++// declares and one page of entries, and installing goes through the shell's package
++// manager, so a plugin lands exactly where its own page puts it.
 +
 +const CATEGORIES = () => [
 +  { id: 'plugins', name: t('Plugins') },
@@ -487,6 +600,41 @@ index 0000000..7d21e08
 +  { id: 'browser', name: t('Browser'), detail: t('Open pages and work inside them'), icon: GlobeIcon },
 +]
 +
++// An index lists its categories in its own key order; the shell's page shows the same fixed
++// sequence, so ids it does not know come after these instead of jumping to the front.
++const CATEGORY_ORDER = ['tools', 'workflow', 'integrations', 'memory', 'skills', 'interface', 'development', 'providers', 'appearance', 'usage', 'knowledge']
++
++// Label order is the shell's, not the index's: reach first, then freshness, activity, trust.
++const LABEL_ORDER = ['downloads-100k', 'downloads-50k', 'downloads-10k', 'downloads-5k', 'downloads-1k', 'downloads-500', 'downloads-100', 'updated-recent', 'updated-week', 'updated-month', 'updated-quarter', 'active', 'trending', 'verified']
++const byLabel = (list = []) => list.slice().sort((a, b) => {
++  const left = LABEL_ORDER.indexOf(a.id)
++  const right = LABEL_ORDER.indexOf(b.id)
++  return (left < 0 ? LABEL_ORDER.length : left) - (right < 0 ? LABEL_ORDER.length : right)
++})
++
++const SORTS = () => [
++  { id: 'index', name: t('Default order'), value: { kind: 'index' } },
++  { id: 'recommended', name: t('Smart picks'), value: { kind: 'key', id: 'recommended', direction: 'desc' } },
++  { id: 'github-stars', name: t('GitHub stars'), value: { kind: 'key', id: 'github-stars', direction: 'desc' } },
++  { id: 'random-resources', name: t('Random'), value: { kind: 'key', id: 'random-resources', direction: 'desc' } },
++  { id: 'published', name: t('Newest first'), value: { kind: 'published', direction: 'desc' } },
++]
++
++const PAGE = 24
++
++const day = (ms) => (ms ? new Intl.DateTimeFormat(dateLocale(), { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(ms)) : '')
++
++function RefreshIcon() {
++  return h('svg', { width: 15, height: 15, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
++    h('path', { d: 'M16 10a6 6 0 1 1-2.1-4.6' }), h('path', { d: 'M16 3.6V7h-3.4' }))
++}
++
++function TagIcon() {
++  return h('svg', { width: 14, height: 14, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
++    h('path', { d: 'M9.6 3.5H4.8A1.3 1.3 0 0 0 3.5 4.8v4.8c0 .35.14.68.38.92l6.1 6.1a1.3 1.3 0 0 0 1.84 0l4.8-4.8a1.3 1.3 0 0 0 0-1.84l-6.1-6.1a1.3 1.3 0 0 0-.92-.38z' }),
++    h('path', { d: 'M7.1 7.1h.01' }))
++}
++
 +function Mark({ icon, state }) {
 +  return h('span', { className: 'bt-market-mark', 'data-state': state ?? 'off', 'aria-hidden': true }, icon ? h(icon) : h(PlusIcon))
 +}
@@ -500,6 +648,221 @@ index 0000000..7d21e08
 +    quiet
 +      ? h('span', { className: 'bt-market-state', 'data-on': state === 'ready' ? '' : undefined }, action)
 +      : h('button', { type: 'button', className: 'bt-market-go', 'data-on': state === 'ready' || installed ? '' : undefined, onClick: onPick }, action))
++}
++
++// One page of the shell's plugin market: its index picker, search box, label and sort menus
++// and category pills above one card per entry. The entries, categories and labels all come
++// from the index the shell fetched, so nothing here invents catalogue content.
++function Discover({ actions }) {
++  const [index, setIndex] = useState(null)
++  const [text, setText] = useState('')
++  const [settled, setSettled] = useState('')
++  const [category, setCategory] = useState('')
++  const [labels, setLabels] = useState([])
++  const [sort, setSort] = useState('index')
++  const [labelsOpen, setLabelsOpen] = useState(false)
++  const [page, setPage] = useState(null)
++  const [entries, setEntries] = useState([])
++  const [busy, setBusy] = useState(true)
++  const [more, setMore] = useState(false)
++  const [reload, setReload] = useState(0)
++  const [installing, setInstalling] = useState(null)
++  // The pills sit on one line; the ones that do not fit fold into a More menu, so the row
++  // never grows and never scrolls sideways.
++  const cats = useRef(null)
++  const mirror = useRef(null)
++  const row = useRef(null)
++  const [fits, setFits] = useState(null)
++  const [moreCats, setMoreCats] = useState(false)
++
++  useEffect(() => {
++    const timer = setTimeout(() => setSettled(text.trim()), 300)
++    return () => clearTimeout(timer)
++  }, [text])
++
++  const sortValue = useMemo(() => (SORTS().find((item) => item.id === sort) ?? SORTS()[0]).value, [sort])
++
++  useEffect(() => {
++    let live = true
++    setBusy(true)
++    Promise.resolve(actions.pluginsMarket?.({
++      index: index ?? undefined,
++      text: settled,
++      category: category || undefined,
++      labels,
++      sort: sortValue,
++      offset: 0,
++      limit: PAGE,
++      refresh: reload > 0,
++    })).then((result) => {
++      if (!live) return
++      setPage(result ?? null)
++      setEntries(result?.entries ?? [])
++      setBusy(false)
++    }, () => { if (live) { setPage(null); setEntries([]); setBusy(false) } })
++    return () => { live = false }
++  }, [actions, index, settled, category, labels, sortValue, reload])
++
++  const loadMore = () => {
++    if (more || !page?.nextOffset) return
++    setMore(true)
++    Promise.resolve(actions.pluginsMarket?.({
++      index: index ?? undefined,
++      text: settled,
++      category: category || undefined,
++      labels,
++      sort: sortValue,
++      offset: page.nextOffset,
++      limit: PAGE,
++    })).then((result) => {
++      if (result?.entries?.length) {
++        setEntries((current) => current.concat(result.entries.filter((entry) => !current.some((item) => item.id === entry.id))))
++      }
++      setPage((current) => (current && result ? { ...current, nextOffset: result.nextOffset } : current))
++      setMore(false)
++    }, () => setMore(false))
++  }
++
++  const install = (entry) => {
++    if (installing) return
++    setInstalling(entry.id)
++    Promise.resolve(actions.installMarketPlugin?.(entry.spec, entry.registry)).then((okay) => {
++      setInstalling(null)
++      if (okay) setEntries((current) => current.map((item) => (item.id === entry.id ? { ...item, status: 'installed' } : item)))
++    }, () => setInstalling(null))
++  }
++
++  const pills = useMemo(() => {
++    const declared = page?.categories ?? []
++    const ordered = CATEGORY_ORDER.map((id) => declared.find((item) => item.id === id)).filter(Boolean)
++    const rest = declared.filter((item) => !ordered.includes(item))
++    return [{ id: '', name: t('All') }, ...ordered, ...rest]
++  }, [page])
++
++  const toggleLabel = (id) => setLabels((current) => (current.includes(id) ? current.filter((item) => item !== id) : current.concat(id)))
++  const indexes = page?.indexes ?? []
++
++  // Measure a hidden copy of the row, so how many pills fit never depends on how many
++  // are drawn: the next render takes the same answer and the row stays stable.
++  useEffect(() => {
++    const line = row.current
++    const full = mirror.current
++    if (!line || !full) return undefined
++    const measure = () => {
++      const widths = [...full.querySelectorAll('.bt-mk-pill')].map((node) => node.getBoundingClientRect().width)
++      const room = line.clientWidth - 78
++      let used = 0
++      let count = widths.length
++      for (let i = 0; i < widths.length; i += 1) {
++        if (used + widths[i] + 6 > room) { count = i; break }
++        used += widths[i] + 6
++      }
++      setFits(Math.max(1, count))
++    }
++    measure()
++    const observer = new ResizeObserver(measure)
++    observer.observe(line)
++    return () => observer.disconnect()
++  }, [pills])
++
++  useEffect(() => {
++    if (!moreCats) return undefined
++    const close = () => setMoreCats(false)
++    const onKey = (event) => { if (event.key === 'Escape') close() }
++    document.addEventListener('mousedown', close)
++    document.addEventListener('keydown', onKey)
++    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', onKey) }
++  }, [moreCats])
++
++  const cut = fits === null ? pills.length : Math.min(fits, pills.length)
++  const head = pills.slice(0, cut)
++  const tail = pills.slice(cut)
++  // A chosen pill always stays on the line, even when it lives in the More menu.
++  const chosenTail = tail.find((pill) => pill.id === category)
++  const shown = chosenTail ? head.concat(chosenTail) : head
++
++  return h('div', { className: 'bt-mk' },
++    h('div', { className: 'bt-mk-bar' },
++      indexes.length > 1
++        ? h('label', { className: 'bt-mk-menu bt-mk-pick bt-mk-switch' },
++          h('select', {
++            value: index ?? indexes[0].url,
++            onChange: (event) => { setIndex(event.target.value); setCategory(''); setLabels([]) },
++            'aria-label': t('Plugin market'),
++          }, ...indexes.map((item) => h('option', { key: item.url, value: item.url }, item.name))))
++        : h('span', { className: 'bt-mk-name' }, page?.index?.name ?? t('Plugin market')),
++      h('label', { className: 'bt-mk-search' },
++        h(SearchIcon),
++        h('input', {
++          type: 'search', value: text, onChange: (event) => setText(event.target.value),
++          placeholder: t('Search plugins'), 'aria-label': t('Search plugins'),
++        })),
++      h('button', {
++        type: 'button', className: 'bt-mk-menu', 'data-on': labels.length ? '' : undefined,
++        'aria-expanded': labelsOpen, onClick: () => setLabelsOpen((open) => !open),
++      }, h(TagIcon), h('span', null, labels.length ? t('{count} labels', { count: labels.length }) : t('Labels'))),
++      h('label', { className: 'bt-mk-menu bt-mk-pick' },
++        h('span', null, t('Sort:')),
++        h('select', { value: sort, onChange: (event) => setSort(event.target.value), 'aria-label': t('Sort') },
++          ...SORTS().map((item) => h('option', { key: item.id, value: item.id }, item.name)))),
++      h('button', { type: 'button', className: 'bt-mk-refresh', 'aria-label': t('Refresh'), title: t('Refresh'), onClick: () => setReload((count) => count + 1) }, h(RefreshIcon))),
++    labelsOpen
++      ? h('div', { className: 'bt-mk-labels' },
++        ...(page?.labels ?? []).map((label) => h('button', {
++          key: label.id, type: 'button', className: 'bt-mk-tag', 'data-on': labels.includes(label.id) ? '' : undefined,
++          onClick: () => toggleLabel(label.id),
++        }, label.name)))
++      : null,
++    h('div', { ref: row, className: 'bt-mk-catrow' },
++      h('div', { ref: cats, className: 'bt-mk-cats', role: 'tablist' },
++        ...shown.map((pill) => h('button', {
++          key: pill.id || 'all', type: 'button', role: 'tab', 'aria-selected': category === pill.id,
++          className: 'bt-mk-pill', 'data-on': category === pill.id ? '' : undefined,
++          onClick: () => setCategory(pill.id),
++        }, pill.name))),
++      tail.length
++        ? h('div', { className: 'bt-mk-catmore' },
++          h('button', {
++            type: 'button', className: 'bt-mk-pill bt-mk-morecat', 'aria-haspopup': 'menu',
++            'aria-expanded': moreCats, 'data-on': tail.some((pill) => pill.id === category) ? '' : undefined,
++            onClick: (event) => { event.stopPropagation(); setMoreCats((open) => !open) },
++          }, t('More')),
++          moreCats
++            ? h('div', { className: 'bt-mk-catmenu', role: 'menu', onMouseDown: (event) => event.stopPropagation() },
++              ...tail.map((pill) => h('button', {
++                key: pill.id, type: 'button', role: 'menuitemradio', 'aria-checked': category === pill.id,
++                className: 'bt-mk-catitem', 'data-on': category === pill.id ? '' : undefined,
++                onClick: () => { setCategory(pill.id); setMoreCats(false) },
++              }, pill.name)))
++            : null)
++        : null,
++      h('div', { ref: mirror, className: 'bt-mk-catmirror', 'aria-hidden': true },
++        ...pills.map((pill) => h('span', { key: pill.id || 'all', className: 'bt-mk-pill' }, pill.name)))),
++    entries.length
++      ? h('ul', { className: 'bt-mk-cards' }, ...entries.map((entry) => h('li', { key: entry.id, className: 'bt-mk-card' },
++        h('span', { className: 'bt-mk-mark', 'aria-hidden': true },
++          entry.icon ? h('img', { src: entry.icon, alt: '', loading: 'lazy' }) : h(PlugIcon)),
++        h('div', { className: 'bt-mk-main' },
++          h('div', { className: 'bt-mk-titlerow' },
++            h('span', { className: 'bt-mk-name', title: entry.id }, entry.name),
++            ...byLabel(entry.labels).map((label) => h('span', { key: label.id, className: 'bt-mk-tag' }, label.name))),
++          entry.detail ? h('span', { className: 'bt-mk-desc' }, entry.detail) : null,
++          h('span', { className: 'bt-mk-meta' }, [entry.version, entry.author, day(entry.published)].filter(Boolean).join(' · '))),
++        h('div', { className: 'bt-mk-end' },
++          entry.status === 'not-installed' || entry.status === 'failed'
++            ? h('button', {
++              type: 'button', className: 'bt-mk-install',
++              disabled: installing === entry.id || !entry.spec,
++              onClick: () => install(entry),
++            }, installing === entry.id ? t('Installing…') : t('Install'))
++            : h('span', { className: 'bt-mk-installed' }, t('Installed'))))))
++      : busy ? null : h('div', { className: 'bt-mk-empty' }, t('No plugin matches this search')),
++    h('div', { className: 'bt-mk-foot' },
++      h('span', { className: 'bt-mk-count' },
++        busy && !entries.length ? t('Reading the plugin index…') : t('{count} plugins', { count: page?.total ?? entries.length })),
++      page?.nextOffset
++        ? h('button', { type: 'button', className: 'bt-mk-more', disabled: more, onClick: loadMore }, more ? t('Loading…') : t('Show more'))
++        : null))
 +}
 +
 +export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
@@ -527,7 +890,7 @@ index 0000000..7d21e08
 +  })), [roster.connectors])
 +
 +  const capabilities = useMemo(CAPABILITIES, [t])
-+  // The shell owns the plugin pages; its remote hands us the list, we draw the rows.
++  // The shell owns the plugin pages; its remote hands us the installed list, we draw the rows.
 +  const [shellPlugins, setShellPlugins] = useState(null)
 +  useEffect(() => {
 +    if (!open || tab !== 'plugins' || shellPlugins !== null) return undefined
@@ -590,50 +953,47 @@ index 0000000..7d21e08
 +      h('header', { className: 'bt-market-head' },
 +        h('div', { className: 'bt-market-heading' },
 +          h('h2', { className: 'bt-market-h2' }, heading),
-+          h('p', { className: 'bt-market-sub' }, current ? current.detail : tab === 'plugins' ? t('Installed in DeepSeek Harness') : t('Connect an app or your own server once, then choose which Bots may use it'))),
++          h('p', { className: 'bt-market-sub' }, current
++            ? current.detail
++            : tab === 'plugins' ? t('Browse the plugin markets this Harness lists') : t('Connect an app or your own server once, then choose which Bots may use it'))),
 +        current
 +          ? h('button', { type: 'button', className: 'bt-market-back', onClick: () => setSelected(null) }, t('Back'))
-+          : h('label', { className: 'bt-market-search' },
-+            h(SearchIcon),
-+            h('input', {
-+              ref: search, type: 'search', value: query, placeholder: t('Search apps'),
-+              onChange: (event) => setQuery(event.target.value), 'aria-label': t('Search apps'),
-+            }))),
-+      h('div', { className: 'bt-market-body' }, 
-+        current
-+          ? h('div', { className: 'bt-market-detailpane' },
-+            h(Card, {
-+              name: current.name, detail: current.detail, mark: current.icon, state: current.state,
-+              installed: true, action: t('Manage'), onOpen: () => {}, onPick: () => { onClose(); actions.openConnectors() },
-+            }),
-+            h('div', { className: 'bt-market-note' }, t('The settings for this entry stay on the page that owns them.')),
-+            h('button', { type: 'button', className: 'bt-market-more', onClick: () => { onClose(); actions.openConnectors() } },
-+              h(GearIcon), h('span', null, t('Open the full connector page'))))
-+          : [
-+            list.length
-+              ? h('div', { className: 'bt-market-grid', key: 'grid' }, list.map((entry) => h(Card, {
-+                key: entry.id ?? entry.name, name: entry.name, detail: entry.detail, mark: entry.icon,
-+                state: tab === 'plugins' ? (entry.enabled === false ? 'off' : 'ready') : entry.state,
-+                installed: tab === 'plugins' ? true : installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)),
-+                action: tab === 'plugins'
-+                  ? (entry.enabled === false ? t('Disabled') : t('Enabled'))
-+                  : installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)) ? t('Manage') : t('Connect'),
-+                quiet: tab === 'plugins',
-+                onOpen: () => setSelected(entry.id ?? entry.name),
-+                onPick: () => pick(entry),
-+              })))
-+              : h('div', { className: 'bt-market-empty', key: 'empty' },
-+                tab === 'plugins'
-+                  ? h('div', { className: 'bt-market-official' },
-+                    h('span', null, t('The plugin catalogue is the shell own page.')),
-+                    h('button', {
-+                      type: 'button', className: 'bt-market-go',
-+                      onClick: () => { onClose(); import('./sidebar.js').then((mod) => mod.openHarnessSettings()) },
-+                    }, t('Open it')))
-+                  : t('Nothing here yet')),
-+            h('button', { type: 'button', className: 'bt-market-more', key: 'more', onClick: () => { onClose(); if (tab === 'plugins') actions.openPluginsPanel?.(); else actions.openConnectors() } },
-+              h(GearIcon), h('span', null, tab === 'plugins' ? t('Open the page that manages plugins') : t('Open the full connector page'))),
-+          ])))), document.body)
++          : tab === 'plugins'
++            ? null
++            : h('label', { className: 'bt-market-search' },
++              h(SearchIcon),
++              h('input', {
++                ref: search, type: 'search', value: query, placeholder: t('Search apps'),
++                onChange: (event) => setQuery(event.target.value), 'aria-label': t('Search apps'),
++              }))),
++      h('div', { className: 'bt-market-body' },
++        tab === 'plugins' && !current
++          ? [h(Discover, { key: 'discover', actions }),
++            h('button', { type: 'button', className: 'bt-market-more', key: 'more', onClick: () => { onClose(); actions.openPluginsPanel?.() } },
++              h(GearIcon), h('span', null, t('Open the page that manages plugins')))]
++          : current
++            ? h('div', { className: 'bt-market-detailpane' },
++              h(Card, {
++                name: current.name, detail: current.detail, mark: current.icon, state: current.state,
++                installed: true, action: t('Manage'), onOpen: () => {}, onPick: () => { onClose(); actions.openConnectors() },
++              }),
++              h('div', { className: 'bt-market-note' }, t('The settings for this entry stay on the page that owns them.')),
++              h('button', { type: 'button', className: 'bt-market-more', onClick: () => { onClose(); actions.openConnectors() } },
++                h(GearIcon), h('span', null, t('Open the full connector page'))))
++            : [
++              list.length
++                ? h('div', { className: 'bt-market-grid', key: 'grid' }, list.map((entry) => h(Card, {
++                  key: entry.id ?? entry.name, name: entry.name, detail: entry.detail, mark: entry.icon,
++                  state: entry.state,
++                  installed: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)),
++                  action: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)) ? t('Manage') : t('Connect'),
++                  onOpen: () => setSelected(entry.id ?? entry.name),
++                  onPick: () => pick(entry),
++                })))
++                : h('div', { className: 'bt-market-empty', key: 'empty' }, t('Nothing here yet')),
++              h('button', { type: 'button', className: 'bt-market-more', key: 'more', onClick: () => { onClose(); actions.openConnectors() } },
++                h(GearIcon), h('span', null, t('Open the full connector page'))),
++            ])))), document.body)
 +}
 diff --git a/ds-bot/src/client/member-status.js b/ds-bot/src/client/member-status.js
 index c3d74e9..665057a 100644
@@ -650,6 +1010,42 @@ index c3d74e9..665057a 100644
  .bt-mw-pill:active{scale:.97}
  .bt-mw-dock[data-leaving] .bt-mw-pill{animation:bt-mw-out .16s cubic-bezier(.4,0,1,1) forwards;pointer-events:none}
  .bt-mw-pill-in{display:inline-flex;align-items:center;gap:8px;flex:none;padding:0 13px 0 6px;white-space:nowrap}
+diff --git a/ds-bot/src/client/model-menu.js b/ds-bot/src/client/model-menu.js
+index 731f093..40f3e32 100644
+--- a/ds-bot/src/client/model-menu.js
++++ b/ds-bot/src/client/model-menu.js
+@@ -6,6 +6,7 @@ import { BotMark } from './mark.js'
+ import { KeyIcon, MaskedInput } from './secret-card.js'
+ import { SPRING_POP, SPRING_SHAPE, spring, useLinger, useViewport, viewBottom } from './motion.js'
+ import { hostText, t } from './i18n.js'
++import { ProviderMark } from './provider-marks.js'
+ 
+ const MENU_EXIT_MS = 120
+ 
+@@ -91,6 +92,7 @@ function ModelRows({ roster, current, onPick }) {
+       key: model.ref, type: 'button', role: 'menuitemradio', 'aria-checked': model.ref === current, title: model.ref,
+       onClick: () => onPick(model.ref),
+     },
++    h(ProviderMark, { key: 'mark', name: model.provider ?? provider, size: 16 }),
+     h('span', { className: 'bt-menu-label' }, model.name),
+     model.ref === roster.defaultModel ? h('span', { className: 'bt-menu-hint' }, t('Default')) : null,
+     h('span', { className: 'bt-model-tick', 'aria-hidden': true }, model.ref === current ? h(CheckIcon) : null)))))
+@@ -180,6 +182,7 @@ export function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onP
+       'aria-haspopup': 'menu', 'aria-expanded': isOpen, 'aria-label': t('Model: {model}', { model: shown?.name ?? t('none') }),
+       'data-missing': shown !== undefined && !shown.served && models.length > 0 ? '' : undefined, onClick: toggle,
+     },
++    h(ProviderMark, { key: 'mark', name: shown?.provider ?? current, size: 16 }),
+     h('span', { className: 'bt-model-copy' },
+       h('span', { className: 'bt-model-name' }, shown?.name ?? t('Choose a model')),
+       shown ? h('span', { className: 'bt-model-provider' }, shown.served || models.length === 0
+@@ -322,6 +325,7 @@ export const MODEL_CSS = `
+ .bt-model-trigger[data-missing] .bt-model-provider{color:var(--bt-danger)}
+ .bt-model-trigger[data-wide]{display:flex;width:100%;min-height:48px;padding:7px 12px;justify-content:space-between;border-radius:12px;background:var(--bt-card);box-shadow:inset 0 0 0 1px var(--bt-line)}
+ .bt-model-trigger[data-wide]:hover,.bt-model-trigger[data-wide][aria-expanded=true]{background:var(--bt-hover)}
++.bt-provider-mark{flex:none;align-self:center;display:block}
+ .bt-model-copy{display:flex;flex-direction:column;min-width:0}
+ .bt-model-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .bt-model-provider{font-size:11px;line-height:14px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 diff --git a/ds-bot/src/client/new-chat.js b/ds-bot/src/client/new-chat.js
 index fd53a99..69c8de0 100644
 --- a/ds-bot/src/client/new-chat.js
@@ -1039,7 +1435,7 @@ index 58d1840..aba0d55 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..9d685fe 100644
+index aa38a3b..4eba8e4 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -117,10 +117,20 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
@@ -1065,7 +1461,7 @@ index aa38a3b..9d685fe 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -145,12 +155,105 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -145,12 +155,174 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
  .bt-unread-wait{background:var(--bt-star)}
@@ -1091,9 +1487,12 @@ index aa38a3b..9d685fe 100644
 +   or one entry's detail on the right. */
 +/* The market is a dialog the size of the settings panel: a scrim, then a card holding the
 +   category rail and the catalogue side by side. */
-+.bt-market-frame{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.32)}
-+.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 24px 60px -24px rgba(0,0,0,.4)}
-+.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:16px 12px;border-right:1px solid var(--bt-line);overflow-y:auto}
++.bt-market-frame{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:color-mix(in srgb,var(--bt-ink) 10%,transparent)}
++/* The market floats over the conversation as frosted glass: a translucent surface, the
++   page behind it blurred and lifted, and one hairline ring instead of a hard border. The
++   tint is mixed from --bt-main, so the panel keeps following the theme. */
++.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 92%,transparent);backdrop-filter:blur(48px) saturate(1.8);-webkit-backdrop-filter:blur(48px) saturate(1.8);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
++.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:16px 12px;border-right:1px solid var(--bt-line);overflow-y:auto;background:color-mix(in srgb,var(--bt-main) 55%,transparent)}
 +.bt-market-navhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px}
 +.bt-market-cats{display:flex;flex-direction:column;gap:2px}
 +.bt-market-cat{height:32px;padding:0 10px;border:0;border-radius:10px;background:none;text-align:left;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink-2);cursor:pointer}
@@ -1142,6 +1541,72 @@ index aa38a3b..9d685fe 100644
 +.bt-market-more:hover{color:var(--bt-ink)}
 +.bt-market-empty{padding:24px 0;color:var(--bt-ink-3);font-size:13px}
 +.bt-market-official{display:flex;align-items:center;justify-content:space-between;gap:12px}
++/* The plugin market's Discover pane, drawn the way the shell's own Discover tab draws it:
++   one toolbar, the index's category pills, then one card per entry. */
++.bt-mk{display:flex;flex-direction:column;gap:16px}
++.bt-mk-bar{display:flex;align-items:center;gap:8px;min-width:0}
++.bt-mk-name{flex:none;font-size:13px;line-height:18px;color:var(--bt-ink);white-space:nowrap}
++.bt-mk-search{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;height:34px;padding:0 8px;border-radius:12px;border:1px solid var(--bt-line);background:color-mix(in srgb,var(--bt-main) 88%,transparent);color:var(--bt-ink-3)}
++.bt-mk-search svg{flex:none;width:15px;height:15px}
++.bt-mk-search input{flex:1 1 auto;min-width:0;border:0;background:none;outline:none;font:inherit;font-size:14px;color:var(--bt-ink)}
++.bt-mk-search input::placeholder{color:var(--bt-ink-3)}
++.bt-mk-menu{position:relative;flex:none;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;color:var(--bt-ink-2);cursor:pointer}
++.bt-mk-menu:hover{background:var(--bt-hover);color:var(--bt-ink)}
++.bt-mk-menu svg{flex:none;width:14px;height:14px}
++.bt-mk-menu>span{font-size:12px;line-height:18px;white-space:nowrap}
++.bt-mk-menu[data-on]{color:var(--bt-ink)}
++.bt-mk-pick{padding-right:22px}
++.bt-mk-pick::after{content:'';position:absolute;right:9px;top:50%;width:6px;height:6px;margin-top:-4px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg);pointer-events:none;opacity:.6}
++.bt-mk-pick select,.bt-mk-switch select{appearance:none;-webkit-appearance:none;border:0;background:none;outline:none;font:inherit;font-size:12px;line-height:18px;color:inherit;cursor:pointer;max-width:160px;padding:0}
++.bt-mk-switch{padding:0 22px 0 10px}
++.bt-mk-switch select,.bt-mk-switch{max-width:200px}
++.bt-mk-refresh{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:none;color:var(--bt-ink-3);cursor:pointer}
++.bt-mk-refresh:hover{background:var(--bt-hover);color:var(--bt-ink)}
++.bt-mk-labels{display:flex;flex-wrap:wrap;gap:6px;margin-top:-6px}
++.bt-mk-tag{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--bt-line);border-radius:999px;background:none;font:inherit;font-size:11px;line-height:18px;font-weight:500;color:var(--bt-ink-3);white-space:nowrap}
++button.bt-mk-tag{cursor:pointer}
++button.bt-mk-tag:hover{color:var(--bt-ink)}
++.bt-mk-tag[data-on]{background:var(--bt-hover);border-color:transparent;color:var(--bt-ink)}
++.bt-mk-catrow{position:relative;display:flex;align-items:center;gap:6px;margin-top:-6px}
++.bt-mk-cats{display:flex;flex-wrap:nowrap;gap:6px;min-width:0;overflow:hidden}
++/* A hidden copy of the whole row: how many pills fit is measured on it, so the answer
++   never depends on how many the last render drew. */
++.bt-mk-catmirror{position:absolute;left:0;top:0;display:flex;flex-wrap:nowrap;gap:6px;visibility:hidden;pointer-events:none;white-space:nowrap}
++.bt-mk-catmore{position:relative;flex:none}
++.bt-mk-pill.bt-mk-morecat{background:var(--bt-ink);color:var(--bt-main);padding-right:20px}
++.bt-mk-pill.bt-mk-morecat::after{content:'';position:absolute;right:9px;top:50%;width:5px;height:5px;margin-top:-4px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg);opacity:.85}
++.bt-mk-pill.bt-mk-morecat:hover,.bt-mk-pill.bt-mk-morecat[data-on]{background:var(--bt-ink);color:var(--bt-main);opacity:.92}
++.bt-mk-catmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:5;display:flex;flex-direction:column;min-width:160px;padding:4px;border-radius:12px;background:color-mix(in srgb,var(--bt-main) 92%,transparent);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 0 0 .5px var(--bt-line),0 12px 28px -12px rgba(0,0,0,.28)}
++.bt-mk-catitem{display:flex;align-items:center;height:30px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;font-size:13px;color:var(--bt-ink-2);text-align:left;cursor:pointer;white-space:nowrap}
++.bt-mk-catitem:hover{background:var(--bt-hover);color:var(--bt-ink)}
++.bt-mk-catitem[data-on]{background:var(--bt-hover);color:var(--bt-ink);font-weight:500}
++.bt-mk-pill{flex:none;height:24px;padding:0 8px;border:0;border-radius:999px;background:none;font:inherit;font-size:12px;line-height:24px;color:var(--bt-ink-2);cursor:pointer}
++.bt-mk-pill:hover{background:var(--bt-hover);color:var(--bt-ink)}
++.bt-mk-pill[data-on]{background:var(--bt-hover);color:var(--bt-ink)}
++.bt-mk-cards{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
++.bt-mk-card{display:flex;align-items:center;gap:14px;min-width:0;padding:8px;border-radius:20px}
++.bt-mk-card:hover{background:var(--bt-hover)}
++.bt-mk-mark{flex:none;width:50px;height:50px;display:inline-flex;align-items:center;justify-content:center;border-radius:16px;border:1px solid var(--bt-line);overflow:hidden;color:var(--bt-ink-2)}
++.bt-mk-mark img{width:32px;height:32px;object-fit:contain}
++.bt-mk-mark svg{width:22px;height:22px}
++.bt-mk-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
++.bt-mk-titlerow{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
++.bt-mk-card .bt-mk-name{flex:0 1 auto;max-width:100%;font-size:14px;line-height:20px;font-weight:500;overflow:hidden;text-overflow:ellipsis}
++.bt-mk-desc{display:block;font-size:13px;line-height:18px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
++.bt-mk-meta{display:block;font-size:12px;line-height:18px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
++.bt-mk-end{flex:none;display:flex;align-items:center;gap:8px}
++.bt-mk-install{flex:none;height:28px;padding:0 10px;border:1px solid var(--bt-line);border-radius:8px;background:none;font:inherit;font-size:12px;line-height:26px;color:var(--bt-ink);cursor:pointer}
++.bt-mk-install:hover{background:var(--bt-hover)}
++.bt-mk-install:disabled{opacity:.5;cursor:default}
++.bt-mk-installed{font-size:12px;line-height:18px;color:var(--bt-ink-3);white-space:nowrap}
++.bt-mk-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:4px}
++.bt-mk-count{font-size:12px;line-height:18px;color:var(--bt-ink-3)}
++.bt-mk-more{flex:none;height:28px;padding:0 12px;border:1px solid var(--bt-line);border-radius:8px;background:none;font:inherit;font-size:12px;color:var(--bt-ink);cursor:pointer}
++.bt-mk-more:hover{background:var(--bt-hover)}
++.bt-mk-more:disabled{opacity:.5;cursor:default}
++.bt-mk-empty{padding:28px 0;font-size:13px;color:var(--bt-ink-3)}
++@media (max-width:720px){.bt-market-pane{backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6)}.bt-mk-bar{flex-wrap:wrap}.bt-mk-search{order:-1;flex:1 1 100%}.bt-mk-mark{width:44px;height:44px;border-radius:14px}}
++
 +@media (max-width:720px){.bt-market-nav{width:200px}.bt-market-grid{grid-template-columns:1fr}}
 +
 +.bt-rail .bt-side-foot{position:static;flex-direction:column;gap:8px;padding:0 0 8px;margin-top:auto}
@@ -1174,7 +1639,7 @@ index aa38a3b..9d685fe 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -317,6 +420,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -317,6 +489,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -1201,7 +1666,7 @@ index aa38a3b..9d685fe 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -548,7 +671,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -548,7 +740,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
  html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
  html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
@@ -1212,7 +1677,7 @@ index aa38a3b..9d685fe 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -588,7 +713,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -588,7 +782,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -1222,7 +1687,7 @@ index aa38a3b..9d685fe 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -883,6 +1009,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +1078,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -1284,7 +1749,7 @@ index aa38a3b..9d685fe 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1163,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1232,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -1393,7 +1858,7 @@ index aa38a3b..9d685fe 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1291,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1360,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -1420,7 +1885,7 @@ index aa38a3b..9d685fe 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1311,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1380,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -1429,7 +1894,7 @@ index aa38a3b..9d685fe 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1352,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1421,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}

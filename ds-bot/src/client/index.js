@@ -508,6 +508,72 @@ export function apply(ctx) {
         }))
         .sort((a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name))
     },
+    // The shell's plugin market: its configured indexes, one page of the discover list,
+    // and the categories, labels and sort keys the index itself declares. Installing goes
+    // through the shell's package manager, so a plugin lands exactly as its own page would
+    // put it; nothing about the profile is written here.
+    pluginsMarket: async (query = {}) => {
+      const unwrap = (answer) => {
+        let value = answer
+        for (let i = 0; i < 5 && value && typeof value === 'object' && 'ok' in value; i += 1) value = value.value
+        return value
+      }
+      const market = ctx.get('remote.pluginMarket')
+      if (!market) return null
+      const indexes = unwrap(await market.listIndexes()) ?? []
+      const url = query.index ?? indexes[0]?.url
+      if (!url) return null
+      const answer = await market.search(url, {
+        sort: query.sort ?? { kind: 'index' },
+        offset: query.offset ?? 0,
+        limit: query.limit ?? 24,
+        ...(query.text ? { text: query.text } : {}),
+        ...(query.category ? { category: query.category } : {}),
+        ...(query.labels?.length ? { labels: query.labels } : {}),
+        ...(query.refresh ? { refresh: true } : {}),
+      })
+      const page = unwrap(answer)
+      if (!page || page.ok === false || !Array.isArray(page.entries)) return null
+      const zh = language().startsWith('zh')
+      const pick = (text) => (text && typeof text === 'object' ? (zh ? text.zh : text.en) ?? text.en ?? text.zh : text)
+      const metadata = page.metadata ?? {}
+      const labelNames = Object.fromEntries(Object.entries(metadata.labels ?? {}).map(([id, label]) => [id, pick(label?.title) ?? id]))
+      const names = (group) => Object.entries(group ?? {}).map(([id, entry]) => ({ id, name: pick(entry?.title) ?? id }))
+      return {
+        index: { url, name: pick(page.title) ?? url, note: pick(page.description) ?? '' },
+        indexes: indexes.map((entry) => ({ url: entry.url, name: pick(entry.title) ?? entry.url })),
+        categories: names(metadata.categories),
+        labels: names(metadata.labels),
+        sorts: names(metadata.sortKeys),
+        total: page.total ?? 0,
+        nextOffset: page.nextOffset ?? null,
+        entries: page.entries.map((entry) => {
+          const version = (entry.versions ?? []).find((item) => item.version === entry.defaultVersion) ?? entry.versions?.[0]
+          return {
+            id: entry.name,
+            name: pick(entry.title) ?? entry.name,
+            detail: pick(entry.description) ?? '',
+            icon: entry.icon,
+            author: entry.author,
+            version: entry.defaultVersion ?? version?.version,
+            published: version?.publishTimestamp ? version.publishTimestamp * 1000 : null,
+            category: entry.metadata?.category,
+            labels: (entry.metadata?.labels ?? []).map((id) => ({ id, name: labelNames[id] ?? id })),
+            stars: entry.metadata?.sortKeys?.['github-stars'],
+            status: entry.installation?.status ?? 'not-installed',
+            compatible: version?.compatibility?.compatible !== false,
+            spec: version?.install?.spec,
+            registry: version?.install?.registry,
+          }
+        }),
+      }
+    },
+    installMarketPlugin: async (spec, registry) => {
+      const manager = ctx.get('remote.pluginManager')
+      if (!manager?.installBundle || !spec) return false
+      const answer = await manager.installBundle(spec, registry ? { registry } : undefined)
+      return answer?.ok !== false && answer?.value?.ok !== false
+    },
     setPluginEnabled: async (id, enabled) => {
       const manager = ctx.get('remote.pluginManager')
       if (manager?.setPluginEnabled) await manager.setPluginEnabled(id, enabled)

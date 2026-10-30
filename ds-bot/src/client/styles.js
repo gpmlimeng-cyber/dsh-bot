@@ -175,9 +175,12 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
    or one entry's detail on the right. */
 /* The market is a dialog the size of the settings panel: a scrim, then a card holding the
    category rail and the catalogue side by side. */
-.bt-market-frame{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.32)}
-.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 24px 60px -24px rgba(0,0,0,.4)}
-.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:16px 12px;border-right:1px solid var(--bt-line);overflow-y:auto}
+.bt-market-frame{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:color-mix(in srgb,var(--bt-ink) 10%,transparent)}
+/* The market floats over the conversation as frosted glass: a translucent surface, the
+   page behind it blurred and lifted, and one hairline ring instead of a hard border. The
+   tint is mixed from --bt-main, so the panel keeps following the theme. */
+.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 92%,transparent);backdrop-filter:blur(48px) saturate(1.8);-webkit-backdrop-filter:blur(48px) saturate(1.8);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
+.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:16px 12px;border-right:1px solid var(--bt-line);overflow-y:auto;background:color-mix(in srgb,var(--bt-main) 55%,transparent)}
 .bt-market-navhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px}
 .bt-market-cats{display:flex;flex-direction:column;gap:2px}
 .bt-market-cat{height:32px;padding:0 10px;border:0;border-radius:10px;background:none;text-align:left;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink-2);cursor:pointer}
@@ -226,6 +229,72 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-market-more:hover{color:var(--bt-ink)}
 .bt-market-empty{padding:24px 0;color:var(--bt-ink-3);font-size:13px}
 .bt-market-official{display:flex;align-items:center;justify-content:space-between;gap:12px}
+/* The plugin market's Discover pane, drawn the way the shell's own Discover tab draws it:
+   one toolbar, the index's category pills, then one card per entry. */
+.bt-mk{display:flex;flex-direction:column;gap:16px}
+.bt-mk-bar{display:flex;align-items:center;gap:8px;min-width:0}
+.bt-mk-name{flex:none;font-size:13px;line-height:18px;color:var(--bt-ink);white-space:nowrap}
+.bt-mk-search{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;height:34px;padding:0 8px;border-radius:12px;border:1px solid var(--bt-line);background:color-mix(in srgb,var(--bt-main) 88%,transparent);color:var(--bt-ink-3)}
+.bt-mk-search svg{flex:none;width:15px;height:15px}
+.bt-mk-search input{flex:1 1 auto;min-width:0;border:0;background:none;outline:none;font:inherit;font-size:14px;color:var(--bt-ink)}
+.bt-mk-search input::placeholder{color:var(--bt-ink-3)}
+.bt-mk-menu{position:relative;flex:none;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;color:var(--bt-ink-2);cursor:pointer}
+.bt-mk-menu:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mk-menu svg{flex:none;width:14px;height:14px}
+.bt-mk-menu>span{font-size:12px;line-height:18px;white-space:nowrap}
+.bt-mk-menu[data-on]{color:var(--bt-ink)}
+.bt-mk-pick{padding-right:22px}
+.bt-mk-pick::after{content:'';position:absolute;right:9px;top:50%;width:6px;height:6px;margin-top:-4px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg);pointer-events:none;opacity:.6}
+.bt-mk-pick select,.bt-mk-switch select{appearance:none;-webkit-appearance:none;border:0;background:none;outline:none;font:inherit;font-size:12px;line-height:18px;color:inherit;cursor:pointer;max-width:160px;padding:0}
+.bt-mk-switch{padding:0 22px 0 10px}
+.bt-mk-switch select,.bt-mk-switch{max-width:200px}
+.bt-mk-refresh{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:none;color:var(--bt-ink-3);cursor:pointer}
+.bt-mk-refresh:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mk-labels{display:flex;flex-wrap:wrap;gap:6px;margin-top:-6px}
+.bt-mk-tag{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--bt-line);border-radius:999px;background:none;font:inherit;font-size:11px;line-height:18px;font-weight:500;color:var(--bt-ink-3);white-space:nowrap}
+button.bt-mk-tag{cursor:pointer}
+button.bt-mk-tag:hover{color:var(--bt-ink)}
+.bt-mk-tag[data-on]{background:var(--bt-hover);border-color:transparent;color:var(--bt-ink)}
+.bt-mk-catrow{position:relative;display:flex;align-items:center;gap:6px;margin-top:-6px}
+.bt-mk-cats{display:flex;flex-wrap:nowrap;gap:6px;min-width:0;overflow:hidden}
+/* A hidden copy of the whole row: how many pills fit is measured on it, so the answer
+   never depends on how many the last render drew. */
+.bt-mk-catmirror{position:absolute;left:0;top:0;display:flex;flex-wrap:nowrap;gap:6px;visibility:hidden;pointer-events:none;white-space:nowrap}
+.bt-mk-catmore{position:relative;flex:none}
+.bt-mk-pill.bt-mk-morecat{background:var(--bt-ink);color:var(--bt-main);padding-right:20px}
+.bt-mk-pill.bt-mk-morecat::after{content:'';position:absolute;right:9px;top:50%;width:5px;height:5px;margin-top:-4px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg);opacity:.85}
+.bt-mk-pill.bt-mk-morecat:hover,.bt-mk-pill.bt-mk-morecat[data-on]{background:var(--bt-ink);color:var(--bt-main);opacity:.92}
+.bt-mk-catmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:5;display:flex;flex-direction:column;min-width:160px;padding:4px;border-radius:12px;background:color-mix(in srgb,var(--bt-main) 92%,transparent);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 0 0 .5px var(--bt-line),0 12px 28px -12px rgba(0,0,0,.28)}
+.bt-mk-catitem{display:flex;align-items:center;height:30px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;font-size:13px;color:var(--bt-ink-2);text-align:left;cursor:pointer;white-space:nowrap}
+.bt-mk-catitem:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mk-catitem[data-on]{background:var(--bt-hover);color:var(--bt-ink);font-weight:500}
+.bt-mk-pill{flex:none;height:24px;padding:0 8px;border:0;border-radius:999px;background:none;font:inherit;font-size:12px;line-height:24px;color:var(--bt-ink-2);cursor:pointer}
+.bt-mk-pill:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mk-pill[data-on]{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mk-cards{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
+.bt-mk-card{display:flex;align-items:center;gap:14px;min-width:0;padding:8px;border-radius:20px}
+.bt-mk-card:hover{background:var(--bt-hover)}
+.bt-mk-mark{flex:none;width:50px;height:50px;display:inline-flex;align-items:center;justify-content:center;border-radius:16px;border:1px solid var(--bt-line);overflow:hidden;color:var(--bt-ink-2)}
+.bt-mk-mark img{width:32px;height:32px;object-fit:contain}
+.bt-mk-mark svg{width:22px;height:22px}
+.bt-mk-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bt-mk-titlerow{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.bt-mk-card .bt-mk-name{flex:0 1 auto;max-width:100%;font-size:14px;line-height:20px;font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.bt-mk-desc{display:block;font-size:13px;line-height:18px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mk-meta{display:block;font-size:12px;line-height:18px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mk-end{flex:none;display:flex;align-items:center;gap:8px}
+.bt-mk-install{flex:none;height:28px;padding:0 10px;border:1px solid var(--bt-line);border-radius:8px;background:none;font:inherit;font-size:12px;line-height:26px;color:var(--bt-ink);cursor:pointer}
+.bt-mk-install:hover{background:var(--bt-hover)}
+.bt-mk-install:disabled{opacity:.5;cursor:default}
+.bt-mk-installed{font-size:12px;line-height:18px;color:var(--bt-ink-3);white-space:nowrap}
+.bt-mk-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:4px}
+.bt-mk-count{font-size:12px;line-height:18px;color:var(--bt-ink-3)}
+.bt-mk-more{flex:none;height:28px;padding:0 12px;border:1px solid var(--bt-line);border-radius:8px;background:none;font:inherit;font-size:12px;color:var(--bt-ink);cursor:pointer}
+.bt-mk-more:hover{background:var(--bt-hover)}
+.bt-mk-more:disabled{opacity:.5;cursor:default}
+.bt-mk-empty{padding:28px 0;font-size:13px;color:var(--bt-ink-3)}
+@media (max-width:720px){.bt-market-pane{backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6)}.bt-mk-bar{flex-wrap:wrap}.bt-mk-search{order:-1;flex:1 1 100%}.bt-mk-mark{width:44px;height:44px;border-radius:14px}}
+
 @media (max-width:720px){.bt-market-nav{width:200px}.bt-market-grid{grid-template-columns:1fr}}
 
 .bt-rail .bt-side-foot{position:static;flex-direction:column;gap:8px;padding:0 0 8px;margin-top:auto}
