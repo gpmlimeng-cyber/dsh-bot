@@ -26185,6 +26185,21 @@ function serveBrowserReads({ browsers, post, clientId = globalThis.crypto.random
   };
 }
 
+// src/client/mode-row.js
+function modeRowSlot(document2) {
+  if (document2.querySelector('[data-mobile-nav="frame"]') === null) return document2.body;
+  return document2.querySelector(".bt-side") ?? document2.body;
+}
+function placeModeRow(document2, nodes) {
+  const slot = modeRowSlot(document2);
+  const wanted = nodes.filter((node) => node !== null && node !== void 0);
+  if (wanted.length > 0 && wanted.every((node) => node.parentNode === slot)) return slot;
+  for (const node of [...wanted].reverse()) {
+    if (node.parentNode !== slot) slot.insertBefore(node, slot.firstChild);
+  }
+  return slot;
+}
+
 // src/client/right-panel.js
 var RIGHTBAR_ATTRIBUTES = ["data-rightbar-collapsed", "data-rightbar-fullscreen"];
 function rightColumnOpen(doc) {
@@ -27437,7 +27452,10 @@ function apply(ctx) {
       } catch {
         declared = false;
       }
-      if (landed) return;
+      if (landed) {
+        paintModeBar();
+        return;
+      }
       if (!declared) {
         if (verifyAttempts < 20) {
           verifyAttempts += 1;
@@ -27538,14 +27556,30 @@ function apply(ctx) {
       button.appendChild(svg);
       return button;
     };
+    let modeRow = null;
+    const inDrawer = () => modeRowSlot(document) !== document.body;
+    const placeRow = () => {
+      const drew = inDrawer();
+      if (drew) {
+        if (modeRow === null) {
+          modeRow = document.createElement("div");
+          modeRow.className = "bt-modebar-row";
+          modeRow.style.cssText = "display:flex;align-items:center;gap:4px;padding:6px 0 2px";
+        }
+        if (modeRow.parentNode !== modeRowSlot(document)) placeModeRow(document, [modeRow]);
+        for (const node of [modeBar, bandActions]) if (node !== null && node.parentNode !== modeRow) modeRow.appendChild(node);
+        return;
+      }
+      modeRow?.remove();
+      placeModeRow(document, [modeBar, bandActions]);
+    };
     const paintActions = () => {
       const box = modeBar.getBoundingClientRect();
       if (!bandActions) {
         bandActions = document.createElement("div");
         bandActions.className = "bt-band-actions";
-        document.body.appendChild(bandActions);
       }
-      bandActions.style.cssText = `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`;
+      bandActions.style.cssText = inDrawer() ? "position:static;display:flex;align-items:center;gap:2px;margin-left:2px" : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`;
       bandActions.textContent = "";
       const hostClick = (selector) => document.querySelector(selector)?.click();
       const inAgent = () => surface.getSnapshot().mode === "agent";
@@ -27582,7 +27616,6 @@ function apply(ctx) {
         modeBar.className = "bt-modebar";
         modeBar.setAttribute("aria-haspopup", "menu");
         modeBar.setAttribute("aria-expanded", "false");
-        document.body.appendChild(modeBar);
         document.addEventListener("mousedown", (event) => {
           if (!modeOpen) return;
           const target = event.target;
@@ -27600,7 +27633,8 @@ function apply(ctx) {
         });
         window.addEventListener("resize", () => paintModeBar());
       }
-      modeBar.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414`;
+      modeBar.style.cssText = inDrawer() ? "position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:#141414" : `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414`;
+      placeRow();
       modeBar.textContent = "";
       const label = document.createElement("span");
       label.textContent = mode === "bot" ? t("Bot mode") : t("DSH mode");
@@ -27627,6 +27661,7 @@ function apply(ctx) {
     const reconcile = () => {
       paintModeBar();
       groups.reconcile(groupsFor(surface.getSnapshot()));
+      requestAnimationFrame(() => paintModeBar());
       clearTimeout(verifyTimer);
       verifyAttempts = 0;
       verifyTimer = setTimeout(verifySidebar, 250);
@@ -27646,7 +27681,9 @@ function apply(ctx) {
         modeMenu.remove();
         modeMenu = null;
       }
-      for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu,.bt-band-actions")) stale.remove();
+      modeRow?.remove();
+      modeRow = null;
+      for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row")) stale.remove();
       document.getElementById("bt-modebar-rules")?.remove();
       groups.dispose();
     };
