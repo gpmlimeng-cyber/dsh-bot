@@ -162,7 +162,7 @@ html:has(.bt-side.bt-rail){overflow-x:hidden}
    slides in rather than popping into the empty space. */
 @keyframes bt-rail-in{from{opacity:0;transform:translateX(-10px)}}
 .bt-side.bt-rail{animation:bt-rail-in .18s cubic-bezier(.22,1,.36,1) both}
-html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side.bt-rail{position:fixed;left:0;top:0;bottom:0;width:56px;padding:calc(var(--dsh-frame-chrome-top,0px) + 42px) 0 8px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-float-ring);z-index:20;overflow:hidden;align-items:center}
+html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side.bt-rail{position:fixed;left:0;top:calc(var(--dsh-frame-chrome-top,0px) + 38px);bottom:0;width:56px;padding:8px 0;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-float-ring);z-index:20;overflow:hidden;align-items:center}
 /* The rail is 56 wide, so a row's hover chip is a 40px rounded tile inside it rather than
    a band across the full column. */
 .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px;width:40px;border-radius:12px;margin:0 auto}
