@@ -922,14 +922,18 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 /* The shell's session-log export belongs in Settings, not at the bottom of the drawer. */
 [data-mobile-nav="drawer-actions"] [data-mobile-nav="session-log"]{display:none!important}
 html:root{--dsw-corner-shape:round}
+/* One floating surface for every control that rides over content: the surface tone, a
+   half-pixel hairline, and a float shadow soft enough to read as separation, not depth.
+   The phone carried a translucent tint of its own; it is gone with it, one recipe now. */
+body{--bt-float-ring:color-mix(in srgb,var(--bt-ink) 10%,transparent);--bt-float-shadow:0 4px 12px -1px rgba(28,28,28,.08),0 2px 4px -2px rgba(28,28,28,.06);--bt-float-hover:color-mix(in srgb,var(--bt-main),var(--bt-ink) 7%)}
 /* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
    into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
    that same plugin's marker rather than a width: the marker means "drawer form", where the
    native button is gone. It is a private attribute of dsh-web-mobile used for visibility
    only — if it is ever renamed the button stops showing (a safe failure) and the native one
    returns, so two hangers never appear at once. */
-.bt-head-btn{display:none;position:absolute;left:0;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:color-mix(in srgb,var(--bt-main) 72%,transparent);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.bt-head-btn:hover,.bt-head-btn:active{background:var(--bt-hover)}
+.bt-head-btn{display:none;position:absolute;left:0;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:var(--bt-main);box-shadow:inset 0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bt-head-btn:hover,.bt-head-btn:active{background:var(--bt-float-hover)}
 .bt-head-btn:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}
 /* 32px is the circle; a finger still gets 44. Grow up, down and left only, so the pill
    beside it keeps its space. */
@@ -1044,7 +1048,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 }
 @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
 @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
-html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:0!important;min-height:44px!important;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:color-mix(in srgb,var(--bt-main) 88%,transparent)!important;border:0!important;box-shadow:0 6px 18px -6px rgba(0,0,0,.10),0 2px 5px rgba(0,0,0,.045),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
+html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:0!important;min-height:44px!important;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;border:0!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
 html:has([data-mobile-nav="frame"]) [data-composer-card]:hover,html:has([data-mobile-nav="frame"]) [data-composer-card]:focus-within{background:color-mix(in srgb,var(--bt-main) 96%,transparent)!important}
 /* The card was measuring 2px of top padding against 7.5px at the bottom, so its 32px row
    sat a couple of pixels high inside the 44px box. Equal 6px insets centre it exactly; the
@@ -1069,6 +1073,8 @@ html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus) [data-mob
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
 [class*="_root"]:has(> [data-composer-card]){padding:0 11px 13px 16px!important}
 [class*="_root"]:has(> [data-composer-card])>[data-composer-card]{max-width:min(992px,100%)!important}
+[data-composer-card]{background:var(--bt-main)!important;box-shadow:inset 0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow)!important}
+[data-composer-card]:focus-within{background:var(--bt-main)!important}
 /* The shell's card is a column: the input on top, the controls on the line below. Both
    surfaces want one capsule instead, so the card turns into a row and the shell's row is
    flattened, its children ordered round the input. The phone frame restates its own

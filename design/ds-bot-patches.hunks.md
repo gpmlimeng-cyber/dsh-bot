@@ -24,7 +24,7 @@
 | 22 | `ds-bot/src/client/icons.js` | 61–72 | 12 |
 | 23 | `ds-bot/src/client/index.js` | 6 | 1 |
 | 24 | `ds-bot/src/client/index.js` | 480 | 1 |
-| 25 | `ds-bot/src/client/member-status.js` | 190–193 | 3 |
+| 25 | `ds-bot/src/client/member-status.js` | 188–189 | 2 |
 | 26 | `ds-bot/src/client/new-chat.js` | 1 | 1 |
 | 27 | `ds-bot/src/client/new-chat.js` | 10–83 | 73 |
 | 28 | `ds-bot/src/client/new-chat.js` | 188–196 | 5 |
@@ -38,11 +38,11 @@
 | 36 | `ds-bot/src/client/sidebar.js` | 591 | 1 |
 | 37 | `ds-bot/src/client/styles.js` | 153–157 | 5 |
 | 38 | `ds-bot/src/client/styles.js` | 324–343 | 20 |
-| 39 | `ds-bot/src/client/styles.js` | 910–947 | 38 |
-| 40 | `ds-bot/src/client/styles.js` | 1047–1121 | 54 |
-| 41 | `ds-bot/src/client/styles.js` | 1171–1182 | 9 |
-| 42 | `ds-bot/src/client/styles.js` | 1191 | 1 |
-| 43 | `ds-bot/src/client/styles.js` | 1232–1237 | 6 |
+| 39 | `ds-bot/src/client/styles.js` | 910–951 | 42 |
+| 40 | `ds-bot/src/client/styles.js` | 1051–1127 | 56 |
+| 41 | `ds-bot/src/client/styles.js` | 1177–1188 | 9 |
+| 42 | `ds-bot/src/client/styles.js` | 1197 | 1 |
+| 43 | `ds-bot/src/client/styles.js` | 1238–1243 | 6 |
 | 44 | `ds-bot/src/client/team-actions.js` | 3 | 1 |
 | 45 | `ds-bot/src/client/team-actions.js` | 17–18 | 2 |
 | 46 | `ds-bot/src/client/team-actions.js` | 47–51 | 2 |

@@ -1,6 +1,6 @@
 # ds-bot 本地补丁台账
 
-已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）；⑬ 移动端三个自绘控件的密度对齐 OpenMausBot。
+已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）；⑬ 移动端三个自绘控件的密度对齐 OpenMausBot；⑭ 全站统一的悬浮面（实底 + 0.5px 发丝环 + 浮动投影）。
 **追加优先**：能写在文件末尾的绝不改上游已有行，把上游合并冲突面积压到最小。
 
 - 基线：**上游 `4a7b550`**（①②③ 已进提交 `f03bc73`，所以补丁必须相对 `4a7b550` 生成，`git diff` 相对 HEAD 只剩 ④⑤）
@@ -8,7 +8,7 @@
 - hunk 数：**46**（`grep -c '^@@' design/ds-bot-patches.patch`）
 - **行号**：见 `design/ds-bot-patches.hunks.md`，由 `node tools/patch-ledger.mjs` 生成，勿手改。
   这里**不写行号**：手写行号已经错了三次，机械表是唯一来源。
-- minus 行分布在 11 个文件：`styles.js` 31、`sidebar.js` 6、`icons.js` 6、`new-chat.js` 5、`bot-settings.js` 5、`team-actions.js` 4、`create-bot.js` 2、`composer.js` 2、`browser-pane.js` 2、`index.js` 1、`header.js` 1；`i18n.js`、`about.js`、`member-status.js`、`drawer-dismiss.js` 各 **0** 个 minus
+- minus 行分布在 12 个文件：`styles.js` 32、`sidebar.js` 6、`icons.js` 6、`new-chat.js` 5、`bot-settings.js` 5、`team-actions.js` 4、`create-bot.js` 2、`composer.js` 2、`browser-pane.js` 2、`index.js` 1、`header.js` 1；`i18n.js`、`about.js`、`member-status.js` 2、`drawer-dismiss.js` **0** 个 minus
 - 冲突自检：`tools/patch-conflict-check.sh <ref>`（升级前先跑，输出 `clean` 才合并）
 
 ## 1. 手改的文件（进补丁，共 15 个）
@@ -48,6 +48,7 @@ hunk 3、5 是唯一的 minus 行（挂载点，各 1 处组件插入），其�
 
 | ⑫ PC 输入框 | `styles.js` | `_add` 隐藏、三处按钮间距、`:focus-within` 底色都收进 `html:has([data-mobile-nav="frame"])`；桌面新增 `html:not(:has(...)) [data-composer-card]{flex-direction:row;flex-wrap:wrap;align-items:center;gap:0;padding:6px 8px}`，藏掉自绘 `.bt-plus/.bt-mic/.bt-voice`；输入框行高与占位文字 24→20、占位 `top` 2→0（游标与文字同一行盒）；发送键 `transform:none` 由移动端改为两端通用 | 宿主 2.0.19-next 的卡片是 `flex-direction:column`（输入一行、控件一行），上游那批拆行 + order 1/2/3 是为旧的一行结构写的，撞上去就在桌面摊成「加号右上、麦克风右下」。现在两端都是一行胶囊：桌面用宿主自己的「+」和发送键，手机用自绘控件；圆角与占位文字两端通用不动。行高原为 24px，游标按行高绘制就比 14px 文字高 4px；占位又比行盒低 2px，游标和文字本来就没对齐。宿主给发送键的 `translateY(-2px)` 也一并去掉，桌面实测三个居中量都相等。**代价：PC 上没有听写与语音对话**，宿主 PC 端本身不提供，这两个是自绘控件 |
 | ⑬ 移动端控件密度 | `styles.js` | `.bt-plus` 与 `.bt-mic/.bt-voice` 28→**32px**，两者 `svg` 22→**18px**；移动端发送键 28→32px、图标 14→16px | 对标 OpenMausBot 的胶囊（`src/components/Composer.tsx`：`size-8`=32px 按钮 + 17–18px 图标，图标只占按钮直径 56%）。我们原来是 22px 图标塞 28px 按钮、占 79%，看着图标撑满没呼吸，也没有 44px 触控目标。桌面不动：宿主自己的「+」28px、发送 34px。触发方式不抄它（它按视口 767.98px，我们只能按 `data-mobile-nav="frame"`，因为卡片 DOM 不归我们） |
+| ⑭ 统一悬浮面 | `styles.js`、`member-status.js` | 新增三个变量 `--bt-float-ring`（`color-mix(ink 10%)` 发丝环）、`--bt-float-shadow`（`0 4px 12px -1px rgba(28,28,28,.08), 0 2px 4px -2px rgba(28,28,28,.06)`）、`--bt-float-hover`（`color-mix(main, ink 7%)`）；`.bt-head-btn`、`.bt-mw-pill`、`[data-composer-card]` 三处改用同一套：实底 + `inset 0 0 0 .5px` 环 + 浮动投影；删掉移动端独有的 72% / 88% 半透明底色与各自两套阴影 | 对标 OpenMausBot 的 `ELEVATED_FLOAT`（`src/components/elevated.ts`）：`bg-composer ring-[0.5px] ring-ink/10` + `shadow-(--shadow-float)`，hover 走 `color-mix(底色, ink 7%)`，是共享常量、全站复用。原来我们两端各写一套：手机 72–88% 半透明 + 硬阴影，桌面宿主原样，同一控件两种质感。现在一条配方两端同款。变量挂在 `body` 上而不是 `:root`，因为 `--bt-ink` 定义在 `body` |
 
 「切换 Agent 模式」走 `setSurface`，**故意不接**。
 

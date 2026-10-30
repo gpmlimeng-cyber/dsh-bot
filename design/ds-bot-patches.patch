@@ -365,20 +365,20 @@ index daf7dd4..2870ccc 100644
      // Agent mode hands the surface back to the shell; everything open on the Bot
      // surface closes first so nothing stale reopens on the way back.
 diff --git a/ds-bot/src/client/member-status.js b/ds-bot/src/client/member-status.js
-index c3d74e9..373c121 100644
+index c3d74e9..357e374 100644
 --- a/ds-bot/src/client/member-status.js
 +++ b/ds-bot/src/client/member-status.js
-@@ -187,7 +187,10 @@ export const MEMBER_CSS = `
+@@ -185,8 +185,8 @@ export function useMemberWork(room, useWork) {
+ 
+ export const MEMBER_CSS = `
  .bt-mw-dock{display:flex;justify-content:center;margin:0 auto 8px;pointer-events:none}
- .bt-mw-pill{pointer-events:auto;position:relative;display:inline-flex;align-items:center;flex:none;box-sizing:border-box;height:32px;max-width:100%;padding:0;border:0;border-radius:999px;overflow:hidden;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line-2),0 2px 8px -2px rgba(0,0,0,.12);color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer;animation:bt-mw-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .18s ease-out backwards;transition:background-color .12s ease,${spring(SPRING_SHAPE, 'width')},${spring(SPRING_TAP, 'scale')}}
- .bt-mw-pill:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))}
-+html:has([data-mobile-nav="frame"]) .bt-mw-pill:hover{background:color-mix(in srgb,var(--bt-ink) 6%,color-mix(in srgb,var(--bt-main) 78%,transparent))}
+-.bt-mw-pill{pointer-events:auto;position:relative;display:inline-flex;align-items:center;flex:none;box-sizing:border-box;height:32px;max-width:100%;padding:0;border:0;border-radius:999px;overflow:hidden;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line-2),0 2px 8px -2px rgba(0,0,0,.12);color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer;animation:bt-mw-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .18s ease-out backwards;transition:background-color .12s ease,${spring(SPRING_SHAPE, 'width')},${spring(SPRING_TAP, 'scale')}}
+-.bt-mw-pill:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))}
++.bt-mw-pill{pointer-events:auto;position:relative;display:inline-flex;align-items:center;flex:none;box-sizing:border-box;height:32px;max-width:100%;padding:0;border:0;border-radius:999px;overflow:hidden;background:var(--bt-main);box-shadow:inset 0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer;animation:bt-mw-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .18s ease-out backwards;transition:background-color .12s ease,${spring(SPRING_SHAPE, 'width')},${spring(SPRING_TAP, 'scale')}}
++.bt-mw-pill:hover{background:var(--bt-float-hover)}
  .bt-mw-pill:active{scale:.97}
-+html:has([data-mobile-nav="frame"]) .bt-mw-pill{background:color-mix(in srgb,var(--bt-main) 72%,transparent);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
-+html:has([data-mobile-nav="frame"]) .bt-mw-face{box-shadow:0 0 0 2px color-mix(in srgb,var(--bt-main) 72%,transparent)}
  .bt-mw-dock[data-leaving] .bt-mw-pill{animation:bt-mw-out .16s cubic-bezier(.4,0,1,1) forwards;pointer-events:none}
  .bt-mw-pill-in{display:inline-flex;align-items:center;gap:8px;flex:none;padding:0 13px 0 6px;white-space:nowrap}
- .bt-mw-faces{display:inline-flex;align-items:center;flex:none;line-height:0}
 diff --git a/ds-bot/src/client/new-chat.js b/ds-bot/src/client/new-chat.js
 index fd53a99..69c8de0 100644
 --- a/ds-bot/src/client/new-chat.js
@@ -597,7 +597,7 @@ index 58d1840..d2cacb9 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..b4d7df3 100644
+index aa38a3b..30c4437 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -150,7 +150,11 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
@@ -640,7 +640,7 @@ index aa38a3b..b4d7df3 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -883,6 +907,44 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +907,48 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -659,14 +659,18 @@ index aa38a3b..b4d7df3 100644
 +/* The shell's session-log export belongs in Settings, not at the bottom of the drawer. */
 +[data-mobile-nav="drawer-actions"] [data-mobile-nav="session-log"]{display:none!important}
 +html:root{--dsw-corner-shape:round}
++/* One floating surface for every control that rides over content: the surface tone, a
++   half-pixel hairline, and a float shadow soft enough to read as separation, not depth.
++   The phone carried a translucent tint of its own; it is gone with it, one recipe now. */
++body{--bt-float-ring:color-mix(in srgb,var(--bt-ink) 10%,transparent);--bt-float-shadow:0 4px 12px -1px rgba(28,28,28,.08),0 2px 4px -2px rgba(28,28,28,.06);--bt-float-hover:color-mix(in srgb,var(--bt-main),var(--bt-ink) 7%)}
 +/* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
 +   into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
 +   that same plugin's marker rather than a width: the marker means "drawer form", where the
 +   native button is gone. It is a private attribute of dsh-web-mobile used for visibility
 +   only — if it is ever renamed the button stops showing (a safe failure) and the native one
 +   returns, so two hangers never appear at once. */
-+.bt-head-btn{display:none;position:absolute;left:0;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:color-mix(in srgb,var(--bt-main) 72%,transparent);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
-+.bt-head-btn:hover,.bt-head-btn:active{background:var(--bt-hover)}
++.bt-head-btn{display:none;position:absolute;left:0;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:var(--bt-main);box-shadow:inset 0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
++.bt-head-btn:hover,.bt-head-btn:active{background:var(--bt-float-hover)}
 +.bt-head-btn:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}
 +/* 32px is the circle; a finger still gets 44. Grow up, down and left only, so the pill
 +   beside it keeps its space. */
@@ -685,13 +689,13 @@ index aa38a3b..b4d7df3 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1044,81 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1048,83 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
 -[data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;min-height:44px!important;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:var(--bt-main)!important;border:.5px solid var(--bt-line-2)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
 -[data-composer-card]:hover,[data-composer-card]:focus-within{border-color:color-mix(in srgb,var(--bt-ink) 30%,transparent)!important}
-+html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:0!important;min-height:44px!important;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:color-mix(in srgb,var(--bt-main) 88%,transparent)!important;border:0!important;box-shadow:0 6px 18px -6px rgba(0,0,0,.10),0 2px 5px rgba(0,0,0,.045),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
++html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:0!important;min-height:44px!important;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;border:0!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
 +html:has([data-mobile-nav="frame"]) [data-composer-card]:hover,html:has([data-mobile-nav="frame"]) [data-composer-card]:focus-within{background:color-mix(in srgb,var(--bt-main) 96%,transparent)!important}
 +/* The card was measuring 2px of top padding against 7.5px at the bottom, so its 32px row
 +   sat a couple of pixels high inside the 44px box. Equal 6px insets centre it exactly; the
@@ -716,6 +720,8 @@ index aa38a3b..b4d7df3 100644
  [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
  [class*="_root"]:has(> [data-composer-card]){padding:0 11px 13px 16px!important}
  [class*="_root"]:has(> [data-composer-card])>[data-composer-card]{max-width:min(992px,100%)!important}
++[data-composer-card]{background:var(--bt-main)!important;box-shadow:inset 0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow)!important}
++[data-composer-card]:focus-within{background:var(--bt-main)!important}
 +/* The shell's card is a column: the input on top, the controls on the line below. Both
 +   surfaces want one capsule instead, so the card turns into a row and the shell's row is
 +   flattened, its children ordered round the input. The phone frame restates its own
@@ -789,7 +795,7 @@ index aa38a3b..b4d7df3 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1168,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1174,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -816,7 +822,7 @@ index aa38a3b..b4d7df3 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1188,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1194,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -825,7 +831,7 @@ index aa38a3b..b4d7df3 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1229,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1235,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
