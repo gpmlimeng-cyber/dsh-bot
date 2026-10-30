@@ -2596,13 +2596,16 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-market-back{flex:none;height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
 .bt-market-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:10px 28px 28px}
 .bt-market-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.bt-market-card{display:flex;align-items:center;gap:10px;min-width:0;padding:10px 12px;border-radius:14px;box-shadow:inset 0 0 0 .5px var(--bt-line)}
-.bt-market-mark{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-2)}
+/* Tiles sit on the panel like the reference's: no frame, a 40px mark, the name over one
+   line of description, and a pill on the right that appears with the row. */
+.bt-market-card{display:flex;align-items:center;gap:12px;min-width:0;padding:8px;border-radius:12px;transition:background-color .12s ease}
+.bt-market-card:hover{background:var(--bt-hover)}
+.bt-market-mark{flex:none;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-2)}
 .bt-market-mark[data-state=ready]{background:color-mix(in srgb,var(--bt-accent) 16%,transparent);color:var(--bt-accent)}
 .bt-market-copy{display:flex;flex-direction:column;align-items:flex-start;min-width:0;flex:1 1 auto;border:0;background:none;padding:0;font:inherit;text-align:left;cursor:pointer;color:inherit}
-.bt-market-name{max-width:100%;font-size:14px;line-height:20px;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-market-detail{max-width:100%;font-size:12px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-market-go{flex:none;height:28px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
+.bt-market-name{max-width:100%;font-size:14px;line-height:20px;font-weight:600;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-detail{max-width:100%;font-size:13px;line-height:18px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-go{flex:none;height:28px;min-width:64px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
 .bt-market-go:hover{background:var(--bt-active,var(--bt-hover))}
 .bt-market-go[data-on]{background:var(--bt-accent);color:var(--bt-accent-ink,#fff)}
 .bt-market-detailpane{display:flex;flex-direction:column;gap:14px;max-width:640px}
