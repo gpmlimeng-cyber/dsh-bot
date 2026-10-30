@@ -121,3 +121,6 @@ their ideas; it does not contain their code.
     (packages/experimental/client-ui-voice-input), MIT: the voice chat
     records with the same steps (record, resample to 16 kHz mono, PCM16 WAV)
     before it calls the plugin's speech service.
+  - Simple Icons (https://simpleicons.org), CC0 1.0: the provider marks in
+    ds-bot/src/client/provider-marks.js. The OpenAI mark comes from
+    OpenMausBot (https://github.com/milind-soni/OpenMausBot), Apache-2.0.

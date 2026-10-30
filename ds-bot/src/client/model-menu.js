@@ -6,6 +6,7 @@ import { BotMark } from './mark.js'
 import { KeyIcon, MaskedInput } from './secret-card.js'
 import { SPRING_POP, SPRING_SHAPE, spring, useLinger, useViewport, viewBottom } from './motion.js'
 import { hostText, t } from './i18n.js'
+import { ProviderMark } from './provider-marks.js'
 
 const MENU_EXIT_MS = 120
 
@@ -91,6 +92,7 @@ function ModelRows({ roster, current, onPick }) {
       key: model.ref, type: 'button', role: 'menuitemradio', 'aria-checked': model.ref === current, title: model.ref,
       onClick: () => onPick(model.ref),
     },
+    h(ProviderMark, { key: 'mark', name: model.provider ?? provider, size: 16 }),
     h('span', { className: 'bt-menu-label' }, model.name),
     model.ref === roster.defaultModel ? h('span', { className: 'bt-menu-hint' }, t('Default')) : null,
     h('span', { className: 'bt-model-tick', 'aria-hidden': true }, model.ref === current ? h(CheckIcon) : null)))))
@@ -180,6 +182,7 @@ export function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onP
       'aria-haspopup': 'menu', 'aria-expanded': isOpen, 'aria-label': t('Model: {model}', { model: shown?.name ?? t('none') }),
       'data-missing': shown !== undefined && !shown.served && models.length > 0 ? '' : undefined, onClick: toggle,
     },
+    h(ProviderMark, { key: 'mark', name: shown?.provider ?? current, size: 16 }),
     h('span', { className: 'bt-model-copy' },
       h('span', { className: 'bt-model-name' }, shown?.name ?? t('Choose a model')),
       shown ? h('span', { className: 'bt-model-provider' }, shown.served || models.length === 0
@@ -322,6 +325,7 @@ export const MODEL_CSS = `
 .bt-model-trigger[data-missing] .bt-model-provider{color:var(--bt-danger)}
 .bt-model-trigger[data-wide]{display:flex;width:100%;min-height:48px;padding:7px 12px;justify-content:space-between;border-radius:12px;background:var(--bt-card);box-shadow:inset 0 0 0 1px var(--bt-line)}
 .bt-model-trigger[data-wide]:hover,.bt-model-trigger[data-wide][aria-expanded=true]{background:var(--bt-hover)}
+.bt-provider-mark{flex:none;align-self:center;display:block}
 .bt-model-copy{display:flex;flex-direction:column;min-width:0}
 .bt-model-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-model-provider{font-size:11px;line-height:14px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
