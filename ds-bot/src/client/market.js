@@ -212,7 +212,10 @@ function Discover({ actions }) {
   return h('div', { className: 'bt-mk' },
     h('div', { className: 'bt-mk-bar' },
       indexes.length > 1
+        // The name sizes itself to the chosen index, as the shell's own picker does; the
+        // select lies over it, invisible, so the native menu still opens.
         ? h('label', { className: 'bt-mk-menu bt-mk-pick bt-mk-switch' },
+          h('span', { className: 'bt-mk-switchname' }, (indexes.find((item) => item.url === (index ?? indexes[0].url)) ?? indexes[0]).name),
           h('select', {
             value: index ?? indexes[0].url,
             onChange: (event) => { setIndex(event.target.value); setCategory(''); setLabels([]) },

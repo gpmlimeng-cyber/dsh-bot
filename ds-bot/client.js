@@ -2665,8 +2665,11 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-mk-pick{padding-right:22px}
 .bt-mk-pick::after{content:'';position:absolute;right:9px;top:50%;width:6px;height:6px;margin-top:-4px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg);pointer-events:none;opacity:.6}
 .bt-mk-pick select,.bt-mk-switch select{appearance:none;-webkit-appearance:none;border:0;background:none;outline:none;font:inherit;font-size:12px;line-height:18px;color:inherit;cursor:pointer;max-width:160px;padding:0}
-.bt-mk-switch{padding:0 22px 0 10px}
-.bt-mk-switch select,.bt-mk-switch{max-width:200px}
+/* The picker is as wide as the index it shows. The select sits on top of the name,
+   transparent, so the shell's own menu still opens on a click. */
+.bt-mk-switch{padding:0 22px 0 10px;max-width:60%}
+.bt-mk-switchname{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mk-switch select{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
 .bt-mk-refresh{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:none;color:var(--bt-ink-3);cursor:pointer}
 .bt-mk-refresh:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-mk-labels{display:flex;flex-wrap:wrap;gap:6px;margin-top:-6px}
@@ -9119,6 +9122,7 @@ function Discover({ actions }) {
       indexes.length > 1 ? (0, import_react15.createElement)(
         "label",
         { className: "bt-mk-menu bt-mk-pick bt-mk-switch" },
+        (0, import_react15.createElement)("span", { className: "bt-mk-switchname" }, (indexes.find((item) => item.url === (index ?? indexes[0].url)) ?? indexes[0]).name),
         (0, import_react15.createElement)("select", {
           value: index ?? indexes[0].url,
           onChange: (event) => {
