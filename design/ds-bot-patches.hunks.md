@@ -35,9 +35,9 @@
 | 33 | `ds-bot/src/client/sidebar.js` | 13 | 1 |
 | 34 | `ds-bot/src/client/sidebar.js` | 257–266 | 10 |
 | 35 | `ds-bot/src/client/sidebar.js` | 306–307 | 2 |
-| 36 | `ds-bot/src/client/sidebar.js` | 315–326 | 4 |
-| 37 | `ds-bot/src/client/sidebar.js` | 499–509 | 11 |
-| 38 | `ds-bot/src/client/sidebar.js` | 591 | 1 |
+| 36 | `ds-bot/src/client/sidebar.js` | 315–328 | 6 |
+| 37 | `ds-bot/src/client/sidebar.js` | 501–511 | 11 |
+| 38 | `ds-bot/src/client/sidebar.js` | 593 | 1 |
 | 39 | `ds-bot/src/client/styles.js` | 120–127 | 6 |
 | 40 | `ds-bot/src/client/styles.js` | 153–164 | 8 |
 | 41 | `ds-bot/src/client/styles.js` | 331–350 | 20 |

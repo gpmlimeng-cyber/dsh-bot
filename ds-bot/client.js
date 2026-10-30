@@ -9084,6 +9084,8 @@ function TeamSidebar(props) {
     ) : (0, import_react15.createElement)(
       import_react15.Fragment,
       null,
+      // The rail opens with the way back: the same control that folded it.
+      (0, import_react15.createElement)("button", { type: "button", className: "bt-round bt-side-expand", "aria-label": t("Expand sidebar"), title: t("Expand sidebar"), onClick: () => actions.toggleSidebar() }, (0, import_react15.createElement)(SidebarIcon)),
       (0, import_react15.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
       (0, import_react15.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new", { fromDrawer: true }) }, (0, import_react15.createElement)(PlusIcon))
     ),
