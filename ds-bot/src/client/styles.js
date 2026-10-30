@@ -952,12 +952,16 @@ html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{display:inline-flex}
 /* The model the conversation runs on, at the title's right: one pill on the shared
    floating surface, name and caret on one line. The phone keeps that slot for the
    session menu instead. */
-.bt-head>.bt-model-trigger{position:absolute;right:24px;top:5px;flex:none;height:30px;min-height:30px;gap:4px;padding:0 8px 0 10px;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);pointer-events:auto;max-width:min(220px,40vw)}
+.bt-head>.bt-model-trigger{position:absolute;right:66px;top:5px;flex:none;height:30px;min-height:30px;gap:4px;padding:0 8px 0 10px;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);pointer-events:auto;max-width:min(220px,40vw)}
 .bt-head>.bt-model-trigger:hover,.bt-head>.bt-model-trigger[aria-expanded=true]{background:var(--bt-float-hover)}
 .bt-head>.bt-model-trigger .bt-model-copy{flex-direction:row;align-items:baseline;gap:4px;min-width:0}
 .bt-head>.bt-model-trigger .bt-model-provider{display:none}
 .bt-head>.bt-model-trigger .bt-model-name{font-size:13px;line-height:18px}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-model-trigger{display:none}
+.bt-head>.bt-head-right{position:absolute;right:24px;top:5px;display:none;width:32px;height:32px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);pointer-events:auto;cursor:pointer}
+.bt-head>.bt-head-right:hover{background:var(--bt-float-hover)}
+html:not(:has([data-mobile-nav="frame"])) .bt-head>.bt-head-right{display:inline-flex}
+
 `
 
 export const CONVERSATION_CSS = `

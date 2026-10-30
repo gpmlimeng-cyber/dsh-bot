@@ -479,6 +479,14 @@ export function apply(ctx) {
     },
     selectPanel: (id, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ctx.layout.selectPanel(id) },
     toggleSidebar: () => { ctx.layout.toggleSidebar() },
+    // DSH's own right column; the header button opens and closes it.
+    toggleRightPanel: () => {
+      try {
+        ctx.get('sidebarRight')?.toggleExpanded()
+      } catch (error) {
+        actions.reportError(error, 'right-sidebar')
+      }
+    },
     // Agent mode hands the surface back to the shell; everything open on the Bot
     // surface closes first so nothing stale reopens on the way back.
     setSurface: (mode) => {

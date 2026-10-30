@@ -18,6 +18,7 @@ const ZH = {
   'New…': '新建',
   'Collapse sidebar': '收起侧边栏',
   'Expand sidebar': '展开侧边栏',
+  'Toggle right panel': '展开/收起右侧栏',
   'Animation': '动画',
   'Bot animation': 'Bot 动画',
   'Quiet': '安静',

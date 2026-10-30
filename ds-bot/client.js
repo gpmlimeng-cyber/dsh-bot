@@ -55,6 +55,7 @@ var ZH = {
   "New…": "新建",
   "Collapse sidebar": "收起侧边栏",
   "Expand sidebar": "展开侧边栏",
+  "Toggle right panel": "展开/收起右侧栏",
   "Animation": "动画",
   "Bot animation": "Bot 动画",
   "Quiet": "安静",
@@ -3327,12 +3328,16 @@ html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{display:inline-flex}
 /* The model the conversation runs on, at the title's right: one pill on the shared
    floating surface, name and caret on one line. The phone keeps that slot for the
    session menu instead. */
-.bt-head>.bt-model-trigger{position:absolute;right:24px;top:5px;flex:none;height:30px;min-height:30px;gap:4px;padding:0 8px 0 10px;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);pointer-events:auto;max-width:min(220px,40vw)}
+.bt-head>.bt-model-trigger{position:absolute;right:66px;top:5px;flex:none;height:30px;min-height:30px;gap:4px;padding:0 8px 0 10px;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);pointer-events:auto;max-width:min(220px,40vw)}
 .bt-head>.bt-model-trigger:hover,.bt-head>.bt-model-trigger[aria-expanded=true]{background:var(--bt-float-hover)}
 .bt-head>.bt-model-trigger .bt-model-copy{flex-direction:row;align-items:baseline;gap:4px;min-width:0}
 .bt-head>.bt-model-trigger .bt-model-provider{display:none}
 .bt-head>.bt-model-trigger .bt-model-name{font-size:13px;line-height:18px}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-model-trigger{display:none}
+.bt-head>.bt-head-right{position:absolute;right:24px;top:5px;display:none;width:32px;height:32px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);pointer-events:auto;cursor:pointer}
+.bt-head>.bt-head-right:hover{background:var(--bt-float-hover)}
+html:not(:has([data-mobile-nav="frame"])) .bt-head>.bt-head-right{display:inline-flex}
+
 `;
 var CONVERSATION_CSS = `
 .bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:calc(var(--bt-msg-w) * 100%)}
@@ -3947,6 +3952,7 @@ function CloudDownloadIcon({ done = false }) {
 var SmileIcon = lineIcon(["M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z", "M7.3 11.6a3.4 3.4 0 0 0 5.4 0", "M7.75 8.25h.01M12.25 8.25h.01"]);
 var ReplyIcon = lineIcon(["M8 5L4 9l4 4", "M4 9h7.5a4.5 4.5 0 0 1 4.5 4.5V15"]);
 var DotsIcon = lineIcon(["M5 10h.01M10 10h.01M15 10h.01"]);
+var PanelRightIcon = lineIcon(["M3 4h14v12H3z", "M13 4v12"]);
 function MoreDotsIcon() {
   return (0, import_react3.createElement)(
     "svg",
@@ -14207,6 +14213,14 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
     ),
     // The model sits beside the title, where the conversation says what it runs on.
     bot ? (0, import_react31.createElement)(ModelMenu, { key: `model:${sessionId}`, bot, roster, actions, run: (promise) => Promise.resolve(promise) }) : null,
+    // The right column's own switch, where the header can reach it.
+    (0, import_react31.createElement)("button", {
+      type: "button",
+      className: "bt-head-right",
+      "aria-label": t("Toggle right panel"),
+      title: t("Toggle right panel"),
+      onClick: () => actions.toggleRightPanel()
+    }, (0, import_react31.createElement)(PanelRightIcon)),
     (0, import_react31.createElement)(SessionMenu, { sessionId, bot, room: room2, roster, actions }),
     (0, import_react31.createElement)("span", { className: "bt-sr", role: "status" }, memoryNotice ? t("Memory updated") : ""),
     (0, import_react31.createElement)("button", {
@@ -20108,6 +20122,14 @@ function apply(ctx) {
     },
     toggleSidebar: () => {
       ctx.layout.toggleSidebar();
+    },
+    // DSH's own right column; the header button opens and closes it.
+    toggleRightPanel: () => {
+      try {
+        ctx.get("sidebarRight")?.toggleExpanded();
+      } catch (error) {
+        actions.reportError(error, "right-sidebar");
+      }
     },
     // Agent mode hands the surface back to the shell; everything open on the Bot
     // surface closes first so nothing stale reopens on the way back.

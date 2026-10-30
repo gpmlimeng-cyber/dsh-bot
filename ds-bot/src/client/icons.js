@@ -58,6 +58,8 @@ export function CloudDownloadIcon({ done = false }) {
 export const SmileIcon = lineIcon(['M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z', 'M7.3 11.6a3.4 3.4 0 0 0 5.4 0', 'M7.75 8.25h.01M12.25 8.25h.01'])
 export const ReplyIcon = lineIcon(['M8 5L4 9l4 4', 'M4 9h7.5a4.5 4.5 0 0 1 4.5 4.5V15'])
 export const DotsIcon = lineIcon(['M5 10h.01M10 10h.01M15 10h.01'])
+// The right column, drawn as the mirror of SidebarIcon.
+export const PanelRightIcon = lineIcon(['M3 4h14v12H3z', 'M13 4v12'])
 // The three dots for a round button: same round caps, drawn at 20px with a weight that
 // still reads at that size.
 export function MoreDotsIcon() {

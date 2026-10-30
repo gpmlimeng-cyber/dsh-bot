@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, PencilIcon, PinIcon, TrashIcon, MenuLinesIcon, BigDotsIcon } from './icons.js'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, PencilIcon, PinIcon, TrashIcon, MenuLinesIcon, BigDotsIcon, PanelRightIcon } from './icons.js'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { ActivityIndicator } from './activity-row.js'
 import { clockLabel, openingTurn, unseenSince } from './cells.js'
@@ -116,6 +116,11 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
     // The model sits beside the title, where the conversation says what it runs on.
     bot ? h(ModelMenu, { key: `model:${sessionId}`, bot, roster, actions, run: promise => Promise.resolve(promise) }) : null,
+    // The right column's own switch, where the header can reach it.
+    h('button', {
+      type: 'button', className: 'bt-head-right', 'aria-label': t('Toggle right panel'), title: t('Toggle right panel'),
+      onClick: () => actions.toggleRightPanel(),
+    }, h(PanelRightIcon)),
     h(SessionMenu, { sessionId, bot, room, roster, actions }),
     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
     h('button', {

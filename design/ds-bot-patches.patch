@@ -199,7 +199,7 @@ index 0000000..8fca0d0
 +  if (fromDrawer === true) collapse?.()
 +}
 diff --git a/ds-bot/src/client/header.js b/ds-bot/src/client/header.js
-index c7b1488..2092787 100644
+index c7b1488..98b1e26 100644
 --- a/ds-bot/src/client/header.js
 +++ b/ds-bot/src/client/header.js
 @@ -1,12 +1,14 @@
@@ -207,7 +207,7 @@ index c7b1488..2092787 100644
  import { createPortal } from 'react-dom'
  import { currentPart, latestMemoryChange } from './text.js'
 -import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon } from './icons.js'
-+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, PencilIcon, PinIcon, TrashIcon, MenuLinesIcon, BigDotsIcon } from './icons.js'
++import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, PencilIcon, PinIcon, TrashIcon, MenuLinesIcon, BigDotsIcon, PanelRightIcon } from './icons.js'
  import { botState, BotAvatar, RoomAvatar } from './mark.js'
  import { ActivityIndicator } from './activity-row.js'
  import { clockLabel, openingTurn, unseenSince } from './cells.js'
@@ -228,12 +228,17 @@ index c7b1488..2092787 100644
      h('button', {
        type: 'button', className: 'bt-pill', 'aria-expanded': away ? undefined : detailsOpen, 'data-memory': memoryNotice ? 'updated' : undefined,
        'aria-label': away ? t('Back to chat') : memoryNotice ? t('Memory updated. Open {name}\'s memory', { name: roster.byId[changed]?.name ?? name }) : t('View conversation details'),
-@@ -109,11 +114,37 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
+@@ -109,11 +114,42 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
      h('span', { className: 'bt-pill-name' }, away ? t('Back to chat') : bot?.name ?? room?.name ?? (title || t('New chat'))),
      h(MemoryNotice, { shown: memoryNotice }),
      h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
 +    // The model sits beside the title, where the conversation says what it runs on.
 +    bot ? h(ModelMenu, { key: `model:${sessionId}`, bot, roster, actions, run: promise => Promise.resolve(promise) }) : null,
++    // The right column's own switch, where the header can reach it.
++    h('button', {
++      type: 'button', className: 'bt-head-right', 'aria-label': t('Toggle right panel'), title: t('Toggle right panel'),
++      onClick: () => actions.toggleRightPanel(),
++    }, h(PanelRightIcon)),
 +    h(SessionMenu, { sessionId, bot, room, roster, actions }),
      h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
 +    h('button', {
@@ -267,10 +272,18 @@ index c7b1488..2092787 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 32ba8c9..92be15d 100644
+index 32ba8c9..57effc7 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -918,6 +918,10 @@ const ZH = {
+@@ -18,6 +18,7 @@ const ZH = {
+   'New…': '新建',
+   'Collapse sidebar': '收起侧边栏',
+   'Expand sidebar': '展开侧边栏',
++  'Toggle right panel': '展开/收起右侧栏',
+   'Animation': '动画',
+   'Bot animation': 'Bot 动画',
+   'Quiet': '安静',
+@@ -918,6 +919,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -281,7 +294,7 @@ index 32ba8c9..92be15d 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -960,6 +964,7 @@ const ZH = {
+@@ -960,6 +965,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -289,7 +302,7 @@ index 32ba8c9..92be15d 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1044,6 +1049,10 @@ const ZH = {
+@@ -1044,6 +1050,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -301,7 +314,7 @@ index 32ba8c9..92be15d 100644
  
  // Host errors stay English, since Bots read them too; they are translated where the
 diff --git a/ds-bot/src/client/icons.js b/ds-bot/src/client/icons.js
-index eee5675..596c44d 100644
+index eee5675..b11eeb4 100644
 --- a/ds-bot/src/client/icons.js
 +++ b/ds-bot/src/client/icons.js
 @@ -18,15 +18,16 @@ export function PeopleIcon() {
@@ -327,10 +340,12 @@ index eee5675..596c44d 100644
  }
  
  export function ShareIcon() {
-@@ -57,6 +58,24 @@ export function CloudDownloadIcon({ done = false }) {
+@@ -57,6 +58,26 @@ export function CloudDownloadIcon({ done = false }) {
  export const SmileIcon = lineIcon(['M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z', 'M7.3 11.6a3.4 3.4 0 0 0 5.4 0', 'M7.75 8.25h.01M12.25 8.25h.01'])
  export const ReplyIcon = lineIcon(['M8 5L4 9l4 4', 'M4 9h7.5a4.5 4.5 0 0 1 4.5 4.5V15'])
  export const DotsIcon = lineIcon(['M5 10h.01M10 10h.01M15 10h.01'])
++// The right column, drawn as the mirror of SidebarIcon.
++export const PanelRightIcon = lineIcon(['M3 4h14v12H3z', 'M13 4v12'])
 +// The three dots for a round button: same round caps, drawn at 20px with a weight that
 +// still reads at that size.
 +export function MoreDotsIcon() {
@@ -353,7 +368,7 @@ index eee5675..596c44d 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..2870ccc 100644
+index daf7dd4..8784d88 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,6 +3,7 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -364,15 +379,24 @@ index daf7dd4..2870ccc 100644
  import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
  import { MENTION_ORIGIN, currentPart } from './text.js'
  import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
-@@ -476,7 +477,7 @@ export function apply(ctx) {
+@@ -476,8 +477,16 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
 -    selectPanel: (id) => { ctx.layout.selectPanel(id) },
 +    selectPanel: (id, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ctx.layout.selectPanel(id) },
      toggleSidebar: () => { ctx.layout.toggleSidebar() },
++    // DSH's own right column; the header button opens and closes it.
++    toggleRightPanel: () => {
++      try {
++        ctx.get('sidebarRight')?.toggleExpanded()
++      } catch (error) {
++        actions.reportError(error, 'right-sidebar')
++      }
++    },
      // Agent mode hands the surface back to the shell; everything open on the Bot
      // surface closes first so nothing stale reopens on the way back.
+     setSurface: (mode) => {
 diff --git a/ds-bot/src/client/member-status.js b/ds-bot/src/client/member-status.js
 index c3d74e9..665057a 100644
 --- a/ds-bot/src/client/member-status.js
@@ -743,7 +767,7 @@ index 58d1840..d2cacb9 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..4df662c 100644
+index aa38a3b..fdc2c51 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -119,8 +119,8 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
@@ -797,7 +821,7 @@ index aa38a3b..4df662c 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -883,6 +907,57 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +907,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -846,16 +870,20 @@ index aa38a3b..4df662c 100644
 +/* The model the conversation runs on, at the title's right: one pill on the shared
 +   floating surface, name and caret on one line. The phone keeps that slot for the
 +   session menu instead. */
-+.bt-head>.bt-model-trigger{position:absolute;right:24px;top:5px;flex:none;height:30px;min-height:30px;gap:4px;padding:0 8px 0 10px;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);pointer-events:auto;max-width:min(220px,40vw)}
++.bt-head>.bt-model-trigger{position:absolute;right:66px;top:5px;flex:none;height:30px;min-height:30px;gap:4px;padding:0 8px 0 10px;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);pointer-events:auto;max-width:min(220px,40vw)}
 +.bt-head>.bt-model-trigger:hover,.bt-head>.bt-model-trigger[aria-expanded=true]{background:var(--bt-float-hover)}
 +.bt-head>.bt-model-trigger .bt-model-copy{flex-direction:row;align-items:baseline;gap:4px;min-width:0}
 +.bt-head>.bt-model-trigger .bt-model-provider{display:none}
 +.bt-head>.bt-model-trigger .bt-model-name{font-size:13px;line-height:18px}
 +html:has([data-mobile-nav="frame"]) .bt-head>.bt-model-trigger{display:none}
++.bt-head>.bt-head-right{position:absolute;right:24px;top:5px;display:none;width:32px;height:32px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);pointer-events:auto;cursor:pointer}
++.bt-head>.bt-head-right:hover{background:var(--bt-float-hover)}
++html:not(:has([data-mobile-nav="frame"])) .bt-head>.bt-head-right{display:inline-flex}
++
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1057,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1061,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -964,7 +992,7 @@ index aa38a3b..4df662c 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1185,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1189,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -991,7 +1019,7 @@ index aa38a3b..4df662c 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1205,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1209,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -1000,7 +1028,7 @@ index aa38a3b..4df662c 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1246,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1250,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
