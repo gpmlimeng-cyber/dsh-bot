@@ -1142,7 +1142,7 @@ export function apply(ctx) {
       const left = mac && chrome >= 24 ? 184 : 15
       // A few pixels lower than the band's own centre, so the control sits on the traffic
       // lights' horizontal line instead of above it.
-      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 6) : 11
+      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 7) : 12
       if (!modeBar) {
         modeBar = document.createElement('button')
         modeBar.type = 'button'
