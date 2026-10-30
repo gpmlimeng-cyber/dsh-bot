@@ -124,6 +124,13 @@ their ideas; it does not contain their code.
   - Simple Icons (https://simpleicons.org), CC0 1.0: the provider marks in
     ds-bot/src/client/provider-marks.js. The OpenAI mark comes from
     OpenMausBot (https://github.com/milind-soni/OpenMausBot), Apache-2.0.
+  - dsh-skill-market (https://github.com/montersy123/dsh-skill-market), MIT,
+    Copyright (c) 2026 montersy123: the skill market in the Skills tab is that
+    plugin's own browser panel and Host routes, vendored whole into
+    ds-bot/src/client/skill-market/panel.js and ds-bot/src/host/skill-market/.
+    Only the module wrapper changed: the panel is mounted in DS Bot's market
+    instead of a global main panel. Its skills come from SkillHub
+    (https://skillhub.cn) and belong to their authors.
   - Inter (https://github.com/rsms/inter), SIL Open Font License 1.1, and
     Geist (https://github.com/vercel/geist-font), SIL Open Font License 1.1:
     the two faces the Font setting offers, embedded in

@@ -22,7 +22,22 @@ test('client.js registers a factory that exports apply and inject', () => {
 
   const requested = []
   const platform = {
-    'react': { createElement: () => null, Fragment: Symbol('Fragment'), useState: initial => [initial, () => {}], useEffect: () => {}, useMemo: make => make(), useRef: current => ({ current }) },
+    // The vendored skill market panel keeps an error boundary, so it needs Component at
+    // module evaluation; the hooks below cover what a module body touches before any render.
+    'react': {
+      createElement: () => null,
+      Fragment: Symbol('Fragment'),
+      Component: class { constructor(props) { this.props = props } setState() {} },
+      createContext: () => ({ Provider: () => null }),
+      forwardRef: render => render,
+      memo: component => component,
+      useState: initial => [initial, () => {}],
+      useEffect: () => {},
+      useLayoutEffect: () => {},
+      useMemo: make => make(),
+      useCallback: fn => fn,
+      useRef: current => ({ current }),
+    },
     'react-dom': { createPortal: node => node },
     '@deepseek-ai/dsh-client-ui-primitives': { MarkdownText: () => null },
   }

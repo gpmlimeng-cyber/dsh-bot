@@ -245,6 +245,11 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-market-iconframe{display:flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:7px;border:.5px solid color-mix(in srgb,var(--bt-ink) 12%,transparent);box-sizing:border-box;overflow:hidden}
 .bt-market-iconimg{width:16px;height:16px;object-fit:contain;display:block}
 .bt-market-hint{display:block;padding:4px 10px;font-size:12px;color:var(--bt-ink-3)}
+/* The Skills tab hands its whole pane to the vendored skill market; it wants a definite
+   height, so the pane is a flex box the panel can fill. */
+.bt-market-skillhost{flex:1 1 auto;min-height:0;min-width:0;display:flex;overflow:hidden}
+/* The panel owns its whole pane: no market padding, no page scroll behind it. */
+.bt-market-body:has(.bt-market-skillhost){display:flex;flex-direction:column;padding:0;overflow:hidden}
 .bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 .bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
 .bt-market-heading{min-width:0}

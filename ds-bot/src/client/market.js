@@ -1,5 +1,6 @@
 import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { SkillMarketPanel, readySkillMarket } from './skill-market/panel.js'
 import { dateLocale, t } from './i18n.js'
 import { CloseIcon, SearchIcon, PlusIcon, PlugIcon, GearIcon, GlobeIcon, TerminalIcon, FolderIcon, MemoryIcon, MoreDotsIcon, TrashIcon, SwitchIcon } from './icons.js'
 
@@ -365,25 +366,22 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
     return () => { live = false }
   }, [open, tab, shellPlugins, actions])
   const plugins = Array.isArray(shellPlugins) ? shellPlugins : (roster.plugins ?? [])
-  // Skills live in the Session's own catalog; the shell's registry answers for one Session.
-  const [shellSkills, setShellSkills] = useState(null)
+  // The vendored panel wants its stylesheet and its Host-backed state once per page.
   useEffect(() => {
-    if (!open || tab !== 'skills' || shellSkills !== null) return undefined
-    let live = true
-    Promise.resolve(actions.skillsList?.()).then((list) => { if (live) setShellSkills(Array.isArray(list) ? list : []) },
-      () => { if (live) setShellSkills([]) })
-    return () => { live = false }
-  }, [open, tab, shellSkills, actions])
-  const skills = Array.isArray(shellSkills) ? shellSkills : (roster.skills ?? [])
+    if (open && tab === 'skills') readySkillMarket()
+  }, [open, tab])
+
 
   if (!open) return null
 
-  const catalogue = (id) => (id === 'connectors' ? connectors : id === 'capabilities' ? capabilities : id === 'plugins' ? plugins : skills)
+  // Skills are the vendored panel's own affair: discovery, installed, saved and import all
+  // live there, so nothing in this catalogue feeds that tab.
+  const catalogue = (id) => (id === 'connectors' ? connectors : id === 'capabilities' ? capabilities : id === 'plugins' ? plugins : [])
   const installedOf = (id) => {
     if (id === 'connectors') return connectors.filter((entry) => entry.state === 'ready')
     if (id === 'capabilities') return capabilities
     if (id === 'plugins') return plugins.filter((entry) => entry.enabled !== false)
-    return skills
+    return []
   }
 
   const q = query.trim().toLowerCase()
@@ -438,8 +436,8 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
           className: 'bt-market-cat',
           onClick: () => setTab(category.id),
         }, category.name))),
-      h('div', { className: 'bt-market-insthead' }, t(tab === 'plugins' ? 'Enabled' : tab === 'skills' ? 'Available' : 'Installed')),
-      h('div', { className: 'bt-market-installed' },
+      tab === 'skills' ? null : h('div', { className: 'bt-market-insthead' }, t(tab === 'plugins' ? 'Enabled' : 'Installed')),
+      tab === 'skills' ? null : h('div', { className: 'bt-market-installed' },
         installed.length
           ? installed.map((entry) => {
             const id = entry.id ?? entry.name
@@ -492,7 +490,12 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
                 onChange: (event) => setQuery(event.target.value), 'aria-label': t('Search apps'),
               }))),
       h('div', { className: 'bt-market-body' },
-        tab === 'plugins' && !current
+        // The Skills tab is the DeepSeek skill market itself, vendored from
+        // @montersy123/dsh-skill-market: discovery, detail drawer, install, favourites and
+        // local import all live in that panel, so nothing here reimplements them.
+        tab === 'skills'
+          ? h('div', { className: 'bt-market-skillhost', key: 'skills' }, h(SkillMarketPanel))
+          : tab === 'plugins' && !current
           ? [h(Discover, { key: 'discover', actions }),
             h('button', { type: 'button', className: 'bt-market-more', key: 'more', onClick: () => { onClose(); actions.openPluginsPanel?.() } },
               h(GearIcon), h('span', null, t('Open the page that manages plugins')))]

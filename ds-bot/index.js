@@ -36,6 +36,7 @@ import * as update from './src/host/update.js'
 import * as dshUpdate from './src/host/dsh-update.js'
 import * as thinking from './src/host/thinking.js'
 import * as channel from './src/host/channel.js'
+import * as skillMarket from './src/host/skill-market/index.js'
 import * as feed from './src/host/feed.js'
 
 export { COLORS } from './src/host/constants.js'
@@ -51,6 +52,10 @@ const MODULES = [diagnostics, store, models, providers, permissions, turns, hand
 
 export function apply(ctx, config = {}) {
   createRuntime(ctx, config)
+  // The skill market is vendored whole (MIT, see NOTICE): its browser panel talks to its own
+  // same-origin routes, so its host half registers them here. A DSH without a web server
+  // simply leaves the Skills tab without data instead of failing the Bot plugin.
+  if (typeof ctx.inject === 'function') ctx.inject(['webServer'], scope => { skillMarket.apply(scope) })
 }
 
 export function createRuntime(ctx, config = {}) {

@@ -1486,8 +1486,8 @@ function fnv1a(text) {
   return value >>> 0;
 }
 function defaultColor(id) {
-  const t2 = fnv1a(id) + 1831565813 | 0;
-  let n = Math.imul(t2 ^ t2 >>> 15, 1 | t2);
+  const t3 = fnv1a(id) + 1831565813 | 0;
+  let n = Math.imul(t3 ^ t3 >>> 15, 1 | t3);
   n = n + Math.imul(n ^ n >>> 7, 61 | n) ^ n;
   return DEFAULT_COLORS[Math.floor(((n ^ n >>> 14) >>> 0) / 4294967296 * DEFAULT_COLORS.length)];
 }
@@ -1526,8 +1526,8 @@ function bodyOf(def, paint, flat = false) {
     return "";
   }
 }
-var eyeMarkup = ([cx, cy, w, h47, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h47 / 2}" width="${w}" height="${h47}" rx="${w / 2}"/></g>`;
-var happyEyeMarkup = ([cx, cy, w, h47, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h47 * 0.14}Q0 ${-h47 * 0.42} ${w * 0.62} ${h47 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
+var eyeMarkup = ([cx, cy, w, h48, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h48 / 2}" width="${w}" height="${h48}" rx="${w / 2}"/></g>`;
+var happyEyeMarkup = ([cx, cy, w, h48, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h48 * 0.14}Q0 ${-h48 * 0.42} ${w * 0.62} ${h48 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
 var maskBox = (size) => `maskUnits="userSpaceOnUse" x="${-size}" y="${-size}" width="${size * 3}" height="${size * 3}"`;
 var holes = (def, eyes) => `<rect x="${-def.size}" y="${-def.size}" width="${def.size * 3}" height="${def.size * 3}" fill="#fff"/>${eyes}`;
 var MASK_ID = "%MASK%";
@@ -2292,10 +2292,10 @@ function useViewport() {
 function springEasing(stiffness, damping) {
   const w0 = Math.sqrt(stiffness);
   const zeta = damping / (2 * w0);
-  const at = (t2) => {
-    if (zeta >= 1) return 1 - (1 + w0 * t2) * Math.exp(-w0 * t2);
+  const at = (t3) => {
+    if (zeta >= 1) return 1 - (1 + w0 * t3) * Math.exp(-w0 * t3);
     const wd = w0 * Math.sqrt(1 - zeta * zeta);
-    return 1 - Math.exp(-zeta * w0 * t2) * (Math.cos(wd * t2) + zeta * w0 / wd * Math.sin(wd * t2));
+    return 1 - Math.exp(-zeta * w0 * t3) * (Math.cos(wd * t3) + zeta * w0 / wd * Math.sin(wd * t3));
   };
   let end = 0.05;
   while (end < 2 && Math.abs(1 - at(end)) > 1e-3) end += 0.01;
@@ -2320,12 +2320,12 @@ function liveSprings(apply2) {
     const dt = Math.min(0.5, Math.max(1e-3, (now - last) / 1e3));
     last = now;
     const steps = Math.ceil(dt * 240);
-    const h47 = dt / steps;
+    const h48 = dt / steps;
     let moving = false;
     for (const value of values.values()) {
       for (let index = 0; index < steps; index += 1) {
-        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h47;
-        value.x += value.v * h47;
+        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h48;
+        value.x += value.v * h48;
       }
       if (Math.abs(value.x - value.to) < 0.05 && Math.abs(value.v) < 1) {
         value.x = value.to;
@@ -2733,6 +2733,11 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-market-iconframe{display:flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:7px;border:.5px solid color-mix(in srgb,var(--bt-ink) 12%,transparent);box-sizing:border-box;overflow:hidden}
 .bt-market-iconimg{width:16px;height:16px;object-fit:contain;display:block}
 .bt-market-hint{display:block;padding:4px 10px;font-size:12px;color:var(--bt-ink-3)}
+/* The Skills tab hands its whole pane to the vendored skill market; it wants a definite
+   height, so the pane is a flex box the panel can fill. */
+.bt-market-skillhost{flex:1 1 auto;min-height:0;min-width:0;display:flex;overflow:hidden}
+/* The panel owns its whole pane: no market padding, no page scroll behind it. */
+.bt-market-body:has(.bt-market-skillhost){display:flex;flex-direction:column;padding:0;overflow:hidden}
 .bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 .bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
 .bt-market-heading{min-width:0}
@@ -7664,7 +7669,7 @@ function stampOf(card) {
   const time = Number.isFinite(card.finishedAt) ? card.finishedAt : card.createdAt;
   return Number.isFinite(time) ? time : void 0;
 }
-function BtwCardView({ card, compact: compact2 = false, sessionId, actions, onDeleted }) {
+function BtwCardView({ card, compact: compact3 = false, sessionId, actions, onDeleted }) {
   const [open, setOpen] = (0, import_react12.useState)(card?.status !== "answering");
   const [deleting, setDeleting] = (0, import_react12.useState)(false);
   (0, import_react12.useEffect)(() => {
@@ -7690,7 +7695,7 @@ function BtwCardView({ card, compact: compact2 = false, sessionId, actions, onDe
   return (0, import_react12.createElement)(
     "div",
     {
-      className: compact2 ? "bt-btw bt-btw-compact" : "bt-btw",
+      className: compact3 ? "bt-btw bt-btw-compact" : "bt-btw",
       "data-open": open || void 0,
       "data-status": card.status,
       role: "region",
@@ -7896,10 +7901,10 @@ function MessageTools({ text, name, sessionId, react, actions, open: tapped }) {
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1e3);
   };
-  const item = (label, Icon, run2) => (0, import_react13.createElement)("button", { key: label, type: "button", role: "menuitem", onClick: () => {
+  const item = (label, Icon2, run2) => (0, import_react13.createElement)("button", { key: label, type: "button", role: "menuitem", onClick: () => {
     close();
     run2();
-  } }, (0, import_react13.createElement)(Icon), label);
+  } }, (0, import_react13.createElement)(Icon2), label);
   return (0, import_react13.createElement)(
     "div",
     { ref: tools, className: "bt-tools", "data-open": panel !== null || tapped || void 0 },
@@ -9047,6 +9052,4798 @@ function ActivityIndicator({ sessionId, useRoster, useSessionStatus, useLive, us
   ), host);
 }
 
+// src/client/skill-market/panel.js
+var React = __toESM(require("react"), 1);
+var hostPrimitives = __toESM(require("@deepseek-ai/dsh-client-ui-primitives"), 1);
+var h14 = React.createElement;
+var primitives = hostPrimitives ?? null;
+var HostMarkdown = primitives?.MarkdownText ?? null;
+var HostDelegateProvider = primitives?.MarkdownDelegateProvider ?? null;
+var HostHighlighter = primitives?.useCodeHighlighter ?? null;
+var HostFallback = class extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { failed: false };
+  }
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidUpdate(previous) {
+    if (previous.resetKey !== this.props.resetKey && this.state.failed) this.setState({ failed: false });
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+};
+var CODE_LANGUAGES = {
+  js: "javascript",
+  mjs: "javascript",
+  cjs: "javascript",
+  jsx: "jsx",
+  ts: "typescript",
+  tsx: "tsx",
+  json: "json",
+  py: "python",
+  rb: "ruby",
+  go: "go",
+  rs: "rust",
+  java: "java",
+  kt: "kotlin",
+  swift: "swift",
+  c: "c",
+  h: "c",
+  cpp: "cpp",
+  hpp: "cpp",
+  cs: "csharp",
+  php: "php",
+  sh: "bash",
+  bash: "bash",
+  zsh: "bash",
+  ps1: "powershell",
+  yml: "yaml",
+  yaml: "yaml",
+  toml: "toml",
+  ini: "ini",
+  css: "css",
+  html: "html",
+  xml: "xml",
+  svg: "xml",
+  sql: "sql",
+  lua: "lua",
+  pl: "perl",
+  r: "r",
+  diff: "diff",
+  patch: "diff"
+};
+function codeLanguageFor(path) {
+  const name = String(path ?? "").split("/").pop() ?? "";
+  const dot = name.lastIndexOf(".");
+  if (dot < 0) return void 0;
+  return CODE_LANGUAGES[name.slice(dot + 1).toLowerCase()];
+}
+function PlainCode({ code }) {
+  return h14("pre", { className: "sm-preview-code" }, h14("code", null, code));
+}
+function HighlightedCode({ code, lang }) {
+  const highlight = HostHighlighter(lang);
+  const lines = highlight(code);
+  if (lines === void 0) return h14(PlainCode, { code });
+  return h14("pre", { className: "sm-preview-code" }, h14(
+    "code",
+    null,
+    lines.map((line, index) => h14(
+      React.Fragment,
+      { key: index },
+      index === 0 ? null : "\n",
+      line.map((token, tokenIndex) => h14("span", { key: tokenIndex, style: token.style }, token.text))
+    ))
+  ));
+}
+var CodeBody = HostHighlighter === null ? PlainCode : HighlightedCode;
+function resolveBundlePath(baseFile, href) {
+  const raw = String(href ?? "").trim().split("#")[0].split("?")[0];
+  if (raw === "" || raw.startsWith("/") || raw.startsWith("\\") || /^[a-z][a-z\d+.-]*:/i.test(raw)) return void 0;
+  const segments = String(baseFile ?? "").split("/").slice(0, -1);
+  for (const part of raw.split("/")) {
+    if (part === "" || part === ".") continue;
+    if (part === "..") {
+      if (segments.length === 0) return void 0;
+      segments.pop();
+      continue;
+    }
+    segments.push(part);
+  }
+  return segments.length === 0 ? void 0 : segments.join("/");
+}
+function Prose({ source, onOpenFile, resetKey }) {
+  if (HostMarkdown === null) return h14(Markdown, { source, onOpenFile });
+  const body = h14(HostFallback, {
+    resetKey,
+    fallback: h14(Markdown, { source, onOpenFile })
+  }, h14(HostMarkdown, { text: source }));
+  if (HostDelegateProvider === null || onOpenFile === void 0) return body;
+  return h14(HostDelegateProvider, { openFile: (path) => onOpenFile(path) }, body);
+}
+var NS = "@montersy123/dsh-skill-market";
+var PANEL_ID = "skill-market";
+var BUILD = "b21";
+var CLIENT_NS = "@montersy123/dsh-skill-market";
+var ZH2 = {
+  "action.cancel": "取消",
+  "action.confirmInstall": "安装「{name}」",
+  "action.detailFailed": "详情加载失败：{reason}",
+  "action.disableNamed": "已停用「{name}」",
+  "action.disableRestart": "已停用「{name}」，重启 DeepSeek Harness 后生效",
+  "action.downgrade": "回退「{name}」到 v{version}？",
+  "action.downgradeBody": "当前安装的是 v{current}。技能目录会被替换为该旧版本的完整文件。",
+  "action.downgradeConfirm": "回退",
+  "action.enableNamed": "已启用「{name}」",
+  "action.enableRestart": "已启用「{name}」，重启 DeepSeek Harness 后生效",
+  "action.importFailedNamed": "导入「{name}」失败：{reason}",
+  "action.install": "安装",
+  "action.installFailed": "安装「{name}」失败：{reason}",
+  "action.installedDetail": "已安装「{name}」v{version}：{files} 个文件 → {directory}，重启 DeepSeek Harness 后生效",
+  "action.installedNamed": "已安装「{name}」",
+  "action.installingNamed": "正在安装「{name}」…",
+  "action.installingVersion": "正在安装「{name}」v{version}…",
+  "action.noInstallResult": "Host 未返回安装结果",
+  "action.removeFromDisabled": "已从停用目录移除「{name}」，重启 DeepSeek Harness 后生效",
+  "action.removedFromDisabled": "已从停用目录移除「{name}」",
+  "action.savedNamed": "已收藏「{name}」",
+  "action.toggleFailed": "切换「{name}」失败：{reason}",
+  "action.tooLarge": "技能目录过大（{size} MB > {limit} MB）",
+  "action.tooManyFiles": "文件数超出上限（{limit}）",
+  "action.uninstall": "卸载",
+  "action.uninstallBody": "技能目录会从磁盘删除，已停用的技能也会一并移除，卸载后需要重新下载才能恢复。",
+  "action.uninstallDetail": "{directory}（{files} 个文件）",
+  "action.uninstallDetailNoFiles": "{directory}",
+  "action.uninstallFailed": "卸载「{name}」失败：{reason}",
+  "action.uninstallNamed": "卸载 {name}",
+  "action.uninstalledNamed": "已卸载「{name}」",
+  "action.uninstalledRestart": "已卸载「{name}」，重启 DeepSeek Harness 后生效",
+  "action.uninstalling": "卸载「{name}」？",
+  "action.unsavedNamed": "已取消收藏「{name}」",
+  "action.update": "更新",
+  "action.updatedNamed": "已更新「{name}」",
+  "action.updatedParked": "已更新「{name}」v{version}：{files} 个文件已写入停用目录，技能仍处于停用状态",
+  "card.category": "分类",
+  "card.categoryLabel": "分类：{name}",
+  "card.downloads": "下载量",
+  "card.firstSeen": "首次收录",
+  "card.from": "来自 {source}，标识 {canonical}",
+  "card.identifier": "标识",
+  "card.install": "安装",
+  "card.installNamed": "安装「{name}」",
+  "card.installed": "已安装",
+  "card.installing": "安装中…",
+  "card.loadMore": "加载更多",
+  "card.noDescription": "该技能未提供简介。",
+  "card.official": "官方技能",
+  "card.rating": "评分折算",
+  "card.ratingTitle": "综合评分折算值",
+  "card.save": "收藏 {name}",
+  "card.saveShort": "收藏",
+  "card.saved": "收藏",
+  "card.saves": "收藏数",
+  "card.score": "综合评分",
+  "card.showing": "已显示 {shown} / {total}",
+  "card.showingAll": "已显示全部 {total} 个技能",
+  "card.source": "来源",
+  "card.stars": "收藏数",
+  "card.unsave": "取消收藏 {name}",
+  "card.unsaveShort": "取消收藏",
+  "card.updatedAt": "最近更新",
+  "card.version": "版本",
+  "card.view": "查看 {name}",
+  "category.ai-agent": "AI Agent",
+  "category.business-ops": "商业运营",
+  "category.content-creation": "内容创作",
+  "category.data-analysis": "数据分析",
+  "category.design-media": "设计多媒体",
+  "category.dev-programming": "开发编程",
+  "category.education": "教育学习",
+  "category.it-ops-security": "IT 运维与安全",
+  "category.knowledge-management": "知识管理",
+  "category.life-service": "生活服务",
+  "category.office-efficiency": "办公效率",
+  "category.professional": "行业专业",
+  "discover.all": "全部技能",
+  "discover.chipTitle": "{name}：共 {count} 个（不受当前筛选影响）",
+  "discover.eyebrow": "DISCOVER",
+  "discover.pageOf": "（本页 {shown} 个）",
+  "discover.subtitle": "来自 SkillHub 的技能库，默认按下载量排序。安装后即可在任意会话中直接调用。",
+  "discover.title": "发现技能",
+  "discover.total": "共 {total} 个",
+  "drawer.aria": "技能详情",
+  "drawer.close": "关闭详情",
+  "drawer.installSkill": "安装技能",
+  "drawer.savedState": "已收藏",
+  "drawer.sourceCommunity": "社区来源",
+  "drawer.sourceOfficial": "官方来源",
+  "drawer.uninstallInstalled": "已安装 · 卸载",
+  "drawer.updatedAt": "更新于 {time}",
+  "drawer.versionUnknown": "版本未标注",
+  "empty.goDiscover": "去发现技能",
+  "empty.noInstalled": "还没有安装技能",
+  "empty.noInstalledBody": "到技能市场挑选一个开始吧。",
+  "empty.noMatch": "没有匹配的技能",
+  "empty.noMatchBody": "换个关键词，或清空分类筛选后再试。",
+  "empty.noSaved": "收藏夹是空的",
+  "empty.noSavedBody": "在技能卡片上点击书签图标即可收藏。",
+  "err.notJson": "技能市场接口返回了非 JSON 内容（HTTP {status}）",
+  "err.offline": "连不上技能市场，请检查网络后重试",
+  "err.requestFailed": "技能市场接口请求失败（HTTP {status}）",
+  "err.uploadFailed": "上传失败（HTTP {status}）",
+  "err.upstreamFailed": "技能市场上游请求失败：{reason}",
+  "error.catalog": "技能数据加载失败",
+  "error.prunedFavorites": "已清理 {count} 个无法解析的旧收藏",
+  "error.retry": "重试",
+  "files.back": "返回文件列表",
+  "files.backOne": "返回上一个文件",
+  "files.close": "关闭",
+  "files.failed": "文件清单加载失败：{reason}",
+  "files.heading": "文件",
+  "files.loading": "正在读取文件清单…",
+  "files.loadingOne": "正在读取 {path}",
+  "files.localHasNone": "本地导入的技能没有 SkillHub 文件清单。",
+  "files.manifestVersion": "清单对应 v{version}",
+  "files.noSource": "该技能没有 SkillHub 来源",
+  "files.nodeSummary": "{files} 个文件 · {size}",
+  "files.nodeTitle": "{path} · 点击查看内容",
+  "files.none": "SkillHub 未返回该技能的文件清单。",
+  "files.readFailed": "无法读取该文件：{reason}",
+  "files.sizeAndLines": "{size} · 共 {lines} 行",
+  "files.treeHint": " · 点击文件查看内容",
+  "files.treeSummary": "{files} 个文件 · {size} · {version} · 点击文件查看内容",
+  "files.treeSummaryBase": "{files} 个文件 · {size}",
+  "files.treeSummaryNoVersion": "{files} 个文件 · {size} · 点击查看内容",
+  "files.truncated": "文件较大，此处已截断显示。",
+  "files.unknownSize": "未知大小",
+  "import.badgeLocal": "本地导入",
+  "import.badgeManual": "手动放置",
+  "import.browse": "浏览文件…",
+  "import.doneMany": "已导入 {count} 个技能包",
+  "import.doneMixed": "已导入 {ok} 个，{failed} 个失败：{reason}",
+  "import.doneOne": "已导入「{name}」",
+  "import.dropAria": "选择或拖入 .zip 技能包",
+  "import.dropNote": "支持的格式只有 .zip 压缩包，文件大小不能超过 50 MB。",
+  "import.dropTitle": "把技能包拖到这里，或点击选择",
+  "import.empty": "还没有本地技能",
+  "import.emptyBody": "把 .zip 技能包拖到上方区域，或点击「浏览文件…」导入。直接复制到技能目录的技能也会出现在这里。",
+  "import.eyebrow": "LOCAL",
+  "import.failed": "导入失败：{reason}",
+  "import.fileFailed": "{name}：{reason}",
+  "import.noResult": "Host 未返回导入结果",
+  "import.noResultDetail": "Host 未返回导入结果（响应：{body}）",
+  "import.pickFile": "导入技能",
+  "import.progress": "正在导入 {done}/{total}：{name}…",
+  "import.statEnabled": "已启用",
+  "import.statFormat": "技能包格式",
+  "import.statImported": "已导入",
+  "import.subtitle": "导入当前设备上的技能包，仅在本地生效，不会同步到市场或团队工作区。导入后即可在任意会话中调用。",
+  "installed.details": "详情",
+  "installed.dirPrefix": "skill 目录：",
+  "installed.disabled": "已停用",
+  "installed.enableNamed": "启用 {name}",
+  "installed.enabled": "已启用",
+  "installed.eyebrow": "LIBRARY",
+  "installed.fileCount": "（{count} 个文件）",
+  "installed.fileCountBare": "{count} 个文件",
+  "installed.installedAt": "安装于 {time}",
+  "installed.noVersion": "版本未标注",
+  "installed.pendingBadge": "待生效",
+  "installed.pendingBadgeTitle": "本次已修改，重启后对新会话生效",
+  "installed.remove": "移除",
+  "installed.removeNamed": "移除 {name}",
+  "installed.subtitle": "{count} 个技能已加入本地技能库，可随时停用而不卸载。",
+  "installed.toggleLabel": "启用 / 停用",
+  "installed.version": "版本 {version}",
+  "metrics.downloads": "下载量",
+  "metrics.heading": "SkillHub 指标",
+  "metrics.homepage": "主页",
+  "metrics.note": "全部数值直接来自 SkillHub 公开接口。",
+  "metrics.rating": "评分折算",
+  "metrics.score": "综合评分",
+  "metrics.stars": "收藏数",
+  "metrics.total": "SkillHub 共 {total}",
+  "misc.byAuthor": "作者未填写更新说明",
+  "misc.community": "社区",
+  "misc.localMachine": "本机",
+  "misc.localVersion": "本地 v{version}",
+  "misc.machineRecord": "本机记录",
+  "misc.notStated": "未标注",
+  "misc.official": "官方",
+  "misc.unknown": "未知",
+  "misc.vendorKeen": "科恩实验室",
+  "misc.vendorSanbu": "云鼎实验室",
+  "overview.fromCommunity": "来自 SkillHub 社区，标识 {canonical}",
+  "overview.fromOfficial": "来自 SkillHub 认证，标识 {canonical}",
+  "overview.installedHint": "已安装的技能；打开详情可读取 SkillHub 上的说明。",
+  "overview.keyInfo": "关键信息",
+  "overview.needsKey": "需要自备 API Key",
+  "overview.noKey": "无需额外 API Key",
+  "overview.summary": "简介",
+  "overview.summaryFailed": "简介加载失败：{reason}",
+  "overview.unknownCategory": "未分类",
+  "overview.unknownSkill": "未知技能",
+  "overview.useCases": "适用场景",
+  "overview.version": "当前版本 v{version}",
+  "overview.versionMaintained": "版本信息由作者维护",
+  "panel.aria": "技能市场视图",
+  "panel.title": "技能市场",
+  "perm.heading": "需要的权限",
+  "perm.localLibrary": "本地技能库",
+  "perm.localLibraryDesc": "「安装」只在本机记录该技能并启用；技能文件本身仍由你通过本地导入提供。",
+  "perm.metadata": "读取技能元数据",
+  "perm.metadataDesc": "本插件仅从 SkillHub 读取公开的名称、简介、版本与统计信息，不写入你的任何数据。",
+  "perm.needsKey": "作者标注需要自备 API Key。",
+  "perm.network": "网络访问",
+  "perm.networkDesc": "技能自身可能访问外部服务；{key}",
+  "perm.noKeyNote": "作者未标注需要 API Key。",
+  "perm.note": "以下说明区分技能自身的声明与本插件的行为，你可以在设置中随时收回。",
+  "restart.bannerTitle": "本次改了 {count} 个技能",
+  "restart.dismiss": "知道了",
+  "restart.dismissTitle": "只是清掉这个提示，不影响技能状态",
+  "restart.effect": "重启 DeepSeek Harness 后生效",
+  "risk.high": "高风险",
+  "risk.low": "低风险",
+  "risk.mid": "中风险",
+  "safety.allBenign": "所有检测方均报告安全，无风险",
+  "safety.badge": "安全",
+  "safety.badgeTitle": "安全扫描通过：所有检测方均报告安全，无风险",
+  "safety.failed": "检测结果读取失败：{reason}",
+  "safety.hasRisk": "有检测方报告可疑，存在潜在风险",
+  "safety.heading": "安全扫描",
+  "safety.hiddenNote": "「安全」标记只在全部检测方都报告安全时出现，因此当前不显示该标记。",
+  "safety.loading": "正在读取检测结果…",
+  "safety.none": "SkillHub 未提供该技能的安全检测结果。",
+  "safety.note": "结果由 SkillHub 的第三方检测方给出，与「权限」页说明的本插件行为无关。",
+  "safety.pending": "检测仍在排队中",
+  "safety.report": "查看报告",
+  "safety.shownNote": "卡片与详情页的「安全」标记只在全部检测方都报告安全时出现。",
+  "safety.unknown": "检测结果未明",
+  "saved.eyebrow": "COLLECTION",
+  "saved.subtitle": "{count} 个技能已收藏，仅保存在本机。",
+  "saved.upToDate": "已是 SkillHub 上的最新版本",
+  "saved.updatable": "可更新",
+  "saved.update": "更新",
+  "saved.updated": "已更新",
+  "saved.versionArrow": "v{local} → v{latest}",
+  "search.placeholder": "搜索技能、描述或关键词",
+  "search.refresh": "刷新技能数据",
+  "search.refreshShort": "刷新",
+  "sort.aria": "排序方式",
+  "sort.downloads": "按下载量",
+  "sort.score": "按综合评分",
+  "sort.stars": "按收藏数",
+  "sort.updated": "按更新时间",
+  "status.connected": "已连接 SkillHub",
+  "status.error": "SkillHub 连接异常",
+  "status.loading": "加载中…",
+  "status.syncing": "正在同步 SkillHub",
+  "tab.files": "文件",
+  "tab.metrics": "指标",
+  "tab.overview": "概览",
+  "tab.permissions": "权限",
+  "tab.safety": "安全扫描",
+  "tab.versions": "版本历史",
+  "time.days": "{count} 天前",
+  "time.hours": "{count} 小时前",
+  "time.justNow": "刚刚",
+  "time.minutes": "{count} 分钟前",
+  "time.months": "{count} 个月前",
+  "time.years": "{count} 年前",
+  "toast.undo": "撤销",
+  "versions.category": "分类",
+  "versions.collapse": "收起历史版本",
+  "versions.comparison": "本地 v{local} · SkillHub v{latest}",
+  "versions.currentVersion": "当前版本",
+  "versions.expand": "展开其余 {count} 个版本",
+  "versions.failed": "版本历史加载失败：{reason}",
+  "versions.firstSeen": "首次收录",
+  "versions.heading": "版本历史",
+  "versions.identifier": "标识",
+  "versions.installThis": "安装",
+  "versions.installed": "已安装",
+  "versions.latest": "最新",
+  "versions.loading": "正在读取版本历史…",
+  "versions.localHasNone": "本地导入的技能没有 SkillHub 版本历史。",
+  "versions.newAvailable": "有新版本可用",
+  "versions.noChangelog": "作者未填写更新说明",
+  "versions.none": "SkillHub 未返回版本记录。",
+  "versions.source": "来源",
+  "versions.upToDate": "已是 SkillHub 上的最新版本",
+  "versions.updateTo": "更新到 v{version}",
+  "versions.updatedAt": "最近更新",
+  "versions.updatedAtValue": "{date}（{relative}）",
+  "versions.versionAndSource": "版本与来源",
+  "view.discover": "发现",
+  "view.import": "本地导入",
+  "view.installed": "已安装",
+  "view.saved": "收藏"
+};
+var EN = {
+  "action.cancel": "Cancel",
+  "action.confirmInstall": "Install “{name}”",
+  "action.detailFailed": "Could not load details: {reason}",
+  "action.disableNamed": "Disabled “{name}”",
+  "action.disableRestart": "Disabled “{name}”. Restart DeepSeek Harness to apply.",
+  "action.downgrade": "Roll “{name}” back to v{version}?",
+  "action.downgradeBody": "v{current} is currently installed. The skill directory is replaced with that older release in full.",
+  "action.downgradeConfirm": "Roll back",
+  "action.enableNamed": "Enabled “{name}”",
+  "action.enableRestart": "Enabled “{name}”. Restart DeepSeek Harness to apply.",
+  "action.importFailedNamed": "Could not import “{name}”: {reason}",
+  "action.install": "Install",
+  "action.installFailed": "Could not install “{name}”: {reason}",
+  "action.installedDetail": "Installed “{name}” v{version}: {files} files → {directory}. Restart DeepSeek Harness to apply.",
+  "action.installedNamed": "Installed “{name}”",
+  "action.installingNamed": "Installing “{name}”…",
+  "action.installingVersion": "Installing “{name}” v{version}…",
+  "action.noInstallResult": "The Host did not return an install result",
+  "action.removeFromDisabled": "Removed “{name}” from the disabled store. Restart DeepSeek Harness to apply.",
+  "action.removedFromDisabled": "Removed “{name}” from the disabled store",
+  "action.savedNamed": "Saved “{name}”",
+  "action.toggleFailed": "Could not switch “{name}”: {reason}",
+  "action.tooLarge": "Skill directory too large ({size} MB > {limit} MB)",
+  "action.tooManyFiles": "Too many files (limit {limit})",
+  "action.uninstall": "Uninstall",
+  "action.uninstallBody": "The skill directory is deleted from disk, including a disabled copy. Reinstalling requires downloading it again.",
+  "action.uninstallDetail": "{directory} ({files} files)",
+  "action.uninstallDetailNoFiles": "{directory}",
+  "action.uninstallFailed": "Could not uninstall “{name}”: {reason}",
+  "action.uninstallNamed": "Uninstall {name}",
+  "action.uninstalledNamed": "Uninstalled “{name}”",
+  "action.uninstalledRestart": "Uninstalled “{name}”. Restart DeepSeek Harness to apply.",
+  "action.uninstalling": "Uninstall “{name}”?",
+  "action.unsavedNamed": "Removed “{name}” from saved",
+  "action.update": "Update",
+  "action.updatedNamed": "Updated “{name}”",
+  "action.updatedParked": "Updated “{name}” v{version}: {files} files written to the disabled store; the skill stays disabled",
+  "card.category": "Category",
+  "card.categoryLabel": "Category: {name}",
+  "card.downloads": "Downloads",
+  "card.firstSeen": "First seen",
+  "card.from": "From {source}, identifier {canonical}",
+  "card.identifier": "Identifier",
+  "card.install": "Install",
+  "card.installNamed": "Install “{name}”",
+  "card.installed": "Installed",
+  "card.installing": "Installing…",
+  "card.loadMore": "Load more",
+  "card.noDescription": "This skill has no description.",
+  "card.official": "Official skill",
+  "card.rating": "Rating",
+  "card.ratingTitle": "Score converted to a 5-point rating",
+  "card.save": "Save {name}",
+  "card.saveShort": "Save",
+  "card.saved": "Saved",
+  "card.saves": "Saves",
+  "card.score": "Score",
+  "card.showing": "Showing {shown} / {total}",
+  "card.showingAll": "All {total} skills shown",
+  "card.source": "Source",
+  "card.stars": "Saves",
+  "card.unsave": "Remove {name} from saved",
+  "card.unsaveShort": "Saved",
+  "card.updatedAt": "Last updated",
+  "card.version": "Version",
+  "card.view": "View {name}",
+  "category.ai-agent": "AI agent",
+  "category.business-ops": "Business operations",
+  "category.content-creation": "Content creation",
+  "category.data-analysis": "Data analysis",
+  "category.design-media": "Design and media",
+  "category.dev-programming": "Development",
+  "category.education": "Education",
+  "category.it-ops-security": "IT operations and security",
+  "category.knowledge-management": "Knowledge management",
+  "category.life-service": "Everyday services",
+  "category.office-efficiency": "Office efficiency",
+  "category.professional": "Industry",
+  "discover.all": "All skills",
+  "discover.chipTitle": "{name}: {count} total (not affected by the current filter)",
+  "discover.eyebrow": "DISCOVER",
+  "discover.pageOf": " ({shown} on this page)",
+  "discover.subtitle": "Skills from SkillHub, most downloaded first. Install one to call it from any conversation.",
+  "discover.title": "Discover skills",
+  "discover.total": "{total} skills",
+  "drawer.aria": "Skill details",
+  "drawer.close": "Close details",
+  "drawer.installSkill": "Install skill",
+  "drawer.savedState": "Saved",
+  "drawer.sourceCommunity": "Community source",
+  "drawer.sourceOfficial": "Official source",
+  "drawer.uninstallInstalled": "Installed · uninstall",
+  "drawer.updatedAt": "Updated {time}",
+  "drawer.versionUnknown": "Version not stated",
+  "empty.goDiscover": "Browse skills",
+  "empty.noInstalled": "No skills installed yet",
+  "empty.noInstalledBody": "Pick one from the market to get started.",
+  "empty.noMatch": "No matching skills",
+  "empty.noMatchBody": "Try another keyword, or clear the category filter.",
+  "empty.noSaved": "Nothing saved yet",
+  "empty.noSavedBody": "Click the bookmark icon on a skill card to save it.",
+  "err.notJson": "The skill-market API returned something that is not JSON (HTTP {status})",
+  "err.offline": "Could not reach the skill market — check your network and retry",
+  "err.requestFailed": "Skill-market API request failed (HTTP {status})",
+  "err.uploadFailed": "Upload failed (HTTP {status})",
+  "err.upstreamFailed": "SkillHub request failed: {reason}",
+  "error.catalog": "Could not load skill data",
+  "error.prunedFavorites": "Cleared {count} saved entries that could no longer be resolved",
+  "error.retry": "Retry",
+  "files.back": "Back to the file list",
+  "files.backOne": "Back to the previous file",
+  "files.close": "Close",
+  "files.failed": "Could not load the file list: {reason}",
+  "files.heading": "Files",
+  "files.loading": "Reading the file list…",
+  "files.loadingOne": "Reading {path}",
+  "files.localHasNone": "A locally imported skill has no SkillHub file list.",
+  "files.manifestVersion": "list matches v{version}",
+  "files.noSource": "This skill has no SkillHub source",
+  "files.nodeSummary": "{files} file(s) · {size}",
+  "files.nodeTitle": "{path} · click to read",
+  "files.none": "SkillHub returned no file list for this skill.",
+  "files.readFailed": "Could not read this file: {reason}",
+  "files.sizeAndLines": "{size} · {lines} line(s)",
+  "files.treeHint": " · click a file to read it",
+  "files.treeSummary": "{files} file(s) · {size} · {version} · click a file to read it",
+  "files.treeSummaryBase": "{files} file(s) · {size}",
+  "files.treeSummaryNoVersion": "{files} file(s) · {size} · click a file to read it",
+  "files.truncated": "This file is large; the preview is truncated.",
+  "files.unknownSize": "Unknown size",
+  "import.badgeLocal": "Imported",
+  "import.badgeManual": "Placed by hand",
+  "import.browse": "Browse files…",
+  "import.doneMany": "Imported {count} skill packages",
+  "import.doneMixed": "Imported {ok}, {failed} failed: {reason}",
+  "import.doneOne": "Imported “{name}”",
+  "import.dropAria": "Choose or drop a .zip skill package",
+  "import.dropNote": "Only .zip archives are supported, up to 50 MB each.",
+  "import.dropTitle": "Drop a skill package here, or click to choose",
+  "import.empty": "No local skills yet",
+  "import.emptyBody": "Drop a .zip package above, or click “Browse files…”. Skills copied straight into the skill directory appear here too.",
+  "import.eyebrow": "LOCAL",
+  "import.failed": "Import failed: {reason}",
+  "import.fileFailed": "{name}: {reason}",
+  "import.noResult": "The Host did not return an import result",
+  "import.noResultDetail": "The Host did not return an import result (response: {body})",
+  "import.pickFile": "Import skill",
+  "import.progress": "Importing {done}/{total}: {name}…",
+  "import.statEnabled": "Enabled",
+  "import.statFormat": "Package format",
+  "import.statImported": "Imported",
+  "import.subtitle": "Import a skill package from this device. It stays local and is not synced to the market or a team workspace, and can be called from any conversation once imported.",
+  "installed.details": "Details",
+  "installed.dirPrefix": "skill directory: ",
+  "installed.disabled": "Disabled",
+  "installed.enableNamed": "Enable {name}",
+  "installed.enabled": "Enabled",
+  "installed.eyebrow": "LIBRARY",
+  "installed.fileCount": " ({count} files)",
+  "installed.fileCountBare": "{count} files",
+  "installed.installedAt": "installed {time}",
+  "installed.noVersion": "Version not stated",
+  "installed.pendingBadge": "Pending",
+  "installed.pendingBadgeTitle": "Changed this session; takes effect in new conversations after a restart",
+  "installed.remove": "Remove",
+  "installed.removeNamed": "Remove {name}",
+  "installed.subtitle": "{count} skill(s) in your local library. Disable one at any time without uninstalling it.",
+  "installed.toggleLabel": "Enable / disable",
+  "installed.version": "Version {version}",
+  "metrics.downloads": "Downloads",
+  "metrics.heading": "SkillHub metrics",
+  "metrics.homepage": "Homepage",
+  "metrics.note": "All values come directly from SkillHub’s public API.",
+  "metrics.rating": "Rating",
+  "metrics.score": "Score",
+  "metrics.stars": "Saves",
+  "metrics.total": "{total} skills on SkillHub",
+  "misc.byAuthor": "No release notes from the author",
+  "misc.community": "Community",
+  "misc.localMachine": "This machine",
+  "misc.localVersion": "local v{version}",
+  "misc.machineRecord": "Local record",
+  "misc.notStated": "not stated",
+  "misc.official": "Official",
+  "misc.unknown": "Unknown",
+  "misc.vendorKeen": "Keen Lab",
+  "misc.vendorSanbu": "Yunding Lab",
+  "overview.fromCommunity": "From the SkillHub community, identifier {canonical}",
+  "overview.fromOfficial": "From SkillHub verified, identifier {canonical}",
+  "overview.installedHint": "An installed skill. Open the details to read its description on SkillHub.",
+  "overview.keyInfo": "Key facts",
+  "overview.needsKey": "You must supply your own API key",
+  "overview.noKey": "No extra API key needed",
+  "overview.summary": "Summary",
+  "overview.summaryFailed": "Could not load the summary: {reason}",
+  "overview.unknownCategory": "Uncategorised",
+  "overview.unknownSkill": "Unknown skill",
+  "overview.useCases": "When to use it",
+  "overview.version": "Current version v{version}",
+  "overview.versionMaintained": "Version information is maintained by the author",
+  "panel.aria": "Skill market view",
+  "panel.title": "Skill Market",
+  "perm.heading": "Permissions needed",
+  "perm.localLibrary": "Local skill library",
+  "perm.localLibraryDesc": "“Install” only records and enables the skill on this machine; you still supply the skill files through local import.",
+  "perm.metadata": "Reads skill metadata",
+  "perm.metadataDesc": "This plugin only reads public names, descriptions, versions and statistics from SkillHub. It writes none of your data.",
+  "perm.needsKey": "the author states you must supply an API key.",
+  "perm.network": "Network access",
+  "perm.networkDesc": "The skill itself may call external services; {key}",
+  "perm.noKeyNote": "the author states no API key is needed.",
+  "perm.note": "These notes separate what the skill itself declares from what this plugin does. You can revoke them in Settings at any time.",
+  "restart.bannerTitle": "{count} skill(s) changed",
+  "restart.dismiss": "Got it",
+  "restart.dismissTitle": "Dismisses this notice only; skill state is unaffected",
+  "restart.effect": "Restart DeepSeek Harness to apply",
+  "risk.high": "High risk",
+  "risk.low": "Low risk",
+  "risk.mid": "Medium risk",
+  "safety.allBenign": "Every scanner reports safe, no risk",
+  "safety.badge": "Safe",
+  "safety.badgeTitle": "Scan passed: every scanner reports safe, no risk",
+  "safety.failed": "Could not read scan results: {reason}",
+  "safety.hasRisk": "A scanner reports suspicious, potential risk",
+  "safety.heading": "Security scan",
+  "safety.hiddenNote": "The “Safe” mark appears only when every scanner reports safe, so it is not shown here.",
+  "safety.loading": "Reading scan results…",
+  "safety.none": "SkillHub provides no security scan for this skill.",
+  "safety.note": "Results come from SkillHub’s third-party scanners and are unrelated to this plugin’s own behaviour described under Permissions.",
+  "safety.pending": "The scan is still queued",
+  "safety.report": "View report",
+  "safety.shownNote": "The “Safe” mark on cards and here appears only when every scanner reports safe.",
+  "safety.unknown": "Scan result unclear",
+  "saved.eyebrow": "COLLECTION",
+  "saved.subtitle": "{count} skill(s) saved, on this machine only.",
+  "saved.upToDate": "Already the latest version on SkillHub",
+  "saved.updatable": "Update available",
+  "saved.update": "Update",
+  "saved.updated": "Updated",
+  "saved.versionArrow": "v{local} → v{latest}",
+  "search.placeholder": "Search skills, descriptions or keywords",
+  "search.refresh": "Refresh skill data",
+  "search.refreshShort": "Refresh",
+  "sort.aria": "Sort order",
+  "sort.downloads": "Most downloaded",
+  "sort.score": "Highest rated",
+  "sort.stars": "Most saved",
+  "sort.updated": "Recently updated",
+  "status.connected": "Connected to SkillHub",
+  "status.error": "SkillHub connection problem",
+  "status.loading": "Loading…",
+  "status.syncing": "Syncing with SkillHub",
+  "tab.files": "Files",
+  "tab.metrics": "Metrics",
+  "tab.overview": "Overview",
+  "tab.permissions": "Permissions",
+  "tab.safety": "Security",
+  "tab.versions": "Version",
+  "time.days": "{count} d ago",
+  "time.hours": "{count} h ago",
+  "time.justNow": "just now",
+  "time.minutes": "{count} min ago",
+  "time.months": "{count} mo ago",
+  "time.years": "{count} y ago",
+  "toast.undo": "Undo",
+  "versions.category": "Category",
+  "versions.collapse": "Hide older versions",
+  "versions.comparison": "local v{local} · SkillHub v{latest}",
+  "versions.currentVersion": "Current version",
+  "versions.expand": "Show the other {count} version(s)",
+  "versions.failed": "Could not load version history: {reason}",
+  "versions.firstSeen": "First seen",
+  "versions.heading": "Version history",
+  "versions.identifier": "Identifier",
+  "versions.installThis": "Install",
+  "versions.installed": "Installed",
+  "versions.latest": "Latest",
+  "versions.loading": "Reading version history…",
+  "versions.localHasNone": "A locally imported skill has no SkillHub version history.",
+  "versions.newAvailable": "A newer version is available",
+  "versions.noChangelog": "No release notes from the author",
+  "versions.none": "SkillHub returned no version records.",
+  "versions.source": "Source",
+  "versions.upToDate": "Already the latest version on SkillHub",
+  "versions.updateTo": "Update to v{version}",
+  "versions.updatedAt": "Last updated",
+  "versions.updatedAtValue": "{date} ({relative})",
+  "versions.versionAndSource": "Version and source",
+  "view.discover": "Discover",
+  "view.import": "Local import",
+  "view.installed": "Installed",
+  "view.saved": "Saved"
+};
+var clientLocale = null;
+function formatText(template, params) {
+  if (params === void 0) return template;
+  return String(template).replace(/\{(\w+)\}/g, (whole, key) => Object.prototype.hasOwnProperty.call(params, key) ? String(params[key]) : whole);
+}
+function t2(key, params) {
+  const dictionary = clientActive === "en" ? EN : ZH2;
+  if (clientLocale !== null) {
+    const text = clientLocale(key, params);
+    if (text !== key) return text;
+  }
+  return formatText(dictionary[key] ?? ZH2[key] ?? key, params);
+}
+var clientActive = "zh";
+function uiLocale() {
+  return clientActive === "en" ? "en-US" : "zh-CN";
+}
+function translatedCategory(key, fallback) {
+  const dictionaryKey = `category.${key}`;
+  const translated2 = t2(dictionaryKey);
+  return translated2 === dictionaryKey ? fallback : translated2;
+}
+var API = "skill-market/api";
+var STATE_PATH = "state";
+var LEGACY_STATE_KEY = "dsh-skill-market/v1";
+var LEGACY_PENDING_KEY = "dsh-skill-market/pending/v1";
+var PANEL_SYNC_INTERVAL_MS = 1e4;
+function apiPath(path) {
+  const relative = `${API}/${String(path).replace(/^\/+/, "")}`;
+  if (typeof document === "undefined") return `/${relative}`;
+  return new URL(relative, document.baseURI).pathname;
+}
+var HIDDEN_CATEGORIES = /* @__PURE__ */ new Set(["pay-skill"]);
+var FALLBACK_CATEGORIES = [
+  { key: "office-efficiency", name: "category.office-efficiency" },
+  { key: "content-creation", name: "category.content-creation" },
+  { key: "dev-programming", name: "category.dev-programming" },
+  { key: "data-analysis", name: "category.data-analysis" },
+  { key: "design-media", name: "category.design-media" },
+  { key: "ai-agent", name: "AI Agent" },
+  { key: "knowledge-management", name: "category.knowledge-management" },
+  { key: "business-ops", name: "category.business-ops" },
+  { key: "education", name: "category.education" },
+  { key: "professional", name: "category.professional" },
+  { key: "it-ops-security", name: "category.it-ops-security" },
+  { key: "life-service", name: "category.life-service" }
+];
+var SORTS = [
+  { value: "downloads", label: "sort.downloads" },
+  { value: "score", label: "sort.score" },
+  { value: "stars", label: "sort.stars" },
+  { value: "updated_at", label: "sort.updated" }
+];
+var DEFAULT_SORT = "downloads";
+var CATEGORY_ICON = {
+  "dev-programming": "i-terminal",
+  "data-analysis": "i-table",
+  "content-creation": "i-type",
+  "office-efficiency": "i-clipboard",
+  "design-media": "i-image",
+  "ai-agent": "i-sparkle",
+  "knowledge-management": "i-book",
+  "business-ops": "i-network",
+  education: "i-book",
+  professional: "i-shield",
+  "it-ops-security": "i-lock",
+  "life-service": "i-mail",
+  "pay-skill": "i-database"
+};
+var CATEGORY_HUE = {
+  "dev-programming": 258,
+  "data-analysis": 200,
+  "content-creation": 318,
+  "office-efficiency": 232,
+  "design-media": 12,
+  "ai-agent": 282,
+  "knowledge-management": 158,
+  "business-ops": 42,
+  education: 192,
+  professional: 88,
+  "it-ops-security": 224,
+  "life-service": 336,
+  "pay-skill": 268
+};
+var RISK_LABELS = { low: "risk.low", mid: "risk.mid", high: "risk.high" };
+var CSS2 = `
+[data-skill-market] {
+  /* canvas + surface */
+  --sm-bg: var(--dsw-alias-bg-base, oklch(99% 0.002 240));
+  --sm-surface: var(--dsw-alias-bg-layer-1, oklch(100% 0 0));
+  --sm-fg: var(--dsw-alias-label-primary, oklch(18% 0.012 250));
+  --sm-muted: var(--dsw-alias-label-secondary, oklch(54% 0.012 250));
+  --sm-border: var(--dsw-alias-border-l1, oklch(92% 0.005 250));
+  --sm-border-strong: var(--dsw-alias-border-l2, color-mix(in oklch, var(--sm-fg) 22%, var(--sm-border)));
+  --sm-accent: var(--dsw-alias-brand-primary, oklch(58% 0.18 255));
+
+  --sm-ok: var(--dsw-alias-state-success-primary, oklch(52% 0.13 155));
+  --sm-warn: var(--dsw-alias-state-warn-primary, oklch(52% 0.13 62));
+  --sm-danger: var(--dsw-alias-state-error-primary, oklch(52% 0.17 27));
+  --sm-star: oklch(62% 0.13 72);
+
+  --sm-accent-soft: color-mix(in oklch, var(--sm-accent) 12%, transparent);
+  --sm-accent-line: color-mix(in oklch, var(--sm-accent) 34%, var(--sm-border));
+  --sm-fg-soft: color-mix(in oklch, var(--sm-fg) 6%, transparent);
+  --sm-fg-softer: color-mix(in oklch, var(--sm-fg) 3.5%, transparent);
+  --sm-ok-soft: color-mix(in oklch, var(--sm-ok) 14%, transparent);
+  --sm-warn-soft: color-mix(in oklch, var(--sm-warn) 14%, transparent);
+  --sm-warn-line: color-mix(in oklch, var(--sm-warn) 32%, var(--sm-border));
+  --sm-danger-soft: color-mix(in oklch, var(--sm-danger) 14%, transparent);
+  --sm-scrim: color-mix(in oklch, var(--sm-fg) 22%, transparent);
+  --sm-shadow-sm: 0 1px 2px color-mix(in oklch, var(--sm-fg) 8%, transparent);
+  --sm-shadow-md: 0 12px 32px color-mix(in oklch, var(--sm-fg) 14%, transparent);
+
+  --sm-radius: 9px;
+  --sm-radius-lg: 13px;
+  --sm-topbar: 58px;
+  --sm-statusbar: 28px;
+
+  --sm-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --sm-font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+}
+body[data-ds-dark-theme] [data-skill-market] {
+  --sm-star: oklch(76% 0.13 78);
+  --sm-accent-soft: color-mix(in oklch, var(--sm-accent) 20%, transparent);
+  --sm-accent-line: color-mix(in oklch, var(--sm-accent) 42%, var(--sm-border));
+  --sm-fg-soft: color-mix(in oklch, var(--sm-fg) 10%, transparent);
+  --sm-fg-softer: color-mix(in oklch, var(--sm-fg) 5%, transparent);
+  --sm-scrim: color-mix(in oklch, black 46%, transparent);
+  --sm-shadow-sm: 0 1px 2px color-mix(in oklch, black 40%, transparent);
+  --sm-shadow-md: 0 12px 32px color-mix(in oklch, black 52%, transparent);
+}
+
+[data-skill-market] *, [data-skill-market] *::before, [data-skill-market] *::after { box-sizing: border-box; }
+[data-skill-market] {
+  display: flex; flex-direction: column; min-width: 0; min-height: 0;
+  /* height: 100% needs a parent with a definite height; when the mount is itself content-sized that
+ resolves to auto and the panel grows past the viewport, so the page scrolls instead of only the card
+ list. max-height: 100% and the overflow: hidden below keep the panel bounded either way, which is
+ what confines scrolling to .sm-content. */
+  height: 100%; max-height: 100%; position: relative; overflow: hidden;
+  background: var(--sm-bg); color: var(--sm-fg);
+  font-family: var(--sm-font); font-size: 14px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+/* The macOS frame overlays the window-chrome strip on every main panel; pad the
+   first row into the frame's declared clearance, exactly like the shell's own
+   entry pages do. */
+[data-platform='darwin'] [data-skill-market] .sm-topbar {
+  height: calc(var(--sm-topbar) + var(--dsh-frame-top-clearance, 0px));
+  padding-top: var(--dsh-frame-top-clearance, 0px);
+}
+[data-skill-market] h1, [data-skill-market] h2, [data-skill-market] h3, [data-skill-market] h4 {
+  margin: 0; font-weight: 600; letter-spacing: -0.018em;
+}
+[data-skill-market] p { margin: 0; }
+[data-skill-market] button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; }
+[data-skill-market] input, [data-skill-market] select { font: inherit; color: inherit; }
+[data-skill-market] ::selection { background: var(--sm-accent-soft); }
+[data-skill-market] :focus-visible { outline: 2px solid var(--sm-accent); outline-offset: 2px; border-radius: 6px; }
+[data-skill-market] .sm-num { font-family: var(--sm-font-mono); font-variant-numeric: tabular-nums; }
+[data-skill-market] .sm-meta { font-family: var(--sm-font-mono); font-size: 12px; color: var(--sm-muted); }
+[data-skill-market] .sm-eyebrow {
+  font-family: var(--sm-font-mono); font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--sm-muted);
+}
+[data-skill-market] svg { display: block; }
+[data-skill-market] .sm-ic { width: 17px; height: 17px; flex: 0 0 auto; }
+
+/* ── topbar ────────────────────────────────────────────────────────── */
+[data-skill-market] .sm-topbar {
+  height: var(--sm-topbar); flex: 0 0 auto;
+  display: flex; align-items: center; gap: 14px; padding: 0 20px;
+  border-bottom: 1px solid var(--sm-border);
+  background: color-mix(in oklch, var(--sm-bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+}
+[data-skill-market] .sm-search { position: relative; flex: 1; max-width: 520px; display: flex; align-items: center; }
+/* In the market head it is a block of its own rather than a flex child of the topbar, so it
+   needs an explicit width and the spacing that separates it from the chips below. */
+[data-skill-market] .sm-search-row { flex: none; max-width: none; width: 100%; margin: 0 0 14px; }
+[data-skill-market] .sm-search-row input { height: 42px; }
+[data-skill-market] .sm-search > svg { position: absolute; left: 12px; width: 16px; height: 16px; color: var(--sm-muted); pointer-events: none; }
+[data-skill-market] .sm-search input {
+  width: 100%; height: 38px; padding: 0 14px 0 36px;
+  border: 1px solid var(--sm-border); border-radius: var(--sm-radius);
+  background: var(--sm-surface); color: var(--sm-fg); font-size: 13.5px;
+  transition: border-color .13s ease, box-shadow .13s ease;
+}
+[data-skill-market] .sm-search input::placeholder { color: var(--sm-muted); }
+[data-skill-market] .sm-search input:focus { outline: none; border-color: var(--sm-accent-line); box-shadow: 0 0 0 3px var(--sm-accent-soft); }
+[data-skill-market] .sm-topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+[data-skill-market] .sm-icon-btn {
+  width: 34px; height: 34px; border-radius: var(--sm-radius);
+  display: grid; place-items: center; color: var(--sm-muted); position: relative;
+  transition: background .13s ease, color .13s ease;
+}
+[data-skill-market] .sm-icon-btn svg { width: 18px; height: 18px; }
+[data-skill-market] .sm-icon-btn:hover { background: var(--sm-fg-soft); color: var(--sm-fg); }
+[data-skill-market] .sm-icon-btn .sm-dot {
+  position: absolute; top: 7px; right: 8px; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--sm-accent); border: 1.5px solid var(--sm-bg);
+}
+
+/* ── buttons ───────────────────────────────────────────────────────── */
+[data-skill-market] .sm-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 34px; padding: 0 14px; border-radius: var(--sm-radius);
+  border: 1px solid transparent; font-size: 13px; font-weight: 500;
+  letter-spacing: -0.005em; white-space: nowrap;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+[data-skill-market] .sm-btn svg { width: 16px; height: 16px; }
+[data-skill-market] .sm-btn:active { transform: translateY(1px); }
+[data-skill-market] .sm-btn-primary { background: var(--sm-accent); color: var(--sm-surface); border-color: var(--sm-accent); }
+[data-skill-market] .sm-btn-primary:hover { background: color-mix(in oklch, var(--sm-accent) 87%, black); }
+[data-skill-market] .sm-btn-secondary { background: var(--sm-surface); color: var(--sm-fg); border-color: var(--sm-border); }
+[data-skill-market] .sm-btn-secondary:hover { border-color: var(--sm-border-strong); }
+[data-skill-market] .sm-btn-ghost { background: transparent; color: var(--sm-muted); padding-inline: 9px; }
+[data-skill-market] .sm-btn-ghost:hover { background: var(--sm-fg-soft); color: var(--sm-fg); }
+[data-skill-market] .sm-btn-sm { height: 30px; padding: 0 11px; font-size: 12.5px; }
+[data-skill-market] .sm-btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* ── view tabs ─────────────────────────────────────────────────────── */
+[data-skill-market] .sm-viewbar {
+  flex: 0 0 auto; display: flex; align-items: center;
+  padding: 0 20px; border-bottom: 1px solid var(--sm-border); background: var(--sm-bg);
+  overflow-x: auto; scrollbar-width: none;
+}
+[data-skill-market] .sm-viewbar::-webkit-scrollbar { display: none; }
+[data-skill-market] .sm-viewtabs { display: flex; gap: 4px; }
+[data-skill-market] .sm-viewtab {
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  padding: 12px 4px; margin: 0 18px -1px 0;
+  font-size: 13.5px; font-weight: 500; color: var(--sm-muted);
+  border-bottom: 2px solid transparent;
+  transition: color .13s ease, border-color .13s ease;
+}
+[data-skill-market] .sm-viewtab:hover { color: var(--sm-fg); }
+[data-skill-market] .sm-viewtab.active { color: var(--sm-fg); border-bottom-color: var(--sm-fg); }
+[data-skill-market] .sm-vt-count {
+  font-family: var(--sm-font-mono); font-size: 11px; line-height: 1;
+  padding: 3px 7px; border-radius: 999px; background: var(--sm-fg-soft); color: var(--sm-muted);
+}
+[data-skill-market] .sm-viewtab.active .sm-vt-count { color: var(--sm-fg); }
+
+/* ── fixed head + scrolling list ───────────────────────────────────── */
+/* Only the card list scrolls: the topbar, view tabs, page head and category
+   chips stay put, so the sort control and the filters are reachable at any
+   scroll depth. The shared measure runs wide (1760px) so a large window really
+   does get more columns — see the responsive block at the end of this sheet. */
+[data-skill-market] .sm-bounded { max-width: 1760px; margin: 0 auto; }
+[data-skill-market] .sm-fixed {
+  flex: 0 0 auto; padding: 18px 24px 0; border-bottom: 1px solid var(--sm-border);
+  background: var(--sm-bg);
+}
+[data-skill-market] .sm-content { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+[data-skill-market] .sm-inner { padding: 20px 24px 60px; }
+[data-skill-market] .sm-statusbar {
+  height: var(--sm-statusbar); flex: 0 0 auto; display: flex; align-items: center; gap: 16px;
+  padding: 0 20px; border-top: 1px solid var(--sm-border);
+  font-family: var(--sm-font-mono); font-size: 11px; color: var(--sm-muted); background: var(--sm-bg);
+  overflow: hidden; white-space: nowrap;
+}
+[data-skill-market] .sm-statusbar .sm-live { display: inline-flex; align-items: center; gap: 6px; color: var(--sm-ok); }
+[data-skill-market] .sm-statusbar .sm-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--sm-ok); }
+[data-skill-market] .sm-statusbar .sm-live.is-error { color: var(--sm-warn); }
+[data-skill-market] .sm-statusbar .sm-live.is-error::before { background: var(--sm-warn); }
+[data-skill-market] .sm-statusbar .sm-live.is-idle { color: var(--sm-muted); }
+[data-skill-market] .sm-statusbar .sm-live.is-idle::before { background: var(--sm-muted); }
+[data-skill-market] .sm-statusbar .sm-spacer { margin-left: auto; }
+
+/* ── page head ─────────────────────────────────────────────────────── */
+[data-skill-market] .sm-page-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 24px; flex-wrap: wrap; margin-bottom: 14px;
+}
+[data-skill-market] .sm-page-title { font-size: 26px; letter-spacing: -0.025em; }
+[data-skill-market] .sm-page-sub { color: var(--sm-muted); font-size: 13.5px; margin-top: 5px; max-width: 62ch; }
+[data-skill-market] .sm-page-actions { display: flex; align-items: center; gap: 10px; }
+
+[data-skill-market] .sm-select-wrap { position: relative; display: inline-flex; align-items: center; }
+[data-skill-market] .sm-select-wrap::after {
+  content: '▾'; position: absolute; right: 11px; pointer-events: none; font-size: 10px; color: var(--sm-muted);
+}
+[data-skill-market] .sm-select-wrap select {
+  appearance: none; -webkit-appearance: none; height: 34px; padding: 0 30px 0 12px;
+  border: 1px solid var(--sm-border); border-radius: var(--sm-radius);
+  background: var(--sm-surface); font-size: 13px;
+}
+[data-skill-market] .sm-select-wrap select:hover { border-color: var(--sm-border-strong); }
+
+/* ── chips ─────────────────────────────────────────────────────────── */
+[data-skill-market] .sm-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
+[data-skill-market] .sm-chip {
+  height: 30px; padding: 0 13px; border-radius: 999px;
+  border: 1px solid var(--sm-border); background: var(--sm-surface);
+  color: var(--sm-muted); font-size: 12.5px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: border-color .13s ease, color .13s ease, background .13s ease;
+}
+[data-skill-market] .sm-chip:hover { border-color: var(--sm-border-strong); color: var(--sm-fg); }
+[data-skill-market] .sm-chip.active { background: var(--sm-fg); border-color: var(--sm-fg); color: var(--sm-surface); }
+[data-skill-market] .sm-chip .sm-chip-n { font-family: var(--sm-font-mono); font-size: 11px; opacity: .72; }
+
+/* ── sections ──────────────────────────────────────────────────────── */
+[data-skill-market] .sm-section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+[data-skill-market] .sm-section-head h2 { font-size: 15px; letter-spacing: -0.01em; }
+[data-skill-market] .sm-section-head .sm-meta { font-weight: 400; }
+
+/* ── skill cards ───────────────────────────────────────────────────── */
+/* auto-fit + a fixed 280px floor fills every row instead of leaving a gap at the
+   end. A fixed floor beats a vw preference here — a percentage floor grows with
+   the viewport and ends up *reducing* the column count on a wide screen, and a
+   floor above 280px starts taking columns away from a 1920px window.
+   Measured column counts (tools/grid-columns.mjs):
+ 360-430px -> 1, 600 -> 1, 820 -> 2, 1024 -> 3, 1366 -> 4, 1440 -> 4, 1920 -> 6
+   min(100%, ...) keeps one column from overflowing in a very narrow panel. */
+[data-skill-market] .sm-grid-cards {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+[data-skill-market] .sm-card {
+  position: relative; display: flex; flex-direction: column; text-align: left;
+  background: var(--sm-surface); border: 1px solid var(--sm-border);
+  border-radius: var(--sm-radius-lg); padding: 16px;
+  transition: border-color .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+[data-skill-market] .sm-card:hover { border-color: var(--sm-border-strong); box-shadow: var(--sm-shadow-sm); transform: translateY(-1px); }
+[data-skill-market] .sm-card.is-open { border-color: var(--sm-accent-line); box-shadow: 0 0 0 3px var(--sm-accent-soft); }
+[data-skill-market] .sm-skill-card { cursor: pointer; min-height: 180px; }
+[data-skill-market] .sm-skill-icon {
+  width: 40px; height: 40px; flex: 0 0 auto; border-radius: 11px; overflow: hidden;
+  border: 1px solid var(--sm-border); background: var(--sm-bg);
+  display: grid; place-items: center; color: var(--sm-fg);
+}
+[data-skill-market] .sm-skill-icon svg { width: 20px; height: 20px; }
+[data-skill-market] .sm-skill-icon img { width: 100%; height: 100%; object-fit: cover; }
+[data-skill-market] .sm-skill-icon.lg { width: 52px; height: 52px; border-radius: 14px; }
+[data-skill-market] .sm-skill-icon.lg svg { width: 26px; height: 26px; }
+[data-skill-market] .sm-skill-icon.is-tinted { border-color: transparent; }
+/* The card header row: icon, then the name/publisher block. This rule was missing entirely, so the
+   header had no layout of its own and its children stacked as blocks — while the title rule below
+   declared flex: 1, which is inert inside a non-flex parent. The card never got the row it was
+   written for. */
+[data-skill-market] .sm-card-top { display: flex; align-items: flex-start; gap: 10px; }
+[data-skill-market] .sm-card-title { min-width: 0; flex: 1; }
+[data-skill-market] .sm-name-row { display: flex; align-items: center; gap: 5px; }
+[data-skill-market] .sm-skill-name {
+  font-size: 14.5px; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-skill-market] .sm-verified { color: var(--sm-accent); flex: 0 0 auto; }
+[data-skill-market] .sm-verified svg { width: 14px; height: 14px; }
+/* Safety scan verdict. Green because that is what it means, and only ever drawn when every vendor
+   reported benign — see SafetyBadge. */
+[data-skill-market] .sm-safety {
+  display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto;
+  font-size: 11.5px; font-weight: 600; color: var(--sm-ok);
+}
+[data-skill-market] .sm-safety svg { width: 14px; height: 14px; }
+[data-skill-market] .sm-safety-compact svg { width: 13px; height: 13px; }
+/* One row per scanning vendor: mark, name, that vendor's own verdict, and its report link pushed to
+   the right edge. The row is the unit because the vendors are independent — one can pass while another
+   does not, and that disagreement is the thing worth seeing. */
+[data-skill-market] .sm-safety-vendors { display: flex; flex-direction: column; gap: 2px; }
+[data-skill-market] .sm-safety-vendor {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  font-size: 13px; line-height: 1.5; border-radius: 9px;
+  transition: background .13s ease;
+}
+[data-skill-market] .sm-safety-vendor:hover { background: var(--sm-bg); }
+[data-skill-market] .sm-safety-mark { display: inline-flex; flex: 0 0 auto; color: var(--sm-ok); }
+[data-skill-market] .sm-safety-mark svg { width: 15px; height: 15px; }
+/* Any verdict other than benign: the mark keeps the neutral colour rather than turning red or amber.
+   The panel states what the vendor said; it does not grade a scan it cannot interpret. */
+[data-skill-market] .sm-safety-vendor.plain .sm-safety-mark { color: var(--sm-muted); }
+[data-skill-market] .sm-safety-label { flex: 1; min-width: 0; }
+[data-skill-market] .sm-safety-label strong { font-weight: 600; margin-right: 6px; }
+[data-skill-market] .sm-safety-report {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12.5px; color: var(--sm-muted);
+}
+[data-skill-market] .sm-safety-report:hover { color: var(--sm-fg); }
+[data-skill-market] .sm-publisher {
+  font-size: 12px; color: var(--sm-muted); display: block; max-width: 100%;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-skill-market] .sm-save-btn {
+  width: 28px; height: 28px; border-radius: 7px; flex: 0 0 auto;
+  display: grid; place-items: center; color: var(--sm-muted);
+  transition: background .13s ease, color .13s ease;
+}
+/* On a catalog card the bookmark sits in the card's top-right corner rather than in the header row:
+   it is a per-card action, and inline it competed with the skill's name for width. The card article
+   is already positioned, so this needs no wrapper. */
+[data-skill-market] .sm-card > .sm-save-btn { position: absolute; top: 12px; right: 12px; z-index: 2; margin: 0; }
+/* Keeps a long name from running under the pinned button. */
+[data-skill-market] .sm-skill-card .sm-card-title { padding-right: 34px; }
+[data-skill-market] .sm-save-btn svg { width: 16px; height: 16px; }
+[data-skill-market] .sm-save-btn:hover { background: var(--sm-fg-soft); color: var(--sm-fg); }
+[data-skill-market] .sm-save-btn.saved { color: var(--sm-fg); }
+[data-skill-market] .sm-save-btn.saved svg { fill: currentColor; }
+[data-skill-market] .sm-card-desc {
+  color: var(--sm-muted); font-size: 13px; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+[data-skill-market] .sm-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 11px; }
+[data-skill-market] .sm-tag {
+  font-size: 11px; color: var(--sm-muted);
+  border: 1px solid var(--sm-border); border-radius: 999px; padding: 2px 8px;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+[data-skill-market] .sm-card-foot { display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 14px; }
+[data-skill-market] .sm-stats { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sm-muted); }
+[data-skill-market] .sm-stats .sm-sep { opacity: .5; }
+/* Figures are icon + number and must never wrap: the row sits at the bottom of a card whose height should not
+   depend on the language. */
+[data-skill-market] .sm-stats > * { flex: 0 0 auto; white-space: nowrap; }
+[data-skill-market] .sm-stats .sm-stat { display: inline-flex; align-items: center; gap: 3px; }
+[data-skill-market] .sm-stats .sm-stat svg { width: 13px; height: 13px; opacity: .75; }
+[data-skill-market] .sm-stats .sm-rating { display: inline-flex; align-items: center; gap: 3px; color: var(--sm-fg); }
+[data-skill-market] .sm-stats .sm-rating svg { width: 13px; height: 13px; color: var(--sm-star); }
+[data-skill-market] .sm-install-btn {
+  margin-left: auto; height: 31px; padding: 0 15px; border-radius: var(--sm-radius);
+  border: 1px solid var(--sm-border); background: var(--sm-surface); color: var(--sm-fg);
+  font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+[data-skill-market] .sm-install-btn svg { width: 15px; height: 15px; }
+[data-skill-market] .sm-install-btn:hover { border-color: var(--sm-accent); color: var(--sm-accent); background: var(--sm-accent-soft); }
+[data-skill-market] .sm-install-btn.installed { color: var(--sm-muted); border-color: var(--sm-border); background: var(--sm-fg-softer); }
+[data-skill-market] .sm-install-btn.installed:hover { color: var(--sm-fg); border-color: var(--sm-border-strong); background: var(--sm-fg-soft); }
+/* An installed-but-behind card reads as actionable, not as done. */
+[data-skill-market] .sm-install-btn.is-update {
+  background: var(--sm-accent); color: var(--sm-surface); border-color: var(--sm-accent);
+}
+[data-skill-market] .sm-install-btn.is-update:hover {
+  background: color-mix(in oklch, var(--sm-accent) 88%, var(--sm-fg));
+  border-color: color-mix(in oklch, var(--sm-accent) 88%, var(--sm-fg));
+  color: var(--sm-surface);
+}
+[data-skill-market] .sm-install-btn.is-busy { color: var(--sm-muted); cursor: progress; }
+[data-skill-market] .sm-install-btn[disabled] { opacity: .6; cursor: progress; }
+/* A failed install keeps its reason on the card: the Host's own text (network,
+   size ceiling, missing SKILL.md, checksum mismatch) is more useful than a
+   generic failure label. */
+[data-skill-market] .sm-install-error {
+  margin-top: 8px; font-size: 12px; line-height: 1.45; color: var(--sm-danger);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  overflow-wrap: anywhere;
+}
+[data-skill-market] .sm-link-out { display: inline-flex; align-items: center; gap: 4px; }
+[data-skill-market] .sm-link-out svg { width: 13px; height: 13px; }
+
+/* ── restart advice banner ─────────────────────────────────────────── */
+/* Advice, not a gate: the panel never blocks a change and never nags beyond
+   this banner, which the user can dismiss with 知道了. It exists because the
+   page cannot restart the process — on the desktop the Host is a child of the
+   Electron shell — so the honest move is to name the step, not to fake it. */
+[data-skill-market] .sm-restart-banner {
+  display: flex; align-items: flex-start; gap: 14px;
+  border: 1px solid var(--sm-accent-line);
+  background: color-mix(in oklch, var(--sm-accent) 7%, var(--sm-surface));
+  border-radius: var(--sm-radius-lg); padding: 14px 16px; margin-bottom: 20px;
+}
+[data-skill-market] .sm-rb-ic {
+  width: 36px; height: 36px; flex: 0 0 auto; border-radius: 10px;
+  display: grid; place-items: center; color: var(--sm-accent); background: var(--sm-accent-soft);
+}
+[data-skill-market] .sm-rb-ic svg { width: 18px; height: 18px; }
+[data-skill-market] .sm-rb-text { flex: 1; min-width: 0; }
+[data-skill-market] .sm-rb-text strong { font-size: 13.5px; font-weight: 600; }
+[data-skill-market] .sm-rb-text p { font-size: 12.5px; color: var(--sm-muted); margin-top: 4px; line-height: 1.55; }
+[data-skill-market] .sm-rb-actions { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; }
+
+[data-skill-market] .sm-loadmore {
+  grid-column: 1 / -1; display: flex; align-items: center; justify-content: center;
+  gap: 14px; padding: 22px 0 4px; flex-wrap: wrap;
+}
+
+/* ── list rows ─────────────────────────────────────────────────────── */
+[data-skill-market] .sm-list { border-top: 1px solid var(--sm-border); }
+[data-skill-market] .sm-list-row {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 14px; align-items: center;
+  padding: 14px 4px; border-bottom: 1px solid var(--sm-border);
+}
+[data-skill-market] .sm-row-main { min-width: 0; }
+[data-skill-market] .sm-list-row .sm-name-row { gap: 7px; }
+[data-skill-market] .sm-list-row h3 {
+  font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-skill-market] .sm-row-sub {
+  font-size: 12px; color: var(--sm-muted); margin-top: 3px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+[data-skill-market] .sm-row-sub .sm-sep { opacity: .5; }
+/* Figures in a row's sub-line are icon + number, matching the card stats row: an icon needs no translation and
+   cannot wrap onto a second line the way "2.4M downloads" did in English. */
+[data-skill-market] .sm-row-sub .sm-stat { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+[data-skill-market] .sm-row-sub .sm-stat svg { width: 12px; height: 12px; opacity: .75; }
+[data-skill-market] .sm-row-actions { display: flex; align-items: center; gap: 10px; }
+[data-skill-market] .sm-badge {
+  font-family: var(--sm-font-mono); font-size: 10.5px; letter-spacing: 0.03em;
+  padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+}
+[data-skill-market] .sm-badge.update { color: var(--sm-warn); background: var(--sm-warn-soft); }
+[data-skill-market] .sm-badge.ok { color: var(--sm-ok); background: var(--sm-ok-soft); }
+[data-skill-market] .sm-badge.plain { color: var(--sm-muted); background: var(--sm-fg-soft); }
+[data-skill-market] .sm-src-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--sm-font-mono); font-size: 10.5px; letter-spacing: 0.03em;
+  color: var(--sm-muted); background: var(--sm-fg-soft); border-radius: 999px; padding: 2px 8px;
+}
+[data-skill-market] .sm-src-badge svg { width: 11px; height: 11px; }
+
+[data-skill-market] .sm-switch { position: relative; width: 38px; height: 22px; flex: 0 0 auto; display: inline-block; }
+[data-skill-market] .sm-switch input {
+  position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer;
+}
+[data-skill-market] .sm-switch .sm-track {
+  position: absolute; inset: 0; border-radius: 999px; background: var(--sm-border); transition: background .16s ease;
+}
+[data-skill-market] .sm-switch .sm-thumb {
+  position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--sm-surface); box-shadow: var(--sm-shadow-sm); transition: transform .16s ease;
+}
+[data-skill-market] .sm-switch input:checked + .sm-track { background: var(--sm-ok); }
+[data-skill-market] .sm-switch input:checked ~ .sm-thumb { transform: translateX(16px); }
+[data-skill-market] .sm-switch input:focus-visible + .sm-track { outline: 2px solid var(--sm-accent); outline-offset: 2px; }
+
+/* ── empty + skeleton ──────────────────────────────────────────────── */
+[data-skill-market] .sm-empty {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 64px 20px; gap: 6px;
+}
+[data-skill-market] .sm-empty .sm-empty-mark {
+  width: 46px; height: 46px; border-radius: 13px; border: 1px solid var(--sm-border);
+  display: grid; place-items: center; color: var(--sm-muted); margin-bottom: 8px;
+}
+[data-skill-market] .sm-empty .sm-empty-mark svg { width: 22px; height: 22px; }
+[data-skill-market] .sm-empty h3 { font-size: 15px; }
+[data-skill-market] .sm-empty p { color: var(--sm-muted); font-size: 13px; max-width: 42ch; }
+[data-skill-market] .sm-empty .sm-empty-actions { margin-top: 12px; display: flex; gap: 10px; }
+[data-skill-market] .sm-empty.is-error .sm-empty-mark { color: var(--sm-warn); border-color: var(--sm-warn-line); }
+
+[data-skill-market] .sm-skeleton {
+  border: 1px solid var(--sm-border); border-radius: var(--sm-radius-lg);
+  background: var(--sm-surface); padding: 16px; min-height: 180px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+[data-skill-market] .sm-sk-line {
+  height: 11px; border-radius: 999px; background: var(--sm-fg-soft);
+  animation: sm-pulse 1.5s ease-in-out infinite;
+}
+[data-skill-market] .sm-sk-head { display: flex; gap: 11px; }
+[data-skill-market] .sm-sk-plate { width: 40px; height: 40px; border-radius: 11px; background: var(--sm-fg-soft); animation: sm-pulse 1.5s ease-in-out infinite; }
+[data-skill-market] .sm-sk-head .sm-sk-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+@keyframes sm-pulse { 0%, 100% { opacity: .45; } 50% { opacity: .9; } }
+
+/* ── stat cards ────────────────────────────────────────────────────── */
+[data-skill-market] .sm-stat-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 30px; }
+[data-skill-market] .sm-stat-card { background: var(--sm-surface); border: 1px solid var(--sm-border); border-radius: var(--sm-radius-lg); padding: 16px; }
+[data-skill-market] .sm-stat-card .sm-k { font-size: 12px; color: var(--sm-muted); }
+[data-skill-market] .sm-stat-card .sm-v {
+  font-family: var(--sm-font-mono); font-size: 26px; font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em; margin-top: 6px;
+}
+
+/* ── local import dropzone ─────────────────────────────────────────── */
+[data-skill-market] .sm-dropzone {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 5px; padding: 38px 24px; margin-bottom: 30px;
+  border: 1.5px dashed color-mix(in oklch, var(--sm-fg) 24%, var(--sm-border));
+  border-radius: var(--sm-radius-lg); background: var(--sm-surface);
+  cursor: pointer; transition: border-color .15s ease, background .15s ease;
+}
+[data-skill-market] .sm-dropzone:hover { border-color: var(--sm-accent-line); }
+[data-skill-market] .sm-dropzone.dragover { border-color: var(--sm-accent); background: var(--sm-accent-soft); }
+[data-skill-market] .sm-dropzone .sm-dz-ic {
+  width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center;
+  color: var(--sm-accent); background: var(--sm-accent-soft); margin-bottom: 7px;
+}
+[data-skill-market] .sm-dropzone .sm-dz-ic svg { width: 22px; height: 22px; }
+[data-skill-market] .sm-dropzone h3 { font-size: 15.5px; }
+[data-skill-market] .sm-dropzone p { color: var(--sm-muted); font-size: 12.5px; max-width: 48ch; }
+[data-skill-market] .sm-dropzone .sm-dz-actions { margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+/* The one action in the dropzone, so it carries its own weight rather than looking like a link. */
+[data-skill-market] .sm-dropzone .sm-dz-browse {
+  height: 40px; padding: 0 22px; font-size: 13.5px; border-radius: 10px;
+}
+[data-skill-market] .sm-dropzone .sm-dz-browse svg { width: 16px; height: 16px; }
+
+/* ── confirmation dialog ───────────────────────────────────────────── */
+[data-skill-market] .sm-confirm-layer { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; }
+[data-skill-market] .sm-confirm-scrim {
+  position: absolute; inset: 0; background: var(--sm-scrim);
+  backdrop-filter: blur(2px); animation: sm-fade .14s ease;
+}
+[data-skill-market] .sm-confirm {
+  position: relative; width: min(400px, calc(100% - 40px));
+  background: var(--sm-surface); border: 1px solid var(--sm-border);
+  border-radius: var(--sm-radius-lg); box-shadow: var(--sm-shadow-md);
+  padding: 20px; animation: sm-pop .16s cubic-bezier(.2, .9, .3, 1.1);
+}
+[data-skill-market] .sm-confirm-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+[data-skill-market] .sm-confirm-body { margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--sm-fg); }
+/* The concrete target, so the answer is informed rather than about "the skill" in the abstract. */
+[data-skill-market] .sm-confirm-detail {
+  margin-top: 10px; padding: 8px 10px; border-radius: 8px;
+  background: var(--sm-bg); border: 1px solid var(--sm-border);
+  font-size: 11.5px; color: var(--sm-muted); overflow-wrap: anywhere;
+}
+[data-skill-market] .sm-confirm-actions { margin-top: 18px; display: flex; justify-content: flex-end; gap: 9px; }
+[data-skill-market] .sm-btn-danger {
+  background: var(--sm-danger); border-color: var(--sm-danger); color: var(--sm-surface);
+}
+[data-skill-market] .sm-btn-danger:hover { background: color-mix(in oklch, var(--sm-danger) 86%, var(--sm-fg)); }
+[data-skill-market] .sm-btn-danger:focus-visible { outline: 2px solid var(--sm-danger-soft); outline-offset: 2px; }
+@keyframes sm-fade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes sm-pop { from { opacity: 0; transform: translateY(6px) scale(.98) } to { opacity: 1; transform: none } }
+
+/* ── inspector drawer ──────────────────────────────────────────────── */
+[data-skill-market] .sm-scrim {
+  position: absolute; inset: 0; z-index: 35; background: var(--sm-scrim);
+  opacity: 0; pointer-events: none; transition: opacity .22s ease;
+}
+[data-skill-market] .sm-scrim.show { opacity: 1; pointer-events: auto; }
+[data-skill-market] .sm-inspector {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 560px; max-width: 94%;
+  z-index: 40; background: var(--sm-surface); border-left: 1px solid var(--sm-border);
+  box-shadow: var(--sm-shadow-md);
+  transform: translateX(101%); transition: transform .24s cubic-bezier(.4, 0, .2, 1);
+  display: flex; flex-direction: column;
+}
+[data-skill-market] .sm-inspector.open { transform: none; }
+[data-skill-market] .sm-insp-head { padding: 20px 20px 0; }
+[data-skill-market] .sm-insp-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+[data-skill-market] .sm-insp-head h2 { font-size: 21px; letter-spacing: -0.02em; margin-top: 14px; }
+[data-skill-market] .sm-insp-pub {
+  display: flex; align-items: center; gap: 6px; color: var(--sm-muted);
+  font-size: 13px; margin-top: 5px; flex-wrap: wrap;
+}
+[data-skill-market] .sm-insp-pub .sm-verified svg { width: 14px; height: 14px; }
+[data-skill-market] .sm-dot-sep { opacity: .5; }
+[data-skill-market] .sm-insp-actions { display: flex; gap: 9px; margin-top: 16px; }
+[data-skill-market] .sm-insp-actions .sm-btn { flex: 1; justify-content: center; }
+[data-skill-market] .sm-insp-meta {
+  display: flex; gap: 14px; flex-wrap: wrap; margin-top: 13px;
+  font-family: var(--sm-font-mono); font-size: 11.5px; color: var(--sm-muted);
+}
+/* a stray backtick:  here */
+[data-skill-market] .sm-tabs {
+  display: flex; gap: 2px; padding: 14px 20px 0; border-bottom: 1px solid var(--sm-border);
+  /* The labels are nowrap, so a narrow drawer scrolls the strip. The scrollbar is hidden for the same
+ reason the view bar hides its own: a scrollbar ranged along the drawer's tab row reads as a layout
+ defect, and the strip still scrolls by wheel, trackpad and keyboard. */
+  position: sticky; top: 0; background: var(--sm-surface);
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+}
+[data-skill-market] .sm-tabs::-webkit-scrollbar { display: none; }
+[data-skill-market] .sm-tab {
+  padding: 9px 11px 11px; font-size: 13px; color: var(--sm-muted); font-weight: 500;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+  transition: color .13s ease, border-color .13s ease;
+}
+/* A tab that carries an icon, for the one whose subject the icon already means. Six tabs is enough
+   that the shield earns its place as a landmark; the others stay plain text. */
+[data-skill-market] .sm-tab-icon {
+  display: inline-flex; align-items: center; gap: 5px;
+}
+[data-skill-market] .sm-tab-icon svg { width: 13px; height: 13px; }
+/* The scan passed. Deliberately the **icon only**: the tab is named 安全扫描, so tinting its label
+   green would read as "safe scan" — a verdict on a scan that may not have passed. A green shield
+   beside neutral text says "this passed" without turning the tab's own name into a claim. */
+[data-skill-market] .sm-tab.sm-tab-safe svg { color: var(--sm-ok); }
+[data-skill-market] .sm-tab:hover { color: var(--sm-fg); }
+[data-skill-market] .sm-tab.active { color: var(--sm-fg); border-bottom-color: var(--sm-fg); }
+[data-skill-market] .sm-insp-body { flex: 1; min-height: 0; overflow-y: auto; padding: 20px; }
+[data-skill-market] .sm-insp-body h4 {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--sm-muted);
+  font-family: var(--sm-font-mono); font-weight: 500; margin: 22px 0 10px;
+}
+[data-skill-market] .sm-insp-body h4:first-child { margin-top: 0; }
+[data-skill-market] .sm-insp-body p { font-size: 13.5px; color: var(--sm-fg); line-height: 1.62; }
+[data-skill-market] .sm-insp-body p + p { margin-top: 10px; }
+[data-skill-market] .sm-body-note { color: var(--sm-muted); font-size: 12.5px; margin-bottom: 6px; }
+[data-skill-market] .sm-feat-list { display: flex; flex-direction: column; gap: 9px; padding: 0; margin: 0; }
+[data-skill-market] .sm-feat-list li { display: flex; gap: 9px; font-size: 13.5px; list-style: none; }
+[data-skill-market] .sm-feat-list li svg { width: 16px; height: 16px; color: var(--sm-ok); flex: 0 0 auto; margin-top: 3px; }
+
+/* ── rendered Markdown (a skill's own SKILL.md) ─────────────────────── */
+[data-skill-market] .sm-md { font-size: 13.5px; line-height: 1.66; color: var(--sm-fg); }
+[data-skill-market] .sm-md > * + * { margin-top: 10px; }
+[data-skill-market] .sm-md h3,
+[data-skill-market] .sm-md h4,
+[data-skill-market] .sm-md h5,
+[data-skill-market] .sm-md h6 { font-size: 13.5px; font-weight: 650; margin-top: 18px; }
+[data-skill-market] .sm-md ul { padding-left: 20px; }
+[data-skill-market] .sm-md li { list-style: disc; }
+[data-skill-market] .sm-md li + li { margin-top: 4px; }
+[data-skill-market] .sm-md code {
+  font-family: var(--sm-font-mono); font-size: 12px; padding: 1px 5px;
+  border-radius: 5px; background: var(--sm-bg); border: 1px solid var(--sm-border);
+}
+[data-skill-market] .sm-md pre {
+  background: var(--sm-bg); border: 1px solid var(--sm-border); border-radius: 9px;
+  padding: 11px 13px; overflow-x: auto;
+}
+[data-skill-market] .sm-md pre code { background: none; border: 0; padding: 0; font-size: 12px; line-height: 1.55; }
+[data-skill-market] .sm-md blockquote {
+  border-left: 3px solid var(--sm-accent-line); padding: 2px 0 2px 12px; color: var(--sm-muted);
+}
+/* GFM tables in the panel's own renderer — the host renderer brings its own styling. A skill document's
+   tables are wide, so the wrapper scrolls rather than squeezing the columns. */
+[data-skill-market] .sm-table-wrap { overflow-x: auto; margin-top: 10px; }
+[data-skill-market] .sm-table { border-collapse: collapse; font-size: 12.5px; min-width: 100%; }
+[data-skill-market] .sm-table th,
+[data-skill-market] .sm-table td {
+  border: 1px solid var(--sm-border); padding: 6px 10px; vertical-align: top;
+}
+[data-skill-market] .sm-table th { background: var(--sm-bg); font-weight: 650; text-align: left; }
+[data-skill-market] .sm-md-link { color: var(--sm-accent); text-decoration: underline; }
+/* A link to a neighbouring file of the same bundle, drawn by the panel's own renderer. When the preview can
+   follow it, it is a button and is coloured like one; when it cannot (the overview has no bundle at hand) it
+   stays plain text, because there is nowhere for it to go. */
+[data-skill-market] .sm-md-ref { text-align: left; }
+[data-skill-market] button.sm-md-ref { color: var(--sm-accent); }
+[data-skill-market] button.sm-md-ref:hover { text-decoration: underline; }
+
+/* ── file tree (flat upstream paths, drawn as a hierarchy) ──────────── */
+[data-skill-market] .sm-tree {
+  border: 1px solid var(--sm-border); border-radius: 10px; overflow: hidden;
+  background: var(--sm-bg); margin-top: 6px;
+}
+[data-skill-market] .sm-tree-row {
+  display: flex; align-items: center; gap: 7px; width: 100%;
+  padding: 5px 10px; font-size: 12.5px; color: var(--sm-fg);
+  background: none; border: 0; text-align: left; font: inherit;
+}
+[data-skill-market] .sm-tree-dir { cursor: pointer; font-weight: 600; }
+[data-skill-market] .sm-tree-dir:hover { background: var(--sm-accent-soft); }
+[data-skill-market] .sm-tree-row svg { flex: 0 0 auto; color: var(--sm-muted); }
+[data-skill-market] .sm-tree-dir svg:last-of-type { color: var(--sm-accent); }
+[data-skill-market] .sm-tree-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-skill-market] .sm-tree-file .sm-tree-name { font-family: var(--sm-font-mono); font-size: 12px; }
+[data-skill-market] .sm-tree-meta { color: var(--sm-muted); font-size: 11px; flex: 0 0 auto; }
+[data-skill-market] .sm-tree-ic { width: 13px; flex: 0 0 auto; }
+[data-skill-market] .sm-tree-file:hover { background: var(--sm-accent-soft); }
+
+/* ── file preview ───────────────────────────────────────────────────── */
+[data-skill-market] .sm-preview-layer {
+  position: absolute; inset: 0; z-index: 58; display: grid; place-items: center; padding: 22px;
+}
+[data-skill-market] .sm-preview-scrim {
+  position: absolute; inset: 0; background: var(--sm-scrim);
+  backdrop-filter: blur(2px); animation: sm-fade .14s ease;
+}
+/* The dialog gets the whole panel to itself; the drawer it was opened from stays behind it. */
+[data-skill-market] .sm-preview-dialog {
+  position: relative; display: flex; flex-direction: column; overflow: hidden;
+  width: min(1040px, 100%); height: min(760px, 100%);
+  background: var(--sm-surface); border: 1px solid var(--sm-border);
+  border-radius: var(--sm-radius-lg); box-shadow: var(--sm-shadow-md);
+  animation: sm-pop .16s cubic-bezier(.2, .9, .3, 1.1);
+}
+[data-skill-market] .sm-preview-head {
+  display: flex; align-items: center; gap: 10px; flex: 0 0 auto;
+  padding: 13px 16px; border-bottom: 1px solid var(--sm-border);
+}
+[data-skill-market] .sm-preview-head > svg { flex: 0 0 auto; }
+/* The name and the path are one line of text, so they share a baseline instead of each being centred in
+   its own line box: centring leaves the smaller path sitting a few pixels above the name's baseline. */
+[data-skill-market] .sm-preview-title {
+  display: flex; align-items: baseline; gap: 10px;
+  flex: 1 1 auto; min-width: 0;
+}
+[data-skill-market] .sm-preview-name { font-size: 13.5px; font-weight: 600; flex: 0 0 auto; }
+[data-skill-market] .sm-preview-path {
+  flex: 0 1 auto; min-width: 0; font-size: 11.5px; color: var(--sm-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+[data-skill-market] .sm-preview-body { flex: 1; min-height: 0; overflow: auto; padding: 18px 20px; }
+[data-skill-market] .sm-preview-foot {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 10px 16px; border-top: 1px solid var(--sm-border);
+  color: var(--sm-muted); font-size: 12px;
+}
+/* A narrow panel has no room to spare around a dialog, so it becomes a sheet. */
+@media (max-width: 920px) {
+  [data-skill-market] .sm-preview-layer { padding: 0; }
+  [data-skill-market] .sm-preview-dialog { width: 100%; height: 100%; border-radius: 0; border: 0; }
+}
+[data-skill-market] .sm-preview-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--sm-muted); margin: 0 0 6px;
+}
+[data-skill-market] .sm-preview-code {
+  background: var(--sm-bg); border: 1px solid var(--sm-border); border-radius: 10px;
+  padding: 12px 14px; overflow: auto;
+}
+[data-skill-market] .sm-preview-code code {
+  font-family: var(--sm-font-mono); font-size: 12px; line-height: 1.55;
+  white-space: pre; color: var(--sm-fg);
+}
+/* The host's code block brings its own frame and palette; this fits it inside the dialog and gives the block
+   a surface that separates it from the page. */
+[data-skill-market] .sm-preview-block {
+  border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--sm-border); background: var(--sm-bg);
+}
+/* Code colour, scoped to the panel.
+   The host's palette is tuned for prose, where a code sample is a side note between two sentences. In a file
+   preview the code *is* the content, and those tokens washed out against the block: the greys and the pale
+   blues read as plain text at 12px. Same hues, taken several steps deeper in light and brighter in dark, and
+   the block gets the panel's own surface so its edge is visible. */
+[data-skill-market] {
+  --shiki-background: var(--sm-bg);
+  --shiki-foreground: var(--sm-fg);
+  --shiki-token-constant: #0b5ed7;
+  --shiki-token-string: #116329;
+  --shiki-token-string-expression: #116329;
+  --shiki-token-comment: #5c6773;
+  --shiki-token-keyword: #bf3989;
+  --shiki-token-parameter: #bc4c00;
+  --shiki-token-function: #6639ba;
+  --shiki-token-punctuation: #3b444d;
+  --shiki-token-link: #0969da;
+}
+body[data-ds-dark-theme] [data-skill-market] {
+  --shiki-token-constant: #79c0ff;
+  --shiki-token-string: #7ee787;
+  --shiki-token-string-expression: #56d364;
+  --shiki-token-comment: #8b949e;
+  --shiki-token-keyword: #ff9bce;
+  --shiki-token-parameter: #ffa657;
+  --shiki-token-function: #d2a8ff;
+  --shiki-token-punctuation: #c9d1d9;
+  --shiki-token-link: #79c0ff;
+}
+/* Host markdown inside the drawer (the summary). Only the panel's typography is set here: tables,
+   headings and the rest come from the host's markdown styles, which are global and already themed. */
+[data-skill-market] .sm-prose { font-size: 13.5px; line-height: 1.62; color: var(--sm-fg); }
+[data-skill-market] .sm-prose > * + * { margin-top: 10px; }
+/* "svg { display: block }" above is right for this panel's icons — they are the only thing in their box.
+   Host markdown puts a glyph *inside* a run of text (an external link's globe, for one), so as a block it
+   took a line of its own and left the link stranded underneath. Matched by the stable part of the shell's
+   CSS-modules class name ('_markdown_…'), which is what the component actually emits. */
+[data-skill-market] [class*="markdown"] svg,
+[data-skill-market] .sm-prose svg,
+[data-skill-market] .sm-md svg,
+[data-skill-market] .sm-preview-body svg {
+  display: inline-block; vertical-align: -0.15em;
+}
+
+/* ── version history ────────────────────────────────────────────────── */
+[data-skill-market] .sm-versions { display: flex; flex-direction: column; gap: 0; }
+[data-skill-market] .sm-version-row {
+  display: flex; gap: 11px; align-items: flex-start;
+  padding: 11px 0; border-bottom: 1px solid var(--sm-border);
+}
+[data-skill-market] .sm-version-row:last-child { border-bottom: 0; }
+[data-skill-market] .sm-version-tag {
+  flex: 0 0 auto; min-width: 58px; font-size: 12px; font-weight: 650;
+  color: var(--sm-accent); background: var(--sm-accent-soft);
+  border-radius: 6px; padding: 3px 7px; text-align: center;
+}
+[data-skill-market] .sm-version-main { flex: 1; min-width: 0; }
+[data-skill-market] .sm-version-actions { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+[data-skill-market] .sm-version-log { font-size: 13px; line-height: 1.5; }
+[data-skill-market] .sm-version-date { font-size: 11px; color: var(--sm-muted); margin-top: 3px; }
+[data-skill-market] .sm-versions-toggle { margin-top: 11px; }
+
+[data-skill-market] .sm-perm { display: flex; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--sm-border); }
+[data-skill-market] .sm-perm:last-child { border-bottom: 0; }
+[data-skill-market] .sm-perm .sm-perm-ic {
+  width: 34px; height: 34px; flex: 0 0 auto; border-radius: 9px;
+  border: 1px solid var(--sm-border); display: grid; place-items: center; color: var(--sm-fg);
+}
+[data-skill-market] .sm-perm .sm-perm-ic svg { width: 17px; height: 17px; }
+[data-skill-market] .sm-perm .sm-perm-main { flex: 1; min-width: 0; }
+[data-skill-market] .sm-perm .sm-perm-title { display: flex; align-items: center; gap: 8px; }
+[data-skill-market] .sm-perm .sm-perm-title strong { font-size: 13.5px; font-weight: 600; }
+[data-skill-market] .sm-perm .sm-perm-desc { font-size: 12.5px; color: var(--sm-muted); margin-top: 3px; }
+[data-skill-market] .sm-risk {
+  font-family: var(--sm-font-mono); font-size: 10px; letter-spacing: .04em;
+  padding: 2px 7px; border-radius: 999px;
+}
+[data-skill-market] .sm-risk.low { color: var(--sm-muted); background: var(--sm-fg-soft); }
+[data-skill-market] .sm-risk.mid { color: var(--sm-warn); background: var(--sm-warn-soft); }
+[data-skill-market] .sm-risk.high { color: var(--sm-danger); background: var(--sm-danger-soft); }
+
+/* The counter strip in the drawer's header, between the skill's meta line and the tab strip. It was
+   the drawer's footer, then briefly the first item inside 概览 — where it scrolled away with the tab.
+   Here it is fixed: the counters are true whichever tab is open. */
+[data-skill-market] .sm-stat-strip {
+  display: flex; gap: 18px; flex-wrap: wrap; padding: 14px 20px;
+  font-family: var(--sm-font-mono); font-size: 11.5px; color: var(--sm-muted);
+  border-bottom: 1px solid var(--sm-border);
+}
+[data-skill-market] .sm-stat-strip .sm-f { display: flex; flex-direction: column; gap: 2px; }
+[data-skill-market] .sm-stat-strip .sm-f strong { font-size: 13px; color: var(--sm-fg); font-weight: 600; }
+
+/* ── toast ─────────────────────────────────────────────────────────── */
+[data-skill-market] .sm-toast-wrap {
+  position: absolute; bottom: 38px; left: 50%; transform: translateX(-50%);
+  z-index: 60; display: flex; flex-direction: column; gap: 8px; align-items: center;
+  pointer-events: none;
+}
+[data-skill-market] .sm-toast {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--sm-fg); color: var(--sm-surface);
+  border-radius: var(--sm-radius); padding: 10px 12px 10px 15px;
+  box-shadow: var(--sm-shadow-md); font-size: 13px; max-width: min(560px, 88%);
+  animation: sm-toast-in .2s ease; pointer-events: auto;
+}
+[data-skill-market] .sm-toast .sm-toast-undo { color: color-mix(in oklch, var(--sm-surface) 78%, transparent); font-weight: 600; }
+[data-skill-market] .sm-toast .sm-toast-undo:hover { color: var(--sm-surface); text-decoration: underline; }
+@keyframes sm-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ── responsive ────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  [data-skill-market] .sm-stat-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 920px) {
+  [data-skill-market] .sm-stat-cards { grid-template-columns: minmax(0, 1fr); }
+  /* The card grid keeps its fluid track; a 240px floor already lands on one
+ column at this width, so no override is needed here. */
+  [data-skill-market] .sm-inner { padding: 16px 16px 60px; }
+  [data-skill-market] .sm-fixed { padding: 14px 16px 0; }
+  [data-skill-market] .sm-topbar { padding: 0 14px; gap: 10px; }
+  [data-skill-market] .sm-topbar-actions .sm-btn-label { display: none; }
+  [data-skill-market] .sm-page-sub { display: none; }
+  [data-skill-market] .sm-list-row { grid-template-columns: 34px minmax(0, 1fr); }
+  [data-skill-market] .sm-list-row .sm-row-actions { grid-column: 1 / -1; justify-content: flex-end; }
+  [data-skill-market] .sm-page-title { font-size: 22px; }
+  [data-skill-market] .sm-inspector { width: 100%; max-width: 100%; border-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-skill-market] *, [data-skill-market] *::before, [data-skill-market] *::after {
+transition-duration: .001ms !important; animation-duration: .001ms !important;
+  }
+}
+`;
+var PATHS = {
+  "i-grid": "M3.5 3.5h7v7h-7zM13.5 3.5h7v7h-7zM3.5 13.5h7v7h-7zM13.5 13.5h7v7h-7z",
+  // A bolt, for "skill" as capacity rather than as a document: the sidebar entry needs one mark that
+  // reads at 18px, and the shapes already in use here (shield = security, sparkle = summary) are
+  // taken. Kept as one closed outline so it strokes like the rest of the table.
+  "i-skill": "M13.6 3 6.4 13.6h4.6l-1 7.4 7.2-10.6h-4.6z",
+  "i-search": "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-3.6-3.6",
+  "i-upload": "M12 15.5V4m0 0-3.6 3.6M12 4l3.6 3.6M4.5 15v2.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V15",
+  "i-bookmark": "M6.5 4h11v15.5l-5.5-3.6-5.5 3.6z",
+  "i-bookmark-check": "M6.5 4h11v15.5l-5.5-3.6-5.5 3.6zM9.5 9.5l1.8 1.8 3.3-3.7",
+  "i-bell": "M6.5 9.5a5.5 5.5 0 0 1 11 0c0 4.5 1.8 5.5 1.8 5.5H4.7s1.8-1 1.8-5.5zM10 18.5a2 2 0 0 0 4 0",
+  "i-download": "M12 4v10.5m0 0-3.6-3.6M12 14.5l3.6-3.6M5 19h14",
+  "i-x": "M6.5 6.5l11 11M17.5 6.5l-11 11",
+  "i-check": "M5 12.5l4.5 4.5L19 7",
+  "i-chevron-right": "M9.5 6l6 6-6 6",
+  "i-chevron-left": "M14.5 6l-6 6 6 6",
+  "i-chevron-down": "M6 9.5l6 6 6-6",
+  "i-refresh": "M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5V9H15",
+  "i-trash": "M5 7h14M9.5 7V5h5v2M7 7l.9 12a1 1 0 0 0 1 1h6.2a1 1 0 0 0 1-1L17 7",
+  "i-arrow-up-circle": "M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zM12 16V8.5M12 8.5 8.7 11.8M12 8.5l3.3 3.3",
+  "i-globe": "M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zM3.5 12h17M12 3.5c2.4 2.6 2.4 14 0 17M12 3.5c-2.4 2.6-2.4 14 0 17",
+  "i-folder": "M3.5 6.5a2 2 0 0 1 2-2h3.4l2 2.3h7.6a2 2 0 0 1 2 2v8.7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z",
+  "i-file": "M13.5 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5zM13.5 3v5.5H19M8.5 13h7M8.5 16.5h4.5",
+  "i-terminal": "M3.5 4.5h17v15h-17zM7.5 9.5l3 2.5-3 2.5M13 14.5h3.5",
+  "i-table": "M3.5 4.5h17v15h-17zM3.5 9.5h17M3.5 14.5h17M9.5 4.5v15M15 4.5v15",
+  "i-type": "M5 7V5.5h14V7M12 5.5v13M9.5 18.5h5",
+  "i-clipboard": "M6 4.5h12v16H6zM9 4.5V3.5h6v1M9.5 10.5h5M9.5 14h3.5",
+  "i-image": "M3.5 4.5h17v15h-17zM8.5 9.5a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2M4.5 17l4.5-4.5 3.5 3.5 3-3 4.5 4.5",
+  "i-sparkle": "M12 4l1.7 4.6L18.3 10l-4.6 1.7L12 16.3l-1.7-4.6L5.7 10l4.6-1.4zM18.5 15l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z",
+  "i-book": "M4.5 5.5a2 2 0 0 1 2-2h12v15h-12a2 2 0 0 0-2 2zM4.5 18.5a2 2 0 0 1 2-2h12",
+  "i-network": "M12 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5.5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM18.5 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM12 7v4.5m0 0-5.5 6m5.5-6 5.5 6",
+  // A document under a magnifier: reading information about something. This is the glyph for
+  // 读取技能元数据; the globe beside it means the skill's own network access.
+  "i-metadata": "M13.6 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5M13.6 3l5.4 5.4M13.6 3v5.4H19M16.4 13.2a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8M18.9 19.7l2.6 2.6",
+  // A shield with a tick, for the scan verdict. Distinct from `i-shield` (the author-verification
+  // mark), which is why this one carries the tick inside it.
+  "i-shield-check": "M12 3 5.5 5.8v5.4c0 4.3 2.8 7.2 6.5 8.6 3.7-1.4 6.5-4.3 6.5-8.6V5.8zM9.1 12.1l2 2 3.8-4.4",
+  "i-shield": "M12 3 5.5 5.8v5.4c0 4.3 2.8 7.2 6.5 8.6 3.7-1.4 6.5-4.3 6.5-8.6V5.8zM9.2 12l2.1 2.1 3.6-4.2",
+  "i-lock": "M5 10h14v9.5H5zM8 10V7.5a4 4 0 0 1 8 0V10",
+  "i-mail": "M3.5 5h17v14h-17zM4 7.5l8 5.2 8-5.2",
+  "i-database": "M12 3.2c4.14 0 7.5 1.25 7.5 2.8S16.14 8.8 12 8.8 4.5 7.55 4.5 6 7.86 3.2 12 3.2zM4.5 6v12c0 1.55 3.36 2.8 7.5 2.8s7.5-1.25 7.5-2.8V6M4.5 12c0 1.55 3.36 2.8 7.5 2.8s7.5-1.25 7.5-2.8",
+  "i-menu": "M4 7h16M4 12h16M4 17h16",
+  "i-link": "M10 13.5a3.5 3.5 0 0 0 5 0l3-3a3.54 3.54 0 0 0-5-5l-1.2 1.2M14 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.54 3.54 0 0 0 5 5l1.2-1.2",
+  "i-help": "M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zM9.6 9.6a2.5 2.5 0 1 1 3.6 2.3c-.7.35-1.1.85-1.1 1.5v.3M12 16.6a.7.7 0 1 0 0-1.4.7.7 0 0 0 0 1.4z"
+};
+function Icon({ name, size, className }) {
+  const d = PATHS[name] ?? PATHS["i-file"];
+  return h14("svg", {
+    className,
+    viewBox: "0 0 24 24",
+    width: size,
+    height: size,
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": true
+  }, h14("path", { d }));
+}
+function Verified({ className }) {
+  return h14(
+    "svg",
+    {
+      className,
+      viewBox: "0 0 24 24",
+      width: 14,
+      height: 14,
+      "aria-hidden": true
+    },
+    h14("path", {
+      fill: "currentColor",
+      d: "M12 2.6l2.3 1.7 2.8-.2 1 2.6 2.4 1.5-.9 2.7.6 2.8-2.5 1.2-1.5 2.4-2.8-.3L12 21.4l-2.4-1.9-2.8.3-1.5-2.4-2.5-1.2.6-2.8-.9-2.7 2.4-1.5 1-2.6 2.8.2z"
+    }),
+    h14("path", {
+      fill: "none",
+      stroke: "var(--sm-surface)",
+      strokeWidth: 1.9,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      d: "m8.7 12.2 2.2 2.2 4.4-4.6"
+    })
+  );
+}
+function Star({ size = 13 }) {
+  return h14("svg", {
+    viewBox: "0 0 24 24",
+    width: size,
+    height: size,
+    fill: "currentColor",
+    "aria-hidden": true
+  }, h14("path", {
+    d: "M12 3.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.2-4.1 5.8-.85z"
+  }));
+}
+function compact(value) {
+  const n = Number(value) || 0;
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1e5) return Math.round(n / 1e3) + "k";
+  if (n >= 1e3) return (n / 1e3).toFixed(n >= 1e4 ? 0 : 1).replace(/\.0$/, "") + "k";
+  return String(n);
+}
+function scoreToRating(score) {
+  const n = Number(score) || 0;
+  return (4 + Math.min(1, Math.max(0, n) / 1e5)).toFixed(1);
+}
+function formatScore(score) {
+  const n = Number(score);
+  if (Number.isFinite(n) === false) return "—";
+  return Math.round(n).toLocaleString("en-US");
+}
+function relativeTime(timestamp) {
+  const value = Number(timestamp);
+  if (Number.isFinite(value) === false || value < 9466848e5) return "";
+  const ms = Date.now() - value;
+  if (ms <= 0) return t2("time.justNow");
+  const minute = 6e4, hour = 60 * minute, day2 = 24 * hour;
+  if (ms < hour) return t2("time.minutes", { count: Math.max(1, Math.round(ms / minute)) });
+  if (ms < day2) return t2("time.hours", { count: Math.round(ms / hour) });
+  if (ms < 30 * day2) return t2("time.days", { count: Math.round(ms / day2) });
+  if (ms < 365 * day2) return t2("time.months", { count: Math.round(ms / (30 * day2)) });
+  return t2("time.years", { count: Math.round(ms / (365 * day2)) });
+}
+function publisherOf(skill) {
+  return skill.publisher || skill.handle || t2("misc.community");
+}
+function fail2(message, code) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+async function hostFetch(path, init) {
+  try {
+    return await fetch(path, init);
+  } catch (error) {
+    if (error?.name === "AbortError") throw error;
+    throw fail2(t2("err.offline"), "offline");
+  }
+}
+function hostFailure(body, status) {
+  if (status === 502 || status === 504) return fail2(t2("err.offline"), "offline");
+  return fail2(body?.error ?? t2("err.requestFailed", { status }), "upstream");
+}
+async function api(path, query, signal) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query ?? {})) {
+    if (value === void 0 || value === null || value === "") continue;
+    params.set(key, String(value));
+  }
+  const suffix = params.toString();
+  const response = await hostFetch(`${apiPath(path)}${suffix ? `?${suffix}` : ""}`, { signal });
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    throw fail2(t2("err.notJson", { status: response.status }), "notJson");
+  }
+  if (!response.ok) throw hostFailure(body, response.status);
+  return body;
+}
+async function apiPost(path, payload) {
+  const response = await hostFetch(apiPath(path), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload ?? {})
+  });
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    throw fail2(t2("err.notJson", { status: response.status }), "notJson");
+  }
+  if (!response.ok) throw hostFailure(body, response.status);
+  return body;
+}
+async function apiUpload(path, fileName, bytes) {
+  const response = await hostFetch(`${apiPath(path)}?name=${encodeURIComponent(fileName)}`, {
+    method: "POST",
+    headers: { "content-type": "application/octet-stream" },
+    body: bytes
+  });
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    throw fail2(t2("err.notJson", { status: response.status }), "notJson");
+  }
+  if (!response.ok) throw hostFailure(body, response.status);
+  return body;
+}
+function normalizeSkill(raw, categories) {
+  const namespace = raw?.namespace ?? {};
+  const slug = String(raw?.slug ?? "");
+  const handle = String(namespace.handle ?? raw?.ownerName ?? "");
+  const canonical = String(namespace.canonicalName ?? (handle && slug ? `@${handle}/${slug}` : slug));
+  const categoryKey = String(raw?.category ?? "");
+  const categoryName = translatedCategory(categoryKey, categories.find((c) => c.key === categoryKey)?.name ?? categoryKey ?? t2("overview.unknownCategory"));
+  const tags = Array.isArray(raw?.subCategories) ? raw.subCategories.map((entry) => String(entry?.name ?? "")).filter(Boolean).slice(0, 3) : [];
+  return {
+    id: canonical || slug || String(raw?.name ?? ""),
+    slug,
+    canonical,
+    name: String(raw?.name ?? slug ?? t2("overview.unknownSkill")),
+    publisher: String(namespace.displayName ?? "") || handle,
+    handle,
+    official: raw?.verified === true || raw?.source === "official" || raw?.source === "deepseek",
+    description: String(raw?.description_zh || raw?.description || "").replace(/\s+/g, " ").trim(),
+    version: String(raw?.version ?? ""),
+    installs: Number(raw?.downloads ?? 0),
+    stars: Number(raw?.stars ?? 0),
+    score: Number(raw?.score ?? 0),
+    rating: scoreToRating(raw?.score),
+    updatedAt: Number(raw?.updated_at ?? raw?.created_at ?? 0),
+    updated: relativeTime(raw?.updated_at ?? raw?.created_at),
+    createdAt: Number(raw?.created_at ?? 0),
+    iconUrl: typeof raw?.iconUrl === "string" ? raw.iconUrl : "",
+    homepage: publicSkillUrl(raw?.homepage, handle, slug),
+    category: categoryKey,
+    categoryName,
+    source: String(raw?.source ?? "community"),
+    tags: tags.length > 0 ? tags : [categoryName],
+    requiresApiKey: String(raw?.labels?.requires_api_key ?? "") === "true",
+    serviceized: raw?.isServiceized === true
+  };
+}
+async function loadSkills(options, categories) {
+  const { signal, ...query } = options;
+  const body = await api("/skills", query, signal);
+  const list = Array.isArray(body?.data?.skills) ? body.data.skills : [];
+  return {
+    skills: list.map((raw) => normalizeSkill(raw, categories)).filter((skill) => skill.id !== ""),
+    total: Number(body?.data?.total ?? list.length)
+  };
+}
+function emptyState() {
+  return {
+    view: "market",
+    category: "all",
+    sortBy: DEFAULT_SORT,
+    detailTab: "overview",
+    installed: [],
+    saved: [],
+    /**
+     * Full records for saved skills, keyed by id.
+     *
+     * The favorite list is a set of ids plus these records. Ids alone are not
+     * enough: resolving a favorite needs the skill's own fields (name, publisher,
+     * downloads, rating), the in-memory catalog is empty on a fresh page load, and
+     * a record for a skill is not otherwise retrievable — the upstream list
+     * endpoint has no id filter. Without this the 收藏 list renders empty until
+     * something happens to populate the catalog again.
+     */
+    savedSkills: {},
+    enabled: {}
+  };
+}
+function emptyPersisted() {
+  return {
+    category: "all",
+    installed: [],
+    saved: [],
+    savedSkills: {},
+    enabled: {},
+    /**
+     * Directories changed since the Host process started, and the start time they were
+     * recorded against. The time is what retires the advice: a set recorded before the
+     * running Host started is asking for a restart that has already happened.
+     */
+    pending: { since: 0, dirs: [] }
+  };
+}
+var panelDocument = emptyPersisted();
+var panelHydrated = false;
+var panelPersistenceBlocked = false;
+var panelHydration = null;
+var panelRevision = 0;
+var panelHostStartedAt = 0;
+var panelFlushed = "";
+var panelDirty = false;
+var panelFlushing = false;
+var panelLegacyClearPending = false;
+var panelListeners = /* @__PURE__ */ new Set();
+function sanitizePersisted(raw) {
+  const base = emptyPersisted();
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return base;
+  const strings = (value) => Array.isArray(value) ? value.filter((entry) => typeof entry === "string" && entry !== "") : [];
+  const records = (value) => value !== null && typeof value === "object" && Array.isArray(value) === false ? value : {};
+  const pending = records(raw.pending);
+  const saved = strings(raw.saved);
+  const named = new Set(saved);
+  const savedSkills = {};
+  for (const [id, record] of Object.entries(records(raw.savedSkills))) {
+    if (named.has(id)) savedSkills[id] = record;
+  }
+  return {
+    category: typeof raw.category === "string" && raw.category !== "" ? raw.category : base.category,
+    installed: Array.isArray(raw.installed) ? raw.installed : base.installed,
+    saved,
+    savedSkills,
+    enabled: records(raw.enabled),
+    pending: {
+      since: Number.isFinite(Number(pending.since)) ? Number(pending.since) : 0,
+      dirs: strings(pending.dirs)
+    }
+  };
+}
+function droppedOrphanRecords(raw, document2) {
+  const rawRecords = raw !== null && typeof raw === "object" && Array.isArray(raw) === false && raw.savedSkills !== null && typeof raw.savedSkills === "object" ? Object.keys(raw.savedSkills).length : 0;
+  return rawRecords > Object.keys(document2.savedSkills).length;
+}
+function mergeFavorites(base, other) {
+  let added = false;
+  const known = new Set(base.saved);
+  for (const id of other.saved) {
+    if (known.has(id)) continue;
+    base.saved.push(id);
+    known.add(id);
+    added = true;
+  }
+  for (const [id, record] of Object.entries(other.savedSkills)) {
+    if (base.savedSkills[id] !== void 0) continue;
+    base.savedSkills[id] = record;
+    added = true;
+  }
+  return added;
+}
+function notifyPanels() {
+  for (const listener of [...panelListeners]) {
+    try {
+      listener();
+    } catch {
+    }
+  }
+}
+function readLegacyStorage() {
+  const nothing = { state: null, pending: null };
+  try {
+    const storage = window.localStorage;
+    if (storage === null || storage === void 0) return nothing;
+    let state = null;
+    try {
+      const raw = storage.getItem(LEGACY_STATE_KEY);
+      if (raw !== null) state = JSON.parse(raw);
+    } catch {
+      state = null;
+    }
+    let pending = null;
+    try {
+      const raw = storage.getItem(LEGACY_PENDING_KEY);
+      const parsed = raw === null ? null : JSON.parse(raw);
+      pending = Array.isArray(parsed) ? parsed.filter((entry) => typeof entry === "string") : null;
+    } catch {
+      pending = null;
+    }
+    return { state, pending };
+  } catch {
+    return nothing;
+  }
+}
+function clearLegacyStorage() {
+  try {
+    window.localStorage.removeItem(LEGACY_STATE_KEY);
+    window.localStorage.removeItem(LEGACY_PENDING_KEY);
+  } catch {
+  }
+}
+function writeLegacyStorage(document2) {
+  try {
+    window.localStorage.setItem(LEGACY_STATE_KEY, JSON.stringify({
+      category: document2.category,
+      installed: document2.installed,
+      saved: document2.saved,
+      savedSkills: document2.savedSkills,
+      enabled: document2.enabled
+    }));
+    window.localStorage.setItem(LEGACY_PENDING_KEY, JSON.stringify(document2.pending.dirs));
+  } catch {
+  }
+}
+async function flushPanelState() {
+  if (panelHydrated === false) return;
+  if (panelPersistenceBlocked === true) return;
+  if (panelFlushing === true) {
+    panelDirty = true;
+    return;
+  }
+  panelFlushing = true;
+  try {
+    for (; ; ) {
+      const body = JSON.stringify(panelDocument);
+      if (body === panelFlushed) {
+        panelDirty = false;
+        break;
+      }
+      try {
+        const answer = await apiPost(STATE_PATH, panelDocument);
+        const revision = Number(answer?.revision ?? 0);
+        if (Number.isFinite(revision) && revision > 0) panelRevision = revision;
+        const startedAt = Number(answer?.harnessStartedAt ?? 0);
+        if (Number.isFinite(startedAt) && startedAt > 0) panelHostStartedAt = startedAt;
+      } catch {
+        writeLegacyStorage(panelDocument);
+        break;
+      }
+      if (JSON.stringify(panelDocument) === body) {
+        panelFlushed = body;
+        panelDirty = false;
+        if (panelLegacyClearPending === true) {
+          clearLegacyStorage();
+          panelLegacyClearPending = false;
+        }
+      }
+    }
+  } finally {
+    panelFlushing = false;
+  }
+}
+function requestPanelFlush() {
+  if (panelHydrated === false) return;
+  if (panelPersistenceBlocked === true) return;
+  panelDirty = true;
+  void flushPanelState();
+}
+async function hydratePanelState() {
+  let remote = null;
+  let answered = false;
+  try {
+    const answer = await api(STATE_PATH);
+    answered = true;
+    remote = answer?.state ?? null;
+    const revision = Number(answer?.revision ?? 0);
+    if (Number.isFinite(revision) && revision > 0) panelRevision = revision;
+    const startedAt = Number(answer?.harnessStartedAt ?? 0);
+    if (Number.isFinite(startedAt) && startedAt > 0) panelHostStartedAt = startedAt;
+  } catch {
+  }
+  if (answered === false) {
+    panelPersistenceBlocked = true;
+    panelHydrated = true;
+    return;
+  }
+  panelPersistenceBlocked = false;
+  let changed = false;
+  const legacy = readLegacyStorage();
+  if (remote === null && legacy.state !== null) {
+    panelDocument = sanitizePersisted(legacy.state);
+    changed = true;
+  } else {
+    panelDocument = sanitizePersisted(remote);
+    if (legacy.state !== null) {
+      const added = mergeFavorites(panelDocument, sanitizePersisted(legacy.state));
+      if (added === true) changed = true;
+    }
+    if (droppedOrphanRecords(remote, panelDocument) === true) changed = true;
+  }
+  if (panelDocument.pending.dirs.length === 0 && legacy.pending !== null && legacy.pending.length > 0) {
+    panelDocument.pending = { since: panelHostStartedAt, dirs: legacy.pending };
+    changed = true;
+  }
+  if (legacy.state !== null || legacy.pending !== null) panelLegacyClearPending = true;
+  if (panelHostStartedAt > 0 && (panelDocument.pending.since !== panelHostStartedAt || panelDocument.pending.dirs.length === 0)) {
+    if (panelDocument.pending.since !== 0 || panelDocument.pending.dirs.length > 0) changed = true;
+    panelDocument.pending = { since: 0, dirs: [] };
+  }
+  panelHydrated = true;
+  if (changed === true) {
+    await flushPanelState();
+  } else {
+    panelFlushed = JSON.stringify(panelDocument);
+    if (panelLegacyClearPending === true) {
+      clearLegacyStorage();
+      panelLegacyClearPending = false;
+    }
+  }
+  notifyPanels();
+}
+function panelStateReady() {
+  if (panelHydration === null) panelHydration = hydratePanelState();
+  return panelHydration;
+}
+async function syncPanelState() {
+  if (panelHydrated === false || panelDirty === true || panelFlushing === true) return false;
+  try {
+    const answer = await api(STATE_PATH);
+    panelPersistenceBlocked = false;
+    const revision = Number(answer?.revision ?? 0);
+    if (Number.isFinite(revision) === false || revision === panelRevision) return false;
+    panelRevision = revision;
+    const startedAt = Number(answer?.harnessStartedAt ?? 0);
+    if (Number.isFinite(startedAt) && startedAt > 0) panelHostStartedAt = startedAt;
+    const stored = answer?.state ?? null;
+    if (stored === null && panelRevision > 0) return false;
+    panelDocument = sanitizePersisted(stored);
+    if (panelHostStartedAt > 0 && panelDocument.pending.since !== panelHostStartedAt) {
+      panelDocument.pending = { since: 0, dirs: [] };
+    }
+    const cleaned = droppedOrphanRecords(stored, panelDocument);
+    panelFlushed = cleaned ? "" : JSON.stringify(panelDocument);
+    panelDirty = false;
+    if (cleaned === true) requestPanelFlush();
+    notifyPanels();
+    return true;
+  } catch {
+    return false;
+  }
+}
+function readState() {
+  return {
+    ...emptyState(),
+    category: panelDocument.category,
+    installed: panelDocument.installed,
+    saved: panelDocument.saved,
+    savedSkills: panelDocument.savedSkills,
+    enabled: panelDocument.enabled
+  };
+}
+function writeState(state) {
+  panelDocument = {
+    ...panelDocument,
+    category: typeof state.category === "string" && state.category !== "" ? state.category : panelDocument.category,
+    installed: Array.isArray(state.installed) ? state.installed : panelDocument.installed,
+    saved: Array.isArray(state.saved) ? state.saved : panelDocument.saved,
+    savedSkills: state.savedSkills !== null && typeof state.savedSkills === "object" && Array.isArray(state.savedSkills) === false ? state.savedSkills : panelDocument.savedSkills,
+    enabled: state.enabled !== null && typeof state.enabled === "object" && Array.isArray(state.enabled) === false ? state.enabled : panelDocument.enabled
+  };
+  requestPanelFlush();
+}
+function SkillIcon({ skill, large }) {
+  const [broken, setBroken] = React.useState(false);
+  const hue = CATEGORY_HUE[skill.category] ?? 240;
+  const plate = {
+    background: `color-mix(in oklch, oklch(64% 0.16 ${hue}) 14%, var(--sm-surface))`,
+    color: `oklch(46% 0.16 ${hue})`
+  };
+  const className = `sm-skill-icon${large ? " lg" : ""}${skill.iconUrl && !broken ? "" : " is-tinted"}`;
+  if (skill.iconUrl && !broken) {
+    return h14(
+      "span",
+      { className: "sm-skill-icon" + (large ? " lg" : "") },
+      h14("img", { src: skill.iconUrl, alt: "", loading: "lazy", onError: () => setBroken(true) })
+    );
+  }
+  return h14(
+    "span",
+    { className, style: plate },
+    h14(Icon, { name: CATEGORY_ICON[skill.category] ?? "i-file", size: large ? 26 : 20 })
+  );
+}
+function Stats({ skill }) {
+  return h14(
+    "div",
+    { className: "sm-stats sm-num" },
+    h14(
+      "span",
+      { className: "sm-stat", title: t2("card.downloads") },
+      h14(Icon, { name: "i-download", size: 13 }),
+      compact(skill.installs)
+    ),
+    h14("span", { className: "sm-sep" }, "·"),
+    h14("span", { className: "sm-rating", title: t2("card.ratingTitle") }, h14(Star, null), skill.rating),
+    h14("span", { className: "sm-sep" }, "·"),
+    h14(
+      "span",
+      { className: "sm-stat", title: t2("card.saves") },
+      h14(Icon, { name: "i-bookmark", size: 13 }),
+      compact(skill.stars)
+    )
+  );
+}
+function SaveButton({ saved, onToggle, name }) {
+  return h14("button", {
+    type: "button",
+    className: "sm-save-btn" + (saved ? " saved" : ""),
+    "aria-pressed": saved,
+    "aria-label": t2(saved ? "card.unsave" : "card.save", { name }),
+    title: t2(saved ? "card.unsaveShort" : "card.saveShort"),
+    onClick: (event) => {
+      event.stopPropagation();
+      onToggle();
+    }
+  }, h14(Icon, { name: "i-bookmark" }));
+}
+function SkillCard({
+  skill,
+  installed,
+  saved,
+  open,
+  installing,
+  installError,
+  // Only the local version is used here, for the button's tooltip; the update
+  // decision itself belongs to the 已安装 and 收藏 rows.
+  update = NO_UPDATE,
+  safety = "unknown",
+  onOpen,
+  onInstall,
+  onToggleSave
+}) {
+  return h14(
+    "article",
+    {
+      className: "sm-card sm-skill-card" + (open ? " is-open" : ""),
+      role: "button",
+      tabIndex: 0,
+      "aria-label": t2("card.view", { name: skill.name }),
+      onClick: onOpen,
+      onKeyDown: (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen();
+        }
+      }
+    },
+    h14(
+      "div",
+      { className: "sm-card-top" },
+      h14(SkillIcon, { skill }),
+      h14(
+        "div",
+        { className: "sm-card-title" },
+        h14(
+          "div",
+          { className: "sm-name-row" },
+          h14("h3", { className: "sm-skill-name", title: skill.name }, skill.name),
+          h14(SafetyBadge, { verdict: safety, compact: false }),
+          skill.official ? h14("span", { className: "sm-verified", title: t2("card.official") }, h14(Verified, null)) : null
+        ),
+        h14(
+          "span",
+          { className: "sm-publisher", title: skill.canonical || publisherOf(skill) },
+          publisherOf(skill)
+        )
+      )
+    ),
+    // Outside the header, pinned to the card's own corner. It is a per-card action, not part of
+    // the skill's identity, so it should not compete with the name for space in the title row —
+    // and `sm-card-title` carries right padding to keep a long name clear of it.
+    h14(SaveButton, { saved, name: skill.name, onToggle: onToggleSave }),
+    h14("p", { className: "sm-card-desc" }, skill.description || t2("card.noDescription")),
+    installError ? h14("p", { className: "sm-install-error", title: installError }, installError) : null,
+    h14("div", { className: "sm-tags" }, skill.tags.map((tag) => h14("span", { key: tag, className: "sm-tag" }, tag))),
+    h14(
+      "div",
+      { className: "sm-card-foot" },
+      h14(Stats, { skill }),
+      // Two states on a catalog card: 安装 when absent, 已安装 when present. The update
+      // affordance deliberately lives on 已安装 and 收藏 only — the catalog is for
+      // finding skills, and comparing releases belongs next to the install it would
+      // replace.
+      installed ? h14("button", {
+        type: "button",
+        className: "sm-install-btn installed",
+        title: update.local === "" ? t2("card.installed") : t2("misc.localVersion", { version: update.local }),
+        onClick: (event) => {
+          event.stopPropagation();
+          onOpen();
+        }
+      }, h14(Icon, { name: "i-check", size: 15 }), t2("card.installed")) : h14("button", {
+        type: "button",
+        className: "sm-install-btn" + (installing ? " is-busy" : ""),
+        disabled: installing,
+        "aria-busy": installing,
+        onClick: (event) => {
+          event.stopPropagation();
+          if (!installing) onInstall();
+        }
+      }, h14(Icon, { name: "i-download", size: 15 }), t2(installing ? "card.installing" : "card.install"))
+    )
+  );
+}
+var NO_UPDATE = Object.freeze({ available: false, local: "", latest: "" });
+function compareVersions(left, right) {
+  const a = String(left).split(".");
+  const b = String(right).split(".");
+  const length = Math.max(a.length, b.length);
+  for (let index = 0; index < length; index += 1) {
+    const x = a[index];
+    const y = b[index];
+    if (x === y) continue;
+    if (x === void 0) return -1;
+    if (y === void 0) return 1;
+    const nx = /^\d+$/.test(x) ? Number(x) : Number.NaN;
+    const ny = /^\d+$/.test(y) ? Number(y) : Number.NaN;
+    if (Number.isNaN(nx) || Number.isNaN(ny)) return 0;
+    return nx < ny ? -1 : 1;
+  }
+  return 0;
+}
+var tableCells = (line) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+var isTableDelimiter = (line) => line.includes("|") && /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(line);
+var tableAlignments = (line) => tableCells(line).map((cell) => {
+  const left = cell.startsWith(":");
+  const right = cell.endsWith(":");
+  if (left && right) return "center";
+  if (right) return "right";
+  return left ? "left" : void 0;
+});
+function Markdown({ source, onOpenFile }) {
+  const lines = String(source ?? "").replace(/\r\n?/g, "\n").split("\n");
+  const blocks = [];
+  let list = null;
+  let code = null;
+  let paragraph = [];
+  const flushParagraph = () => {
+    if (paragraph.length === 0) return;
+    blocks.push({ kind: "p", text: paragraph.join(" ") });
+    paragraph = [];
+  };
+  const flushList = () => {
+    if (list === null) return;
+    blocks.push(list);
+    list = null;
+  };
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (line.trim().startsWith("```")) {
+      if (code === null) {
+        flushParagraph();
+        flushList();
+        code = [];
+      } else {
+        blocks.push({ kind: "code", lines: code });
+        code = null;
+      }
+      continue;
+    }
+    if (code !== null) {
+      code.push(line);
+      continue;
+    }
+    if (line.includes("|") && index + 1 < lines.length && isTableDelimiter(lines[index + 1])) {
+      flushParagraph();
+      flushList();
+      const header = tableCells(line);
+      const align = tableAlignments(lines[index + 1]);
+      const rows2 = [];
+      index += 2;
+      while (index < lines.length && lines[index].trim() !== "" && lines[index].includes("|")) {
+        rows2.push(tableCells(lines[index]));
+        index += 1;
+      }
+      index -= 1;
+      blocks.push({ kind: "table", header, align, rows: rows2 });
+      continue;
+    }
+    const heading = line.match(/^(#{1,6})\s+(.*)$/);
+    if (heading !== null) {
+      flushParagraph();
+      flushList();
+      blocks.push({ kind: "h", level: heading[1].length, text: heading[2].trim() });
+      continue;
+    }
+    const bullet = line.match(/^\s*(?:[-*+]|\d+[.)])\s+(.*)$/);
+    if (bullet !== null) {
+      flushParagraph();
+      if (list === null) list = { kind: "ul", items: [] };
+      list.items.push(bullet[1].trim());
+      continue;
+    }
+    if (line.trim() === "") {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+    if (line.startsWith(">")) {
+      flushParagraph();
+      flushList();
+      blocks.push({ kind: "quote", text: line.replace(/^>\s?/, "").trim() });
+      continue;
+    }
+    flushList();
+    paragraph.push(line.trim());
+  }
+  if (code !== null) blocks.push({ kind: "code", lines: code });
+  flushParagraph();
+  flushList();
+  const inline = (text) => {
+    const out = [];
+    const pattern = /\*\*([^*]+)\*\*|`([^`]+)`|\[([^\]]+)\]\(([^)\s]+)\)/g;
+    let last = 0;
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      if (match.index > last) out.push(text.slice(last, match.index));
+      const href = match[4];
+      if (match[1] !== void 0) {
+        out.push(h14("strong", { key: `${match.index}b` }, match[1]));
+      } else if (match[2] !== void 0) {
+        out.push(h14("code", { key: `${match.index}c` }, match[2]));
+      } else if (/^https?:\/\//i.test(href)) {
+        out.push(h14("a", {
+          key: `${match.index}l`,
+          className: "sm-md-link",
+          href,
+          target: "_blank",
+          rel: "noreferrer noopener"
+        }, match[3]));
+      } else if (onOpenFile === void 0) {
+        out.push(h14("span", { key: `${match.index}l`, className: "sm-md-ref", title: href }, match[3]));
+      } else {
+        out.push(h14("button", {
+          key: `${match.index}l`,
+          type: "button",
+          className: "sm-md-ref",
+          title: href,
+          onClick: () => onOpenFile(href)
+        }, match[3]));
+      }
+      last = match.index + match[0].length;
+    }
+    if (last < text.length) out.push(text.slice(last));
+    return out;
+  };
+  return h14("div", { className: "sm-md" }, blocks.map((block, index) => {
+    const key = `${block.kind}-${String(index)}`;
+    if (block.kind === "h") return h14("h" + String(Math.min(block.level + 2, 6)), { key }, inline(block.text));
+    if (block.kind === "ul") return h14("ul", { key }, block.items.map((item, i) => h14("li", { key: i }, inline(item))));
+    if (block.kind === "code") return h14("pre", { key }, h14("code", null, block.lines.join("\n")));
+    if (block.kind === "quote") return h14("blockquote", { key }, inline(block.text));
+    if (block.kind === "table") {
+      const alignStyle = (column) => block.align[column] === void 0 ? void 0 : { textAlign: block.align[column] };
+      return h14(
+        "div",
+        { key, className: "sm-table-wrap" },
+        h14(
+          "table",
+          { className: "sm-table" },
+          h14(
+            "thead",
+            null,
+            h14("tr", null, block.header.map((cell, column) => h14("th", { key: column, style: alignStyle(column) }, inline(cell))))
+          ),
+          block.rows.length === 0 ? null : h14("tbody", null, block.rows.map((row, rowIndex) => h14(
+            "tr",
+            { key: rowIndex },
+            block.header.map((_, column) => h14("td", { key: column, style: alignStyle(column) }, inline(row[column] ?? "")))
+          )))
+        )
+      );
+    }
+    return h14("p", { key }, inline(block.text));
+  }));
+}
+function FileTree({ nodes, depth = 0, onOpen }) {
+  const [closed, setClosed] = React.useState(() => new Set(nodes.filter((node) => node.kind === "dir").map((node) => node.path)));
+  return h14("div", { className: "sm-tree" }, nodes.map((node) => {
+    const isClosed = closed.has(node.path);
+    const toggle = () => {
+      setClosed((current) => {
+        const next = new Set(current);
+        if (next.has(node.path)) next.delete(node.path);
+        else next.add(node.path);
+        return next;
+      });
+    };
+    if (node.kind === "dir") {
+      return h14(
+        "div",
+        { key: node.path, className: "sm-tree-group" },
+        h14(
+          "button",
+          {
+            type: "button",
+            className: "sm-tree-row sm-tree-dir",
+            style: { paddingLeft: `${String(8 + depth * 16)}px` },
+            "aria-expanded": !isClosed,
+            onClick: toggle
+          },
+          h14(Icon, { name: isClosed ? "i-chevron-right" : "i-chevron-down", size: 13 }),
+          h14(Icon, { name: "i-folder", size: 14 }),
+          h14("span", { className: "sm-tree-name" }, node.name),
+          h14(
+            "span",
+            { className: "sm-num sm-tree-meta" },
+            t2("files.nodeSummary", { files: node.files, size: humanSize(node.bytes) })
+          )
+        ),
+        isClosed ? null : h14(FileTree, { nodes: node.children, depth: depth + 1, onOpen })
+      );
+    }
+    return h14(
+      "button",
+      {
+        key: node.path,
+        type: "button",
+        className: "sm-tree-row sm-tree-file",
+        style: { paddingLeft: `${String(8 + depth * 16)}px` },
+        title: t2("files.nodeTitle", { path: node.path }),
+        onClick: () => onOpen?.(node.path)
+      },
+      h14("span", { className: "sm-tree-ic" }),
+      h14(Icon, { name: "i-file", size: 14 }),
+      h14("span", { className: "sm-tree-name" }, node.name),
+      h14("span", { className: "sm-num sm-tree-meta" }, humanSize(node.size))
+    );
+  }));
+}
+function VersionHistory({ versions, installedVersion, onInstall, busy }) {
+  const [expanded, setExpanded] = React.useState(false);
+  const shown = expanded ? versions : versions.slice(0, 3);
+  const hidden = versions.length - shown.length;
+  return h14(
+    React.Fragment,
+    null,
+    h14("div", { className: "sm-versions" }, shown.map((entry, index) => {
+      const version = String(entry?.version ?? "");
+      const isInstalled = version !== "" && version === installedVersion;
+      return h14(
+        "div",
+        {
+          key: String(entry?.versionId ?? entry?.version ?? index),
+          className: "sm-version-row"
+        },
+        h14("span", { className: "sm-version-tag sm-num" }, "v" + (version || "—")),
+        h14(
+          "div",
+          { className: "sm-version-main" },
+          h14("div", { className: "sm-version-log" }, String(entry?.changelog ?? "") || t2("versions.noChangelog")),
+          h14(
+            "div",
+            { className: "sm-version-date sm-num" },
+            new Date(Number(entry?.createdAt ?? 0) || Date.now()).toLocaleString("zh-CN")
+          )
+        ),
+        h14(
+          "div",
+          { className: "sm-version-actions" },
+          index === 0 ? h14("span", { className: "sm-badge plain" }, t2("versions.latest")) : null,
+          isInstalled ? h14("span", { className: "sm-badge plain" }, t2("card.installed")) : h14("button", {
+            type: "button",
+            className: "sm-btn sm-btn-secondary sm-btn-sm",
+            disabled: busy,
+            onClick: () => onInstall(version)
+          }, h14(Icon, { name: "i-download", size: 14 }), t2("card.install"))
+        )
+      );
+    })),
+    versions.length > 3 ? h14(
+      "button",
+      {
+        type: "button",
+        className: "sm-btn sm-btn-secondary sm-btn-sm sm-versions-toggle",
+        "aria-expanded": expanded,
+        onClick: () => setExpanded((current) => !current)
+      },
+      h14(Icon, { name: expanded ? "i-chevron-down" : "i-chevron-right", size: 14 }),
+      expanded ? t2("versions.collapse") : t2("versions.expand", { count: hidden })
+    ) : null
+  );
+}
+function SkeletonCard() {
+  return h14(
+    "div",
+    { className: "sm-skeleton", "aria-hidden": true },
+    h14(
+      "div",
+      { className: "sm-sk-head" },
+      h14("div", { className: "sm-sk-plate" }),
+      h14(
+        "div",
+        { className: "sm-sk-lines" },
+        h14("div", { className: "sm-sk-line", style: { width: "58%" } }),
+        h14("div", { className: "sm-sk-line", style: { width: "34%" } })
+      )
+    ),
+    h14("div", { className: "sm-sk-line", style: { width: "100%" } }),
+    h14("div", { className: "sm-sk-line", style: { width: "82%" } })
+  );
+}
+function EmptyState({ icon: icon2, title, body, error, children }) {
+  return h14(
+    "div",
+    { className: "sm-empty" + (error ? " is-error" : "") },
+    h14("span", { className: "sm-empty-mark" }, h14(Icon, { name: icon2, size: 22 })),
+    h14("h3", null, title),
+    body ? h14("p", null, body) : null,
+    children ? h14("div", { className: "sm-empty-actions" }, children) : null
+  );
+}
+function Switch({ checked, label, onChange }) {
+  return h14(
+    "label",
+    { className: "sm-switch", title: t2("installed.toggleLabel") },
+    h14("input", {
+      type: "checkbox",
+      checked,
+      "aria-label": label,
+      onChange: (event) => onChange(event.target.checked)
+    }),
+    h14("span", { className: "sm-track" }),
+    h14("span", { className: "sm-thumb" })
+  );
+}
+function SkillMarketPanel(props) {
+  const store = React.useMemo(() => readState(), []);
+  const [view, setView] = React.useState(store.view);
+  const [category, setCategory] = React.useState(store.category);
+  const [sortBy, setSortBy] = React.useState(store.sortBy);
+  const [query, setQuery] = React.useState("");
+  const [debouncedQuery, setDebouncedQuery] = React.useState("");
+  const [selected, setSelected] = React.useState(null);
+  const [detailTab, setDetailTab] = React.useState(store.detailTab);
+  const [details, setDetails] = React.useState({});
+  const [security, setSecurity] = React.useState({});
+  const securityRequests = React.useRef(/* @__PURE__ */ new Set());
+  const [preview, setPreview] = React.useState(null);
+  const [previewTrail, setPreviewTrail] = React.useState([]);
+  const [previews, setPreviews] = React.useState({});
+  const [installed, setInstalled] = React.useState(store.installed);
+  const [saved, setSaved] = React.useState(store.saved);
+  const [savedSkills, setSavedSkills] = React.useState(store.savedSkills);
+  const [enabled, setEnabled] = React.useState(store.enabled);
+  const imported = React.useMemo(
+    () => installed.filter((entry) => entry.origin === "local" || entry.origin === "manual"),
+    [installed]
+  );
+  const [importProgress, setImportProgress] = React.useState(null);
+  const [confirmRequest, setConfirmRequest] = React.useState(null);
+  const [catalog, setCatalog] = React.useState({ skills: [], total: 0 });
+  const [status, setStatus] = React.useState("loading");
+  const [failure, setFailure] = React.useState("");
+  const [categories, setCategories] = React.useState(FALLBACK_CATEGORIES);
+  const [categoriesRev, setCategoriesRev] = React.useState(-1);
+  const [toast, setToast] = React.useState(null);
+  const [dragOver, setDragOver] = React.useState(false);
+  const [pendingRestart, setPendingRestart] = React.useState(() => readPending());
+  const [reloadNonce, setReloadNonce] = React.useState(0);
+  const [installState, setInstallState] = React.useState({ kind: "idle" });
+  const contentRef = React.useRef(null);
+  const searchRef = React.useRef(null);
+  const fileRef = React.useRef(null);
+  const toastTimer = React.useRef(null);
+  const installBusy = React.useRef(false);
+  const seen = React.useRef(/* @__PURE__ */ new Map());
+  const categoriesRef = React.useRef(categories);
+  categoriesRef.current = categories;
+  const remember = React.useCallback((list) => {
+    for (const skill of list) seen.current.set(skill.id, skill);
+  }, []);
+  React.useEffect(() => {
+    writeState({ category, sortBy, installed, saved, savedSkills, enabled });
+  }, [category, sortBy, installed, saved, savedSkills, enabled]);
+  React.useEffect(() => {
+    const controller = new AbortController();
+    panelStateReady().then(() => api("installed", void 0, controller.signal)).then((body) => {
+      const hostRows = Array.isArray(body?.skills) ? body.skills : [];
+      setInstalled((current) => {
+        const known = new Set(current.map((entry) => String(entry.id)));
+        const fromHost = hostRows.map((host) => {
+          const directoryName = String(host.directoryName ?? String(host.directory ?? "").split(/[\\/]/).pop());
+          const previous = current.find((entry) => entry.directoryName === directoryName);
+          const [directoryHandle, ...directorySlugParts] = directoryName.split("--");
+          const handle = String(host.handle ?? "").trim() || directoryHandle;
+          const slug = String(host.slug ?? "").trim() || directorySlugParts.join("--");
+          return {
+            id: `@${handle}/${slug}`,
+            // The Host's answer wins for the time too: it reports the recorded install
+            // time, or the directory's mtime when there is no record. Falling back to 0
+            // here is what produced "安装于 57 年前", so an absent value stays absent.
+            installedAt: Number(host.installedAt ?? 0) || Number(previous?.installedAt ?? 0) || 0,
+            name: host.name,
+            version: host.version || "",
+            latestVersion: host.latestVersion ?? "",
+            directory: host.directory,
+            directoryName,
+            registeredAs: host.name,
+            handle,
+            slug,
+            origin: host.origin ?? "market",
+            // The Host's own answer for whether it is on, used whenever this browser has no
+            // recorded choice. Guessing from the ledger made a skill that is plainly in the
+            // skill root show as 已停用.
+            enabled: host.enabled !== false,
+            files: host.files,
+            bytes: host.bytes
+          };
+        });
+        const hostIds = new Set(fromHost.map((entry) => entry.id));
+        const orphans = current.filter((entry) => hostIds.has(String(entry.id)) === false && String(entry.id).startsWith("local-"));
+        return [...fromHost, ...orphans];
+      });
+      setEnabled(Object.fromEntries(hostRows.map((host) => {
+        const directoryName = String(host.directoryName ?? String(host.directory ?? "").split(/[\\/]/).pop());
+        return [directoryName, host.enabled !== false];
+      })));
+    }).catch(() => {
+    });
+    return () => controller.abort();
+  }, [reloadNonce]);
+  React.useEffect(() => {
+    for (const [id, record] of Object.entries(savedSkills)) {
+      if (seen.current.has(id) === false) seen.current.set(id, record);
+    }
+  }, []);
+  React.useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query), 300);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+  React.useEffect(() => {
+    if (selected === null) return void 0;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape" && preview === null) setSelected(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selected, preview]);
+  React.useEffect(() => {
+    const controller = new AbortController();
+    api("/categories", void 0, controller.signal).then((body) => {
+      const items = Array.isArray(body?.items) ? body.items : [];
+      const list = items.filter((item) => item?.active !== false && Number(item?.level ?? 1) === 1).filter((item) => HIDDEN_CATEGORIES.has(String(item?.key)) === false).sort((a, b) => Number(a?.sortOrder ?? 0) - Number(b?.sortOrder ?? 0)).map((item) => ({ key: String(item.key), name: String(item.name || item.key) }));
+      if (list.length > 0) setCategories(list);
+      setCategoriesRev((current) => current < 0 ? 0 : current + 1);
+    }).catch(() => {
+      setCategoriesRev((current) => current < 0 ? 0 : current);
+    });
+    return () => controller.abort();
+  }, []);
+  React.useEffect(() => {
+    if (categoriesRev < 0) return void 0;
+    const controller = new AbortController();
+    api("category-counts", void 0, controller.signal).then((body) => {
+      const counts2 = body?.counts;
+      if (counts2 !== null && typeof counts2 === "object") {
+        const clean = {};
+        for (const [key, value] of Object.entries(counts2)) {
+          if (Number.isFinite(Number(value))) clean[key] = Number(value);
+        }
+        setCategoryCounts(clean);
+      }
+    }).catch(() => {
+    });
+    return () => controller.abort();
+  }, [categoriesRev]);
+  const catalogQuery = React.useMemo(() => ({
+    sortBy,
+    keyword: debouncedQuery.trim(),
+    category: category === "all" ? "" : category
+  }), [sortBy, debouncedQuery, category]);
+  const PAGE_SIZE = 60;
+  const SECURITY_CONCURRENCY = 6;
+  const [pageCount, setPageCount] = React.useState(0);
+  const [hasMore, setHasMore] = React.useState(false);
+  const [loadingMore, setLoadingMore] = React.useState(false);
+  const loadingMoreRef = React.useRef(false);
+  const sentinelRef = React.useRef(null);
+  React.useEffect(() => {
+    if (categoriesRev < 0) return void 0;
+    const controller = new AbortController();
+    setStatus("loading");
+    setFailure("");
+    loadSkills({ page: 1, pageSize: PAGE_SIZE, ...catalogQuery, signal: controller.signal }, categoriesRef.current).then((page) => {
+      remember(page.skills);
+      setCatalog(page);
+      setPageCount(1);
+      setHasMore(page.skills.length > 0 && page.skills.length < page.total);
+      setStatus("ready");
+    }).catch((error) => {
+      if (error?.name === "AbortError") return;
+      setFailure(error instanceof Error ? error.message : String(error));
+      setStatus("error");
+    });
+    return () => controller.abort();
+  }, [catalogQuery, categoriesRev, remember, reloadNonce]);
+  const loadMore = React.useCallback(async () => {
+    if (loadingMoreRef.current || hasMore === false || status !== "ready") return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    const nextPage = pageCount + 1;
+    const controller = new AbortController();
+    try {
+      const page = await loadSkills(
+        { page: nextPage, pageSize: PAGE_SIZE, ...catalogQuery, signal: controller.signal },
+        categoriesRef.current
+      );
+      if (page.skills.length === 0) {
+        setHasMore(false);
+        return;
+      }
+      remember(page.skills);
+      setCatalog((current) => {
+        const seenIds = new Set(current.skills.map((skill) => skill.id));
+        const fresh = page.skills.filter((skill) => seenIds.has(skill.id) === false);
+        return { skills: [...current.skills, ...fresh], total: page.total };
+      });
+      setPageCount(nextPage);
+      setHasMore(page.skills.length > 0 && nextPage * PAGE_SIZE < page.total);
+    } catch {
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  }, [catalogQuery, hasMore, pageCount, remember, status]);
+  React.useEffect(() => {
+    const node = sentinelRef.current;
+    if (node === null || typeof window.IntersectionObserver !== "function") return void 0;
+    const observer = new window.IntersectionObserver((entries2) => {
+      if (entries2.some((entry) => entry.isIntersecting)) void loadMore();
+    }, { rootMargin: "600px 0px" });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [loadMore, hasMore, pageCount]);
+  React.useEffect(() => {
+    let live = true;
+    const adopt = () => {
+      if (live === false) return;
+      const next = readState();
+      setCategory(next.category);
+      setInstalled(next.installed);
+      setSaved(next.saved);
+      setSavedSkills(next.savedSkills);
+      setEnabled(next.enabled);
+      setPendingRestart(readPending());
+    };
+    panelListeners.add(adopt);
+    adopt();
+    const onFocus = () => {
+      void syncPanelState();
+    };
+    window.addEventListener("focus", onFocus);
+    const timer = window.setInterval(() => {
+      void syncPanelState();
+    }, PANEL_SYNC_INTERVAL_MS);
+    return () => {
+      live = false;
+      panelListeners.delete(adopt);
+      window.removeEventListener("focus", onFocus);
+      window.clearInterval(timer);
+    };
+  }, []);
+  React.useEffect(() => {
+    setDetailTab("overview");
+    setPreview(null);
+    setPreviewTrail([]);
+  }, [selected]);
+  React.useEffect(() => {
+    if (contentRef.current !== null) contentRef.current.scrollTop = 0;
+  }, [category, sortBy, debouncedQuery]);
+  const notify = React.useCallback((message, undo) => {
+    setToast({ id: Date.now(), message, undo: typeof undo === "function" ? undo : null });
+    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 4200);
+  }, []);
+  React.useEffect(() => () => {
+    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
+  }, []);
+  const installedIds = React.useMemo(() => new Set(installed.map((entry) => entry.id)), [installed]);
+  const savedIds = React.useMemo(() => new Set(saved), [saved]);
+  const findSkill = React.useCallback((id) => seen.current.get(id) ?? null, []);
+  const selectedSkill = selected === null ? null : findSkill(selected);
+  const isEnabled = React.useCallback((entry) => {
+    const key = String(entry?.directoryName ?? entry?.id ?? "");
+    const chosen = enabled[key];
+    if (chosen !== void 0) return chosen !== false;
+    return entry?.enabled !== false;
+  }, [enabled]);
+  const markPending = React.useCallback((directoryName) => {
+    if (directoryName === "") return;
+    setPendingRestart((current) => {
+      const next = new Set(current);
+      next.add(directoryName);
+      writePending(next);
+      return next;
+    });
+  }, []);
+  const setSkillEnabled = React.useCallback(async (skill, entry, next) => {
+    const directory = String(entry?.directory ?? "").split(/[\\/]/).pop();
+    const key = String(entry?.directoryName ?? skill?.id ?? "");
+    if (directory === "") {
+      setEnabled((current) => ({ ...current, [key]: next }));
+      return;
+    }
+    setEnabled((current) => ({ ...current, [key]: next }));
+    try {
+      const body = await apiPost("enabled", { directory, enabled: next });
+      const reported = Array.isArray(body?.installed?.skills) ? body.installed.skills : [];
+      const match = reported.find((row) => String(row.directory).endsWith(directory));
+      if (match !== void 0) {
+        setEnabled((current) => ({ ...current, [key]: match.enabled === true }));
+      }
+      markPending(directory);
+      notify(t2(next ? "action.enableRestart" : "action.disableRestart", { name: skill.name }));
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      setEnabled((current) => ({ ...current, [key]: !next }));
+      notify(t2("action.toggleFailed", { name: skill.name, reason }));
+    }
+  }, [markPending, notify]);
+  const install = React.useCallback(async (skill, version = "") => {
+    seen.current.set(skill.id, skill);
+    if (installBusy.current) return;
+    installBusy.current = true;
+    setInstallState({ kind: "installing", id: skill.id, name: skill.name });
+    notify(t2(version === "" ? "action.installingNamed" : "action.installingVersion", { name: skill.name, version }));
+    try {
+      const body = await apiPost("install", {
+        slug: skill.slug,
+        namespace: skill.handle,
+        name: skill.name,
+        version: version === "" ? skill.version : version
+      });
+      const result = body?.install;
+      if (result === void 0 || typeof result.directory !== "string") {
+        throw new Error(t2("action.noInstallResult"));
+      }
+      const installedVersion = result.version || (version === "" ? skill.version : version);
+      setInstalled((current) => {
+        const directoryName = String(result.directory).split(/[\\/]/).pop();
+        const row = {
+          id: skill.id,
+          installedAt: Date.now(),
+          version: installedVersion,
+          directory: result.directory,
+          directoryName,
+          registeredAs: result.name,
+          handle: skill.handle,
+          slug: skill.slug,
+          origin: "market",
+          files: result.files,
+          bytes: result.bytes
+        };
+        const existing = current.findIndex((entry) => entry.id === skill.id);
+        if (existing < 0) return [row, ...current];
+        const next = [...current];
+        next[existing] = row;
+        return next;
+      });
+      const becameEnabled = result.enabled !== false;
+      const installedKey = String(result.directory).split(/[\\/]/).pop();
+      setEnabled((current) => ({ ...current, [installedKey]: becameEnabled }));
+      setInstallState({ kind: "idle" });
+      markPending(String(result.directory).split(/[\\/]/).pop());
+      notify(becameEnabled ? t2("action.installedDetail", { name: skill.name, version: installedVersion, files: result.files, directory: result.directory }) : t2("action.updatedParked", { name: skill.name, version: installedVersion, files: result.files }));
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      setInstallState({ kind: "failed", id: skill.id, name: skill.name, reason });
+      notify(t2("action.installFailed", { name: skill.name, reason }));
+    } finally {
+      installBusy.current = false;
+    }
+  }, [notify]);
+  const installedEntryFor = React.useCallback((skill) => {
+    const handle = String(skill?.handle ?? "");
+    const slug = String(skill?.slug ?? "");
+    const directoryName = handle !== "" && slug !== "" ? `${handle}--${slug}` : "";
+    const canonical = (value) => String(value ?? "").replace(/_/g, "-");
+    return installed.find((row) => directoryName !== "" && canonical(row.directoryName) === canonical(directoryName) || row.id === skill?.id);
+  }, [installed]);
+  const uninstallConfirmed = React.useCallback(async (skill) => {
+    const entry = installedEntryFor(skill);
+    const directory = entry?.directory;
+    const directoryName = String(directory ?? entry?.directoryName ?? "").split(/[\\/]/).pop();
+    let answer;
+    if (directory !== void 0) {
+      try {
+        answer = await apiPost("uninstall", { name: directoryName });
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        notify(t2("action.uninstallFailed", { name: skill.name, reason }));
+        return;
+      }
+    }
+    const rowId = entry?.id ?? skill.id;
+    setInstalled((current) => current.filter((row) => row.id !== rowId));
+    if (selected === rowId) setSelected(null);
+    markPending(directoryName);
+    notify(t2(answer?.uninstall?.wasDisabled === true ? "action.removeFromDisabled" : "action.uninstalledRestart", { name: skill.name }));
+  }, [installedEntryFor, markPending, notify, selected]);
+  const uninstall = React.useCallback((skill) => {
+    const entry = installedEntryFor(skill);
+    setConfirmRequest({
+      title: t2("action.uninstalling", { name: skill.name }),
+      body: t2("action.uninstallBody"),
+      detail: entry?.directory === void 0 ? "" : `${String(entry.directory).split(/[\\/]/).pop()}${entry.files ? `（${String(entry.files)} 个文件）` : ""}`,
+      confirmLabel: t2("action.uninstall"),
+      danger: true,
+      onConfirm: () => {
+        void uninstallConfirmed(skill);
+      }
+    });
+  }, [installedEntryFor, uninstallConfirmed]);
+  const toggleSave = React.useCallback((skill) => {
+    setSaved((current) => {
+      const has = current.includes(skill.id);
+      notify(t2(has ? "action.unsavedNamed" : "action.savedNamed", { name: skill.name }));
+      return has ? current.filter((id) => id !== skill.id) : [skill.id, ...current];
+    });
+    setSavedSkills((current) => {
+      if (current[skill.id] !== void 0) {
+        const { [skill.id]: removed, ...rest } = current;
+        return rest;
+      }
+      return { ...current, [skill.id]: skill };
+    });
+  }, [notify]);
+  const isLocalSkill = React.useCallback((skill, origin) => {
+    const known = String(origin ?? skill?.origin ?? "");
+    if (known !== "") return known !== "market";
+    return String(skill?.id ?? "").startsWith("@local/") || String(skill?.handle ?? "") === "local";
+  }, []);
+  const openDetail = React.useCallback((skill, origin) => {
+    if (isLocalSkill(skill, origin)) return;
+    seen.current.set(skill.id, skill);
+    setSelected(skill.id);
+  }, [isLocalSkill]);
+  const loadDetail = React.useCallback(async (skill, options = {}) => {
+    const id = String(skill?.id ?? "");
+    const slug = String(skill?.slug ?? "");
+    const namespace = String(skill?.handle ?? "");
+    if (id === "") return;
+    if (slug === "" || namespace === "" || id.startsWith("local-")) {
+      setDetails((current) => ({ ...current, [id]: { kind: "unavailable" } }));
+      return;
+    }
+    setDetails((current) => ({ ...current, [id]: { kind: "loading" } }));
+    const query2 = { slug, namespace };
+    try {
+      const [detail, versions, files] = await Promise.all([
+        api("skill-detail", query2),
+        api("skill-versions", query2).catch(() => null),
+        api("skill-files", query2).catch(() => null)
+      ]);
+      const fileList = Array.isArray(files?.files) ? files.files : [];
+      setDetails((current) => ({
+        ...current,
+        [id]: {
+          kind: "ready",
+          summary: String(detail?.skill?.summary_zh || detail?.skill?.summary || ""),
+          latestVersion: String(detail?.latestVersion?.version ?? ""),
+          latestChangelog: String(detail?.latestVersion?.changelog ?? ""),
+          latestAt: Number(detail?.latestVersion?.createdAt ?? 0),
+          sourceUrl: publicSkillUrl(detail?.skill?.sourceUrl, namespace, slug),
+          versions: Array.isArray(versions?.versions) ? versions.versions : [],
+          files: fileList,
+          filesVersion: String(files?.version ?? "")
+        }
+      }));
+    } catch (error) {
+      setDetails((current) => ({
+        ...current,
+        [id]: { kind: "failed", reason: error instanceof Error ? error.message : String(error) }
+      }));
+      if (options.quiet !== true) notify(t2("action.detailFailed", { reason: error instanceof Error ? error.message : String(error) }));
+    }
+  }, [notify]);
+  const loadSecurity = React.useCallback((skill) => {
+    const id = String(skill?.id ?? "");
+    const slug = String(skill?.slug ?? "");
+    const namespace = String(skill?.handle ?? "");
+    if (id === "" || slug === "" || namespace === "" || id.startsWith("@local/")) return;
+    if (securityRequests.current.has(id)) return;
+    securityRequests.current.add(id);
+    setSecurity((current) => current[id] === void 0 ? { ...current, [id]: { kind: "loading" } } : current);
+    api("skill-security", { slug, namespace }).then((body) => {
+      setSecurity((current) => ({
+        ...current,
+        [id]: {
+          kind: "ready",
+          verdict: String(body?.verdict ?? "unknown"),
+          vendors: Array.isArray(body?.vendors) ? body.vendors : []
+        }
+      }));
+    }).catch((error) => {
+      setSecurity((current) => ({
+        ...current,
+        [id]: { kind: "failed", reason: error instanceof Error ? error.message : String(error) }
+      }));
+    });
+  }, []);
+  const securityFor = React.useCallback(
+    (skill) => security[String(skill?.id ?? "")] ?? { kind: "idle" },
+    [security]
+  );
+  function previewKey(skill, filePath, version) {
+    return `${String(skill?.id ?? "")}|${version}:${filePath}`;
+  }
+  const loadPreview = React.useCallback(async (skill, filePath, version) => {
+    const key = previewKey(skill, filePath, version);
+    const query2 = {
+      slug: String(skill?.slug ?? ""),
+      namespace: String(skill?.handle ?? ""),
+      path: filePath
+    };
+    if (query2.slug === "" || query2.namespace === "") {
+      setPreviews((current) => ({ ...current, [key]: { kind: "failed", reason: t2("files.noSource") } }));
+      return;
+    }
+    if (version !== "") query2.version = version;
+    setPreviews((current) => ({ ...current, [key]: { kind: "loading" } }));
+    try {
+      const body = await api("skill-file", query2);
+      setPreviews((current) => ({
+        ...current,
+        [key]: {
+          kind: "ready",
+          text: typeof body?.text === "string" ? body.text : "",
+          truncated: body?.truncated === true,
+          bytes: Number(body?.bytes ?? 0)
+        }
+      }));
+    } catch (error) {
+      setPreviews((current) => ({
+        ...current,
+        [key]: { kind: "failed", reason: error instanceof Error ? error.message : String(error) }
+      }));
+    }
+  }, []);
+  const openPreview = React.useCallback((skill, filePath, version = "") => {
+    setPreviewTrail([]);
+    setPreview({ path: filePath, version });
+    const key = previewKey(skill, filePath, version);
+    if (previews[key] !== void 0) return;
+    void loadPreview(skill, filePath, version);
+  }, [previews, loadPreview]);
+  const followPreview = React.useCallback((skill, filePath, version = "") => {
+    if (preview !== null) setPreviewTrail((trail) => [...trail, preview]);
+    setPreview({ path: filePath, version });
+    const key = previewKey(skill, filePath, version);
+    if (previews[key] !== void 0) return;
+    void loadPreview(skill, filePath, version);
+  }, [preview, previews, loadPreview]);
+  const backPreview = React.useCallback((skill) => {
+    if (previewTrail.length === 0) return;
+    const previous = previewTrail[previewTrail.length - 1];
+    setPreviewTrail((trail) => trail.slice(0, -1));
+    setPreview(previous);
+    const key = previewKey(skill, previous.path, previous.version);
+    if (previews[key] === void 0) void loadPreview(skill, previous.path, previous.version);
+  }, [previewTrail, previews, loadPreview]);
+  const installVersion = React.useCallback((skill, version) => {
+    if (version === "") return;
+    const entry = installedEntryFor(skill);
+    const currentVersion = String(entry?.version ?? "");
+    if (entry !== void 0 && currentVersion !== "" && compareVersions(version, currentVersion) < 0) {
+      setConfirmRequest({
+        title: t2("action.downgrade", { name: skill.name, version }),
+        body: t2("action.downgradeBody", { current: currentVersion }),
+        detail: "",
+        confirmLabel: t2("action.downgradeConfirm"),
+        danger: true,
+        onConfirm: () => {
+          void install(skill, version);
+        }
+      });
+      return;
+    }
+    void install(skill, version);
+  }, [install, installedEntryFor]);
+  const latestFor = React.useCallback((skill) => {
+    const fromLedger = installedEntryFor(skill)?.latestVersion;
+    if (typeof fromLedger === "string" && fromLedger !== "") return fromLedger;
+    const detail = details[String(skill?.id ?? "")];
+    return detail?.kind === "ready" ? String(detail.latestVersion ?? "") : "";
+  }, [installedEntryFor, details]);
+  const updateStateFor = React.useCallback((skill) => {
+    const entry = installedEntryFor(skill);
+    const local = String(entry?.version ?? "");
+    const latest = latestFor(skill);
+    return {
+      available: entry !== void 0 && local !== "" && latest !== "" && local !== latest,
+      local,
+      latest
+    };
+  }, [installedEntryFor, latestFor]);
+  React.useEffect(() => {
+    if (selected === null) return;
+    const skill = seen.current.get(selected);
+    if (skill === void 0) return;
+    if (details[selected] !== void 0) return;
+    void loadDetail(skill, { quiet: true });
+  }, [selected, details, loadDetail]);
+  const buildFileTree = React.useCallback((files) => {
+    const root = { dirs: /* @__PURE__ */ new Map(), files: [] };
+    for (const entry of files) {
+      const path = String(entry?.path ?? "");
+      if (path === "") continue;
+      const segments = path.split("/").filter((segment) => segment !== "" && segment !== ".");
+      if (segments.length === 0) continue;
+      let node = root;
+      for (const segment of segments.slice(0, -1)) {
+        if (node.dirs.has(segment) === false) node.dirs.set(segment, { dirs: /* @__PURE__ */ new Map(), files: [] });
+        node = node.dirs.get(segment);
+      }
+      node.files.push({ name: segments[segments.length - 1], size: Number(entry?.size ?? 0) });
+    }
+    const render = (node, prefix) => {
+      const dirs = [...node.dirs.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, child]) => {
+        const children = render(child, `${prefix}${name}/`);
+        return {
+          kind: "dir",
+          name,
+          path: `${prefix}${name}`,
+          children: children.nodes,
+          files: children.files,
+          bytes: children.bytes
+        };
+      });
+      const leaves = [...node.files].sort((a, b) => a.name.localeCompare(b.name)).map((file) => ({ kind: "file", name: file.name, size: file.size, path: `${prefix}${file.name}` }));
+      return {
+        nodes: [...dirs, ...leaves],
+        files: dirs.reduce((total, dir) => total + dir.files, 0) + leaves.length,
+        bytes: dirs.reduce((total, dir) => total + dir.bytes, 0) + leaves.reduce((total, file) => total + file.size, 0)
+      };
+    };
+    const tree = render(root, "");
+    return { nodes: tree.nodes, files: tree.files, bytes: tree.bytes, total: files.length };
+  }, []);
+  const addLocalFiles = React.useCallback(async (files) => {
+    if (files === null || files === void 0 || files.length === 0) return;
+    const chosen = Array.from(files);
+    setImportProgress({ done: 0, total: chosen.length, name: String(chosen[0]?.name ?? "") });
+    let done = 0;
+    const failures = [];
+    const names = [];
+    for (const file of chosen) {
+      try {
+        const label = String(file.name ?? "") || String(file.webkitRelativePath ?? "").split("/")[0] || "skill";
+        const body = await apiUpload("import", label, file);
+        const result = body?.import;
+        if (result === void 0 || typeof result.directory !== "string") {
+          throw new Error(t2("import.noResultDetail", { body: JSON.stringify(body)?.slice(0, 160) ?? "null" }));
+        }
+        names.push(String(result.name ?? label));
+      } catch (error) {
+        failures.push(t2("import.fileFailed", { name: String(file.name ?? ""), reason: error instanceof Error ? error.message : String(error) }));
+      }
+      done += 1;
+      setImportProgress({ done, total: chosen.length, name: String(file.name ?? "") });
+    }
+    setImportProgress(null);
+    setReloadNonce((current) => current + 1);
+    if (failures.length === 0) {
+      notify(names.length === 1 ? t2("import.doneOne", { name: names[0] }) : t2("import.doneMany", { count: names.length }));
+    } else if (names.length === 0) {
+      notify(t2("import.failed", { reason: failures[0] }));
+    } else {
+      notify(t2("import.doneMixed", { ok: names.length, failed: failures.length, reason: failures[0] }));
+    }
+  }, [notify]);
+  const removeLocal = React.useCallback(async (row) => {
+    await uninstall({ id: row.id, name: row.name, handle: row.handle, slug: row.slug });
+  }, [uninstall]);
+  const goToView = React.useCallback((nextView) => {
+    setView(nextView);
+    if (contentRef.current !== null) contentRef.current.scrollTop = 0;
+  }, []);
+  const pickFiles = React.useCallback(() => {
+    fileRef.current?.click();
+  }, []);
+  const onImportAction = React.useCallback(() => {
+    if (view === "import") pickFiles();
+    else goToView("import");
+  }, [view, pickFiles, goToView]);
+  const visible = React.useMemo(() => {
+    const needle = debouncedQuery.trim().toLowerCase();
+    if (needle === "") return catalog.skills;
+    return catalog.skills.filter((skill) => (skill.name + " " + skill.publisher + " " + skill.description + " " + skill.tags.join(" ") + " " + skill.canonical).toLowerCase().includes(needle));
+  }, [catalog.skills, debouncedQuery]);
+  React.useEffect(() => {
+    const queue = visible.filter((skill) => skill?.id !== void 0 && security[skill.id] === void 0 && securityRequests.current.has(String(skill.id)) === false && String(skill.id).startsWith("@local/") === false);
+    if (queue.length === 0) return void 0;
+    let cancelled = false;
+    let cursor = 0;
+    const worker = () => {
+      if (cancelled) return;
+      const next = queue[cursor];
+      cursor += 1;
+      if (next === void 0) return;
+      loadSecurity(next);
+      window.setTimeout(worker, 0);
+    };
+    for (let index = 0; index < SECURITY_CONCURRENCY; index += 1) worker();
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, security, loadSecurity]);
+  const resolveSaved = React.useCallback((id) => {
+    const live = findSkill(id);
+    if (live !== null) return live;
+    return savedSkills[id] ?? null;
+  }, [findSkill, savedSkills, catalog]);
+  const skillFromInstalled = React.useCallback((entry) => {
+    const directoryName = String(entry.directoryName ?? String(entry.directory ?? "").split(/[\\/]/).pop());
+    const handle = String(entry.handle ?? directoryName.split("--")[0] ?? "");
+    const slug = String(entry.slug ?? (directoryName.includes("--") ? directoryName.slice(directoryName.indexOf("--") + 2) : directoryName));
+    return {
+      id: entry.id,
+      slug,
+      canonical: handle === "" ? slug : `@${handle}/${slug}`,
+      name: entry.registeredAs || directoryName || String(entry.id),
+      publisher: handle || t2("misc.localMachine"),
+      handle,
+      official: false,
+      description: t2("overview.installedHint"),
+      version: String(entry.version ?? ""),
+      installs: 0,
+      stars: 0,
+      score: 0,
+      rating: "—",
+      updatedAt: 0,
+      updated: t2("misc.unknown"),
+      createdAt: Number(entry.installedAt ?? 0),
+      iconUrl: "",
+      homepage: "",
+      category: "",
+      categoryName: t2("overview.unknownCategory"),
+      source: "local",
+      tags: [],
+      requiresApiKey: false,
+      serviceized: false
+    };
+  }, []);
+  const installedRows = React.useMemo(() => installed.map((entry) => ({
+    entry,
+    skill: findSkill(entry.id) ?? skillFromInstalled(entry)
+  })), [installed, findSkill, skillFromInstalled, catalog]);
+  const savedRows = React.useMemo(() => saved.map((id) => ({ id, skill: resolveSaved(id) })).filter((row) => row.skill !== null), [saved, resolveSaved]);
+  React.useEffect(() => {
+    if (status === "loading") return;
+    const orphans = saved.filter((id) => resolveSaved(id) === null);
+    if (orphans.length === 0) return;
+    const dropped = new Set(orphans);
+    setSaved((current) => current.filter((id) => dropped.has(id) === false));
+    setSavedSkills((current) => {
+      const next = { ...current };
+      for (const id of orphans) delete next[id];
+      return next;
+    });
+    notify(t2("error.prunedFavorites", { count: orphans.length }));
+  }, [status, saved, resolveSaved, notify]);
+  const [categoryCounts, setCategoryCounts] = React.useState({});
+  const categoryLabel = React.useCallback((key) => {
+    if (key === "" || key === void 0 || key === null) return t2("overview.unknownCategory");
+    const upstream = categories.find((entry) => entry.key === key)?.name;
+    return translatedCategory(key, upstream ?? key);
+  }, [categories]);
+  function marketHead() {
+    return h14(
+      React.Fragment,
+      null,
+      h14(
+        "div",
+        { className: "sm-page-head" },
+        h14(
+          "div",
+          null,
+          h14("p", { className: "sm-eyebrow" }, t2("discover.eyebrow")),
+          h14("h1", { className: "sm-page-title" }, t2("discover.title")),
+          h14(
+            "p",
+            { className: "sm-page-sub" },
+            t2("discover.subtitle")
+          )
+        ),
+        h14(
+          "div",
+          { className: "sm-page-actions" },
+          h14(
+            "span",
+            { className: "sm-select-wrap" },
+            h14("select", {
+              value: sortBy,
+              "aria-label": t2("sort.aria"),
+              onChange: (event) => setSortBy(event.target.value)
+            }, SORTS.map((option) => h14("option", { key: option.value, value: option.value }, t2(option.label))))
+          )
+        )
+      ),
+      // Above the list it filters, and inside the fixed head — so the search stays
+      // reachable while the card list scrolls, which is where someone reading results
+      // actually wants it.
+      h14(
+        "div",
+        { className: "sm-search sm-search-row" },
+        h14(Icon, { name: "i-search", size: 16 }),
+        h14("input", {
+          ref: searchRef,
+          type: "search",
+          value: query,
+          placeholder: t2("search.placeholder"),
+          "aria-label": t2("search.placeholder"),
+          autoComplete: "off",
+          onChange: (event) => {
+            setQuery(event.target.value);
+            if (view !== "market") setView("market");
+          }
+        })
+      ),
+      h14(
+        "div",
+        { className: "sm-chips" },
+        h14("button", {
+          type: "button",
+          className: "sm-chip" + (category === "all" ? " active" : ""),
+          title: t2("discover.all"),
+          onClick: () => setCategory("all")
+          // The API total, not `catalog.skills.length`: that is the size of the
+          // loaded page, which is what made every count in the panel look wrong.
+        }, t2("discover.all") + " ", h14("span", { className: "sm-chip-n" }, catalog.total.toLocaleString("zh-CN"))),
+        categories.map((entry) => {
+          const label = translatedCategory(entry.key, entry.name);
+          const total = categoryCounts[entry.key];
+          return h14("button", {
+            key: entry.key,
+            type: "button",
+            className: "sm-chip" + (category === entry.key ? " active" : ""),
+            title: total === void 0 ? label : t2("discover.chipTitle", { name: label, count: total }),
+            onClick: () => setCategory(entry.key)
+          }, label, total === void 0 ? null : h14("span", { className: "sm-chip-n" }, total));
+        })
+      )
+    );
+  }
+  function marketBody() {
+    const searching = debouncedQuery.trim() !== "";
+    return h14(
+      React.Fragment,
+      null,
+      status === "error" ? h14(EmptyState, {
+        icon: "i-help",
+        title: t2("error.catalog"),
+        body: failure,
+        error: true
+      }, h14("button", {
+        type: "button",
+        className: "sm-btn sm-btn-primary",
+        onClick: () => setReloadNonce((current) => current + 1)
+      }, h14(Icon, { name: "i-refresh", size: 16 }), t2("error.retry"))) : null,
+      status === "loading" && catalog.skills.length === 0 ? h14(
+        "section",
+        null,
+        h14(
+          "div",
+          { className: "sm-section-head" },
+          h14("h2", null, category === "all" ? t2("discover.all") : categoryLabel(category)),
+          h14("span", { className: "sm-meta sm-num" }, t2("status.loading"))
+        ),
+        h14("div", { className: "sm-grid-cards" }, Array.from({ length: 8 }, (_, index) => h14(SkeletonCard, { key: index })))
+      ) : null,
+      status !== "loading" || catalog.skills.length > 0 ? h14(
+        React.Fragment,
+        null,
+        h14(
+          "section",
+          null,
+          h14(
+            "div",
+            { className: "sm-section-head" },
+            h14("h2", null, category === "all" ? t2("discover.all") : categoryLabel(category)),
+            h14(
+              "span",
+              { className: "sm-meta sm-num" },
+              t2("discover.total", { total: catalog.total.toLocaleString() }) + (searching || category !== "all" ? t2("discover.pageOf", { shown: visible.length.toLocaleString() }) : "")
+            )
+          ),
+          visible.length > 0 ? h14(
+            React.Fragment,
+            null,
+            h14("div", { className: "sm-grid-cards", "data-count": visible.length }, visible.map((skill) => h14(SkillCard, {
+              key: skill.id,
+              skill,
+              installed: installedIds.has(skill.id),
+              saved: savedIds.has(skill.id),
+              update: updateStateFor(skill),
+              safety: securityFor(skill).verdict ?? "unknown",
+              open: selected === skill.id,
+              installing: installState.kind === "installing" && installState.id === skill.id,
+              installError: installState.kind === "failed" && installState.id === skill.id ? installState.reason : null,
+              onOpen: () => openDetail(skill),
+              onInstall: () => install(skill),
+              onToggleSave: () => toggleSave(skill)
+            }))),
+            // Lazy-load footer: the sentinel is what the observer watches, and
+            // the button is the same action for profiles without an observer
+            // (jsdom, or an environment that blocks it). Saying how many rows
+            // are loaded keeps the state legible while scrolling.
+            h14(
+              "div",
+              { className: "sm-loadmore", ref: sentinelRef },
+              hasMore ? h14(
+                React.Fragment,
+                null,
+                h14(
+                  "button",
+                  {
+                    type: "button",
+                    className: "sm-btn sm-btn-secondary",
+                    disabled: loadingMore,
+                    onClick: () => {
+                      void loadMore();
+                    }
+                  },
+                  h14(Icon, { name: "i-download", size: 15 }),
+                  t2(loadingMore ? "status.loading" : "card.loadMore")
+                ),
+                h14(
+                  "span",
+                  { className: "sm-meta sm-num" },
+                  t2("card.showing", {
+                    shown: visible.length.toLocaleString(),
+                    total: catalog.total.toLocaleString()
+                  })
+                )
+              ) : h14(
+                "span",
+                { className: "sm-meta sm-num" },
+                t2("card.showingAll", { total: visible.length.toLocaleString() })
+              )
+            )
+          ) : h14(EmptyState, {
+            icon: "i-search",
+            title: t2("empty.noMatch"),
+            body: t2("empty.noMatchBody")
+          })
+        )
+      ) : null
+    );
+  }
+  function installedHead() {
+    return h14(
+      "div",
+      { className: "sm-page-head" },
+      h14(
+        "div",
+        null,
+        h14("p", { className: "sm-eyebrow" }, t2("installed.eyebrow")),
+        h14("h1", { className: "sm-page-title" }, t2("view.installed")),
+        h14(
+          "p",
+          { className: "sm-page-sub" },
+          t2("installed.subtitle", { count: installed.length })
+        )
+      )
+    );
+  }
+  function installedBody() {
+    return h14(
+      React.Fragment,
+      null,
+      pendingRestart.size > 0 ? h14(
+        "div",
+        { className: "sm-restart-banner" },
+        h14("span", { className: "sm-rb-ic" }, h14(Icon, { name: "i-refresh", size: 18 })),
+        h14(
+          "div",
+          { className: "sm-rb-text" },
+          h14("strong", null, t2("restart.bannerTitle", { count: pendingRestart.size })),
+          // Deliberately one line. The panel cannot restart the process, and
+          // anything longer invites the user to read a promise into a change
+          // whose visibility depends on the conversation the agent was built
+          // with. Say what is true and stop.
+          h14("p", null, t2("restart.effect"))
+        ),
+        h14(
+          "div",
+          { className: "sm-rb-actions" },
+          h14("button", {
+            type: "button",
+            className: "sm-btn sm-btn-ghost sm-btn-sm",
+            title: t2("restart.dismissTitle"),
+            onClick: () => {
+              setPendingRestart(/* @__PURE__ */ new Set());
+              writePending(/* @__PURE__ */ new Set());
+            }
+          }, t2("restart.dismiss"))
+        )
+      ) : null,
+      installed.length === 0 ? h14(EmptyState, {
+        icon: "i-download",
+        title: t2("empty.noInstalled"),
+        body: t2("empty.noInstalledBody")
+      }, h14("button", {
+        type: "button",
+        className: "sm-btn sm-btn-primary",
+        onClick: () => goToView("market")
+      }, t2("empty.goDiscover"))) : h14("div", { className: "sm-list" }, installedRows.map(({ entry, skill }) => {
+        const name = skill?.name ?? entry.id;
+        return h14(
+          "div",
+          { className: "sm-list-row", key: entry.id },
+          h14(SkillIcon, { skill: skill ?? { category: "", iconUrl: "" } }),
+          h14(
+            "div",
+            { className: "sm-row-main" },
+            h14(
+              "div",
+              { className: "sm-name-row" },
+              h14("h3", null, name),
+              skill?.official ? h14("span", { className: "sm-verified" }, h14(Verified, null)) : null,
+              isEnabled(entry) ? null : h14("span", { className: "sm-badge plain" }, t2("installed.disabled"))
+            ),
+            h14(
+              "div",
+              { className: "sm-row-sub" },
+              h14("span", { className: "sm-num" }, "v" + (entry.version || skill?.version || "—")),
+              h14("span", { className: "sm-sep" }, "·"),
+              // A locally imported skill has no publisher, so the badge says where it came from
+              // instead. A hand-placed directory is named too, because only one of the two came
+              // through this panel. A `manual` skill with a catalogue record still names its
+              // publisher below, and that is deliberate: it has one.
+              entry.origin === "local" || entry.origin === "manual" ? t2(entry.origin === "manual" ? "import.badgeManual" : "import.badgeLocal") : skill ? publisherOf(skill) : t2("misc.machineRecord"),
+              // Shown only when there is a number. A skill with no catalog record has no download
+              // count, and `0` is what an absent count looks like — printing it states a fact
+              // nobody measured. Keyed on `local` alone: a hand-placed directory can still have a
+              // publisher record, and then its download count is real.
+              entry.origin === "local" || Number(skill?.installs ?? 0) <= 0 ? null : h14(
+                React.Fragment,
+                null,
+                h14("span", { className: "sm-sep" }, "·"),
+                h14(
+                  "span",
+                  { className: "sm-num sm-stat", title: t2("card.downloads") },
+                  h14(Icon, { name: "i-download", size: 12 }),
+                  compact(skill.installs)
+                )
+              ),
+              relativeTime(entry.installedAt) === "" ? null : h14(
+                React.Fragment,
+                null,
+                h14("span", { className: "sm-sep" }, "·"),
+                h14("span", { className: "sm-num" }, t2("installed.installedAt", { time: relativeTime(entry.installedAt) }))
+              )
+            ),
+            entry.directory ? h14(
+              "div",
+              { className: "sm-num", style: { fontSize: "11px", color: "var(--sm-muted)", marginTop: "3px", overflowWrap: "anywhere" }, title: entry.directory },
+              t2("installed.dirPrefix") + entry.directory,
+              entry.files ? t2("installed.fileCount", { count: entry.files }) : ""
+            ) : null
+          ),
+          h14(
+            "div",
+            { className: "sm-row-actions" },
+            entry.directoryName !== void 0 && pendingRestart.has(entry.directoryName) ? h14("span", { className: "sm-badge update", title: t2("installed.pendingBadgeTitle") }, t2("installed.pendingBadge")) : null,
+            h14(Switch, {
+              checked: isEnabled(entry),
+              label: t2("installed.enableNamed", { name }),
+              onChange: (checked) => setSkillEnabled(skill ?? { id: entry.id, name }, entry, checked)
+            }),
+            // Only when there is something to describe: a local import or a hand-placed directory
+            // has no upstream record, so the button is withheld rather than opening a drawer of
+            // empty tabs. The origin is what says so — the id of a hand-placed directory looks
+            // exactly like a published one.
+            skill && isLocalSkill(skill, entry.origin) === false ? h14("button", {
+              type: "button",
+              className: "sm-btn sm-btn-secondary sm-btn-sm",
+              onClick: () => openDetail(skill, entry.origin)
+            }, t2("installed.details")) : null,
+            // The library is where an outdated install is most visible, so the update
+            // belongs here as well as on the favorite row.
+            skill !== null && updateStateFor(skill).available ? h14("button", {
+              type: "button",
+              className: "sm-btn sm-btn-primary sm-btn-sm",
+              disabled: installState.kind === "installing",
+              title: t2("saved.versionArrow", { local: updateStateFor(skill).local, latest: updateStateFor(skill).latest }),
+              onClick: () => installVersion(skill, updateStateFor(skill).latest)
+            }, h14(Icon, { name: "i-arrow-up-circle", size: 15 }), t2("saved.update")) : null,
+            h14("button", {
+              type: "button",
+              className: "sm-icon-btn",
+              "aria-label": t2("action.uninstallNamed", { name }),
+              title: t2("action.uninstall"),
+              onClick: () => uninstall(skill ?? { id: entry.id, name })
+            }, h14(Icon, { name: "i-trash" }))
+          )
+        );
+      }))
+    );
+  }
+  function savedHead() {
+    return h14(
+      "div",
+      { className: "sm-page-head" },
+      h14(
+        "div",
+        null,
+        h14("p", { className: "sm-eyebrow" }, t2("saved.eyebrow")),
+        h14("h1", { className: "sm-page-title" }, t2("view.saved")),
+        h14("p", { className: "sm-page-sub" }, t2("saved.subtitle", { count: saved.length }))
+      )
+    );
+  }
+  function savedBody() {
+    return h14(
+      React.Fragment,
+      null,
+      saved.length === 0 ? h14(EmptyState, {
+        icon: "i-bookmark",
+        title: t2("empty.noSaved"),
+        body: t2("empty.noSavedBody")
+      }, h14("button", {
+        type: "button",
+        className: "sm-btn sm-btn-primary",
+        onClick: () => goToView("market")
+      }, t2("empty.goDiscover"))) : h14("div", { className: "sm-list" }, savedRows.map(({ skill }) => h14(
+        "div",
+        {
+          className: "sm-list-row",
+          key: skill.id
+        },
+        h14(SkillIcon, { skill }),
+        h14(
+          "div",
+          { className: "sm-row-main" },
+          h14(
+            "div",
+            { className: "sm-name-row" },
+            h14("h3", null, skill.name),
+            skill.official ? h14("span", { className: "sm-verified" }, h14(Verified, null)) : null
+          ),
+          h14(
+            "div",
+            { className: "sm-row-sub" },
+            publisherOf(skill),
+            h14("span", { className: "sm-sep" }, "·"),
+            h14(
+              "span",
+              { className: "sm-num sm-stat", title: t2("card.downloads") },
+              h14(Icon, { name: "i-download", size: 12 }),
+              compact(skill.installs)
+            ),
+            h14("span", { className: "sm-sep" }, "·"),
+            h14(
+              "span",
+              { className: "sm-num sm-stat", title: t2("card.ratingTitle") },
+              h14(Star, { size: 12 }),
+              skill.rating
+            )
+          )
+        ),
+        h14(
+          "div",
+          { className: "sm-row-actions" },
+          // Same rule as the library row: a skill with no upstream record has no drawer to offer.
+          // Kept here too rather than relying on the guard inside openDetail, because a button
+          // that does nothing when pressed is its own defect.
+          isLocalSkill(skill) ? null : h14("button", {
+            type: "button",
+            className: "sm-btn sm-btn-secondary sm-btn-sm",
+            // The same drawer the market and library rows open; a favorite is a
+            // skill like any other, so the entries into it must not differ.
+            onClick: () => openDetail(skill)
+          }, t2("installed.details")),
+          updateStateFor(skill).available ? h14("button", {
+            type: "button",
+            className: "sm-btn sm-btn-primary sm-btn-sm",
+            disabled: installState.kind === "installing",
+            title: "v" + updateStateFor(skill).local + " → v" + updateStateFor(skill).latest,
+            onClick: () => installVersion(skill, updateStateFor(skill).latest)
+          }, h14(Icon, { name: "i-arrow-up-circle", size: 15 }), t2("saved.update")) : null,
+          // 已安装 here follows the same identity rule as the update button: a favorite
+          // saved from one publisher must still read as installed when the install came
+          // from another.
+          installedIds.has(skill.id) || installedEntryFor(skill) !== void 0 ? h14("span", { className: "sm-badge plain" }, t2("card.installed")) : h14("button", {
+            type: "button",
+            className: "sm-btn sm-btn-secondary sm-btn-sm",
+            onClick: () => install(skill)
+          }, h14(Icon, { name: "i-download", size: 15 }), t2("card.install")),
+          h14("button", {
+            type: "button",
+            className: "sm-icon-btn",
+            "aria-label": t2("card.unsave", { name: skill.name }),
+            title: t2("card.unsaveShort"),
+            onClick: () => toggleSave(skill)
+          }, h14(Icon, { name: "i-bookmark-check" }))
+        )
+      )))
+    );
+  }
+  function importHead() {
+    return h14(
+      "div",
+      { className: "sm-page-head" },
+      h14(
+        "div",
+        null,
+        h14("p", { className: "sm-eyebrow" }, t2("import.eyebrow")),
+        h14("h1", { className: "sm-page-title" }, t2("view.import")),
+        h14("p", { className: "sm-page-sub" }, t2("import.subtitle"))
+      )
+    );
+  }
+  function importBody() {
+    const enabledCount = imported.filter((row) => isEnabled(row)).length;
+    const dropzone = h14(
+      "div",
+      {
+        className: "sm-dropzone" + (dragOver ? " dragover" : ""),
+        role: "button",
+        tabIndex: 0,
+        "aria-label": t2("import.dropAria"),
+        onClick: pickFiles,
+        onKeyDown: (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            pickFiles();
+          }
+        },
+        onDragOver: (event) => {
+          event.preventDefault();
+          setDragOver(true);
+        },
+        onDragLeave: () => setDragOver(false),
+        onDrop: (event) => {
+          event.preventDefault();
+          setDragOver(false);
+          addLocalFiles(event.dataTransfer?.files);
+        }
+      },
+      h14("span", { className: "sm-dz-ic" }, h14(Icon, { name: "i-upload", size: 22 })),
+      h14("h3", null, t2("import.dropTitle")),
+      h14("p", null, t2("import.dropNote")),
+      // A span, not a button: the zone itself is the control, and nesting a button inside a
+      // clickable element would fire the picker twice.
+      h14(
+        "div",
+        { className: "sm-dz-actions" },
+        h14(
+          "span",
+          { className: "sm-btn sm-btn-secondary sm-dz-browse" },
+          h14(Icon, { name: "i-folder", size: 16 }),
+          t2("import.browse")
+        )
+      )
+    );
+    return h14(
+      React.Fragment,
+      null,
+      dropzone,
+      h14(
+        "div",
+        { className: "sm-stat-cards" },
+        h14(
+          "div",
+          { className: "sm-stat-card" },
+          h14("div", { className: "sm-k" }, t2("import.statImported")),
+          h14("div", { className: "sm-v" }, imported.length)
+        ),
+        h14(
+          "div",
+          { className: "sm-stat-card" },
+          h14("div", { className: "sm-k" }, t2("import.statEnabled")),
+          h14("div", { className: "sm-v" }, enabledCount)
+        ),
+        h14(
+          "div",
+          { className: "sm-stat-card" },
+          h14("div", { className: "sm-k" }, t2("import.statFormat")),
+          h14("div", { className: "sm-v" }, ".zip")
+        )
+      ),
+      importProgress === null ? null : h14(
+        "p",
+        { className: "sm-body-note" },
+        t2("import.progress", { done: importProgress.done + 1, total: importProgress.total, name: importProgress.name })
+      ),
+      imported.length === 0 ? h14(EmptyState, {
+        icon: "i-upload",
+        title: t2("import.empty"),
+        body: t2("import.emptyBody")
+      }) : h14("div", { className: "sm-list" }, imported.map((row) => h14(
+        "div",
+        {
+          className: "sm-list-row",
+          key: row.id
+        },
+        h14(SkillIcon, { skill: { category: "", iconUrl: "" } }),
+        h14(
+          "div",
+          { className: "sm-row-main" },
+          h14(
+            "div",
+            { className: "sm-name-row" },
+            h14("h3", null, row.name),
+            // Distinguishes a package this page imported from a directory the user placed in
+            // a root by hand: both are local, but only one of them came through the panel.
+            h14(
+              "span",
+              { className: "sm-src-badge" },
+              h14(Icon, { name: "i-folder", size: 11 }),
+              t2(row.origin === "manual" ? "import.badgeManual" : "import.badgeLocal")
+            ),
+            isEnabled(row) ? null : h14("span", { className: "sm-badge plain" }, t2("installed.disabled"))
+          ),
+          h14(
+            "div",
+            { className: "sm-row-sub" },
+            row.version ? h14("span", { className: "sm-num" }, "v" + row.version) : h14("span", null, t2("installed.noVersion")),
+            h14("span", { className: "sm-sep" }, "·"),
+            h14("span", { className: "sm-num", title: row.directory }, t2("installed.fileCountBare", { count: row.files ?? 0 })),
+            h14("span", { className: "sm-sep" }, "·"),
+            h14("span", { className: "sm-num" }, humanSize(row.bytes ?? 0))
+          )
+        ),
+        h14(
+          "div",
+          { className: "sm-row-actions" },
+          h14(Switch, {
+            checked: isEnabled(row),
+            label: t2("installed.enableNamed", { name: row.name }),
+            onChange: (checked) => {
+              void setSkillEnabled(
+                { id: row.id, name: row.name, handle: row.handle, slug: row.slug },
+                row,
+                checked
+              );
+            }
+          }),
+          h14("button", {
+            type: "button",
+            className: "sm-icon-btn",
+            "aria-label": t2("installed.removeNamed", { name: row.name }),
+            title: t2("installed.remove"),
+            onClick: () => removeLocal(row)
+          }, h14(Icon, { name: "i-trash" }))
+        )
+      )))
+    );
+  }
+  function overviewTab(skill, detail) {
+    const bullets = [
+      t2(skill.official ? "overview.fromOfficial" : "overview.fromCommunity", { canonical: skill.canonical }),
+      t2("card.categoryLabel", { name: skill.categoryName }),
+      skill.version ? t2("overview.version", { version: skill.version }) : t2("overview.versionMaintained"),
+      skill.requiresApiKey ? t2("overview.needsKey") : t2("overview.noKey")
+    ];
+    const summary = detail?.kind === "ready" ? detail.summary : "";
+    return h14(
+      React.Fragment,
+      null,
+      detail?.kind === "failed" ? h14("p", { className: "sm-body-note" }, t2("overview.summaryFailed", { reason: detail.reason })) : null,
+      detail?.kind === "ready" && summary !== "" ? h14(
+        React.Fragment,
+        null,
+        h14("h4", null, t2("overview.summary")),
+        h14("div", { className: "sm-prose" }, h14(Prose, { source: summary }))
+      ) : null,
+      detail?.kind === "ready" && summary === "" ? h14(
+        React.Fragment,
+        null,
+        h14("h4", null, t2("overview.summary")),
+        h14("div", { className: "sm-prose" }, h14(Prose, { source: skill.description || t2("card.noDescription") }))
+      ) : null,
+      h14("h4", null, t2("overview.keyInfo")),
+      h14(
+        "ul",
+        { className: "sm-feat-list" },
+        bullets.map((text) => h14("li", { key: text }, h14(Icon, { name: "i-check", size: 16 }), h14("span", null, text)))
+      ),
+      h14("h4", null, t2("overview.useCases")),
+      h14(
+        "div",
+        { className: "sm-tags" },
+        skill.tags.map((tag) => h14("span", { key: tag, className: "sm-tag" }, tag)),
+        h14("span", { className: "sm-tag" }, skill.categoryName)
+      )
+    );
+  }
+  function filesTab(skill, detail) {
+    if (detail === void 0 || detail.kind === "loading") {
+      return h14("p", { className: "sm-body-note" }, t2("files.loading"));
+    }
+    if (detail.kind === "unavailable") {
+      return h14("p", { className: "sm-body-note" }, t2("files.localHasNone"));
+    }
+    if (detail.kind === "failed") {
+      return h14("p", { className: "sm-body-note" }, t2("files.failed", { reason: detail.reason }));
+    }
+    const tree = buildFileTree(detail.files);
+    if (tree.nodes.length === 0) {
+      return h14("p", { className: "sm-body-note" }, t2("files.none"));
+    }
+    return h14(
+      React.Fragment,
+      null,
+      h14("h4", null, t2("files.heading")),
+      h14(
+        "p",
+        { className: "sm-body-note" },
+        t2("files.treeSummaryBase", { files: tree.total, size: humanSize(tree.bytes) }) + (detail.filesVersion !== "" ? t2("files.manifestVersion", { version: detail.filesVersion }) : "") + t2("files.treeHint")
+      ),
+      h14(FileTree, {
+        nodes: tree.nodes,
+        onOpen: (filePath) => openPreview(skill, filePath, "")
+      })
+    );
+  }
+  function versionTab(skill, detail) {
+    const installedRow = installedEntryFor(skill);
+    const local = String(installedRow?.version ?? "").trim();
+    const latest = detail?.kind === "ready" ? detail.latestVersion : "";
+    const behind = local !== "" && latest !== "" && local !== latest;
+    const rows2 = [
+      [t2("versions.currentVersion"), skill.version || t2("misc.notStated")],
+      [t2("versions.category"), skill.categoryName],
+      [t2("versions.source"), t2(skill.source === "official" ? "misc.official" : "misc.community")],
+      [t2("versions.identifier"), skill.canonical],
+      [t2("versions.firstSeen"), new Date(skill.createdAt || Date.now()).toLocaleDateString(uiLocale())],
+      [t2("versions.updatedAt"), t2("versions.updatedAtValue", {
+        date: new Date(skill.updatedAt || Date.now()).toLocaleDateString(uiLocale()),
+        relative: skill.updated
+      })]
+    ];
+    const versions = detail?.kind === "ready" ? detail.versions : [];
+    return h14(
+      React.Fragment,
+      null,
+      installedRow !== void 0 ? h14(
+        React.Fragment,
+        null,
+        h14("h4", null, t2("saved.update")),
+        h14(
+          "div",
+          { className: "sm-perm" },
+          h14(
+            "span",
+            { className: "sm-perm-ic" },
+            h14(Icon, { name: behind ? "i-arrow-up-circle" : "i-check", size: 17 })
+          ),
+          h14(
+            "div",
+            { className: "sm-perm-main" },
+            h14(
+              "div",
+              { className: "sm-perm-title" },
+              h14("strong", null, t2(behind ? "versions.newAvailable" : "versions.upToDate")),
+              h14(
+                "span",
+                { className: "sm-risk " + (behind ? "mid" : "low") },
+                t2(behind ? "saved.updatable" : "versions.latest")
+              )
+            ),
+            h14(
+              "div",
+              { className: "sm-perm-desc sm-num" },
+              t2("versions.comparison", {
+                local: local || t2("misc.notStated"),
+                latest: latest || t2("misc.notStated")
+              }) + (behind && detail?.latestChangelog ? " · " + detail.latestChangelog : "")
+            )
+          )
+        )
+      ) : null,
+      h14("h4", null, t2("versions.heading")),
+      detail?.kind === "loading" ? h14("p", { className: "sm-body-note" }, t2("versions.loading")) : null,
+      detail?.kind === "unavailable" ? h14("p", { className: "sm-body-note" }, t2("versions.localHasNone")) : null,
+      versions.length > 0 ? h14(VersionHistory, {
+        versions,
+        installedVersion: local,
+        busy: installState.kind === "installing",
+        onInstall: (version) => installVersion(skill, version)
+      }) : detail?.kind === "ready" ? h14("p", { className: "sm-body-note" }, t2("versions.none")) : null,
+      h14("h4", null, t2("versions.versionAndSource")),
+      rows2.map(([label, value]) => h14(
+        "div",
+        { className: "sm-perm", key: label },
+        h14(
+          "div",
+          { className: "sm-perm-main" },
+          h14("div", { className: "sm-perm-title" }, h14("strong", null, label)),
+          h14("div", { className: "sm-perm-desc sm-num" }, String(value))
+        )
+      ))
+    );
+  }
+  function permissionsTab(skill) {
+    const rows2 = [
+      {
+        icon: "i-globe",
+        title: t2("perm.network"),
+        risk: "mid",
+        desc: t2("perm.networkDesc", { key: t2(skill.requiresApiKey ? "perm.needsKey" : "perm.noKeyNote") })
+      },
+      {
+        icon: "i-metadata",
+        title: t2("perm.metadata"),
+        risk: "low",
+        desc: t2("perm.metadataDesc")
+      },
+      {
+        icon: "i-folder",
+        title: t2("perm.localLibrary"),
+        risk: "low",
+        desc: t2("perm.localLibraryDesc")
+      }
+    ];
+    return h14(
+      React.Fragment,
+      null,
+      h14("h4", null, t2("perm.heading")),
+      h14("p", { className: "sm-body-note" }, t2("perm.note")),
+      rows2.map((row) => h14(
+        "div",
+        { className: "sm-perm", key: row.title },
+        h14("span", { className: "sm-perm-ic" }, h14(Icon, { name: row.icon, size: 17 })),
+        h14(
+          "div",
+          { className: "sm-perm-main" },
+          h14(
+            "div",
+            { className: "sm-perm-title" },
+            h14("strong", null, row.title),
+            h14("span", { className: "sm-risk " + row.risk }, t2(RISK_LABELS[row.risk]))
+          ),
+          h14("div", { className: "sm-perm-desc" }, row.desc)
+        )
+      ))
+    );
+  }
+  function homepageFor(skill, detail) {
+    const fromDetail = detail?.kind === "ready" ? String(detail.sourceUrl ?? "") : "";
+    return fromDetail !== "" ? fromDetail : String(skill.homepage ?? "");
+  }
+  function safetyTab(skill) {
+    const entry = securityFor(skill);
+    if (entry.kind === "loading" || entry.kind === "idle") {
+      return h14(
+        React.Fragment,
+        null,
+        h14("h4", null, t2("safety.heading")),
+        h14("p", { className: "sm-body-note" }, t2("safety.loading"))
+      );
+    }
+    if (entry.kind === "failed") {
+      return h14(
+        React.Fragment,
+        null,
+        h14("h4", null, t2("safety.heading")),
+        // Stated rather than hidden: an empty section would read as "no findings".
+        h14("p", { className: "sm-body-note" }, t2("safety.failed", { reason: String(entry.reason ?? "") }))
+      );
+    }
+    const vendors = Array.isArray(entry.vendors) ? entry.vendors : [];
+    if (vendors.length === 0) {
+      return h14(
+        React.Fragment,
+        null,
+        h14("h4", null, t2("safety.heading")),
+        h14("p", { className: "sm-body-note" }, t2("safety.none"))
+      );
+    }
+    const safe = entry.verdict === "safe";
+    const verdictText = t2(safe ? "safety.allBenign" : entry.verdict === "risk" ? "safety.hasRisk" : entry.verdict === "pending" ? "safety.pending" : "safety.unknown");
+    return h14(
+      React.Fragment,
+      null,
+      h14("h4", null, t2("safety.heading")),
+      h14("p", { className: "sm-body-note" }, t2("safety.note")),
+      // One row per vendor, each carrying its own verdict. The shield is green per row because a
+      // row only exists to state what that vendor said — the single 安全 badge at the top of the
+      // drawer is what requires *every* vendor to agree, and this list is where a disagreement
+      // becomes visible.
+      h14(
+        "div",
+        { className: "sm-safety-vendors" },
+        vendors.map((vendor) => {
+          const vendorSafe = String(vendor.status) === "benign";
+          const vendorText = String(vendor.statusText || vendor.status || "—");
+          return h14(
+            "div",
+            { className: "sm-safety-vendor" + (vendorSafe ? "" : " plain"), key: String(vendor.vendor) },
+            h14(
+              "span",
+              { className: "sm-safety-mark" },
+              h14(Icon, { name: vendorSafe ? "i-shield-check" : "i-shield", size: 15 })
+            ),
+            h14(
+              "span",
+              { className: "sm-safety-label" },
+              h14("strong", null, vendorLabel(vendor.vendor)),
+              h14("span", null, vendorText)
+            ),
+            typeof vendor.reportUrl === "string" && vendor.reportUrl !== "" ? h14("a", {
+              className: "sm-link-out sm-safety-report",
+              href: vendor.reportUrl,
+              target: "_blank",
+              rel: "noreferrer noopener"
+            }, t2("safety.report"), h14(Icon, { name: "i-link", size: 12 })) : null
+          );
+        })
+      ),
+      // Said plainly, because the badge only appears for one verdict and its absence is otherwise
+      // ambiguous between "not safe" and "not scanned".
+      h14(
+        "p",
+        { className: "sm-body-note" },
+        t2(safe ? "safety.shownNote" : "safety.hiddenNote")
+      )
+    );
+  }
+  function metricsTab(skill, detail) {
+    const homepage = homepageFor(skill, detail);
+    return h14(
+      React.Fragment,
+      null,
+      h14("h4", null, t2("metrics.heading")),
+      h14("p", { className: "sm-body-note" }, t2("metrics.note")),
+      h14(
+        "div",
+        { className: "sm-stat-cards", style: { gridTemplateColumns: "repeat(2, minmax(0, 1fr))" } },
+        h14(
+          "div",
+          { className: "sm-stat-card" },
+          h14("div", { className: "sm-k" }, t2("metrics.downloads")),
+          h14("div", { className: "sm-v" }, compact(skill.installs))
+        ),
+        h14(
+          "div",
+          { className: "sm-stat-card" },
+          h14("div", { className: "sm-k" }, t2("metrics.stars")),
+          h14("div", { className: "sm-v" }, compact(skill.stars))
+        ),
+        h14(
+          "div",
+          { className: "sm-stat-card" },
+          h14("div", { className: "sm-k" }, t2("metrics.score")),
+          h14("div", { className: "sm-v" }, formatScore(skill.score))
+        ),
+        h14(
+          "div",
+          { className: "sm-stat-card" },
+          h14("div", { className: "sm-k" }, t2("metrics.rating")),
+          h14("div", { className: "sm-v" }, skill.rating)
+        )
+      ),
+      homepage ? h14(
+        React.Fragment,
+        null,
+        h14("h4", null, t2("metrics.homepage")),
+        h14("p", null, h14("a", {
+          className: "sm-link-out",
+          href: homepage,
+          target: "_blank",
+          rel: "noreferrer noopener"
+        }, homepage, h14(Icon, { name: "i-link", size: 13 })))
+      ) : null
+    );
+  }
+  function inspector() {
+    const skill = selectedSkill;
+    const open = skill !== null;
+    const detail = skill === null ? void 0 : details[skill.id];
+    const tabs = [
+      ["overview", "tab.overview"],
+      ["files", "tab.files"],
+      ["versions", "tab.versions"],
+      ["permissions", "tab.permissions"],
+      ["safety", "tab.safety"],
+      ["metrics", "tab.metrics"]
+    ];
+    const selectedVerdict = skill === null ? "unknown" : securityFor(skill).verdict ?? "unknown";
+    const body = skill === null ? null : detailTab === "files" ? filesTab(skill, detail) : detailTab === "versions" ? versionTab(skill, detail) : detailTab === "permissions" ? permissionsTab(skill) : detailTab === "safety" ? safetyTab(skill) : detailTab === "metrics" ? metricsTab(skill, detail) : overviewTab(skill, detail);
+    return h14(
+      React.Fragment,
+      null,
+      h14("div", {
+        className: "sm-scrim" + (open ? " show" : ""),
+        onClick: () => setSelected(null)
+      }),
+      h14("aside", {
+        className: "sm-inspector" + (open ? " open" : ""),
+        "aria-hidden": !open,
+        "aria-label": t2("drawer.aria")
+      }, skill === null ? null : h14(
+        React.Fragment,
+        null,
+        h14(
+          "div",
+          { className: "sm-insp-head" },
+          h14(
+            "div",
+            { className: "sm-insp-top" },
+            h14(SkillIcon, { skill, large: true }),
+            h14("button", {
+              type: "button",
+              className: "sm-icon-btn",
+              "aria-label": t2("drawer.close"),
+              onClick: () => setSelected(null)
+            }, h14(Icon, { name: "i-x" }))
+          ),
+          h14("h2", null, skill.name),
+          h14(
+            "div",
+            { className: "sm-insp-pub" },
+            publisherOf(skill),
+            skill.official ? h14("span", { className: "sm-verified" }, h14(Verified, null)) : null,
+            h14("span", { className: "sm-dot-sep" }, "·"),
+            skill.categoryName
+          ),
+          h14(
+            "div",
+            { className: "sm-insp-actions" },
+            installedIds.has(skill.id) ? h14("button", {
+              type: "button",
+              className: "sm-btn sm-btn-secondary",
+              onClick: () => uninstall(skill)
+            }, h14(Icon, { name: "i-check", size: 16 }), t2("drawer.uninstallInstalled")) : h14("button", {
+              type: "button",
+              className: "sm-btn sm-btn-primary",
+              onClick: () => install(skill)
+            }, h14(Icon, { name: "i-download", size: 16 }), t2("drawer.installSkill")),
+            h14("button", {
+              type: "button",
+              className: "sm-btn sm-btn-secondary",
+              "aria-pressed": savedIds.has(skill.id),
+              onClick: () => toggleSave(skill)
+            }, h14(Icon, { name: "i-bookmark", size: 16 }), t2(savedIds.has(skill.id) ? "drawer.savedState" : "card.saveShort"))
+          ),
+          h14(
+            "div",
+            { className: "sm-insp-meta" },
+            h14("span", { className: "sm-num" }, skill.version ? "v" + skill.version : t2("drawer.versionUnknown")),
+            h14("span", { className: "sm-sep" }, "·"),
+            h14("span", null, t2(skill.source === "official" ? "drawer.sourceOfficial" : "drawer.sourceCommunity")),
+            h14("span", { className: "sm-sep" }, "·"),
+            h14("span", null, t2("drawer.updatedAt", { time: skill.updated }))
+          ),
+          // Above the tab strip, in the drawer's fixed header rather than inside a tab's body: the
+          // counters are true whichever tab is open, and inside 概览 they scrolled away with it.
+          h14(StatStrip, { skill }),
+          h14(
+            "div",
+            { className: "sm-tabs", role: "tablist" },
+            tabs.map(([key, label]) => h14("button", {
+              key,
+              type: "button",
+              role: "tab",
+              className: "sm-tab" + (detailTab === key ? " active" : "") + (key === "safety" ? " sm-tab-icon" : "") + (key === "safety" && selectedVerdict === "safe" ? " sm-tab-safe" : ""),
+              "aria-selected": detailTab === key,
+              onClick: () => setDetailTab(key)
+            }, key === "safety" ? h14(Icon, { name: "i-shield-check", size: 13 }) : null, t2(label)))
+          )
+          // The header ends here, and the body starts as its SIBLING. Written as one nested call by mistake, the
+          // body landed inside the header: measured in the running app, `.sm-insp-body` reported a parent of
+          // `.sm-insp-head` (a block, row-direction box) instead of `.sm-inspector` (the column flex container).
+          // With no flex parent the body was never given a height — clientHeight 5862 === scrollHeight 5862, the
+          // full content height — and everything past the panel's 1352px was clipped, so the drawer could not be
+          // scrolled despite `overflow-y: auto` being in force. Both closing parentheses below matter: the first
+          // pair closes the header, and the run at the end closes the fragment, the aside and the outer fragment.
+        ),
+        h14("div", { className: "sm-insp-body" }, body)
+      ))
+    );
+  }
+  const liveClass = status === "loading" ? "is-idle" : status === "error" ? "is-error" : "";
+  const liveText = t2(status === "loading" ? "status.syncing" : status === "error" ? "status.error" : "status.connected");
+  return h14(
+    "div",
+    { "data-skill-market": "", "data-skill-market-panel": PANEL_ID },
+    h14(
+      "header",
+      { className: "sm-topbar" },
+      h14(
+        "div",
+        { className: "sm-topbar-actions" },
+        h14("button", {
+          type: "button",
+          className: "sm-icon-btn",
+          "aria-label": t2("search.refresh"),
+          title: t2("search.refreshShort"),
+          onClick: () => setReloadNonce((current) => current + 1)
+        }, h14(Icon, { name: "i-refresh" })),
+        h14("button", {
+          type: "button",
+          className: "sm-btn sm-btn-primary",
+          onClick: onImportAction
+        }, h14(Icon, { name: "i-upload", size: 16 }), h14("span", { className: "sm-btn-label" }, t2("import.pickFile")))
+      )
+    ),
+    h14(
+      "div",
+      { className: "sm-viewbar" },
+      h14(
+        "div",
+        { className: "sm-viewtabs", role: "tablist", "aria-label": t2("panel.aria") },
+        h14("button", {
+          type: "button",
+          role: "tab",
+          className: "sm-viewtab" + (view === "market" ? " active" : ""),
+          "aria-selected": view === "market",
+          onClick: () => goToView("market")
+        }, t2("view.discover")),
+        h14("button", {
+          type: "button",
+          role: "tab",
+          className: "sm-viewtab" + (view === "installed" ? " active" : ""),
+          "aria-selected": view === "installed",
+          onClick: () => goToView("installed")
+        }, t2("view.installed") + " ", h14("span", { className: "sm-vt-count" }, installed.length)),
+        h14("button", {
+          type: "button",
+          role: "tab",
+          className: "sm-viewtab" + (view === "saved" ? " active" : ""),
+          "aria-selected": view === "saved",
+          onClick: () => goToView("saved")
+        }, t2("view.saved") + " ", h14("span", { className: "sm-vt-count" }, saved.length)),
+        h14("button", {
+          type: "button",
+          role: "tab",
+          className: "sm-viewtab" + (view === "import" ? " active" : ""),
+          "aria-selected": view === "import",
+          onClick: () => goToView("import")
+        }, t2("view.import") + " ", h14("span", { className: "sm-vt-count" }, imported.length))
+      )
+    ),
+    h14(
+      "div",
+      { className: "sm-fixed" },
+      h14(
+        "div",
+        { className: "sm-bounded" },
+        view === "installed" ? installedHead() : view === "saved" ? savedHead() : view === "import" ? importHead() : marketHead()
+      )
+    ),
+    h14(
+      "main",
+      { className: "sm-content", ref: contentRef },
+      h14(
+        "div",
+        { className: "sm-inner sm-bounded" },
+        view === "installed" ? installedBody() : view === "saved" ? savedBody() : view === "import" ? importBody() : marketBody()
+      )
+    ),
+    h14(
+      "div",
+      { className: "sm-statusbar" },
+      h14("span", { className: "sm-live " + liveClass }, liveText),
+      h14("span", { className: "sm-num" }, t2("metrics.total", { total: catalog.total.toLocaleString() })),
+      h14("span", { className: "sm-spacer" }),
+      h14("span", null, "SkillHub · api.skillhub.cn")
+    ),
+    inspector(),
+    // Over the drawer, under the confirmation dialog: a file is read *from* the drawer, and a
+    // confirmation is a question about the whole panel that must not be buried by a preview.
+    h14(FileDialog, {
+      preview,
+      skill: selectedSkill,
+      file: preview === null ? void 0 : previews[previewKey(selectedSkill, preview.path, preview.version)],
+      // The file list is what tells a link in a document whether it points inside the bundle, and the
+      // version follows the preview so a link inside an old release stays in that release.
+      files: selectedSkill === null ? void 0 : details[selectedSkill.id]?.files,
+      canGoBack: previewTrail.length > 0,
+      onBack: () => backPreview(selectedSkill),
+      // Following a link keeps the trail, which is what the back control walks back along.
+      onOpenFile: (path) => followPreview(selectedSkill, path, preview?.version ?? ""),
+      onClose: () => setPreview(null)
+    }),
+    h14(ConfirmDialog, { request: confirmRequest, onClose: () => setConfirmRequest(null) }),
+    h14(
+      "div",
+      { className: "sm-toast-wrap" },
+      toast === null ? null : h14(
+        "div",
+        { className: "sm-toast" },
+        h14("span", null, toast.message),
+        toast.undo === null ? null : h14("button", {
+          type: "button",
+          className: "sm-toast-undo",
+          onClick: () => {
+            setToast(null);
+            toast.undo();
+          }
+        }, t2("toast.undo"))
+      ),
+      h14("input", {
+        ref: fileRef,
+        type: "file",
+        accept: ".zip",
+        multiple: true,
+        hidden: true,
+        onChange: (event) => {
+          addLocalFiles(event.target.files);
+          event.target.value = "";
+        }
+      })
+    )
+  );
+}
+function insertStylesheet(css) {
+  if (typeof document === "undefined") return () => {
+  };
+  const tag = document.createElement("style");
+  tag.textContent = css;
+  document.head.appendChild(tag);
+  return () => {
+    tag.remove();
+  };
+}
+function readPending() {
+  if (panelHostStartedAt > 0 && panelDocument.pending.since !== panelHostStartedAt) {
+    if (panelDocument.pending.since !== 0 || panelDocument.pending.dirs.length > 0) {
+      panelDocument = { ...panelDocument, pending: { since: 0, dirs: [] } };
+      requestPanelFlush();
+    }
+    return /* @__PURE__ */ new Set();
+  }
+  return new Set(panelDocument.pending.dirs);
+}
+function writePending(pending) {
+  panelDocument = {
+    ...panelDocument,
+    pending: pending.size === 0 ? { since: 0, dirs: [] } : { since: panelHostStartedAt, dirs: [...pending] }
+  };
+  requestPanelFlush();
+}
+function stripFrontmatter(text) {
+  const source = String(text ?? "").replace(/\r\n?/g, "\n");
+  if (source.startsWith("---\n") === false) return source.trim();
+  const end = source.indexOf("\n---", 4);
+  if (end < 0) return source.trim();
+  const after = source.indexOf("\n", end + 1);
+  return (after < 0 ? "" : source.slice(after + 1)).trim();
+}
+function MarkdownFile({ text, path, onOpenFile }) {
+  const source = String(text ?? "").replace(/\r\n?/g, "\n");
+  const closed = source.startsWith("---\n") ? source.indexOf("\n---", 4) : -1;
+  const frontmatter = closed < 0 ? "" : source.slice(4, closed);
+  const body = stripFrontmatter(source);
+  return h14(
+    React.Fragment,
+    null,
+    frontmatter === "" ? null : h14(
+      React.Fragment,
+      null,
+      h14("div", { className: "sm-preview-label" }, "Frontmatter"),
+      h14("pre", { className: "sm-preview-code" }, h14("code", null, frontmatter))
+    ),
+    body === "" ? null : h14(Prose, { source: body, onOpenFile, resetKey: path })
+  );
+}
+function FileDialog({ preview, skill, file, files, canGoBack, onBack, onOpenFile, onClose }) {
+  const closeRef = React.useRef(null);
+  const bodyRef = React.useRef(null);
+  React.useEffect(() => {
+    if (preview === null) return void 0;
+    closeRef.current?.focus();
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [preview, onClose]);
+  if (preview === null) return null;
+  const name = preview.path.split("/").pop();
+  const markdown = /\.(md|markdown)$/i.test(preview.path);
+  const shownPath = preview.version === "" ? preview.path : preview.path + " · v" + preview.version;
+  const ready = file?.kind === "ready";
+  const openLinkedFile = (href) => {
+    const target = resolveBundlePath(preview.path, href);
+    if (target === void 0) return;
+    if (Array.isArray(files) && files.some((entry) => entry.path === target) === false) return;
+    onOpenFile?.(target);
+  };
+  return h14(
+    "div",
+    { className: "sm-preview-layer" },
+    h14("div", {
+      className: "sm-preview-scrim",
+      role: "presentation",
+      onClick: onClose
+    }),
+    h14(
+      "div",
+      {
+        className: "sm-preview-dialog",
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": preview.path,
+        "data-skill": skill?.id ?? ""
+      },
+      h14(
+        "div",
+        { className: "sm-preview-head" },
+        // Only there once a link has been followed: a back control with nowhere to go is a dead one.
+        canGoBack === true ? h14("button", {
+          type: "button",
+          className: "sm-icon-btn",
+          "aria-label": t2("files.backOne"),
+          title: t2("files.backOne"),
+          onClick: onBack
+        }, h14(Icon, { name: "i-chevron-left", size: 16 })) : null,
+        h14(Icon, { name: "i-file", size: 15 }),
+        h14(
+          "span",
+          { className: "sm-preview-title" },
+          h14("span", { className: "sm-preview-name" }, name),
+          h14("span", { className: "sm-preview-path sm-num", title: preview.path }, shownPath)
+        ),
+        h14("button", {
+          ref: closeRef,
+          type: "button",
+          className: "sm-btn sm-btn-secondary sm-btn-sm",
+          onClick: onClose
+        }, h14(Icon, { name: "i-x", size: 14 }), t2("files.close"))
+      ),
+      h14(
+        "div",
+        { className: "sm-preview-body", ref: bodyRef },
+        file === void 0 || file.kind === "loading" ? h14("p", { className: "sm-body-note" }, t2("files.loadingOne", { path: name })) : null,
+        file?.kind === "failed" ? h14("p", { className: "sm-body-note" }, t2("files.readFailed", { reason: file.reason })) : null,
+        ready ? markdown ? h14(MarkdownFile, { text: file.text, path: preview.path, onOpenFile: openLinkedFile }) : h14(HostFallback, {
+          resetKey: preview.path,
+          fallback: h14(PlainCode, { code: file.text })
+        }, h14(CodeBody, { code: file.text, lang: codeLanguageFor(preview.path) })) : null
+      ),
+      h14(
+        "div",
+        { className: "sm-preview-foot" },
+        ready ? h14(
+          "span",
+          { className: "sm-num" },
+          t2("files.sizeAndLines", { size: humanSize(file.bytes), lines: file.text.split("\n").length })
+        ) : null,
+        ready && file.truncated ? h14("span", null, t2("files.truncated")) : null
+      )
+    )
+  );
+}
+function ConfirmDialog({ request, onClose }) {
+  const confirmRef = React.useRef(null);
+  React.useEffect(() => {
+    if (request === null) return void 0;
+    confirmRef.current?.focus();
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [request, onClose]);
+  if (request === null) return null;
+  return h14(
+    "div",
+    { className: "sm-confirm-layer" },
+    h14("div", {
+      className: "sm-confirm-scrim",
+      role: "presentation",
+      onClick: onClose
+    }),
+    h14(
+      "div",
+      {
+        className: "sm-confirm",
+        role: "alertdialog",
+        "aria-modal": "true",
+        "aria-label": request.title
+      },
+      h14("h2", { className: "sm-confirm-title" }, request.title),
+      h14("p", { className: "sm-confirm-body" }, request.body),
+      request.detail === "" ? null : h14("p", { className: "sm-confirm-detail sm-num" }, request.detail),
+      h14(
+        "div",
+        { className: "sm-confirm-actions" },
+        h14("button", {
+          type: "button",
+          className: "sm-btn sm-btn-secondary",
+          onClick: onClose
+        }, t2("action.cancel")),
+        h14("button", {
+          ref: confirmRef,
+          type: "button",
+          className: "sm-btn " + (request.danger === true ? "sm-btn-danger" : "sm-btn-primary"),
+          onClick: () => {
+            onClose();
+            request.onConfirm();
+          }
+        }, request.confirmLabel)
+      )
+    )
+  );
+}
+function publicSkillUrl(homepage, handle, slug) {
+  const raw = typeof homepage === "string" ? homepage.trim() : "";
+  const namespace = String(handle ?? "").trim();
+  const name = String(slug ?? "").trim();
+  if (raw === "" || raw.includes("//api.skillhub.cn")) {
+    if (namespace === "" || name === "") return "";
+    return `https://skillhub.cn/skills/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`;
+  }
+  return raw;
+}
+function SafetyBadge({ verdict, compact: compact3 }) {
+  if (verdict !== "safe") return null;
+  return h14(
+    "span",
+    {
+      className: "sm-safety" + (compact3 ? " sm-safety-compact" : ""),
+      title: t2("safety.badgeTitle")
+    },
+    h14(Icon, { name: "i-shield-check", size: compact3 ? 13 : 15 }),
+    compact3 ? null : t2("safety.badge")
+  );
+}
+var VENDOR_NAMES = { keen: "misc.vendorKeen", sanbu: "misc.vendorSanbu" };
+function vendorLabel(vendor) {
+  const code = String(vendor ?? "");
+  const key = VENDOR_NAMES[code];
+  return key === void 0 ? code : t2(key);
+}
+function StatStrip({ skill }) {
+  return h14(
+    "div",
+    { className: "sm-stat-strip" },
+    h14(
+      "div",
+      { className: "sm-f" },
+      h14("strong", { className: "sm-num" }, compact(skill.installs)),
+      h14("span", null, t2("metrics.downloads"))
+    ),
+    h14(
+      "div",
+      { className: "sm-f" },
+      h14("strong", { className: "sm-num" }, compact(skill.stars)),
+      h14("span", null, t2("card.saved"))
+    ),
+    h14(
+      "div",
+      { className: "sm-f" },
+      h14("strong", { className: "sm-num" }, formatScore(skill.score)),
+      h14("span", null, t2("metrics.score"))
+    ),
+    h14(
+      "div",
+      { className: "sm-f" },
+      h14("strong", { className: "sm-num" }, skill.version || "—"),
+      h14("span", null, t2("card.version"))
+    )
+  );
+}
+function humanSize(bytes) {
+  const n = Number(bytes);
+  if (!Number.isFinite(n) || n <= 0) return t2("files.unknownSize");
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+  return (n / 1024 / 1024).toFixed(1) + " MB";
+}
+function PanelIcon({ size }) {
+  return h14(Icon, { name: "i-skill", size: size ?? 18 });
+}
+var mounted = false;
+function readySkillMarket() {
+  if (mounted) return;
+  mounted = true;
+  insertStylesheet(CSS2);
+  void panelStateReady();
+}
+
 // src/client/market.js
 var import_react15 = require("react");
 var import_react_dom3 = require("react-dom");
@@ -9069,7 +13866,7 @@ var byLabel = (list = []) => list.slice().sort((a, b) => {
   const right = LABEL_ORDER.indexOf(b.id);
   return (left < 0 ? LABEL_ORDER.length : left) - (right < 0 ? LABEL_ORDER.length : right);
 });
-var SORTS = () => [
+var SORTS2 = () => [
   { id: "index", name: t("Default order"), value: { kind: "index" } },
   { id: "recommended", name: t("Smart picks"), value: { kind: "key", id: "recommended", direction: "desc" } },
   { id: "github-stars", name: t("GitHub stars"), value: { kind: "key", id: "github-stars", direction: "desc" } },
@@ -9162,8 +13959,8 @@ function Discover({ actions }) {
     const timer = setTimeout(() => setSettled(text.trim()), 300);
     return () => clearTimeout(timer);
   }, [text]);
-  const sortValue = (0, import_react15.useMemo)(() => (SORTS().find((item) => item.id === sort) ?? SORTS()[0]).value, [sort]);
-  const sortName = (0, import_react15.useMemo)(() => (SORTS().find((item) => item.id === sort) ?? SORTS()[0]).name, [sort]);
+  const sortValue = (0, import_react15.useMemo)(() => (SORTS2().find((item) => item.id === sort) ?? SORTS2()[0]).value, [sort]);
+  const sortName = (0, import_react15.useMemo)(() => (SORTS2().find((item) => item.id === sort) ?? SORTS2()[0]).name, [sort]);
   (0, import_react15.useEffect)(() => {
     let live = true;
     setBusy(true);
@@ -9317,7 +14114,7 @@ function Discover({ actions }) {
         (0, import_react15.createElement)(
           "select",
           { value: sort, onChange: (event) => setSort(event.target.value), "aria-label": t("Sort") },
-          ...SORTS().map((item) => (0, import_react15.createElement)("option", { key: item.id, value: item.id }, item.name))
+          ...SORTS2().map((item) => (0, import_react15.createElement)("option", { key: item.id, value: item.id }, item.name))
         )
       ),
       (0, import_react15.createElement)("button", { type: "button", className: "bt-mk-refresh", "aria-label": t("Refresh"), title: t("Refresh"), onClick: () => setReload((count) => count + 1) }, (0, import_react15.createElement)(RefreshIcon))
@@ -9481,30 +14278,16 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
     };
   }, [open, tab, shellPlugins, actions]);
   const plugins = Array.isArray(shellPlugins) ? shellPlugins : roster.plugins ?? [];
-  const [shellSkills, setShellSkills] = (0, import_react15.useState)(null);
   (0, import_react15.useEffect)(() => {
-    if (!open || tab !== "skills" || shellSkills !== null) return void 0;
-    let live = true;
-    Promise.resolve(actions.skillsList?.()).then(
-      (list2) => {
-        if (live) setShellSkills(Array.isArray(list2) ? list2 : []);
-      },
-      () => {
-        if (live) setShellSkills([]);
-      }
-    );
-    return () => {
-      live = false;
-    };
-  }, [open, tab, shellSkills, actions]);
-  const skills = Array.isArray(shellSkills) ? shellSkills : roster.skills ?? [];
+    if (open && tab === "skills") readySkillMarket();
+  }, [open, tab]);
   if (!open) return null;
-  const catalogue = (id) => id === "connectors" ? connectors : id === "capabilities" ? capabilities : id === "plugins" ? plugins : skills;
+  const catalogue = (id) => id === "connectors" ? connectors : id === "capabilities" ? capabilities : id === "plugins" ? plugins : [];
   const installedOf = (id) => {
     if (id === "connectors") return connectors.filter((entry) => entry.state === "ready");
     if (id === "capabilities") return capabilities;
     if (id === "plugins") return plugins.filter((entry) => entry.enabled !== false);
-    return skills;
+    return [];
   };
   const q = query.trim().toLowerCase();
   const row = (entry) => !q || `${entry.name} ${entry.detail ?? ""}`.toLowerCase().includes(q);
@@ -9570,8 +14353,8 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
             onClick: () => setTab(category.id)
           }, category.name))
         ),
-        (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t(tab === "plugins" ? "Enabled" : tab === "skills" ? "Available" : "Installed")),
-        (0, import_react15.createElement)(
+        tab === "skills" ? null : (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t(tab === "plugins" ? "Enabled" : "Installed")),
+        tab === "skills" ? null : (0, import_react15.createElement)(
           "div",
           { className: "bt-market-installed" },
           installed.length ? installed.map((entry) => {
@@ -9650,7 +14433,10 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
         (0, import_react15.createElement)(
           "div",
           { className: "bt-market-body" },
-          tab === "plugins" && !current ? [
+          // The Skills tab is the DeepSeek skill market itself, vendored from
+          // @montersy123/dsh-skill-market: discovery, detail drawer, install, favourites and
+          // local import all live in that panel, so nothing here reimplements them.
+          tab === "skills" ? (0, import_react15.createElement)("div", { className: "bt-market-skillhost", key: "skills" }, (0, import_react15.createElement)(SkillMarketPanel)) : tab === "plugins" && !current ? [
             (0, import_react15.createElement)(Discover, { key: "discover", actions }),
             (0, import_react15.createElement)(
               "button",
@@ -10729,7 +15515,7 @@ function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboardi
         import_react16.Fragment,
         { key: index },
         index > 0 ? (0, import_react16.createElement)("div", { className: "bt-menu-sep", role: "separator" }) : null,
-        group.map(([label, Icon, run2, hint, stay]) => (0, import_react16.createElement)("button", {
+        group.map(([label, Icon2, run2, hint, stay]) => (0, import_react16.createElement)("button", {
           key: label,
           type: "button",
           role: "menuitem",
@@ -10737,7 +15523,7 @@ function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboardi
             if (stay !== true) setOpen(false);
             void Promise.resolve(run2()).catch((error) => actions.reportError(error, "menu"));
           }
-        }, (0, import_react16.createElement)(Icon), (0, import_react16.createElement)("span", { className: "bt-menu-label" }, label), hint ? (0, import_react16.createElement)("span", { className: "bt-menu-hint" }, hint) : null))
+        }, (0, import_react16.createElement)(Icon2), (0, import_react16.createElement)("span", { className: "bt-menu-label" }, label), hint ? (0, import_react16.createElement)("span", { className: "bt-menu-hint" }, hint) : null))
       ))
     ), document.body) : null
   );
@@ -12843,7 +17629,7 @@ function Row({ label, hint, stack = false, children }) {
 function Card2({ title, children }) {
   return (0, import_react25.createElement)("section", { className: "bt-set-section" }, title ? (0, import_react25.createElement)("h3", null, title) : null, (0, import_react25.createElement)("div", { className: "bt-set-card" }, children));
 }
-function Switch({ on, label, disabled, onChange }) {
+function Switch2({ on, label, disabled, onChange }) {
   return (0, import_react25.createElement)(
     "button",
     { type: "button", role: "switch", className: "bt-switch", "aria-checked": on, "aria-label": label, disabled, onClick: () => onChange(!on) },
@@ -12855,7 +17641,7 @@ function SwitchRow({ label, hint, on, disabled, onChange }) {
     "div",
     { className: "bt-set-row bt-bs-row" },
     (0, import_react25.createElement)("span", { className: "bt-set-copy" }, (0, import_react25.createElement)("span", { className: "bt-bs-label" }, label), hint ? (0, import_react25.createElement)("span", { className: "bt-set-hint" }, hint) : null),
-    (0, import_react25.createElement)(Switch, { on, label, disabled, onChange })
+    (0, import_react25.createElement)(Switch2, { on, label, disabled, onChange })
   );
 }
 function modelHint(bot, roster) {
@@ -14177,7 +18963,7 @@ function SideEntry({ chatId, entry, actions }) {
 function SideChatView({ subject, chat, actions }) {
   const scroll = (0, import_react30.useRef)(null);
   const [draft, setDraft] = (0, import_react30.useState)("");
-  const [fail2, setFail] = (0, import_react30.useState)(null);
+  const [fail3, setFail] = (0, import_react30.useState)(null);
   const entries2 = Array.isArray(chat?.entries) ? chat.entries : [];
   const busy = entries2.some((entry) => entry?.status === "answering");
   const last = entries2.at(-1);
@@ -14217,7 +19003,7 @@ function SideChatView({ subject, chat, actions }) {
         "aria-label": t("Ask about the work so far"),
         onChange: (event) => {
           setDraft(event.target.value);
-          if (fail2 !== null) setFail(null);
+          if (fail3 !== null) setFail(null);
         },
         onKeyDown: (event) => {
           if (event.key !== "Enter" || event.shiftKey || event.nativeEvent?.isComposing) return;
@@ -14225,7 +19011,7 @@ function SideChatView({ subject, chat, actions }) {
           ask();
         }
       }),
-      fail2 !== null ? (0, import_react30.createElement)("p", { className: "bt-side-fail" }, fail2) : null
+      fail3 !== null ? (0, import_react30.createElement)("p", { className: "bt-side-fail" }, fail3) : null
     )
   );
 }
@@ -16081,17 +20867,17 @@ function disposeAll(disposers, label) {
   }
 }
 function surfaceGroups(install, { onError } = {}) {
-  const mounted = { shell: [], conversation: [] };
+  const mounted2 = { shell: [], conversation: [] };
   const withdraw = (group) => {
-    const disposers = mounted[group];
-    mounted[group] = [];
+    const disposers = mounted2[group];
+    mounted2[group] = [];
     disposeAll(disposers, `withdraw ${group}`);
   };
   const mount = (group) => {
     const disposers = [];
     try {
       for (const step of install[group]()) if (step) disposers.push(step());
-      mounted[group] = disposers;
+      mounted2[group] = disposers;
       return true;
     } catch (error) {
       disposeAll(disposers, `roll back ${group}`);
@@ -16101,12 +20887,12 @@ function surfaceGroups(install, { onError } = {}) {
     }
   };
   let lastWanted = {};
-  const api = {
+  const api2 = {
     reconcile(wanted) {
       lastWanted = wanted;
       for (const group of [...GROUPS].reverse()) if (!wanted[group]) withdraw(group);
       for (const group of GROUPS) {
-        if (!wanted[group] || mounted[group].length > 0) continue;
+        if (!wanted[group] || mounted2[group].length > 0) continue;
         if (!mount(group)) break;
       }
     },
@@ -16121,13 +20907,13 @@ function surfaceGroups(install, { onError } = {}) {
       if (!GROUPS.includes(group)) return;
       for (const later of GROUPS.slice(GROUPS.indexOf(group) + 1)) withdraw(later);
       withdraw(group);
-      api.reconcile(wanted);
+      api2.reconcile(wanted);
     },
     dispose() {
       for (const group of [...GROUPS].reverse()) withdraw(group);
     }
   };
-  return api;
+  return api2;
 }
 function freePriority(entries2, { priority, key, id }) {
   if (priority === void 0) return void 0;
@@ -17362,7 +22148,7 @@ function trimmed(value) {
   const text = value >= 100 ? value.toFixed(0) : value >= 10 ? value.toFixed(1) : value.toFixed(2);
   return text.includes(".") ? text.replace(/\.?0+$/, "") : text;
 }
-function compact(count) {
+function compact2(count) {
   for (const [size, unit] of [[1e9, "B"], [1e6, "M"], [1e3, "K"]]) {
     if (count >= size * 0.9995) return `${trimmed(count / size)}${unit}`;
   }
@@ -17502,7 +22288,7 @@ ${names}`, { box: boxRef });
     options.map(([id, text, icon2]) => (0, import_react39.createElement)("button", { key: id, type: "button", "aria-pressed": value === id, onClick: () => onChange(id) }, icon2 ? (0, import_react39.createElement)(icon2) : null, text))
   );
 }
-function Stats({ range, total, previous }) {
+function Stats2({ range, total, previous }) {
   const shown = useTween(total.total);
   const change = previous > 0 ? Math.round((total.total - previous) / previous * 100) : null;
   const cell = (label, value) => (0, import_react39.createElement)("div", { className: "bt-us-stat" }, (0, import_react39.createElement)("span", { className: "bt-us-stat-label" }, label), (0, import_react39.createElement)("span", { className: "bt-us-stat-value" }, value));
@@ -17516,7 +22302,7 @@ function Stats({ range, total, previous }) {
       (0, import_react39.createElement)(
         "span",
         { className: "bt-us-stat-value" },
-        compact(shown),
+        compact2(shown),
         (0, import_react39.createElement)("small", null, t("tokens")),
         change === null ? null : (0, import_react39.createElement)(
           "span",
@@ -17526,7 +22312,7 @@ function Stats({ range, total, previous }) {
       )
     ),
     cell(t("Cache hit rate"), `${hitRate(total)}%`),
-    cell(t("Output"), compact(total.output)),
+    cell(t("Output"), compact2(total.output)),
     cell(t("Calls"), full(total.calls))
   );
 }
@@ -17558,7 +22344,7 @@ function Chart({ range, columns: columns2, series, tipSeries, by, onBy, onPick }
       (0, import_react39.createElement)(
         "div",
         { className: "bt-us-plot", "data-hover": hover === null ? void 0 : "", onMouseLeave: () => setHover(null) },
-        [1, 0.5].map((level) => (0, import_react39.createElement)("div", { key: level, className: "bt-us-grid", style: { bottom: `${level * 100}%` } }, (0, import_react39.createElement)("span", null, compact(top * level)))),
+        [1, 0.5].map((level) => (0, import_react39.createElement)("div", { key: level, className: "bt-us-grid", style: { bottom: `${level * 100}%` } }, (0, import_react39.createElement)("span", null, compact2(top * level)))),
         (0, import_react39.createElement)("div", { className: "bt-us-grid bt-us-base", style: { bottom: 0 } }, (0, import_react39.createElement)("span", null, "0")),
         (0, import_react39.createElement)(
           "div",
@@ -17584,7 +22370,7 @@ function Chart({ range, columns: columns2, series, tipSeries, by, onBy, onPick }
             { key, className: "bt-us-tip-row" },
             (0, import_react39.createElement)("i", { className: "bt-us-dot", style: { background: tipOf.get(key)?.fill } }),
             (0, import_react39.createElement)("span", null, tipOf.get(key)?.name),
-            (0, import_react39.createElement)("b", null, compact(value))
+            (0, import_react39.createElement)("b", null, compact2(value))
           ))
         ) : null
       ),
@@ -17633,7 +22419,7 @@ function Row2({ kind, glyph, name, sub, sum, whole, fill: fill2, index, onClick 
       ),
       (0, import_react39.createElement)("span", { className: "bt-us-track" }, (0, import_react39.createElement)("span", { style: { width: `${width}%`, background: fill2 } }))
     ),
-    (0, import_react39.createElement)("span", { className: "bt-us-row-num" }, (0, import_react39.createElement)("b", null, compact(sum.total)), (0, import_react39.createElement)("small", null, `${percent2(sum.total, whole)}%`))
+    (0, import_react39.createElement)("span", { className: "bt-us-row-num" }, (0, import_react39.createElement)("b", null, compact2(sum.total)), (0, import_react39.createElement)("small", null, `${percent2(sum.total, whole)}%`))
   );
 }
 function ListCard({ title, count, index, children }) {
@@ -18025,7 +22811,7 @@ function UsagePage({ roster, actions, focusId }) {
       (0, import_react39.createElement)(
         "div",
         { key: "sheet", className: "bt-us-sheet" },
-        (0, import_react39.createElement)(Stats, { key: "stats", range, total: part.total, previous: part.previous }),
+        (0, import_react39.createElement)(Stats2, { key: "stats", range, total: part.total, previous: part.previous }),
         (0, import_react39.createElement)(Chart, { key: "chart", range, columns: columns2, series, tipSeries, onPick: pick2 }),
         (0, import_react39.createElement)(
           "div",
@@ -18049,7 +22835,7 @@ function UsagePage({ roster, actions, focusId }) {
       (0, import_react39.createElement)(
         "div",
         { key: "sheet", className: "bt-us-sheet" },
-        (0, import_react39.createElement)(Stats, { key: "stats", range, total: all.total, previous: all.previous }),
+        (0, import_react39.createElement)(Stats2, { key: "stats", range, total: all.total, previous: all.previous }),
         (0, import_react39.createElement)(Chart, { key: "chart", range, columns: columns2, series, tipSeries, by, onBy: setBy, onPick: pick2 }),
         (0, import_react39.createElement)(
           "div",
@@ -19105,7 +23891,7 @@ function CustomForm({ view, apply: apply2, actions, onDone }) {
       (0, import_react44.createElement)(
         "select",
         { className: "bt-select", "aria-label": t("Protocol"), value: draft.api, onChange: (event) => set("api", event.target.value) },
-        view.protocols.map((api) => (0, import_react44.createElement)("option", { key: api, value: api }, PROTOCOL_NAMES[api] ?? api))
+        view.protocols.map((api2) => (0, import_react44.createElement)("option", { key: api2, value: api2 }, PROTOCOL_NAMES[api2] ?? api2))
       )
     ),
     (0, import_react44.createElement)("label", { className: "bt-q-field bt-secret-field" }, (0, import_react44.createElement)(KeyIcon), (0, import_react44.createElement)(MaskedInput, { value: draft.key, onChange: (value) => set("key", value), label: t("API key") })),
@@ -19306,7 +24092,7 @@ function GeneralPage({ roster, actions, run: run2 }) {
       // The flat layout's text has a width of its own; the bubble width stays for the user's messages.
       layoutOf(prefs) === "flat" ? (0, import_react45.createElement)(SetRow, { label: t("Text width") }, (0, import_react45.createElement)(WidthSlider, { label: t("Text width"), value: flatWidthOf(prefs), save: (flatWidth) => run2(actions.setPrefs({ flatWidth })) })) : null,
       (0, import_react45.createElement)(SetRow, { label: t("Bubble width") }, (0, import_react45.createElement)(WidthSlider, { label: t("Bubble width"), value: widthOf(prefs), save: (width) => run2(actions.setPrefs({ width })) })),
-      (0, import_react45.createElement)(SetRow, { label: t("Show thinking") }, (0, import_react45.createElement)(Switch, { label: t("Show thinking"), on: thinkingShown(prefs), onChange: (thinking) => run2(actions.setPrefs({ thinking })) }))
+      (0, import_react45.createElement)(SetRow, { label: t("Show thinking") }, (0, import_react45.createElement)(Switch2, { label: t("Show thinking"), on: thinkingShown(prefs), onChange: (thinking) => run2(actions.setPrefs({ thinking })) }))
     ),
     actions.setSurface ? (0, import_react45.createElement)(
       SetSection,
@@ -19658,7 +24444,7 @@ function ContextMenu({ menu, roster, actions, leaving = false }) {
       import_react46.Fragment,
       { key: index },
       index > 0 ? (0, import_react46.createElement)("div", { className: "bt-menu-sep", role: "separator" }) : null,
-      group.map(([label, Icon, run2, danger]) => (0, import_react46.createElement)("button", {
+      group.map(([label, Icon2, run2, danger]) => (0, import_react46.createElement)("button", {
         key: label,
         type: "button",
         role: "menuitem",
@@ -19667,7 +24453,7 @@ function ContextMenu({ menu, roster, actions, leaving = false }) {
           actions.closeMenu();
           void Promise.resolve(run2()).catch((error) => actions.reportError(error, "menu"));
         }
-      }, (0, import_react46.createElement)(Icon), label))
+      }, (0, import_react46.createElement)(Icon2), label))
     ))
   );
 }
@@ -19704,7 +24490,7 @@ function AgentMenu({ menu, roster, actions, leaving }) {
       import_react46.Fragment,
       { key: index },
       index > 0 ? (0, import_react46.createElement)("div", { className: "bt-menu-sep", role: "separator" }) : null,
-      group.map(([label, Icon, run2, danger]) => (0, import_react46.createElement)("button", {
+      group.map(([label, Icon2, run2, danger]) => (0, import_react46.createElement)("button", {
         key: label,
         type: "button",
         role: "menuitem",
@@ -19713,7 +24499,7 @@ function AgentMenu({ menu, roster, actions, leaving }) {
           actions.closeMenu();
           void Promise.resolve(run2()).catch((error) => console.warn("[ds-bot]", error));
         }
-      }, (0, import_react46.createElement)(Icon), label))
+      }, (0, import_react46.createElement)(Icon2), label))
     ))
   );
 }
@@ -20828,10 +25614,10 @@ function UserText({ text, bots, referenceLabels, skillNames, references, actions
   ) : (0, import_react48.createElement)(import_react48.Fragment, { key: index }, ui.projectUserText(part.text, referenceLabels, skillNames, "skill", references)));
 }
 function Attachments({ attachments, renderMessageImages }) {
-  const compact2 = attachments.length > 1;
+  const compact3 = attachments.length > 1;
   return (0, import_react48.createElement)("div", { className: "bt-uattach" }, attachments.map((block, index) => {
     if (block.type === "image") {
-      return renderMessageImages ? (0, import_react48.createElement)(import_react48.Fragment, { key: index }, renderMessageImages({ images: [{ attachment: block.attachment }], align: "end", compact: compact2 })) : null;
+      return renderMessageImages ? (0, import_react48.createElement)(import_react48.Fragment, { key: index }, renderMessageImages({ images: [{ attachment: block.attachment }], align: "end", compact: compact3 })) : null;
     }
     const file = block.attachment;
     const meta = [ui.fileExtension?.(file.name)?.toUpperCase().slice(0, 8), ui.fileSizeText?.(file.bytes)].filter(Boolean).join(" · ");
@@ -21460,27 +26246,6 @@ function apply(ctx) {
       } catch (error) {
         actions.reportError(error, "plugins-panel");
       }
-    },
-    // Skills are per Session: the registry answers for one retained Session, so the market
-    // asks through the one the main view shows.
-    skillsList: async () => {
-      const skills = ctx.get("remote.skills");
-      if (typeof skills?.list !== "function") return [];
-      const byId = ctx.sessions.list.getSnapshot().byId ?? {};
-      const sessionId = Object.values(byId).find((session) => (session?.retainedBy?.mainView ?? 0) > 0)?.id ?? Object.values(byId)[0]?.id;
-      if (sessionId === void 0) return [];
-      const read = async () => {
-        const answer = await skills.list({ sessionId });
-        const value = answer && typeof answer === "object" && "ok" in answer ? answer.ok === false ? null : answer.value : answer;
-        return Array.isArray(value?.skills) ? value.skills : [];
-      };
-      const list = ctx.sessions.using === void 0 ? await read() : await ctx.sessions.using(sessionId, { source: "skillCatalog" }, read);
-      return (Array.isArray(list) ? list : []).map((entry) => ({
-        id: entry.name,
-        name: entry.name,
-        detail: entry.description ?? "",
-        state: "ready"
-      }));
     },
     // The installed list is the shell's Plugins page installed list, not everything loaded:
     // a bundle the installation ships with is not the user's to see or remove here.
