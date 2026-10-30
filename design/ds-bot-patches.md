@@ -1,6 +1,6 @@
 # ds-bot 本地补丁台账
 
-已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）。
+已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）；⑬ 移动端三个自绘控件的密度对齐 OpenMausBot。
 **追加优先**：能写在文件末尾的绝不改上游已有行，把上游合并冲突面积压到最小。
 
 - 基线：**上游 `4a7b550`**（①②③ 已进提交 `f03bc73`，所以补丁必须相对 `4a7b550` 生成，`git diff` 相对 HEAD 只剩 ④⑤）
@@ -47,6 +47,7 @@ hunk 3、5 是唯一的 minus 行（挂载点，各 1 处组件插入），其�
 | ⑤ 样式 | `styles.js` | 追加 `.bt-menu-btn`（44×44、绝对定位、`pointer-events:auto`）+ `html:has([data-mobile-nav="frame"]) .bt-menu-btn{display:flex}` | 绝对定位不参与 `.bt-head` 的 flex 居中；`pointer-events:auto` 必须显式写（`.bt-head` 是 `none`，漏了就是死按钮）；可见性用 dsh-web-mobile 的标记而非宽度，rail 模式不会多出按钮，标记消失时安全失败（原生按钮回归，不会两个汉堡） |
 
 | ⑫ PC 输入框 | `styles.js` | `_add` 隐藏、三处按钮间距、`:focus-within` 底色都收进 `html:has([data-mobile-nav="frame"])`；桌面新增 `html:not(:has(...)) [data-composer-card]{flex-direction:row;flex-wrap:wrap;align-items:center;gap:0;padding:6px 8px}`，藏掉自绘 `.bt-plus/.bt-mic/.bt-voice`；输入框行高与占位文字 24→20、占位 `top` 2→0（游标与文字同一行盒）；发送键 `transform:none` 由移动端改为两端通用 | 宿主 2.0.19-next 的卡片是 `flex-direction:column`（输入一行、控件一行），上游那批拆行 + order 1/2/3 是为旧的一行结构写的，撞上去就在桌面摊成「加号右上、麦克风右下」。现在两端都是一行胶囊：桌面用宿主自己的「+」和发送键，手机用自绘控件；圆角与占位文字两端通用不动。行高原为 24px，游标按行高绘制就比 14px 文字高 4px；占位又比行盒低 2px，游标和文字本来就没对齐。宿主给发送键的 `translateY(-2px)` 也一并去掉，桌面实测三个居中量都相等。**代价：PC 上没有听写与语音对话**，宿主 PC 端本身不提供，这两个是自绘控件 |
+| ⑬ 移动端控件密度 | `styles.js` | `.bt-plus` 与 `.bt-mic/.bt-voice` 28→**32px**，两者 `svg` 22→**18px**；移动端发送键 28→32px、图标 14→16px | 对标 OpenMausBot 的胶囊（`src/components/Composer.tsx`：`size-8`=32px 按钮 + 17–18px 图标，图标只占按钮直径 56%）。我们原来是 22px 图标塞 28px 按钮、占 79%，看着图标撑满没呼吸，也没有 44px 触控目标。桌面不动：宿主自己的「+」28px、发送 34px。触发方式不抄它（它按视口 767.98px，我们只能按 `data-mobile-nav="frame"`，因为卡片 DOM 不归我们） |
 
 「切换 Agent 模式」走 `setSurface`，**故意不接**。
 

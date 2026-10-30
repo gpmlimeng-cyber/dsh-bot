@@ -597,7 +597,7 @@ index 58d1840..d2cacb9 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..bed6878 100644
+index aa38a3b..b4d7df3 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -150,7 +150,11 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
@@ -685,7 +685,7 @@ index aa38a3b..bed6878 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1044,80 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1044,81 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -751,11 +751,11 @@ index aa38a3b..bed6878 100644
 +   menu, the trailing send button and the spacing between them. Only the phone frame gets
 +   the team's replacement controls. */
 +html:not(:has([data-mobile-nav="frame"])) [data-composer-card] :is(.bt-plus,.bt-mic,.bt-voice){display:none!important}
-+.bt-plus{flex:none;align-self:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;box-shadow:none;color:var(--bt-ink);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
++.bt-plus{flex:none;align-self:center;width:32px;height:32px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;box-shadow:none;color:var(--bt-ink);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
 +.bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 8%,transparent);color:var(--bt-ink)}
  .bt-plus:active{scale:.9}
 -.bt-plus svg{width:14px;height:14px;transition:${spring(SPRING_POP, 'rotate')}}
-+.bt-plus svg{width:22px;height:22px;transition:${spring(SPRING_POP, 'rotate')}}
++.bt-plus svg{width:18px;height:18px;transition:${spring(SPRING_POP, 'rotate')}}
  .bt-plus[aria-expanded=true] svg{rotate:45deg}
  .bt-plus-menu{min-width:180px}
 -[data-composer-card] [class*="_tools"]{gap:0!important}
@@ -770,24 +770,26 @@ index aa38a3b..bed6878 100644
 -[data-composer-card] button[class*="_primary"]:hover:not(:disabled){opacity:.9}
 -[data-composer-card] button[class*="_primary"]:active:not(:disabled){scale:.9}
 +html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_standardControls"]{align-items:center!important;gap:8px!important}
-+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]{width:28px!important;height:28px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink,#fff)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
++html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink,#fff)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
 +html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:hover:not(:disabled){opacity:.9}
 +html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:active:not(:disabled){scale:.9}
  @keyframes bt-icon-swap{from{opacity:0;transform:scale(.5) rotate(-30deg)}}
 -[data-composer-card] button[class*="_primary"] svg{width:14px;height:14px}
 -[data-composer-card] button[class*="_primary"]:disabled{display:none!important}
-+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"] svg{width:14px;height:14px}
++html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"] svg{width:16px;height:16px}
 +html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:disabled{display:none!important}
  [data-composer-dock]{display:none!important}
- .bt-mic,.bt-voice{flex:none;width:28px;height:28px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
+-.bt-mic,.bt-voice{flex:none;width:28px;height:28px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
 -.bt-mic{background:color-mix(in srgb,var(--bt-ink) 5%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink-2)}
 -.bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
++.bt-mic,.bt-voice{flex:none;width:32px;height:32px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
 +.bt-mic{background:transparent;box-shadow:none;color:var(--bt-ink)}
++.bt-mic svg,.bt-voice svg{width:18px;height:18px}
 +.bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 8%,transparent);color:var(--bt-ink)}
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1167,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1168,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -814,7 +816,7 @@ index aa38a3b..bed6878 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1187,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1188,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -823,7 +825,7 @@ index aa38a3b..bed6878 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1228,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1229,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}

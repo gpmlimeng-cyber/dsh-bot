@@ -1096,10 +1096,10 @@ html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_add"]{d
    menu, the trailing send button and the spacing between them. Only the phone frame gets
    the team's replacement controls. */
 html:not(:has([data-mobile-nav="frame"])) [data-composer-card] :is(.bt-plus,.bt-mic,.bt-voice){display:none!important}
-.bt-plus{flex:none;align-self:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;box-shadow:none;color:var(--bt-ink);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
+.bt-plus{flex:none;align-self:center;width:32px;height:32px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;box-shadow:none;color:var(--bt-ink);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 8%,transparent);color:var(--bt-ink)}
 .bt-plus:active{scale:.9}
-.bt-plus svg{width:22px;height:22px;transition:${spring(SPRING_POP, 'rotate')}}
+.bt-plus svg{width:18px;height:18px;transition:${spring(SPRING_POP, 'rotate')}}
 .bt-plus[aria-expanded=true] svg{rotate:45deg}
 .bt-plus-menu{min-width:180px}
 html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_tools"]{gap:0!important}
@@ -1108,15 +1108,16 @@ html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_tools"]{gap:0
 html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_trailing"]{gap:8px!important}
 /* No display here: DSH hides these controls with [hidden] while the Bot works. */
 html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_standardControls"]{align-items:center!important;gap:8px!important}
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]{width:28px!important;height:28px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink,#fff)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink,#fff)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
 html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:hover:not(:disabled){opacity:.9}
 html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:active:not(:disabled){scale:.9}
 @keyframes bt-icon-swap{from{opacity:0;transform:scale(.5) rotate(-30deg)}}
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"] svg{width:14px;height:14px}
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"] svg{width:16px;height:16px}
 html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:disabled{display:none!important}
 [data-composer-dock]{display:none!important}
-.bt-mic,.bt-voice{flex:none;width:28px;height:28px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
+.bt-mic,.bt-voice{flex:none;width:32px;height:32px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-mic{background:transparent;box-shadow:none;color:var(--bt-ink)}
+.bt-mic svg,.bt-voice svg{width:18px;height:18px}
 .bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 8%,transparent);color:var(--bt-ink)}
 .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
 @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
