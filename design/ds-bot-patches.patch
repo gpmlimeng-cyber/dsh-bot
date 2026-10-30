@@ -155,51 +155,6 @@ index 08d3b66..24096b6 100644
      canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
      h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
  }
-diff --git a/ds-bot/src/client/context-menu.js b/ds-bot/src/client/context-menu.js
-index dc5fd1b..972887c 100644
---- a/ds-bot/src/client/context-menu.js
-+++ b/ds-bot/src/client/context-menu.js
-@@ -1,10 +1,11 @@
- import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
- import { isMainOf } from './sources.js'
- import { currentPart } from './text.js'
--import { GearIcon, PinIcon, UnreadIcon, PencilIcon, StarLineIcon, CopyIcon, HideIcon, TrashIcon, DuplicateIcon } from './icons.js'
-+import { GearIcon, PinIcon, UnreadIcon, PencilIcon, StarLineIcon, CopyIcon, HideIcon, TrashIcon, DuplicateIcon, FolderIcon } from './icons.js'
- import { useEscape } from './overlay-hooks.js'
- import { useViewport, viewBottom } from './motion.js'
- import { t } from './i18n.js'
-+import { readArrangement, writeArrangement } from './sidebar-groups.js'
- 
- export function ContextMenu({ menu, roster, actions, leaving = false }) {
-   useEscape(() => actions.closeMenu())
-@@ -26,6 +27,7 @@ export function ContextMenu({ menu, roster, actions, leaving = false }) {
-   const room = roster.roomsById[menu.id]
-   const entry = bot ?? room
-   if (entry === undefined) return null
-+  const arrangement = readArrangement()
-   const isMainBot = isMainOf(roster, menu.id)
-   const isTile = roster.mainBotId === menu.id
-   const mainCount = (roster.mainBotIds ?? []).length
-@@ -43,6 +45,19 @@ export function ContextMenu({ menu, roster, actions, leaving = false }) {
-       bot && !isMainBot ? [t('Make Main Bot'), StarLineIcon, () => actions.setMain(bot.id, true)] : null,
-       bot && isMainBot && mainCount > 1 ? [t('Remove Main Bot role'), StarLineIcon, () => actions.setMain(bot.id, false)] : null,
-     ],
-+    // The same groups the sidebar draws: one entry per section, plus the way back out.
-+    arrangement.groups.length || arrangement.assign[menu.id]
-+      ? [[
-+        ...arrangement.groups.map(group => [group.name, FolderIcon, () => {
-+          writeArrangement({ ...arrangement, assign: { ...arrangement.assign, [menu.id]: group.id } })
-+        }]),
-+        arrangement.assign[menu.id] ? [t('Remove from section'), FolderIcon, () => {
-+          const assign = { ...arrangement.assign }
-+          delete assign[menu.id]
-+          writeArrangement({ ...arrangement, assign })
-+        }] : null,
-+      ].filter(Boolean)]
-+      : [],
-     [[t('Copy conversation ID'), CopyIcon, () => navigator.clipboard?.writeText(bot ? currentPart(bot) : menu.id)]],
-     [
-       isMainBot ? null : [t('Hide from sidebar'), HideIcon, () => actions.setFlags(menu.id, { hidden: true })],
 diff --git a/ds-bot/src/client/create-bot.js b/ds-bot/src/client/create-bot.js
 index 3956f8f..40a05f4 100644
 --- a/ds-bot/src/client/create-bot.js
@@ -357,7 +312,7 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 32ba8c9..5dd4f85 100644
+index 32ba8c9..69c06e2 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
 @@ -18,6 +18,51 @@ const ZH = {
@@ -420,7 +375,7 @@ index 32ba8c9..5dd4f85 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -420,6 +464,20 @@ const ZH = {
+@@ -420,6 +464,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -437,11 +392,14 @@ index 32ba8c9..5dd4f85 100644
 +  'Rename section': '重命名分组',
 +  'Delete section': '删除分组',
 +  'Move to section': '移动到分组',
++  'Move rows here': '把条目移到这里',
++  'Move to this group': '移到这个分组',
++  'Everything is here already': '都已经在这个分组里了',
 +  'Remove from section': '移出分组',
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -535,6 +593,19 @@ const ZH = {
+@@ -535,6 +596,19 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -461,7 +419,7 @@ index 32ba8c9..5dd4f85 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -918,6 +989,10 @@ const ZH = {
+@@ -918,6 +992,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -472,7 +430,7 @@ index 32ba8c9..5dd4f85 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -960,6 +1035,7 @@ const ZH = {
+@@ -960,6 +1038,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -480,7 +438,7 @@ index 32ba8c9..5dd4f85 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1044,6 +1120,10 @@ const ZH = {
+@@ -1044,6 +1123,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -1762,7 +1720,7 @@ index 0000000..ae11666
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 58d1840..3fb714c 100644
+index 58d1840..ea016ae 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -3,14 +3,19 @@ import { createPortal } from 'react-dom'
@@ -1892,7 +1850,7 @@ index 58d1840..3fb714c 100644
    const roster = useRoster(value => value)
    const markedUnread = useUi(value => value.unread)
    props.useRegistry(value => value)
-@@ -272,6 +299,78 @@ export function TeamSidebar(props) {
+@@ -272,6 +299,89 @@ export function TeamSidebar(props) {
      return entries.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at)
    }, [roster, updated])
    const main = roster.byId[roster.mainBotId]
@@ -1907,6 +1865,8 @@ index 58d1840..3fb714c 100644
 +  }, [])
 +  const [renamingSection, setRenamingSection] = useState(null)
 +  const [sectionMenu, setSectionMenu] = useState(null)
++  const [sectionPicker, setSectionPicker] = useState(null)
++  const [creating, setCreating] = useState(false)
 +  const sections = useMemo(() => {
 +    const pinned = order.filter(entry => entry.item.pinned)
 +    // The Main Bot's row otherwise sits above every section; once it is put in a group it
@@ -1929,10 +1889,19 @@ index 58d1840..3fb714c 100644
 +    setArrange(next)
 +    writeArrangement(next)
 +  }
-+  const addGroup = () => {
++  // The new-group row turns into a name field in place: nothing is created until it is named.
++  const beginCreate = () => {
++    setSectionMenu(null)
++    setSectionPicker(null)
++    setRenamingSection(null)
++    setCreating(true)
++  }
++  const createGroup = (name) => {
++    const clean = name.trim().slice(0, 24)
++    setCreating(false)
++    if (!clean) return
 +    const id = `g${Date.now().toString(36)}`
-+    changeArrange({ ...arrange, groups: arrange.groups.concat({ id, name: t('New section'), collapsed: false }) })
-+    setRenamingSection(id)
++    changeArrange({ ...arrange, groups: arrange.groups.concat({ id, name: clean, collapsed: false }) })
 +  }
 +  const renameGroup = (id, name) => {
 +    const clean = name.trim().slice(0, 24)
@@ -1971,7 +1940,7 @@ index 58d1840..3fb714c 100644
    useListGlide(listRef, wide, order.map(entry => entry.item.id).join(','))
    useLandOnMainBot(roster, useSessions, actions)
    // The shell keeps wide content during its collapse fade. Normalize through its
-@@ -292,6 +391,8 @@ export function TeamSidebar(props) {
+@@ -292,6 +402,8 @@ export function TeamSidebar(props) {
      openAgent: id => navigate(actions.openAgent, id),
      openAgentSession: id => navigate(actions.openAgentSession, id),
      newAgentSession: id => navigate(actions.newAgentSession, id),
@@ -1980,7 +1949,7 @@ index 58d1840..3fb714c 100644
    }
    const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
    // Typing while the sidebar has focus starts a search.
-@@ -299,26 +400,66 @@ export function TeamSidebar(props) {
+@@ -299,26 +411,91 @@ export function TeamSidebar(props) {
      if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
      if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
      event.preventDefault()
@@ -2031,19 +2000,34 @@ index 58d1840..3fb714c 100644
 +            'aria-expanded': !isFolded(section),
 +            onClick: () => foldSection(section),
 +          },
-+          h('span', { className: 'bt-sec-caret', 'data-open': !isFolded(section) ? '' : undefined, 'aria-hidden': true }, h(ChevronRightIcon)),
 +          h('span', { className: 'bt-sec-name' }, section.name),
++          h('span', { className: 'bt-sec-caret', 'data-open': !isFolded(section) ? '' : undefined, 'aria-hidden': true }, h(ChevronRightIcon)),
 +          h('span', { className: 'bt-sec-count' }, String(section.entries.length))),
 +        section.custom
 +          ? h('button', {
 +            type: 'button', className: 'bt-sec-more', 'aria-label': t('Section options'), 'aria-expanded': sectionMenu === section.id,
-+            onClick: (event) => { event.stopPropagation(); setSectionMenu((open) => (open === section.id ? null : section.id)) },
++            onClick: (event) => { event.stopPropagation(); setSectionPicker(null); setSectionMenu((open) => (open === section.id ? null : section.id)) },
 +          }, h(MoreDotsIcon))
 +          : null,
 +        sectionMenu === section.id
 +          ? h('div', { className: 'bt-sec-menu', role: 'menu' },
-+            h('button', { type: 'button', role: 'menuitem', onClick: () => { setSectionMenu(null); setRenamingSection(section.id) } }, h(PencilIcon), t('Rename section')),
-+            h('button', { type: 'button', role: 'menuitem', className: 'bt-danger', onClick: () => deleteGroup(section.id) }, h(TrashIcon), t('Delete section')))
++            sectionPicker === section.id
++              ? [
++                h('div', { key: 'head', className: 'bt-sec-menu-head' }, t('Move to this group')),
++                ...order.filter(entry => arrange.assign[entry.item.id] !== section.id).map(entry => h('button', {
++                  key: entry.item.id, type: 'button', role: 'menuitem', className: 'bt-sec-pick',
++                  onClick: () => assignTo(entry.item.id, section.id),
++                }, h('span', { className: 'bt-sec-pick-name' }, entry.item.name))),
++                order.every(entry => arrange.assign[entry.item.id] === section.id)
++                  ? h('div', { key: 'none', className: 'bt-sec-menu-empty' }, t('Everything is here already'))
++                  : null,
++              ]
++              : [
++                h('button', { key: 'rename', type: 'button', role: 'menuitem', onClick: () => { setSectionMenu(null); setRenamingSection(section.id) } }, h(PencilIcon), t('Rename section')),
++                h('button', { key: 'move', type: 'button', role: 'menuitem', onClick: () => setSectionPicker(section.id) }, h(PlusIcon), t('Move rows here')),
++                h('button', { key: 'new', type: 'button', role: 'menuitem', onClick: () => beginCreate() }, h(PlusIcon), t('New section')),
++                h('button', { key: 'delete', type: 'button', role: 'menuitem', className: 'bt-danger', onClick: () => deleteGroup(section.id) }, h(TrashIcon), t('Delete section')),
++              ])
 +          : null),
 +        ...(isFolded(section) ? [] : section.entries.map(entry => (entry.kind === 'bot'
 +          ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
@@ -2051,8 +2035,18 @@ index 58d1840..3fb714c 100644
 +            ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
 +            : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })))),
 +      ]),
-+      h('button', { key: 'new-group', type: 'button', className: 'bt-sec-new', onClick: addGroup },
-+        h(PlusIcon), h('span', null, t('New section')))),
++      creating
++        ? h('input', {
++          key: 'new-group-input', className: 'bt-sec-new-input', autoFocus: true, placeholder: t('New section'),
++          'aria-label': t('New section'),
++          onBlur: (event) => createGroup(event.target.value),
++          onKeyDown: (event) => {
++            if (event.key === 'Enter') { event.preventDefault(); createGroup(event.currentTarget.value) }
++            if (event.key === 'Escape') { event.stopPropagation(); setCreating(false) }
++          },
++        })
++        : h('button', { key: 'new-group', type: 'button', className: 'bt-sec-new', onClick: beginCreate },
++          h(PlusIcon), h('span', null, t('New section')))),
 +    h('div', { className: 'bt-side-foot' },
 +      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
 +        h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
@@ -2061,7 +2055,7 @@ index 58d1840..3fb714c 100644
  }
  
  // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -483,7 +624,17 @@ const NO_SNAPSHOT = () => null
+@@ -483,7 +660,17 @@ const NO_SNAPSHOT = () => null
  // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
  // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
  // back in Agent mode; FooterAccount stands in while no seat exists at all.
@@ -2080,7 +2074,7 @@ index 58d1840..3fb714c 100644
    const [open, setOpen] = useState(false)
    useLayoutEffect(() => {
      if (!seat) return undefined
-@@ -565,7 +716,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+@@ -565,7 +752,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
    }, [open])
    const groups = [
      [
@@ -2103,7 +2097,7 @@ index f74ffcb..976bcce 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..b25c187 100644
+index aa38a3b..5b507aa 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -2144,7 +2138,7 @@ index aa38a3b..b25c187 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,22 +141,223 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,22 +141,229 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -2161,6 +2155,11 @@ index aa38a3b..b25c187 100644
 +.bt-sec-row{position:relative;display:flex;align-items:center;gap:2px}
 +.bt-sec-row .bt-sec{flex:1 1 auto;min-width:0}
 +.bt-sec-more{flex:none;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;background:none;color:var(--bt-ink-3);cursor:pointer;opacity:0}
++.bt-sec-menu-head{padding:4px 8px 6px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
++.bt-sec-pick{padding-left:8px}
++.bt-sec-pick-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
++.bt-sec-menu-empty{padding:6px 8px;font-size:12px;color:var(--bt-ink-3)}
++.bt-sec-menu{max-height:280px;overflow-y:auto}
 +.bt-sec-row:hover .bt-sec-more,.bt-sec-more[aria-expanded=true]{opacity:1}
 +.bt-sec-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
 +.bt-sec-menu{position:absolute;right:4px;top:24px;z-index:8;display:flex;flex-direction:column;min-width:150px;padding:4px;border-radius:10px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 12px 28px -12px rgba(0,0,0,.28)}
@@ -2171,6 +2170,7 @@ index aa38a3b..b25c187 100644
 +.bt-sec-new{display:flex;align-items:center;gap:6px;width:100%;height:30px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;color:var(--bt-ink-3);cursor:pointer;text-align:left}
 +.bt-sec-new:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
 +.bt-sec-new svg{width:14px;height:14px}
++.bt-sec-new-input{width:100%;height:30px;margin-top:6px;padding:0 9px;border:1px solid var(--bt-line-2);border-radius:8px;background:var(--bt-card);font:inherit;font-size:12px;color:var(--bt-ink);outline:none}
 +/* A section heading over its rows: small, quiet, and folding on a click. */
 +.bt-sec{display:flex;align-items:center;gap:5px;width:100%;height:26px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:11px;line-height:16px;letter-spacing:.02em;color:var(--bt-ink-3);cursor:pointer;text-align:left}
 +.bt-sec:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
@@ -2371,7 +2371,7 @@ index aa38a3b..b25c187 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -317,6 +524,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -317,6 +530,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -2398,7 +2398,7 @@ index aa38a3b..b25c187 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -548,7 +775,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -548,7 +781,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
  html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
  html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
@@ -2409,7 +2409,7 @@ index aa38a3b..b25c187 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -588,7 +817,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -588,7 +823,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -2419,7 +2419,7 @@ index aa38a3b..b25c187 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -883,6 +1113,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +1119,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -2481,7 +2481,7 @@ index aa38a3b..b25c187 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1267,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1273,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -2590,7 +2590,7 @@ index aa38a3b..b25c187 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1395,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1401,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -2617,7 +2617,7 @@ index aa38a3b..b25c187 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1415,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1421,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -2626,7 +2626,7 @@ index aa38a3b..b25c187 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1456,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1462,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}

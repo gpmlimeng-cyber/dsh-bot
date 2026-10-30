@@ -536,6 +536,9 @@ var ZH = {
   "Rename section": "重命名分组",
   "Delete section": "删除分组",
   "Move to section": "移动到分组",
+  "Move rows here": "把条目移到这里",
+  "Move to this group": "移到这个分组",
+  "Everything is here already": "都已经在这个分组里了",
   "Remove from section": "移出分组",
   "Group chats": "群聊",
   Secrets: "密钥",
@@ -2634,6 +2637,11 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-sec-row{position:relative;display:flex;align-items:center;gap:2px}
 .bt-sec-row .bt-sec{flex:1 1 auto;min-width:0}
 .bt-sec-more{flex:none;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;background:none;color:var(--bt-ink-3);cursor:pointer;opacity:0}
+.bt-sec-menu-head{padding:4px 8px 6px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
+.bt-sec-pick{padding-left:8px}
+.bt-sec-pick-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-sec-menu-empty{padding:6px 8px;font-size:12px;color:var(--bt-ink-3)}
+.bt-sec-menu{max-height:280px;overflow-y:auto}
 .bt-sec-row:hover .bt-sec-more,.bt-sec-more[aria-expanded=true]{opacity:1}
 .bt-sec-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-sec-menu{position:absolute;right:4px;top:24px;z-index:8;display:flex;flex-direction:column;min-width:150px;padding:4px;border-radius:10px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 12px 28px -12px rgba(0,0,0,.28)}
@@ -2644,6 +2652,7 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-sec-new{display:flex;align-items:center;gap:6px;width:100%;height:30px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;color:var(--bt-ink-3);cursor:pointer;text-align:left}
 .bt-sec-new:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
 .bt-sec-new svg{width:14px;height:14px}
+.bt-sec-new-input{width:100%;height:30px;margin-top:6px;padding:0 9px;border:1px solid var(--bt-line-2);border-radius:8px;background:var(--bt-card);font:inherit;font-size:12px;color:var(--bt-ink);outline:none}
 /* A section heading over its rows: small, quiet, and folding on a click. */
 .bt-sec{display:flex;align-items:center;gap:5px;width:100%;height:26px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:11px;line-height:16px;letter-spacing:.02em;color:var(--bt-ink-3);cursor:pointer;text-align:left}
 .bt-sec:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
@@ -10021,6 +10030,8 @@ function TeamSidebar(props) {
   }, []);
   const [renamingSection, setRenamingSection] = (0, import_react16.useState)(null);
   const [sectionMenu, setSectionMenu] = (0, import_react16.useState)(null);
+  const [sectionPicker, setSectionPicker] = (0, import_react16.useState)(null);
+  const [creating, setCreating] = (0, import_react16.useState)(false);
   const sections = (0, import_react16.useMemo)(() => {
     const pinned = order.filter((entry) => entry.item.pinned);
     const mainAssigned = main ? arrange.assign[main.id] : void 0;
@@ -10041,10 +10052,18 @@ function TeamSidebar(props) {
     setArrange(next);
     writeArrangement(next);
   };
-  const addGroup = () => {
+  const beginCreate = () => {
+    setSectionMenu(null);
+    setSectionPicker(null);
+    setRenamingSection(null);
+    setCreating(true);
+  };
+  const createGroup = (name) => {
+    const clean = name.trim().slice(0, 24);
+    setCreating(false);
+    if (!clean) return;
     const id = `g${Date.now().toString(36)}`;
-    changeArrange({ ...arrange, groups: arrange.groups.concat({ id, name: t("New section"), collapsed: false }) });
-    setRenamingSection(id);
+    changeArrange({ ...arrange, groups: arrange.groups.concat({ id, name: clean, collapsed: false }) });
   };
   const renameGroup = (id, name) => {
     const clean = name.trim().slice(0, 24);
@@ -10169,8 +10188,8 @@ function TeamSidebar(props) {
               "aria-expanded": !isFolded(section),
               onClick: () => foldSection(section)
             },
-            (0, import_react16.createElement)("span", { className: "bt-sec-caret", "data-open": !isFolded(section) ? "" : void 0, "aria-hidden": true }, (0, import_react16.createElement)(ChevronRightIcon)),
             (0, import_react16.createElement)("span", { className: "bt-sec-name" }, section.name),
+            (0, import_react16.createElement)("span", { className: "bt-sec-caret", "data-open": !isFolded(section) ? "" : void 0, "aria-hidden": true }, (0, import_react16.createElement)(ChevronRightIcon)),
             (0, import_react16.createElement)("span", { className: "bt-sec-count" }, String(section.entries.length))
           ),
           section.custom ? (0, import_react16.createElement)("button", {
@@ -10180,24 +10199,56 @@ function TeamSidebar(props) {
             "aria-expanded": sectionMenu === section.id,
             onClick: (event) => {
               event.stopPropagation();
+              setSectionPicker(null);
               setSectionMenu((open) => open === section.id ? null : section.id);
             }
           }, (0, import_react16.createElement)(MoreDotsIcon)) : null,
           sectionMenu === section.id ? (0, import_react16.createElement)(
             "div",
             { className: "bt-sec-menu", role: "menu" },
-            (0, import_react16.createElement)("button", { type: "button", role: "menuitem", onClick: () => {
-              setSectionMenu(null);
-              setRenamingSection(section.id);
-            } }, (0, import_react16.createElement)(PencilIcon), t("Rename section")),
-            (0, import_react16.createElement)("button", { type: "button", role: "menuitem", className: "bt-danger", onClick: () => deleteGroup(section.id) }, (0, import_react16.createElement)(TrashIcon), t("Delete section"))
+            sectionPicker === section.id ? [
+              (0, import_react16.createElement)("div", { key: "head", className: "bt-sec-menu-head" }, t("Move to this group")),
+              ...order.filter((entry) => arrange.assign[entry.item.id] !== section.id).map((entry) => (0, import_react16.createElement)("button", {
+                key: entry.item.id,
+                type: "button",
+                role: "menuitem",
+                className: "bt-sec-pick",
+                onClick: () => assignTo(entry.item.id, section.id)
+              }, (0, import_react16.createElement)("span", { className: "bt-sec-pick-name" }, entry.item.name))),
+              order.every((entry) => arrange.assign[entry.item.id] === section.id) ? (0, import_react16.createElement)("div", { key: "none", className: "bt-sec-menu-empty" }, t("Everything is here already")) : null
+            ] : [
+              (0, import_react16.createElement)("button", { key: "rename", type: "button", role: "menuitem", onClick: () => {
+                setSectionMenu(null);
+                setRenamingSection(section.id);
+              } }, (0, import_react16.createElement)(PencilIcon), t("Rename section")),
+              (0, import_react16.createElement)("button", { key: "move", type: "button", role: "menuitem", onClick: () => setSectionPicker(section.id) }, (0, import_react16.createElement)(PlusIcon), t("Move rows here")),
+              (0, import_react16.createElement)("button", { key: "new", type: "button", role: "menuitem", onClick: () => beginCreate() }, (0, import_react16.createElement)(PlusIcon), t("New section")),
+              (0, import_react16.createElement)("button", { key: "delete", type: "button", role: "menuitem", className: "bt-danger", onClick: () => deleteGroup(section.id) }, (0, import_react16.createElement)(TrashIcon), t("Delete section"))
+            ]
           ) : null
         ),
         ...isFolded(section) ? [] : section.entries.map((entry) => entry.kind === "bot" ? (0, import_react16.createElement)(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true }) : entry.kind === "room" ? (0, import_react16.createElement)(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true }) : (0, import_react16.createElement)(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true }))
       ]),
-      (0, import_react16.createElement)(
+      creating ? (0, import_react16.createElement)("input", {
+        key: "new-group-input",
+        className: "bt-sec-new-input",
+        autoFocus: true,
+        placeholder: t("New section"),
+        "aria-label": t("New section"),
+        onBlur: (event) => createGroup(event.target.value),
+        onKeyDown: (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            createGroup(event.currentTarget.value);
+          }
+          if (event.key === "Escape") {
+            event.stopPropagation();
+            setCreating(false);
+          }
+        }
+      }) : (0, import_react16.createElement)(
         "button",
-        { key: "new-group", type: "button", className: "bt-sec-new", onClick: addGroup },
+        { key: "new-group", type: "button", className: "bt-sec-new", onClick: beginCreate },
         (0, import_react16.createElement)(PlusIcon),
         (0, import_react16.createElement)("span", null, t("New section"))
       )
@@ -19407,7 +19458,6 @@ function ContextMenu({ menu, roster, actions, leaving = false }) {
   const room2 = roster.roomsById[menu.id];
   const entry = bot ?? room2;
   if (entry === void 0) return null;
-  const arrangement = readArrangement();
   const isMainBot = isMainOf(roster, menu.id);
   const isTile = roster.mainBotId === menu.id;
   const mainCount = (roster.mainBotIds ?? []).length;
@@ -19428,17 +19478,6 @@ function ContextMenu({ menu, roster, actions, leaving = false }) {
       bot && !isMainBot ? [t("Make Main Bot"), StarLineIcon, () => actions.setMain(bot.id, true)] : null,
       bot && isMainBot && mainCount > 1 ? [t("Remove Main Bot role"), StarLineIcon, () => actions.setMain(bot.id, false)] : null
     ],
-    // The same groups the sidebar draws: one entry per section, plus the way back out.
-    arrangement.groups.length || arrangement.assign[menu.id] ? [[
-      ...arrangement.groups.map((group) => [group.name, FolderIcon, () => {
-        writeArrangement({ ...arrangement, assign: { ...arrangement.assign, [menu.id]: group.id } });
-      }]),
-      arrangement.assign[menu.id] ? [t("Remove from section"), FolderIcon, () => {
-        const assign = { ...arrangement.assign };
-        delete assign[menu.id];
-        writeArrangement({ ...arrangement, assign });
-      }] : null
-    ].filter(Boolean)] : [],
     [[t("Copy conversation ID"), CopyIcon, () => navigator.clipboard?.writeText(bot ? currentPart(bot) : menu.id)]],
     [
       isMainBot ? null : [t("Hide from sidebar"), HideIcon, () => actions.setFlags(menu.id, { hidden: true })],

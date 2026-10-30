@@ -310,6 +310,8 @@ export function TeamSidebar(props) {
   }, [])
   const [renamingSection, setRenamingSection] = useState(null)
   const [sectionMenu, setSectionMenu] = useState(null)
+  const [sectionPicker, setSectionPicker] = useState(null)
+  const [creating, setCreating] = useState(false)
   const sections = useMemo(() => {
     const pinned = order.filter(entry => entry.item.pinned)
     // The Main Bot's row otherwise sits above every section; once it is put in a group it
@@ -332,10 +334,19 @@ export function TeamSidebar(props) {
     setArrange(next)
     writeArrangement(next)
   }
-  const addGroup = () => {
+  // The new-group row turns into a name field in place: nothing is created until it is named.
+  const beginCreate = () => {
+    setSectionMenu(null)
+    setSectionPicker(null)
+    setRenamingSection(null)
+    setCreating(true)
+  }
+  const createGroup = (name) => {
+    const clean = name.trim().slice(0, 24)
+    setCreating(false)
+    if (!clean) return
     const id = `g${Date.now().toString(36)}`
-    changeArrange({ ...arrange, groups: arrange.groups.concat({ id, name: t('New section'), collapsed: false }) })
-    setRenamingSection(id)
+    changeArrange({ ...arrange, groups: arrange.groups.concat({ id, name: clean, collapsed: false }) })
   }
   const renameGroup = (id, name) => {
     const clean = name.trim().slice(0, 24)
@@ -433,19 +444,34 @@ export function TeamSidebar(props) {
             'aria-expanded': !isFolded(section),
             onClick: () => foldSection(section),
           },
-          h('span', { className: 'bt-sec-caret', 'data-open': !isFolded(section) ? '' : undefined, 'aria-hidden': true }, h(ChevronRightIcon)),
           h('span', { className: 'bt-sec-name' }, section.name),
+          h('span', { className: 'bt-sec-caret', 'data-open': !isFolded(section) ? '' : undefined, 'aria-hidden': true }, h(ChevronRightIcon)),
           h('span', { className: 'bt-sec-count' }, String(section.entries.length))),
         section.custom
           ? h('button', {
             type: 'button', className: 'bt-sec-more', 'aria-label': t('Section options'), 'aria-expanded': sectionMenu === section.id,
-            onClick: (event) => { event.stopPropagation(); setSectionMenu((open) => (open === section.id ? null : section.id)) },
+            onClick: (event) => { event.stopPropagation(); setSectionPicker(null); setSectionMenu((open) => (open === section.id ? null : section.id)) },
           }, h(MoreDotsIcon))
           : null,
         sectionMenu === section.id
           ? h('div', { className: 'bt-sec-menu', role: 'menu' },
-            h('button', { type: 'button', role: 'menuitem', onClick: () => { setSectionMenu(null); setRenamingSection(section.id) } }, h(PencilIcon), t('Rename section')),
-            h('button', { type: 'button', role: 'menuitem', className: 'bt-danger', onClick: () => deleteGroup(section.id) }, h(TrashIcon), t('Delete section')))
+            sectionPicker === section.id
+              ? [
+                h('div', { key: 'head', className: 'bt-sec-menu-head' }, t('Move to this group')),
+                ...order.filter(entry => arrange.assign[entry.item.id] !== section.id).map(entry => h('button', {
+                  key: entry.item.id, type: 'button', role: 'menuitem', className: 'bt-sec-pick',
+                  onClick: () => assignTo(entry.item.id, section.id),
+                }, h('span', { className: 'bt-sec-pick-name' }, entry.item.name))),
+                order.every(entry => arrange.assign[entry.item.id] === section.id)
+                  ? h('div', { key: 'none', className: 'bt-sec-menu-empty' }, t('Everything is here already'))
+                  : null,
+              ]
+              : [
+                h('button', { key: 'rename', type: 'button', role: 'menuitem', onClick: () => { setSectionMenu(null); setRenamingSection(section.id) } }, h(PencilIcon), t('Rename section')),
+                h('button', { key: 'move', type: 'button', role: 'menuitem', onClick: () => setSectionPicker(section.id) }, h(PlusIcon), t('Move rows here')),
+                h('button', { key: 'new', type: 'button', role: 'menuitem', onClick: () => beginCreate() }, h(PlusIcon), t('New section')),
+                h('button', { key: 'delete', type: 'button', role: 'menuitem', className: 'bt-danger', onClick: () => deleteGroup(section.id) }, h(TrashIcon), t('Delete section')),
+              ])
           : null),
         ...(isFolded(section) ? [] : section.entries.map(entry => (entry.kind === 'bot'
           ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
@@ -453,8 +479,18 @@ export function TeamSidebar(props) {
             ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
             : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })))),
       ]),
-      h('button', { key: 'new-group', type: 'button', className: 'bt-sec-new', onClick: addGroup },
-        h(PlusIcon), h('span', null, t('New section')))),
+      creating
+        ? h('input', {
+          key: 'new-group-input', className: 'bt-sec-new-input', autoFocus: true, placeholder: t('New section'),
+          'aria-label': t('New section'),
+          onBlur: (event) => createGroup(event.target.value),
+          onKeyDown: (event) => {
+            if (event.key === 'Enter') { event.preventDefault(); createGroup(event.currentTarget.value) }
+            if (event.key === 'Escape') { event.stopPropagation(); setCreating(false) }
+          },
+        })
+        : h('button', { key: 'new-group', type: 'button', className: 'bt-sec-new', onClick: beginCreate },
+          h(PlusIcon), h('span', null, t('New section')))),
     h('div', { className: 'bt-side-foot' },
       h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
         h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),

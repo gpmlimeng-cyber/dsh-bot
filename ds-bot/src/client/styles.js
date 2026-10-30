@@ -154,6 +154,11 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-sec-row{position:relative;display:flex;align-items:center;gap:2px}
 .bt-sec-row .bt-sec{flex:1 1 auto;min-width:0}
 .bt-sec-more{flex:none;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;background:none;color:var(--bt-ink-3);cursor:pointer;opacity:0}
+.bt-sec-menu-head{padding:4px 8px 6px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
+.bt-sec-pick{padding-left:8px}
+.bt-sec-pick-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-sec-menu-empty{padding:6px 8px;font-size:12px;color:var(--bt-ink-3)}
+.bt-sec-menu{max-height:280px;overflow-y:auto}
 .bt-sec-row:hover .bt-sec-more,.bt-sec-more[aria-expanded=true]{opacity:1}
 .bt-sec-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-sec-menu{position:absolute;right:4px;top:24px;z-index:8;display:flex;flex-direction:column;min-width:150px;padding:4px;border-radius:10px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 12px 28px -12px rgba(0,0,0,.28)}
@@ -164,6 +169,7 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-sec-new{display:flex;align-items:center;gap:6px;width:100%;height:30px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;color:var(--bt-ink-3);cursor:pointer;text-align:left}
 .bt-sec-new:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
 .bt-sec-new svg{width:14px;height:14px}
+.bt-sec-new-input{width:100%;height:30px;margin-top:6px;padding:0 9px;border:1px solid var(--bt-line-2);border-radius:8px;background:var(--bt-card);font:inherit;font-size:12px;color:var(--bt-ink);outline:none}
 /* A section heading over its rows: small, quiet, and folding on a click. */
 .bt-sec{display:flex;align-items:center;gap:5px;width:100%;height:26px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:11px;line-height:16px;letter-spacing:.02em;color:var(--bt-ink-3);cursor:pointer;text-align:left}
 .bt-sec:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
