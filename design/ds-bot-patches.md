@@ -1,17 +1,18 @@
 # ds-bot 本地补丁台账
 
-已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）；⑬ 移动端三个自绘控件的密度对齐 OpenMausBot；⑭ 全站统一的悬浮面（实底 + 0.5px 发丝环 + 浮动投影）；⑮ 输入框形态对标 OpenMausBot（圆角 26/24、内边距 6x12、正文 15px/24px）；⑯ 会话标题右侧的模型选择器（桌面，样式对标 OpenMausBot 的头部模型胶囊）；⑰ 模型厂商图标（12 家，按墨迹高度归一）；⑱ 桌面「更多」与三个点的粗细；⑲ 侧栏折叠钮与 32px 侧栏按钮；⑳ 折叠后的 56px 单列图标栏；㉑ 底部「连接应用」入口；㉒–㉔ 应用市场弹窗：插件发现页、磨砂玻璃面板、连接器/能力列表；㉕ 字体设置（系统默认 / Geist / Inter，随主题一起应用）；㉖ Codex 主题（浅色与深色两套调色板）；㉗ 字号与密度；㉘ 顶栏去掉品牌标、行贴到窗口最顶（固定定位）并修掉上提抖动；㉙ 侧栏行尾时间；㉚ 侧栏列表分组（置顶 / Bot / 群聊，可折叠）；㉛ 用户自建分组（新建 / 改名 / 删除 / 拖入 / 移出）；㉜ 品牌位改成模式选择器（胶囊 + 面板），专业模式下同一行固定在 DSH 的 Logo 位；㉝ 桌面端顶栏与 Web 一致。
+已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）；⑬ 移动端三个自绘控件的密度对齐 OpenMausBot；⑭ 全站统一的悬浮面（实底 + 0.5px 发丝环 + 浮动投影）；⑮ 输入框形态对标 OpenMausBot（圆角 26/24、内边距 6x12、正文 15px/24px）；⑯ 会话标题右侧的模型选择器（桌面，样式对标 OpenMausBot 的头部模型胶囊）；⑰ 模型厂商图标（12 家，按墨迹高度归一）；⑱ 桌面「更多」与三个点的粗细；⑲ 侧栏折叠钮与 32px 侧栏按钮；⑳ 折叠后的 56px 单列图标栏；㉑ 底部「连接应用」入口；㉒–㉔ 应用市场弹窗：插件发现页、磨砂玻璃面板、连接器/能力列表；㉕ 字体设置（系统默认 / Geist / Inter，随主题一起应用）；㉖ Codex 主题（浅色与深色两套调色板）；㉗ 字号与密度；㉘ 顶栏去掉品牌标、行贴到窗口最顶（固定定位）并修掉上提抖动；㉙ 侧栏行尾时间；㉚ 侧栏列表分组（置顶 / Bot / 群聊，可折叠）；㉛ 用户自建分组（新建 / 改名 / 删除 / 拖入 / 移出）；㉜ 品牌位改成模式选择器（胶囊 + 面板），专业模式下同一行固定在 DSH 的 Logo 位；㉝ 桌面端顶栏与 Web 一致；㉞ 应用市场新增「MCP」页签（列表 / 单服务器工具 / 新增编辑 / 启停 / 删除）；㉟ 窄屏把模式选择器那一行放进左侧抽屉顶部（桌面仍在窗口标题带）。
 **追加优先**：能写在文件末尾的绝不改上游已有行，把上游合并冲突面积压到最小。
 
-- 基线：**上游 `4a7b550`**（①②③ 已进提交 `f03bc73`，所以补丁必须相对 `4a7b550` 生成，`git diff` 相对 HEAD 只剩 ④⑤）
-- 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，24 个手改文件，含宿主侧 `src/host/channel.js`；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
-- hunk 数：**86**（`grep -c '^@@' design/ds-bot-patches.patch`）
+- 基线：**上游 `4a7b550`**。生成口径（唯一来源，别凭记忆）：
+  `git diff 4a7b550 -- ds-bot/src/client ':(exclude)ds-bot/src/client/gaze.js' ds-bot/src/host/channel.js ds-bot/src/host/mcp.js ds-bot/index.js > design/ds-bot-patches.patch`
+- 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，31 个文件，含宿主侧 `src/host/channel.js`、`src/host/mcp.js` 与 `ds-bot/index.js` 的模块注册；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
+- hunk 数：**98**（`grep -c '^@@' design/ds-bot-patches.patch`）
 - **行号**：见 `design/ds-bot-patches.hunks.md`，由 `node tools/patch-ledger.mjs` 生成，勿手改。
   这里**不写行号**：手写行号已经错了三次，机械表是唯一来源。
-- minus 行共 **86**，分布在 14 个文件：`styles.js` 41、`sidebar.js` 8、`icons.js` 6、`bot-settings.js` 5、`new-chat.js` 5、`index.js` 5、`team-actions.js` 4、`browser-pane.js` 2、`composer.js` 2、`create-bot.js` 2、`details-drawer.js` 2、`member-status.js` 2、`header.js` 1、`settings.js` 1；`about.js`、`drawer-dismiss.js`、`i18n.js`、`market.js`、`model-menu.js`、`provider-marks.js`、`fonts.js`、`themes.js` **0** 个 minus
+- minus 行共 **108**，分布在 17 个文件：`styles.js` 41、`sidebar.js` 25、`index.js` 6、`icons.js` 6、`bot-settings.js` 5、`new-chat.js` 5、`team-actions.js` 4、`i18n.js` 2、`browser-pane.js` 2、`composer.js` 2、`create-bot.js` 2、`details-drawer.js` 2、`member-status.js` 2、`header.js` 1、`settings.js` 1、`src/host/channel.js` 1、`ds-bot/index.js` 1；其余为纯 `+`
 - 冲突自检：`tools/patch-conflict-check.sh <ref>`（升级前先跑，输出 `clean` 才合并）
 
-## 1. 手改的文件（进补丁，共 23 个）
+## 1. 手改的文件（进补丁，共 31 个）
 
 hunk 编号与 `hunks.md` 的 `#` 列一一对应。
 
