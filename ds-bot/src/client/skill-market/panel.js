@@ -5674,12 +5674,9 @@ function SkillMarketPanel(props) {
         h('button', {
           type: 'button', role: 'tab', className: 'sm-viewtab' + (view === 'import' ? ' active' : ''),
           'aria-selected': view === 'import', onClick: () => goToView('import'),
-        }, t('view.import') + ' ', h('span', { className: 'sm-vt-count' }, imported.length)))),
-
-    // Refresh and import belong to the page, not above its tabs: they sit in the row under
-    // the view tabs, against its right edge.
-    h('header', { className: 'sm-topbar sm-topbar-under' },
-      h('div', { className: 'sm-topbar-actions' },
+        }, t('view.import') + ' ', h('span', { className: 'sm-vt-count' }, imported.length))),
+      // Refresh and import ride the tab row itself, against its right edge.
+      h('div', { className: 'sm-topbar-actions sm-viewbar-actions' },
         h('button', {
           type: 'button',
           className: 'sm-icon-btn',
