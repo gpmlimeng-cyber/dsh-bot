@@ -91,7 +91,6 @@ var ZH = {
   "No plugin is on yet": "还没有启用任何插件",
   "Uninstall": "卸载",
   "Available": "可用",
-  "Skills this Session can load": "这个会话可以加载的技能",
   "Disable": "停用",
   "Open the full connector page": "打开完整连接器页",
   "Nothing here yet": "这里还什么都没有",
@@ -14407,14 +14406,16 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
       (0, import_react15.createElement)(
         "main",
         { className: "bt-market-main" },
-        (0, import_react15.createElement)(
+        // The Skills tab carries no second heading: the vendored panel brings its own title,
+        // search box and view tabs, and a market header above them only repeated them.
+        tab === "skills" ? null : (0, import_react15.createElement)(
           "header",
           { className: "bt-market-head" },
           (0, import_react15.createElement)(
             "div",
             { className: "bt-market-heading" },
             (0, import_react15.createElement)("h2", { className: "bt-market-h2" }, heading),
-            (0, import_react15.createElement)("p", { className: "bt-market-sub" }, current ? current.detail : tab === "plugins" ? t("Browse the plugin markets this Harness lists") : tab === "skills" ? t("Skills this Session can load") : t("Connect an app or your own server once, then choose which Bots may use it"))
+            (0, import_react15.createElement)("p", { className: "bt-market-sub" }, current ? current.detail : tab === "plugins" ? t("Browse the plugin markets this Harness lists") : t("Connect an app or your own server once, then choose which Bots may use it"))
           ),
           current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : tab === "plugins" ? null : (0, import_react15.createElement)(
             "label",

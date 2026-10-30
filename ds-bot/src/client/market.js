@@ -471,14 +471,15 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
           })
           : h('span', { className: 'bt-market-hint' }, t(tab === 'plugins' ? 'No plugin is on yet' : 'Nothing installed yet')))),
     h('main', { className: 'bt-market-main' },
-      h('header', { className: 'bt-market-head' },
+      // The Skills tab carries no second heading: the vendored panel brings its own title,
+      // search box and view tabs, and a market header above them only repeated them.
+      tab === 'skills' ? null : h('header', { className: 'bt-market-head' },
         h('div', { className: 'bt-market-heading' },
           h('h2', { className: 'bt-market-h2' }, heading),
           h('p', { className: 'bt-market-sub' }, current
             ? current.detail
             : tab === 'plugins' ? t('Browse the plugin markets this Harness lists')
-              : tab === 'skills' ? t('Skills this Session can load')
-                : t('Connect an app or your own server once, then choose which Bots may use it'))),
+              : t('Connect an app or your own server once, then choose which Bots may use it'))),
         current
           ? h('button', { type: 'button', className: 'bt-market-back', onClick: () => setSelected(null) }, t('Back'))
           : tab === 'plugins'
