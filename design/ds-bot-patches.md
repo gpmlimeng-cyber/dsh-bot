@@ -1,14 +1,14 @@
 # ds-bot 本地补丁台账
 
-已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 头部悬浮面、输入框、控件图标、底部抽屉。
+已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）。
 **追加优先**：能写在文件末尾的绝不改上游已有行，把上游合并冲突面积压到最小。
 
 - 基线：**上游 `4a7b550`**（①②③ 已进提交 `f03bc73`，所以补丁必须相对 `4a7b550` 生成，`git diff` 相对 HEAD 只剩 ④⑤）
 - 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，15 个手改文件）
-- hunk 数：**48**（`grep -c '^@@' design/ds-bot-patches.patch`）
+- hunk 数：**46**（`grep -c '^@@' design/ds-bot-patches.patch`）
 - **行号**：见 `design/ds-bot-patches.hunks.md`，由 `node tools/patch-ledger.mjs` 生成，勿手改。
   这里**不写行号**：手写行号已经错了三次，机械表是唯一来源。
-- minus 行分布在 11 个文件：`styles.js` 22、`sidebar.js` 6、`icons.js` 6、`new-chat.js` 5、`bot-settings.js` 5、`team-actions.js` 4、`create-bot.js` 2、`composer.js` 2、`browser-pane.js` 2、`index.js` 1、`header.js` 1；`i18n.js`、`about.js`、`member-status.js`、`drawer-dismiss.js` 各 **0** 个 minus
+- minus 行分布在 11 个文件：`styles.js` 31、`sidebar.js` 6、`icons.js` 6、`new-chat.js` 5、`bot-settings.js` 5、`team-actions.js` 4、`create-bot.js` 2、`composer.js` 2、`browser-pane.js` 2、`index.js` 1、`header.js` 1；`i18n.js`、`about.js`、`member-status.js`、`drawer-dismiss.js` 各 **0** 个 minus
 - 冲突自检：`tools/patch-conflict-check.sh <ref>`（升级前先跑，输出 `clean` 才合并）
 
 ## 1. 手改的文件（进补丁，共 15 个）
@@ -46,16 +46,18 @@ hunk 3、5 是唯一的 minus 行（挂载点，各 1 处组件插入），其�
 | ⑦ 样式 | `styles.js` | 追加 `.bt-head>.bt-pmenu{right:8px;top:4px}`、弹层 `pointer-events:auto`、命中区镜像 `inset:-6px -6px -6px 0` | `.bt-head` 是 `pointer-events:none` 且 `PanelMenu` 自身没声明，不补则弹层能画不能点；热区镜像后不会向左长进药丸 |
 | ⑤ 样式 | `styles.js` | 追加 `.bt-menu-btn`（44×44、绝对定位、`pointer-events:auto`）+ `html:has([data-mobile-nav="frame"]) .bt-menu-btn{display:flex}` | 绝对定位不参与 `.bt-head` 的 flex 居中；`pointer-events:auto` 必须显式写（`.bt-head` 是 `none`，漏了就是死按钮）；可见性用 dsh-web-mobile 的标记而非宽度，rail 模式不会多出按钮，标记消失时安全失败（原生按钮回归，不会两个汉堡） |
 
+| ⑫ PC 输入框 | `styles.js` | `_add` 隐藏、三处按钮间距、`:focus-within` 底色都收进 `html:has([data-mobile-nav="frame"])`；桌面新增 `html:not(:has(...)) [data-composer-card]{flex-direction:row;flex-wrap:wrap;align-items:center;gap:0;padding:6px 8px}`，藏掉自绘 `.bt-plus/.bt-mic/.bt-voice`；输入框行高与占位文字 24→20、占位 `top` 2→0（游标与文字同一行盒）；发送键 `transform:none` 由移动端改为两端通用 | 宿主 2.0.19-next 的卡片是 `flex-direction:column`（输入一行、控件一行），上游那批拆行 + order 1/2/3 是为旧的一行结构写的，撞上去就在桌面摊成「加号右上、麦克风右下」。现在两端都是一行胶囊：桌面用宿主自己的「+」和发送键，手机用自绘控件；圆角与占位文字两端通用不动。行高原为 24px，游标按行高绘制就比 14px 文字高 4px；占位又比行盒低 2px，游标和文字本来就没对齐。宿主给发送键的 `translateY(-2px)` 也一并去掉，桌面实测三个居中量都相等。**代价：PC 上没有听写与语音对话**，宿主 PC 端本身不提供，这两个是自绘控件 |
+
 「切换 Agent 模式」走 `setSurface`，**故意不接**。
 
 ## 2. 生成物（不进补丁）
 
 | 文件 | 类别 | 重生成方式 |
 |---|---|---|
-| `ds-bot/src/client/gaze.js` | 生成物，37 KB（4 张 base64 PNG） | `node ext/avatar-gaze/gen.mjs --client`（**离线**，只读 `ext/avatar-gaze/out/*.png`，缺文件报错退出） |
+| `ds-bot/src/client/gaze.js` | **随仓库交付的资产**，37,448 B（4 张 base64 PNG），sha256 `d581144d2c977f38d231a59d2c05260e8ded4261e70442b99d8a340abbc676a8` | 生成器 `ext/avatar-gaze/gen.mjs` 与 4 张源图**已随换设备丢失**（`repo/ext/` 不存在）。有 `ext/` 时用 `node ext/avatar-gaze/gen.mjs --client` 重生成；没有就跳过这一步，直接使用仓库里的这个文件，校验 sha256 即可 |
 | `ds-bot/client.js` | 构建产物 | `cd repo/ds-bot && npm run build` |
 
-两者都不进 `.patch`：`client.js` 是打包结果，升级后必须重生成；`gaze.js` 由命令产出，不需要人合并。
+两者都不进 `.patch`：`client.js` 是打包结果，升级后必须重生成；`gaze.js` 是 ①Gaze 排的唯一来源，缺它就编译不过，所以按资产交付、用 sha256 固定。
 `gaze.js` 头部写明来源（DiceBear gaze，CC0 1.0）与重生成命令。
 
 ## 3. 重打方式
@@ -63,8 +65,8 @@ hunk 3、5 是唯一的 minus 行（挂载点，各 1 处组件插入），其�
 每一行都靠这条命令重放；顺序不能反，`gaze.js` 必须先于 build 就位：
 
 ```sh
-git -C repo apply ../design/ds-bot-patches.patch \
-  && node ext/avatar-gaze/gen.mjs --client \
+git -C repo apply design/ds-bot-patches.patch \
+  && { [ -d ext ] && node ext/avatar-gaze/gen.mjs --client || echo "ext/ 已丢失，跳过 gaze.js 生成（用仓库内资产，sha256 d581144d…）"; } \
   && (cd repo/ds-bot && npm run build)
 ```
 
@@ -78,7 +80,15 @@ tools/patch-conflict-check.sh <upstream-ref>   # 输出 clean / 冲突文件
 
 ```sh
 cd repo/ds-bot && npm run build && npm test && node scripts/build-client.mjs --check && npm run lint
-git -C repo apply --check    ../design/ds-bot-patches.patch   # HEAD 上可干净重放
-git -C repo apply --check -R ../design/ds-bot-patches.patch   # 当前树可反向撤销
+git -C repo apply --check -R design/ds-bot-patches.patch   # 当前树 = 基线 + 本补丁
+bash tools/patch-conflict-check.sh 4a7b550                 # 对基线整包可干净重放（HEAD 已含①–⑤，对 HEAD 必冲突）
 node tools/patch-ledger.mjs > design/ds-bot-patches.hunks.md  # 台账行号重新生成
+
+`npm test` 直接跑会红 13 条：宿主自己的 `DS_BOT_APP` / `DSH_HOME` 等变量会漏进来。清掉再跑：
+
+```sh
+env -u DS_BOT_APP -u DS_BOT_USER_DSH_HOME -u DS_BOT_WORKSPACE -u DSH_HOME -u DSH_PROFILE \
+    -u DSH_PROFILE_DIR -u DSH_SESSION_ID -u DSH_SHELL -u DSH_WEB_URL \
+    node --import ./test/harness-resolve.mjs --test "test/*.test.js"
+```
 ```
