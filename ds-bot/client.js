@@ -2536,13 +2536,20 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-rail>.bt-rail-foot{margin-top:auto;display:flex;justify-content:center;width:100%}
 /* The way into the apps market, where MausBot keeps its own connect entry: one pill on
    the shared surface, the marks first, in the sidebar's bottom corner. */
-.bt-apps-chip{display:flex;align-items:center;gap:6px;flex:none;margin:0 8px 8px;padding:0 10px;height:32px;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
+/* The market and the account share the bottom row; the chip takes what is left over and
+   its label truncates instead of wrapping. */
+/* The account and its settings stay the shell's own; the market chip rides beside it,
+   taking whatever room the footer leaves. */
+.bt-side{position:relative}
+.bt-side-foot{position:fixed;left:60px;bottom:18px;width:208px;display:flex;align-items:center;gap:8px;min-width:0}
+.bt-apps-chip{display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 auto;min-width:0;padding:0 10px;height:32px;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
 .bt-apps-chip:hover{background:var(--bt-float-hover)}
 .bt-apps-marks{display:inline-flex;flex:none;gap:3px}
 .bt-apps-mark{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--bt-ink) 22%,transparent);display:block}
 .bt-apps-mark-b{border-radius:50%;background:color-mix(in srgb,var(--bt-accent) 60%,transparent)}
-.bt-apps-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-rail .bt-apps-chip{margin:8px auto;padding:0;width:40px;height:40px;justify-content:center;border-radius:12px}
+.bt-apps-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.bt-rail .bt-side-foot{position:static;flex-direction:column;gap:8px;padding:0 0 8px;margin-top:auto}
+.bt-rail .bt-apps-chip{flex:none;padding:0;width:40px;height:40px;justify-content:center;border-radius:12px}
 .bt-rail .bt-apps-label{display:none}
 /* Nothing in the rail may widen it: a row keeps its own width, the list scrolls
    vertically only, and the document never gains a sideways scrollbar from it. */
@@ -9137,12 +9144,15 @@ function TeamSidebar(props) {
       order.map((entry) => entry.kind === "bot" ? (0, import_react15.createElement)(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true }) : entry.kind === "room" ? (0, import_react15.createElement)(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true }) : (0, import_react15.createElement)(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true }))
     ),
     (0, import_react15.createElement)(
-      "button",
-      { type: "button", className: "bt-apps-chip", "aria-label": t("Connect apps"), title: t("Connect apps"), onClick: () => actions.openConnectors({ fromDrawer: !wide }) },
-      (0, import_react15.createElement)("span", { className: "bt-apps-marks", "aria-hidden": true }, (0, import_react15.createElement)("i", { className: "bt-apps-mark" }), (0, import_react15.createElement)("i", { className: "bt-apps-mark bt-apps-mark-b" })),
-      wide ? (0, import_react15.createElement)("span", { className: "bt-apps-label" }, t("Connect apps")) : null
-    ),
-    wide ? null : (0, import_react15.createElement)("div", { className: "bt-rail-foot" }, (0, import_react15.createElement)(AccountLauncher, { ...props, seat: false }))
+      "div",
+      { className: "bt-side-foot" },
+      (0, import_react15.createElement)(
+        "button",
+        { type: "button", className: "bt-apps-chip", "aria-label": t("Connect apps"), title: t("Connect apps"), onClick: () => actions.openConnectors({ fromDrawer: !wide }) },
+        (0, import_react15.createElement)("span", { className: "bt-apps-marks", "aria-hidden": true }, (0, import_react15.createElement)("i", { className: "bt-apps-mark" }), (0, import_react15.createElement)("i", { className: "bt-apps-mark bt-apps-mark-b" })),
+        wide ? (0, import_react15.createElement)("span", { className: "bt-apps-label" }, t("Connect apps")) : null
+      )
+    )
   );
 }
 function UpdateButton({ useUpdate, actions }) {
