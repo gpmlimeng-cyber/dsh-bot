@@ -597,7 +597,7 @@ index 58d1840..d2cacb9 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..ddf66d5 100644
+index aa38a3b..b2d9aae 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -150,7 +150,11 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
@@ -729,9 +729,10 @@ index aa38a3b..ddf66d5 100644
 +html:not(:has([data-mobile-nav="frame"])) [data-composer-card]{flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;padding:6px 8px!important;border-radius:24px!important}
  [data-composer-card]>[class*="_row"]{display:contents!important}
 -[data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:flex-end!important;margin:0!important}
-+[data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:center!important;margin:0!important}
- [data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0!important}
+-[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0!important}
 -[data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:flex-end!important;margin:0!important}
++[data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:center!important;margin:0!important}
++[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0 0 0 -22px!important}
 +/* The desktop field keeps ds-bot's stock inset; the phone pulls its field up to the mark. */
 +html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{margin-left:-10px!important}
 +[data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:center!important;margin:0!important}

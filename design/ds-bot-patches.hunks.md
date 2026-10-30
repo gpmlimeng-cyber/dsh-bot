@@ -39,7 +39,7 @@
 | 37 | `ds-bot/src/client/styles.js` | 153–157 | 5 |
 | 38 | `ds-bot/src/client/styles.js` | 324–343 | 20 |
 | 39 | `ds-bot/src/client/styles.js` | 910–951 | 42 |
-| 40 | `ds-bot/src/client/styles.js` | 1051–1129 | 58 |
+| 40 | `ds-bot/src/client/styles.js` | 1051–1129 | 59 |
 | 41 | `ds-bot/src/client/styles.js` | 1179–1190 | 9 |
 | 42 | `ds-bot/src/client/styles.js` | 1199 | 1 |
 | 43 | `ds-bot/src/client/styles.js` | 1240–1245 | 6 |
