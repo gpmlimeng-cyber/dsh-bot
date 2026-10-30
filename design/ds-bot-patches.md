@@ -1,11 +1,11 @@
 # ds-bot 本地补丁台账
 
-已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）；⑬ 移动端三个自绘控件的密度对齐 OpenMausBot；⑭ 全站统一的悬浮面（实底 + 0.5px 发丝环 + 浮动投影）；⑮ 输入框形态对标 OpenMausBot（圆角 26/24、内边距 6x12、正文 15px/24px）；⑯ 会话标题右侧的模型选择器（桌面，样式对标 OpenMausBot 的头部模型胶囊）；⑰ 模型厂商图标（12 家，按墨迹高度归一）；⑱ 桌面「更多」与三个点的粗细；⑲ 侧栏折叠钮与 32px 侧栏按钮；⑳ 折叠后的 56px 单列图标栏；㉑ 底部「连接应用」入口；㉒–㉔ 应用市场弹窗：插件发现页、磨砂玻璃面板、连接器/能力列表；㉕ 字体设置（系统默认 / Geist / Inter，随主题一起应用）；㉖ Codex 主题（浅色与深色两套调色板）；㉗ 字号与密度；㉘ 顶栏去掉品牌标、行贴到窗口最顶并修掉上提抖动。
+已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）；⑬ 移动端三个自绘控件的密度对齐 OpenMausBot；⑭ 全站统一的悬浮面（实底 + 0.5px 发丝环 + 浮动投影）；⑮ 输入框形态对标 OpenMausBot（圆角 26/24、内边距 6x12、正文 15px/24px）；⑯ 会话标题右侧的模型选择器（桌面，样式对标 OpenMausBot 的头部模型胶囊）；⑰ 模型厂商图标（12 家，按墨迹高度归一）；⑱ 桌面「更多」与三个点的粗细；⑲ 侧栏折叠钮与 32px 侧栏按钮；⑳ 折叠后的 56px 单列图标栏；㉑ 底部「连接应用」入口；㉒–㉔ 应用市场弹窗：插件发现页、磨砂玻璃面板、连接器/能力列表；㉕ 字体设置（系统默认 / Geist / Inter，随主题一起应用）；㉖ Codex 主题（浅色与深色两套调色板）；㉗ 字号与密度；㉘ 顶栏去掉品牌标、行贴到窗口最顶（固定定位）并修掉上提抖动；㉙ 侧栏行尾时间。
 **追加优先**：能写在文件末尾的绝不改上游已有行，把上游合并冲突面积压到最小。
 
 - 基线：**上游 `4a7b550`**（①②③ 已进提交 `f03bc73`，所以补丁必须相对 `4a7b550` 生成，`git diff` 相对 HEAD 只剩 ④⑤）
 - 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，23 个手改文件，含宿主侧 `src/host/channel.js`；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
-- hunk 数：**72**（`grep -c '^@@' design/ds-bot-patches.patch`）
+- hunk 数：**76**（`grep -c '^@@' design/ds-bot-patches.patch`）
 - **行号**：见 `design/ds-bot-patches.hunks.md`，由 `node tools/patch-ledger.mjs` 生成，勿手改。
   这里**不写行号**：手写行号已经错了三次，机械表是唯一来源。
 - minus 行共 **86**，分布在 14 个文件：`styles.js` 41、`sidebar.js` 8、`icons.js` 6、`bot-settings.js` 5、`new-chat.js` 5、`index.js` 5、`team-actions.js` 4、`browser-pane.js` 2、`composer.js` 2、`create-bot.js` 2、`details-drawer.js` 2、`member-status.js` 2、`header.js` 1、`settings.js` 1；`about.js`、`drawer-dismiss.js`、`i18n.js`、`market.js`、`model-menu.js`、`provider-marks.js`、`fonts.js`、`themes.js` **0** 个 minus
@@ -63,6 +63,7 @@ hunk 3、5 是唯一的 minus 行（挂载点，各 1 处组件插入），其�
 | ㉖ Codex 主题 | `themes.js` | `THEMES.codex`：浅色按 `surface #ffffff / ink #1a1c1f / accent #339cff / diffAdded #00a240 / diffRemoved #ba2623 / skill #924ff7`，深色按 `surface #181818 / ink #ffffff / accent #339cff / diffAdded #40c977 / diffRemoved #fa423e / skill #ad7bf9`；语义色走该主题的 `css` 字段（`html body` 与 `data-ds-dark-theme` 两段），其余八个 `--bt-*` 走既有 `themeVars`；用户消息气泡用强调色的浅染（浅色 `#e4eefb` + `#1a1c1f` 字，深色 `#22303f` + 白字），与灰调的机器人气泡分开 | 用户直接给的两段 `codex-theme-v1`（light/dark），要求「增加 codex 主题」「浅色和深色」。`contrast` 与 `opaqueWindows` 在我们的模型里没有对应项，没有引入；`fonts` 为 null，所以主题不绑字体，字体仍由「字体」那一行单独选 |
 | ㉗ 字号与密度 | `themes.js`、`settings.js`、`index.js`、`styles.js`、`i18n.js`、`host/channel.js` | 外观里再加两行：**字号**（小 13 / 标准 14 / 大 15 / 特大 16）与**密度**（紧凑 / 标准 / 宽松）。字号骑宿主自己的内容令牌 `--dsh-content-font-size`（宿主把它写在 body 的**行内样式**里，所以我们也写行内，标准档删掉该属性还给宿主），次要字号与两个 delta 由 `html body[data-bt-size]` 推出来；密度只改一个 `data-bt-density` 属性，`.bt-row` / `.bt-tile` / `.bt-market-card` / `.bt-market-inst` / `.bt-market-cat` 的高度与内边距由基表按属性给（46/54/62px 三档）。两者都走 `actions.localPref(key, value)`：先落本机 localStorage + 重画，再 `setPrefs` 交给宿主 | 用户口径：「在外观里增加更多可自定义的内容，你来梳理，但不要太多，聚焦核心影响交互体验的，MausBot 可作参考」。对照 MausBot 的实际设置项（`settings.*` 文案：主题、界面字体、聊天宽度、侧栏密度、给自己消息上色、显示工具调用、发送键、通知等），**只加了这两条**：字号直接决定读得清不清，密度决定一屏能看多少。刻意不加：聊天宽度（已有文字宽度/气泡宽度）、发送键（属宿主语义，口径 B 不动）、工具调用显示与通知（归宿主）、给自己消息上色（Codex 主题已按主题给气色）。**踩坑**：宿主的 `html body{--dsh-content-font-size:14px}` 在样式表里更靠后，靠选择器优先级压不住，只能同时压行内样式；上一版只写 CSS 时该变量仍读 14px |
 | ㉘ 顶栏 | `sidebar.js`、`styles.js` | 品牌块只留文字「DS Bot」，去掉鲸鱼标；`--bt-side-lift` 改为**只测一次**（测量前先把 lift 清零），上限抬到 64px，行贴到窗口最顶（`top:0`），三个圆钮在 38px 高的 caption 带里垂直居中，内缩 78px 避让红绿灯 | 用户口径：「这里还是没有上去，把 LOGO 去了我不需要，三个按钮放最顶部」。**根因**：原来的 `useLayoutEffect` 没有依赖，每帧都用「当前」行位置算 lift——行已经被提上去后测得 0，于是下一帧又放回带里，来回抖；改成首次测量并缓存后抖动消失 |
+| ㉙ 侧栏行尾时间 | `sidebar.js`、`styles.js` | 每条 Bot / 群聊 / DSH Agent 行的第一行右侧加时间：复用已有的 `relativeShort(at)`（刚刚 / N 分钟 / N 小时 / N 天 / 月日），`at` 取列表排序已经在用的那份时间戳（主 Bot 取 `Sessions.updatedAt`，其余取 `order` 里的 `entry.at`），样式 11px、`--bt-ink-3`、等宽数字、`margin-left:auto` 贴右 | 用户口径：「侧栏消息列表需要增加时间，样式参考 DSH 官方会话行的，显示到第一行右侧」 |
 
 
 

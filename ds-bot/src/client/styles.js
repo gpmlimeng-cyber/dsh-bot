@@ -118,6 +118,9 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 
 .bt-side{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;gap:2px;padding:0 12px 8px 0;color:var(--bt-ink);font-family:var(--bt-font)}
 .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
+/* Pinned to the window's top edge, the row only paints; its own controls stay clickable. */
+.bt-side-top[data-floating]{background:var(--bt-sidebar)}
+.bt-side-top[data-floating]>*{pointer-events:auto}
 /* The sidebar's own controls sit a size below the panel buttons: 32px, where the round
    buttons elsewhere are 36. */
 .bt-side-top .bt-round{width:32px;height:32px}
@@ -162,6 +165,8 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-row-body{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
 .bt-row-name{display:flex;align-items:center;gap:6px;min-width:0;font-size:14px;line-height:20px;font-weight:400}
 .bt-row-title{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* When a row was last touched, on the right of its first line, as the shell's rows do. */
+.bt-row-time{margin-left:auto;flex:none;padding-left:6px;font-size:11px;line-height:16px;color:var(--bt-ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
 .bt-tag{flex:none;max-width:96px;font-size:12px;line-height:16px;font-weight:400;padding:1px 6px;border-radius:4px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}

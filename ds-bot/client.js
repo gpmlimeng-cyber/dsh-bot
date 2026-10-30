@@ -2585,6 +2585,9 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 
 .bt-side{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;gap:2px;padding:0 12px 8px 0;color:var(--bt-ink);font-family:var(--bt-font)}
 .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
+/* Pinned to the window's top edge, the row only paints; its own controls stay clickable. */
+.bt-side-top[data-floating]{background:var(--bt-sidebar)}
+.bt-side-top[data-floating]>*{pointer-events:auto}
 /* The sidebar's own controls sit a size below the panel buttons: 32px, where the round
    buttons elsewhere are 36. */
 .bt-side-top .bt-round{width:32px;height:32px}
@@ -2629,6 +2632,8 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-row-body{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
 .bt-row-name{display:flex;align-items:center;gap:6px;min-width:0;font-size:14px;line-height:20px;font-weight:400}
 .bt-row-title{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* When a row was last touched, on the right of its first line, as the shell's rows do. */
+.bt-row-time{margin-left:auto;flex:none;padding-left:6px;font-size:11px;line-height:16px;color:var(--bt-ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
 .bt-tag{flex:none;max-width:96px;font-size:12px;line-height:16px;font-weight:400;padding:1px 6px;border-radius:4px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
@@ -9571,7 +9576,7 @@ var waitingFor = (roster, waits) => {
   const names = [...(waits?.bots ?? []).map((id) => roster.byId[id]?.name), ...(waits?.rooms ?? []).map((id) => roster.roomsById[id]?.name)].filter(Boolean);
   return names.length === 0 ? "" : t("Waiting for {names}", { names: names.join(t(" and ")) });
 };
-function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, marked }) {
+function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, marked, at }) {
   const id = bot.id;
   const part = currentPart(bot);
   const preview = useSessions((list) => previewOf(list, part, roster.exchangeTurns[part]));
@@ -9633,13 +9638,13 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
     wide ? (0, import_react16.createElement)(
       "span",
       { className: "bt-row-body" },
-      (0, import_react16.createElement)("span", { className: "bt-row-name" }, (0, import_react16.createElement)("span", { className: "bt-row-title" }, bot.name), pinned ? (0, import_react16.createElement)(PinMark) : null),
+      (0, import_react16.createElement)("span", { className: "bt-row-name" }, (0, import_react16.createElement)("span", { className: "bt-row-title" }, bot.name), pinned ? (0, import_react16.createElement)(PinMark) : null, (0, import_react16.createElement)(RowTime, { at })),
       runningLine ? (0, import_react16.createElement)("span", { className: "bt-row-preview" }, runningLine) : awayLine ? (0, import_react16.createElement)("span", { className: "bt-row-preview" }, awayLine) : waitsFor ? (0, import_react16.createElement)("span", { className: "bt-row-preview" }, waitsFor) : preview ? (0, import_react16.createElement)("span", { className: "bt-row-preview" }, preview) : null
     ) : null,
     wide && unread && !active ? (0, import_react16.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
   );
 }
-function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked }) {
+function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked, at }) {
   const id = room2.id;
   const fallback = useSessions((list) => previewOf(list, id));
   const preview = room2.preview?.replace(/\s+/g, " ").trim() || fallback;
@@ -9672,7 +9677,7 @@ function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, 
     wide ? (0, import_react16.createElement)(
       "span",
       { className: "bt-row-body" },
-      (0, import_react16.createElement)("span", { className: "bt-row-name" }, (0, import_react16.createElement)("span", { className: "bt-row-title" }, room2.name), pinned ? (0, import_react16.createElement)(PinMark) : null),
+      (0, import_react16.createElement)("span", { className: "bt-row-name" }, (0, import_react16.createElement)("span", { className: "bt-row-title" }, room2.name), pinned ? (0, import_react16.createElement)(PinMark) : null, (0, import_react16.createElement)(RowTime, { at })),
       workingLine ? (0, import_react16.createElement)("span", { className: "bt-row-preview" }, workingLine) : preview ? (0, import_react16.createElement)("span", { className: "bt-row-preview" }, preview) : null
     ) : null,
     wide && approval && !active ? (0, import_react16.createElement)("span", { className: "bt-unread bt-unread-wait", "aria-hidden": true }) : wide && unread && !active ? (0, import_react16.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
@@ -9735,7 +9740,11 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
     (0, import_react16.createElement)("span", { className: "bt-agent-sub-time" }, session.at > 0 ? relativeShort(session.at) : "")
   );
 }
-function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked }) {
+function RowTime({ at }) {
+  if (!at) return null;
+  return (0, import_react16.createElement)("span", { className: "bt-row-time" }, relativeShort(at));
+}
+function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked, at }) {
   const info = useSessions((list) => JSON.stringify(agent.sessions.map((id) => {
     const row = list.byId[id];
     return {
@@ -9789,7 +9798,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
       wide ? (0, import_react16.createElement)(
         "span",
         { className: "bt-row-body" },
-        (0, import_react16.createElement)("span", { className: "bt-row-name" }, "DSH Agent"),
+        (0, import_react16.createElement)("span", { className: "bt-row-name" }, (0, import_react16.createElement)("span", { className: "bt-row-title" }, "DSH Agent"), (0, import_react16.createElement)(RowTime, { at })),
         preview ? (0, import_react16.createElement)("span", { className: "bt-row-preview" }, preview) : null
       ) : null,
       wide && unread && !active ? (0, import_react16.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
@@ -9848,13 +9857,21 @@ function TeamSidebar(props) {
     const row = listRef.current?.parentElement?.querySelector(".bt-side-top");
     if (!row) return void 0;
     const measure = () => {
-      row.style.marginTop = "0px";
-      row.style.height = "";
-      const band = row.getBoundingClientRect().top;
-      const lift = band > 0 ? Math.min(band, 120) : 0;
-      row.style.marginTop = lift ? `${-lift}px` : "0px";
-      row.style.height = lift >= 24 ? `${lift}px` : "";
-      row.style.paddingLeft = lift ? "78px" : "";
+      row.removeAttribute("style");
+      const band = Math.round(row.getBoundingClientRect().top);
+      if (band < 24) return;
+      const side = row.parentElement;
+      const box = side.getBoundingClientRect();
+      row.style.position = "fixed";
+      row.style.top = "0px";
+      row.style.left = `${Math.round(box.left)}px`;
+      row.style.width = `${Math.round(box.width)}px`;
+      row.style.height = `${band}px`;
+      row.style.paddingLeft = "78px";
+      row.style.paddingRight = "8px";
+      row.style.zIndex = "6";
+      row.style.pointerEvents = "none";
+      row.dataset.floating = "";
     };
     measure();
     let frame = 0;
@@ -9862,15 +9879,12 @@ function TeamSidebar(props) {
     const settle = (now) => {
       if (!started) started = now;
       measure();
-      if (now - started < 6e3) frame = requestAnimationFrame(settle);
+      if (now - started < 4e3) frame = requestAnimationFrame(settle);
     };
     frame = requestAnimationFrame(settle);
-    const observer = new MutationObserver(measure);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["style", "class", "data-platform"] });
     window.addEventListener("resize", measure);
     return () => {
       cancelAnimationFrame(frame);
-      observer.disconnect();
       window.removeEventListener("resize", measure);
     };
   }, []);
@@ -9955,8 +9969,8 @@ function TeamSidebar(props) {
     (0, import_react16.createElement)(
       "div",
       { ref: listRef, className: "bt-list", role: "region", "aria-label": t("Bot list") },
-      main ? (0, import_react16.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react16.createElement)("div", { className: "bt-hint" }, t("Setting up your Main Bot…")),
-      order.map((entry) => entry.kind === "bot" ? (0, import_react16.createElement)(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true }) : entry.kind === "room" ? (0, import_react16.createElement)(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true }) : (0, import_react16.createElement)(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true }))
+      main ? (0, import_react16.createElement)(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react16.createElement)("div", { className: "bt-hint" }, t("Setting up your Main Bot…")),
+      order.map((entry) => entry.kind === "bot" ? (0, import_react16.createElement)(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true }) : entry.kind === "room" ? (0, import_react16.createElement)(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true }) : (0, import_react16.createElement)(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true }))
     ),
     (0, import_react16.createElement)(
       "div",

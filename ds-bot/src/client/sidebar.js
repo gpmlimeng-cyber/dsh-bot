@@ -45,7 +45,7 @@ const waitingFor = (roster, waits) => {
   return names.length === 0 ? '' : t('Waiting for {names}', { names: names.join(t(' and ')) })
 }
 
-function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, marked }) {
+function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, marked, at }) {
   const id = bot.id
   const part = currentPart(bot)
   const preview = useSessions(list => previewOf(list, part, roster.exchangeTurns[part]))
@@ -90,7 +90,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   h(BotAvatar, { bot, size: 36, state, main }),
   pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
-    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null),
+    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null, h(RowTime, { at })),
     runningLine ? h('span', { className: 'bt-row-preview' }, runningLine)
       : awayLine ? h('span', { className: 'bt-row-preview' }, awayLine)
         : waitsFor ? h('span', { className: 'bt-row-preview' }, waitsFor)
@@ -98,7 +98,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
 }
 
-function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked }) {
+function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked, at }) {
   const id = room.id
   const fallback = useSessions(list => previewOf(list, id))
   const preview = room.preview?.replace(/\s+/g, ' ').trim() || fallback
@@ -120,7 +120,7 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
   h(RoomAvatar, { room, roster, size: 36 }),
   pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
-    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null),
+    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null, h(RowTime, { at })),
     workingLine ? h('span', { className: 'bt-row-preview' }, workingLine) : preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
   wide && approval && !active ? h('span', { className: 'bt-unread bt-unread-wait', 'aria-hidden': true })
     : wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
@@ -175,7 +175,14 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
 
 // The DSH Agent row: a plain dsh Session list lives in the Bot workspace, so it
 // sits among the Bots with the harness's own whale mark.
-function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked }) {
+// The first line of a row ends with when it was last touched, in the shell's own short form
+// ("just now", "5 min", "3 h", "2 d", then a date).
+function RowTime({ at }) {
+  if (!at) return null
+  return h('span', { className: 'bt-row-time' }, relativeShort(at))
+}
+
+function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked, at }) {
   const info = useSessions(list => JSON.stringify(agent.sessions.map((id) => {
     const row = list.byId[id]
     return {
@@ -213,7 +220,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
     },
     h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: 22 })),
     wide ? h('span', { className: 'bt-row-body' },
-      h('span', { className: 'bt-row-name' }, 'DSH Agent'),
+      h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, 'DSH Agent'), h(RowTime, { at })),
       preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
     wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null),
     h('div', { className: 'bt-agent-sub', 'data-open': open || undefined },
@@ -257,23 +264,28 @@ export function TeamSidebar(props) {
   // The desktop window reserves a band for its own controls; when it does, the row rides
   // that band and indents past them. Measured once, so a browser without the band is left
   // alone instead of being pushed off the top.
-  // The window reserves a band above the sidebar for its own controls. The shell adds that
-  // band a moment after the first paint and does not mark the platform in every build, so
-  // the row is lifted inline: clear the lift, measure, apply. Once the band stops moving the
-  // observer keeps watching the document, since a window switch can reserve it again.
+  // The window reserves a band above the sidebar for its own controls. A negative margin
+  // would push the row out of the sidebar's clipped box, so once a real band is there the
+  // row is taken out of the flow and pinned to the window's top edge at the sidebar's width.
   useLayoutEffect(() => {
     const row = listRef.current?.parentElement?.querySelector('.bt-side-top')
     if (!row) return undefined
     const measure = () => {
-      row.style.marginTop = '0px'
-      row.style.height = ''
-      const band = row.getBoundingClientRect().top
-      const lift = band > 0 ? Math.min(band, 120) : 0
-      row.style.marginTop = lift ? `${-lift}px` : '0px'
-      // A real caption band (not the few pixels a browser offsets the column by) is what the
-      // row then fills, so the buttons sit on the window's own control line.
-      row.style.height = lift >= 24 ? `${lift}px` : ''
-      row.style.paddingLeft = lift ? '78px' : ''
+      row.removeAttribute('style')
+      const band = Math.round(row.getBoundingClientRect().top)
+      if (band < 24) return
+      const side = row.parentElement
+      const box = side.getBoundingClientRect()
+      row.style.position = 'fixed'
+      row.style.top = '0px'
+      row.style.left = `${Math.round(box.left)}px`
+      row.style.width = `${Math.round(box.width)}px`
+      row.style.height = `${band}px`
+      row.style.paddingLeft = '78px'
+      row.style.paddingRight = '8px'
+      row.style.zIndex = '6'
+      row.style.pointerEvents = 'none'
+      row.dataset.floating = ''
     }
     measure()
     let frame = 0
@@ -281,15 +293,12 @@ export function TeamSidebar(props) {
     const settle = (now) => {
       if (!started) started = now
       measure()
-      if (now - started < 6000) frame = requestAnimationFrame(settle)
+      if (now - started < 4000) frame = requestAnimationFrame(settle)
     }
     frame = requestAnimationFrame(settle)
-    const observer = new MutationObserver(measure)
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class', 'data-platform'] })
     window.addEventListener('resize', measure)
     return () => {
       cancelAnimationFrame(frame)
-      observer.disconnect()
       window.removeEventListener('resize', measure)
     }
   }, [])
@@ -369,12 +378,12 @@ export function TeamSidebar(props) {
           h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon))),
     wide && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
     h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
-      main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
+      main ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
       order.map(entry => (entry.kind === 'bot'
-        ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
+        ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
         : entry.kind === 'room'
-          ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
-          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))),
+          ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
+          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })))),
     h('div', { className: 'bt-side-foot' },
       h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
         h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
