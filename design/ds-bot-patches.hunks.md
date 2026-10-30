@@ -39,10 +39,10 @@
 | 37 | `ds-bot/src/client/styles.js` | 153–157 | 5 |
 | 38 | `ds-bot/src/client/styles.js` | 324–343 | 20 |
 | 39 | `ds-bot/src/client/styles.js` | 910–951 | 42 |
-| 40 | `ds-bot/src/client/styles.js` | 1051–1131 | 61 |
-| 41 | `ds-bot/src/client/styles.js` | 1181–1192 | 9 |
-| 42 | `ds-bot/src/client/styles.js` | 1201 | 1 |
-| 43 | `ds-bot/src/client/styles.js` | 1242–1247 | 6 |
+| 40 | `ds-bot/src/client/styles.js` | 1051–1129 | 58 |
+| 41 | `ds-bot/src/client/styles.js` | 1179–1190 | 9 |
+| 42 | `ds-bot/src/client/styles.js` | 1199 | 1 |
+| 43 | `ds-bot/src/client/styles.js` | 1240–1245 | 6 |
 | 44 | `ds-bot/src/client/team-actions.js` | 3 | 1 |
 | 45 | `ds-bot/src/client/team-actions.js` | 17–18 | 2 |
 | 46 | `ds-bot/src/client/team-actions.js` | 47–51 | 2 |

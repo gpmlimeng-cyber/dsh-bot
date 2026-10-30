@@ -597,7 +597,7 @@ index 58d1840..d2cacb9 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..ec3e0b1 100644
+index aa38a3b..ddf66d5 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -150,7 +150,11 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
@@ -689,7 +689,7 @@ index aa38a3b..ec3e0b1 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1048,87 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1048,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -729,14 +729,11 @@ index aa38a3b..ec3e0b1 100644
 +html:not(:has([data-mobile-nav="frame"])) [data-composer-card]{flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;padding:6px 8px!important;border-radius:24px!important}
  [data-composer-card]>[class*="_row"]{display:contents!important}
 -[data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:flex-end!important;margin:0!important}
--[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0!important}
--[data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:flex-end!important;margin:0!important}
 +[data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:center!important;margin:0!important}
-+/* The + button already carries its own inset, so the field starts 2px after it instead
-+   of a further 8px: the caret sat 27px from the mark and read as a gap. */
-+[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 4px!important;margin:0 0 0 -6px!important}
-+/* The phone's + is a 32px seat with the same inset, so the field only needs to drop back to the mark. */
-+html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{margin-left:-6px!important}
+ [data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0!important}
+-[data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:flex-end!important;margin:0!important}
++/* The desktop field keeps ds-bot's stock inset; the phone pulls its field up to the mark. */
++html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{margin-left:-10px!important}
 +[data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:center!important;margin:0!important}
  /* The slot anchor is display:contents, so the rail inside it is the flex item. */
  [data-composer-card]>[data-slot="conversation.input.attachments"]>[class*="_rail"]{order:0!important;flex:0 0 100%!important;margin:0!important;padding:2px 8px 6px!important}
@@ -800,7 +797,7 @@ index aa38a3b..ec3e0b1 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1178,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1176,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -827,7 +824,7 @@ index aa38a3b..ec3e0b1 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1198,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1196,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -836,7 +833,7 @@ index aa38a3b..ec3e0b1 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1239,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1237,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
