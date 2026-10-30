@@ -549,7 +549,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..0a15c8d 100644
+index daf7dd4..f6dd299 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -738,7 +738,7 @@ index daf7dd4..0a15c8d 100644
      // Agent mode hands the surface back to the shell; everything open on the Bot
      // surface closes first so nothing stale reopens on the way back.
      setSurface: (mode) => {
-@@ -958,7 +1091,110 @@ export function apply(ctx) {
+@@ -958,7 +1091,158 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -785,6 +785,53 @@ index daf7dd4..0a15c8d 100644
 +      modeBar.setAttribute('aria-expanded', 'true')
 +      document.body.appendChild(modeMenu)
 +    }
++    // The sidebar's own controls, moved up beside the switcher: plain icons, no circles.
++    let bandActions = null
++    const iconPaths = (name) => ({
++      search: [{ tag: 'circle', attrs: { cx: '9', cy: '9', r: '5.2' } }, { tag: 'path', attrs: { d: 'M12.9 12.9L17 17' } }],
++      plus: [{ tag: 'path', attrs: { d: 'M10 4.5v11M4.5 10h11' } }],
++      collapse: [{ tag: 'rect', attrs: { x: '3.5', y: '4.5', width: '13', height: '11', rx: '2.4' } }, { tag: 'path', attrs: { d: 'M8 4.9v10.2' } }],
++    }[name] ?? [])
++    const buildAction = (label, name, run) => {
++      const button = document.createElement('button')
++      button.type = 'button'
++      button.className = 'bt-band-action'
++      button.setAttribute('aria-label', label)
++      button.title = label
++      button.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:0;border-radius:7px;background:transparent;box-shadow:none;color:rgba(20,20,20,.7);cursor:pointer'
++      button.addEventListener('mouseenter', () => { button.style.background = 'rgba(20,20,20,.07)' })
++      button.addEventListener('mouseleave', () => { button.style.background = 'transparent' })
++      button.addEventListener('click', run)
++      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
++      svg.setAttribute('width', '16')
++      svg.setAttribute('height', '16')
++      svg.setAttribute('viewBox', '0 0 20 20')
++      svg.setAttribute('fill', 'none')
++      svg.setAttribute('stroke', 'currentColor')
++      svg.setAttribute('stroke-width', '1.6')
++      svg.setAttribute('stroke-linecap', 'round')
++      svg.setAttribute('stroke-linejoin', 'round')
++      for (const { tag, attrs } of iconPaths(name)) {
++        const node = document.createElementNS('http://www.w3.org/2000/svg', tag)
++        for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value)
++        svg.appendChild(node)
++      }
++      button.appendChild(svg)
++      return button
++    }
++    const paintActions = () => {
++      const box = modeBar.getBoundingClientRect()
++      if (!bandActions) {
++        bandActions = document.createElement('div')
++        bandActions.className = 'bt-band-actions'
++        document.body.appendChild(bandActions)
++      }
++      bandActions.style.cssText = `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`
++      bandActions.textContent = ''
++      bandActions.appendChild(buildAction(t('Search'), 'search', () => actions.openPalette('', { fromDrawer: true })))
++      bandActions.appendChild(buildAction(t('New…'), 'plus', () => actions.openNewChat('new', { fromDrawer: true })))
++      bandActions.appendChild(buildAction(t('Collapse sidebar'), 'collapse', () => actions.toggleSidebar()))
++    }
 +    const paintModeBar = () => {
 +      const mac = /Mac/i.test(navigator.platform || navigator.userAgent)
 +      // The desktop window may keep its caption as an overlay and never publish the band
@@ -801,7 +848,7 @@ index daf7dd4..0a15c8d 100644
 +      if (!modeBar) {
 +        // A surface effect that re-runs gets a fresh closure; clear anything an earlier
 +        // closure left on the page so the row never stacks up.
-+        for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu')) stale.remove()
++        for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions')) stale.remove()
 +        modeBar = document.createElement('button')
 +        modeBar.type = 'button'
 +        modeBar.className = 'bt-modebar'
@@ -828,6 +875,7 @@ index daf7dd4..0a15c8d 100644
 +      const label = document.createElement('span')
 +      label.textContent = mode === 'bot' ? t('Bot mode') : t('DSH mode')
 +      modeBar.appendChild(label)
++      paintActions()
 +      const caret = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 +      caret.setAttribute('width', '12')
 +      caret.setAttribute('height', '12')
@@ -849,14 +897,14 @@ index daf7dd4..0a15c8d 100644
        groups.reconcile(groupsFor(surface.getSnapshot()))
        clearTimeout(verifyTimer)
        verifyAttempts = 0
-@@ -970,6 +1206,10 @@ export function apply(ctx) {
+@@ -970,6 +1254,10 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
 +      if (modeBar) { modeBar.remove(); modeBar = null }
 +      modeOpen = false
 +      if (modeMenu) { modeMenu.remove(); modeMenu = null }
-+      for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu')) stale.remove()
++      for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions')) stale.remove()
        groups.dispose()
      }
    }, 'ds-bot: surface')
@@ -1688,7 +1736,7 @@ index 0000000..ae11666
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 58d1840..6cba162 100644
+index 58d1840..3ea0537 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -3,14 +3,19 @@ import { createPortal } from 'react-dom'
@@ -1906,7 +1954,7 @@ index 58d1840..6cba162 100644
    }
    const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
    // Typing while the sidebar has focus starts a search.
-@@ -299,26 +400,71 @@ export function TeamSidebar(props) {
+@@ -299,26 +400,68 @@ export function TeamSidebar(props) {
      if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
      if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
      event.preventDefault()
@@ -1916,13 +1964,12 @@ index 58d1840..6cba162 100644
    return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
      wide ? h('div', { className: 'bt-side-top' },
 -      h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
-+      h('span', { className: 'bt-brand' }, h(BrandName)),
-       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
+-      h(UpdateButton, { useUpdate: props.useUpdate, actions }),
 -      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
 -      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
-+      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette('', { fromDrawer: true }) }, h(SearchIcon)),
-+      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon)),
-       h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)))
+-      h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)))
++      h('span', { className: 'bt-brand' }, h(BrandName)),
++      h(UpdateButton, { useUpdate: props.useUpdate, actions }))
        : h(Fragment, null,
 +          // The rail opens with the way back: the same control that folded it.
 +          h('button', { type: 'button', className: 'bt-round bt-side-expand', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)),
@@ -1989,7 +2036,7 @@ index 58d1840..6cba162 100644
  }
  
  // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -483,7 +629,17 @@ const NO_SNAPSHOT = () => null
+@@ -483,7 +626,17 @@ const NO_SNAPSHOT = () => null
  // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
  // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
  // back in Agent mode; FooterAccount stands in while no seat exists at all.
@@ -2008,7 +2055,7 @@ index 58d1840..6cba162 100644
    const [open, setOpen] = useState(false)
    useLayoutEffect(() => {
      if (!seat) return undefined
-@@ -565,7 +721,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+@@ -565,7 +718,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
    }, [open])
    const groups = [
      [

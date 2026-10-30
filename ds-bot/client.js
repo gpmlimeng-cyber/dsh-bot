@@ -10121,10 +10121,7 @@ function TeamSidebar(props) {
       "div",
       { className: "bt-side-top" },
       (0, import_react16.createElement)("span", { className: "bt-brand" }, (0, import_react16.createElement)(BrandName)),
-      (0, import_react16.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
-      (0, import_react16.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Search"), title: t("Search"), onClick: () => actions.openPalette("", { fromDrawer: true }) }, (0, import_react16.createElement)(SearchIcon)),
-      (0, import_react16.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new", { fromDrawer: true }) }, (0, import_react16.createElement)(PlusIcon)),
-      (0, import_react16.createElement)("button", { type: "button", className: "bt-round bt-side-collapse", "aria-label": t("Collapse sidebar"), title: t("Collapse sidebar"), onClick: () => actions.toggleSidebar() }, (0, import_react16.createElement)(SidebarIcon))
+      (0, import_react16.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions })
     ) : (0, import_react16.createElement)(
       import_react16.Fragment,
       null,
@@ -21856,6 +21853,56 @@ function apply(ctx) {
       modeBar.setAttribute("aria-expanded", "true");
       document.body.appendChild(modeMenu);
     };
+    let bandActions = null;
+    const iconPaths = (name) => ({
+      search: [{ tag: "circle", attrs: { cx: "9", cy: "9", r: "5.2" } }, { tag: "path", attrs: { d: "M12.9 12.9L17 17" } }],
+      plus: [{ tag: "path", attrs: { d: "M10 4.5v11M4.5 10h11" } }],
+      collapse: [{ tag: "rect", attrs: { x: "3.5", y: "4.5", width: "13", height: "11", rx: "2.4" } }, { tag: "path", attrs: { d: "M8 4.9v10.2" } }]
+    })[name] ?? [];
+    const buildAction = (label, name, run2) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "bt-band-action";
+      button.setAttribute("aria-label", label);
+      button.title = label;
+      button.style.cssText = "display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:0;border-radius:7px;background:transparent;box-shadow:none;color:rgba(20,20,20,.7);cursor:pointer";
+      button.addEventListener("mouseenter", () => {
+        button.style.background = "rgba(20,20,20,.07)";
+      });
+      button.addEventListener("mouseleave", () => {
+        button.style.background = "transparent";
+      });
+      button.addEventListener("click", run2);
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", "16");
+      svg.setAttribute("height", "16");
+      svg.setAttribute("viewBox", "0 0 20 20");
+      svg.setAttribute("fill", "none");
+      svg.setAttribute("stroke", "currentColor");
+      svg.setAttribute("stroke-width", "1.6");
+      svg.setAttribute("stroke-linecap", "round");
+      svg.setAttribute("stroke-linejoin", "round");
+      for (const { tag, attrs } of iconPaths(name)) {
+        const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+        for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+        svg.appendChild(node);
+      }
+      button.appendChild(svg);
+      return button;
+    };
+    const paintActions = () => {
+      const box = modeBar.getBoundingClientRect();
+      if (!bandActions) {
+        bandActions = document.createElement("div");
+        bandActions.className = "bt-band-actions";
+        document.body.appendChild(bandActions);
+      }
+      bandActions.style.cssText = `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`;
+      bandActions.textContent = "";
+      bandActions.appendChild(buildAction(t("Search"), "search", () => actions.openPalette("", { fromDrawer: true })));
+      bandActions.appendChild(buildAction(t("New…"), "plus", () => actions.openNewChat("new", { fromDrawer: true })));
+      bandActions.appendChild(buildAction(t("Collapse sidebar"), "collapse", () => actions.toggleSidebar()));
+    };
     const paintModeBar = () => {
       const mac = /Mac/i.test(navigator.platform || navigator.userAgent);
       const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue("--dsh-frame-chrome-top")) || (mac ? 44 : 0);
@@ -21863,7 +21910,7 @@ function apply(ctx) {
       const left = mac ? 84 : 15;
       const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9;
       if (!modeBar) {
-        for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu")) stale.remove();
+        for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu,.bt-band-actions")) stale.remove();
         modeBar = document.createElement("button");
         modeBar.type = "button";
         modeBar.className = "bt-modebar";
@@ -21892,6 +21939,7 @@ function apply(ctx) {
       const label = document.createElement("span");
       label.textContent = mode === "bot" ? t("Bot mode") : t("DSH mode");
       modeBar.appendChild(label);
+      paintActions();
       const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       caret.setAttribute("width", "12");
       caret.setAttribute("height", "12");
@@ -21932,7 +21980,7 @@ function apply(ctx) {
         modeMenu.remove();
         modeMenu = null;
       }
-      for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu")) stale.remove();
+      for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu,.bt-band-actions")) stale.remove();
       groups.dispose();
     };
   }, "ds-bot: surface");

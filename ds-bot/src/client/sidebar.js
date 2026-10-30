@@ -405,10 +405,7 @@ export function TeamSidebar(props) {
   return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
     wide ? h('div', { className: 'bt-side-top' },
       h('span', { className: 'bt-brand' }, h(BrandName)),
-      h(UpdateButton, { useUpdate: props.useUpdate, actions }),
-      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette('', { fromDrawer: true }) }, h(SearchIcon)),
-      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon)),
-      h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)))
+      h(UpdateButton, { useUpdate: props.useUpdate, actions }))
       : h(Fragment, null,
           // The rail opens with the way back: the same control that folded it.
           h('button', { type: 'button', className: 'bt-round bt-side-expand', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)),
