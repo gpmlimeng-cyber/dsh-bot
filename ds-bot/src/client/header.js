@@ -8,6 +8,7 @@ import { clockLabel, openingTurn, unseenSince } from './cells.js'
 import { viewBottom } from './motion.js'
 import { t } from './i18n.js'
 import { PanelMenu } from './browser-pane.js'
+import { ModelMenu } from './model-menu.js'
 
 // -------------------------------------------------------------------------
 // Conversation header
@@ -113,6 +114,8 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h('span', { className: 'bt-pill-name' }, away ? t('Back to chat') : bot?.name ?? room?.name ?? (title || t('New chat'))),
     h(MemoryNotice, { shown: memoryNotice }),
     h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
+    // The model sits beside the title, where the conversation says what it runs on.
+    bot ? h(ModelMenu, { key: `model:${sessionId}`, bot, roster, actions, run: promise => Promise.resolve(promise) }) : null,
     h(SessionMenu, { sessionId, bot, room, roster, actions }),
     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
     h('button', {

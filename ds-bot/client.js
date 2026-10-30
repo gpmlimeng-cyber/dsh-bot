@@ -3324,6 +3324,15 @@ html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{display:inline-flex}
 .bt-head>.bt-pmenu .bt-pmenu-pop{pointer-events:auto}
 /* The left button's hit area grows rightwards; this one mirrors it so it never reaches the pill. */
 .bt-head>.bt-pmenu .bt-head-btn::after{inset:-4px -4px -4px 0}
+/* The model the conversation runs on, at the title's right: one pill on the shared
+   floating surface, name and caret on one line. The phone keeps that slot for the
+   session menu instead. */
+.bt-head>.bt-model-trigger{position:absolute;right:max(16px,calc((100% - 992px) / 2));top:5px;flex:none;height:30px;min-height:30px;gap:4px;padding:0 8px 0 10px;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);pointer-events:auto;max-width:min(220px,40vw)}
+.bt-head>.bt-model-trigger:hover,.bt-head>.bt-model-trigger[aria-expanded=true]{background:var(--bt-float-hover)}
+.bt-head>.bt-model-trigger .bt-model-copy{flex-direction:row;align-items:baseline;gap:4px;min-width:0}
+.bt-head>.bt-model-trigger .bt-model-provider{display:none}
+.bt-head>.bt-model-trigger .bt-model-name{font-size:13px;line-height:18px}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-model-trigger{display:none}
 `;
 var CONVERSATION_CSS = `
 .bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:calc(var(--bt-msg-w) * 100%)}
@@ -14061,6 +14070,8 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
       (0, import_react30.createElement)(MemoryNotice, { shown: memoryNotice }),
       (0, import_react30.createElement)("span", { className: "bt-pill-go", "aria-hidden": true }, (0, import_react30.createElement)(GoArrow))
     ),
+    // The model sits beside the title, where the conversation says what it runs on.
+    bot ? (0, import_react30.createElement)(ModelMenu, { key: `model:${sessionId}`, bot, roster, actions, run: (promise) => Promise.resolve(promise) }) : null,
     (0, import_react30.createElement)(SessionMenu, { sessionId, bot, room: room2, roster, actions }),
     (0, import_react30.createElement)("span", { className: "bt-sr", role: "status" }, memoryNotice ? t("Memory updated") : ""),
     (0, import_react30.createElement)("button", {

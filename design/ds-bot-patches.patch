@@ -199,10 +199,10 @@ index 0000000..8fca0d0
 +  if (fromDrawer === true) collapse?.()
 +}
 diff --git a/ds-bot/src/client/header.js b/ds-bot/src/client/header.js
-index c7b1488..dc7991a 100644
+index c7b1488..2092787 100644
 --- a/ds-bot/src/client/header.js
 +++ b/ds-bot/src/client/header.js
-@@ -1,12 +1,13 @@
+@@ -1,12 +1,14 @@
  import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
  import { createPortal } from 'react-dom'
  import { currentPart, latestMemoryChange } from './text.js'
@@ -214,10 +214,11 @@ index c7b1488..dc7991a 100644
  import { viewBottom } from './motion.js'
  import { t } from './i18n.js'
 +import { PanelMenu } from './browser-pane.js'
++import { ModelMenu } from './model-menu.js'
  
  // -------------------------------------------------------------------------
  // Conversation header
-@@ -98,6 +99,9 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
+@@ -98,6 +100,9 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
    }, [Boolean(room)])
    const memoryNotice = !away && notice && changed !== null && roster.memory !== false
    return h('div', { className: 'bt-head' },
@@ -227,10 +228,12 @@ index c7b1488..dc7991a 100644
      h('button', {
        type: 'button', className: 'bt-pill', 'aria-expanded': away ? undefined : detailsOpen, 'data-memory': memoryNotice ? 'updated' : undefined,
        'aria-label': away ? t('Back to chat') : memoryNotice ? t('Memory updated. Open {name}\'s memory', { name: roster.byId[changed]?.name ?? name }) : t('View conversation details'),
-@@ -109,11 +113,35 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
+@@ -109,11 +114,37 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
      h('span', { className: 'bt-pill-name' }, away ? t('Back to chat') : bot?.name ?? room?.name ?? (title || t('New chat'))),
      h(MemoryNotice, { shown: memoryNotice }),
      h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
++    // The model sits beside the title, where the conversation says what it runs on.
++    bot ? h(ModelMenu, { key: `model:${sessionId}`, bot, roster, actions, run: promise => Promise.resolve(promise) }) : null,
 +    h(SessionMenu, { sessionId, bot, room, roster, actions }),
      h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
 +    h('button', {
@@ -597,7 +600,7 @@ index 58d1840..d2cacb9 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..b2d9aae 100644
+index aa38a3b..f354951 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -150,7 +150,11 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
@@ -640,7 +643,7 @@ index aa38a3b..b2d9aae 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -883,6 +907,48 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +907,57 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -686,10 +689,19 @@ index aa38a3b..b2d9aae 100644
 +.bt-head>.bt-pmenu .bt-pmenu-pop{pointer-events:auto}
 +/* The left button's hit area grows rightwards; this one mirrors it so it never reaches the pill. */
 +.bt-head>.bt-pmenu .bt-head-btn::after{inset:-4px -4px -4px 0}
++/* The model the conversation runs on, at the title's right: one pill on the shared
++   floating surface, name and caret on one line. The phone keeps that slot for the
++   session menu instead. */
++.bt-head>.bt-model-trigger{position:absolute;right:max(16px,calc((100% - 992px) / 2));top:5px;flex:none;height:30px;min-height:30px;gap:4px;padding:0 8px 0 10px;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);pointer-events:auto;max-width:min(220px,40vw)}
++.bt-head>.bt-model-trigger:hover,.bt-head>.bt-model-trigger[aria-expanded=true]{background:var(--bt-float-hover)}
++.bt-head>.bt-model-trigger .bt-model-copy{flex-direction:row;align-items:baseline;gap:4px;min-width:0}
++.bt-head>.bt-model-trigger .bt-model-provider{display:none}
++.bt-head>.bt-model-trigger .bt-model-name{font-size:13px;line-height:18px}
++html:has([data-mobile-nav="frame"]) .bt-head>.bt-model-trigger{display:none}
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1048,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1057,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -798,7 +810,7 @@ index aa38a3b..b2d9aae 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1176,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1185,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -825,7 +837,7 @@ index aa38a3b..b2d9aae 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1196,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1205,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -834,7 +846,7 @@ index aa38a3b..b2d9aae 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1237,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1246,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
