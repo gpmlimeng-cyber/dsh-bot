@@ -318,7 +318,7 @@ function Discover({ actions }) {
 }
 
 export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
-  const [tab, setTab] = useState('connectors')
+  const [tab, setTab] = useState('plugins')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
   const [busyRow, setBusyRow] = useState('')

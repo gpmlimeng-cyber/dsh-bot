@@ -9428,7 +9428,7 @@ function Discover({ actions }) {
   );
 }
 function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
-  const [tab, setTab] = (0, import_react15.useState)("connectors");
+  const [tab, setTab] = (0, import_react15.useState)("plugins");
   const [query, setQuery] = (0, import_react15.useState)("");
   const [selected, setSelected] = (0, import_react15.useState)(null);
   const [busyRow, setBusyRow] = (0, import_react15.useState)("");
