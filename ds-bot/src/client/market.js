@@ -204,9 +204,10 @@ function Discover({ actions }) {
   const cut = fits === null ? pills.length : Math.min(fits, pills.length)
   const head = pills.slice(0, cut)
   const tail = pills.slice(cut)
-  // A chosen pill always stays on the line, even when it lives in the More menu.
+  // A category chosen from the More menu does not get one more pill: the menu's own
+  // button takes that name, so the row keeps its width and stays one line.
   const chosenTail = tail.find((pill) => pill.id === category)
-  const shown = chosenTail ? head.concat(chosenTail) : head
+  const shown = head
 
   return h('div', { className: 'bt-mk' },
     h('div', { className: 'bt-mk-bar' },
@@ -227,7 +228,7 @@ function Discover({ actions }) {
       h('button', {
         type: 'button', className: 'bt-mk-menu', 'data-on': labels.length ? '' : undefined,
         'aria-expanded': labelsOpen, onClick: () => setLabelsOpen((open) => !open),
-      }, h(TagIcon), h('span', null, labels.length ? t('{count} labels', { count: labels.length }) : t('Labels'))),
+      }, h(TagIcon), h('span', null, t('Labels'))),
       h('label', { className: 'bt-mk-menu bt-mk-pick' },
         h('span', null, t('Sort:')),
         h('select', { value: sort, onChange: (event) => setSort(event.target.value), 'aria-label': t('Sort') },
@@ -251,9 +252,9 @@ function Discover({ actions }) {
         ? h('div', { className: 'bt-mk-catmore' },
           h('button', {
             type: 'button', className: 'bt-mk-pill bt-mk-morecat', 'aria-haspopup': 'menu',
-            'aria-expanded': moreCats, 'data-on': tail.some((pill) => pill.id === category) ? '' : undefined,
+            'aria-expanded': moreCats, 'data-on': chosenTail ? '' : undefined,
             onClick: (event) => { event.stopPropagation(); setMoreCats((open) => !open) },
-          }, t('More')),
+          }, chosenTail ? chosenTail.name : t('More')),
           moreCats
             ? h('div', { className: 'bt-mk-catmenu', role: 'menu', onMouseDown: (event) => event.stopPropagation() },
               ...tail.map((pill) => h('button', {

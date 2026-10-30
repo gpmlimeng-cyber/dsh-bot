@@ -2670,7 +2670,7 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-mk-refresh{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:none;color:var(--bt-ink-3);cursor:pointer}
 .bt-mk-refresh:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-mk-labels{display:flex;flex-wrap:wrap;gap:6px;margin-top:-6px}
-.bt-mk-tag{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--bt-line);border-radius:999px;background:none;font:inherit;font-size:11px;line-height:18px;font-weight:500;color:var(--bt-ink-3);white-space:nowrap}
+.bt-mk-tag{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--bt-line);border-radius:999px;background:color-mix(in srgb,var(--bt-main) 88%,transparent);font:inherit;font-size:11px;line-height:18px;font-weight:500;color:var(--bt-ink-3);white-space:nowrap}
 button.bt-mk-tag{cursor:pointer}
 button.bt-mk-tag:hover{color:var(--bt-ink)}
 .bt-mk-tag[data-on]{background:var(--bt-hover);border-color:transparent;color:var(--bt-ink)}
@@ -2687,7 +2687,7 @@ button.bt-mk-tag:hover{color:var(--bt-ink)}
 .bt-mk-catitem{display:flex;align-items:center;height:30px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;font-size:13px;color:var(--bt-ink-2);text-align:left;cursor:pointer;white-space:nowrap}
 .bt-mk-catitem:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-mk-catitem[data-on]{background:var(--bt-hover);color:var(--bt-ink);font-weight:500}
-.bt-mk-pill{flex:none;height:24px;padding:0 8px;border:0;border-radius:999px;background:none;font:inherit;font-size:12px;line-height:24px;color:var(--bt-ink-2);cursor:pointer}
+.bt-mk-pill{flex:none;height:24px;padding:0 8px;border:0;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 88%,transparent);font:inherit;font-size:12px;line-height:24px;color:var(--bt-ink-2);cursor:pointer}
 .bt-mk-pill:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-mk-pill[data-on]{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-mk-cards{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
@@ -9109,7 +9109,7 @@ function Discover({ actions }) {
   const head = pills.slice(0, cut);
   const tail = pills.slice(cut);
   const chosenTail = tail.find((pill) => pill.id === category);
-  const shown = chosenTail ? head.concat(chosenTail) : head;
+  const shown = head;
   return (0, import_react15.createElement)(
     "div",
     { className: "bt-mk" },
@@ -9147,7 +9147,7 @@ function Discover({ actions }) {
         "data-on": labels.length ? "" : void 0,
         "aria-expanded": labelsOpen,
         onClick: () => setLabelsOpen((open) => !open)
-      }, (0, import_react15.createElement)(TagIcon), (0, import_react15.createElement)("span", null, labels.length ? t("{count} labels", { count: labels.length }) : t("Labels"))),
+      }, (0, import_react15.createElement)(TagIcon), (0, import_react15.createElement)("span", null, t("Labels"))),
       (0, import_react15.createElement)(
         "label",
         { className: "bt-mk-menu bt-mk-pick" },
@@ -9195,12 +9195,12 @@ function Discover({ actions }) {
           className: "bt-mk-pill bt-mk-morecat",
           "aria-haspopup": "menu",
           "aria-expanded": moreCats,
-          "data-on": tail.some((pill) => pill.id === category) ? "" : void 0,
+          "data-on": chosenTail ? "" : void 0,
           onClick: (event) => {
             event.stopPropagation();
             setMoreCats((open) => !open);
           }
-        }, t("More")),
+        }, chosenTail ? chosenTail.name : t("More")),
         moreCats ? (0, import_react15.createElement)(
           "div",
           { className: "bt-mk-catmenu", role: "menu", onMouseDown: (event) => event.stopPropagation() },
