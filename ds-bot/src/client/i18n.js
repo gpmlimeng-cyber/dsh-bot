@@ -19,6 +19,7 @@ const ZH = {
   'Collapse sidebar': '收起侧边栏',
   'Expand sidebar': '展开侧边栏',
   'Toggle right panel': '展开/收起右侧栏',
+  'Connect apps': '连接应用',
   'Animation': '动画',
   'Bot animation': 'Bot 动画',
   'Quiet': '安静',

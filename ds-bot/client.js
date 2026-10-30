@@ -56,6 +56,7 @@ var ZH = {
   "Collapse sidebar": "收起侧边栏",
   "Expand sidebar": "展开侧边栏",
   "Toggle right panel": "展开/收起右侧栏",
+  "Connect apps": "连接应用",
   "Animation": "动画",
   "Bot animation": "Bot 动画",
   "Quiet": "安静",
@@ -2533,6 +2534,16 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-unread-wait{background:var(--bt-star)}
 .bt-rail{display:flex;flex-direction:column;align-items:center;padding:0 0 8px;gap:8px}
 .bt-rail>.bt-rail-foot{margin-top:auto;display:flex;justify-content:center;width:100%}
+/* The way into the apps market, where MausBot keeps its own connect entry: one pill on
+   the shared surface, the marks first, in the sidebar's bottom corner. */
+.bt-apps-chip{display:flex;align-items:center;gap:6px;flex:none;margin:0 8px 8px;padding:0 10px;height:32px;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
+.bt-apps-chip:hover{background:var(--bt-float-hover)}
+.bt-apps-marks{display:inline-flex;flex:none;gap:3px}
+.bt-apps-mark{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--bt-ink) 22%,transparent);display:block}
+.bt-apps-mark-b{border-radius:50%;background:color-mix(in srgb,var(--bt-accent) 60%,transparent)}
+.bt-apps-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-rail .bt-apps-chip{margin:8px auto;padding:0;width:40px;height:40px;justify-content:center;border-radius:12px}
+.bt-rail .bt-apps-label{display:none}
 /* Nothing in the rail may widen it: a row keeps its own width, the list scrolls
    vertically only, and the document never gains a sideways scrollbar from it. */
 .bt-rail,.bt-rail>*{box-sizing:border-box;max-width:100%;min-width:0}
@@ -9124,6 +9135,12 @@ function TeamSidebar(props) {
       { ref: listRef, className: "bt-list", role: "region", "aria-label": t("Bot list") },
       main ? (0, import_react15.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react15.createElement)("div", { className: "bt-hint" }, t("Setting up your Main Bot…")),
       order.map((entry) => entry.kind === "bot" ? (0, import_react15.createElement)(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true }) : entry.kind === "room" ? (0, import_react15.createElement)(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true }) : (0, import_react15.createElement)(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true }))
+    ),
+    (0, import_react15.createElement)(
+      "button",
+      { type: "button", className: "bt-apps-chip", "aria-label": t("Connect apps"), title: t("Connect apps"), onClick: () => actions.openConnectors({ fromDrawer: !wide }) },
+      (0, import_react15.createElement)("span", { className: "bt-apps-marks", "aria-hidden": true }, (0, import_react15.createElement)("i", { className: "bt-apps-mark" }), (0, import_react15.createElement)("i", { className: "bt-apps-mark bt-apps-mark-b" })),
+      wide ? (0, import_react15.createElement)("span", { className: "bt-apps-label" }, t("Connect apps")) : null
     ),
     wide ? null : (0, import_react15.createElement)("div", { className: "bt-rail-foot" }, (0, import_react15.createElement)(AccountLauncher, { ...props, seat: false }))
   );

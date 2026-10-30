@@ -345,6 +345,9 @@ export function TeamSidebar(props) {
         : entry.kind === 'room'
           ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
           : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))),
+    h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => actions.openConnectors({ fromDrawer: !wide }) },
+      h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
+      wide ? h('span', { className: 'bt-apps-label' }, t('Connect apps')) : null),
     wide ? null : h('div', { className: 'bt-rail-foot' }, h(AccountLauncher, { ...props, seat: false })))
 }
 
