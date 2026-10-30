@@ -146,6 +146,16 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-tile[aria-current=page]{background:var(--bt-active)}
 .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
+/* Density: one attribute on the body, so every list and row that already has a height
+   follows without a second stylesheet. */
+html body[data-bt-density=tight] .bt-row{min-height:46px}
+html body[data-bt-density=tight] .bt-tile{padding:4px 6px 2px}
+html body[data-bt-density=tight] .bt-market-card{padding:6px 8px}
+html body[data-bt-density=tight] .bt-market-inst,html body[data-bt-density=tight] .bt-market-cat{height:28px}
+html body[data-bt-density=roomy] .bt-row{min-height:62px}
+html body[data-bt-density=roomy] .bt-tile{padding:8px 10px 6px}
+html body[data-bt-density=roomy] .bt-market-card{padding:12px}
+html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy] .bt-market-cat{height:36px}
 .bt-row{display:flex;align-items:center;gap:8px;min-height:54px;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--bt-ink);text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-family:inherit;transition:background-color .12s ease}
 .bt-row:hover{background:var(--bt-hover)}
 .bt-row[aria-current=page]{background:var(--bt-active)}

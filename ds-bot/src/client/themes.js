@@ -145,6 +145,21 @@ export const fontCss = (id) => {
   const face = FONT_CHOICES[id]
   return face?.stack ? `html body{--bt-font-choice:${face.stack}}` : ''
 }
+// Reading text size. It rides the shell's own content tokens, so markdown, code and our
+// bubbles all follow one number; the default is the shell's 14px and needs no rule.
+export const SIZE_CHOICES = { s: { label: 'Small', px: 13 }, m: { label: 'Standard', px: 14 }, l: { label: 'Large', px: 15 }, xl: { label: 'Largest', px: 16 } }
+export const sizeOf = prefs => (SIZE_CHOICES[prefs?.size] ? prefs.size : 'm')
+export const sizeCss = (id) => {
+  const px = (SIZE_CHOICES[id] ?? SIZE_CHOICES.m).px
+  if (px === 14) return ''
+  const small = `min(calc(${px}px - 1px),max(13px,calc(${px}px - 2px)))`
+  // The attribute lifts the rule above the shell's own `html body` block, which loads later.
+  return `html body[data-bt-size]{--dsh-content-font-size:${px}px;--dsh-content-font-delta:calc(${px}px - 14px);--dsh-content-font-size-secondary:${small};--dsh-content-font-delta-secondary:calc(${small} - 13px)}`
+}
+// Spacing density. The attribute drives the rules in the base sheet, so switching it costs
+// one attribute write rather than a new stylesheet.
+export const DENSITY_CHOICES = { tight: { label: 'Compact' }, normal: { label: 'Standard' }, roomy: { label: 'Roomier' } }
+export const densityOf = prefs => (DENSITY_CHOICES[prefs?.density] ? prefs.density : 'normal')
 export const layoutOf = prefs => (prefs?.layout === 'flat' ? 'flat' : 'bubble')
 export const thinkingShown = prefs => prefs?.thinking === true
 export const widthOf = prefs => percent(prefs?.width, 80)

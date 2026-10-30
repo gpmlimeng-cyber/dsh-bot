@@ -112,6 +112,16 @@ export function install(rt) {
       else if (body.motion === 'quiet' || body.motion === 'lively') state.prefs.motion = body.motion
       else throw invalid('Motion must be quiet, normal or lively')
     }
+    if (body.size !== undefined) {
+      if (body.size === null || body.size === 'm') delete state.prefs.size
+      else if (['s', 'l', 'xl'].includes(body.size)) state.prefs.size = body.size
+      else throw invalid('Size must be s, m, l or xl')
+    }
+    if (body.density !== undefined) {
+      if (body.density === null || body.density === 'normal') delete state.prefs.density
+      else if (body.density === 'tight' || body.density === 'roomy') state.prefs.density = body.density
+      else throw invalid('Density must be tight, normal or roomy')
+    }
     if (body.font !== undefined) {
       if (body.font === null || body.font === 'system') delete state.prefs.font
       else if (body.font === 'geist' || body.font === 'inter') state.prefs.font = body.font

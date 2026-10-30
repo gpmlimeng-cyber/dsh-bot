@@ -257,13 +257,18 @@ export function TeamSidebar(props) {
   // The desktop window reserves a band for its own controls; when it does, the row rides
   // that band and indents past them. Measured once, so a browser without the band is left
   // alone instead of being pushed off the top.
+  const band = useRef(null)
   useLayoutEffect(() => {
     const row = listRef.current?.parentElement?.querySelector('.bt-side-top')
     if (!row) return
-    // Whatever the window pushed the row down by is what it gets lifted by, so the row lands
-    // on the caption line instead of guessing the band height.
-    const reserved = row.getBoundingClientRect().top
-    const lift = reserved > 0 ? Math.min(reserved, 44) : 0
+    // Measured once, with any earlier lift cleared: measuring the lifted row answers 0 and
+    // would drop it back into the band on the next render.
+    if (band.current === null) {
+      row.style.setProperty('--bt-side-lift', '0px')
+      const reserved = row.getBoundingClientRect().top
+      band.current = reserved > 0 ? Math.min(reserved, 64) : 0
+    }
+    const lift = band.current
     row.style.setProperty('--bt-side-lift', lift ? `${lift}px` : '0px')
     row.style.setProperty('--bt-side-indent', lift ? '78px' : '0px')
   })
@@ -331,7 +336,7 @@ export function TeamSidebar(props) {
   }
   return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
     wide ? h('div', { className: 'bt-side-top' },
-      h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
+      h('span', { className: 'bt-brand' }, h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
       h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette('', { fromDrawer: true }) }, h(SearchIcon)),
       h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon)),

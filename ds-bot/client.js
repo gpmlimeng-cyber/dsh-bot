@@ -634,6 +634,16 @@ var ZH = {
   "More message actions": "更多操作",
   More: "更多",
   "Font": "字体",
+  "Text size": "字号",
+  "How large messages and their markdown read.": "消息和正文的字有多大。",
+  "Small": "小",
+  "Standard": "标准",
+  "Large": "大",
+  "Largest": "特大",
+  "Density": "密度",
+  "How much room rows and lists take.": "侧栏和列表的行占多少空间。",
+  "Compact": "紧凑",
+  "Roomier": "宽松",
   "The typeface for names, messages and menus.": "名字、消息和菜单用的字体。",
   "System": "系统默认",
   Reactions: "表情",
@@ -1946,6 +1956,16 @@ var fontCss = (id) => {
   const face = FONT_CHOICES[id];
   return face?.stack ? `html body{--bt-font-choice:${face.stack}}` : "";
 };
+var SIZE_CHOICES = { s: { label: "Small", px: 13 }, m: { label: "Standard", px: 14 }, l: { label: "Large", px: 15 }, xl: { label: "Largest", px: 16 } };
+var sizeOf = (prefs) => SIZE_CHOICES[prefs?.size] ? prefs.size : "m";
+var sizeCss = (id) => {
+  const px = (SIZE_CHOICES[id] ?? SIZE_CHOICES.m).px;
+  if (px === 14) return "";
+  const small = `min(calc(${px}px - 1px),max(13px,calc(${px}px - 2px)))`;
+  return `html body[data-bt-size]{--dsh-content-font-size:${px}px;--dsh-content-font-delta:calc(${px}px - 14px);--dsh-content-font-size-secondary:${small};--dsh-content-font-delta-secondary:calc(${small} - 13px)}`;
+};
+var DENSITY_CHOICES = { tight: { label: "Compact" }, normal: { label: "Standard" }, roomy: { label: "Roomier" } };
+var densityOf = (prefs) => DENSITY_CHOICES[prefs?.density] ? prefs.density : "normal";
 var layoutOf = (prefs) => prefs?.layout === "flat" ? "flat" : "bubble";
 var thinkingShown = (prefs) => prefs?.thinking === true;
 var widthOf = (prefs) => percent(prefs?.width, 80);
@@ -2593,6 +2613,16 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-tile[aria-current=page]{background:var(--bt-active)}
 .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
+/* Density: one attribute on the body, so every list and row that already has a height
+   follows without a second stylesheet. */
+html body[data-bt-density=tight] .bt-row{min-height:46px}
+html body[data-bt-density=tight] .bt-tile{padding:4px 6px 2px}
+html body[data-bt-density=tight] .bt-market-card{padding:6px 8px}
+html body[data-bt-density=tight] .bt-market-inst,html body[data-bt-density=tight] .bt-market-cat{height:28px}
+html body[data-bt-density=roomy] .bt-row{min-height:62px}
+html body[data-bt-density=roomy] .bt-tile{padding:8px 10px 6px}
+html body[data-bt-density=roomy] .bt-market-card{padding:12px}
+html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy] .bt-market-cat{height:36px}
 .bt-row{display:flex;align-items:center;gap:8px;min-height:54px;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--bt-ink);text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-family:inherit;transition:background-color .12s ease}
 .bt-row:hover{background:var(--bt-hover)}
 .bt-row[aria-current=page]{background:var(--bt-active)}
@@ -9814,11 +9844,16 @@ function TeamSidebar(props) {
   const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props;
   const [market, setMarket] = (0, import_react16.useState)(false);
   const listRef = (0, import_react16.useRef)(null);
+  const band = (0, import_react16.useRef)(null);
   (0, import_react16.useLayoutEffect)(() => {
     const row = listRef.current?.parentElement?.querySelector(".bt-side-top");
     if (!row) return;
-    const reserved = row.getBoundingClientRect().top;
-    const lift = reserved > 0 ? Math.min(reserved, 44) : 0;
+    if (band.current === null) {
+      row.style.setProperty("--bt-side-lift", "0px");
+      const reserved = row.getBoundingClientRect().top;
+      band.current = reserved > 0 ? Math.min(reserved, 64) : 0;
+    }
+    const lift = band.current;
     row.style.setProperty("--bt-side-lift", lift ? `${lift}px` : "0px");
     row.style.setProperty("--bt-side-indent", lift ? "78px" : "0px");
   });
@@ -9886,7 +9921,7 @@ function TeamSidebar(props) {
     wide ? (0, import_react16.createElement)(
       "div",
       { className: "bt-side-top" },
-      (0, import_react16.createElement)("span", { className: "bt-brand" }, (0, import_react16.createElement)(BrandMark, { size: 22 }), (0, import_react16.createElement)(BrandName)),
+      (0, import_react16.createElement)("span", { className: "bt-brand" }, (0, import_react16.createElement)(BrandName)),
       (0, import_react16.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
       (0, import_react16.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Search"), title: t("Search"), onClick: () => actions.openPalette("", { fromDrawer: true }) }, (0, import_react16.createElement)(SearchIcon)),
       (0, import_react16.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new", { fromDrawer: true }) }, (0, import_react16.createElement)(PlusIcon)),
@@ -18837,11 +18872,21 @@ function GeneralPage({ roster, actions, run: run2 }) {
             value: font,
             onChange: (event) => {
               setFont(event.target.value);
-              run2(actions.setFontPref(event.target.value));
+              run2(actions.localPref("font", event.target.value));
             }
           },
           Object.entries(FONT_CHOICES).map(([id, face]) => (0, import_react45.createElement)("option", { key: id, value: id }, t(face.label)))
         )
+      ),
+      (0, import_react45.createElement)(
+        SetRow,
+        { label: t("Text size"), hint: t("How large messages and their markdown read.") },
+        (0, import_react45.createElement)(Choice, { label: t("Text size"), value: sizeOf(prefs), options: Object.entries(SIZE_CHOICES).map(([id, face]) => [id, face.label]), pick: (id) => run2(actions.localPref("size", id)) })
+      ),
+      (0, import_react45.createElement)(
+        SetRow,
+        { label: t("Density"), hint: t("How much room rows and lists take.") },
+        (0, import_react45.createElement)(Choice, { label: t("Density"), value: densityOf(prefs), options: Object.entries(DENSITY_CHOICES).map(([id, face]) => [id, face.label]), pick: (id) => run2(actions.localPref("density", id)) })
       ),
       (0, import_react45.createElement)(
         SetRow,
@@ -20804,21 +20849,29 @@ function apply(ctx) {
       const width = widthOf(prefs);
       const flatWidth = flatWidthOf(prefs);
       const font = fontOf(prefs.font ? prefs : savedPrefs);
+      const size = sizeOf(prefs.size ? prefs : savedPrefs);
+      const density = densityOf(prefs.density ? prefs : savedPrefs);
       document.body.dataset.btMotion = motion;
       document.body.dataset.btFont = font;
+      document.body.dataset.btDensity = density;
+      if (size === "m") delete document.body.dataset.btSize;
+      else document.body.dataset.btSize = size;
+      const px = (SIZE_CHOICES[size] ?? SIZE_CHOICES.m).px;
+      if (px === 14) document.body.style.removeProperty("--dsh-content-font-size");
+      else document.body.style.setProperty("--dsh-content-font-size", `${px}px`);
       document.body.dataset.btLayout = layout;
       document.body.style.setProperty("--bt-msg-w", String(width / 100));
       document.body.style.setProperty("--bt-flat-w", String(flatWidth / 100));
-      const next = `${id}|${accent ?? ""}|${motion}|${layout}|${width}|${flatWidth}|${font}|${registry.getSnapshot()}`;
+      const next = `${id}|${accent ?? ""}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${registry.getSnapshot()}`;
       if (next === key) return;
       key = next;
-      style.textContent = themeCss(themes[id], accent) + fontCss(font);
+      style.textContent = themeCss(themes[id], accent) + fontCss(font) + sizeCss(size);
       const release = releaseTokens;
       releaseTokens = ctx.theme.overrideTokens("ds-bot", shellTokens(themes[id]));
       if (typeof release === "function") release();
       if (snapshot.ready) {
         try {
-          localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font }));
+          localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font, size: prefs.size ?? savedPrefs.size, density: prefs.density ?? savedPrefs.density }));
         } catch {
         }
       }
@@ -21075,18 +21128,19 @@ function apply(ctx) {
       const answer = await manager.installBundle(spec, registry2 ? { registry: registry2 } : void 0);
       return answer?.ok !== false && answer?.value?.ok !== false;
     },
-    // The font repaints this device immediately and asks the host to keep it for the team.
-    fontPref: () => fontOf(savedPrefs),
-    setFontPref: (font) => {
-      const id = fontOf({ font });
-      savedPrefs = { ...savedPrefs, font: id === "system" ? void 0 : id };
+    // A look that must show on this device at once, before the host keeps it for the team:
+    // it lands in the local copy, repaints, and goes to the host in the same gesture.
+    localPref: (key, value) => {
+      savedPrefs = { ...savedPrefs, [key]: value === "normal" || value === "m" || value === "system" ? void 0 : value };
       try {
         localStorage.setItem(PREFS_KEY, JSON.stringify(savedPrefs));
       } catch {
       }
       reapplyPrefs();
-      return actions.setPrefs({ font: id });
+      return actions.setPrefs({ [key]: value });
     },
+    // The font picker shows what this device already uses, not what the host last answered.
+    fontPref: () => fontOf(savedPrefs),
     setPluginEnabled: async (id, enabled) => {
       const manager = ctx.get("remote.pluginManager");
       if (manager?.setPluginEnabled) await manager.setPluginEnabled(id, enabled);

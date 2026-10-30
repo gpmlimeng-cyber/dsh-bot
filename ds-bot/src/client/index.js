@@ -4,7 +4,7 @@ import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
 import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
 import { teamActions } from './team-actions.js'
 import { dismissDrawerIfOpen } from './drawer-dismiss.js'
-import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss } from './themes.js'
+import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, SIZE_CHOICES } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
 import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
 import { lookOf } from './mark.js'
@@ -320,20 +320,30 @@ export function apply(ctx) {
       const width = widthOf(prefs)
       const flatWidth = flatWidthOf(prefs)
       const font = fontOf(prefs.font ? prefs : savedPrefs)
+      const size = sizeOf(prefs.size ? prefs : savedPrefs)
+      const density = densityOf(prefs.density ? prefs : savedPrefs)
       document.body.dataset.btMotion = motion
       document.body.dataset.btFont = font
+      document.body.dataset.btDensity = density
+      if (size === 'm') delete document.body.dataset.btSize
+      else document.body.dataset.btSize = size
+      // The shell writes this one inline, so it has to be answered inline as well; the rest
+      // of the scale (secondary sizes, deltas) comes from the attribute rule in sizeCss.
+      const px = (SIZE_CHOICES[size] ?? SIZE_CHOICES.m).px
+      if (px === 14) document.body.style.removeProperty('--dsh-content-font-size')
+      else document.body.style.setProperty('--dsh-content-font-size', `${px}px`)
       document.body.dataset.btLayout = layout
       document.body.style.setProperty('--bt-msg-w', String(width / 100))
       document.body.style.setProperty('--bt-flat-w', String(flatWidth / 100))
-      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${registry.getSnapshot()}`
+      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${registry.getSnapshot()}`
       if (next === key) return
       key = next
-      style.textContent = themeCss(themes[id], accent) + fontCss(font)
+      style.textContent = themeCss(themes[id], accent) + fontCss(font) + sizeCss(size)
       const release = releaseTokens
       releaseTokens = ctx.theme.overrideTokens('ds-bot', shellTokens(themes[id]))
       if (typeof release === 'function') release()
       if (snapshot.ready) {
-        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font })) } catch { /* storage unavailable */ }
+        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font, size: prefs.size ?? savedPrefs.size, density: prefs.density ?? savedPrefs.density })) } catch { /* storage unavailable */ }
       }
     }
     render()
@@ -579,15 +589,16 @@ export function apply(ctx) {
       const answer = await manager.installBundle(spec, registry ? { registry } : undefined)
       return answer?.ok !== false && answer?.value?.ok !== false
     },
-    // The font repaints this device immediately and asks the host to keep it for the team.
-    fontPref: () => fontOf(savedPrefs),
-    setFontPref: (font) => {
-      const id = fontOf({ font })
-      savedPrefs = { ...savedPrefs, font: id === 'system' ? undefined : id }
+    // A look that must show on this device at once, before the host keeps it for the team:
+    // it lands in the local copy, repaints, and goes to the host in the same gesture.
+    localPref: (key, value) => {
+      savedPrefs = { ...savedPrefs, [key]: value === 'normal' || value === 'm' || value === 'system' ? undefined : value }
       try { localStorage.setItem(PREFS_KEY, JSON.stringify(savedPrefs)) } catch { /* storage unavailable */ }
       reapplyPrefs()
-      return actions.setPrefs({ font: id })
+      return actions.setPrefs({ [key]: value })
     },
+    // The font picker shows what this device already uses, not what the host last answered.
+    fontPref: () => fontOf(savedPrefs),
     setPluginEnabled: async (id, enabled) => {
       const manager = ctx.get('remote.pluginManager')
       if (manager?.setPluginEnabled) await manager.setPluginEnabled(id, enabled)

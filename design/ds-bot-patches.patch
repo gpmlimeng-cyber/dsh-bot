@@ -312,7 +312,7 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 32ba8c9..eeba03e 100644
+index 32ba8c9..4b8faba 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
 @@ -18,6 +18,51 @@ const ZH = {
@@ -367,17 +367,27 @@ index 32ba8c9..eeba03e 100644
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
    'Quiet': '安静',
-@@ -535,6 +580,9 @@ const ZH = {
+@@ -535,6 +580,19 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
 +  'Font': '字体',
++  'Text size': '字号',
++  'How large messages and their markdown read.': '消息和正文的字有多大。',
++  'Small': '小',
++  'Standard': '标准',
++  'Large': '大',
++  'Largest': '特大',
++  'Density': '密度',
++  'How much room rows and lists take.': '侧栏和列表的行占多少空间。',
++  'Compact': '紧凑',
++  'Roomier': '宽松',
 +  'The typeface for names, messages and menus.': '名字、消息和菜单用的字体。',
 +  'System': '系统默认',
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -918,6 +966,10 @@ const ZH = {
+@@ -918,6 +976,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -388,7 +398,7 @@ index 32ba8c9..eeba03e 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -960,6 +1012,7 @@ const ZH = {
+@@ -960,6 +1022,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -396,7 +406,7 @@ index 32ba8c9..eeba03e 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1044,6 +1097,10 @@ const ZH = {
+@@ -1044,6 +1107,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -465,7 +475,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..0a5b167 100644
+index daf7dd4..a3d7dfd 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -474,7 +484,7 @@ index daf7dd4..0a5b167 100644
  import { teamActions } from './team-actions.js'
 -import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
 +import { dismissDrawerIfOpen } from './drawer-dismiss.js'
-+import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss } from './themes.js'
++import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, SIZE_CHOICES } from './themes.js'
  import { MENTION_ORIGIN, currentPart } from './text.js'
  import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
  import { lookOf } from './mark.js'
@@ -487,28 +497,38 @@ index daf7dd4..0a5b167 100644
    const writeUnread = (id, value) => {
      const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
      ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
-@@ -316,23 +319,26 @@ export function apply(ctx) {
+@@ -316,23 +319,36 @@ export function apply(ctx) {
        const layout = layoutOf(prefs)
        const width = widthOf(prefs)
        const flatWidth = flatWidthOf(prefs)
 +      const font = fontOf(prefs.font ? prefs : savedPrefs)
++      const size = sizeOf(prefs.size ? prefs : savedPrefs)
++      const density = densityOf(prefs.density ? prefs : savedPrefs)
        document.body.dataset.btMotion = motion
 +      document.body.dataset.btFont = font
++      document.body.dataset.btDensity = density
++      if (size === 'm') delete document.body.dataset.btSize
++      else document.body.dataset.btSize = size
++      // The shell writes this one inline, so it has to be answered inline as well; the rest
++      // of the scale (secondary sizes, deltas) comes from the attribute rule in sizeCss.
++      const px = (SIZE_CHOICES[size] ?? SIZE_CHOICES.m).px
++      if (px === 14) document.body.style.removeProperty('--dsh-content-font-size')
++      else document.body.style.setProperty('--dsh-content-font-size', `${px}px`)
        document.body.dataset.btLayout = layout
        document.body.style.setProperty('--bt-msg-w', String(width / 100))
        document.body.style.setProperty('--bt-flat-w', String(flatWidth / 100))
 -      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${registry.getSnapshot()}`
-+      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${registry.getSnapshot()}`
++      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${registry.getSnapshot()}`
        if (next === key) return
        key = next
 -      style.textContent = themeCss(themes[id], accent)
-+      style.textContent = themeCss(themes[id], accent) + fontCss(font)
++      style.textContent = themeCss(themes[id], accent) + fontCss(font) + sizeCss(size)
        const release = releaseTokens
        releaseTokens = ctx.theme.overrideTokens('ds-bot', shellTokens(themes[id]))
        if (typeof release === 'function') release()
        if (snapshot.ready) {
 -        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking })) } catch { /* storage unavailable */ }
-+        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font })) } catch { /* storage unavailable */ }
++        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font, size: prefs.size ?? savedPrefs.size, density: prefs.density ?? savedPrefs.density })) } catch { /* storage unavailable */ }
        }
      }
      render()
@@ -517,7 +537,7 @@ index daf7dd4..0a5b167 100644
      const offRegistry = registry.subscribe(render)
      return () => {
        offRoster()
-@@ -476,8 +482,124 @@ export function apply(ctx) {
+@@ -476,8 +492,125 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
@@ -619,15 +639,16 @@ index daf7dd4..0a5b167 100644
 +      const answer = await manager.installBundle(spec, registry ? { registry } : undefined)
 +      return answer?.ok !== false && answer?.value?.ok !== false
 +    },
-+    // The font repaints this device immediately and asks the host to keep it for the team.
-+    fontPref: () => fontOf(savedPrefs),
-+    setFontPref: (font) => {
-+      const id = fontOf({ font })
-+      savedPrefs = { ...savedPrefs, font: id === 'system' ? undefined : id }
++    // A look that must show on this device at once, before the host keeps it for the team:
++    // it lands in the local copy, repaints, and goes to the host in the same gesture.
++    localPref: (key, value) => {
++      savedPrefs = { ...savedPrefs, [key]: value === 'normal' || value === 'm' || value === 'system' ? undefined : value }
 +      try { localStorage.setItem(PREFS_KEY, JSON.stringify(savedPrefs)) } catch { /* storage unavailable */ }
 +      reapplyPrefs()
-+      return actions.setPrefs({ font: id })
++      return actions.setPrefs({ [key]: value })
 +    },
++    // The font picker shows what this device already uses, not what the host last answered.
++    fontPref: () => fontOf(savedPrefs),
 +    setPluginEnabled: async (id, enabled) => {
 +      const manager = ctx.get('remote.pluginManager')
 +      if (manager?.setPluginEnabled) await manager.setPluginEnabled(id, enabled)
@@ -1398,7 +1419,7 @@ index 0000000..0328db2
 +  }, mark.paths.map((d, index) => h('path', { key: index, d })))
 +}
 diff --git a/ds-bot/src/client/settings.js b/ds-bot/src/client/settings.js
-index b1e36f3..af2da96 100644
+index b1e36f3..d198c0a 100644
 --- a/ds-bot/src/client/settings.js
 +++ b/ds-bot/src/client/settings.js
 @@ -1,7 +1,7 @@
@@ -1406,7 +1427,7 @@ index b1e36f3..af2da96 100644
  import { ACCENT_INKS, INKS } from './inks.js'
  import { isMainOf } from './sources.js'
 -import { MESSAGE_WIDTH, allThemes, flatWidthOf, layoutOf, thinkingShown, widthOf } from './themes.js'
-+import { FONT_CHOICES, MESSAGE_WIDTH, allThemes, flatWidthOf, fontOf, layoutOf, thinkingShown, widthOf } from './themes.js'
++import { DENSITY_CHOICES, FONT_CHOICES, MESSAGE_WIDTH, SIZE_CHOICES, allThemes, densityOf, flatWidthOf, fontOf, layoutOf, sizeOf, thinkingShown, widthOf } from './themes.js'
  import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, InfoIcon, PlugIcon, PlusIcon, SlidersIcon, SETTINGS_ICONS } from './icons.js'
  import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
  import { useEscape } from './overlay-hooks.js'
@@ -1419,21 +1440,25 @@ index b1e36f3..af2da96 100644
    const timer = useRef(0)
    useEffect(() => () => clearTimeout(timer.current), [])
    const pickCustom = (value) => {
-@@ -91,6 +93,12 @@ function GeneralPage({ roster, actions, run }) {
+@@ -91,6 +93,16 @@ function GeneralPage({ roster, actions, run }) {
        h(SetRow, { label: t('Theme'), hint: t('Colors for the whole team, on every device.') },
          h('select', { className: 'bt-select', 'aria-label': t('Theme'), value: current, onChange: event => run(actions.setPrefs({ theme: event.target.value })) },
            Object.entries(themes).map(([id, theme]) => h('option', { key: id, value: id }, t(theme.label))))),
 +      h(SetRow, { label: t('Font'), hint: t('The typeface for names, messages and menus.') },
 +        h('select', {
 +          className: 'bt-select', 'aria-label': t('Font'), value: font,
-+          onChange: (event) => { setFont(event.target.value); run(actions.setFontPref(event.target.value)) },
++          onChange: (event) => { setFont(event.target.value); run(actions.localPref('font', event.target.value)) },
 +        },
 +          Object.entries(FONT_CHOICES).map(([id, face]) => h('option', { key: id, value: id }, t(face.label))))),
++      h(SetRow, { label: t('Text size'), hint: t('How large messages and their markdown read.') },
++        h(Choice, { label: t('Text size'), value: sizeOf(prefs), options: Object.entries(SIZE_CHOICES).map(([id, face]) => [id, face.label]), pick: id => run(actions.localPref('size', id)) })),
++      h(SetRow, { label: t('Density'), hint: t('How much room rows and lists take.') },
++        h(Choice, { label: t('Density'), value: densityOf(prefs), options: Object.entries(DENSITY_CHOICES).map(([id, face]) => [id, face.label]), pick: id => run(actions.localPref('density', id)) })),
        h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },
          h('div', { className: 'bt-swatches' },
            h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 58d1840..aba0d55 100644
+index 58d1840..1c5a084 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -10,6 +10,8 @@ import { reducedMotion } from './activity-row.js'
@@ -1445,7 +1470,7 @@ index 58d1840..aba0d55 100644
  import { showsDshRow } from './dsh-offer.js'
  
  // -------------------------------------------------------------------------
-@@ -250,9 +252,33 @@ function useListGlide(listRef, layout, key) {
+@@ -250,9 +252,38 @@ function useListGlide(listRef, layout, key) {
  
  export function TeamSidebar(props) {
    const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
@@ -1454,13 +1479,18 @@ index 58d1840..aba0d55 100644
 +  // The desktop window reserves a band for its own controls; when it does, the row rides
 +  // that band and indents past them. Measured once, so a browser without the band is left
 +  // alone instead of being pushed off the top.
++  const band = useRef(null)
 +  useLayoutEffect(() => {
 +    const row = listRef.current?.parentElement?.querySelector('.bt-side-top')
 +    if (!row) return
-+    // Whatever the window pushed the row down by is what it gets lifted by, so the row lands
-+    // on the caption line instead of guessing the band height.
-+    const reserved = row.getBoundingClientRect().top
-+    const lift = reserved > 0 ? Math.min(reserved, 44) : 0
++    // Measured once, with any earlier lift cleared: measuring the lifted row answers 0 and
++    // would drop it back into the band on the next render.
++    if (band.current === null) {
++      row.style.setProperty('--bt-side-lift', '0px')
++      const reserved = row.getBoundingClientRect().top
++      band.current = reserved > 0 ? Math.min(reserved, 64) : 0
++    }
++    const lift = band.current
 +    row.style.setProperty('--bt-side-lift', lift ? `${lift}px` : '0px')
 +    row.style.setProperty('--bt-side-indent', lift ? '78px' : '0px')
 +  })
@@ -1479,7 +1509,7 @@ index 58d1840..aba0d55 100644
    const roster = useRoster(value => value)
    const markedUnread = useUi(value => value.unread)
    props.useRegistry(value => value)
-@@ -292,6 +318,8 @@ export function TeamSidebar(props) {
+@@ -292,6 +323,8 @@ export function TeamSidebar(props) {
      openAgent: id => navigate(actions.openAgent, id),
      openAgentSession: id => navigate(actions.openAgentSession, id),
      newAgentSession: id => navigate(actions.newAgentSession, id),
@@ -1488,7 +1518,7 @@ index 58d1840..aba0d55 100644
    }
    const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
    // Typing while the sidebar has focus starts a search.
-@@ -299,18 +327,20 @@ export function TeamSidebar(props) {
+@@ -299,18 +332,20 @@ export function TeamSidebar(props) {
      if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
      if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
      event.preventDefault()
@@ -1497,7 +1527,8 @@ index 58d1840..aba0d55 100644
    }
    return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
      wide ? h('div', { className: 'bt-side-top' },
-       h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
+-      h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
++      h('span', { className: 'bt-brand' }, h(BrandName)),
        h(UpdateButton, { useUpdate: props.useUpdate, actions }),
 -      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
 -      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
@@ -1513,7 +1544,7 @@ index 58d1840..aba0d55 100644
      wide && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
      h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
        main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
-@@ -318,7 +348,12 @@ export function TeamSidebar(props) {
+@@ -318,7 +353,12 @@ export function TeamSidebar(props) {
          ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
          : entry.kind === 'room'
            ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
@@ -1527,7 +1558,7 @@ index 58d1840..aba0d55 100644
  }
  
  // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -483,7 +518,17 @@ const NO_SNAPSHOT = () => null
+@@ -483,7 +523,17 @@ const NO_SNAPSHOT = () => null
  // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
  // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
  // back in Agent mode; FooterAccount stands in while no seat exists at all.
@@ -1546,7 +1577,7 @@ index 58d1840..aba0d55 100644
    const [open, setOpen] = useState(false)
    useLayoutEffect(() => {
      if (!seat) return undefined
-@@ -565,7 +610,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+@@ -565,7 +615,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
    }, [open])
    const groups = [
      [
@@ -1556,7 +1587,7 @@ index 58d1840..aba0d55 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..5966991 100644
+index aa38a3b..7c81827 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -1601,7 +1632,24 @@ index aa38a3b..5966991 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -145,12 +156,181 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,6 +146,16 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+ .bt-tile[aria-current=page]{background:var(--bt-active)}
+ .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
++/* Density: one attribute on the body, so every list and row that already has a height
++   follows without a second stylesheet. */
++html body[data-bt-density=tight] .bt-row{min-height:46px}
++html body[data-bt-density=tight] .bt-tile{padding:4px 6px 2px}
++html body[data-bt-density=tight] .bt-market-card{padding:6px 8px}
++html body[data-bt-density=tight] .bt-market-inst,html body[data-bt-density=tight] .bt-market-cat{height:28px}
++html body[data-bt-density=roomy] .bt-row{min-height:62px}
++html body[data-bt-density=roomy] .bt-tile{padding:8px 10px 6px}
++html body[data-bt-density=roomy] .bt-market-card{padding:12px}
++html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy] .bt-market-cat{height:36px}
+ .bt-row{display:flex;align-items:center;gap:8px;min-height:54px;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--bt-ink);text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-family:inherit;transition:background-color .12s ease}
+ .bt-row:hover{background:var(--bt-hover)}
+ .bt-row[aria-current=page]{background:var(--bt-active)}
+@@ -145,12 +166,181 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
  .bt-unread-wait{background:var(--bt-star)}
@@ -1786,7 +1834,7 @@ index aa38a3b..5966991 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -317,6 +497,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -317,6 +507,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -1813,7 +1861,7 @@ index aa38a3b..5966991 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -548,7 +748,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -548,7 +758,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
  html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
  html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
@@ -1824,7 +1872,7 @@ index aa38a3b..5966991 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -588,7 +790,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -588,7 +800,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -1834,7 +1882,7 @@ index aa38a3b..5966991 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -883,6 +1086,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +1096,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -1896,7 +1944,7 @@ index aa38a3b..5966991 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1240,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1250,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -2005,7 +2053,7 @@ index aa38a3b..5966991 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1368,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1378,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -2032,7 +2080,7 @@ index aa38a3b..5966991 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1388,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1398,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -2041,7 +2089,7 @@ index aa38a3b..5966991 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1429,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1439,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -2091,10 +2139,27 @@ index 1f47624..83f2a14 100644
        if (view !== 'details' && view !== 'browser' && view !== 'side') return
        ui.set(state => (state.details && state.view !== view ? { ...state, view } : state))
 diff --git a/ds-bot/src/client/themes.js b/ds-bot/src/client/themes.js
-index 82c3b3b..2466793 100644
+index 82c3b3b..de970c2 100644
 --- a/ds-bot/src/client/themes.js
 +++ b/ds-bot/src/client/themes.js
-@@ -122,6 +122,19 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
+@@ -23,6 +23,16 @@ const THEMES = {
+     light: { bg: '#faf9f5', sidebar: '#f3f0e8', bubble: '#ebe7dc', card: '#ffffff', text: '#1f1e1b', user: '#2b2a26', userText: '#faf9f5', accent: '#d97757' },
+     dark: { bg: '#1f1e1b', sidebar: '#262521', bubble: '#34322d', card: '#2a2925', text: '#f3f0e8', user: '#f3f0e8', userText: '#1f1e1b', accent: '#e08a6d' },
+   },
++  // The Codex palette as shipped in its own theme files: light is surface #ffffff with ink
++  // #1a1c1f, dark is surface #181818 with ink #ffffff;
++  // both carry accent #339cff and their own diff and skill inks. Its bot bubble is a
++  // neutral grey, so the user's own turns take an accent-tinted surface to stay apart.
++  codex: {
++    label: 'Codex',
++    light: { bg: '#ffffff', sidebar: '#f9f9fa', bubble: '#f3f4f6', card: '#ffffff', text: '#1a1c1f', user: '#e4eefb', userText: '#1a1c1f', accent: '#339cff' },
++    dark: { bg: '#181818', sidebar: '#1f1f1f', bubble: '#262626', card: '#202020', text: '#ffffff', user: '#22303f', userText: '#ffffff', accent: '#339cff' },
++    css: 'html body{--bt-green:#00a240;--bt-danger:#ba2623;--bt-skill:#924ff7}html body[data-ds-dark-theme]{--bt-green:#40c977;--bt-danger:#fa423e;--bt-skill:#ad7bf9}',
++  },
+   moonlight: {
+     label: 'Moonlight',
+     light: { bg: '#f7f9fc', sidebar: '#eef2f8', bubble: '#e5ebf5', card: '#ffffff', text: '#121826', user: '#1e3a8a', userText: '#ffffff', accent: '#1e86ff' },
+@@ -122,6 +132,34 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
  // flat one.
  export const MESSAGE_WIDTH = { min: 50, max: 100, step: 5 }
  const percent = (value, initial) => (Number.isInteger(value) && value >= MESSAGE_WIDTH.min && value <= MESSAGE_WIDTH.max ? value : initial)
@@ -2111,17 +2176,42 @@ index 82c3b3b..2466793 100644
 +  const face = FONT_CHOICES[id]
 +  return face?.stack ? `html body{--bt-font-choice:${face.stack}}` : ''
 +}
++// Reading text size. It rides the shell's own content tokens, so markdown, code and our
++// bubbles all follow one number; the default is the shell's 14px and needs no rule.
++export const SIZE_CHOICES = { s: { label: 'Small', px: 13 }, m: { label: 'Standard', px: 14 }, l: { label: 'Large', px: 15 }, xl: { label: 'Largest', px: 16 } }
++export const sizeOf = prefs => (SIZE_CHOICES[prefs?.size] ? prefs.size : 'm')
++export const sizeCss = (id) => {
++  const px = (SIZE_CHOICES[id] ?? SIZE_CHOICES.m).px
++  if (px === 14) return ''
++  const small = `min(calc(${px}px - 1px),max(13px,calc(${px}px - 2px)))`
++  // The attribute lifts the rule above the shell's own `html body` block, which loads later.
++  return `html body[data-bt-size]{--dsh-content-font-size:${px}px;--dsh-content-font-delta:calc(${px}px - 14px);--dsh-content-font-size-secondary:${small};--dsh-content-font-delta-secondary:calc(${small} - 13px)}`
++}
++// Spacing density. The attribute drives the rules in the base sheet, so switching it costs
++// one attribute write rather than a new stylesheet.
++export const DENSITY_CHOICES = { tight: { label: 'Compact' }, normal: { label: 'Standard' }, roomy: { label: 'Roomier' } }
++export const densityOf = prefs => (DENSITY_CHOICES[prefs?.density] ? prefs.density : 'normal')
  export const layoutOf = prefs => (prefs?.layout === 'flat' ? 'flat' : 'bubble')
  export const thinkingShown = prefs => prefs?.thinking === true
  export const widthOf = prefs => percent(prefs?.width, 80)
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
-index d254700..5c9695c 100644
+index d254700..10fbca8 100644
 --- a/ds-bot/src/host/channel.js
 +++ b/ds-bot/src/host/channel.js
-@@ -112,6 +112,11 @@ export function install(rt) {
+@@ -112,6 +112,21 @@ export function install(rt) {
        else if (body.motion === 'quiet' || body.motion === 'lively') state.prefs.motion = body.motion
        else throw invalid('Motion must be quiet, normal or lively')
      }
++    if (body.size !== undefined) {
++      if (body.size === null || body.size === 'm') delete state.prefs.size
++      else if (['s', 'l', 'xl'].includes(body.size)) state.prefs.size = body.size
++      else throw invalid('Size must be s, m, l or xl')
++    }
++    if (body.density !== undefined) {
++      if (body.density === null || body.density === 'normal') delete state.prefs.density
++      else if (body.density === 'tight' || body.density === 'roomy') state.prefs.density = body.density
++      else throw invalid('Density must be tight, normal or roomy')
++    }
 +    if (body.font !== undefined) {
 +      if (body.font === null || body.font === 'system') delete state.prefs.font
 +      else if (body.font === 'geist' || body.font === 'inter') state.prefs.font = body.font
