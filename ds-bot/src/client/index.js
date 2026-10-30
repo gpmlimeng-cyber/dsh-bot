@@ -1143,7 +1143,7 @@ export function apply(ctx) {
       // Clear of the traffic lights: past them in the window, at the edge without one.
       // A Mac window's traffic lights take the left corner, so the control sits well past
       // them; everywhere else it sits 15px from the window's left edge.
-      const left = mac ? 79 : 15
+      const left = mac ? 84 : 15
       // A few pixels lower than the band's own centre, so the control sits on the traffic
       // lights' horizontal line instead of above it.
       const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 7) : 12
