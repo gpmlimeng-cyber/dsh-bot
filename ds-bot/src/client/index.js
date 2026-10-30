@@ -1147,13 +1147,13 @@ export function apply(ctx) {
       button.className = 'bt-band-action'
       button.setAttribute('aria-label', label)
       button.title = label
-      button.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:0;border-radius:7px;background:transparent;box-shadow:none;color:rgba(20,20,20,.7);cursor:pointer'
+      button.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;box-shadow:none;color:rgba(20,20,20,.72);cursor:pointer'
       button.addEventListener('mouseenter', () => { button.style.background = 'rgba(20,20,20,.07)' })
       button.addEventListener('mouseleave', () => { button.style.background = 'transparent' })
       button.addEventListener('click', run)
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-      svg.setAttribute('width', '16')
-      svg.setAttribute('height', '16')
+      svg.setAttribute('width', '18')
+      svg.setAttribute('height', '18')
       svg.setAttribute('viewBox', '0 0 20 20')
       svg.setAttribute('fill', 'none')
       svg.setAttribute('stroke', 'currentColor')
@@ -1180,6 +1180,14 @@ export function apply(ctx) {
       bandActions.appendChild(buildAction(t('Search'), 'search', () => actions.openPalette('', { fromDrawer: true })))
       bandActions.appendChild(buildAction(t('New…'), 'plus', () => actions.openNewChat('new', { fromDrawer: true })))
       bandActions.appendChild(buildAction(t('Collapse sidebar'), 'collapse', () => actions.toggleSidebar()))
+    }
+    // The band carries our own toggle now, so the shell's rail toggle is hidden from both
+    // views. It lives in its own style element, since the plugin's sheet is gone in Agent mode.
+    if (!document.getElementById('bt-modebar-rules')) {
+      const rules = document.createElement('style')
+      rules.id = 'bt-modebar-rules'
+      rules.textContent = 'button[aria-label="打开侧边栏"],button[aria-label="收起侧边栏"]:not(.bt-band-action),button[aria-label="展开侧边栏"]:not(.bt-side-expand),button[aria-label="Open sidebar"],button[aria-label="Close sidebar"]{display:none!important}'
+      document.head.appendChild(rules)
     }
     const paintModeBar = () => {
       const mac = /Mac/i.test(navigator.platform || navigator.userAgent)
@@ -1258,6 +1266,7 @@ export function apply(ctx) {
       modeOpen = false
       if (modeMenu) { modeMenu.remove(); modeMenu = null }
       for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions')) stale.remove()
+      document.getElementById('bt-modebar-rules')?.remove()
       groups.dispose()
     }
   }, 'ds-bot: surface')

@@ -36,8 +36,8 @@
 | 34 | `ds-bot/src/client/index.js` | 139–140 | 2 |
 | 35 | `ds-bot/src/client/index.js` | 322–351 | 16 |
 | 36 | `ds-bot/src/client/index.js` | 495–613 | 118 |
-| 37 | `ds-bot/src/client/index.js` | 1094–1245 | 151 |
-| 38 | `ds-bot/src/client/index.js` | 1257–1260 | 4 |
+| 37 | `ds-bot/src/client/index.js` | 1094–1253 | 159 |
+| 38 | `ds-bot/src/client/index.js` | 1265–1269 | 5 |
 | 39 | `ds-bot/src/client/market.js` | 1–432 | 432 |
 | 40 | `ds-bot/src/client/member-status.js` | 188–189 | 2 |
 | 41 | `ds-bot/src/client/model-menu.js` | 9 | 1 |
