@@ -549,7 +549,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..2c825b6 100644
+index daf7dd4..2322805 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -738,47 +738,104 @@ index daf7dd4..2c825b6 100644
      // Agent mode hands the surface back to the shell; everything open on the Bot
      // surface closes first so nothing stale reopens on the way back.
      setSurface: (mode) => {
-@@ -958,7 +1091,39 @@ export function apply(ctx) {
+@@ -958,7 +1091,96 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
-+    // In the shell's own view its logo sits alone in the top-left corner; the mode row takes
-+    // that corner over, so both ways back and forth stay one click away and never move.
++    // The window reserves a caption band above everything; the two modes live in its first
++    // row, clear of the traffic lights, as one dropdown rather than a row of buttons. Styled
++    // inline: in the shell's own view the plugin's stylesheet is gone.
 +    let modeBar = null
-+    const paintModeBar = () => {
++    let modeMenu = null
++    let modeOpen = false
++    const closeModeMenu = () => {
++      modeOpen = false
++      if (modeMenu) { modeMenu.remove(); modeMenu = null }
++      if (modeBar) modeBar.setAttribute('aria-expanded', 'false')
++    }
++    const openModeMenu = (left, top) => {
 +      const mode = surface.getSnapshot().mode
-+      if (mode !== 'agent') {
-+        if (modeBar) { modeBar.remove(); modeBar = null }
-+        return
-+      }
-+      if (!modeBar) {
-+        // Styled inline: the plugin's stylesheet belongs to the Bot surface and is gone here.
-+        modeBar = document.createElement('div')
-+        modeBar.className = 'bt-modebar'
-+        modeBar.setAttribute('role', 'tablist')
-+        modeBar.setAttribute('aria-label', t('Modes'))
-+        modeBar.style.cssText = 'position:fixed;left:8px;top:calc(var(--dsh-frame-chrome-top,0px) + 12px);z-index:41;display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--bt-main,#fcfcfc);box-shadow:0 0 0 .5px rgba(20,20,20,.14),0 10px 24px -14px rgba(0,0,0,.35)'
-+        document.body.appendChild(modeBar)
-+      }
-+      modeBar.textContent = ''
++      modeMenu = document.createElement('div')
++      modeMenu.className = 'bt-modebar-menu'
++      modeMenu.setAttribute('role', 'menu')
++      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:198px;padding:6px;border-radius:14px;background:var(--bt-main,#fcfcfc);box-shadow:0 0 0 .5px rgba(20,20,20,.14),0 22px 46px -22px rgba(0,0,0,.42)`
 +      for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
 +        const selected = mode === id
-+        const button = document.createElement('button')
-+        button.type = 'button'
-+        button.setAttribute('role', 'tab')
-+        button.setAttribute('aria-selected', String(selected))
-+        button.textContent = label
-+        button.style.cssText = `height:26px;padding:0 10px;border:0;border-radius:999px;font:inherit;font-size:12px;line-height:26px;cursor:pointer;white-space:nowrap;background:${selected ? 'rgba(119,119,119,.17)' : 'transparent'};color:var(--bt-ink,#141414);font-weight:${selected ? 600 : 400}`
-+        button.addEventListener('click', () => actions.setSurface(id))
-+        modeBar.appendChild(button)
++        const item = document.createElement('button')
++        item.type = 'button'
++        item.setAttribute('role', 'menuitemradio')
++        item.setAttribute('aria-checked', String(selected))
++        item.style.cssText = `display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:8px;background:${selected ? 'rgba(119,119,119,.12)' : 'transparent'};font:inherit;font-size:13px;text-align:left;cursor:pointer;color:var(--bt-ink,#141414)`
++        const name = document.createElement('span')
++        name.textContent = label
++        name.style.cssText = 'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'
++        item.appendChild(name)
++        if (selected) {
++          const tick = document.createElement('span')
++          tick.textContent = '✓'
++          tick.style.cssText = 'flex:none;font-size:12px;color:var(--bt-accent,#4d6bfe)'
++          item.appendChild(tick)
++        }
++        item.addEventListener('click', () => { closeModeMenu(); actions.setSurface(id) })
++        modeMenu.appendChild(item)
 +      }
++      modeOpen = true
++      modeBar.setAttribute('aria-expanded', 'true')
++      document.body.appendChild(modeMenu)
++    }
++    const paintModeBar = () => {
++      const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue('--dsh-frame-chrome-top')) || 0
++      const mode = surface.getSnapshot().mode
++      // Clear of the traffic lights: past them in the window, at the edge without one.
++      const left = chrome >= 24 ? 84 : 8
++      // A few pixels lower than the band's own centre, so the control sits on the traffic
++      // lights' horizontal line instead of above it.
++      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 3) : 8
++      if (!modeBar) {
++        modeBar = document.createElement('button')
++        modeBar.type = 'button'
++        modeBar.className = 'bt-modebar'
++        modeBar.setAttribute('aria-haspopup', 'menu')
++        modeBar.setAttribute('aria-expanded', 'false')
++        document.body.appendChild(modeBar)
++        document.addEventListener('mousedown', (event) => {
++          if (!modeOpen) return
++          const target = event.target
++          if (target instanceof Element && (target.closest('.bt-modebar') || target.closest('.bt-modebar-menu'))) return
++          closeModeMenu()
++        })
++        modeBar.addEventListener('click', () => {
++          if (modeOpen) { closeModeMenu(); return }
++          paintModeBar()
++          const box = modeBar.getBoundingClientRect()
++          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
++        })
++        window.addEventListener('resize', () => paintModeBar())
++      }
++      modeBar.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 6px;border:0;border-radius:8px;background:transparent;box-shadow:none;font:inherit;font-size:12px;line-height:26px;cursor:pointer;white-space:nowrap;color:var(--bt-ink,#141414)`
++      modeBar.textContent = mode === 'bot' ? t('Bot mode') : t('DSH mode')
++      const caret = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
++      caret.setAttribute('width', '12')
++      caret.setAttribute('height', '12')
++      caret.setAttribute('viewBox', '0 0 20 20')
++      caret.setAttribute('fill', 'none')
++      caret.setAttribute('stroke', 'currentColor')
++      caret.setAttribute('stroke-width', '1.8')
++      caret.setAttribute('stroke-linecap', 'round')
++      caret.setAttribute('stroke-linejoin', 'round')
++      caret.style.cssText = 'flex:none;color:rgba(20,20,20,.44);margin-left:1px'
++      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
++      path.setAttribute('d', 'M5.5 8l4.5 4.5L14.5 8')
++      caret.appendChild(path)
++      modeBar.appendChild(caret)
++      if (modeOpen) { closeModeMenu() }
 +    }
      const reconcile = () => {
 +      paintModeBar()
        groups.reconcile(groupsFor(surface.getSnapshot()))
        clearTimeout(verifyTimer)
        verifyAttempts = 0
-@@ -970,6 +1135,7 @@ export function apply(ctx) {
+@@ -970,6 +1192,7 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
@@ -1614,15 +1671,15 @@ index 0000000..ae11666
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 58d1840..0b233c9 100644
+index 58d1840..6cba162 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
-@@ -3,14 +3,20 @@ import { createPortal } from 'react-dom'
+@@ -3,14 +3,19 @@ import { createPortal } from 'react-dom'
  import { FishLogo } from './dsh-primitives.js'
  import { isMainOf } from './sources.js'
  import { currentPart, previewOf, relativeShort } from './text.js'
 -import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon } from './icons.js'
-+import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon, CheckIcon, PeopleIcon, TerminalIcon } from './icons.js'
++import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon } from './icons.js'
  import { MAIN_LOOK } from './characters.js'
  import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
  import { reducedMotion } from './activity-row.js'
@@ -1634,12 +1691,11 @@ index 58d1840..0b233c9 100644
  import { showsDshRow } from './dsh-offer.js'
 +import { STORAGE } from './storage.js'
 +import { readArrangement, writeArrangement } from './sidebar-groups.js'
-+import { readMode } from './surface.js'
-+import { Caret } from './model-menu.js'
++
  
  // -------------------------------------------------------------------------
  // Sidebar
-@@ -43,7 +49,7 @@ const waitingFor = (roster, waits) => {
+@@ -43,7 +48,7 @@ const waitingFor = (roster, waits) => {
    return names.length === 0 ? '' : t('Waiting for {names}', { names: names.join(t(' and ')) })
  }
  
@@ -1648,7 +1704,7 @@ index 58d1840..0b233c9 100644
    const id = bot.id
    const part = currentPart(bot)
    const preview = useSessions(list => previewOf(list, part, roster.exchangeTurns[part]))
-@@ -78,17 +84,17 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
+@@ -78,17 +83,17 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
        'data-bot-id': id, title: preview || bot.name, onClick: () => actions.openSession(id), onContextMenu,
      },
      h(BotAvatar, { bot, size: 60, state, main: true }),
@@ -1669,7 +1725,7 @@ index 58d1840..0b233c9 100644
      runningLine ? h('span', { className: 'bt-row-preview' }, runningLine)
        : awayLine ? h('span', { className: 'bt-row-preview' }, awayLine)
          : waitsFor ? h('span', { className: 'bt-row-preview' }, waitsFor)
-@@ -96,7 +102,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
+@@ -96,7 +101,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
    wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
  }
  
@@ -1678,7 +1734,7 @@ index 58d1840..0b233c9 100644
    const id = room.id
    const fallback = useSessions(list => previewOf(list, id))
    const preview = room.preview?.replace(/\s+/g, ' ').trim() || fallback
-@@ -114,11 +120,12 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
+@@ -114,11 +119,12 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
      type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
      'data-room-id': id, onClick: () => actions.openSession(id),
      onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'room', id, x: event.clientX, y: event.clientY }) },
@@ -1692,7 +1748,7 @@ index 58d1840..0b233c9 100644
      workingLine ? h('span', { className: 'bt-row-preview' }, workingLine) : preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
    wide && approval && !active ? h('span', { className: 'bt-unread bt-unread-wait', 'aria-hidden': true })
      : wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
-@@ -173,7 +180,14 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
+@@ -173,7 +179,14 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
  
  // The DSH Agent row: a plain dsh Session list lives in the Bot workspace, so it
  // sits among the Bots with the harness's own whale mark.
@@ -1708,7 +1764,7 @@ index 58d1840..0b233c9 100644
    const info = useSessions(list => JSON.stringify(agent.sessions.map((id) => {
      const row = list.byId[id]
      return {
-@@ -207,11 +221,12 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide,
+@@ -207,11 +220,12 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide,
      h('button', {
        type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
        'data-agent-id': agent.id, title: wide ? undefined : 'DSH Agent', onClick: () => actions.openAgent(agent.id),
@@ -1722,52 +1778,8 @@ index 58d1840..0b233c9 100644
        preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
      wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null),
      h('div', { className: 'bt-agent-sub', 'data-open': open || undefined },
-@@ -248,11 +263,66 @@ function useListGlide(listRef, layout, key) {
-   }, [layout, key])
- }
+@@ -250,9 +264,22 @@ function useListGlide(listRef, layout, key) {
  
-+// The brand is the way between the two surfaces: the Bot team's own screen, or the shell's
-+// professional session view. It reads like a workspace switcher, with the current one ticked.
-+function SurfaceMenu({ actions }) {
-+  const [open, setOpen] = useState(false)
-+  const [mode, setMode] = useState(() => readMode())
-+  const box = useRef(null)
-+  useEffect(() => {
-+    if (!open) return undefined
-+    const onDown = (event) => { if (!(event.target instanceof Element) || !event.target.closest('.bt-surface-menu') && !event.target.closest('.bt-brand')) setOpen(false) }
-+    const onKey = (event) => { if (event.key === 'Escape') setOpen(false) }
-+    window.addEventListener('mousedown', onDown)
-+    window.addEventListener('keydown', onKey)
-+    return () => { window.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey) }
-+  }, [open])
-+  const choices = [
-+    { id: 'bot', name: t('Bot mode'), detail: t('The Bot team, its chats and its groups.'), icon: PeopleIcon },
-+    { id: 'agent', name: t('DSH mode'), detail: t('The shell\'s own session view, tools and panels.'), icon: TerminalIcon },
-+  ]
-+  const current = choices.find(choice => choice.id === mode) ?? choices[0]
-+  const pick = (id) => { setMode(id); setOpen(false); actions.setSurface?.(id) }
-+  return h('span', { ref: box, className: 'bt-surface' },
-+    h('button', {
-+      type: 'button', className: 'bt-brand', 'aria-haspopup': 'menu', 'aria-expanded': open,
-+      onClick: () => setOpen((value) => !value),
-+    },
-+    // The same anatomy as the model picker: a mark, the name, and a quiet chevron.
-+    h('span', { className: 'bt-surface-mark', 'aria-hidden': true }, h(current.icon)),
-+    h('span', { className: 'bt-surface-label' }, current.name),
-+    h(Caret)),
-+    open
-+      ? h('div', { className: 'bt-surface-menu', role: 'menu', 'aria-label': t('Modes') },
-+        h('div', { className: 'bt-surface-title' }, t('Modes')),
-+        ...choices.map(choice => h('button', {
-+          key: choice.id, type: 'button', role: 'menuitemradio', 'aria-checked': mode === choice.id,
-+          className: 'bt-surface-item', 'data-on': mode === choice.id ? '' : undefined,
-+          onClick: () => pick(choice.id),
-+        },
-+        h('span', { className: 'bt-surface-name' }, choice.name),
-+        mode === choice.id ? h('span', { className: 'bt-surface-tick', 'aria-hidden': true }, h(CheckIcon)) : null)))
-+      : null)
-+}
-+
  export function TeamSidebar(props) {
    const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
 +  const [market, setMarket] = useState(false)
@@ -1789,7 +1801,7 @@ index 58d1840..0b233c9 100644
    const roster = useRoster(value => value)
    const markedUnread = useUi(value => value.unread)
    props.useRegistry(value => value)
-@@ -272,6 +342,78 @@ export function TeamSidebar(props) {
+@@ -272,6 +299,78 @@ export function TeamSidebar(props) {
      return entries.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at)
    }, [roster, updated])
    const main = roster.byId[roster.mainBotId]
@@ -1868,7 +1880,7 @@ index 58d1840..0b233c9 100644
    useListGlide(listRef, wide, order.map(entry => entry.item.id).join(','))
    useLandOnMainBot(roster, useSessions, actions)
    // The shell keeps wide content during its collapse fade. Normalize through its
-@@ -292,6 +434,8 @@ export function TeamSidebar(props) {
+@@ -292,6 +391,8 @@ export function TeamSidebar(props) {
      openAgent: id => navigate(actions.openAgent, id),
      openAgentSession: id => navigate(actions.openAgentSession, id),
      newAgentSession: id => navigate(actions.newAgentSession, id),
@@ -1877,7 +1889,7 @@ index 58d1840..0b233c9 100644
    }
    const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
    // Typing while the sidebar has focus starts a search.
-@@ -299,26 +443,71 @@ export function TeamSidebar(props) {
+@@ -299,26 +400,71 @@ export function TeamSidebar(props) {
      if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
      if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
      event.preventDefault()
@@ -1887,7 +1899,7 @@ index 58d1840..0b233c9 100644
    return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
      wide ? h('div', { className: 'bt-side-top' },
 -      h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
-+      h(SurfaceMenu, { actions }),
++      h('span', { className: 'bt-brand' }, h(BrandName)),
        h(UpdateButton, { useUpdate: props.useUpdate, actions }),
 -      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
 -      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
@@ -1960,7 +1972,7 @@ index 58d1840..0b233c9 100644
  }
  
  // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -483,7 +672,17 @@ const NO_SNAPSHOT = () => null
+@@ -483,7 +629,17 @@ const NO_SNAPSHOT = () => null
  // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
  // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
  // back in Agent mode; FooterAccount stands in while no seat exists at all.
@@ -1979,7 +1991,7 @@ index 58d1840..0b233c9 100644
    const [open, setOpen] = useState(false)
    useLayoutEffect(() => {
      if (!seat) return undefined
-@@ -565,7 +764,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+@@ -565,7 +721,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
    }, [open])
    const groups = [
      [
@@ -2002,7 +2014,7 @@ index f74ffcb..976bcce 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..e8f1a4f 100644
+index aa38a3b..b25c187 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -2024,34 +2036,11 @@ index aa38a3b..e8f1a4f 100644
  /* iOS waits out a double-tap zoom on buttons; the plugin's own controls never zoom. */
  :is(.bt-tool,.bt-uaction,.bt-menu button,.bt-menu-item,.bt-icon-btn,.bt-round,.bt-pill,.bt-account,.bt-set-row,.bt-settings-item,.bt-react-strip button,.bt-palette-row,.bt-palette-clear,.bt-tab,.bt-ptab,.bt-ptab-x,.bt-bcard-x,.bt-plus,.bt-q-btn,.bt-q-x,.bt-x,.bt-nc-send,.bt-send,.bt-soft,.bt-mini,.bt-shape,.bt-swatch,.bt-color,.bt-newchat,.bt-task-day,.bt-task-remove,.bt-fb-btn){touch-action:manipulation}
  body[data-ds-dark-theme]{--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(255,255,255,.08);--bt-line-2:rgba(255,255,255,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(255,255,255,.09);--bt-tag-ink:rgba(242,242,242,.62)}
-@@ -116,11 +117,39 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -116,11 +117,16 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-stack-more{font-size:11px;line-height:16px;color:var(--bt-ink-3);margin-left:3px!important}
  
  .bt-side{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;gap:2px;padding:0 12px 8px 0;color:var(--bt-ink);font-family:var(--bt-font)}
 +.bt-surface{position:relative;display:inline-flex;min-width:0;margin-right:auto}
-+/* The trigger is the same capsule as the header's model picker: a 30px pill on the shared
-+   floating surface, the name at 13px and a quiet chevron after it. */
-+.bt-surface .bt-brand{height:30px;margin:0;padding:0 9px 0 12px;gap:6px;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);font-size:13px;line-height:18px;font-weight:600;letter-spacing:0;cursor:pointer;transition:background-color .12s ease}
-+.bt-surface .bt-brand:hover,.bt-surface .bt-brand[aria-expanded=true]{background:var(--bt-float-hover)}
-+.bt-surface-label{font-size:13px;line-height:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;color:var(--bt-ink)}
-+.bt-surface-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;color:var(--bt-ink-2)}
-+.bt-surface-mark svg{width:16px;height:16px}
-+.bt-surface-caret{display:inline-flex;align-items:center;margin-left:0;color:var(--bt-ink-3)}
-+.bt-surface-caret svg{width:13px;height:13px}
-+.bt-surface-menu{position:absolute;left:0;top:calc(100% + 6px);z-index:30;display:flex;flex-direction:column;gap:1px;width:212px;padding:6px;border-radius:14px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 20px 44px -22px rgba(0,0,0,.4)}
-+.bt-surface-title{padding:5px 8px 4px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
-+.bt-surface-item{display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;text-align:left;cursor:pointer;color:var(--bt-ink)}
-+.bt-surface-item:hover{background:var(--bt-hover)}
-+.bt-surface-name{flex:1 1 auto;min-width:0;font-size:13px;line-height:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-+.bt-surface-tick{flex:none;display:inline-flex;color:var(--bt-accent)}
-+.bt-surface-tick svg{width:15px;height:15px}
-+.bt-surface .bt-model-caret{flex:none;color:var(--bt-ink-3);transition:transform .16s ease}
-+.bt-surface .bt-brand[aria-expanded=true] .bt-model-caret{transform:rotate(180deg)}
-+/* Where the shell's logo sits in its own view, the two modes stay put and both stay visible. */
-+.bt-modebar{position:fixed;left:8px;top:calc(var(--dsh-frame-chrome-top,0px) + 12px);z-index:41;display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 10px 24px -14px rgba(0,0,0,.35)}
-+.bt-modebar button{height:26px;padding:0 10px;border:0;border-radius:999px;background:none;font:inherit;font-size:12px;line-height:26px;color:var(--bt-ink-2);cursor:pointer;white-space:nowrap}
-+.bt-modebar button:hover{background:var(--bt-hover);color:var(--bt-ink)}
-+.bt-modebar button[aria-selected=true]{background:var(--bt-active);color:var(--bt-ink);font-weight:600}
  .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
 +/* Pinned to the window's top edge, the row only paints; its own controls stay clickable. */
 +/* The sidebar's own controls sit a size below the panel buttons: 32px, where the round
@@ -2066,7 +2055,7 @@ index aa38a3b..e8f1a4f 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,22 +164,223 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,22 +141,223 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -2293,7 +2282,7 @@ index aa38a3b..e8f1a4f 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -317,6 +547,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -317,6 +524,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -2320,7 +2309,7 @@ index aa38a3b..e8f1a4f 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -548,7 +798,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -548,7 +775,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
  html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
  html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
@@ -2331,7 +2320,7 @@ index aa38a3b..e8f1a4f 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -588,7 +840,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -588,7 +817,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -2341,7 +2330,7 @@ index aa38a3b..e8f1a4f 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -883,6 +1136,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +1113,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -2403,7 +2392,7 @@ index aa38a3b..e8f1a4f 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1290,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1267,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -2512,7 +2501,7 @@ index aa38a3b..e8f1a4f 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1418,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1395,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -2539,7 +2528,7 @@ index aa38a3b..e8f1a4f 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1438,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1415,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -2548,7 +2537,7 @@ index aa38a3b..e8f1a4f 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1479,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1456,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}

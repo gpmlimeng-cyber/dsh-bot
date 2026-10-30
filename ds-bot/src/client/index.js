@@ -1091,36 +1091,93 @@ export function apply(ctx) {
       groups.remount('shell')
       verifyTimer = setTimeout(verifySidebar, 250)
     }
-    // In the shell's own view its logo sits alone in the top-left corner; the mode row takes
-    // that corner over, so both ways back and forth stay one click away and never move.
+    // The window reserves a caption band above everything; the two modes live in its first
+    // row, clear of the traffic lights, as one dropdown rather than a row of buttons. Styled
+    // inline: in the shell's own view the plugin's stylesheet is gone.
     let modeBar = null
-    const paintModeBar = () => {
+    let modeMenu = null
+    let modeOpen = false
+    const closeModeMenu = () => {
+      modeOpen = false
+      if (modeMenu) { modeMenu.remove(); modeMenu = null }
+      if (modeBar) modeBar.setAttribute('aria-expanded', 'false')
+    }
+    const openModeMenu = (left, top) => {
       const mode = surface.getSnapshot().mode
-      if (mode !== 'agent') {
-        if (modeBar) { modeBar.remove(); modeBar = null }
-        return
-      }
-      if (!modeBar) {
-        // Styled inline: the plugin's stylesheet belongs to the Bot surface and is gone here.
-        modeBar = document.createElement('div')
-        modeBar.className = 'bt-modebar'
-        modeBar.setAttribute('role', 'tablist')
-        modeBar.setAttribute('aria-label', t('Modes'))
-        modeBar.style.cssText = 'position:fixed;left:8px;top:calc(var(--dsh-frame-chrome-top,0px) + 12px);z-index:41;display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--bt-main,#fcfcfc);box-shadow:0 0 0 .5px rgba(20,20,20,.14),0 10px 24px -14px rgba(0,0,0,.35)'
-        document.body.appendChild(modeBar)
-      }
-      modeBar.textContent = ''
+      modeMenu = document.createElement('div')
+      modeMenu.className = 'bt-modebar-menu'
+      modeMenu.setAttribute('role', 'menu')
+      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:198px;padding:6px;border-radius:14px;background:var(--bt-main,#fcfcfc);box-shadow:0 0 0 .5px rgba(20,20,20,.14),0 22px 46px -22px rgba(0,0,0,.42)`
       for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
         const selected = mode === id
-        const button = document.createElement('button')
-        button.type = 'button'
-        button.setAttribute('role', 'tab')
-        button.setAttribute('aria-selected', String(selected))
-        button.textContent = label
-        button.style.cssText = `height:26px;padding:0 10px;border:0;border-radius:999px;font:inherit;font-size:12px;line-height:26px;cursor:pointer;white-space:nowrap;background:${selected ? 'rgba(119,119,119,.17)' : 'transparent'};color:var(--bt-ink,#141414);font-weight:${selected ? 600 : 400}`
-        button.addEventListener('click', () => actions.setSurface(id))
-        modeBar.appendChild(button)
+        const item = document.createElement('button')
+        item.type = 'button'
+        item.setAttribute('role', 'menuitemradio')
+        item.setAttribute('aria-checked', String(selected))
+        item.style.cssText = `display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:8px;background:${selected ? 'rgba(119,119,119,.12)' : 'transparent'};font:inherit;font-size:13px;text-align:left;cursor:pointer;color:var(--bt-ink,#141414)`
+        const name = document.createElement('span')
+        name.textContent = label
+        name.style.cssText = 'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'
+        item.appendChild(name)
+        if (selected) {
+          const tick = document.createElement('span')
+          tick.textContent = '✓'
+          tick.style.cssText = 'flex:none;font-size:12px;color:var(--bt-accent,#4d6bfe)'
+          item.appendChild(tick)
+        }
+        item.addEventListener('click', () => { closeModeMenu(); actions.setSurface(id) })
+        modeMenu.appendChild(item)
       }
+      modeOpen = true
+      modeBar.setAttribute('aria-expanded', 'true')
+      document.body.appendChild(modeMenu)
+    }
+    const paintModeBar = () => {
+      const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue('--dsh-frame-chrome-top')) || 0
+      const mode = surface.getSnapshot().mode
+      // Clear of the traffic lights: past them in the window, at the edge without one.
+      const left = chrome >= 24 ? 84 : 8
+      // A few pixels lower than the band's own centre, so the control sits on the traffic
+      // lights' horizontal line instead of above it.
+      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 3) : 8
+      if (!modeBar) {
+        modeBar = document.createElement('button')
+        modeBar.type = 'button'
+        modeBar.className = 'bt-modebar'
+        modeBar.setAttribute('aria-haspopup', 'menu')
+        modeBar.setAttribute('aria-expanded', 'false')
+        document.body.appendChild(modeBar)
+        document.addEventListener('mousedown', (event) => {
+          if (!modeOpen) return
+          const target = event.target
+          if (target instanceof Element && (target.closest('.bt-modebar') || target.closest('.bt-modebar-menu'))) return
+          closeModeMenu()
+        })
+        modeBar.addEventListener('click', () => {
+          if (modeOpen) { closeModeMenu(); return }
+          paintModeBar()
+          const box = modeBar.getBoundingClientRect()
+          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
+        })
+        window.addEventListener('resize', () => paintModeBar())
+      }
+      modeBar.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 6px;border:0;border-radius:8px;background:transparent;box-shadow:none;font:inherit;font-size:12px;line-height:26px;cursor:pointer;white-space:nowrap;color:var(--bt-ink,#141414)`
+      modeBar.textContent = mode === 'bot' ? t('Bot mode') : t('DSH mode')
+      const caret = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      caret.setAttribute('width', '12')
+      caret.setAttribute('height', '12')
+      caret.setAttribute('viewBox', '0 0 20 20')
+      caret.setAttribute('fill', 'none')
+      caret.setAttribute('stroke', 'currentColor')
+      caret.setAttribute('stroke-width', '1.8')
+      caret.setAttribute('stroke-linecap', 'round')
+      caret.setAttribute('stroke-linejoin', 'round')
+      caret.style.cssText = 'flex:none;color:rgba(20,20,20,.44);margin-left:1px'
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+      path.setAttribute('d', 'M5.5 8l4.5 4.5L14.5 8')
+      caret.appendChild(path)
+      modeBar.appendChild(caret)
+      if (modeOpen) { closeModeMenu() }
     }
     const reconcile = () => {
       paintModeBar()

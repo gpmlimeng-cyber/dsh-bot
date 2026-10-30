@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { FishLogo } from './dsh-primitives.js'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
-import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon, CheckIcon, PeopleIcon, TerminalIcon } from './icons.js'
+import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon } from './icons.js'
 import { MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
@@ -15,8 +15,7 @@ import { holdDrawerDismiss } from './drawer-dismiss.js'
 import { showsDshRow } from './dsh-offer.js'
 import { STORAGE } from './storage.js'
 import { readArrangement, writeArrangement } from './sidebar-groups.js'
-import { readMode } from './surface.js'
-import { Caret } from './model-menu.js'
+
 
 // -------------------------------------------------------------------------
 // Sidebar
@@ -263,48 +262,6 @@ function useListGlide(listRef, layout, key) {
   }, [layout, key])
 }
 
-// The brand is the way between the two surfaces: the Bot team's own screen, or the shell's
-// professional session view. It reads like a workspace switcher, with the current one ticked.
-function SurfaceMenu({ actions }) {
-  const [open, setOpen] = useState(false)
-  const [mode, setMode] = useState(() => readMode())
-  const box = useRef(null)
-  useEffect(() => {
-    if (!open) return undefined
-    const onDown = (event) => { if (!(event.target instanceof Element) || !event.target.closest('.bt-surface-menu') && !event.target.closest('.bt-brand')) setOpen(false) }
-    const onKey = (event) => { if (event.key === 'Escape') setOpen(false) }
-    window.addEventListener('mousedown', onDown)
-    window.addEventListener('keydown', onKey)
-    return () => { window.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey) }
-  }, [open])
-  const choices = [
-    { id: 'bot', name: t('Bot mode'), detail: t('The Bot team, its chats and its groups.'), icon: PeopleIcon },
-    { id: 'agent', name: t('DSH mode'), detail: t('The shell\'s own session view, tools and panels.'), icon: TerminalIcon },
-  ]
-  const current = choices.find(choice => choice.id === mode) ?? choices[0]
-  const pick = (id) => { setMode(id); setOpen(false); actions.setSurface?.(id) }
-  return h('span', { ref: box, className: 'bt-surface' },
-    h('button', {
-      type: 'button', className: 'bt-brand', 'aria-haspopup': 'menu', 'aria-expanded': open,
-      onClick: () => setOpen((value) => !value),
-    },
-    // The same anatomy as the model picker: a mark, the name, and a quiet chevron.
-    h('span', { className: 'bt-surface-mark', 'aria-hidden': true }, h(current.icon)),
-    h('span', { className: 'bt-surface-label' }, current.name),
-    h(Caret)),
-    open
-      ? h('div', { className: 'bt-surface-menu', role: 'menu', 'aria-label': t('Modes') },
-        h('div', { className: 'bt-surface-title' }, t('Modes')),
-        ...choices.map(choice => h('button', {
-          key: choice.id, type: 'button', role: 'menuitemradio', 'aria-checked': mode === choice.id,
-          className: 'bt-surface-item', 'data-on': mode === choice.id ? '' : undefined,
-          onClick: () => pick(choice.id),
-        },
-        h('span', { className: 'bt-surface-name' }, choice.name),
-        mode === choice.id ? h('span', { className: 'bt-surface-tick', 'aria-hidden': true }, h(CheckIcon)) : null)))
-      : null)
-}
-
 export function TeamSidebar(props) {
   const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
   const [market, setMarket] = useState(false)
@@ -447,7 +404,7 @@ export function TeamSidebar(props) {
   }
   return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
     wide ? h('div', { className: 'bt-side-top' },
-      h(SurfaceMenu, { actions }),
+      h('span', { className: 'bt-brand' }, h(BrandName)),
       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
       h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette('', { fromDrawer: true }) }, h(SearchIcon)),
       h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon)),

@@ -118,29 +118,6 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 
 .bt-side{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;gap:2px;padding:0 12px 8px 0;color:var(--bt-ink);font-family:var(--bt-font)}
 .bt-surface{position:relative;display:inline-flex;min-width:0;margin-right:auto}
-/* The trigger is the same capsule as the header's model picker: a 30px pill on the shared
-   floating surface, the name at 13px and a quiet chevron after it. */
-.bt-surface .bt-brand{height:30px;margin:0;padding:0 9px 0 12px;gap:6px;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);font-size:13px;line-height:18px;font-weight:600;letter-spacing:0;cursor:pointer;transition:background-color .12s ease}
-.bt-surface .bt-brand:hover,.bt-surface .bt-brand[aria-expanded=true]{background:var(--bt-float-hover)}
-.bt-surface-label{font-size:13px;line-height:18px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;color:var(--bt-ink)}
-.bt-surface-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;color:var(--bt-ink-2)}
-.bt-surface-mark svg{width:16px;height:16px}
-.bt-surface-caret{display:inline-flex;align-items:center;margin-left:0;color:var(--bt-ink-3)}
-.bt-surface-caret svg{width:13px;height:13px}
-.bt-surface-menu{position:absolute;left:0;top:calc(100% + 6px);z-index:30;display:flex;flex-direction:column;gap:1px;width:212px;padding:6px;border-radius:14px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 20px 44px -22px rgba(0,0,0,.4)}
-.bt-surface-title{padding:5px 8px 4px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
-.bt-surface-item{display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;text-align:left;cursor:pointer;color:var(--bt-ink)}
-.bt-surface-item:hover{background:var(--bt-hover)}
-.bt-surface-name{flex:1 1 auto;min-width:0;font-size:13px;line-height:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-surface-tick{flex:none;display:inline-flex;color:var(--bt-accent)}
-.bt-surface-tick svg{width:15px;height:15px}
-.bt-surface .bt-model-caret{flex:none;color:var(--bt-ink-3);transition:transform .16s ease}
-.bt-surface .bt-brand[aria-expanded=true] .bt-model-caret{transform:rotate(180deg)}
-/* Where the shell's logo sits in its own view, the two modes stay put and both stay visible. */
-.bt-modebar{position:fixed;left:8px;top:calc(var(--dsh-frame-chrome-top,0px) + 12px);z-index:41;display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 10px 24px -14px rgba(0,0,0,.35)}
-.bt-modebar button{height:26px;padding:0 10px;border:0;border-radius:999px;background:none;font:inherit;font-size:12px;line-height:26px;color:var(--bt-ink-2);cursor:pointer;white-space:nowrap}
-.bt-modebar button:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-modebar button[aria-selected=true]{background:var(--bt-active);color:var(--bt-ink);font-weight:600}
 .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
 /* Pinned to the window's top edge, the row only paints; its own controls stay clickable. */
 /* The sidebar's own controls sit a size below the panel buttons: 32px, where the round
