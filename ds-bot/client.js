@@ -21822,14 +21822,14 @@ function apply(ctx) {
       modeMenu = document.createElement("div");
       modeMenu.className = "bt-modebar-menu";
       modeMenu.setAttribute("role", "menu");
-      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:214px;padding:8px;border-radius:16px;background:color-mix(in srgb,var(--bt-main,#fcfcfc) 94%,transparent);backdrop-filter:blur(24px);box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 26px 56px -24px rgba(0,0,0,.4)`;
+      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:190px;padding:6px;border-radius:12px;background:color-mix(in srgb,var(--bt-main,#fcfcfc) 94%,transparent);backdrop-filter:blur(24px);box-shadow:0 0 0 .5px rgba(20,20,20,.09),0 18px 40px -20px rgba(0,0,0,.32)`;
       for (const [id, label] of [["bot", t("Bot mode")], ["agent", t("DSH mode")]]) {
         const selected = mode === id;
         const item = document.createElement("button");
         item.type = "button";
         item.setAttribute("role", "menuitemradio");
         item.setAttribute("aria-checked", String(selected));
-        item.style.cssText = `display:flex;align-items:center;gap:10px;width:100%;height:36px;padding:0 10px;border:0;border-radius:10px;background:${selected ? "rgba(119,119,119,.1)" : "transparent"};font-family:inherit;font-size:13px;font-weight:${selected ? 600 : 400};text-align:left;cursor:pointer;color:var(--bt-ink,#141414)`;
+        item.style.cssText = `display:flex;align-items:center;gap:8px;width:100%;height:30px;padding:0 8px;border:0;border-radius:7px;background:transparent;font-family:inherit;font-size:13px;font-weight:${selected ? 500 : 400};text-align:left;cursor:pointer;color:var(--bt-ink,#141414)`;
         const name = document.createElement("span");
         name.textContent = label;
         name.style.cssText = "flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";
@@ -21840,6 +21840,12 @@ function apply(ctx) {
           tick.style.cssText = "flex:none;font-size:12px;color:var(--bt-accent,#4d6bfe)";
           item.appendChild(tick);
         }
+        item.addEventListener("mouseenter", () => {
+          item.style.background = "rgba(119,119,119,.08)";
+        });
+        item.addEventListener("mouseleave", () => {
+          item.style.background = "transparent";
+        });
         item.addEventListener("click", () => {
           closeModeMenu();
           actions.setSurface(id);
