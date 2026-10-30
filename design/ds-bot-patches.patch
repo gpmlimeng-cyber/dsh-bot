@@ -549,7 +549,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..cbcab69 100644
+index daf7dd4..06421fa 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -738,7 +738,7 @@ index daf7dd4..cbcab69 100644
      // Agent mode hands the surface back to the shell; everything open on the Bot
      // surface closes first so nothing stale reopens on the way back.
      setSurface: (mode) => {
-@@ -958,7 +1091,124 @@ export function apply(ctx) {
+@@ -958,7 +1091,126 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -786,13 +786,15 @@ index daf7dd4..cbcab69 100644
 +      document.body.appendChild(modeMenu)
 +    }
 +    const paintModeBar = () => {
-+      const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue('--dsh-frame-chrome-top')) || 0
++      const mac = /Mac/i.test(navigator.platform || navigator.userAgent)
++      // The desktop window may keep its caption as an overlay and never publish the band
++      // height, so a Mac window falls back to the standard 44px band.
++      const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue('--dsh-frame-chrome-top')) || (mac ? 44 : 0)
 +      const mode = surface.getSnapshot().mode
 +      // Clear of the traffic lights: past them in the window, at the edge without one.
-+      // A Mac window's traffic lights end about 64px in; the control sits 15px after them.
-+      // Everywhere else it sits 15px from the window's left edge.
-+      const mac = /Mac/i.test(navigator.platform || navigator.userAgent)
-+      const left = mac && chrome >= 24 ? 179 : 15
++      // A Mac window's traffic lights take the left corner, so the control sits well past
++      // them; everywhere else it sits 15px from the window's left edge.
++      const left = mac ? 179 : 15
 +      // A few pixels lower than the band's own centre, so the control sits on the traffic
 +      // lights' horizontal line instead of above it.
 +      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 7) : 12
@@ -863,7 +865,7 @@ index daf7dd4..cbcab69 100644
        groups.reconcile(groupsFor(surface.getSnapshot()))
        clearTimeout(verifyTimer)
        verifyAttempts = 0
-@@ -970,6 +1220,7 @@ export function apply(ctx) {
+@@ -970,6 +1222,7 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
