@@ -772,7 +772,7 @@ index 58d1840..ba451a7 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..97dc207 100644
+index aa38a3b..ef05510 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -117,10 +117,14 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
@@ -792,12 +792,16 @@ index aa38a3b..97dc207 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -146,11 +150,18 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -146,11 +150,22 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
  .bt-unread-wait{background:var(--bt-star)}
  .bt-rail{align-items:center;padding:0 0 8px}
 +/* The shell hides a collapsed sidebar outright on macOS (it has no rail state of its own),
 +   so the rail ds-bot draws gets a fixed column instead of the width the shell leaves it. */
++/* The shell zeroes its column at once and the rail only mounts on the next render, so it
++   slides in rather than popping into the empty space. */
++@keyframes bt-rail-in{from{opacity:0;transform:translateX(-10px)}}
++.bt-side.bt-rail{animation:bt-rail-in .18s cubic-bezier(.22,1,.36,1) both}
 +html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side.bt-rail{position:fixed;left:0;top:0;bottom:0;width:56px;padding:calc(var(--dsh-frame-chrome-top,0px) + 42px) 0 8px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-float-ring);z-index:20;overflow:hidden;align-items:center}
  .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px}
  .bt-side-foot{display:flex;padding-top:8px}
@@ -812,7 +816,7 @@ index aa38a3b..97dc207 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -317,6 +328,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -317,6 +332,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -839,7 +843,7 @@ index aa38a3b..97dc207 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -548,7 +579,7 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -548,7 +583,7 @@ button.bt-set-row:hover{background:var(--bt-hover)}
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
  html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
  html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
@@ -848,7 +852,17 @@ index aa38a3b..97dc207 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -883,6 +914,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -588,7 +623,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+ .bt-voice-end:hover{background:#e02135}
+ @keyframes bt-fade{from{opacity:0}to{opacity:1}}
+ @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
+-@media (prefers-reduced-motion:reduce){.bt-voice-pane,.bt-voice-caption,.bt-voice-ring{animation:none!important}}
++@media (prefers-reduced-motion:reduce){.bt-voice-pane,.bt-voice-caption,.bt-voice-ring{animation:none!important}
++@media (prefers-reduced-motion:reduce){.bt-side.bt-rail{animation:none}}}
+ /* A bubble takes the set share of the column, as the user's does; 82px stays free for
+    the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
+ .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
+@@ -883,6 +919,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -910,7 +924,7 @@ index aa38a3b..97dc207 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1068,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1073,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -1019,7 +1033,7 @@ index aa38a3b..97dc207 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1196,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1201,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -1046,7 +1060,7 @@ index aa38a3b..97dc207 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1216,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1221,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -1055,7 +1069,7 @@ index aa38a3b..97dc207 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1257,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1262,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}

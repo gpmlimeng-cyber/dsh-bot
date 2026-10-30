@@ -152,6 +152,10 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-rail{align-items:center;padding:0 0 8px}
 /* The shell hides a collapsed sidebar outright on macOS (it has no rail state of its own),
    so the rail ds-bot draws gets a fixed column instead of the width the shell leaves it. */
+/* The shell zeroes its column at once and the rail only mounts on the next render, so it
+   slides in rather than popping into the empty space. */
+@keyframes bt-rail-in{from{opacity:0;transform:translateX(-10px)}}
+.bt-side.bt-rail{animation:bt-rail-in .18s cubic-bezier(.22,1,.36,1) both}
 html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side.bt-rail{position:fixed;left:0;top:0;bottom:0;width:56px;padding:calc(var(--dsh-frame-chrome-top,0px) + 42px) 0 8px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-float-ring);z-index:20;overflow:hidden;align-items:center}
 .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px}
 .bt-side-foot{display:flex;padding-top:8px}
@@ -619,7 +623,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
 .bt-voice-end:hover{background:#e02135}
 @keyframes bt-fade{from{opacity:0}to{opacity:1}}
 @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
-@media (prefers-reduced-motion:reduce){.bt-voice-pane,.bt-voice-caption,.bt-voice-ring{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.bt-voice-pane,.bt-voice-caption,.bt-voice-ring{animation:none!important}
+@media (prefers-reduced-motion:reduce){.bt-side.bt-rail{animation:none}}}
 /* A bubble takes the set share of the column, as the user's does; 82px stays free for
    the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
 .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
