@@ -21822,7 +21822,7 @@ function apply(ctx) {
       modeMenu = document.createElement("div");
       modeMenu.className = "bt-modebar-menu";
       modeMenu.setAttribute("role", "menu");
-      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:190px;padding:6px;border-radius:12px;background:color-mix(in srgb,var(--bt-main,#fcfcfc) 94%,transparent);backdrop-filter:blur(24px);box-shadow:0 0 0 .5px rgba(20,20,20,.09),0 18px 40px -20px rgba(0,0,0,.32)`;
+      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:190px;padding:6px;border-radius:12px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 18px 40px -20px rgba(0,0,0,.32)`;
       for (const [id, label] of [["bot", t("Bot mode")], ["agent", t("DSH mode")]]) {
         const selected = mode === id;
         const item = document.createElement("button");
@@ -21887,7 +21887,7 @@ function apply(ctx) {
         });
         window.addEventListener("resize", () => paintModeBar());
       }
-      modeBar.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px 0 10px;border:0;border-radius:999px;background:color-mix(in srgb,var(--bt-main,#fcfcfc) 92%,transparent);box-shadow:0 0 0 .5px rgba(20,20,20,.09),0 1px 2px rgba(20,20,20,.05);font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:var(--bt-ink,#141414);backdrop-filter:blur(12px)`;
+      modeBar.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px 0 10px;border:0;border-radius:999px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 1px 2px rgba(20,20,20,.06);font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414`;
       modeBar.textContent = "";
       const label = document.createElement("span");
       label.textContent = mode === "bot" ? t("Bot mode") : t("DSH mode");
