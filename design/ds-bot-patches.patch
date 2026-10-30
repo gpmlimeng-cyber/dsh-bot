@@ -2147,7 +2147,7 @@ index f74ffcb..976bcce 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..35cae78 100644
+index aa38a3b..401c932 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -2226,7 +2226,7 @@ index aa38a3b..35cae78 100644
 +.bt-sec:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
 +/* The caret shows on hover, and stays for a section that is open. */
 +.bt-sec-caret{display:inline-flex;flex:none;opacity:0;transition:transform .15s ease,opacity .12s ease}
-+.bt-sec-row:hover .bt-sec-caret,.bt-sec-caret[data-open]{opacity:1}
++.bt-sec-row:hover .bt-sec-caret{opacity:1}
 +.bt-sec-caret[data-open]{transform:rotate(90deg)}
 +.bt-sec-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 +.bt-sec-count{margin-left:auto;flex:none;font-variant-numeric:tabular-nums;color:var(--bt-ink-3)}
