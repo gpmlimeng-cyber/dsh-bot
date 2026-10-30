@@ -122,6 +122,19 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
 // flat one.
 export const MESSAGE_WIDTH = { min: 50, max: 100, step: 5 }
 const percent = (value, initial) => (Number.isInteger(value) && value >= MESSAGE_WIDTH.min && value <= MESSAGE_WIDTH.max ? value : initial)
+// Typeface. Two faces ship with the plugin (both variable, both OFL 1.1) beside the system
+// face the shell already asks for; CJK falls back to the system font in either case.
+export const FONT_CHOICES = {
+  system: { label: 'System' },
+  geist: { label: 'Geist', stack: '"Geist Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif' },
+  inter: { label: 'Inter', stack: '"Inter Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif' },
+}
+export const fontOf = prefs => (FONT_CHOICES[prefs?.font] ? prefs.font : 'system')
+// The choice rides on a variable, so every --bt-font rule keeps working unchanged.
+export const fontCss = (id) => {
+  const face = FONT_CHOICES[id]
+  return face?.stack ? `html body{--bt-font-choice:${face.stack}}` : ''
+}
 export const layoutOf = prefs => (prefs?.layout === 'flat' ? 'flat' : 'bubble')
 export const thinkingShown = prefs => prefs?.thinking === true
 export const widthOf = prefs => percent(prefs?.width, 80)

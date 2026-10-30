@@ -4,7 +4,7 @@ import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
 import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
 import { teamActions } from './team-actions.js'
 import { dismissDrawerIfOpen } from './drawer-dismiss.js'
-import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
+import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
 import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
 import { lookOf } from './mark.js'
@@ -136,6 +136,8 @@ export function apply(ctx) {
   const PREFS_KEY = STORAGE.prefs
   let savedPrefs = {}
   try { savedPrefs = JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') ?? {} } catch { savedPrefs = {} }
+  // The chosen font repaints this device at once; the host makes it the team's choice.
+  let reapplyPrefs = () => {}
   const writeUnread = (id, value) => {
     const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
     ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
@@ -317,23 +319,26 @@ export function apply(ctx) {
       const layout = layoutOf(prefs)
       const width = widthOf(prefs)
       const flatWidth = flatWidthOf(prefs)
+      const font = fontOf(prefs.font ? prefs : savedPrefs)
       document.body.dataset.btMotion = motion
+      document.body.dataset.btFont = font
       document.body.dataset.btLayout = layout
       document.body.style.setProperty('--bt-msg-w', String(width / 100))
       document.body.style.setProperty('--bt-flat-w', String(flatWidth / 100))
-      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${registry.getSnapshot()}`
+      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${registry.getSnapshot()}`
       if (next === key) return
       key = next
-      style.textContent = themeCss(themes[id], accent)
+      style.textContent = themeCss(themes[id], accent) + fontCss(font)
       const release = releaseTokens
       releaseTokens = ctx.theme.overrideTokens('ds-bot', shellTokens(themes[id]))
       if (typeof release === 'function') release()
       if (snapshot.ready) {
-        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking })) } catch { /* storage unavailable */ }
+        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font })) } catch { /* storage unavailable */ }
       }
     }
     render()
     const offRoster = roster.subscribe(render)
+    reapplyPrefs = render
     const offRegistry = registry.subscribe(render)
     return () => {
       offRoster()
@@ -573,6 +578,15 @@ export function apply(ctx) {
       if (!manager?.installBundle || !spec) return false
       const answer = await manager.installBundle(spec, registry ? { registry } : undefined)
       return answer?.ok !== false && answer?.value?.ok !== false
+    },
+    // The font repaints this device immediately and asks the host to keep it for the team.
+    fontPref: () => fontOf(savedPrefs),
+    setFontPref: (font) => {
+      const id = fontOf({ font })
+      savedPrefs = { ...savedPrefs, font: id === 'system' ? undefined : id }
+      try { localStorage.setItem(PREFS_KEY, JSON.stringify(savedPrefs)) } catch { /* storage unavailable */ }
+      reapplyPrefs()
+      return actions.setPrefs({ font: id })
     },
     setPluginEnabled: async (id, enabled) => {
       const manager = ctx.get('remote.pluginManager')

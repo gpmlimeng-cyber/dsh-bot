@@ -124,3 +124,8 @@ their ideas; it does not contain their code.
   - Simple Icons (https://simpleicons.org), CC0 1.0: the provider marks in
     ds-bot/src/client/provider-marks.js. The OpenAI mark comes from
     OpenMausBot (https://github.com/milind-soni/OpenMausBot), Apache-2.0.
+  - Inter (https://github.com/rsms/inter), SIL Open Font License 1.1, and
+    Geist (https://github.com/vercel/geist-font), SIL Open Font License 1.1:
+    the two faces the Font setting offers, embedded in
+    ds-bot/src/client/fonts.js from @fontsource-variable/inter and
+    @fontsource-variable/geist (latin subsets, variable weight axis).

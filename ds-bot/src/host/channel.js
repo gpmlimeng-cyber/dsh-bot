@@ -112,6 +112,11 @@ export function install(rt) {
       else if (body.motion === 'quiet' || body.motion === 'lively') state.prefs.motion = body.motion
       else throw invalid('Motion must be quiet, normal or lively')
     }
+    if (body.font !== undefined) {
+      if (body.font === null || body.font === 'system') delete state.prefs.font
+      else if (body.font === 'geist' || body.font === 'inter') state.prefs.font = body.font
+      else throw invalid('Font must be system, geist or inter')
+    }
     if (body.layout !== undefined) {
       if (body.layout === null || body.layout === 'bubble') delete state.prefs.layout
       else if (body.layout === 'flat') state.prefs.layout = body.layout

@@ -1,7 +1,7 @@
 import { createElement as h, useCallback, useEffect, useRef, useState } from 'react'
 import { ACCENT_INKS, INKS } from './inks.js'
 import { isMainOf } from './sources.js'
-import { MESSAGE_WIDTH, allThemes, flatWidthOf, layoutOf, thinkingShown, widthOf } from './themes.js'
+import { FONT_CHOICES, MESSAGE_WIDTH, allThemes, flatWidthOf, fontOf, layoutOf, thinkingShown, widthOf } from './themes.js'
 import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, InfoIcon, PlugIcon, PlusIcon, SlidersIcon, SETTINGS_ICONS } from './icons.js'
 import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
 import { useEscape } from './overlay-hooks.js'
@@ -79,6 +79,8 @@ function GeneralPage({ roster, actions, run }) {
   const themes = allThemes()
   const current = themes[prefs.theme] ? prefs.theme : 'deepseek'
   const [custom, setCustom] = useState(prefs.accent ?? '#4d6bfe')
+  // The font applies on this device before the host answers, so the picker keeps its own copy.
+  const [font, setFont] = useState(() => (actions.fontPref ? actions.fontPref() : fontOf(prefs)))
   const timer = useRef(0)
   useEffect(() => () => clearTimeout(timer.current), [])
   const pickCustom = (value) => {
@@ -91,6 +93,12 @@ function GeneralPage({ roster, actions, run }) {
       h(SetRow, { label: t('Theme'), hint: t('Colors for the whole team, on every device.') },
         h('select', { className: 'bt-select', 'aria-label': t('Theme'), value: current, onChange: event => run(actions.setPrefs({ theme: event.target.value })) },
           Object.entries(themes).map(([id, theme]) => h('option', { key: id, value: id }, t(theme.label))))),
+      h(SetRow, { label: t('Font'), hint: t('The typeface for names, messages and menus.') },
+        h('select', {
+          className: 'bt-select', 'aria-label': t('Font'), value: font,
+          onChange: (event) => { setFont(event.target.value); run(actions.setFontPref(event.target.value)) },
+        },
+          Object.entries(FONT_CHOICES).map(([id, face]) => h('option', { key: id, value: id }, t(face.label))))),
       h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },
         h('div', { className: 'bt-swatches' },
           h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
