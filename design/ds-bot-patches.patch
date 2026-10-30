@@ -641,7 +641,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..20902fe 100644
+index daf7dd4..b69129f 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -973,7 +973,7 @@ index daf7dd4..20902fe 100644
 +        bandActions.className = 'bt-band-actions'
 +      }
 +      bandActions.style.cssText = inDrawer()
-+        ? 'position:static;display:flex;align-items:center;gap:2px;margin-left:2px'
++        ? 'position:static;display:flex;align-items:center;gap:2px;margin-left:auto'
 +        : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`
 +      bandActions.textContent = ''
 +      // In the shell's own view these three do what the shell's own controls do, so the row
