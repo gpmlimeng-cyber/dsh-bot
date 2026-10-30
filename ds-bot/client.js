@@ -21892,7 +21892,7 @@ function apply(ctx) {
         bandActions.className = "bt-band-actions";
         document.body.appendChild(bandActions);
       }
-      bandActions.style.cssText = `position:fixed;left:${Math.round(box.right + 20)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`;
+      bandActions.style.cssText = `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`;
       bandActions.textContent = "";
       const hostClick = (selector) => document.querySelector(selector)?.click();
       const inAgent = () => surface.getSnapshot().mode === "agent";
