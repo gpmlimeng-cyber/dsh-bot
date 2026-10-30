@@ -2735,6 +2735,9 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The Skills tab hands its whole pane to the vendored skill market; it wants a definite
    height, so the pane is a flex box the panel can fill. */
 .bt-market-skillhost{flex:1 1 auto;min-height:0;min-width:0;display:flex;overflow:hidden}
+/* Refresh and import belong under the view tabs, not over them: a short row of their own,
+   right-aligned, with no bar chrome of its own. */
+[data-skill-market] .sm-topbar-under{flex:none;height:auto;padding:10px 20px 0;border-bottom:0;background:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 /* The panel owns its whole pane: no market padding, no page scroll behind it. */
 .bt-market-body:has(.bt-market-skillhost){display:flex;flex-direction:column;padding:0;overflow:hidden}
 .bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
@@ -13447,26 +13450,6 @@ function SkillMarketPanel(props) {
     "div",
     { "data-skill-market": "", "data-skill-market-panel": PANEL_ID },
     h14(
-      "header",
-      { className: "sm-topbar" },
-      h14(
-        "div",
-        { className: "sm-topbar-actions" },
-        h14("button", {
-          type: "button",
-          className: "sm-icon-btn",
-          "aria-label": t2("search.refresh"),
-          title: t2("search.refreshShort"),
-          onClick: () => setReloadNonce((current) => current + 1)
-        }, h14(Icon, { name: "i-refresh" })),
-        h14("button", {
-          type: "button",
-          className: "sm-btn sm-btn-primary",
-          onClick: onImportAction
-        }, h14(Icon, { name: "i-upload", size: 16 }), h14("span", { className: "sm-btn-label" }, t2("import.pickFile")))
-      )
-    ),
-    h14(
       "div",
       { className: "sm-viewbar" },
       h14(
@@ -13500,6 +13483,28 @@ function SkillMarketPanel(props) {
           "aria-selected": view === "import",
           onClick: () => goToView("import")
         }, t2("view.import") + " ", h14("span", { className: "sm-vt-count" }, imported.length))
+      )
+    ),
+    // Refresh and import belong to the page, not above its tabs: they sit in the row under
+    // the view tabs, against its right edge.
+    h14(
+      "header",
+      { className: "sm-topbar sm-topbar-under" },
+      h14(
+        "div",
+        { className: "sm-topbar-actions" },
+        h14("button", {
+          type: "button",
+          className: "sm-icon-btn",
+          "aria-label": t2("search.refresh"),
+          title: t2("search.refreshShort"),
+          onClick: () => setReloadNonce((current) => current + 1)
+        }, h14(Icon, { name: "i-refresh" })),
+        h14("button", {
+          type: "button",
+          className: "sm-btn sm-btn-primary",
+          onClick: onImportAction
+        }, h14(Icon, { name: "i-upload", size: 16 }), h14("span", { className: "sm-btn-label" }, t2("import.pickFile")))
       )
     ),
     h14(

@@ -5656,20 +5656,6 @@ function SkillMarketPanel(props) {
       : 'status.connected')
 
   return h('div', { 'data-skill-market': '', 'data-skill-market-panel': PANEL_ID },
-    h('header', { className: 'sm-topbar' },
-      h('div', { className: 'sm-topbar-actions' },
-        h('button', {
-          type: 'button',
-          className: 'sm-icon-btn',
-          'aria-label': t('search.refresh'),
-          title: t('search.refreshShort'),
-          onClick: () => setReloadNonce((current) => current + 1),
-        }, h(Icon, { name: 'i-refresh' })),
-        h('button', {
-          type: 'button',
-          className: 'sm-btn sm-btn-primary',
-          onClick: onImportAction,
-        }, h(Icon, { name: 'i-upload', size: 16 }), h('span', { className: 'sm-btn-label' }, t('import.pickFile'))))),
 
     h('div', { className: 'sm-viewbar' },
       h('div', { className: 'sm-viewtabs', role: 'tablist', 'aria-label': t('panel.aria') },
@@ -5689,6 +5675,23 @@ function SkillMarketPanel(props) {
           type: 'button', role: 'tab', className: 'sm-viewtab' + (view === 'import' ? ' active' : ''),
           'aria-selected': view === 'import', onClick: () => goToView('import'),
         }, t('view.import') + ' ', h('span', { className: 'sm-vt-count' }, imported.length)))),
+
+    // Refresh and import belong to the page, not above its tabs: they sit in the row under
+    // the view tabs, against its right edge.
+    h('header', { className: 'sm-topbar sm-topbar-under' },
+      h('div', { className: 'sm-topbar-actions' },
+        h('button', {
+          type: 'button',
+          className: 'sm-icon-btn',
+          'aria-label': t('search.refresh'),
+          title: t('search.refreshShort'),
+          onClick: () => setReloadNonce((current) => current + 1),
+        }, h(Icon, { name: 'i-refresh' })),
+        h('button', {
+          type: 'button',
+          className: 'sm-btn sm-btn-primary',
+          onClick: onImportAction,
+        }, h(Icon, { name: 'i-upload', size: 16 }), h('span', { className: 'sm-btn-label' }, t('import.pickFile'))))),
 
     h('div', { className: 'sm-fixed' },
       h('div', { className: 'sm-bounded' },
