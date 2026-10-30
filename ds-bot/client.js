@@ -21897,7 +21897,7 @@ function apply(ctx) {
         bandActions.className = "bt-band-actions";
         document.body.appendChild(bandActions);
       }
-      bandActions.style.cssText = `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`;
+      bandActions.style.cssText = `position:fixed;left:${Math.round(box.right + 10)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`;
       bandActions.textContent = "";
       bandActions.appendChild(buildAction(t("Search"), "search", () => actions.openPalette("", { fromDrawer: true })));
       bandActions.appendChild(buildAction(t("New…"), "plus", () => actions.openNewChat("new", { fromDrawer: true })));
