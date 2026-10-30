@@ -2652,7 +2652,8 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-sec-new{display:flex;align-items:center;gap:6px;width:100%;height:30px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;color:var(--bt-ink-3);cursor:pointer;text-align:left}
 .bt-sec-new:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
 .bt-sec-new svg{width:14px;height:14px}
-.bt-sec-new-input{width:100%;height:30px;margin-top:6px;padding:0 9px;border:1px solid var(--bt-line-2);border-radius:8px;background:var(--bt-card);font:inherit;font-size:12px;color:var(--bt-ink);outline:none}
+/* The name field takes the row's own box, so clicking the row turns it into the field. */
+.bt-sec-new-input{display:block;width:100%;height:30px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:12px;color:var(--bt-ink);outline:none;box-sizing:border-box}
 /* A section heading over its rows: small, quiet, and folding on a click. */
 .bt-sec{display:flex;align-items:center;gap:5px;width:100%;height:26px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:11px;line-height:16px;letter-spacing:.02em;color:var(--bt-ink-3);cursor:pointer;text-align:left}
 .bt-sec:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
