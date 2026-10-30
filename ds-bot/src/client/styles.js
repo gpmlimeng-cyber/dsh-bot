@@ -234,11 +234,11 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-mk{display:flex;flex-direction:column;gap:16px}
 .bt-mk-bar{display:flex;align-items:center;gap:8px;min-width:0}
 .bt-mk-name{flex:none;font-size:13px;line-height:18px;color:var(--bt-ink);white-space:nowrap}
-.bt-mk-search{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;height:34px;padding:0 8px;border-radius:12px;border:1px solid var(--bt-line);background:color-mix(in srgb,var(--bt-main) 88%,transparent);color:var(--bt-ink-3)}
+.bt-mk-search{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;height:34px;padding:0 8px;border-radius:12px;border:1px solid var(--bt-line);background:color-mix(in srgb,var(--bt-main) 88%,transparent);color:var(--bt-ink)}
 .bt-mk-search svg{flex:none;width:15px;height:15px}
 .bt-mk-search input{flex:1 1 auto;min-width:0;border:0;background:none;outline:none;font:inherit;font-size:14px;color:var(--bt-ink)}
 .bt-mk-search input::placeholder{color:var(--bt-ink-3)}
-.bt-mk-menu{position:relative;flex:none;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;color:var(--bt-ink-2);cursor:pointer}
+.bt-mk-menu{position:relative;flex:none;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;color:var(--bt-ink);cursor:pointer}
 .bt-mk-menu:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-mk-menu svg{flex:none;width:14px;height:14px}
 .bt-mk-menu>span{font-size:12px;line-height:18px;white-space:nowrap}
@@ -255,11 +255,11 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-mk-switch{padding:0 22px 0 10px;max-width:60%}
 .bt-mk-switchname{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-mk-switch select{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
-.bt-mk-refresh{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:none;color:var(--bt-ink-3);cursor:pointer}
+.bt-mk-refresh{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:none;color:var(--bt-ink);cursor:pointer}
 .bt-mk-refresh:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-mk-labels{display:flex;flex-wrap:wrap;gap:6px;margin-top:-6px}
 .bt-mk-tag{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--bt-line);border-radius:999px;background:color-mix(in srgb,var(--bt-main) 88%,transparent);font:inherit;font-size:11px;line-height:18px;font-weight:500;color:var(--bt-ink-3);white-space:nowrap}
-button.bt-mk-tag{cursor:pointer}
+button.bt-mk-tag{cursor:pointer;color:var(--bt-ink)}
 button.bt-mk-tag:hover{color:var(--bt-ink)}
 .bt-mk-tag[data-on]{background:var(--bt-hover);border-color:transparent;color:var(--bt-ink)}
 .bt-mk-catrow{position:relative;display:flex;align-items:center;gap:6px;margin-top:-6px}
@@ -275,7 +275,7 @@ button.bt-mk-tag:hover{color:var(--bt-ink)}
 .bt-mk-catitem{display:flex;align-items:center;height:30px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;font-size:13px;color:var(--bt-ink-2);text-align:left;cursor:pointer;white-space:nowrap}
 .bt-mk-catitem:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-mk-catitem[data-on]{background:var(--bt-hover);color:var(--bt-ink);font-weight:500}
-.bt-mk-pill{flex:none;height:24px;padding:0 8px;border:0;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 88%,transparent);font:inherit;font-size:12px;line-height:24px;color:var(--bt-ink-2);cursor:pointer}
+.bt-mk-pill{flex:none;height:24px;padding:0 8px;border:0;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 88%,transparent);font:inherit;font-size:12px;line-height:24px;color:var(--bt-ink);cursor:pointer}
 .bt-mk-pill:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-mk-pill[data-on]{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-mk-cards{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
