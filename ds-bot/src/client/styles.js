@@ -171,6 +171,41 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-apps-mark{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--bt-ink) 22%,transparent);display:block}
 .bt-apps-mark-b{border-radius:50%;background:color-mix(in srgb,var(--bt-accent) 60%,transparent)}
 .bt-apps-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+/* The market panel: the reference app's Apps card, on our own surface tokens. */
+.bt-market-frame{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.28)}
+.bt-market{width:min(780px,100%);height:min(760px,100%);min-height:0;display:flex;flex-direction:column;border-radius:20px;background:var(--bt-card);box-shadow:0 24px 60px -24px rgba(0,0,0,.35),0 0 0 .5px var(--bt-float-ring);overflow:hidden}
+.bt-market-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 22px 0;flex:none}
+.bt-market-heading{display:flex;align-items:center;gap:10px;min-width:0}
+.bt-market-h2{margin:0;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink)}
+.bt-market-connected{display:inline-flex;align-items:center;gap:4px;border:0;background:none;padding:0;color:var(--bt-ink-3);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
+.bt-market-connected:hover{color:var(--bt-ink)}
+.bt-market-close{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
+.bt-market-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-market-sub{margin:4px 22px 0;flex:none;font-size:13px;line-height:20px;color:var(--bt-ink-3)}
+.bt-market-tools{display:flex;flex-direction:column;gap:10px;padding:14px 22px 0;flex:none}
+.bt-market-search{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-3)}
+.bt-market-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:14px;color:var(--bt-ink);outline:none}
+.bt-market-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.bt-market-tab{height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
+.bt-market-tab:hover{background:var(--bt-hover)}
+.bt-market-tab[aria-selected=true]{background:var(--bt-ink);color:var(--bt-main)}
+.bt-market-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:14px 22px 22px;display:flex;flex-direction:column;gap:18px}
+.bt-market-title{margin:0 0 8px;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-3)}
+.bt-market-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.bt-market-card{display:flex;align-items:center;gap:10px;min-width:0;padding:10px 12px;border-radius:14px;box-shadow:inset 0 0 0 .5px var(--bt-line)}
+.bt-market-mark{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-2)}
+.bt-market-mark[data-state=ready]{background:color-mix(in srgb,var(--bt-accent) 16%,transparent);color:var(--bt-accent)}
+.bt-market-copy{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
+.bt-market-name{font-size:14px;line-height:20px;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-detail{font-size:12px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-go{flex:none;height:28px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
+.bt-market-go:hover{background:var(--bt-active,var(--bt-hover))}
+.bt-market-go[data-on]{background:var(--bt-accent);color:var(--bt-accent-ink,#fff)}
+.bt-market-more{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;border:0;background:none;padding:4px 0;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
+.bt-market-more:hover{color:var(--bt-ink)}
+.bt-market-empty{padding:24px 0;text-align:center;color:var(--bt-ink-3);font-size:13px}
+@media (max-width:640px){.bt-market-grid{grid-template-columns:1fr}.bt-market{width:100%;height:100%;border-radius:20px}}
+
 .bt-rail .bt-side-foot{position:static;flex-direction:column;gap:8px;padding:0 0 8px;margin-top:auto}
 .bt-rail .bt-apps-chip{flex:none;padding:0;width:40px;height:40px;justify-content:center;border-radius:12px}
 .bt-rail .bt-apps-label{display:none}

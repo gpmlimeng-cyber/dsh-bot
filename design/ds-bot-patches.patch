@@ -272,19 +272,24 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 32ba8c9..3c3ef9e 100644
+index 32ba8c9..632d052 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,8 @@ const ZH = {
+@@ -18,6 +18,13 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
 +  'Toggle right panel': '展开/收起右侧栏',
 +  'Connect apps': '连接应用',
++  'All': '全部',
++  'Plugins': '插件',
++  'Apps': '应用市场',
++  'Market': '市场',
++  'Search apps': '搜索应用',
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
    'Quiet': '安静',
-@@ -918,6 +920,10 @@ const ZH = {
+@@ -918,6 +925,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -295,7 +300,7 @@ index 32ba8c9..3c3ef9e 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -960,6 +966,7 @@ const ZH = {
+@@ -960,6 +971,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -303,7 +308,7 @@ index 32ba8c9..3c3ef9e 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1044,6 +1051,10 @@ const ZH = {
+@@ -1044,6 +1056,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -401,6 +406,134 @@ index daf7dd4..8784d88 100644
      // Agent mode hands the surface back to the shell; everything open on the Bot
      // surface closes first so nothing stale reopens on the way back.
      setSurface: (mode) => {
+diff --git a/ds-bot/src/client/market.js b/ds-bot/src/client/market.js
+new file mode 100644
+index 0000000..5f2f1d5
+--- /dev/null
++++ b/ds-bot/src/client/market.js
+@@ -0,0 +1,122 @@
++import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
++import { createPortal } from 'react-dom'
++import { t } from './i18n.js'
++import { CloseIcon, SearchIcon, PlusIcon, GearIcon, GlobeIcon, TerminalIcon, FolderIcon, MemoryIcon } from './icons.js'
++
++// The market: one panel over the conversation that shows what DS Bot can reach — the
++// connectors it is wired to, the capabilities it runs on, and the DSH plugins installed
++// beside it. The pages themselves are untouched; every card opens the page that owns it.
++//
++// The shape follows the reference app's Apps panel: a centred card, 780 wide and never
++// taller than the window, a title row with the connected count, a search field, category
++// tabs, then two columns of cards with a mark, a name, one line and a button.
++
++// What DS Bot brings itself. Each entry names what owns the setting today.
++const CAPABILITIES = () => [
++  { id: 'memory', name: t('Memory'), detail: t('What every Bot remembers about you'), icon: MemoryIcon },
++  { id: 'terminal', name: t('Terminal'), detail: t('Run commands in the session workspace'), icon: TerminalIcon },
++  { id: 'files', name: t('Workspace files'), detail: t('Read and edit the session workspace'), icon: FolderIcon },
++  { id: 'browser', name: t('Browser'), detail: t('Open pages and work inside them'), icon: GlobeIcon },
++]
++
++function Mark({ icon, state }) {
++  return h('span', { className: 'bt-market-mark', 'data-state': state ?? 'off', 'aria-hidden': true }, icon ? h(icon) : h(PlusIcon))
++}
++
++function Card({ name, detail, mark, state, action, onPick }) {
++  return h('div', { className: 'bt-market-card' },
++    h(Mark, { icon: mark, state }),
++    h('span', { className: 'bt-market-copy' },
++      h('span', { className: 'bt-market-name' }, name),
++      detail ? h('span', { className: 'bt-market-detail' }, detail) : null),
++    h('button', { type: 'button', className: 'bt-market-go', 'data-on': state === 'ready' ? '' : undefined, onClick: onPick }, action))
++}
++
++export function MarketPanel({ open, onClose, roster, actions }) {
++  const [tab, setTab] = useState('all')
++  const [query, setQuery] = useState('')
++  const search = useRef(null)
++
++  useEffect(() => {
++    if (!open) return undefined
++    const onKey = (event) => { if (event.key === 'Escape') onClose() }
++    document.addEventListener('keydown', onKey)
++    const timer = setTimeout(() => search.current?.focus(), 40)
++    return () => { document.removeEventListener('keydown', onKey); clearTimeout(timer) }
++  }, [open, onClose])
++
++  const connectors = useMemo(() => (roster.connectors ?? []).map((connector) => ({
++    id: connector.id,
++    name: connector.title ?? connector.name ?? connector.id,
++    detail: connector.state === 'ready'
++      ? (connector.account ? t('Connected as {account}', { account: connector.account }) : t('Connected'))
++      : connector.state === 'error' ? t('Could not connect') : (connector.about ?? t('Not connected')),
++    state: connector.state,
++  })), [roster.connectors])
++
++  const capabilities = useMemo(CAPABILITIES, [t])
++  const plugins = roster.plugins ?? []
++  const connected = connectors.filter((entry) => entry.state === 'ready').length
++
++  if (!open) return null
++
++  const q = query.trim().toLowerCase()
++  const match = (entry) => !q || `${entry.name} ${entry.detail ?? ''}`.toLowerCase().includes(q)
++
++  const section = (title, entries, kind, render) => {
++    if (tab !== 'all' && tab !== kind) return null
++    const shown = entries.filter(match)
++    if (!shown.length) return null
++    return h('section', { className: 'bt-market-section', key: kind },
++      h('h3', { className: 'bt-market-title' }, title),
++      h('div', { className: 'bt-market-grid' }, shown.map(render)))
++  }
++
++  return createPortal(h('div', {
++    className: 'bt-market-frame', role: 'presentation',
++    onMouseDown: (event) => { if (event.target === event.currentTarget) onClose() },
++  },
++  h('div', { className: 'bt-market', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('Apps') },
++    h('header', { className: 'bt-market-head' },
++      h('div', { className: 'bt-market-heading' },
++        h('h2', { className: 'bt-market-h2' }, t('Apps')),
++        h('button', { type: 'button', className: 'bt-market-connected', onClick: () => setTab('connectors') },
++          t('Connected {n}', { n: connected }), h('span', { 'aria-hidden': true }, '›'))),
++      h('button', { type: 'button', className: 'bt-market-close', 'aria-label': t('Close'), onClick: onClose }, h(CloseIcon))),
++    h('p', { className: 'bt-market-sub' }, t('Connect an app or your own server once, then choose which Bots may use it')),
++    h('div', { className: 'bt-market-tools' },
++      h('label', { className: 'bt-market-search' },
++        h(SearchIcon),
++        h('input', {
++          ref: search, type: 'search', value: query, placeholder: t('Search apps'),
++          onChange: (event) => setQuery(event.target.value), 'aria-label': t('Search apps'),
++        })),
++      h('div', { className: 'bt-market-tabs', role: 'tablist' },
++        ...[['all', t('All')], ['connectors', t('Connectors')], ['capabilities', t('Capabilities')], ['plugins', t('Plugins')]]
++          .map(([id, label]) => h('button', {
++            key: id, type: 'button', role: 'tab', 'aria-selected': tab === id, className: 'bt-market-tab',
++            onClick: () => setTab(id),
++          }, label)))),
++    h('div', { className: 'bt-market-body' },
++      section(t('Connectors'), connectors, 'connectors', (entry) => h(Card, {
++        key: entry.id, name: entry.name, detail: entry.detail, state: entry.state,
++        action: entry.state === 'ready' ? t('Manage') : t('Connect'),
++        onPick: () => { onClose(); actions.openConnectors() },
++      })),
++      section(t('Capabilities'), capabilities, 'capabilities', (entry) => h(Card, {
++        key: entry.id, name: entry.name, detail: entry.detail, mark: entry.icon,
++        action: t('Open'),
++        onPick: () => { onClose(); actions.openConnectors() },
++      })),
++      section(t('Plugins'), plugins, 'plugins', (entry) => h(Card, {
++        key: entry.id ?? entry.name, name: entry.name ?? entry.id,
++        detail: entry.detail ?? t('Installed in DeepSeek Harness'),
++        action: t('Open'),
++        onPick: () => { onClose(); actions.openSettings?.() },
++      })),
++      !connectors.length && !plugins.length
++        ? h('div', { className: 'bt-market-empty' }, t('Nothing here yet'))
++        : null,
++      h('button', { type: 'button', className: 'bt-market-more', onClick: () => { onClose(); actions.openConnectors() } },
++        h(GearIcon), h('span', null, t('Open the full connector page')))))), document.body)
++}
 diff --git a/ds-bot/src/client/member-status.js b/ds-bot/src/client/member-status.js
 index c3d74e9..665057a 100644
 --- a/ds-bot/src/client/member-status.js
@@ -682,20 +815,23 @@ index 0000000..0328db2
 +  }, mark.paths.map((d, index) => h('path', { key: index, d })))
 +}
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 58d1840..a0a13a8 100644
+index 58d1840..a5f05a2 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
-@@ -10,6 +10,7 @@ import { reducedMotion } from './activity-row.js'
+@@ -10,6 +10,8 @@ import { reducedMotion } from './activity-row.js'
  import { Shimmer, workPhrase } from './cells.js'
  import { springEasing, SPRING_SHAPE, useViewport, viewBottom } from './motion.js'
  import { hostText, t } from './i18n.js'
++import { MarketPanel } from './market.js'
 +import { holdDrawerDismiss } from './drawer-dismiss.js'
  import { showsDshRow } from './dsh-offer.js'
  
  // -------------------------------------------------------------------------
-@@ -251,8 +252,29 @@ function useListGlide(listRef, layout, key) {
+@@ -250,9 +252,33 @@ function useListGlide(listRef, layout, key) {
+ 
  export function TeamSidebar(props) {
    const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
++  const [market, setMarket] = useState(false)
    const listRef = useRef(null)
 +  // The desktop window reserves a band for its own controls; when it does, the row rides
 +  // that band and indents past them. Measured once, so a browser without the band is left
@@ -703,8 +839,10 @@ index 58d1840..a0a13a8 100644
 +  useLayoutEffect(() => {
 +    const row = listRef.current?.parentElement?.querySelector('.bt-side-top')
 +    if (!row) return
++    // Whatever the window pushed the row down by is what it gets lifted by, so the row lands
++    // on the caption line instead of guessing the band height.
 +    const reserved = row.getBoundingClientRect().top
-+    const lift = reserved > 6 ? Math.min(reserved, 44) : 0
++    const lift = reserved > 0 ? Math.min(reserved, 44) : 0
 +    row.style.setProperty('--bt-side-lift', lift ? `${lift}px` : '0px')
 +    row.style.setProperty('--bt-side-indent', lift ? '78px' : '0px')
 +  })
@@ -723,7 +861,7 @@ index 58d1840..a0a13a8 100644
    const roster = useRoster(value => value)
    const markedUnread = useUi(value => value.unread)
    props.useRegistry(value => value)
-@@ -292,6 +314,8 @@ export function TeamSidebar(props) {
+@@ -292,6 +318,8 @@ export function TeamSidebar(props) {
      openAgent: id => navigate(actions.openAgent, id),
      openAgentSession: id => navigate(actions.openAgentSession, id),
      newAgentSession: id => navigate(actions.newAgentSession, id),
@@ -732,7 +870,7 @@ index 58d1840..a0a13a8 100644
    }
    const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
    // Typing while the sidebar has focus starts a search.
-@@ -299,18 +323,20 @@ export function TeamSidebar(props) {
+@@ -299,18 +327,20 @@ export function TeamSidebar(props) {
      if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
      if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
      event.preventDefault()
@@ -757,20 +895,21 @@ index 58d1840..a0a13a8 100644
      wide && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
      h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
        main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
-@@ -318,7 +344,11 @@ export function TeamSidebar(props) {
+@@ -318,7 +348,12 @@ export function TeamSidebar(props) {
          ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
          : entry.kind === 'room'
            ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
 -          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))))
 +          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))),
 +    h('div', { className: 'bt-side-foot' },
-+      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => actions.openConnectors({ fromDrawer: !wide }) },
++      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
 +        h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
-+        wide ? h('span', { className: 'bt-apps-label' }, t('Connect apps')) : null)))
++        wide ? h('span', { className: 'bt-apps-label' }, t('Connect apps')) : null)),
++    h(MarketPanel, { open: market, onClose: () => setMarket(false), roster, actions }))
  }
  
  // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -483,7 +513,17 @@ const NO_SNAPSHOT = () => null
+@@ -483,7 +518,17 @@ const NO_SNAPSHOT = () => null
  // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
  // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
  // back in Agent mode; FooterAccount stands in while no seat exists at all.
@@ -789,7 +928,7 @@ index 58d1840..a0a13a8 100644
    const [open, setOpen] = useState(false)
    useLayoutEffect(() => {
      if (!seat) return undefined
-@@ -565,7 +605,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+@@ -565,7 +610,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
    }, [open])
    const groups = [
      [
@@ -799,7 +938,7 @@ index 58d1840..a0a13a8 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..870dd6c 100644
+index aa38a3b..ec4d866 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -117,10 +117,20 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
@@ -825,7 +964,7 @@ index aa38a3b..870dd6c 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -145,12 +155,48 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -145,12 +155,83 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
  .bt-unread-wait{background:var(--bt-star)}
@@ -847,6 +986,41 @@ index aa38a3b..870dd6c 100644
 +.bt-apps-mark{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--bt-ink) 22%,transparent);display:block}
 +.bt-apps-mark-b{border-radius:50%;background:color-mix(in srgb,var(--bt-accent) 60%,transparent)}
 +.bt-apps-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
++/* The market panel: the reference app's Apps card, on our own surface tokens. */
++.bt-market-frame{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.28)}
++.bt-market{width:min(780px,100%);height:min(760px,100%);min-height:0;display:flex;flex-direction:column;border-radius:20px;background:var(--bt-card);box-shadow:0 24px 60px -24px rgba(0,0,0,.35),0 0 0 .5px var(--bt-float-ring);overflow:hidden}
++.bt-market-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 22px 0;flex:none}
++.bt-market-heading{display:flex;align-items:center;gap:10px;min-width:0}
++.bt-market-h2{margin:0;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink)}
++.bt-market-connected{display:inline-flex;align-items:center;gap:4px;border:0;background:none;padding:0;color:var(--bt-ink-3);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
++.bt-market-connected:hover{color:var(--bt-ink)}
++.bt-market-close{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
++.bt-market-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
++.bt-market-sub{margin:4px 22px 0;flex:none;font-size:13px;line-height:20px;color:var(--bt-ink-3)}
++.bt-market-tools{display:flex;flex-direction:column;gap:10px;padding:14px 22px 0;flex:none}
++.bt-market-search{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-3)}
++.bt-market-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:14px;color:var(--bt-ink);outline:none}
++.bt-market-tabs{display:flex;gap:6px;flex-wrap:wrap}
++.bt-market-tab{height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
++.bt-market-tab:hover{background:var(--bt-hover)}
++.bt-market-tab[aria-selected=true]{background:var(--bt-ink);color:var(--bt-main)}
++.bt-market-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:14px 22px 22px;display:flex;flex-direction:column;gap:18px}
++.bt-market-title{margin:0 0 8px;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-3)}
++.bt-market-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
++.bt-market-card{display:flex;align-items:center;gap:10px;min-width:0;padding:10px 12px;border-radius:14px;box-shadow:inset 0 0 0 .5px var(--bt-line)}
++.bt-market-mark{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-2)}
++.bt-market-mark[data-state=ready]{background:color-mix(in srgb,var(--bt-accent) 16%,transparent);color:var(--bt-accent)}
++.bt-market-copy{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
++.bt-market-name{font-size:14px;line-height:20px;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
++.bt-market-detail{font-size:12px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
++.bt-market-go{flex:none;height:28px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
++.bt-market-go:hover{background:var(--bt-active,var(--bt-hover))}
++.bt-market-go[data-on]{background:var(--bt-accent);color:var(--bt-accent-ink,#fff)}
++.bt-market-more{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;border:0;background:none;padding:4px 0;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
++.bt-market-more:hover{color:var(--bt-ink)}
++.bt-market-empty{padding:24px 0;text-align:center;color:var(--bt-ink-3);font-size:13px}
++@media (max-width:640px){.bt-market-grid{grid-template-columns:1fr}.bt-market{width:100%;height:100%;border-radius:20px}}
++
 +.bt-rail .bt-side-foot{position:static;flex-direction:column;gap:8px;padding:0 0 8px;margin-top:auto}
 +.bt-rail .bt-apps-chip{flex:none;padding:0;width:40px;height:40px;justify-content:center;border-radius:12px}
 +.bt-rail .bt-apps-label{display:none}
@@ -877,7 +1051,7 @@ index aa38a3b..870dd6c 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -317,6 +363,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -317,6 +398,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -904,7 +1078,7 @@ index aa38a3b..870dd6c 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -548,7 +614,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -548,7 +649,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
  html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
  html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
@@ -915,7 +1089,7 @@ index aa38a3b..870dd6c 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -588,7 +656,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -588,7 +691,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -925,7 +1099,7 @@ index aa38a3b..870dd6c 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -883,6 +952,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +987,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -987,7 +1161,7 @@ index aa38a3b..870dd6c 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1106,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1141,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -1096,7 +1270,7 @@ index aa38a3b..870dd6c 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1234,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1269,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -1123,7 +1297,7 @@ index aa38a3b..870dd6c 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1254,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1289,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -1132,7 +1306,7 @@ index aa38a3b..870dd6c 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1295,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1330,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}

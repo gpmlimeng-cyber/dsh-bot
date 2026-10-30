@@ -10,6 +10,7 @@ import { reducedMotion } from './activity-row.js'
 import { Shimmer, workPhrase } from './cells.js'
 import { springEasing, SPRING_SHAPE, useViewport, viewBottom } from './motion.js'
 import { hostText, t } from './i18n.js'
+import { MarketPanel } from './market.js'
 import { holdDrawerDismiss } from './drawer-dismiss.js'
 import { showsDshRow } from './dsh-offer.js'
 
@@ -251,6 +252,7 @@ function useListGlide(listRef, layout, key) {
 
 export function TeamSidebar(props) {
   const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
+  const [market, setMarket] = useState(false)
   const listRef = useRef(null)
   // The desktop window reserves a band for its own controls; when it does, the row rides
   // that band and indents past them. Measured once, so a browser without the band is left
@@ -258,8 +260,10 @@ export function TeamSidebar(props) {
   useLayoutEffect(() => {
     const row = listRef.current?.parentElement?.querySelector('.bt-side-top')
     if (!row) return
+    // Whatever the window pushed the row down by is what it gets lifted by, so the row lands
+    // on the caption line instead of guessing the band height.
     const reserved = row.getBoundingClientRect().top
-    const lift = reserved > 6 ? Math.min(reserved, 44) : 0
+    const lift = reserved > 0 ? Math.min(reserved, 44) : 0
     row.style.setProperty('--bt-side-lift', lift ? `${lift}px` : '0px')
     row.style.setProperty('--bt-side-indent', lift ? '78px' : '0px')
   })
@@ -346,9 +350,10 @@ export function TeamSidebar(props) {
           ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
           : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))),
     h('div', { className: 'bt-side-foot' },
-      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => actions.openConnectors({ fromDrawer: !wide }) },
+      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
         h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
-        wide ? h('span', { className: 'bt-apps-label' }, t('Connect apps')) : null)))
+        wide ? h('span', { className: 'bt-apps-label' }, t('Connect apps')) : null)),
+    h(MarketPanel, { open: market, onClose: () => setMarket(false), roster, actions }))
 }
 
 // The update button at the sidebar's top right: a cloud while a newer DS Bot —
