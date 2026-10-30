@@ -496,12 +496,17 @@ export function apply(ctx) {
       if (!manager) return []
       const raw = unwrap(unwrap(await manager.listPlugins()))
       const list = Array.isArray(raw) ? raw : Array.isArray(raw?.plugins) ? raw.plugins : Array.isArray(raw?.items) ? raw.items : []
-      return list.map((entry) => ({
-        id: entry.id ?? entry.name ?? entry.pluginId,
-        name: entry.title ?? entry.displayName ?? entry.name ?? entry.id ?? entry.pluginId,
-        detail: entry.version ? `v${entry.version}` : (entry.description ?? ''),
-        enabled: entry.enabled !== false,
-      }))
+      const zh = ctx.get('locale')?.current === 'zh'
+      const text = (value) => (value && typeof value === 'object' ? (zh ? value.zh : value.en) ?? value.en ?? value.zh : value)
+      return list
+        .filter((entry) => entry && (entry.moduleName || entry.entryId))
+        .map((entry) => ({
+          id: entry.entryId ?? entry.id ?? entry.moduleName,
+          name: text(entry.meta?.title) ?? entry.moduleName ?? entry.entryId,
+          detail: text(entry.meta?.description) ?? (entry.fiberPhase ? String(entry.fiberPhase) : ''),
+          enabled: entry.enabled !== false,
+        }))
+        .sort((a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name))
     },
     setPluginEnabled: async (id, enabled) => {
       const manager = ctx.get('remote.pluginManager')

@@ -209,16 +209,18 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-market-card{display:flex;align-items:center;gap:12px;min-width:0;padding:12px 14px;border-radius:0;box-shadow:inset 0 -.5px var(--bt-line);transition:background-color .12s ease}
 .bt-market-card:last-child{box-shadow:none}
 .bt-market-card:hover{background:var(--bt-hover)}
-.bt-market-mark{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--bt-ink-2)}
+.bt-market-mark{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-2)}
 .bt-market-mark svg{width:20px;height:20px}
 .bt-market-mark[data-state=ready]{color:var(--bt-accent)}
 .bt-market-copy{display:flex;flex-direction:column;align-items:flex-start;min-width:0;flex:1 1 auto;border:0;background:none;padding:0;font:inherit;text-align:left;cursor:pointer;color:inherit}
-.bt-market-name{max-width:100%;font-size:14px;line-height:20px;font-weight:600;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-name{max-width:100%;font-size:14px;line-height:20px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-market-detail{max-width:100%;font-size:13px;line-height:18px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-market-go{flex:none;height:28px;min-width:64px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
 .bt-market-go:hover{background:var(--bt-active,var(--bt-hover))}
 .bt-market-go[data-on]{background:var(--bt-accent);color:var(--bt-accent-ink,#fff)}
 .bt-market-detailpane{display:flex;flex-direction:column;gap:14px;max-width:640px}
+.bt-market-state{flex:none;font-size:13px;line-height:18px;color:var(--bt-ink-3)}
+.bt-market-state[data-on]{color:var(--bt-ink-2)}
 .bt-market-note{font-size:13px;line-height:20px;color:var(--bt-ink-3)}
 .bt-market-more{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;border:0;background:none;padding:4px 0;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
 .bt-market-more:hover{color:var(--bt-ink)}

@@ -93,6 +93,9 @@ var init_i18n = __esm({
       "Plugins": "插件",
       "Apps": "应用市场",
       "Market": "市场",
+      "Enabled": "已启用",
+      "Disabled": "已停用",
+      "Open the page that manages plugins": "打开插件管理页",
       "The plugin catalogue is the shell own page.": "插件目录是宿主自己的页面。",
       "Open it": "打开",
       "Skills": "技能",
@@ -7402,7 +7405,7 @@ var init_activity_row = __esm({
 function Mark({ icon: icon2, state }) {
   return (0, import_react15.createElement)("span", { className: "bt-market-mark", "data-state": state ?? "off", "aria-hidden": true }, icon2 ? (0, import_react15.createElement)(icon2) : (0, import_react15.createElement)(PlusIcon));
 }
-function Card({ name, detail, mark, state, action, installed, onPick, onOpen }) {
+function Card({ name, detail, mark, state, action, installed, quiet, onPick, onOpen }) {
   return (0, import_react15.createElement)(
     "div",
     { className: "bt-market-card", "data-installed": installed ? "" : void 0 },
@@ -7413,7 +7416,7 @@ function Card({ name, detail, mark, state, action, installed, onPick, onOpen }) 
       (0, import_react15.createElement)("span", { className: "bt-market-name" }, name),
       detail ? (0, import_react15.createElement)("span", { className: "bt-market-detail" }, detail) : null
     ),
-    (0, import_react15.createElement)("button", { type: "button", className: "bt-market-go", "data-on": state === "ready" || installed ? "" : void 0, onClick: onPick }, action)
+    quiet ? (0, import_react15.createElement)("span", { className: "bt-market-state", "data-on": state === "ready" ? "" : void 0 }, action) : (0, import_react15.createElement)("button", { type: "button", className: "bt-market-go", "data-on": state === "ready" || installed ? "" : void 0, onClick: onPick }, action)
   );
 }
 function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
@@ -7441,36 +7444,6 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   })), [roster.connectors]);
   const capabilities = (0, import_react15.useMemo)(CAPABILITIES, [t]);
   const [shellPlugins, setShellPlugins] = (0, import_react15.useState)(null);
-  const embedRef = (0, import_react15.useRef)(null);
-  (0, import_react15.useEffect)(() => {
-    if (!open || tab !== "plugins") return void 0;
-    const host = embedRef.current;
-    if (!host) return void 0;
-    let frame = 0;
-    let moved = null;
-    const take = () => {
-      const slot = document.querySelector('[data-slot="main"]');
-      if (!slot || !slot.parentElement) return;
-      const home = slot.parentElement;
-      const next = slot.nextSibling;
-      try {
-        host.appendChild(slot);
-      } catch (error) {
-        return;
-      }
-      moved = { slot, home, next };
-    };
-    frame = requestAnimationFrame(() => requestAnimationFrame(take));
-    return () => {
-      cancelAnimationFrame(frame);
-      if (!moved) return;
-      const { slot, home, next } = moved;
-      try {
-        if (slot.isConnected && home && home.isConnected) home.insertBefore(slot, next && next.parentElement === home ? next : null);
-      } catch (error) {
-      }
-    };
-  }, [open, tab]);
   (0, import_react15.useEffect)(() => {
     if (!open || tab !== "plugins" || shellPlugins !== null) return void 0;
     let live = true;
@@ -7486,7 +7459,7 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
       live = false;
     };
   }, [open, tab, shellPlugins, actions]);
-  const plugins = roster.plugins ?? [];
+  const plugins = Array.isArray(shellPlugins) ? shellPlugins : roster.plugins ?? [];
   const skills = roster.skills ?? [];
   if (!open) return null;
   const catalogue = (id) => id === "connectors" ? connectors : id === "capabilities" ? capabilities : id === "plugins" ? plugins : skills;
@@ -7539,21 +7512,14 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
             role: "tab",
             "aria-selected": tab === category.id,
             className: "bt-market-cat",
-            onClick: () => {
-              if (category.id === "plugins") {
-                setTab("plugins");
-                actions.openPluginsPanel?.();
-                return;
-              }
-              setTab(category.id);
-            }
+            onClick: () => setTab(category.id)
           }, category.name))
         ),
         (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t("Installed")),
         (0, import_react15.createElement)(
           "div",
           { className: "bt-market-installed" },
-          installed.length ? installed.map((entry) => (0, import_react15.createElement)("button", {
+          installed.length ? installed.slice(0, 8).map((entry) => (0, import_react15.createElement)("button", {
             key: entry.id ?? entry.name,
             type: "button",
             className: "bt-market-inst",
@@ -7572,9 +7538,9 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
             "div",
             { className: "bt-market-heading" },
             (0, import_react15.createElement)("h2", { className: "bt-market-h2" }, heading),
-            tab === "plugins" && !current ? null : (0, import_react15.createElement)("p", { className: "bt-market-sub" }, current ? current.detail : t("Connect an app or your own server once, then choose which Bots may use it"))
+            (0, import_react15.createElement)("p", { className: "bt-market-sub" }, current ? current.detail : tab === "plugins" ? t("Installed in DeepSeek Harness") : t("Connect an app or your own server once, then choose which Bots may use it"))
           ),
-          tab === "plugins" && !current ? null : current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : (0, import_react15.createElement)(
+          current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : (0, import_react15.createElement)(
             "label",
             { className: "bt-market-search" },
             (0, import_react15.createElement)(SearchIcon),
@@ -7591,7 +7557,6 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
         (0, import_react15.createElement)(
           "div",
           { className: "bt-market-body" },
-          tab === "plugins" ? (0, import_react15.createElement)("div", { ref: embedRef, className: "bt-market-embed" }) : null,
           current ? (0, import_react15.createElement)(
             "div",
             { className: "bt-market-detailpane" },
@@ -7625,9 +7590,10 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
               name: entry.name,
               detail: entry.detail,
               mark: entry.icon,
-              state: entry.state,
-              installed: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)),
-              action: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)) ? t("Manage") : t("Connect"),
+              state: tab === "plugins" ? entry.enabled === false ? "off" : "ready" : entry.state,
+              installed: tab === "plugins" ? true : installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)),
+              action: tab === "plugins" ? entry.enabled === false ? t("Disabled") : t("Enabled") : installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)) ? t("Manage") : t("Connect"),
+              quiet: tab === "plugins",
               onOpen: () => setSelected(entry.id ?? entry.name),
               onPick: () => pick2(entry)
             }))) : (0, import_react15.createElement)(
@@ -7651,10 +7617,11 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
               "button",
               { type: "button", className: "bt-market-more", key: "more", onClick: () => {
                 onClose();
-                actions.openConnectors();
+                if (tab === "plugins") actions.openPluginsPanel?.();
+                else actions.openConnectors();
               } },
               (0, import_react15.createElement)(GearIcon),
-              (0, import_react15.createElement)("span", null, t("Open the full connector page"))
+              (0, import_react15.createElement)("span", null, tab === "plugins" ? t("Open the page that manages plugins") : t("Open the full connector page"))
             )
           ]
         )
@@ -9015,16 +8982,18 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-market-card{display:flex;align-items:center;gap:12px;min-width:0;padding:12px 14px;border-radius:0;box-shadow:inset 0 -.5px var(--bt-line);transition:background-color .12s ease}
 .bt-market-card:last-child{box-shadow:none}
 .bt-market-card:hover{background:var(--bt-hover)}
-.bt-market-mark{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--bt-ink-2)}
+.bt-market-mark{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-2)}
 .bt-market-mark svg{width:20px;height:20px}
 .bt-market-mark[data-state=ready]{color:var(--bt-accent)}
 .bt-market-copy{display:flex;flex-direction:column;align-items:flex-start;min-width:0;flex:1 1 auto;border:0;background:none;padding:0;font:inherit;text-align:left;cursor:pointer;color:inherit}
-.bt-market-name{max-width:100%;font-size:14px;line-height:20px;font-weight:600;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-name{max-width:100%;font-size:14px;line-height:20px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-market-detail{max-width:100%;font-size:13px;line-height:18px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-market-go{flex:none;height:28px;min-width:64px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
 .bt-market-go:hover{background:var(--bt-active,var(--bt-hover))}
 .bt-market-go[data-on]{background:var(--bt-accent);color:var(--bt-accent-ink,#fff)}
 .bt-market-detailpane{display:flex;flex-direction:column;gap:14px;max-width:640px}
+.bt-market-state{flex:none;font-size:13px;line-height:18px;color:var(--bt-ink-3)}
+.bt-market-state[data-on]{color:var(--bt-ink-2)}
 .bt-market-note{font-size:13px;line-height:20px;color:var(--bt-ink-3)}
 .bt-market-more{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;border:0;background:none;padding:4px 0;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
 .bt-market-more:hover{color:var(--bt-ink)}
@@ -21005,12 +20974,14 @@ function apply(ctx) {
       if (!manager) return [];
       const raw = unwrap(unwrap(await manager.listPlugins()));
       const list = Array.isArray(raw) ? raw : Array.isArray(raw?.plugins) ? raw.plugins : Array.isArray(raw?.items) ? raw.items : [];
-      return list.map((entry) => ({
-        id: entry.id ?? entry.name ?? entry.pluginId,
-        name: entry.title ?? entry.displayName ?? entry.name ?? entry.id ?? entry.pluginId,
-        detail: entry.version ? `v${entry.version}` : entry.description ?? "",
+      const zh = ctx.get("locale")?.current === "zh";
+      const text = (value) => value && typeof value === "object" ? (zh ? value.zh : value.en) ?? value.en ?? value.zh : value;
+      return list.filter((entry) => entry && (entry.moduleName || entry.entryId)).map((entry) => ({
+        id: entry.entryId ?? entry.id ?? entry.moduleName,
+        name: text(entry.meta?.title) ?? entry.moduleName ?? entry.entryId,
+        detail: text(entry.meta?.description) ?? (entry.fiberPhase ? String(entry.fiberPhase) : ""),
         enabled: entry.enabled !== false
-      }));
+      })).sort((a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name));
     },
     setPluginEnabled: async (id, enabled) => {
       const manager = ctx.get("remote.pluginManager");
