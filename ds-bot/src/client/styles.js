@@ -150,6 +150,9 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
 .bt-unread-wait{background:var(--bt-star)}
 .bt-rail{align-items:center;padding:0 0 8px}
+/* The shell hides a collapsed sidebar outright on macOS (it has no rail state of its own),
+   so the rail ds-bot draws gets a fixed column instead of the width the shell leaves it. */
+html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side.bt-rail{position:fixed;left:0;top:0;bottom:0;width:56px;padding:calc(var(--dsh-frame-chrome-top,0px) + 42px) 0 8px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-float-ring);z-index:20;overflow:hidden;align-items:center}
 .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px}
 .bt-side-foot{display:flex;padding-top:8px}
 
