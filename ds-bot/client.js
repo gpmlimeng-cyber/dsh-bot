@@ -21863,6 +21863,7 @@ function apply(ctx) {
       const left = mac ? 84 : 15;
       const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 2) : 7;
       if (!modeBar) {
+        for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu")) stale.remove();
         modeBar = document.createElement("button");
         modeBar.type = "button";
         modeBar.className = "bt-modebar";
@@ -21926,6 +21927,12 @@ function apply(ctx) {
         modeBar.remove();
         modeBar = null;
       }
+      modeOpen = false;
+      if (modeMenu) {
+        modeMenu.remove();
+        modeMenu = null;
+      }
+      for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu")) stale.remove();
       groups.dispose();
     };
   }, "ds-bot: surface");

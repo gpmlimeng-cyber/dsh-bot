@@ -1148,6 +1148,9 @@ export function apply(ctx) {
       // lights' horizontal line instead of above it.
       const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 2) : 7
       if (!modeBar) {
+        // A surface effect that re-runs gets a fresh closure; clear anything an earlier
+        // closure left on the page so the row never stacks up.
+        for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu')) stale.remove()
         modeBar = document.createElement('button')
         modeBar.type = 'button'
         modeBar.className = 'bt-modebar'
@@ -1204,6 +1207,9 @@ export function apply(ctx) {
       unsub()
       clearTimeout(verifyTimer)
       if (modeBar) { modeBar.remove(); modeBar = null }
+      modeOpen = false
+      if (modeMenu) { modeMenu.remove(); modeMenu = null }
+      for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu')) stale.remove()
       groups.dispose()
     }
   }, 'ds-bot: surface')
