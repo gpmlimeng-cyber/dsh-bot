@@ -2598,8 +2598,8 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 /* The market floats over the conversation as frosted glass: a translucent surface, the
    page behind it blurred and lifted, and one hairline ring instead of a hard border. The
    tint is mixed from --bt-main, so the panel keeps following the theme. */
-.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 92%,transparent);backdrop-filter:blur(48px) saturate(1.8);-webkit-backdrop-filter:blur(48px) saturate(1.8);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
-.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:16px 12px;border-right:1px solid var(--bt-line);overflow-y:auto;background:color-mix(in srgb,var(--bt-main) 55%,transparent)}
+.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 80%,transparent);backdrop-filter:blur(64px) saturate(2);-webkit-backdrop-filter:blur(64px) saturate(2);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
+.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:16px 12px;border-right:1px solid var(--bt-line);overflow-y:auto;background:color-mix(in srgb,var(--bt-main) 40%,transparent)}
 .bt-market-navhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px}
 .bt-market-cats{display:flex;flex-direction:column;gap:2px}
 .bt-market-cat{height:32px;padding:0 10px;border:0;border-radius:10px;background:none;text-align:left;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink-2);cursor:pointer}
