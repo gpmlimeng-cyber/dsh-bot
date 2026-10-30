@@ -24,8 +24,8 @@
 | 22 | `ds-bot/src/client/icons.js` | 21–30 | 7 |
 | 23 | `ds-bot/src/client/icons.js` | 61–83 | 23 |
 | 24 | `ds-bot/src/client/index.js` | 6 | 1 |
-| 25 | `ds-bot/src/client/index.js` | 480–508 | 28 |
-| 26 | `ds-bot/src/client/market.js` | 1–165 | 165 |
+| 25 | `ds-bot/src/client/index.js` | 480–517 | 37 |
+| 26 | `ds-bot/src/client/market.js` | 1–170 | 170 |
 | 27 | `ds-bot/src/client/member-status.js` | 188–189 | 2 |
 | 28 | `ds-bot/src/client/new-chat.js` | 1 | 1 |
 | 29 | `ds-bot/src/client/new-chat.js` | 10–83 | 73 |

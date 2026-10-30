@@ -107,7 +107,12 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
       h('div', { className: 'bt-market-cats', role: 'tablist' },
         ...CATEGORIES().map((category) => h('button', {
           key: category.id, type: 'button', role: 'tab', 'aria-selected': tab === category.id,
-          className: 'bt-market-cat', onClick: () => setTab(category.id),
+          className: 'bt-market-cat',
+          onClick: () => {
+            // The plugin pages are the shell's own; the market opens the real one.
+            if (category.id === 'plugins') { onClose(); actions.openPluginsPanel?.(); return }
+            setTab(category.id)
+          },
         }, category.name))),
       h('div', { className: 'bt-market-insthead' }, t('Installed')),
       h('div', { className: 'bt-market-installed' },

@@ -7509,7 +7509,14 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
             role: "tab",
             "aria-selected": tab === category.id,
             className: "bt-market-cat",
-            onClick: () => setTab(category.id)
+            onClick: () => {
+              if (category.id === "plugins") {
+                onClose();
+                actions.openPluginsPanel?.();
+                return;
+              }
+              setTab(category.id);
+            }
           }, category.name))
         ),
         (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t("Installed")),
@@ -20950,6 +20957,15 @@ function apply(ctx) {
     },
     // The shell's own plugin pages, reached through its remotes. They answer
     // { ok, value }, and some wrap twice, so unwrap until a list or an error appears.
+    // The shell's Plugins page is a global main panel with this id; selecting it is the only
+    // supported way to show that page, so the market hands over to it.
+    openPluginsPanel: () => {
+      try {
+        ctx.layout.selectPanel("plugins");
+      } catch (error) {
+        actions.reportError(error, "plugins-panel");
+      }
+    },
     pluginsList: async () => {
       const unwrap = (answer) => answer && typeof answer === "object" && "ok" in answer ? answer.value : answer;
       const manager = ctx.get("remote.pluginManager");
