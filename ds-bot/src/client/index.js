@@ -1107,7 +1107,7 @@ export function apply(ctx) {
       modeMenu = document.createElement('div')
       modeMenu.className = 'bt-modebar-menu'
       modeMenu.setAttribute('role', 'menu')
-      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:190px;padding:6px;border-radius:12px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 18px 40px -20px rgba(0,0,0,.32)`
+      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 18px 40px -20px rgba(0,0,0,.32)`
       for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
         const selected = mode === id
         const item = document.createElement('button')
