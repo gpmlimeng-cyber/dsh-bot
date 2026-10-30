@@ -21861,7 +21861,7 @@ function apply(ctx) {
       const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue("--dsh-frame-chrome-top")) || (mac ? 44 : 0);
       const mode = surface.getSnapshot().mode;
       const left = mac ? 84 : 15;
-      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 2) : 7;
+      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9;
       if (!modeBar) {
         for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu")) stale.remove();
         modeBar = document.createElement("button");
