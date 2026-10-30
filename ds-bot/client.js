@@ -3957,8 +3957,8 @@ function MenuLinesIcon() {
 function BigDotsIcon() {
   return (0, import_react3.createElement)(
     "svg",
-    { width: 22, height: 22, viewBox: "0 0 20 20", "aria-hidden": true },
-    (0, import_react3.createElement)("path", { d: "M3.6 10h.01M10 10h.01M16.4 10h.01", stroke: "currentColor", strokeWidth: 4.4, strokeLinecap: "round" })
+    { width: 24, height: 24, viewBox: "0 0 20 20", "aria-hidden": true },
+    (0, import_react3.createElement)("path", { d: "M2.8 10h.01M10 10h.01M17.2 10h.01", stroke: "currentColor", strokeWidth: 4.6, strokeLinecap: "round" })
   );
 }
 var ImageIcon = lineIcon(["M4 4.5h12v11H4z", "M4 12l3.5-3.5 3 3 2-2 3.5 3.5", "M7.75 8h.01"]);
