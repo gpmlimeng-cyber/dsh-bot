@@ -88,6 +88,9 @@ var ZH = {
   "Skills": "技能",
   "Installed": "已安装",
   "Nothing installed yet": "还没有安装任何东西",
+  "No plugin is on yet": "还没有启用任何插件",
+  "Uninstall": "卸载",
+  "Disable": "停用",
   "Open the full connector page": "打开完整连接器页",
   "Nothing here yet": "这里还什么都没有",
   "Not connected": "未连接",
@@ -2685,8 +2688,10 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    taking whatever room the footer leaves. */
 .bt-side{position:relative}
 .bt-side-foot{position:fixed;left:60px;bottom:18px;width:208px;display:flex;align-items:center;gap:8px;min-width:0}
-.bt-apps-chip{display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 auto;min-width:0;padding:0 10px;height:32px;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
-.bt-apps-chip:hover{background:var(--bt-float-hover)}
+/* The chip wears the whale seat's own surface: a faint tint with the hairline drawn inside,
+   never a floating card, so the footer reads as one row of the same material. */
+.bt-apps-chip{display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 auto;min-width:0;padding:0 10px;height:32px;border:0;border-radius:999px;background:color-mix(in srgb,var(--bt-ink) 5%,var(--bt-sidebar));box-shadow:inset 0 0 0 1px var(--bt-line);color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;cursor:pointer;transition:background-color .12s ease}
+.bt-apps-chip:hover{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-sidebar))}
 .bt-apps-marks{display:inline-flex;flex:none;gap:3px}
 .bt-apps-mark{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--bt-ink) 22%,transparent);display:block}
 .bt-apps-mark-b{border-radius:50%;background:color-mix(in srgb,var(--bt-accent) 60%,transparent)}
@@ -2708,9 +2713,23 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-market-cat[aria-selected=true]{background:var(--bt-hover);color:var(--bt-ink);font-weight:600}
 .bt-market-insthead{margin-top:10px;padding:0 10px;font-size:11px;line-height:16px;letter-spacing:.04em;text-transform:uppercase;color:var(--bt-ink-3)}
 .bt-market-installed{display:flex;flex-direction:column;gap:2px}
-.bt-market-inst{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border:0;border-radius:10px;background:none;font:inherit;font-size:13px;color:var(--bt-ink);cursor:pointer;min-width:0}
-.bt-market-inst:hover,.bt-market-inst[aria-current=page]{background:var(--bt-hover)}
+/* One enabled plugin: the Plugins page's icon and title on a single line, with a row menu
+   that stays out of sight until the row is hovered (or its menu is open). */
+.bt-market-instrow{position:relative;display:flex;align-items:center;gap:2px;padding-right:4px;border-radius:10px}
+.bt-market-instrow:hover,.bt-market-instrow[data-open],.bt-market-instrow:has(.bt-market-inst[aria-current=page]){background:var(--bt-hover)}
+.bt-market-inst{display:flex;align-items:center;gap:8px;flex:1 1 auto;height:32px;padding:0 4px 0 10px;border:0;border-radius:10px;background:none;font:inherit;font-size:13px;color:var(--bt-ink);cursor:pointer;min-width:0}
+.bt-market-inst:hover{background:none}
 .bt-market-instname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-instmore{flex:none;display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:0;border-radius:6px;background:none;color:var(--bt-ink-3);cursor:pointer;opacity:0;transition:opacity .12s ease,background-color .12s ease}
+.bt-market-instrow:hover .bt-market-instmore,.bt-market-instmore[aria-expanded=true],.bt-market-instmore:focus-visible{opacity:1}
+.bt-market-instmore:hover{background:var(--bt-active);color:var(--bt-ink)}
+.bt-market-instmore svg{width:14px;height:14px}
+.bt-market-instmenu{right:0;top:30px;min-width:126px}
+.bt-market-instrow[data-busy]{opacity:.6;pointer-events:none}
+/* The Plugins page's 50px frame around a 36px icon, scaled to a row: same radius share
+   (16/50), same hairline, same contain fit. */
+.bt-market-iconframe{display:flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:7px;border:.5px solid color-mix(in srgb,var(--bt-ink) 12%,transparent);box-sizing:border-box;overflow:hidden}
+.bt-market-iconimg{width:16px;height:16px;object-fit:contain;display:block}
 .bt-market-hint{display:block;padding:4px 10px;font-size:12px;color:var(--bt-ink-3)}
 .bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 .bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
@@ -9076,6 +9095,34 @@ function TagIcon() {
 function Mark({ icon: icon2, state }) {
   return (0, import_react15.createElement)("span", { className: "bt-market-mark", "data-state": state ?? "off", "aria-hidden": true }, icon2 ? (0, import_react15.createElement)(icon2) : (0, import_react15.createElement)(PlusIcon));
 }
+function PluginIcon({ src }) {
+  return (0, import_react15.createElement)(
+    "span",
+    { className: "bt-market-iconframe", "aria-hidden": true },
+    src ? (0, import_react15.createElement)("img", { className: "bt-market-iconimg", src, alt: "" }) : (0, import_react15.createElement)(
+      "svg",
+      { className: "bt-market-iconimg", viewBox: "0 0 36 36", fill: "none" },
+      (0, import_react15.createElement)("rect", { x: 14.99, y: 15.19, width: 12.24, height: 12.24, rx: 2, fill: "url(#bt-plugin-art-b)", fillOpacity: 0.8 }),
+      (0, import_react15.createElement)("rect", { x: 8.87, y: 9.07, width: 12.24, height: 12.24, rx: 2, fill: "url(#bt-plugin-art-a)", fillOpacity: 0.8 }),
+      (0, import_react15.createElement)(
+        "defs",
+        null,
+        (0, import_react15.createElement)(
+          "linearGradient",
+          { id: "bt-plugin-art-b", x1: 21.11, y1: 15.19, x2: 21.11, y2: 27.42, gradientUnits: "userSpaceOnUse" },
+          (0, import_react15.createElement)("stop", { stopColor: "#45E7A4" }),
+          (0, import_react15.createElement)("stop", { offset: 1, stopColor: "#05909D" })
+        ),
+        (0, import_react15.createElement)(
+          "linearGradient",
+          { id: "bt-plugin-art-a", x1: 14.99, y1: 9.07, x2: 14.99, y2: 21.31, gradientUnits: "userSpaceOnUse" },
+          (0, import_react15.createElement)("stop", { stopColor: "#69B9FF" }),
+          (0, import_react15.createElement)("stop", { offset: 1, stopColor: "#324DE2" })
+        )
+      )
+    )
+  );
+}
 function Card({ name, detail, mark, state, action, installed, quiet, onPick, onOpen }) {
   return (0, import_react15.createElement)(
     "div",
@@ -9384,6 +9431,8 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   const [tab, setTab] = (0, import_react15.useState)("connectors");
   const [query, setQuery] = (0, import_react15.useState)("");
   const [selected, setSelected] = (0, import_react15.useState)(null);
+  const [busyRow, setBusyRow] = (0, import_react15.useState)("");
+  const [menuFor, setMenuFor] = (0, import_react15.useState)(null);
   const search = (0, import_react15.useRef)(null);
   (0, import_react15.useEffect)(() => {
     if (!open) return void 0;
@@ -9397,6 +9446,15 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
     setSelected(null);
     setQuery("");
   }, [tab]);
+  (0, import_react15.useEffect)(() => {
+    if (!menuFor) return void 0;
+    const onDown = (event) => {
+      if (event.target instanceof Element && (event.target.closest(".bt-market-instmenu") || event.target.closest(".bt-market-instmore"))) return;
+      setMenuFor(null);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [menuFor]);
   const connectors = (0, import_react15.useMemo)(() => (roster.connectors ?? []).map((connector) => ({
     id: connector.id,
     name: connector.title ?? connector.name ?? connector.id,
@@ -9427,7 +9485,7 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   const installedOf = (id) => {
     if (id === "connectors") return connectors.filter((entry) => entry.state === "ready");
     if (id === "capabilities") return capabilities;
-    if (id === "plugins") return plugins;
+    if (id === "plugins") return plugins.filter((entry) => entry.enabled !== false);
     return skills;
   };
   const q = query.trim().toLowerCase();
@@ -9442,6 +9500,24 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
       return;
     }
     setSelected(entry.id ?? entry.name);
+  };
+  const disableBundle = (entry) => {
+    setMenuFor(null);
+    if (busyRow) return;
+    setBusyRow(entry.id);
+    Promise.resolve(actions.setBundleEnabled?.(entry.id, false)).then((okay) => {
+      if (okay === false) return;
+      setShellPlugins((now) => Array.isArray(now) ? now.filter((item) => item.id !== entry.id) : now);
+    }, (error) => actions.reportError?.(error, "plugins")).finally(() => setBusyRow(""));
+  };
+  const removeBundle = (entry) => {
+    setMenuFor(null);
+    if (busyRow) return;
+    setBusyRow(entry.id);
+    Promise.resolve(actions.removeBundle?.(entry.id)).then((okay) => {
+      if (okay === false) return;
+      setShellPlugins((now) => Array.isArray(now) ? now.filter((item) => item.id !== entry.id) : now);
+    }, (error) => actions.reportError?.(error, "plugins")).finally(() => setBusyRow(""));
   };
   const heading = current ? current.name : t(tab === "plugins" ? "Plugins" : tab === "connectors" ? "Connectors" : tab === "capabilities" ? "Capabilities" : "Skills");
   return (0, import_react_dom3.createPortal)((0, import_react15.createElement)(
@@ -9476,17 +9552,55 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
             onClick: () => setTab(category.id)
           }, category.name))
         ),
-        (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t("Installed")),
+        (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t(tab === "plugins" ? "Enabled" : "Installed")),
         (0, import_react15.createElement)(
           "div",
           { className: "bt-market-installed" },
-          installed.length ? installed.slice(0, 8).map((entry) => (0, import_react15.createElement)("button", {
-            key: entry.id ?? entry.name,
-            type: "button",
-            className: "bt-market-inst",
-            "aria-current": selected === (entry.id ?? entry.name) ? "page" : void 0,
-            onClick: () => setSelected(entry.id ?? entry.name)
-          }, (0, import_react15.createElement)(Mark, { icon: entry.icon, state: entry.state ?? "ready" }), (0, import_react15.createElement)("span", { className: "bt-market-instname" }, entry.name))) : (0, import_react15.createElement)("span", { className: "bt-market-hint" }, t("Nothing installed yet"))
+          installed.length ? installed.map((entry) => {
+            const id = entry.id ?? entry.name;
+            return (0, import_react15.createElement)(
+              "div",
+              {
+                key: id,
+                className: "bt-market-instrow",
+                "data-open": menuFor === id ? "" : void 0,
+                "data-busy": busyRow === id ? "" : void 0
+              },
+              (0, import_react15.createElement)(
+                "button",
+                {
+                  type: "button",
+                  className: "bt-market-inst",
+                  "aria-current": selected === id ? "page" : void 0,
+                  onClick: () => setSelected(id)
+                },
+                tab === "plugins" ? (0, import_react15.createElement)(PluginIcon, { src: entry.icon }) : (0, import_react15.createElement)(Mark, { icon: entry.icon, state: entry.state ?? "ready" }),
+                (0, import_react15.createElement)("span", { className: "bt-market-instname" }, entry.name)
+              ),
+              tab === "plugins" ? (0, import_react15.createElement)("button", {
+                type: "button",
+                className: "bt-market-instmore",
+                "aria-haspopup": "menu",
+                "aria-expanded": menuFor === id,
+                "aria-label": entry.name,
+                onClick: (event) => {
+                  event.stopPropagation();
+                  setMenuFor(menuFor === id ? null : id);
+                }
+              }, (0, import_react15.createElement)(MoreDotsIcon)) : null,
+              menuFor === id ? (0, import_react15.createElement)(
+                "div",
+                { className: "bt-sec-menu bt-market-instmenu", role: "menu" },
+                (0, import_react15.createElement)("button", { type: "button", role: "menuitem", onClick: () => disableBundle(entry) }, (0, import_react15.createElement)(SwitchIcon), t("Disable")),
+                (0, import_react15.createElement)("button", { type: "button", role: "menuitem", onClick: () => {
+                  setMenuFor(null);
+                  onClose();
+                  actions.openPluginsPanel?.();
+                } }, (0, import_react15.createElement)(GearIcon), t("Manage")),
+                (0, import_react15.createElement)("button", { type: "button", role: "menuitem", className: "bt-danger", onClick: () => removeBundle(entry) }, (0, import_react15.createElement)(TrashIcon), t("Uninstall"))
+              ) : null
+            );
+          }) : (0, import_react15.createElement)("span", { className: "bt-market-hint" }, t(tab === "plugins" ? "No plugin is on yet" : "Nothing installed yet"))
         )
       ),
       (0, import_react15.createElement)(
@@ -21329,19 +21443,27 @@ function apply(ctx) {
         actions.reportError(error, "plugins-panel");
       }
     },
+    // The installed list is the shell's Plugins page installed list, not everything loaded:
+    // a bundle the installation ships with is not the user's to see or remove here.
     pluginsList: async () => {
-      const unwrap = (answer) => answer && typeof answer === "object" && "ok" in answer ? answer.value : answer;
+      const unwrap = (answer) => {
+        let value = answer;
+        for (let i = 0; i < 5 && value && typeof value === "object" && "ok" in value; i += 1) value = value.value;
+        return value;
+      };
       const manager = ctx.get("remote.pluginManager");
-      if (!manager) return [];
-      const raw = unwrap(unwrap(await manager.listPlugins()));
-      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.plugins) ? raw.plugins : Array.isArray(raw?.items) ? raw.items : [];
-      const zh = ctx.get("locale")?.current === "zh";
+      if (!manager?.listBundles) return [];
+      const raw = unwrap(await manager.listBundles());
+      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.bundles) ? raw.bundles : [];
+      const zh = language().startsWith("zh");
       const text = (value) => value && typeof value === "object" ? (zh ? value.zh : value.en) ?? value.en ?? value.zh : value;
-      return list.filter((entry) => entry && (entry.moduleName || entry.entryId)).map((entry) => ({
-        id: entry.entryId ?? entry.id ?? entry.moduleName,
-        name: text(entry.meta?.title) ?? entry.moduleName ?? entry.entryId,
-        detail: text(entry.meta?.description) ?? (entry.fiberPhase ? String(entry.fiberPhase) : ""),
-        enabled: entry.enabled !== false
+      return list.filter((entry) => entry && entry.availability === "profile").map((entry) => ({
+        id: entry.name,
+        name: text(entry.meta?.title) ?? entry.name,
+        detail: text(entry.meta?.description) ?? "",
+        icon: typeof entry.meta?.icon === "string" ? entry.meta.icon : "",
+        enabled: entry.enabled !== false,
+        removable: entry.removable === true
       })).sort((a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name));
     },
     // The shell's plugin market: its configured indexes, one page of the discover list,
@@ -21423,9 +21545,21 @@ function apply(ctx) {
     },
     // The font picker shows what this device already uses, not what the host last answered.
     fontPref: () => fontOf(savedPrefs),
-    setPluginEnabled: async (id, enabled) => {
+    // A bundle is the unit the enabled list shows, so its switch is the bundle switch the
+    // shell's own Plugins page offers; the identity is the package name.
+    setBundleEnabled: async (name, enabled) => {
       const manager = ctx.get("remote.pluginManager");
-      if (manager?.setPluginEnabled) await manager.setPluginEnabled(id, enabled);
+      if (!manager?.setBundleEnabled) return false;
+      const answer = await manager.setBundleEnabled(name, enabled);
+      return answer?.ok !== false;
+    },
+    // Removal goes through the shell's own package manager, which refuses whenever taking the
+    // bundle out would stop or break the running profile; that refusal is reported, not hidden.
+    removeBundle: async (name) => {
+      const manager = ctx.get("remote.pluginManager");
+      if (!manager?.removeBundle) return false;
+      const answer = await manager.removeBundle(name);
+      return answer?.ok !== false;
     },
     // DSH's own right column; the header button opens and closes it.
     toggleRightPanel: () => {

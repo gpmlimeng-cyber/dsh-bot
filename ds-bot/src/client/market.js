@@ -1,7 +1,7 @@
 import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { dateLocale, t } from './i18n.js'
-import { CloseIcon, SearchIcon, PlusIcon, PlugIcon, GearIcon, GlobeIcon, TerminalIcon, FolderIcon, MemoryIcon } from './icons.js'
+import { CloseIcon, SearchIcon, PlusIcon, PlugIcon, GearIcon, GlobeIcon, TerminalIcon, FolderIcon, MemoryIcon, MoreDotsIcon, TrashIcon, SwitchIcon } from './icons.js'
 
 // The market takes the main content area rather than a dialog: a rail of categories on the
 // left, the installed list under it, and the catalogue or one entry's detail on the right.
@@ -64,6 +64,23 @@ function TagIcon() {
 
 function Mark({ icon, state }) {
   return h('span', { className: 'bt-market-mark', 'data-state': state ?? 'off', 'aria-hidden': true }, icon ? h(icon) : h(PlusIcon))
+}
+
+// The Plugins page draws each entry's icon inside one rounded frame: the plugin's own image
+// when the package declares one, the shell's own mark when it does not. The installed rows
+// keep that pair exactly, only smaller.
+function PluginIcon({ src }) {
+  return h('span', { className: 'bt-market-iconframe', 'aria-hidden': true },
+    src
+      ? h('img', { className: 'bt-market-iconimg', src, alt: '' })
+      : h('svg', { className: 'bt-market-iconimg', viewBox: '0 0 36 36', fill: 'none' },
+        h('rect', { x: 14.99, y: 15.19, width: 12.24, height: 12.24, rx: 2, fill: 'url(#bt-plugin-art-b)', fillOpacity: 0.8 }),
+        h('rect', { x: 8.87, y: 9.07, width: 12.24, height: 12.24, rx: 2, fill: 'url(#bt-plugin-art-a)', fillOpacity: 0.8 }),
+        h('defs', null,
+          h('linearGradient', { id: 'bt-plugin-art-b', x1: 21.11, y1: 15.19, x2: 21.11, y2: 27.42, gradientUnits: 'userSpaceOnUse' },
+            h('stop', { stopColor: '#45E7A4' }), h('stop', { offset: 1, stopColor: '#05909D' })),
+          h('linearGradient', { id: 'bt-plugin-art-a', x1: 14.99, y1: 9.07, x2: 14.99, y2: 21.31, gradientUnits: 'userSpaceOnUse' },
+            h('stop', { stopColor: '#69B9FF' }), h('stop', { offset: 1, stopColor: '#324DE2' })))))
 }
 
 function Card({ name, detail, mark, state, action, installed, quiet, onPick, onOpen }) {
@@ -304,6 +321,8 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   const [tab, setTab] = useState('connectors')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
+  const [busyRow, setBusyRow] = useState('')
+  const [menuFor, setMenuFor] = useState(null)
   const search = useRef(null)
 
   useEffect(() => {
@@ -314,6 +333,17 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   }, [open, onClose])
 
   useEffect(() => { setSelected(null); setQuery('') }, [tab])
+
+  // The row menu closes on any press outside it, and its own toggle keeps it.
+  useEffect(() => {
+    if (!menuFor) return undefined
+    const onDown = (event) => {
+      if (event.target instanceof Element && (event.target.closest('.bt-market-instmenu') || event.target.closest('.bt-market-instmore'))) return
+      setMenuFor(null)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [menuFor])
 
   const connectors = useMemo(() => (roster.connectors ?? []).map((connector) => ({
     id: connector.id,
@@ -343,7 +373,7 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   const installedOf = (id) => {
     if (id === 'connectors') return connectors.filter((entry) => entry.state === 'ready')
     if (id === 'capabilities') return capabilities
-    if (id === 'plugins') return plugins
+    if (id === 'plugins') return plugins.filter((entry) => entry.enabled !== false)
     return skills
   }
 
@@ -356,6 +386,30 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   const pick = (entry) => {
     if (tab === 'connectors' || tab === 'capabilities') { onClose(); actions.openConnectors(); return }
     setSelected(entry.id ?? entry.name)
+  }
+
+  // Disabling is the bundle switch the Plugins page offers; the row leaves this list because
+  // it only holds what is on right now.
+  const disableBundle = (entry) => {
+    setMenuFor(null)
+    if (busyRow) return
+    setBusyRow(entry.id)
+    Promise.resolve(actions.setBundleEnabled?.(entry.id, false)).then((okay) => {
+      if (okay === false) return
+      setShellPlugins((now) => (Array.isArray(now) ? now.filter((item) => item.id !== entry.id) : now))
+    }, (error) => actions.reportError?.(error, 'plugins')).finally(() => setBusyRow(''))
+  }
+
+  // Removing goes through the shell's package manager, so it lands exactly as removal from
+  // its own Plugins page would; the row leaves the list only once that answered okay.
+  const removeBundle = (entry) => {
+    setMenuFor(null)
+    if (busyRow) return
+    setBusyRow(entry.id)
+    Promise.resolve(actions.removeBundle?.(entry.id)).then((okay) => {
+      if (okay === false) return
+      setShellPlugins((now) => (Array.isArray(now) ? now.filter((item) => item.id !== entry.id) : now))
+    }, (error) => actions.reportError?.(error, 'plugins')).finally(() => setBusyRow(''))
   }
 
   const heading = current ? current.name : t(tab === 'plugins' ? 'Plugins' : tab === 'connectors' ? 'Connectors' : tab === 'capabilities' ? 'Capabilities' : 'Skills')
@@ -375,15 +429,40 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
           className: 'bt-market-cat',
           onClick: () => setTab(category.id),
         }, category.name))),
-      h('div', { className: 'bt-market-insthead' }, t('Installed')),
+      h('div', { className: 'bt-market-insthead' }, t(tab === 'plugins' ? 'Enabled' : 'Installed')),
       h('div', { className: 'bt-market-installed' },
         installed.length
-          ? installed.slice(0, 8).map((entry) => h('button', {
-            key: entry.id ?? entry.name, type: 'button',
-            className: 'bt-market-inst', 'aria-current': selected === (entry.id ?? entry.name) ? 'page' : undefined,
-            onClick: () => setSelected(entry.id ?? entry.name),
-          }, h(Mark, { icon: entry.icon, state: entry.state ?? 'ready' }), h('span', { className: 'bt-market-instname' }, entry.name)))
-          : h('span', { className: 'bt-market-hint' }, t('Nothing installed yet')))),
+          ? installed.map((entry) => {
+            const id = entry.id ?? entry.name
+            return h('div', {
+              key: id, className: 'bt-market-instrow',
+              'data-open': menuFor === id ? '' : undefined,
+              'data-busy': busyRow === id ? '' : undefined,
+            },
+            h('button', {
+              type: 'button', className: 'bt-market-inst',
+              'aria-current': selected === id ? 'page' : undefined,
+              onClick: () => setSelected(id),
+            },
+            tab === 'plugins'
+              ? h(PluginIcon, { src: entry.icon })
+              : h(Mark, { icon: entry.icon, state: entry.state ?? 'ready' }),
+            h('span', { className: 'bt-market-instname' }, entry.name)),
+            tab === 'plugins'
+              ? h('button', {
+                type: 'button', className: 'bt-market-instmore',
+                'aria-haspopup': 'menu', 'aria-expanded': menuFor === id, 'aria-label': entry.name,
+                onClick: (event) => { event.stopPropagation(); setMenuFor(menuFor === id ? null : id) },
+              }, h(MoreDotsIcon))
+              : null,
+            menuFor === id
+              ? h('div', { className: 'bt-sec-menu bt-market-instmenu', role: 'menu' },
+                h('button', { type: 'button', role: 'menuitem', onClick: () => disableBundle(entry) }, h(SwitchIcon), t('Disable')),
+                h('button', { type: 'button', role: 'menuitem', onClick: () => { setMenuFor(null); onClose(); actions.openPluginsPanel?.() } }, h(GearIcon), t('Manage')),
+                h('button', { type: 'button', role: 'menuitem', className: 'bt-danger', onClick: () => removeBundle(entry) }, h(TrashIcon), t('Uninstall')))
+              : null)
+          })
+          : h('span', { className: 'bt-market-hint' }, t(tab === 'plugins' ? 'No plugin is on yet' : 'Nothing installed yet')))),
     h('main', { className: 'bt-market-main' },
       h('header', { className: 'bt-market-head' },
         h('div', { className: 'bt-market-heading' },

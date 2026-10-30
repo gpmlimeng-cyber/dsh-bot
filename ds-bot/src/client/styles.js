@@ -202,8 +202,10 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    taking whatever room the footer leaves. */
 .bt-side{position:relative}
 .bt-side-foot{position:fixed;left:60px;bottom:18px;width:208px;display:flex;align-items:center;gap:8px;min-width:0}
-.bt-apps-chip{display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 auto;min-width:0;padding:0 10px;height:32px;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
-.bt-apps-chip:hover{background:var(--bt-float-hover)}
+/* The chip wears the whale seat's own surface: a faint tint with the hairline drawn inside,
+   never a floating card, so the footer reads as one row of the same material. */
+.bt-apps-chip{display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 auto;min-width:0;padding:0 10px;height:32px;border:0;border-radius:999px;background:color-mix(in srgb,var(--bt-ink) 5%,var(--bt-sidebar));box-shadow:inset 0 0 0 1px var(--bt-line);color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;cursor:pointer;transition:background-color .12s ease}
+.bt-apps-chip:hover{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-sidebar))}
 .bt-apps-marks{display:inline-flex;flex:none;gap:3px}
 .bt-apps-mark{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--bt-ink) 22%,transparent);display:block}
 .bt-apps-mark-b{border-radius:50%;background:color-mix(in srgb,var(--bt-accent) 60%,transparent)}
@@ -225,9 +227,23 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-market-cat[aria-selected=true]{background:var(--bt-hover);color:var(--bt-ink);font-weight:600}
 .bt-market-insthead{margin-top:10px;padding:0 10px;font-size:11px;line-height:16px;letter-spacing:.04em;text-transform:uppercase;color:var(--bt-ink-3)}
 .bt-market-installed{display:flex;flex-direction:column;gap:2px}
-.bt-market-inst{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border:0;border-radius:10px;background:none;font:inherit;font-size:13px;color:var(--bt-ink);cursor:pointer;min-width:0}
-.bt-market-inst:hover,.bt-market-inst[aria-current=page]{background:var(--bt-hover)}
+/* One enabled plugin: the Plugins page's icon and title on a single line, with a row menu
+   that stays out of sight until the row is hovered (or its menu is open). */
+.bt-market-instrow{position:relative;display:flex;align-items:center;gap:2px;padding-right:4px;border-radius:10px}
+.bt-market-instrow:hover,.bt-market-instrow[data-open],.bt-market-instrow:has(.bt-market-inst[aria-current=page]){background:var(--bt-hover)}
+.bt-market-inst{display:flex;align-items:center;gap:8px;flex:1 1 auto;height:32px;padding:0 4px 0 10px;border:0;border-radius:10px;background:none;font:inherit;font-size:13px;color:var(--bt-ink);cursor:pointer;min-width:0}
+.bt-market-inst:hover{background:none}
 .bt-market-instname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-instmore{flex:none;display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:0;border-radius:6px;background:none;color:var(--bt-ink-3);cursor:pointer;opacity:0;transition:opacity .12s ease,background-color .12s ease}
+.bt-market-instrow:hover .bt-market-instmore,.bt-market-instmore[aria-expanded=true],.bt-market-instmore:focus-visible{opacity:1}
+.bt-market-instmore:hover{background:var(--bt-active);color:var(--bt-ink)}
+.bt-market-instmore svg{width:14px;height:14px}
+.bt-market-instmenu{right:0;top:30px;min-width:126px}
+.bt-market-instrow[data-busy]{opacity:.6;pointer-events:none}
+/* The Plugins page's 50px frame around a 36px icon, scaled to a row: same radius share
+   (16/50), same hairline, same contain fit. */
+.bt-market-iconframe{display:flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:7px;border:.5px solid color-mix(in srgb,var(--bt-ink) 12%,transparent);box-sizing:border-box;overflow:hidden}
+.bt-market-iconimg{width:16px;height:16px;object-fit:contain;display:block}
 .bt-market-hint{display:block;padding:4px 10px;font-size:12px;color:var(--bt-ink-3)}
 .bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 .bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}

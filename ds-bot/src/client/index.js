@@ -505,21 +505,29 @@ export function apply(ctx) {
         actions.reportError(error, 'plugins-panel')
       }
     },
+    // The installed list is the shell's Plugins page installed list, not everything loaded:
+    // a bundle the installation ships with is not the user's to see or remove here.
     pluginsList: async () => {
-      const unwrap = (answer) => (answer && typeof answer === 'object' && 'ok' in answer ? answer.value : answer)
+      const unwrap = (answer) => {
+        let value = answer
+        for (let i = 0; i < 5 && value && typeof value === 'object' && 'ok' in value; i += 1) value = value.value
+        return value
+      }
       const manager = ctx.get('remote.pluginManager')
-      if (!manager) return []
-      const raw = unwrap(unwrap(await manager.listPlugins()))
-      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.plugins) ? raw.plugins : Array.isArray(raw?.items) ? raw.items : []
-      const zh = ctx.get('locale')?.current === 'zh'
+      if (!manager?.listBundles) return []
+      const raw = unwrap(await manager.listBundles())
+      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.bundles) ? raw.bundles : []
+      const zh = language().startsWith('zh')
       const text = (value) => (value && typeof value === 'object' ? (zh ? value.zh : value.en) ?? value.en ?? value.zh : value)
       return list
-        .filter((entry) => entry && (entry.moduleName || entry.entryId))
+        .filter((entry) => entry && entry.availability === 'profile')
         .map((entry) => ({
-          id: entry.entryId ?? entry.id ?? entry.moduleName,
-          name: text(entry.meta?.title) ?? entry.moduleName ?? entry.entryId,
-          detail: text(entry.meta?.description) ?? (entry.fiberPhase ? String(entry.fiberPhase) : ''),
+          id: entry.name,
+          name: text(entry.meta?.title) ?? entry.name,
+          detail: text(entry.meta?.description) ?? '',
+          icon: typeof entry.meta?.icon === 'string' ? entry.meta.icon : '',
           enabled: entry.enabled !== false,
+          removable: entry.removable === true,
         }))
         .sort((a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name))
     },
@@ -599,9 +607,21 @@ export function apply(ctx) {
     },
     // The font picker shows what this device already uses, not what the host last answered.
     fontPref: () => fontOf(savedPrefs),
-    setPluginEnabled: async (id, enabled) => {
+    // A bundle is the unit the enabled list shows, so its switch is the bundle switch the
+    // shell's own Plugins page offers; the identity is the package name.
+    setBundleEnabled: async (name, enabled) => {
       const manager = ctx.get('remote.pluginManager')
-      if (manager?.setPluginEnabled) await manager.setPluginEnabled(id, enabled)
+      if (!manager?.setBundleEnabled) return false
+      const answer = await manager.setBundleEnabled(name, enabled)
+      return answer?.ok !== false
+    },
+    // Removal goes through the shell's own package manager, which refuses whenever taking the
+    // bundle out would stop or break the running profile; that refusal is reported, not hidden.
+    removeBundle: async (name) => {
+      const manager = ctx.get('remote.pluginManager')
+      if (!manager?.removeBundle) return false
+      const answer = await manager.removeBundle(name)
+      return answer?.ok !== false
     },
     // DSH's own right column; the header button opens and closes it.
     toggleRightPanel: () => {
