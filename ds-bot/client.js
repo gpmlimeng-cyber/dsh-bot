@@ -21860,7 +21860,7 @@ function apply(ctx) {
       const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue("--dsh-frame-chrome-top")) || 0;
       const mode = surface.getSnapshot().mode;
       const mac = /Mac/i.test(navigator.platform || navigator.userAgent);
-      const left = mac && chrome >= 24 ? 79 : 15;
+      const left = mac && chrome >= 24 ? 179 : 15;
       const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 7) : 12;
       if (!modeBar) {
         modeBar = document.createElement("button");

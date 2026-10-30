@@ -1141,7 +1141,7 @@ export function apply(ctx) {
       // A Mac window's traffic lights end about 64px in; the control sits 15px after them.
       // Everywhere else it sits 15px from the window's left edge.
       const mac = /Mac/i.test(navigator.platform || navigator.userAgent)
-      const left = mac && chrome >= 24 ? 79 : 15
+      const left = mac && chrome >= 24 ? 179 : 15
       // A few pixels lower than the band's own centre, so the control sits on the traffic
       // lights' horizontal line instead of above it.
       const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 7) : 12
