@@ -9175,7 +9175,7 @@ function Discover({ actions }) {
     labelsOpen ? (0, import_react15.createElement)(
       "div",
       { className: "bt-mk-labels" },
-      ...(page?.labels ?? []).map((label) => (0, import_react15.createElement)("button", {
+      ...byLabel(page?.labels).map((label) => (0, import_react15.createElement)("button", {
         key: label.id,
         type: "button",
         className: "bt-mk-tag",

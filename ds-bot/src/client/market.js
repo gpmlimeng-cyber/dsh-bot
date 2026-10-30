@@ -243,7 +243,7 @@ function Discover({ actions }) {
       h('button', { type: 'button', className: 'bt-mk-refresh', 'aria-label': t('Refresh'), title: t('Refresh'), onClick: () => setReload((count) => count + 1) }, h(RefreshIcon))),
     labelsOpen
       ? h('div', { className: 'bt-mk-labels' },
-        ...(page?.labels ?? []).map((label) => h('button', {
+        ...byLabel(page?.labels).map((label) => h('button', {
           key: label.id, type: 'button', className: 'bt-mk-tag', 'data-on': labels.includes(label.id) ? '' : undefined,
           onClick: () => toggleLabel(label.id),
         }, label.name)))
