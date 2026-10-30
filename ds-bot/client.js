@@ -1832,6 +1832,16 @@ var THEMES = {
     light: { bg: "#faf9f5", sidebar: "#f3f0e8", bubble: "#ebe7dc", card: "#ffffff", text: "#1f1e1b", user: "#2b2a26", userText: "#faf9f5", accent: "#d97757" },
     dark: { bg: "#1f1e1b", sidebar: "#262521", bubble: "#34322d", card: "#2a2925", text: "#f3f0e8", user: "#f3f0e8", userText: "#1f1e1b", accent: "#e08a6d" }
   },
+  // The Codex palette as shipped in its own theme files: light is surface #ffffff with ink
+  // #1a1c1f, dark is surface #181818 with ink #ffffff;
+  // both carry accent #339cff and their own diff and skill inks. Its user turns are a
+  // light grey card, as the product draws them, not a filled dark bubble.
+  codex: {
+    label: "Codex",
+    light: { bg: "#ffffff", sidebar: "#f9f9fa", bubble: "#f3f4f6", card: "#ffffff", text: "#1a1c1f", user: "#f3f4f6", userText: "#1a1c1f", accent: "#339cff" },
+    dark: { bg: "#181818", sidebar: "#1f1f1f", bubble: "#262626", card: "#202020", text: "#ffffff", user: "#2a2a2a", userText: "#ffffff", accent: "#339cff" },
+    css: "html body{--bt-green:#00a240;--bt-danger:#ba2623;--bt-skill:#924ff7}html body[data-ds-dark-theme]{--bt-green:#40c977;--bt-danger:#fa423e;--bt-skill:#ad7bf9}"
+  },
   moonlight: {
     label: "Moonlight",
     light: { bg: "#f7f9fc", sidebar: "#eef2f8", bubble: "#e5ebf5", card: "#ffffff", text: "#121826", user: "#1e3a8a", userText: "#ffffff", accent: "#1e86ff" },
