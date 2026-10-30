@@ -218,7 +218,7 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The market floats over the conversation as frosted glass: a translucent surface, the
    page behind it blurred and lifted, and one hairline ring instead of a hard border. The
    tint is mixed from --bt-main, so the panel keeps following the theme. */
-.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 80%,transparent);backdrop-filter:blur(64px) saturate(2);-webkit-backdrop-filter:blur(64px) saturate(2);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
+.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;flex-direction:column;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 80%,transparent);backdrop-filter:blur(64px) saturate(2);-webkit-backdrop-filter:blur(64px) saturate(2);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
 /* The page's own title row inside the tab: its name on the left, its action on the right,
    and the content starts at the very top beneath it. */
 .bt-market-bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px 0}
@@ -231,7 +231,10 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The skill market's refresh and import buttons, drawn by its panel into this slot. */
 .bt-market-skillslot{display:flex;align-items:center}
 .bt-skill-topbar[data-skill-market]{display:flex;align-items:center;height:auto;max-height:none;background:none;color:var(--bt-ink)}
-.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:12px;border-right:1px solid var(--bt-line);overflow-y:auto;background:color-mix(in srgb,var(--bt-main) 40%,transparent)}
+/* The dialog's own row spans the whole pane: 市场 on the left, close hard against the right. */
+.bt-market-navhead{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px 10px 20px}
+.bt-market-cols{flex:1 1 auto;min-height:0;display:flex}
+.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:0 12px 12px;border-right:1px solid var(--bt-line);overflow-y:auto;background:color-mix(in srgb,var(--bt-main) 40%,transparent)}
 .bt-market-cats{display:flex;flex-direction:column;gap:2px}
 .bt-market-cat{height:32px;padding:0 10px;border:0;border-radius:10px;background:none;text-align:left;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink-2);cursor:pointer}
 .bt-market-cat:hover{background:var(--bt-hover);color:var(--bt-ink)}

@@ -428,10 +428,13 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
     onMouseDown: (event) => { if (event.target === event.currentTarget) onClose() },
   },
   h('div', { className: 'bt-market-pane', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('Market') },
+    // The dialog's own row: 市场 on the left, close on the far right. The pages inside keep
+    // their own title rows below it.
+    h('div', { className: 'bt-market-navhead' },
+      h('span', { className: 'bt-market-h2' }, t('Market')),
+      h('button', { type: 'button', className: 'bt-market-close', 'aria-label': t('Close'), onClick: onClose }, h(CloseIcon))),
+    h('div', { className: 'bt-market-cols' },
     h('aside', { className: 'bt-market-nav' },
-      h('div', { className: 'bt-market-navhead' },
-        h('span', { className: 'bt-market-h2' }, t('Market')),
-        h('button', { type: 'button', className: 'bt-market-close', 'aria-label': t('Close'), onClick: onClose }, h(CloseIcon))),
       h('div', { className: 'bt-market-cats', role: 'tablist' },
         ...CATEGORIES().map((category) => h('button', {
           key: category.id, type: 'button', role: 'tab', 'aria-selected': tab === category.id,
@@ -531,6 +534,6 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
                   onPick: () => pick(entry),
                 })))
                 : h('div', { className: 'bt-market-empty', key: 'empty' }, t('Nothing here yet')),
-            ])))),
+            ]))))),
     document.body)
 }
