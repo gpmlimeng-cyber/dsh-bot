@@ -13853,9 +13853,9 @@ var import_react15 = require("react");
 var import_react_dom3 = require("react-dom");
 var CATEGORIES = () => [
   { id: "plugins", name: t("Plugins") },
+  { id: "skills", name: t("Skills") },
   { id: "connectors", name: t("Connectors") },
-  { id: "capabilities", name: t("Capabilities") },
-  { id: "skills", name: t("Skills") }
+  { id: "capabilities", name: t("Capabilities") }
 ];
 var CAPABILITIES = () => [
   { id: "memory", name: t("Memory"), detail: t("What every Bot remembers about you"), icon: MemoryIcon },

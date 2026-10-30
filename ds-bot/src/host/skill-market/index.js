@@ -2083,6 +2083,53 @@ async function handleSkillFile(res, url) {
 }
 
 /**
+ * Read one skill's own directory: what a locally imported or hand-placed skill can show about
+ * itself, since it has no catalogue record. Only a direct child of the skill root is addressable.
+ * @param {unknown} value - Directory name under the skill root.
+ * @returns {Promise<{name: string, files: Array<{path: string, size: number}>}>} Tree, sorted by path.
+ */
+async function readLocalSkill(value) {
+  const name = String(value ?? '').trim()
+  if (name === '' || name.includes('/') || name.includes('\\') || name === '.' || name === '..') throw new Error('技能名不合法')
+  const dir = resolveInside(skillRoot(), name)
+  const info = await stat(dir).catch(() => undefined)
+  if (info === undefined || !info.isDirectory()) throw new Error(`没有这个技能：${name}`)
+  const files = []
+  const walk = async (current, prefix, depth) => {
+    if (depth > 6 || files.length > MAX_FILES) return
+    for (const entry of await readdir(current, { withFileTypes: true }).catch(() => [])) {
+      if (entry.name.startsWith('.')) continue
+      const relative = prefix === '' ? entry.name : `${prefix}/${entry.name}`
+      if (entry.isDirectory()) {
+        await walk(join(current, entry.name), relative, depth + 1)
+        continue
+      }
+      const size = (await stat(join(current, entry.name)).catch(() => undefined))?.size ?? 0
+      files.push({ path: relative, size })
+    }
+  }
+  await walk(dir, '', 0)
+  return { name, files: files.sort((a, b) => a.path.localeCompare(b.path)) }
+}
+
+/**
+ * Read one text file of a local skill, refusing anything outside that skill's directory.
+ * @param {unknown} value - Directory name under the skill root.
+ * @param {unknown} filePath - Path relative to that directory.
+ * @returns {Promise<{path: string, text: string, truncated: boolean, bytes: number}>} The preview.
+ */
+async function readLocalFile(value, filePath) {
+  const tree = await readLocalSkill(value)
+  const path = String(filePath ?? '').trim()
+  const target = resolveInside(join(skillRoot(), tree.name), path)
+  const info = await stat(target).catch(() => undefined)
+  if (info === undefined || !info.isFile()) throw new Error(`没有这个文件：${path}`)
+  if (info.size > MAX_PREVIEW_BYTES) return { path, text: '', truncated: true, bytes: info.size }
+  const text = await readFile(target, 'utf8')
+  return { path, text, truncated: false, bytes: info.size }
+}
+
+/**
  * Validate one upstream path segment (a slug or a publisher handle).
  * @param {unknown} value - Raw query value.
  * @param {string} label - Parameter name for the error message.
@@ -2367,6 +2414,27 @@ async function handle(req, res, registry) {
     }
     if (suffix === '/skill-file') {
       await handleSkillFile(res, url)
+      return
+    }
+    // A skill that came from this machine (an import or a hand-placed folder) has no upstream
+    // record to draw a detail from, so its own directory is the detail: the file tree, and any
+    // one of those files' text under the same read limits an upstream preview uses.
+    if (suffix === '/local-skill') {
+      try {
+        sendJson(res, 200, await readLocalSkill(url.searchParams.get('name')))
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error)
+        sendError(res, 400, `本地技能读取失败：${reason}`)
+      }
+      return
+    }
+    if (suffix === '/local-file') {
+      try {
+        sendJson(res, 200, await readLocalFile(url.searchParams.get('name'), url.searchParams.get('path')))
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error)
+        sendError(res, 400, `本地技能文件读取失败：${reason}`)
+      }
       return
     }
     // The safety verdict on its own. The reports live in the detail response, which is 2.3 KB and

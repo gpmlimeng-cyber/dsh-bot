@@ -16,9 +16,9 @@ import { CloseIcon, SearchIcon, PlusIcon, PlugIcon, GearIcon, GlobeIcon, Termina
 
 const CATEGORIES = () => [
   { id: 'plugins', name: t('Plugins') },
+  { id: 'skills', name: t('Skills') },
   { id: 'connectors', name: t('Connectors') },
   { id: 'capabilities', name: t('Capabilities') },
-  { id: 'skills', name: t('Skills') },
 ]
 
 const CAPABILITIES = () => [
