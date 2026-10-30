@@ -263,44 +263,22 @@ export function TeamSidebar(props) {
   // The desktop window reserves a band for its own controls; when it does, the row rides
   // that band and indents past them. Measured once, so a browser without the band is left
   // alone instead of being pushed off the top.
-  // The window reserves a band above the sidebar for its own controls. A negative margin
-  // would push the row out of the sidebar's clipped box, so once a real band is there the
-  // row is taken out of the flow and pinned to the window's top edge at the sidebar's width.
+  // The desktop window reserves a band for its own controls; when it does, the row rides
+  // that band and indents past them. Measured from the row's own offset, and applied by the
+  // platform rules in the stylesheet, so a browser without the band is left alone.
   useLayoutEffect(() => {
     const row = listRef.current?.parentElement?.querySelector('.bt-side-top')
-    if (!row) return undefined
-    const measure = () => {
-      row.removeAttribute('style')
-      const band = Math.round(row.getBoundingClientRect().top)
-      if (band < 24) return
-      const side = row.parentElement
-      const box = side.getBoundingClientRect()
-      row.style.position = 'fixed'
-      row.style.top = '0px'
-      row.style.left = `${Math.round(box.left)}px`
-      row.style.width = `${Math.round(box.width)}px`
-      row.style.height = `${band}px`
-      row.style.paddingLeft = '78px'
-      row.style.paddingRight = '8px'
-      row.style.zIndex = '6'
-      row.style.pointerEvents = 'none'
-      row.dataset.floating = ''
-    }
-    measure()
-    let frame = 0
-    let started = 0
-    const settle = (now) => {
-      if (!started) started = now
-      measure()
-      if (now - started < 4000) frame = requestAnimationFrame(settle)
-    }
-    frame = requestAnimationFrame(settle)
-    window.addEventListener('resize', measure)
-    return () => {
-      cancelAnimationFrame(frame)
-      window.removeEventListener('resize', measure)
-    }
-  }, [])
+    if (!row) return
+    row.removeAttribute('data-floating')
+    row.style.position = ''
+    row.style.zIndex = ''
+    row.style.pointerEvents = ''
+    const reserved = row.getBoundingClientRect().top
+    const lift = reserved > 0 ? Math.min(reserved, 64) : 0
+    row.style.setProperty('--bt-side-lift', lift ? `${lift}px` : '0px')
+    row.style.setProperty('--bt-side-indent', lift ? '78px' : '0px')
+    row.style.setProperty('--bt-side-band', lift ? `${Math.max(lift, 38)}px` : '38px')
+  })
   const closing = useRef(false)
   useLayoutEffect(() => { closing.current = false })
   // The collapse lives here because this component alone knows `wide` and the latch that

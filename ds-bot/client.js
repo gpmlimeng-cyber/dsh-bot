@@ -2586,8 +2586,6 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-side{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;gap:2px;padding:0 12px 8px 0;color:var(--bt-ink);font-family:var(--bt-font)}
 .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
 /* Pinned to the window's top edge, the row only paints; its own controls stay clickable. */
-.bt-side-top[data-floating]{background:var(--bt-sidebar)}
-.bt-side-top[data-floating]>*{pointer-events:auto}
 /* The sidebar's own controls sit a size below the panel buttons: 32px, where the round
    buttons elsewhere are 36. */
 .bt-side-top .bt-round{width:32px;height:32px}
@@ -9854,39 +9852,17 @@ function TeamSidebar(props) {
   const listRef = (0, import_react16.useRef)(null);
   (0, import_react16.useLayoutEffect)(() => {
     const row = listRef.current?.parentElement?.querySelector(".bt-side-top");
-    if (!row) return void 0;
-    const measure = () => {
-      row.removeAttribute("style");
-      const band = Math.round(row.getBoundingClientRect().top);
-      if (band < 24) return;
-      const side = row.parentElement;
-      const box = side.getBoundingClientRect();
-      row.style.position = "fixed";
-      row.style.top = "0px";
-      row.style.left = `${Math.round(box.left)}px`;
-      row.style.width = `${Math.round(box.width)}px`;
-      row.style.height = `${band}px`;
-      row.style.paddingLeft = "78px";
-      row.style.paddingRight = "8px";
-      row.style.zIndex = "6";
-      row.style.pointerEvents = "none";
-      row.dataset.floating = "";
-    };
-    measure();
-    let frame = 0;
-    let started = 0;
-    const settle = (now) => {
-      if (!started) started = now;
-      measure();
-      if (now - started < 4e3) frame = requestAnimationFrame(settle);
-    };
-    frame = requestAnimationFrame(settle);
-    window.addEventListener("resize", measure);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
+    if (!row) return;
+    row.removeAttribute("data-floating");
+    row.style.position = "";
+    row.style.zIndex = "";
+    row.style.pointerEvents = "";
+    const reserved = row.getBoundingClientRect().top;
+    const lift = reserved > 0 ? Math.min(reserved, 64) : 0;
+    row.style.setProperty("--bt-side-lift", lift ? `${lift}px` : "0px");
+    row.style.setProperty("--bt-side-indent", lift ? "78px" : "0px");
+    row.style.setProperty("--bt-side-band", lift ? `${Math.max(lift, 38)}px` : "38px");
+  });
   const closing = (0, import_react16.useRef)(false);
   (0, import_react16.useLayoutEffect)(() => {
     closing.current = false;

@@ -1458,7 +1458,7 @@ index b1e36f3..d198c0a 100644
          h('div', { className: 'bt-swatches' },
            h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 58d1840..aad9627 100644
+index 58d1840..ef40cfa 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -10,6 +10,8 @@ import { reducedMotion } from './activity-row.js'
@@ -1541,7 +1541,7 @@ index 58d1840..aad9627 100644
        preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
      wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null),
      h('div', { className: 'bt-agent-sub', 'data-open': open || undefined },
-@@ -250,9 +258,61 @@ function useListGlide(listRef, layout, key) {
+@@ -250,9 +258,39 @@ function useListGlide(listRef, layout, key) {
  
  export function TeamSidebar(props) {
    const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
@@ -1550,44 +1550,22 @@ index 58d1840..aad9627 100644
 +  // The desktop window reserves a band for its own controls; when it does, the row rides
 +  // that band and indents past them. Measured once, so a browser without the band is left
 +  // alone instead of being pushed off the top.
-+  // The window reserves a band above the sidebar for its own controls. A negative margin
-+  // would push the row out of the sidebar's clipped box, so once a real band is there the
-+  // row is taken out of the flow and pinned to the window's top edge at the sidebar's width.
++  // The desktop window reserves a band for its own controls; when it does, the row rides
++  // that band and indents past them. Measured from the row's own offset, and applied by the
++  // platform rules in the stylesheet, so a browser without the band is left alone.
 +  useLayoutEffect(() => {
 +    const row = listRef.current?.parentElement?.querySelector('.bt-side-top')
-+    if (!row) return undefined
-+    const measure = () => {
-+      row.removeAttribute('style')
-+      const band = Math.round(row.getBoundingClientRect().top)
-+      if (band < 24) return
-+      const side = row.parentElement
-+      const box = side.getBoundingClientRect()
-+      row.style.position = 'fixed'
-+      row.style.top = '0px'
-+      row.style.left = `${Math.round(box.left)}px`
-+      row.style.width = `${Math.round(box.width)}px`
-+      row.style.height = `${band}px`
-+      row.style.paddingLeft = '78px'
-+      row.style.paddingRight = '8px'
-+      row.style.zIndex = '6'
-+      row.style.pointerEvents = 'none'
-+      row.dataset.floating = ''
-+    }
-+    measure()
-+    let frame = 0
-+    let started = 0
-+    const settle = (now) => {
-+      if (!started) started = now
-+      measure()
-+      if (now - started < 4000) frame = requestAnimationFrame(settle)
-+    }
-+    frame = requestAnimationFrame(settle)
-+    window.addEventListener('resize', measure)
-+    return () => {
-+      cancelAnimationFrame(frame)
-+      window.removeEventListener('resize', measure)
-+    }
-+  }, [])
++    if (!row) return
++    row.removeAttribute('data-floating')
++    row.style.position = ''
++    row.style.zIndex = ''
++    row.style.pointerEvents = ''
++    const reserved = row.getBoundingClientRect().top
++    const lift = reserved > 0 ? Math.min(reserved, 64) : 0
++    row.style.setProperty('--bt-side-lift', lift ? `${lift}px` : '0px')
++    row.style.setProperty('--bt-side-indent', lift ? '78px' : '0px')
++    row.style.setProperty('--bt-side-band', lift ? `${Math.max(lift, 38)}px` : '38px')
++  })
    const closing = useRef(false)
    useLayoutEffect(() => { closing.current = false })
 +  // The collapse lives here because this component alone knows `wide` and the latch that
@@ -1603,7 +1581,7 @@ index 58d1840..aad9627 100644
    const roster = useRoster(value => value)
    const markedUnread = useUi(value => value.unread)
    props.useRegistry(value => value)
-@@ -292,6 +352,8 @@ export function TeamSidebar(props) {
+@@ -292,6 +330,8 @@ export function TeamSidebar(props) {
      openAgent: id => navigate(actions.openAgent, id),
      openAgentSession: id => navigate(actions.openAgentSession, id),
      newAgentSession: id => navigate(actions.newAgentSession, id),
@@ -1612,7 +1590,7 @@ index 58d1840..aad9627 100644
    }
    const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
    // Typing while the sidebar has focus starts a search.
-@@ -299,26 +361,33 @@ export function TeamSidebar(props) {
+@@ -299,26 +339,33 @@ export function TeamSidebar(props) {
      if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
      if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
      event.preventDefault()
@@ -1655,7 +1633,7 @@ index 58d1840..aad9627 100644
  }
  
  // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -483,7 +552,17 @@ const NO_SNAPSHOT = () => null
+@@ -483,7 +530,17 @@ const NO_SNAPSHOT = () => null
  // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
  // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
  // back in Agent mode; FooterAccount stands in while no seat exists at all.
@@ -1674,7 +1652,7 @@ index 58d1840..aad9627 100644
    const [open, setOpen] = useState(false)
    useLayoutEffect(() => {
      if (!seat) return undefined
-@@ -565,7 +644,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+@@ -565,7 +622,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
    }, [open])
    const groups = [
      [
@@ -1684,7 +1662,7 @@ index 58d1840..aad9627 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..7920508 100644
+index aa38a3b..572c579 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -1706,13 +1684,11 @@ index aa38a3b..7920508 100644
  /* iOS waits out a double-tap zoom on buttons; the plugin's own controls never zoom. */
  :is(.bt-tool,.bt-uaction,.bt-menu button,.bt-menu-item,.bt-icon-btn,.bt-round,.bt-pill,.bt-account,.bt-set-row,.bt-settings-item,.bt-react-strip button,.bt-palette-row,.bt-palette-clear,.bt-tab,.bt-ptab,.bt-ptab-x,.bt-bcard-x,.bt-plus,.bt-q-btn,.bt-q-x,.bt-x,.bt-nc-send,.bt-send,.bt-soft,.bt-mini,.bt-shape,.bt-swatch,.bt-color,.bt-newchat,.bt-task-day,.bt-task-remove,.bt-fb-btn){touch-action:manipulation}
  body[data-ds-dark-theme]{--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(255,255,255,.08);--bt-line-2:rgba(255,255,255,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(255,255,255,.09);--bt-tag-ink:rgba(242,242,242,.62)}
-@@ -117,10 +118,23 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -117,10 +118,21 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  
  .bt-side{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;gap:2px;padding:0 12px 8px 0;color:var(--bt-ink);font-family:var(--bt-font)}
  .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
 +/* Pinned to the window's top edge, the row only paints; its own controls stay clickable. */
-+.bt-side-top[data-floating]{background:var(--bt-sidebar)}
-+.bt-side-top[data-floating]>*{pointer-events:auto}
 +/* The sidebar's own controls sit a size below the panel buttons: 32px, where the round
 +   buttons elsewhere are 36. */
 +.bt-side-top .bt-round{width:32px;height:32px}
@@ -1732,7 +1708,7 @@ index aa38a3b..7920508 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,22 +149,203 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,22 +147,203 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -1939,7 +1915,7 @@ index aa38a3b..7920508 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -317,6 +512,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -317,6 +510,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -1966,7 +1942,7 @@ index aa38a3b..7920508 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -548,7 +763,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -548,7 +761,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
  html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
  html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
@@ -1977,7 +1953,7 @@ index aa38a3b..7920508 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -588,7 +805,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -588,7 +803,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -1987,7 +1963,7 @@ index aa38a3b..7920508 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -883,6 +1101,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +1099,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -2049,7 +2025,7 @@ index aa38a3b..7920508 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1255,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1253,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -2158,7 +2134,7 @@ index aa38a3b..7920508 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1383,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1381,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -2185,7 +2161,7 @@ index aa38a3b..7920508 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1403,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1401,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -2194,7 +2170,7 @@ index aa38a3b..7920508 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1444,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1442,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
