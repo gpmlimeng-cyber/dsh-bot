@@ -301,7 +301,7 @@ index 32ba8c9..92be15d 100644
  
  // Host errors stay English, since Bots read them too; they are translated where the
 diff --git a/ds-bot/src/client/icons.js b/ds-bot/src/client/icons.js
-index eee5675..5f9a18f 100644
+index eee5675..5741615 100644
 --- a/ds-bot/src/client/icons.js
 +++ b/ds-bot/src/client/icons.js
 @@ -18,15 +18,16 @@ export function PeopleIcon() {
@@ -340,7 +340,7 @@ index eee5675..5f9a18f 100644
 +// The same dots as DotsIcon, drawn larger for the session header's button.
 +export function BigDotsIcon() {
 +  return h('svg', { width: 22, height: 22, viewBox: '0 0 20 20', 'aria-hidden': true },
-+    h('path', { d: 'M4 10h.01M10 10h.01M16 10h.01', stroke: 'currentColor', strokeWidth: 3.2, strokeLinecap: 'round' }))
++    h('path', { d: 'M3.6 10h.01M10 10h.01M16.4 10h.01', stroke: 'currentColor', strokeWidth: 4.4, strokeLinecap: 'round' }))
 +}
 +export const ImageIcon = lineIcon(['M4 4.5h12v11H4z', 'M4 12l3.5-3.5 3 3 2-2 3.5 3.5', 'M7.75 8h.01'])
  export const CheckIcon = lineIcon(['M4.5 10.5l3.5 3.5 7.5-8'])
@@ -737,9 +737,20 @@ index 58d1840..d2cacb9 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..60ad3c8 100644
+index aa38a3b..4df662c 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
+@@ -119,8 +119,8 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+ .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
+ .bt-brand{display:inline-flex;align-items:center;gap:6px;margin-right:auto;padding:4px 8px 4px 4px;border:0;border-radius:8px;background:none;cursor:pointer;font-family:inherit;font-size:15px;line-height:20px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink);white-space:nowrap}
+ .bt-brand-whale{display:inline-flex;color:var(--bt-accent)}
+-.bt-round{width:36px;height:36px;border-radius:50%;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .12s ease,transform .12s ease}
+-.bt-round:hover{background:var(--bt-hover)}
++.bt-round{width:36px;height:36px;border-radius:50%;border:0;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .12s ease,transform .12s ease}
++.bt-round:hover{background:var(--bt-float-hover)}
+ .bt-round:active{transform:scale(.94)}
+ .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
+ /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
 @@ -150,7 +150,11 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-side-foot{display:flex;padding-top:8px}
  

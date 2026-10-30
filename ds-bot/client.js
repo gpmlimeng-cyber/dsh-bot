@@ -2494,8 +2494,8 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
 .bt-brand{display:inline-flex;align-items:center;gap:6px;margin-right:auto;padding:4px 8px 4px 4px;border:0;border-radius:8px;background:none;cursor:pointer;font-family:inherit;font-size:15px;line-height:20px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink);white-space:nowrap}
 .bt-brand-whale{display:inline-flex;color:var(--bt-accent)}
-.bt-round{width:36px;height:36px;border-radius:50%;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .12s ease,transform .12s ease}
-.bt-round:hover{background:var(--bt-hover)}
+.bt-round{width:36px;height:36px;border-radius:50%;border:0;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .12s ease,transform .12s ease}
+.bt-round:hover{background:var(--bt-float-hover)}
 .bt-round:active{transform:scale(.94)}
 .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
 /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
@@ -3958,7 +3958,7 @@ function BigDotsIcon() {
   return (0, import_react3.createElement)(
     "svg",
     { width: 22, height: 22, viewBox: "0 0 20 20", "aria-hidden": true },
-    (0, import_react3.createElement)("path", { d: "M4 10h.01M10 10h.01M16 10h.01", stroke: "currentColor", strokeWidth: 3.2, strokeLinecap: "round" })
+    (0, import_react3.createElement)("path", { d: "M3.6 10h.01M10 10h.01M16.4 10h.01", stroke: "currentColor", strokeWidth: 4.4, strokeLinecap: "round" })
   );
 }
 var ImageIcon = lineIcon(["M4 4.5h12v11H4z", "M4 12l3.5-3.5 3 3 2-2 3.5 3.5", "M7.75 8h.01"]);
