@@ -155,6 +155,50 @@ index 08d3b66..24096b6 100644
      canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
      h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
  }
+diff --git a/ds-bot/src/client/context-menu.js b/ds-bot/src/client/context-menu.js
+index dc5fd1b..e59ba77 100644
+--- a/ds-bot/src/client/context-menu.js
++++ b/ds-bot/src/client/context-menu.js
+@@ -5,6 +5,7 @@ import { GearIcon, PinIcon, UnreadIcon, PencilIcon, StarLineIcon, CopyIcon, Hide
+ import { useEscape } from './overlay-hooks.js'
+ import { useViewport, viewBottom } from './motion.js'
+ import { t } from './i18n.js'
++import { readArrangement, writeArrangement } from './sidebar-groups.js'
+ 
+ export function ContextMenu({ menu, roster, actions, leaving = false }) {
+   useEscape(() => actions.closeMenu())
+@@ -43,6 +44,31 @@ export function ContextMenu({ menu, roster, actions, leaving = false }) {
+       bot && !isMainBot ? [t('Make Main Bot'), StarLineIcon, () => actions.setMain(bot.id, true)] : null,
+       bot && isMainBot && mainCount > 1 ? [t('Remove Main Bot role'), StarLineIcon, () => actions.setMain(bot.id, false)] : null,
+     ],
++    // The groups the sidebar draws, as one menu group; the nesting here used to be one
++    // array too deep, which made React see an array where an icon belongs.
++    (() => {
++      const arrange = readArrangement()
++      const items = arrange.groups.map(group => [group.name, GearIcon, () => {
++        writeArrangement({ ...arrange, assign: { ...arrange.assign, [menu.id]: group.id } })
++      }])
++      if (arrange.assign[menu.id]) {
++        items.push([t('Remove from section'), GearIcon, () => {
++          const assign = { ...arrange.assign }
++          delete assign[menu.id]
++          writeArrangement({ ...arrange, assign })
++        }])
++      }
++      // The same entry as the list's own new-group row: make one, then name it in place.
++      items.push([t('New section'), GearIcon, () => {
++        const id = `g${Date.now().toString(36)}`
++        writeArrangement({
++          groups: arrange.groups.concat({ id, name: t('New section'), collapsed: false }),
++          assign: { ...arrange.assign, [menu.id]: id },
++        })
++        window.dispatchEvent(new CustomEvent('ds-bot:group-created', { detail: id }))
++      }])
++      return items
++    })(),
+     [[t('Copy conversation ID'), CopyIcon, () => navigator.clipboard?.writeText(bot ? currentPart(bot) : menu.id)]],
+     [
+       isMainBot ? null : [t('Hide from sidebar'), HideIcon, () => actions.setFlags(menu.id, { hidden: true })],
 diff --git a/ds-bot/src/client/create-bot.js b/ds-bot/src/client/create-bot.js
 index 3956f8f..40a05f4 100644
 --- a/ds-bot/src/client/create-bot.js
@@ -1720,7 +1764,7 @@ index 0000000..ae11666
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 58d1840..ea016ae 100644
+index 58d1840..15bb97b 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -3,14 +3,19 @@ import { createPortal } from 'react-dom'
@@ -1850,7 +1894,7 @@ index 58d1840..ea016ae 100644
    const roster = useRoster(value => value)
    const markedUnread = useUi(value => value.unread)
    props.useRegistry(value => value)
-@@ -272,6 +299,89 @@ export function TeamSidebar(props) {
+@@ -272,6 +299,95 @@ export function TeamSidebar(props) {
      return entries.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at)
    }, [roster, updated])
    const main = roster.byId[roster.mainBotId]
@@ -1860,8 +1904,14 @@ index 58d1840..ea016ae 100644
 +  const [arrange, setArrange] = useState(readArrangement)
 +  useEffect(() => {
 +    const reload = () => setArrange(readArrangement())
++    // A group made from a row's menu is named right away, as the list's own row is.
++    const rename = (event) => { reload(); setRenamingSection(event.detail) }
 +    window.addEventListener('ds-bot:groups', reload)
-+    return () => window.removeEventListener('ds-bot:groups', reload)
++    window.addEventListener('ds-bot:group-created', rename)
++    return () => {
++      window.removeEventListener('ds-bot:groups', reload)
++      window.removeEventListener('ds-bot:group-created', rename)
++    }
 +  }, [])
 +  const [renamingSection, setRenamingSection] = useState(null)
 +  const [sectionMenu, setSectionMenu] = useState(null)
@@ -1940,7 +1990,7 @@ index 58d1840..ea016ae 100644
    useListGlide(listRef, wide, order.map(entry => entry.item.id).join(','))
    useLandOnMainBot(roster, useSessions, actions)
    // The shell keeps wide content during its collapse fade. Normalize through its
-@@ -292,6 +402,8 @@ export function TeamSidebar(props) {
+@@ -292,6 +408,8 @@ export function TeamSidebar(props) {
      openAgent: id => navigate(actions.openAgent, id),
      openAgentSession: id => navigate(actions.openAgentSession, id),
      newAgentSession: id => navigate(actions.newAgentSession, id),
@@ -1949,7 +1999,7 @@ index 58d1840..ea016ae 100644
    }
    const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
    // Typing while the sidebar has focus starts a search.
-@@ -299,26 +411,91 @@ export function TeamSidebar(props) {
+@@ -299,26 +417,91 @@ export function TeamSidebar(props) {
      if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
      if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
      event.preventDefault()
@@ -2055,7 +2105,7 @@ index 58d1840..ea016ae 100644
  }
  
  // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -483,7 +660,17 @@ const NO_SNAPSHOT = () => null
+@@ -483,7 +666,17 @@ const NO_SNAPSHOT = () => null
  // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
  // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
  // back in Agent mode; FooterAccount stands in while no seat exists at all.
@@ -2074,7 +2124,7 @@ index 58d1840..ea016ae 100644
    const [open, setOpen] = useState(false)
    useLayoutEffect(() => {
      if (!seat) return undefined
-@@ -565,7 +752,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+@@ -565,7 +758,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
    }, [open])
    const groups = [
      [

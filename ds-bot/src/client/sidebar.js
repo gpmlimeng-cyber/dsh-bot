@@ -305,8 +305,14 @@ export function TeamSidebar(props) {
   const [arrange, setArrange] = useState(readArrangement)
   useEffect(() => {
     const reload = () => setArrange(readArrangement())
+    // A group made from a row's menu is named right away, as the list's own row is.
+    const rename = (event) => { reload(); setRenamingSection(event.detail) }
     window.addEventListener('ds-bot:groups', reload)
-    return () => window.removeEventListener('ds-bot:groups', reload)
+    window.addEventListener('ds-bot:group-created', rename)
+    return () => {
+      window.removeEventListener('ds-bot:groups', reload)
+      window.removeEventListener('ds-bot:group-created', rename)
+    }
   }, [])
   const [renamingSection, setRenamingSection] = useState(null)
   const [sectionMenu, setSectionMenu] = useState(null)

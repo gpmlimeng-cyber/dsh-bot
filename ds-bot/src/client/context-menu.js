@@ -5,6 +5,7 @@ import { GearIcon, PinIcon, UnreadIcon, PencilIcon, StarLineIcon, CopyIcon, Hide
 import { useEscape } from './overlay-hooks.js'
 import { useViewport, viewBottom } from './motion.js'
 import { t } from './i18n.js'
+import { readArrangement, writeArrangement } from './sidebar-groups.js'
 
 export function ContextMenu({ menu, roster, actions, leaving = false }) {
   useEscape(() => actions.closeMenu())
@@ -43,6 +44,31 @@ export function ContextMenu({ menu, roster, actions, leaving = false }) {
       bot && !isMainBot ? [t('Make Main Bot'), StarLineIcon, () => actions.setMain(bot.id, true)] : null,
       bot && isMainBot && mainCount > 1 ? [t('Remove Main Bot role'), StarLineIcon, () => actions.setMain(bot.id, false)] : null,
     ],
+    // The groups the sidebar draws, as one menu group; the nesting here used to be one
+    // array too deep, which made React see an array where an icon belongs.
+    (() => {
+      const arrange = readArrangement()
+      const items = arrange.groups.map(group => [group.name, GearIcon, () => {
+        writeArrangement({ ...arrange, assign: { ...arrange.assign, [menu.id]: group.id } })
+      }])
+      if (arrange.assign[menu.id]) {
+        items.push([t('Remove from section'), GearIcon, () => {
+          const assign = { ...arrange.assign }
+          delete assign[menu.id]
+          writeArrangement({ ...arrange, assign })
+        }])
+      }
+      // The same entry as the list's own new-group row: make one, then name it in place.
+      items.push([t('New section'), GearIcon, () => {
+        const id = `g${Date.now().toString(36)}`
+        writeArrangement({
+          groups: arrange.groups.concat({ id, name: t('New section'), collapsed: false }),
+          assign: { ...arrange.assign, [menu.id]: id },
+        })
+        window.dispatchEvent(new CustomEvent('ds-bot:group-created', { detail: id }))
+      }])
+      return items
+    })(),
     [[t('Copy conversation ID'), CopyIcon, () => navigator.clipboard?.writeText(bot ? currentPart(bot) : menu.id)]],
     [
       isMainBot ? null : [t('Hide from sidebar'), HideIcon, () => actions.setFlags(menu.id, { hidden: true })],
