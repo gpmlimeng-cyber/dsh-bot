@@ -1171,7 +1171,7 @@ export function apply(ctx) {
         })
         window.addEventListener('resize', () => paintModeBar())
       }
-      modeBar.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px 0 10px;border:0;border-radius:999px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 1px 2px rgba(20,20,20,.06);font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414`
+      modeBar.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414`
       // No mark: the name and the chevron are enough, and the control stays narrow.
       modeBar.textContent = ''
       const label = document.createElement('span')
