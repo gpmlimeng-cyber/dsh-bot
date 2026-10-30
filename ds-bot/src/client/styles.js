@@ -149,7 +149,13 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
 .bt-unread-wait{background:var(--bt-star)}
-.bt-rail{align-items:center;padding:0 0 8px}
+.bt-rail{display:flex;flex-direction:column;align-items:center;padding:0 0 8px;gap:8px}
+.bt-rail>.bt-rail-foot{margin-top:auto;display:flex;justify-content:center;width:100%}
+/* Nothing in the rail may widen it: a row keeps its own width, the list scrolls
+   vertically only, and the document never gains a sideways scrollbar from it. */
+.bt-rail,.bt-rail>*{box-sizing:border-box;max-width:100%;min-width:0}
+.bt-rail .bt-list{width:100%;overflow-x:hidden}
+html:has(.bt-side.bt-rail){overflow-x:hidden}
 /* The shell hides a collapsed sidebar outright on macOS (it has no rail state of its own),
    so the rail ds-bot draws gets a fixed column instead of the width the shell leaves it. */
 /* The shell zeroes its column at once and the rail only mounts on the next render, so it
@@ -157,7 +163,9 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 @keyframes bt-rail-in{from{opacity:0;transform:translateX(-10px)}}
 .bt-side.bt-rail{animation:bt-rail-in .18s cubic-bezier(.22,1,.36,1) both}
 html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side.bt-rail{position:fixed;left:0;top:0;bottom:0;width:56px;padding:calc(var(--dsh-frame-chrome-top,0px) + 42px) 0 8px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-float-ring);z-index:20;overflow:hidden;align-items:center}
-.bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px}
+/* The rail is 56 wide, so a row's hover chip is a 40px rounded tile inside it rather than
+   a band across the full column. */
+.bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px;width:40px;border-radius:12px;margin:0 auto}
 .bt-side-foot{display:flex;padding-top:8px}
 
 .bt-head{position:relative;display:flex;justify-content:center;align-items:center;height:40px;flex:none;pointer-events:none}
