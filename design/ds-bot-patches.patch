@@ -1458,7 +1458,7 @@ index b1e36f3..d198c0a 100644
          h('div', { className: 'bt-swatches' },
            h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 58d1840..8905d85 100644
+index 58d1840..aad9627 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -10,6 +10,8 @@ import { reducedMotion } from './activity-row.js'
@@ -1479,7 +1479,17 @@ index 58d1840..8905d85 100644
    const id = bot.id
    const part = currentPart(bot)
    const preview = useSessions(list => previewOf(list, part, roster.exchangeTurns[part]))
-@@ -88,7 +90,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
+@@ -78,8 +80,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
+       'data-bot-id': id, title: preview || bot.name, onClick: () => actions.openSession(id), onContextMenu,
+     },
+     h(BotAvatar, { bot, size: 60, state, main: true }),
+-    h('span', { className: 'bt-tile-name' }, bot.name),
+-    bot.role ? h('span', { className: 'bt-chip' }, bot.role) : null))
++    h('span', { className: 'bt-tile-name' }, bot.name)))
+   }
+   return h('button', {
+     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
+@@ -88,7 +89,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
    h(BotAvatar, { bot, size: 36, state, main }),
    pinned && !wide ? h(PinMark) : null,
    wide ? h('span', { className: 'bt-row-body' },
@@ -1488,7 +1498,7 @@ index 58d1840..8905d85 100644
      runningLine ? h('span', { className: 'bt-row-preview' }, runningLine)
        : awayLine ? h('span', { className: 'bt-row-preview' }, awayLine)
          : waitsFor ? h('span', { className: 'bt-row-preview' }, waitsFor)
-@@ -96,7 +98,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
+@@ -96,7 +97,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
    wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
  }
  
@@ -1497,7 +1507,7 @@ index 58d1840..8905d85 100644
    const id = room.id
    const fallback = useSessions(list => previewOf(list, id))
    const preview = room.preview?.replace(/\s+/g, ' ').trim() || fallback
-@@ -118,7 +120,7 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
+@@ -118,7 +119,7 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
    h(RoomAvatar, { room, roster, size: 36 }),
    pinned && !wide ? h(PinMark) : null,
    wide ? h('span', { className: 'bt-row-body' },
@@ -1506,7 +1516,7 @@ index 58d1840..8905d85 100644
      workingLine ? h('span', { className: 'bt-row-preview' }, workingLine) : preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
    wide && approval && !active ? h('span', { className: 'bt-unread bt-unread-wait', 'aria-hidden': true })
      : wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
-@@ -173,7 +175,14 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
+@@ -173,7 +174,14 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
  
  // The DSH Agent row: a plain dsh Session list lives in the Bot workspace, so it
  // sits among the Bots with the harness's own whale mark.
@@ -1522,7 +1532,7 @@ index 58d1840..8905d85 100644
    const info = useSessions(list => JSON.stringify(agent.sessions.map((id) => {
      const row = list.byId[id]
      return {
-@@ -211,7 +220,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide,
+@@ -211,7 +219,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide,
      },
      h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: 22 })),
      wide ? h('span', { className: 'bt-row-body' },
@@ -1531,7 +1541,7 @@ index 58d1840..8905d85 100644
        preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
      wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null),
      h('div', { className: 'bt-agent-sub', 'data-open': open || undefined },
-@@ -250,9 +259,61 @@ function useListGlide(listRef, layout, key) {
+@@ -250,9 +258,61 @@ function useListGlide(listRef, layout, key) {
  
  export function TeamSidebar(props) {
    const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
@@ -1593,7 +1603,7 @@ index 58d1840..8905d85 100644
    const roster = useRoster(value => value)
    const markedUnread = useUi(value => value.unread)
    props.useRegistry(value => value)
-@@ -292,6 +353,8 @@ export function TeamSidebar(props) {
+@@ -292,6 +352,8 @@ export function TeamSidebar(props) {
      openAgent: id => navigate(actions.openAgent, id),
      openAgentSession: id => navigate(actions.openAgentSession, id),
      newAgentSession: id => navigate(actions.newAgentSession, id),
@@ -1602,7 +1612,7 @@ index 58d1840..8905d85 100644
    }
    const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
    // Typing while the sidebar has focus starts a search.
-@@ -299,26 +362,33 @@ export function TeamSidebar(props) {
+@@ -299,26 +361,33 @@ export function TeamSidebar(props) {
      if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
      if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
      event.preventDefault()
@@ -1645,7 +1655,7 @@ index 58d1840..8905d85 100644
  }
  
  // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -483,7 +553,17 @@ const NO_SNAPSHOT = () => null
+@@ -483,7 +552,17 @@ const NO_SNAPSHOT = () => null
  // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
  // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
  // back in Agent mode; FooterAccount stands in while no seat exists at all.
@@ -1664,7 +1674,7 @@ index 58d1840..8905d85 100644
    const [open, setOpen] = useState(false)
    useLayoutEffect(() => {
      if (!seat) return undefined
-@@ -565,7 +645,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+@@ -565,7 +644,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
    }, [open])
    const groups = [
      [

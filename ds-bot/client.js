@@ -9617,8 +9617,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
         onContextMenu
       },
       (0, import_react16.createElement)(BotAvatar, { bot, size: 60, state, main: true }),
-      (0, import_react16.createElement)("span", { className: "bt-tile-name" }, bot.name),
-      bot.role ? (0, import_react16.createElement)("span", { className: "bt-chip" }, bot.role) : null
+      (0, import_react16.createElement)("span", { className: "bt-tile-name" }, bot.name)
     ));
   }
   return (0, import_react16.createElement)(

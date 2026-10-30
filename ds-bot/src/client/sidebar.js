@@ -80,8 +80,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
       'data-bot-id': id, title: preview || bot.name, onClick: () => actions.openSession(id), onContextMenu,
     },
     h(BotAvatar, { bot, size: 60, state, main: true }),
-    h('span', { className: 'bt-tile-name' }, bot.name),
-    bot.role ? h('span', { className: 'bt-chip' }, bot.role) : null))
+    h('span', { className: 'bt-tile-name' }, bot.name)))
   }
   return h('button', {
     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
