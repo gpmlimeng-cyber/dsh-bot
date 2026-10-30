@@ -1168,28 +1168,9 @@ export function apply(ctx) {
         })
         window.addEventListener('resize', () => paintModeBar())
       }
-      modeBar.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 11px 0 13px;border:0;border-radius:999px;background:color-mix(in srgb,var(--bt-main,#fcfcfc) 92%,transparent);box-shadow:0 0 0 .5px rgba(20,20,20,.09),0 1px 2px rgba(20,20,20,.05);font-family:inherit;font-size:13px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink,#141414);backdrop-filter:blur(12px)`
-      // The model picker's anatomy: a mark, the name, then the chevron.
+      modeBar.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px 0 10px;border:0;border-radius:999px;background:color-mix(in srgb,var(--bt-main,#fcfcfc) 92%,transparent);box-shadow:0 0 0 .5px rgba(20,20,20,.09),0 1px 2px rgba(20,20,20,.05);font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:var(--bt-ink,#141414);backdrop-filter:blur(12px)`
+      // No mark: the name and the chevron are enough, and the control stays narrow.
       modeBar.textContent = ''
-      const mark = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-      mark.setAttribute('width', '14')
-      mark.setAttribute('height', '14')
-      mark.setAttribute('viewBox', '0 0 20 20')
-      mark.setAttribute('fill', 'none')
-      mark.setAttribute('stroke', 'currentColor')
-      mark.setAttribute('stroke-width', '1.6')
-      mark.setAttribute('stroke-linecap', 'round')
-      mark.setAttribute('stroke-linejoin', 'round')
-      mark.style.cssText = 'flex:none;color:rgba(20,20,20,.5)'
-      const paths = mode === 'bot'
-        ? ['M7.5 8.6a2.1 2.1 0 1 0 0-4.2 2.1 2.1 0 0 0 0 4.2z', 'M12.9 8.2a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4z', 'M3.6 15.5c0-2.2 1.8-3.6 3.9-3.6s3.9 1.4 3.9 3.6', 'M12.4 11.9c1.9.1 3.2 1.4 3.2 3.3']
-        : ['M4.5 6.2l3.6 3.8-3.6 3.8', 'M10.4 13.8h5.1']
-      for (const d of paths) {
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        path.setAttribute('d', d)
-        mark.appendChild(path)
-      }
-      modeBar.appendChild(mark)
       const label = document.createElement('span')
       label.textContent = mode === 'bot' ? t('Bot mode') : t('DSH mode')
       modeBar.appendChild(label)
