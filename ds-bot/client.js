@@ -2664,7 +2664,11 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-mk-menu[data-on]{color:var(--bt-ink)}
 .bt-mk-pick{padding-right:22px}
 .bt-mk-pick::after{content:'';position:absolute;right:9px;top:50%;width:6px;height:6px;margin-top:-4px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg);pointer-events:none;opacity:.6}
-.bt-mk-pick select,.bt-mk-switch select{appearance:none;-webkit-appearance:none;border:0;background:none;outline:none;font:inherit;font-size:12px;line-height:18px;color:inherit;cursor:pointer;max-width:160px;padding:0}
+.bt-mk-pick select{appearance:none;-webkit-appearance:none;border:0;background:none;outline:none;font:inherit;font-size:12px;line-height:18px;color:inherit;cursor:pointer;padding:0}
+/* The sort control is one click target: its select covers the label and the name. */
+.bt-mk-sort{padding-right:22px}
+.bt-mk-sortname{display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mk-sort select{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;margin:0}
 /* The picker is as wide as the index it shows. The select sits on top of the name,
    transparent, so the shell's own menu still opens on a click. */
 .bt-mk-switch{padding:0 22px 0 10px;max-width:60%}
@@ -9009,6 +9013,7 @@ function Discover({ actions }) {
     return () => clearTimeout(timer);
   }, [text]);
   const sortValue = (0, import_react15.useMemo)(() => (SORTS().find((item) => item.id === sort) ?? SORTS()[0]).value, [sort]);
+  const sortName = (0, import_react15.useMemo)(() => (SORTS().find((item) => item.id === sort) ?? SORTS()[0]).name, [sort]);
   (0, import_react15.useEffect)(() => {
     let live = true;
     setBusy(true);
@@ -9152,10 +9157,13 @@ function Discover({ actions }) {
         "aria-expanded": labelsOpen,
         onClick: () => setLabelsOpen((open) => !open)
       }, (0, import_react15.createElement)(TagIcon), (0, import_react15.createElement)("span", null, t("Labels"))),
+      // Like the market picker: the visible name sizes itself and the select covers the
+      // whole control, so a click anywhere on it opens the menu.
       (0, import_react15.createElement)(
         "label",
-        { className: "bt-mk-menu bt-mk-pick" },
+        { className: "bt-mk-menu bt-mk-pick bt-mk-sort" },
         (0, import_react15.createElement)("span", null, t("Sort:")),
+        (0, import_react15.createElement)("span", { className: "bt-mk-sortname" }, sortName),
         (0, import_react15.createElement)(
           "select",
           { value: sort, onChange: (event) => setSort(event.target.value), "aria-label": t("Sort") },

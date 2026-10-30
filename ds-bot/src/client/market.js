@@ -108,6 +108,7 @@ function Discover({ actions }) {
   }, [text])
 
   const sortValue = useMemo(() => (SORTS().find((item) => item.id === sort) ?? SORTS()[0]).value, [sort])
+  const sortName = useMemo(() => (SORTS().find((item) => item.id === sort) ?? SORTS()[0]).name, [sort])
 
   useEffect(() => {
     let live = true
@@ -232,8 +233,11 @@ function Discover({ actions }) {
         type: 'button', className: 'bt-mk-menu', 'data-on': labels.length ? '' : undefined,
         'aria-expanded': labelsOpen, onClick: () => setLabelsOpen((open) => !open),
       }, h(TagIcon), h('span', null, t('Labels'))),
-      h('label', { className: 'bt-mk-menu bt-mk-pick' },
+      // Like the market picker: the visible name sizes itself and the select covers the
+      // whole control, so a click anywhere on it opens the menu.
+      h('label', { className: 'bt-mk-menu bt-mk-pick bt-mk-sort' },
         h('span', null, t('Sort:')),
+        h('span', { className: 'bt-mk-sortname' }, sortName),
         h('select', { value: sort, onChange: (event) => setSort(event.target.value), 'aria-label': t('Sort') },
           ...SORTS().map((item) => h('option', { key: item.id, value: item.id }, item.name)))),
       h('button', { type: 'button', className: 'bt-mk-refresh', 'aria-label': t('Refresh'), title: t('Refresh'), onClick: () => setReload((count) => count + 1) }, h(RefreshIcon))),
