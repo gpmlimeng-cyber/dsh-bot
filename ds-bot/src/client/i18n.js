@@ -24,6 +24,8 @@ const ZH = {
   'Plugins': '插件',
   'Apps': '应用市场',
   'Market': '市场',
+  'The plugin catalogue is the shell own page.': '插件目录是宿主自己的页面。',
+  'Open it': '打开',
   'Skills': '技能',
   'Installed': '已安装',
   'Nothing installed yet': '还没有安装任何东西',

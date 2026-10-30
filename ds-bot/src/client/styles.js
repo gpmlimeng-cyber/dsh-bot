@@ -221,6 +221,7 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-market-more{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;border:0;background:none;padding:4px 0;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
 .bt-market-more:hover{color:var(--bt-ink)}
 .bt-market-empty{padding:24px 0;color:var(--bt-ink-3);font-size:13px}
+.bt-market-official{display:flex;align-items:center;justify-content:space-between;gap:12px}
 @media (max-width:720px){.bt-market-nav{width:200px}.bt-market-grid{grid-template-columns:1fr}}
 
 .bt-rail .bt-side-foot{position:static;flex-direction:column;gap:8px;padding:0 0 8px;margin-top:auto}

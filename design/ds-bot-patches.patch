@@ -272,10 +272,10 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 32ba8c9..0403363 100644
+index 32ba8c9..b580e74 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,26 @@ const ZH = {
+@@ -18,6 +18,28 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
@@ -285,6 +285,8 @@ index 32ba8c9..0403363 100644
 +  'Plugins': '插件',
 +  'Apps': '应用市场',
 +  'Market': '市场',
++  'The plugin catalogue is the shell own page.': '插件目录是宿主自己的页面。',
++  'Open it': '打开',
 +  'Skills': '技能',
 +  'Installed': '已安装',
 +  'Nothing installed yet': '还没有安装任何东西',
@@ -302,7 +304,7 @@ index 32ba8c9..0403363 100644
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
    'Quiet': '安静',
-@@ -918,6 +938,10 @@ const ZH = {
+@@ -918,6 +940,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -313,7 +315,7 @@ index 32ba8c9..0403363 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -960,6 +984,7 @@ const ZH = {
+@@ -960,6 +986,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -321,7 +323,7 @@ index 32ba8c9..0403363 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1044,6 +1069,10 @@ const ZH = {
+@@ -1044,6 +1071,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -421,10 +423,10 @@ index daf7dd4..8784d88 100644
      setSurface: (mode) => {
 diff --git a/ds-bot/src/client/market.js b/ds-bot/src/client/market.js
 new file mode 100644
-index 0000000..c3823b0
+index 0000000..8a3913a
 --- /dev/null
 +++ b/ds-bot/src/client/market.js
-@@ -0,0 +1,148 @@
+@@ -0,0 +1,156 @@
 +import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
 +import { createPortal } from 'react-dom'
 +import { t } from './i18n.js'
@@ -568,7 +570,15 @@ index 0000000..c3823b0
 +                onOpen: () => setSelected(entry.id ?? entry.name),
 +                onPick: () => pick(entry),
 +              })))
-+              : h('div', { className: 'bt-market-empty', key: 'empty' }, t('Nothing here yet')),
++              : h('div', { className: 'bt-market-empty', key: 'empty' },
++                tab === 'plugins'
++                  ? h('div', { className: 'bt-market-official' },
++                    h('span', null, t('The plugin catalogue is the shell own page.')),
++                    h('button', {
++                      type: 'button', className: 'bt-market-go',
++                      onClick: () => { onClose(); import('./sidebar.js').then((mod) => mod.openHarnessSettings()) },
++                    }, t('Open it')))
++                  : t('Nothing here yet')),
 +            h('button', { type: 'button', className: 'bt-market-more', key: 'more', onClick: () => { onClose(); actions.openConnectors() } },
 +              h(GearIcon), h('span', null, t('Open the full connector page'))),
 +          ])))), document.body)
@@ -977,7 +987,7 @@ index 58d1840..aba0d55 100644
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..10260bd 100644
+index aa38a3b..9b0a399 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -117,10 +117,20 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
@@ -1003,7 +1013,7 @@ index aa38a3b..10260bd 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -145,12 +155,100 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -145,12 +155,101 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
  .bt-unread-wait{background:var(--bt-star)}
@@ -1075,6 +1085,7 @@ index aa38a3b..10260bd 100644
 +.bt-market-more{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;border:0;background:none;padding:4px 0;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
 +.bt-market-more:hover{color:var(--bt-ink)}
 +.bt-market-empty{padding:24px 0;color:var(--bt-ink-3);font-size:13px}
++.bt-market-official{display:flex;align-items:center;justify-content:space-between;gap:12px}
 +@media (max-width:720px){.bt-market-nav{width:200px}.bt-market-grid{grid-template-columns:1fr}}
 +
 +.bt-rail .bt-side-foot{position:static;flex-direction:column;gap:8px;padding:0 0 8px;margin-top:auto}
@@ -1107,7 +1118,7 @@ index aa38a3b..10260bd 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -317,6 +415,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -317,6 +416,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -1134,7 +1145,7 @@ index aa38a3b..10260bd 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -548,7 +666,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -548,7 +667,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
  html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
  html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
@@ -1145,7 +1156,7 @@ index aa38a3b..10260bd 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -588,7 +708,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -588,7 +709,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -1155,7 +1166,7 @@ index aa38a3b..10260bd 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -883,6 +1004,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +1005,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -1217,7 +1228,7 @@ index aa38a3b..10260bd 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1158,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1159,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -1326,7 +1337,7 @@ index aa38a3b..10260bd 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1286,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1287,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -1353,7 +1364,7 @@ index aa38a3b..10260bd 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1306,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1307,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -1362,7 +1373,7 @@ index aa38a3b..10260bd 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1347,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1348,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}

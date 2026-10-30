@@ -141,7 +141,15 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
                 onOpen: () => setSelected(entry.id ?? entry.name),
                 onPick: () => pick(entry),
               })))
-              : h('div', { className: 'bt-market-empty', key: 'empty' }, t('Nothing here yet')),
+              : h('div', { className: 'bt-market-empty', key: 'empty' },
+                tab === 'plugins'
+                  ? h('div', { className: 'bt-market-official' },
+                    h('span', null, t('The plugin catalogue is the shell own page.')),
+                    h('button', {
+                      type: 'button', className: 'bt-market-go',
+                      onClick: () => { onClose(); import('./sidebar.js').then((mod) => mod.openHarnessSettings()) },
+                    }, t('Open it')))
+                  : t('Nothing here yet')),
             h('button', { type: 'button', className: 'bt-market-more', key: 'more', onClick: () => { onClose(); actions.openConnectors() } },
               h(GearIcon), h('span', null, t('Open the full connector page'))),
           ])))), document.body)
