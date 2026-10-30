@@ -918,6 +918,10 @@ const ZH = {
   // Feedback and errors
   Feedback: '反馈',
   'Report a problem': '报告问题',
+  'Session': '会话',
+  'Export session log': '导出会话日志',
+  'A ZIP of this Session, written by the Shell': '由宿主打包的当前会话 ZIP',
+  'Export': '导出',
   'What happened?': '发生了什么？',
   'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
   'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',

@@ -919,6 +919,8 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
    rounded square. The shell ships the whole surface as superellipse(1.5) through this one
    variable, so a round corner everywhere is one variable, not a pile of !important rules:
    sizes, colours and layout stay exactly as the shell set them. */
+/* The shell's session-log export belongs in Settings, not at the bottom of the drawer. */
+[data-mobile-nav="drawer-actions"] [data-mobile-nav="session-log"]{display:none!important}
 html:root{--dsw-corner-shape:round}
 /* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
    into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off

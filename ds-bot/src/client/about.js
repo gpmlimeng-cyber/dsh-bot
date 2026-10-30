@@ -107,6 +107,21 @@ export function AboutPage({ useUpdate, actions, run, Section, Row }) {
         ? h('button', { type: 'button', className: 'bt-fb-primary', disabled: dshPhase === 'installing', onClick: () => run(actions.installDshUpdate()) },
             dshPhase === 'installing' ? t('Updating…') : dshPhase === 'failed' ? t('Try again') : t('Update'))
         : null
+  // The shell's session-log export sits in the drawer's footer, at the very bottom of a
+  // phone screen. Settings carries it instead: the same shell route, asked for the
+  // conversation that is open, with its sub-Sessions in the archive.
+  const sessionId = () => (typeof document === 'undefined' ? '' : document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') ?? '')
+  const exportLog = () => {
+    const id = sessionId()
+    if (id === '') return
+    const link = document.createElement('a')
+    link.href = `/api/session.export?sessionId=${encodeURIComponent(id)}&includeDescendants=true`
+    link.download = ''
+    document.body.append(link)
+    link.click()
+    link.remove()
+  }
+  const hasChat = typeof document !== 'undefined' && Boolean(document.querySelector('[data-conversation-session]'))
   const repo = update.repoUrl
   return [
     h('div', { key: 'hero', className: 'bt-about-hero' },
@@ -124,6 +139,9 @@ export function AboutPage({ useUpdate, actions, run, Section, Row }) {
     h(Section, { key: 'updates', title: t('Updates') },
       h(Row, { label: 'DS Bot', hint: ownRow?.hint ?? botHint(update) }, botControl, update.available && update.notesUrl ? h('a', linkProps(update.notesUrl), t("What's new")) : null),
       dsh?.current ? h(Row, { label: 'DeepSeek Harness', hint: dshHint(dsh, dshShown) }, dshControl) : null),
+    h(Section, { key: 'session', title: t('Session') },
+      h(Row, { label: t('Export session log'), hint: t('A ZIP of this Session, written by the Shell') },
+        h('button', { type: 'button', className: 'bt-soft bt-soft-sm', disabled: !hasChat, onClick: exportLog }, t('Export')))),
     h(Section, { key: 'links', title: t('Links') },
       repo ? h(Row, { label: t('Source code'), hint: repo.replace(/^https:\/\//, '') }, h('a', linkProps(repo), h(GitHubMark), t('Open'))) : null,
       update.notesUrl ? h(Row, { label: t('Release notes') }, h('a', linkProps(update.notesUrl), t('Open'))) : null,

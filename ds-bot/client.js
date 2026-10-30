@@ -965,6 +965,10 @@ var ZH = {
   // Feedback and errors
   Feedback: "反馈",
   "Report a problem": "报告问题",
+  "Session": "会话",
+  "Export session log": "导出会话日志",
+  "A ZIP of this Session, written by the Shell": "由宿主打包的当前会话 ZIP",
+  "Export": "导出",
   "What happened?": "发生了什么？",
   "What you did, what you expected, and what happened instead. It goes into the issue.": "你做了什么、期望什么、实际发生了什么。会写进 issue。",
   "For example: I asked Writer in the group chat and it showed an error.": "例如：我在群聊里问 Writer，它显示出错了。",
@@ -3290,6 +3294,8 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
    rounded square. The shell ships the whole surface as superellipse(1.5) through this one
    variable, so a round corner everywhere is one variable, not a pile of !important rules:
    sizes, colours and layout stay exactly as the shell set them. */
+/* The shell's session-log export belongs in Settings, not at the bottom of the drawer. */
+[data-mobile-nav="drawer-actions"] [data-mobile-nav="session-log"]{display:none!important}
 html:root{--dsw-corner-shape:round}
 /* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
    into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
@@ -17353,6 +17359,18 @@ function AboutPage({ useUpdate, actions, run: run2, Section, Row: Row3 }) {
     { type: "button", className: "bt-fb-primary", disabled: dshPhase === "installing", onClick: () => run2(actions.installDshUpdate()) },
     dshPhase === "installing" ? t("Updating…") : dshPhase === "failed" ? t("Try again") : t("Update")
   ) : null;
+  const sessionId = () => typeof document === "undefined" ? "" : document.querySelector("[data-conversation-session]")?.getAttribute("data-conversation-session") ?? "";
+  const exportLog = () => {
+    const id = sessionId();
+    if (id === "") return;
+    const link = document.createElement("a");
+    link.href = `/api/session.export?sessionId=${encodeURIComponent(id)}&includeDescendants=true`;
+    link.download = "";
+    document.body.append(link);
+    link.click();
+    link.remove();
+  };
+  const hasChat = typeof document !== "undefined" && Boolean(document.querySelector("[data-conversation-session]"));
   const repo = update.repoUrl;
   return [
     (0, import_react41.createElement)(
@@ -17385,6 +17403,15 @@ function AboutPage({ useUpdate, actions, run: run2, Section, Row: Row3 }) {
       { key: "updates", title: t("Updates") },
       (0, import_react41.createElement)(Row3, { label: "DS Bot", hint: ownRow?.hint ?? botHint(update) }, botControl, update.available && update.notesUrl ? (0, import_react41.createElement)("a", linkProps(update.notesUrl), t("What's new")) : null),
       dsh?.current ? (0, import_react41.createElement)(Row3, { label: "DeepSeek Harness", hint: dshHint(dsh, dshShown) }, dshControl) : null
+    ),
+    (0, import_react41.createElement)(
+      Section,
+      { key: "session", title: t("Session") },
+      (0, import_react41.createElement)(
+        Row3,
+        { label: t("Export session log"), hint: t("A ZIP of this Session, written by the Shell") },
+        (0, import_react41.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", disabled: !hasChat, onClick: exportLog }, t("Export"))
+      )
     ),
     (0, import_react41.createElement)(
       Section,
