@@ -111,6 +111,14 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     secretCancel: requestId => after(call('secret-cancel', { requestId })),
     secretUpdate: (name, { scope, purpose } = {}) => after(call('secret-update', { name, scope, purpose })),
     secretDelete: name => after(call('secret-delete', { name })),
+    // MCP servers: the reading calls answer with the profile's own rows; the mutating
+    // ones answer with the fresh list so the panel never reads twice.
+    mcpList: () => call('mcp-list'),
+    mcpTools: serverName => call('mcp-tools', { serverName }),
+    mcpSave: payload => after(call('mcp-save', payload)),
+    mcpToggle: payload => after(call('mcp-toggle', payload)),
+    mcpAdd: payload => after(call('mcp-add', payload)),
+    mcpRemove: payload => after(call('mcp-remove', payload)),
     connectorConnect: (id, token) => after(call('connector-connect', { id, token })),
     connectorDisconnect: id => after(call('connector-disconnect', { id })),
     connectorRetry: id => after(call('connector-retry', { id })),

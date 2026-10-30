@@ -1,6 +1,7 @@
 import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { SkillMarketPanel, readySkillMarket } from './skill-market/panel.js'
+import { McpPanel } from './mcp-panel.js'
 import { dateLocale, t } from './i18n.js'
 import { CloseIcon, SearchIcon, PlusIcon, PlugIcon, GearIcon, GlobeIcon, TerminalIcon, FolderIcon, MemoryIcon, MoreDotsIcon, TrashIcon, SwitchIcon } from './icons.js'
 
@@ -14,9 +15,10 @@ import { CloseIcon, SearchIcon, PlusIcon, PlugIcon, GearIcon, GlobeIcon, Termina
 // declares and one page of entries, and installing goes through the shell's package
 // manager, so a plugin lands exactly where its own page puts it.
 
-const CATEGORIES = () => [
+export const CATEGORIES = () => [
   { id: 'plugins', name: t('Plugins') },
   { id: 'skills', name: t('Skills') },
+  { id: 'mcp', name: t('MCP') },
   { id: 'connectors', name: t('Connectors') },
   { id: 'capabilities', name: t('Capabilities') },
 ]
@@ -436,8 +438,8 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
           className: 'bt-market-cat',
           onClick: () => setTab(category.id),
         }, category.name))),
-      tab === 'skills' ? null : h('div', { className: 'bt-market-insthead' }, t(tab === 'plugins' ? 'Enabled' : 'Installed')),
-      tab === 'skills' ? null : h('div', { className: 'bt-market-installed' },
+      tab === 'skills' || tab === 'mcp' ? null : h('div', { className: 'bt-market-insthead' }, t(tab === 'plugins' ? 'Enabled' : 'Installed')),
+      tab === 'skills' || tab === 'mcp' ? null : h('div', { className: 'bt-market-installed' },
         installed.length
           ? installed.map((entry) => {
             const id = entry.id ?? entry.name
@@ -473,7 +475,7 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
     h('main', { className: 'bt-market-main' },
       // The Skills tab carries no second heading: the vendored panel brings its own title,
       // search box and view tabs, and a market header above them only repeated them.
-      tab === 'skills' ? null : h('header', { className: 'bt-market-head' },
+      tab === 'skills' || tab === 'mcp' ? null : h('header', { className: 'bt-market-head' },
         h('div', { className: 'bt-market-heading' },
           h('h2', { className: 'bt-market-h2' }, heading),
           h('p', { className: 'bt-market-sub' }, current
@@ -496,6 +498,10 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
         // local import all live in that panel, so nothing here reimplements them.
         tab === 'skills'
           ? h('div', { className: 'bt-market-skillhost', key: 'skills' }, h(SkillMarketPanel))
+          // The MCP page is its own panel too: the servers, one server's tools and the
+          // editor share one state, and none of it comes from a catalogue.
+          : tab === 'mcp'
+            ? h('div', { className: 'bt-mcp-host', key: 'mcp' }, h(McpPanel, { actions }))
           : tab === 'plugins' && !current
           ? [h(Discover, { key: 'discover', actions }),
             h('button', { type: 'button', className: 'bt-market-more', key: 'more', onClick: () => { onClose(); actions.openPluginsPanel?.() } },
