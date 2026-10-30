@@ -154,7 +154,9 @@ export function install(rt) {
   async function writePatch(path, text, check) {
     const before = await readFile(path, 'utf8').catch(() => '[]\n')
     const temp = `${path}.ds-bot-${process.pid}.tmp`
-    await writeFile(temp, text, 'utf8')
+    // The profile patch is the user's own file and holds provider keys and `!!js`
+    // expressions; it stays readable by its owner only, so the replacement does too.
+    await writeFile(temp, text, { encoding: 'utf8', mode: 0o600 })
     try {
       await replaceFile(temp, path)
     } catch (error) {
@@ -166,7 +168,7 @@ export function install(rt) {
       if (await check()) return
     } catch { /* checked below */ }
     const back = `${path}.ds-bot-restore-${process.pid}.tmp`
-    await writeFile(back, before, 'utf8')
+    await writeFile(back, before, { encoding: 'utf8', mode: 0o600 })
     await rename(back, path).catch(() => {})
     throw fail('The profile did not pick the change up, so it was put back')
   }
