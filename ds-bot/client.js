@@ -10117,12 +10117,7 @@ function TeamSidebar(props) {
   return (0, import_react16.createElement)(
     "div",
     { className: wide ? "bt-side" : "bt-side bt-rail", onKeyDown: typeToSearch },
-    wide ? (0, import_react16.createElement)(
-      "div",
-      { className: "bt-side-top" },
-      (0, import_react16.createElement)("span", { className: "bt-brand" }, (0, import_react16.createElement)(BrandName)),
-      (0, import_react16.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions })
-    ) : (0, import_react16.createElement)(
+    wide ? null : (0, import_react16.createElement)(
       import_react16.Fragment,
       null,
       // The rail opens with the way back: the same control that folded it.
@@ -21819,7 +21814,7 @@ function apply(ctx) {
       modeMenu = document.createElement("div");
       modeMenu.className = "bt-modebar-menu";
       modeMenu.setAttribute("role", "menu");
-      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:164px;padding:5px;border-radius:10px;background:transparent;box-shadow:none;backdrop-filter:blur(22px) saturate(1.4)`;
+      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 16px 36px -18px rgba(0,0,0,.3)`;
       for (const [id, label] of [["bot", t("Bot mode")], ["agent", t("DSH mode")]]) {
         const selected = mode === id;
         const item = document.createElement("button");
@@ -21899,20 +21894,32 @@ function apply(ctx) {
       }
       bandActions.style.cssText = `position:fixed;left:${Math.round(box.right + 20)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`;
       bandActions.textContent = "";
-      bandActions.appendChild(buildAction(t("Search"), "search", () => actions.openPalette("", { fromDrawer: true })));
-      bandActions.appendChild(buildAction(t("New…"), "plus", () => actions.openNewChat("new", { fromDrawer: true })));
-      bandActions.appendChild(buildAction(t("Collapse sidebar"), "collapse", () => actions.toggleSidebar()));
+      const hostClick = (selector) => document.querySelector(selector)?.click();
+      const inAgent = () => surface.getSnapshot().mode === "agent";
+      bandActions.appendChild(buildAction(t("Search"), "search", () => {
+        if (inAgent()) hostClick('button[class*="_searchButton"],button[aria-label*="搜索会话"],button[aria-label*="Search sessions"]');
+        else actions.openPalette("", { fromDrawer: true });
+      }));
+      bandActions.appendChild(buildAction(t("New…"), "plus", () => {
+        if (inAgent()) hostClick('button[class*="_newSession"],button[aria-label*="新建会话"],button[aria-label*="New session"]');
+        else actions.openNewChat("new", { fromDrawer: true });
+      }));
+      bandActions.appendChild(buildAction(t("Collapse sidebar"), "collapse", () => {
+        if (inAgent()) hostClick('button[class*="_toggle"],button[class*="_logoRow"] button');
+        else actions.toggleSidebar();
+      }));
     };
     if (!document.getElementById("bt-modebar-rules")) {
       const rules = document.createElement("style");
       rules.id = "bt-modebar-rules";
-      rules.textContent = 'button[aria-label="打开侧边栏"],button[aria-label="收起侧边栏"]:not(.bt-band-action),button[aria-label="展开侧边栏"]:not(.bt-side-expand),button[aria-label="Open sidebar"],button[aria-label="Close sidebar"]{display:none!important}';
+      rules.textContent = 'button[aria-label="打开侧边栏"],button[aria-label="收起侧边栏"]:not(.bt-band-action),button[aria-label="展开侧边栏"]:not(.bt-side-expand),button[aria-label="Open sidebar"],button[aria-label="Close sidebar"]{display:none!important}html.bt-agent [class*="_logoRow"]{display:none!important}';
       document.head.appendChild(rules);
     }
     const paintModeBar = () => {
       const mac = /Mac/i.test(navigator.platform || navigator.userAgent);
       const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue("--dsh-frame-chrome-top")) || (mac ? 44 : 0);
       const mode = surface.getSnapshot().mode;
+      document.documentElement.classList.toggle("bt-agent", mode === "agent");
       const left = mac ? 84 : 15;
       const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9;
       if (!modeBar) {

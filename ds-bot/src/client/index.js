@@ -1107,7 +1107,7 @@ export function apply(ctx) {
       modeMenu = document.createElement('div')
       modeMenu.className = 'bt-modebar-menu'
       modeMenu.setAttribute('role', 'menu')
-      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:164px;padding:5px;border-radius:10px;background:transparent;box-shadow:none;backdrop-filter:blur(22px) saturate(1.4)`
+      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 16px 36px -18px rgba(0,0,0,.3)`
       for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
         const selected = mode === id
         const item = document.createElement('button')
@@ -1177,9 +1177,22 @@ export function apply(ctx) {
       }
       bandActions.style.cssText = `position:fixed;left:${Math.round(box.right + 20)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`
       bandActions.textContent = ''
-      bandActions.appendChild(buildAction(t('Search'), 'search', () => actions.openPalette('', { fromDrawer: true })))
-      bandActions.appendChild(buildAction(t('New…'), 'plus', () => actions.openNewChat('new', { fromDrawer: true })))
-      bandActions.appendChild(buildAction(t('Collapse sidebar'), 'collapse', () => actions.toggleSidebar()))
+      // In the shell's own view these three do what the shell's own controls do, so the row
+      // never lies about what a click will get.
+      const hostClick = (selector) => document.querySelector(selector)?.click()
+      const inAgent = () => surface.getSnapshot().mode === 'agent'
+      bandActions.appendChild(buildAction(t('Search'), 'search', () => {
+        if (inAgent()) hostClick('button[class*="_searchButton"],button[aria-label*="搜索会话"],button[aria-label*="Search sessions"]')
+        else actions.openPalette('', { fromDrawer: true })
+      }))
+      bandActions.appendChild(buildAction(t('New…'), 'plus', () => {
+        if (inAgent()) hostClick('button[class*="_newSession"],button[aria-label*="新建会话"],button[aria-label*="New session"]')
+        else actions.openNewChat('new', { fromDrawer: true })
+      }))
+      bandActions.appendChild(buildAction(t('Collapse sidebar'), 'collapse', () => {
+        if (inAgent()) hostClick('button[class*="_toggle"],button[class*="_logoRow"] button')
+        else actions.toggleSidebar()
+      }))
     }
     // The band carries our own toggle now, so the shell's rail toggle is hidden from both
     // views. It lives in its own style element, since the plugin's sheet is gone in Agent mode.
@@ -1187,6 +1200,7 @@ export function apply(ctx) {
       const rules = document.createElement('style')
       rules.id = 'bt-modebar-rules'
       rules.textContent = 'button[aria-label="打开侧边栏"],button[aria-label="收起侧边栏"]:not(.bt-band-action),button[aria-label="展开侧边栏"]:not(.bt-side-expand),button[aria-label="Open sidebar"],button[aria-label="Close sidebar"]{display:none!important}'
+        + 'html.bt-agent [class*="_logoRow"]{display:none!important}'
       document.head.appendChild(rules)
     }
     const paintModeBar = () => {
@@ -1195,6 +1209,9 @@ export function apply(ctx) {
       // height, so a Mac window falls back to the standard 44px band.
       const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue('--dsh-frame-chrome-top')) || (mac ? 44 : 0)
       const mode = surface.getSnapshot().mode
+      // The shell's logo row belongs to its own view; hide it there, since the band carries
+      // the controls. The Bot view never renders that row.
+      document.documentElement.classList.toggle('bt-agent', mode === 'agent')
       // Clear of the traffic lights: past them in the window, at the edge without one.
       // A Mac window's traffic lights take the left corner, so the control sits well past
       // them; everywhere else it sits 15px from the window's left edge.

@@ -403,9 +403,7 @@ export function TeamSidebar(props) {
     actions.openPalette(event.key, { fromDrawer: true })
   }
   return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
-    wide ? h('div', { className: 'bt-side-top' },
-      h('span', { className: 'bt-brand' }, h(BrandName)),
-      h(UpdateButton, { useUpdate: props.useUpdate, actions }))
+    wide ? null
       : h(Fragment, null,
           // The rail opens with the way back: the same control that folded it.
           h('button', { type: 'button', className: 'bt-round bt-side-expand', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)),

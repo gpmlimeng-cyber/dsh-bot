@@ -549,7 +549,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..437ac8a 100644
+index daf7dd4..5925487 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -738,7 +738,7 @@ index daf7dd4..437ac8a 100644
      // Agent mode hands the surface back to the shell; everything open on the Bot
      // surface closes first so nothing stale reopens on the way back.
      setSurface: (mode) => {
-@@ -958,7 +1091,166 @@ export function apply(ctx) {
+@@ -958,7 +1091,183 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -758,7 +758,7 @@ index daf7dd4..437ac8a 100644
 +      modeMenu = document.createElement('div')
 +      modeMenu.className = 'bt-modebar-menu'
 +      modeMenu.setAttribute('role', 'menu')
-+      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:164px;padding:5px;border-radius:10px;background:transparent;box-shadow:none;backdrop-filter:blur(22px) saturate(1.4)`
++      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 16px 36px -18px rgba(0,0,0,.3)`
 +      for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
 +        const selected = mode === id
 +        const item = document.createElement('button')
@@ -828,9 +828,22 @@ index daf7dd4..437ac8a 100644
 +      }
 +      bandActions.style.cssText = `position:fixed;left:${Math.round(box.right + 20)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`
 +      bandActions.textContent = ''
-+      bandActions.appendChild(buildAction(t('Search'), 'search', () => actions.openPalette('', { fromDrawer: true })))
-+      bandActions.appendChild(buildAction(t('New…'), 'plus', () => actions.openNewChat('new', { fromDrawer: true })))
-+      bandActions.appendChild(buildAction(t('Collapse sidebar'), 'collapse', () => actions.toggleSidebar()))
++      // In the shell's own view these three do what the shell's own controls do, so the row
++      // never lies about what a click will get.
++      const hostClick = (selector) => document.querySelector(selector)?.click()
++      const inAgent = () => surface.getSnapshot().mode === 'agent'
++      bandActions.appendChild(buildAction(t('Search'), 'search', () => {
++        if (inAgent()) hostClick('button[class*="_searchButton"],button[aria-label*="搜索会话"],button[aria-label*="Search sessions"]')
++        else actions.openPalette('', { fromDrawer: true })
++      }))
++      bandActions.appendChild(buildAction(t('New…'), 'plus', () => {
++        if (inAgent()) hostClick('button[class*="_newSession"],button[aria-label*="新建会话"],button[aria-label*="New session"]')
++        else actions.openNewChat('new', { fromDrawer: true })
++      }))
++      bandActions.appendChild(buildAction(t('Collapse sidebar'), 'collapse', () => {
++        if (inAgent()) hostClick('button[class*="_toggle"],button[class*="_logoRow"] button')
++        else actions.toggleSidebar()
++      }))
 +    }
 +    // The band carries our own toggle now, so the shell's rail toggle is hidden from both
 +    // views. It lives in its own style element, since the plugin's sheet is gone in Agent mode.
@@ -838,6 +851,7 @@ index daf7dd4..437ac8a 100644
 +      const rules = document.createElement('style')
 +      rules.id = 'bt-modebar-rules'
 +      rules.textContent = 'button[aria-label="打开侧边栏"],button[aria-label="收起侧边栏"]:not(.bt-band-action),button[aria-label="展开侧边栏"]:not(.bt-side-expand),button[aria-label="Open sidebar"],button[aria-label="Close sidebar"]{display:none!important}'
++        + 'html.bt-agent [class*="_logoRow"]{display:none!important}'
 +      document.head.appendChild(rules)
 +    }
 +    const paintModeBar = () => {
@@ -846,6 +860,9 @@ index daf7dd4..437ac8a 100644
 +      // height, so a Mac window falls back to the standard 44px band.
 +      const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue('--dsh-frame-chrome-top')) || (mac ? 44 : 0)
 +      const mode = surface.getSnapshot().mode
++      // The shell's logo row belongs to its own view; hide it there, since the band carries
++      // the controls. The Bot view never renders that row.
++      document.documentElement.classList.toggle('bt-agent', mode === 'agent')
 +      // Clear of the traffic lights: past them in the window, at the edge without one.
 +      // A Mac window's traffic lights take the left corner, so the control sits well past
 +      // them; everywhere else it sits 15px from the window's left edge.
@@ -905,7 +922,7 @@ index daf7dd4..437ac8a 100644
        groups.reconcile(groupsFor(surface.getSnapshot()))
        clearTimeout(verifyTimer)
        verifyAttempts = 0
-@@ -970,6 +1262,11 @@ export function apply(ctx) {
+@@ -970,6 +1279,11 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
@@ -1745,7 +1762,7 @@ index 0000000..ae11666
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 58d1840..3ea0537 100644
+index 58d1840..3fb714c 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -3,14 +3,19 @@ import { createPortal } from 'react-dom'
@@ -1963,7 +1980,7 @@ index 58d1840..3ea0537 100644
    }
    const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
    // Typing while the sidebar has focus starts a search.
-@@ -299,26 +400,68 @@ export function TeamSidebar(props) {
+@@ -299,26 +400,66 @@ export function TeamSidebar(props) {
      if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
      if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
      event.preventDefault()
@@ -1971,14 +1988,13 @@ index 58d1840..3ea0537 100644
 +    actions.openPalette(event.key, { fromDrawer: true })
    }
    return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
-     wide ? h('div', { className: 'bt-side-top' },
+-    wide ? h('div', { className: 'bt-side-top' },
 -      h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
 -      h(UpdateButton, { useUpdate: props.useUpdate, actions }),
 -      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
 -      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
 -      h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)))
-+      h('span', { className: 'bt-brand' }, h(BrandName)),
-+      h(UpdateButton, { useUpdate: props.useUpdate, actions }))
++    wide ? null
        : h(Fragment, null,
 +          // The rail opens with the way back: the same control that folded it.
 +          h('button', { type: 'button', className: 'bt-round bt-side-expand', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)),
@@ -2045,7 +2061,7 @@ index 58d1840..3ea0537 100644
  }
  
  // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -483,7 +626,17 @@ const NO_SNAPSHOT = () => null
+@@ -483,7 +624,17 @@ const NO_SNAPSHOT = () => null
  // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
  // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
  // back in Agent mode; FooterAccount stands in while no seat exists at all.
@@ -2064,7 +2080,7 @@ index 58d1840..3ea0537 100644
    const [open, setOpen] = useState(false)
    useLayoutEffect(() => {
      if (!seat) return undefined
-@@ -565,7 +718,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+@@ -565,7 +716,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
    }, [open])
    const groups = [
      [
