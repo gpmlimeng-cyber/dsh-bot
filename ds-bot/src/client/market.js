@@ -60,6 +60,15 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   })), [roster.connectors])
 
   const capabilities = useMemo(CAPABILITIES, [t])
+  // The shell owns the plugin pages; its remote hands us the list, we draw the rows.
+  const [shellPlugins, setShellPlugins] = useState(null)
+  useEffect(() => {
+    if (!open || tab !== 'plugins' || shellPlugins !== null) return undefined
+    let live = true
+    Promise.resolve(actions.pluginsList?.()).then((list) => { if (live) setShellPlugins(Array.isArray(list) ? list : []) },
+      () => { if (live) setShellPlugins([]) })
+    return () => { live = false }
+  }, [open, tab, shellPlugins, actions])
   const plugins = roster.plugins ?? []
   const skills = roster.skills ?? []
 

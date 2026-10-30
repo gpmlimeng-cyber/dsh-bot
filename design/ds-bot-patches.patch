@@ -392,7 +392,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..8784d88 100644
+index daf7dd4..616fe25 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,6 +3,7 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -403,13 +403,32 @@ index daf7dd4..8784d88 100644
  import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
  import { MENTION_ORIGIN, currentPart } from './text.js'
  import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
-@@ -476,8 +477,16 @@ export function apply(ctx) {
+@@ -476,8 +477,35 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
 -    selectPanel: (id) => { ctx.layout.selectPanel(id) },
 +    selectPanel: (id, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ctx.layout.selectPanel(id) },
      toggleSidebar: () => { ctx.layout.toggleSidebar() },
++    // The shell's own plugin pages, reached through its remotes. They answer
++    // { ok, value }, and some wrap twice, so unwrap until a list or an error appears.
++    pluginsList: async () => {
++      const unwrap = (answer) => (answer && typeof answer === 'object' && 'ok' in answer ? answer.value : answer)
++      const manager = ctx.get('remote.pluginManager')
++      if (!manager) return []
++      const raw = unwrap(unwrap(await manager.listPlugins()))
++      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.plugins) ? raw.plugins : Array.isArray(raw?.items) ? raw.items : []
++      return list.map((entry) => ({
++        id: entry.id ?? entry.name ?? entry.pluginId,
++        name: entry.title ?? entry.displayName ?? entry.name ?? entry.id ?? entry.pluginId,
++        detail: entry.version ? `v${entry.version}` : (entry.description ?? ''),
++        enabled: entry.enabled !== false,
++      }))
++    },
++    setPluginEnabled: async (id, enabled) => {
++      const manager = ctx.get('remote.pluginManager')
++      if (manager?.setPluginEnabled) await manager.setPluginEnabled(id, enabled)
++    },
 +    // DSH's own right column; the header button opens and closes it.
 +    toggleRightPanel: () => {
 +      try {
@@ -423,10 +442,10 @@ index daf7dd4..8784d88 100644
      setSurface: (mode) => {
 diff --git a/ds-bot/src/client/market.js b/ds-bot/src/client/market.js
 new file mode 100644
-index 0000000..8a3913a
+index 0000000..001d426
 --- /dev/null
 +++ b/ds-bot/src/client/market.js
-@@ -0,0 +1,156 @@
+@@ -0,0 +1,165 @@
 +import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
 +import { createPortal } from 'react-dom'
 +import { t } from './i18n.js'
@@ -489,6 +508,15 @@ index 0000000..8a3913a
 +  })), [roster.connectors])
 +
 +  const capabilities = useMemo(CAPABILITIES, [t])
++  // The shell owns the plugin pages; its remote hands us the list, we draw the rows.
++  const [shellPlugins, setShellPlugins] = useState(null)
++  useEffect(() => {
++    if (!open || tab !== 'plugins' || shellPlugins !== null) return undefined
++    let live = true
++    Promise.resolve(actions.pluginsList?.()).then((list) => { if (live) setShellPlugins(Array.isArray(list) ? list : []) },
++      () => { if (live) setShellPlugins([]) })
++    return () => { live = false }
++  }, [open, tab, shellPlugins, actions])
 +  const plugins = roster.plugins ?? []
 +  const skills = roster.skills ?? []
 +

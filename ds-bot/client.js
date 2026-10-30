@@ -7440,6 +7440,22 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
     state: connector.state
   })), [roster.connectors]);
   const capabilities = (0, import_react15.useMemo)(CAPABILITIES, [t]);
+  const [shellPlugins, setShellPlugins] = (0, import_react15.useState)(null);
+  (0, import_react15.useEffect)(() => {
+    if (!open || tab !== "plugins" || shellPlugins !== null) return void 0;
+    let live = true;
+    Promise.resolve(actions.pluginsList?.()).then(
+      (list2) => {
+        if (live) setShellPlugins(Array.isArray(list2) ? list2 : []);
+      },
+      () => {
+        if (live) setShellPlugins([]);
+      }
+    );
+    return () => {
+      live = false;
+    };
+  }, [open, tab, shellPlugins, actions]);
   const plugins = roster.plugins ?? [];
   const skills = roster.skills ?? [];
   if (!open) return null;
@@ -20931,6 +20947,25 @@ function apply(ctx) {
     },
     toggleSidebar: () => {
       ctx.layout.toggleSidebar();
+    },
+    // The shell's own plugin pages, reached through its remotes. They answer
+    // { ok, value }, and some wrap twice, so unwrap until a list or an error appears.
+    pluginsList: async () => {
+      const unwrap = (answer) => answer && typeof answer === "object" && "ok" in answer ? answer.value : answer;
+      const manager = ctx.get("remote.pluginManager");
+      if (!manager) return [];
+      const raw = unwrap(unwrap(await manager.listPlugins()));
+      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.plugins) ? raw.plugins : Array.isArray(raw?.items) ? raw.items : [];
+      return list.map((entry) => ({
+        id: entry.id ?? entry.name ?? entry.pluginId,
+        name: entry.title ?? entry.displayName ?? entry.name ?? entry.id ?? entry.pluginId,
+        detail: entry.version ? `v${entry.version}` : entry.description ?? "",
+        enabled: entry.enabled !== false
+      }));
+    },
+    setPluginEnabled: async (id, enabled) => {
+      const manager = ctx.get("remote.pluginManager");
+      if (manager?.setPluginEnabled) await manager.setPluginEnabled(id, enabled);
     },
     // DSH's own right column; the header button opens and closes it.
     toggleRightPanel: () => {

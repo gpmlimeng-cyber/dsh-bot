@@ -479,6 +479,25 @@ export function apply(ctx) {
     },
     selectPanel: (id, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ctx.layout.selectPanel(id) },
     toggleSidebar: () => { ctx.layout.toggleSidebar() },
+    // The shell's own plugin pages, reached through its remotes. They answer
+    // { ok, value }, and some wrap twice, so unwrap until a list or an error appears.
+    pluginsList: async () => {
+      const unwrap = (answer) => (answer && typeof answer === 'object' && 'ok' in answer ? answer.value : answer)
+      const manager = ctx.get('remote.pluginManager')
+      if (!manager) return []
+      const raw = unwrap(unwrap(await manager.listPlugins()))
+      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.plugins) ? raw.plugins : Array.isArray(raw?.items) ? raw.items : []
+      return list.map((entry) => ({
+        id: entry.id ?? entry.name ?? entry.pluginId,
+        name: entry.title ?? entry.displayName ?? entry.name ?? entry.id ?? entry.pluginId,
+        detail: entry.version ? `v${entry.version}` : (entry.description ?? ''),
+        enabled: entry.enabled !== false,
+      }))
+    },
+    setPluginEnabled: async (id, enabled) => {
+      const manager = ctx.get('remote.pluginManager')
+      if (manager?.setPluginEnabled) await manager.setPluginEnabled(id, enabled)
+    },
     // DSH's own right column; the header button opens and closes it.
     toggleRightPanel: () => {
       try {
