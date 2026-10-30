@@ -9207,9 +9207,15 @@ var ZH2 = {
   "action.uninstallFailed": "卸载「{name}」失败：{reason}",
   "action.uninstallNamed": "卸载 {name}",
   "action.uninstalledNamed": "已卸载「{name}」",
+  "local.subtitle": "本机技能：目录里的文件，不来自 SkillHub",
+  "local.loading": "读取中…",
+  "local.empty": "这个技能目录是空的",
+  "local.pick": "选一个文件看内容",
+  "local.truncated": "文件太大，只显示开头",
   "action.uninstalledRestart": "已卸载「{name}」，重启 DeepSeek Harness 后生效",
   "action.uninstalling": "卸载「{name}」？",
   "action.unsavedNamed": "已取消收藏「{name}」",
+  "action.close": "关闭",
   "action.update": "更新",
   "action.updatedNamed": "已更新「{name}」",
   "action.updatedParked": "已更新「{name}」v{version}：{files} 个文件已写入停用目录，技能仍处于停用状态",
@@ -9501,9 +9507,15 @@ var EN = {
   "action.uninstallFailed": "Could not uninstall “{name}”: {reason}",
   "action.uninstallNamed": "Uninstall {name}",
   "action.uninstalledNamed": "Uninstalled “{name}”",
+  "local.subtitle": "A skill on this machine: files from its own directory, not from SkillHub",
+  "local.loading": "Reading…",
+  "local.empty": "This skill directory has no files",
+  "local.pick": "Pick a file to read it",
+  "local.truncated": "File too large; only the start is shown",
   "action.uninstalledRestart": "Uninstalled “{name}”. Restart DeepSeek Harness to apply.",
   "action.uninstalling": "Uninstall “{name}”?",
   "action.unsavedNamed": "Removed “{name}” from saved",
+  "action.close": "Close",
   "action.update": "Update",
   "action.updatedNamed": "Updated “{name}”",
   "action.updatedParked": "Updated “{name}” v{version}: {files} files written to the disabled store; the skill stays disabled",
@@ -10021,6 +10033,43 @@ body[data-ds-dark-theme] [data-skill-market] {
 }
 [data-skill-market] .sm-content { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
 [data-skill-market] .sm-inner { padding: 20px 24px 60px; }
+/* A machine-only skill's own drawer: its directory tree on the left, one file's text on the
+   right. It exists because those skills have no catalogue record to fill the usual drawer. */
+[data-skill-market] .sm-local-scrim {
+  position: absolute; inset: 0; z-index: 40; display: flex; justify-content: flex-end;
+  background: color-mix(in oklch, var(--sm-fg) 18%, transparent);
+}
+[data-skill-market] .sm-local-drawer {
+  width: 640px; max-width: 92%; height: 100%; display: flex; flex-direction: column;
+  background: var(--sm-bg); border-left: 1px solid var(--sm-border);
+  box-shadow: var(--sm-shadow-md);
+}
+[data-skill-market] .sm-local-head {
+  flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; padding: 18px 20px 14px; border-bottom: 1px solid var(--sm-border);
+}
+[data-skill-market] .sm-local-title h3 { font-size: 17px; }
+[data-skill-market] .sm-local-title p { margin-top: 4px; font-size: 12.5px; color: var(--sm-muted); }
+[data-skill-market] .sm-local-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 240px minmax(0, 1fr); }
+[data-skill-market] .sm-local-files {
+  min-height: 0; overflow-y: auto; padding: 10px; border-right: 1px solid var(--sm-border);
+}
+[data-skill-market] .sm-local-file {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  padding: 6px 8px; border-radius: var(--sm-radius); text-align: left; font-size: 12.5px;
+  color: var(--sm-fg);
+}
+[data-skill-market] .sm-local-file:hover { background: var(--sm-hover, color-mix(in oklch, var(--sm-fg) 7%, transparent)); }
+[data-skill-market] .sm-local-file.active { background: color-mix(in oklch, var(--sm-accent) 14%, transparent); color: var(--sm-fg); }
+[data-skill-market] .sm-local-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-skill-market] .sm-local-file-size { flex: none; color: var(--sm-muted); font-size: 11px; }
+[data-skill-market] .sm-local-preview { min-width: 0; min-height: 0; overflow: auto; padding: 12px 16px 24px; }
+[data-skill-market] .sm-local-preview-head {
+  font-family: var(--sm-font-mono); font-size: 11.5px; color: var(--sm-muted); margin-bottom: 8px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+[data-skill-market] .sm-local-note { padding: 10px 8px; font-size: 12.5px; color: var(--sm-muted); }
+[data-skill-market] .sm-local-note.is-error { color: var(--sm-danger, #e02135); }
 [data-skill-market] .sm-statusbar {
   height: var(--sm-statusbar); flex: 0 0 auto; display: flex; align-items: center; gap: 16px;
   padding: 0 20px; border-top: 1px solid var(--sm-border);
@@ -11712,6 +11761,8 @@ function SkillMarketPanel(props) {
   const securityRequests = React.useRef(/* @__PURE__ */ new Set());
   const [preview, setPreview] = React.useState(null);
   const [previewTrail, setPreviewTrail] = React.useState([]);
+  const [localDetail, setLocalDetail] = React.useState(null);
+  const [localPreview, setLocalPreview] = React.useState(null);
   const [previews, setPreviews] = React.useState({});
   const [installed, setInstalled] = React.useState(store.installed);
   const [saved, setSaved] = React.useState(store.saved);
@@ -12110,6 +12161,27 @@ function SkillMarketPanel(props) {
     seen.current.set(skill.id, skill);
     setSelected(skill.id);
   }, [isLocalSkill]);
+  const openLocalDetail = React.useCallback(async (entry) => {
+    const name = entry.directoryName ?? entry.id;
+    setLocalDetail({ name, loading: true, files: [], error: "" });
+    setLocalPreview(null);
+    try {
+      const answer = await api("/local-skill", { name });
+      setLocalDetail({ name, loading: false, files: Array.isArray(answer?.files) ? answer.files : [], error: "" });
+    } catch (error) {
+      setLocalDetail({ name, loading: false, files: [], error: error instanceof Error ? error.message : String(error) });
+    }
+  }, []);
+  const openLocalFile = React.useCallback(async (path) => {
+    if (localDetail === null) return;
+    setLocalPreview({ path, loading: true, text: "", error: "" });
+    try {
+      const answer = await api("/local-file", { name: localDetail.name, path });
+      setLocalPreview({ path, loading: false, text: String(answer?.text ?? ""), truncated: answer?.truncated === true, error: "" });
+    } catch (error) {
+      setLocalPreview({ path, loading: false, text: "", error: error instanceof Error ? error.message : String(error) });
+    }
+  }, [localDetail]);
   const loadDetail = React.useCallback(async (skill, options = {}) => {
     const id = String(skill?.id ?? "");
     const slug = String(skill?.slug ?? "");
@@ -12744,15 +12816,17 @@ function SkillMarketPanel(props) {
               label: t2("installed.enableNamed", { name }),
               onChange: (checked) => setSkillEnabled(skill ?? { id: entry.id, name }, entry, checked)
             }),
-            // Only when there is something to describe: a local import or a hand-placed directory
-            // has no upstream record, so the button is withheld rather than opening a drawer of
-            // empty tabs. The origin is what says so — the id of a hand-placed directory looks
-            // exactly like a published one.
+            // A published skill opens the catalogue drawer; a machine-only one opens its own
+            // directory, so neither row is left without a way in.
             skill && isLocalSkill(skill, entry.origin) === false ? h14("button", {
               type: "button",
               className: "sm-btn sm-btn-secondary sm-btn-sm",
               onClick: () => openDetail(skill, entry.origin)
-            }, t2("installed.details")) : null,
+            }, t2("installed.details")) : h14("button", {
+              type: "button",
+              className: "sm-btn sm-btn-secondary sm-btn-sm",
+              onClick: () => openLocalDetail(entry)
+            }, t2("installed.details")),
             // The library is where an outdated install is most visible, so the update
             // belongs here as well as on the favorite row.
             skill !== null && updateStateFor(skill).available ? h14("button", {
@@ -13549,6 +13623,74 @@ function SkillMarketPanel(props) {
       onOpenFile: (path) => followPreview(selectedSkill, path, preview?.version ?? ""),
       onClose: () => setPreview(null)
     }),
+    // The machine-only skill's own drawer: its directory, its files, one file's text.
+    localDetail === null ? null : h14(
+      "div",
+      { className: "sm-local-scrim", onClick: () => {
+        setLocalDetail(null);
+        setLocalPreview(null);
+      } },
+      h14(
+        "aside",
+        {
+          className: "sm-local-drawer",
+          role: "dialog",
+          "aria-label": localDetail.name,
+          onClick: (event) => event.stopPropagation()
+        },
+        h14(
+          "header",
+          { className: "sm-local-head" },
+          h14(
+            "div",
+            { className: "sm-local-title" },
+            h14("h3", null, localDetail.name),
+            h14("p", null, t2("local.subtitle"))
+          ),
+          h14("button", {
+            type: "button",
+            className: "sm-icon-btn",
+            "aria-label": t2("action.close"),
+            onClick: () => {
+              setLocalDetail(null);
+              setLocalPreview(null);
+            }
+          }, h14(Icon, { name: "i-x", size: 16 }))
+        ),
+        h14(
+          "div",
+          { className: "sm-local-body" },
+          h14(
+            "div",
+            { className: "sm-local-files" },
+            localDetail.loading ? h14("p", { className: "sm-local-note" }, t2("local.loading")) : localDetail.error !== "" ? h14("p", { className: "sm-local-note is-error" }, localDetail.error) : localDetail.files.length === 0 ? h14("p", { className: "sm-local-note" }, t2("local.empty")) : localDetail.files.map((file) => h14(
+              "button",
+              {
+                key: file.path,
+                type: "button",
+                className: "sm-local-file" + (localPreview?.path === file.path ? " active" : ""),
+                onClick: () => {
+                  void openLocalFile(file.path);
+                }
+              },
+              h14("span", { className: "sm-local-file-name" }, file.path),
+              h14("span", { className: "sm-local-file-size" }, humanSize(file.size))
+            ))
+          ),
+          h14(
+            "div",
+            { className: "sm-local-preview" },
+            localPreview === null ? h14("p", { className: "sm-local-note" }, t2("local.pick")) : localPreview.loading ? h14("p", { className: "sm-local-note" }, t2("local.loading")) : localPreview.error !== "" ? h14("p", { className: "sm-local-note is-error" }, localPreview.error) : h14(
+              React.Fragment,
+              null,
+              h14("div", { className: "sm-local-preview-head" }, localPreview.path),
+              h14("pre", { className: "sm-preview-code" }, h14("code", null, localPreview.text)),
+              localPreview.truncated === true ? h14("p", { className: "sm-local-note" }, t2("local.truncated")) : null
+            )
+          )
+        )
+      )
+    ),
     h14(ConfirmDialog, { request: confirmRequest, onClose: () => setConfirmRequest(null) }),
     h14(
       "div",
