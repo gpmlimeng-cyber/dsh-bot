@@ -1,0 +1,841 @@
+diff --git a/ds-bot/src/client/about.js b/ds-bot/src/client/about.js
+index 6dc05e2..a1bf478 100644
+--- a/ds-bot/src/client/about.js
++++ b/ds-bot/src/client/about.js
+@@ -107,6 +107,21 @@ export function AboutPage({ useUpdate, actions, run, Section, Row }) {
+         ? h('button', { type: 'button', className: 'bt-fb-primary', disabled: dshPhase === 'installing', onClick: () => run(actions.installDshUpdate()) },
+             dshPhase === 'installing' ? t('Updating…') : dshPhase === 'failed' ? t('Try again') : t('Update'))
+         : null
++  // The shell's session-log export sits in the drawer's footer, at the very bottom of a
++  // phone screen. Settings carries it instead: the same shell route, asked for the
++  // conversation that is open, with its sub-Sessions in the archive.
++  const sessionId = () => (typeof document === 'undefined' ? '' : document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') ?? '')
++  const exportLog = () => {
++    const id = sessionId()
++    if (id === '') return
++    const link = document.createElement('a')
++    link.href = `/api/session.export?sessionId=${encodeURIComponent(id)}&includeDescendants=true`
++    link.download = ''
++    document.body.append(link)
++    link.click()
++    link.remove()
++  }
++  const hasChat = typeof document !== 'undefined' && Boolean(document.querySelector('[data-conversation-session]'))
+   const repo = update.repoUrl
+   return [
+     h('div', { key: 'hero', className: 'bt-about-hero' },
+@@ -124,6 +139,9 @@ export function AboutPage({ useUpdate, actions, run, Section, Row }) {
+     h(Section, { key: 'updates', title: t('Updates') },
+       h(Row, { label: 'DS Bot', hint: ownRow?.hint ?? botHint(update) }, botControl, update.available && update.notesUrl ? h('a', linkProps(update.notesUrl), t("What's new")) : null),
+       dsh?.current ? h(Row, { label: 'DeepSeek Harness', hint: dshHint(dsh, dshShown) }, dshControl) : null),
++    h(Section, { key: 'session', title: t('Session') },
++      h(Row, { label: t('Export session log'), hint: t('A ZIP of this Session, written by the Shell') },
++        h('button', { type: 'button', className: 'bt-soft bt-soft-sm', disabled: !hasChat, onClick: exportLog }, t('Export')))),
+     h(Section, { key: 'links', title: t('Links') },
+       repo ? h(Row, { label: t('Source code'), hint: repo.replace(/^https:\/\//, '') }, h('a', linkProps(repo), h(GitHubMark), t('Open'))) : null,
+       update.notesUrl ? h(Row, { label: t('Release notes') }, h('a', linkProps(update.notesUrl), t('Open'))) : null,
+diff --git a/ds-bot/src/client/bot-settings.js b/ds-bot/src/client/bot-settings.js
+index ee141a9..ae68f2c 100644
+--- a/ds-bot/src/client/bot-settings.js
++++ b/ds-bot/src/client/bot-settings.js
+@@ -4,6 +4,7 @@ import { CHARACTERS, PICKER_SHAPES, PICKER_COLUMNS, CHARACTER_COLORS, SHAPES, ha
+ import { isMainOf } from './sources.js'
+ import { PencilIcon, ChevronRightIcon } from './icons.js'
+ import { lookOf, BotMark } from './mark.js'
++import { GAZE } from './gaze.js'
+ import { ModelMenu, modelOf } from './model-menu.js'
+ import { FolderMenu } from './folder-menu.js'
+ import { BotSchedules } from './schedules.js'
+@@ -96,6 +97,15 @@ export function CharacterGrid({ look, hasPhoto = false, onShape, onColor }) {
+     }, h('span', { style: { background: paintCss(color) } })))))
+ }
+ 
++// The Gaze faces that ship with the plugin, one click away in both avatar pickers.
++export function GazeRow({ current, onPick }) {
++  return h('div', { className: 'bt-shape-row', role: 'group', 'aria-label': t('Gaze') }, GAZE.map(entry => h('button', {
++    key: entry.id, type: 'button', className: 'bt-shape', title: entry.id, 'aria-label': entry.id,
++    'aria-pressed': current === entry.image,
++    onClick: () => onPick(entry.image),
++  }, h('span', { style: { width: 36, height: 36 } }, h('img', { className: 'bt-mark-img', src: entry.image, alt: '', draggable: false })))))
++}
++
+ // The avatar editor: the Bot tab picks a character (every click saves), the
+ // Upload tab takes a photo, the Library tab picks one the user imported before, and
+ // Reset returns to the look the Bot id gives.
+@@ -138,11 +148,13 @@ function AvatarEditor({ bot, actions, run, onClose }) {
+         type: 'button', className: 'bt-avedit-tab bt-avedit-reset', title: t('Reset character to default'),
+         onClick: () => run(actions.updateBot(bot.id, { avatar: null, color: null })),
+       }, t('Reset'))),
+-    tab === 'bot' ? h(CharacterGrid, {
+-      look, hasPhoto,
+-      onShape: shape => run(actions.updateBot(bot.id, { avatar: { shape } })),
+-      onColor: color => run(actions.updateBot(bot.id, { color })),
+-    }) : null,
++    tab === 'bot' ? h(Fragment, null,
++      h(CharacterGrid, {
++        look, hasPhoto,
++        onShape: shape => run(actions.updateBot(bot.id, { avatar: { shape } })),
++        onColor: color => run(actions.updateBot(bot.id, { color })),
++      }),
++      h(GazeRow, { current: look.image, onPick: image => run(actions.updateBot(bot.id, { avatar: { ...bot.avatar, image } })) })) : null,
+     tab === 'upload' ? h('div', {
+       className: 'bt-dropzone', 'data-over': over || undefined,
+       onDragOver: (event) => { event.preventDefault(); setOver(true) },
+diff --git a/ds-bot/src/client/browser-pane.js b/ds-bot/src/client/browser-pane.js
+index a273d4d..fcb5206 100644
+--- a/ds-bot/src/client/browser-pane.js
++++ b/ds-bot/src/client/browser-pane.js
+@@ -125,7 +125,7 @@ const tabLabel = page => page.title || shortAddress(page.url) || t('New tab')
+ // The `···` popover anchored to its button. `items` holds {key, icon, label,
+ // onPick} and {sep:true} entries; Escape or a click outside closes it. The
+ // callers hide the button when the list is empty.
+-export function PanelMenu({ items, className, 'aria-label': label }) {
++export function PanelMenu({ items, className, icon, 'aria-label': label }) {
+   const [open, setOpen] = useState(false)
+   const wrap = useRef(null)
+   useEffect(() => {
+@@ -145,7 +145,7 @@ export function PanelMenu({ items, className, 'aria-label': label }) {
+     h('button', {
+       type: 'button', className, 'aria-label': label, title: label,
+       'aria-haspopup': 'menu', 'aria-expanded': open, onClick: () => setOpen(value => !value),
+-    }, h(DotsIcon)),
++    }, h(icon ?? DotsIcon)),
+     open ? h('div', { className: 'bt-pmenu-pop', role: 'menu' },
+       items.map((item, index) => (item.sep
+         ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
+diff --git a/ds-bot/src/client/composer.js b/ds-bot/src/client/composer.js
+index 08d3b66..24096b6 100644
+--- a/ds-bot/src/client/composer.js
++++ b/ds-bot/src/client/composer.js
+@@ -1,6 +1,6 @@
+ import { createElement as h, Fragment, useEffect, useMemo, useRef, useState } from 'react'
+ import { createPortal } from 'react-dom'
+-import { ChatsIcon, ClockIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
++import { ChatsIcon, ClockIcon, ImageIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
+ import { BotMark } from './mark.js'
+ import { useLinger, useViewport, viewBottom } from './motion.js'
+ import { t } from './i18n.js'
+@@ -85,7 +85,7 @@ export function ComposerVoice({ sessionId, inputActions, actions, useUi }) {
+     h('button', {
+       type: 'button', className: 'bt-voice', 'aria-label': t('Start voice chat'), title: t('Voice chat'),
+       onMouseDown: keepComposerFocus, onClick: () => actions.openVoice(sessionId),
+-    }, h(WaveIcon, { size: 18 })),
++    }, h(WaveIcon)),
+     dictation.note ? h('span', { className: 'bt-mic-note', role: 'status' }, dictation.note) : null)
+ }
+ 
+@@ -133,6 +133,22 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
+     setOpen(null)
+     fileInput()?.click()
+   }
++  // Images take the same composer picker; only its accept filter changes for this one
++  // open, and it goes back whichever way the dialog ends (change, or a focus return).
++  const attachImage = () => {
++    setOpen(null)
++    const input = fileInput()
++    if (!input) return
++    const previous = input.getAttribute('accept')
++    input.setAttribute('accept', 'image/*')
++    const restore = () => {
++      if (previous === null) input.removeAttribute('accept')
++      else input.setAttribute('accept', previous)
++    }
++    input.addEventListener('change', restore, { once: true })
++    window.addEventListener('focus', () => setTimeout(restore, 500), { once: true })
++    input.click()
++  }
+   const schedule = () => {
+     setOpen(null)
+     actions.openSettings('schedules', target)
+@@ -161,6 +177,7 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
+       style: place ?? {}, 'data-leaving': leaving || undefined,
+     },
+     shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attach }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
++    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attachImage }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
+     canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
+     h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
+ }
+diff --git a/ds-bot/src/client/create-bot.js b/ds-bot/src/client/create-bot.js
+index 3956f8f..40a05f4 100644
+--- a/ds-bot/src/client/create-bot.js
++++ b/ds-bot/src/client/create-bot.js
+@@ -1,6 +1,6 @@
+ import { createElement as h, useEffect, useRef, useState } from 'react'
+ import { BotMark } from './mark.js'
+-import { CharacterGrid } from './bot-settings.js'
++import { CharacterGrid, GazeRow } from './bot-settings.js'
+ import { AvatarLibraryPanel, avatarImage } from './avatar-library.js'
+ import { DEFAULT_SHAPES, DEFAULT_COLORS } from './characters.js'
+ import { ChevronLeftIcon, CloseIcon } from './icons.js'
+@@ -73,7 +73,8 @@ export function CreateBot({ roster, actions, start, brief = '', onBack, canGoBac
+         h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: () => fileRef.current?.click() }, image ? t('Replace photo') : t('Upload photo')),
+         h('button', { type: 'button', className: 'bt-soft bt-soft-sm', 'aria-expanded': library, onClick: () => setLibrary(value => !value) }, t('Library')),
+         image ? h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: () => setImage(null) }, t('Remove photo')) : null,
+-        h('input', { ref: fileRef, type: 'file', accept: 'image/png,image/jpeg,image/webp,image/gif', hidden: true, onChange: (event) => { const file = event.target.files?.[0]; event.target.value = ''; upload(file) } }))),
++        h('input', { ref: fileRef, type: 'file', accept: 'image/png,image/jpeg,image/webp,image/gif', hidden: true, onChange: (event) => { const file = event.target.files?.[0]; event.target.value = ''; upload(file) } })),
++      h(GazeRow, { current: image, onPick: setImage })),
+     // The library is a block of its own under the look, not a part of the button row.
+     library ? h(AvatarLibraryPanel, { actions, onPick: entry => { setImage(entry.image); setLibrary(false) } }) : null,
+     h('label', { className: 'bt-field' },
+diff --git a/ds-bot/src/client/drawer-dismiss.js b/ds-bot/src/client/drawer-dismiss.js
+new file mode 100644
+index 0000000..8fca0d0
+--- /dev/null
++++ b/ds-bot/src/client/drawer-dismiss.js
+@@ -0,0 +1,15 @@
++// The shell's sidebar column doubles as the narrow-screen drawer, and no documented API
++// reports whether it is open (`ctx.layout` offers toggleSidebar only, and the sidebar slot
++// takes `wide`/`expandSidebar` but no open flag). So the caller says where the click came
++// from: only an entry inside the drawer passes `fromDrawer`, and only then does the drawer
++// collapse. A stale or missing holder makes this a no-op rather than a wrong toggle.
++let collapse = null
++
++export function holdDrawerDismiss(fn) {
++  collapse = fn
++  return () => { if (collapse === fn) collapse = null }
++}
++
++export function dismissDrawerIfOpen(fromDrawer) {
++  if (fromDrawer === true) collapse?.()
++}
+diff --git a/ds-bot/src/client/header.js b/ds-bot/src/client/header.js
+index c7b1488..dc7991a 100644
+--- a/ds-bot/src/client/header.js
++++ b/ds-bot/src/client/header.js
+@@ -1,12 +1,13 @@
+ import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
+ import { createPortal } from 'react-dom'
+ import { currentPart, latestMemoryChange } from './text.js'
+-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon } from './icons.js'
++import { ArrowUpIcon, CloseIcon, ArrowDownIcon, MemoryIcon, PencilIcon, PinIcon, TrashIcon, MenuLinesIcon, BigDotsIcon } from './icons.js'
+ import { botState, BotAvatar, RoomAvatar } from './mark.js'
+ import { ActivityIndicator } from './activity-row.js'
+ import { clockLabel, openingTurn, unseenSince } from './cells.js'
+ import { viewBottom } from './motion.js'
+ import { t } from './i18n.js'
++import { PanelMenu } from './browser-pane.js'
+ 
+ // -------------------------------------------------------------------------
+ // Conversation header
+@@ -98,6 +99,9 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
+   }, [Boolean(room)])
+   const memoryNotice = !away && notice && changed !== null && roster.memory !== false
+   return h('div', { className: 'bt-head' },
++    // dsh-web-mobile's own sidebar toggle renders into a slot this plugin shadows, so it
++    // never mounts on a phone. This is that missing entry: narrow screens only, and it
++    // only toggles the shell's sidebar, which is where the drawer lives.
+     h('button', {
+       type: 'button', className: 'bt-pill', 'aria-expanded': away ? undefined : detailsOpen, 'data-memory': memoryNotice ? 'updated' : undefined,
+       'aria-label': away ? t('Back to chat') : memoryNotice ? t('Memory updated. Open {name}\'s memory', { name: roster.byId[changed]?.name ?? name }) : t('View conversation details'),
+@@ -109,11 +113,35 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
+     h('span', { className: 'bt-pill-name' }, away ? t('Back to chat') : bot?.name ?? room?.name ?? (title || t('New chat'))),
+     h(MemoryNotice, { shown: memoryNotice }),
+     h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
++    h(SessionMenu, { sessionId, bot, room, roster, actions }),
+     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
++    h('button', {
++      type: 'button', className: 'bt-head-btn', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'),
++      onClick: () => actions.toggleSidebar(),
++    }, h(MenuLinesIcon)),
+     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
+     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions }))
+ }
+ 
++// The session's own actions, at the drawer button's mirror position. Only the entries that
++// exist for this session kind appear: a Bot has a memory, an Agent Session can be archived,
++// a group chat has neither.
++function SessionMenu({ sessionId, bot, room, roster, actions }) {
++  const agent = Object.values(roster.agentsById ?? {}).find(entry => (entry.sessions ?? []).includes(sessionId))
++  const subject = bot?.id ?? room?.id
++  const items = []
++  if (subject !== undefined) {
++    items.push({ key: 'rename', icon: PencilIcon, label: bot ? t('Rename Bot') : t('Rename'), onPick: () => actions.renameBot(subject) })
++    items.push({ key: 'pin', icon: PinIcon, label: (bot ?? room).pinned ? t('Unpin') : t('Pin'), onPick: () => actions.setFlags(subject, { pinned: !(bot ?? room).pinned }) })
++  }
++  if (bot !== undefined) items.push({ key: 'memory', icon: MemoryIcon, label: t('Memory'), onPick: () => actions.openMemory(bot.id) })
++  if (agent !== undefined) {
++    items.push({ key: 'rename-agent', icon: PencilIcon, label: t('Rename'), onPick: () => actions.beginAgentRename(sessionId) })
++    items.push({ key: 'archive', icon: TrashIcon, label: t('Archive'), onPick: () => actions.archiveAgentSession(agent.id, sessionId) })
++  }
++  return h(PanelMenu, { items, className: 'bt-head-btn', icon: BigDotsIcon, 'aria-label': t('Session actions') })
++}
++
+ // New-message pills. "N new messages ↓" takes Back to bottom's place when
+ // replies land while the user is scrolled up; "N new messages ↑" points at an unread
+ // divider above the viewport until it has been seen. The shell shows Back to bottom
+diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
+index 32ba8c9..92be15d 100644
+--- a/ds-bot/src/client/i18n.js
++++ b/ds-bot/src/client/i18n.js
+@@ -918,6 +918,10 @@ const ZH = {
+   // Feedback and errors
+   Feedback: '反馈',
+   'Report a problem': '报告问题',
++  'Session': '会话',
++  'Export session log': '导出会话日志',
++  'A ZIP of this Session, written by the Shell': '由宿主打包的当前会话 ZIP',
++  'Export': '导出',
+   'What happened?': '发生了什么？',
+   'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
+   'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
+@@ -960,6 +964,7 @@ const ZH = {
+   'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
+   // The composer's +
+   'Add files': '添加文件',
++  'Add image': '添加图片',
+   'Reference a chat': '引用对话',
+   'Chat with {name}': '与 {name} 的对话',
+   'Scheduled task': '定时任务',
+@@ -1044,6 +1049,10 @@ const ZH = {
+   'Up one level': '上一级',
+   'No folders inside.': '里面没有文件夹。',
+   'Some folders are not shown.': '还有一些文件夹没有显示。',
++
++  // Local patch (design/ds-bot-patches.md): appended, so it never collides with an
++  // upstream edit to the entries above.
++  Gaze: '凝视',
+ }
+ 
+ // Host errors stay English, since Bots read them too; they are translated where the
+diff --git a/ds-bot/src/client/icons.js b/ds-bot/src/client/icons.js
+index eee5675..5f9a18f 100644
+--- a/ds-bot/src/client/icons.js
++++ b/ds-bot/src/client/icons.js
+@@ -18,15 +18,16 @@ export function PeopleIcon() {
+ export function ArrowUpIcon() {
+   return h('svg', { width: 16, height: 16, viewBox: '0 0 20 20', 'aria-hidden': true }, h('path', { d: 'M10 16V4M5 9l5-5 5 5', stroke: 'currentColor', strokeWidth: 1.8, fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' }))
+ }
+-export function MicIcon({ size = 16 }) {
+-  return h('svg', { width: size, height: size, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', 'aria-hidden': true },
+-    h('rect', { x: 7, y: 2.5, width: 6, height: 10, rx: 3, fill: 'currentColor', stroke: 'none' }),
+-    h('path', { d: 'M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5' }))
++export function MicIcon({ size = 22 }) {
++  return h('svg', { width: size, height: size, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', 'aria-hidden': true },
++    h('rect', { x: 7.25, y: 2, width: 5.5, height: 10, rx: 2.75, fill: 'currentColor', stroke: 'none' }),
++    h('path', { d: 'M4.75 9.5a5.25 5.25 0 0 0 10.5 0' }),
++    h('path', { d: 'M10 14.75v2.75M7 17.5h6' }))
+ }
+ // The voice-chat glyph: five bars of a level meter.
+-export function WaveIcon({ size = 16 }) {
++export function WaveIcon({ size = 22 }) {
+   return h('svg', { width: size, height: size, viewBox: '0 0 20 20', fill: 'currentColor', 'aria-hidden': true },
+-    [[3, 7.5, 5], [6.5, 4.5, 11], [10, 2.5, 15], [13.5, 5.5, 9], [17, 8, 4]].map(([x, y, height]) => h('rect', { key: x, x: x - 1, y, width: 2, height, rx: 1 })))
++    [[3.75, 7, 6], [7, 4.5, 11], [10, 2, 16], [13, 4.5, 11], [16.25, 7, 6]].map(([x, y, height]) => h('rect', { key: x, x: x - 1.25, y, width: 2.5, height, rx: 1.25 })))
+ }
+ 
+ export function ShareIcon() {
+@@ -57,6 +58,18 @@ export function CloudDownloadIcon({ done = false }) {
+ export const SmileIcon = lineIcon(['M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z', 'M7.3 11.6a3.4 3.4 0 0 0 5.4 0', 'M7.75 8.25h.01M12.25 8.25h.01'])
+ export const ReplyIcon = lineIcon(['M8 5L4 9l4 4', 'M4 9h7.5a4.5 4.5 0 0 1 4.5 4.5V15'])
+ export const DotsIcon = lineIcon(['M5 10h.01M10 10h.01M15 10h.01'])
++// The reference app's drawer mark: a long line over a short one, both starting at the same
++// left edge, at display weight.
++export function MenuLinesIcon() {
++  return h('svg', { width: 20, height: 20, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', 'aria-hidden': true },
++    h('path', { d: 'M4 7.5h12M4 12.5h8' }))
++}
++// The same dots as DotsIcon, drawn larger for the session header's button.
++export function BigDotsIcon() {
++  return h('svg', { width: 22, height: 22, viewBox: '0 0 20 20', 'aria-hidden': true },
++    h('path', { d: 'M4 10h.01M10 10h.01M16 10h.01', stroke: 'currentColor', strokeWidth: 3.2, strokeLinecap: 'round' }))
++}
++export const ImageIcon = lineIcon(['M4 4.5h12v11H4z', 'M4 12l3.5-3.5 3 3 2-2 3.5 3.5', 'M7.75 8h.01'])
+ export const CheckIcon = lineIcon(['M4.5 10.5l3.5 3.5 7.5-8'])
+ export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
+ export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
+diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
+index daf7dd4..2870ccc 100644
+--- a/ds-bot/src/client/index.js
++++ b/ds-bot/src/client/index.js
+@@ -3,6 +3,7 @@ import { isHex, inkText, paintCss } from './inks.js'
+ import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
+ import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
+ import { teamActions } from './team-actions.js'
++import { dismissDrawerIfOpen } from './drawer-dismiss.js'
+ import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
+ import { MENTION_ORIGIN, currentPart } from './text.js'
+ import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
+@@ -476,7 +477,7 @@ export function apply(ctx) {
+       const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
+       show(target)
+     },
+-    selectPanel: (id) => { ctx.layout.selectPanel(id) },
++    selectPanel: (id, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ctx.layout.selectPanel(id) },
+     toggleSidebar: () => { ctx.layout.toggleSidebar() },
+     // Agent mode hands the surface back to the shell; everything open on the Bot
+     // surface closes first so nothing stale reopens on the way back.
+diff --git a/ds-bot/src/client/member-status.js b/ds-bot/src/client/member-status.js
+index c3d74e9..373c121 100644
+--- a/ds-bot/src/client/member-status.js
++++ b/ds-bot/src/client/member-status.js
+@@ -187,7 +187,10 @@ export const MEMBER_CSS = `
+ .bt-mw-dock{display:flex;justify-content:center;margin:0 auto 8px;pointer-events:none}
+ .bt-mw-pill{pointer-events:auto;position:relative;display:inline-flex;align-items:center;flex:none;box-sizing:border-box;height:32px;max-width:100%;padding:0;border:0;border-radius:999px;overflow:hidden;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line-2),0 2px 8px -2px rgba(0,0,0,.12);color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer;animation:bt-mw-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing} backwards,bt-veil-in .18s ease-out backwards;transition:background-color .12s ease,${spring(SPRING_SHAPE, 'width')},${spring(SPRING_TAP, 'scale')}}
+ .bt-mw-pill:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))}
++html:has([data-mobile-nav="frame"]) .bt-mw-pill:hover{background:color-mix(in srgb,var(--bt-ink) 6%,color-mix(in srgb,var(--bt-main) 78%,transparent))}
+ .bt-mw-pill:active{scale:.97}
++html:has([data-mobile-nav="frame"]) .bt-mw-pill{background:color-mix(in srgb,var(--bt-main) 72%,transparent);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
++html:has([data-mobile-nav="frame"]) .bt-mw-face{box-shadow:0 0 0 2px color-mix(in srgb,var(--bt-main) 72%,transparent)}
+ .bt-mw-dock[data-leaving] .bt-mw-pill{animation:bt-mw-out .16s cubic-bezier(.4,0,1,1) forwards;pointer-events:none}
+ .bt-mw-pill-in{display:inline-flex;align-items:center;gap:8px;flex:none;padding:0 13px 0 6px;white-space:nowrap}
+ .bt-mw-faces{display:inline-flex;align-items:center;flex:none;line-height:0}
+diff --git a/ds-bot/src/client/new-chat.js b/ds-bot/src/client/new-chat.js
+index fd53a99..69c8de0 100644
+--- a/ds-bot/src/client/new-chat.js
++++ b/ds-bot/src/client/new-chat.js
+@@ -1,4 +1,4 @@
+-import { createElement as h, useRef, useState } from 'react'
++import { Fragment, createElement as h, useEffect, useRef, useState } from 'react'
+ import { FishLogo } from './dsh-primitives.js'
+ import { PlusIcon, PeopleIcon, ArrowUpIcon } from './icons.js'
+ import { AdminStar, BotMark } from './mark.js'
+@@ -7,7 +7,80 @@ import { CreateBot } from './create-bot.js'
+ import { QUICK_EDGES, useFlip, useGlide, useMorph } from './motion.js'
+ import { t } from './i18n.js'
+ 
++// The pane is a bottom sheet on a phone: a drag on its grip stretches it (the list inside
++// then scrolls), and it may not grow past the visible area.
++function useSheetGrip(ref) {
++  useEffect(() => {
++    const pane = ref.current
++    const grip = pane?.querySelector('.bt-sheet-grip')
++    if (!pane || !grip || !document.querySelector('[data-mobile-nav="frame"]')) return undefined
++    const down = (event) => {
++      if (event.pointerType === 'mouse' && event.button !== 0) return
++      event.preventDefault()
++      const from = pane.getBoundingClientRect().height
++      const y0 = event.clientY
++      const ceiling = Math.min(window.visualViewport?.height ?? window.innerHeight, window.innerHeight) * 0.96
++      pane.dataset.dragging = '1'
++      const move = (ev) => {
++        const next = Math.max(180, Math.min(ceiling, from + (y0 - ev.clientY)))
++        pane.style.setProperty('--bt-sheet-h', `${Math.round(next)}px`)
++      }
++      const up = () => {
++        delete pane.dataset.dragging
++        removeEventListener('pointermove', move)
++        removeEventListener('pointerup', up)
++        removeEventListener('pointercancel', up)
++      }
++      addEventListener('pointermove', move)
++      addEventListener('pointerup', up)
++      addEventListener('pointercancel', up)
++    }
++    grip.addEventListener('pointerdown', down)
++    return () => {
++      grip.removeEventListener('pointerdown', down)
++      pane.style.removeProperty('--bt-sheet-h')
++      delete pane.dataset.dragging
++    }
++  }, [])
++}
++
++// The sheet sits on the composer, but a phone keyboard shrinks only the visible area and
++// leaves the composer behind it. Measure the composer while it is on screen and reserve
++// exactly that much; once it is behind the keyboard the sheet goes flush against it.
++function useSheetFoot() {
++  useEffect(() => {
++    if (!document.querySelector('[data-mobile-nav="frame"]')) return undefined
++    const root = document.documentElement
++    const sync = () => {
++      const card = document.querySelector('[data-composer-card]')
++      const box = card?.closest('[class*="_root"]') ?? card
++      const visible = (window.visualViewport?.height ?? window.innerHeight) + 1
++      const rect = box?.getBoundingClientRect()
++      const foot = rect && rect.bottom <= visible ? Math.ceil(rect.height) : 0
++      root.style.setProperty('--bt-sheet-foot', `${foot}px`)
++    }
++    sync()
++    const viewport = window.visualViewport
++    addEventListener('resize', sync)
++    addEventListener('focusin', sync)
++    addEventListener('focusout', sync)
++    viewport?.addEventListener('resize', sync)
++    viewport?.addEventListener('scroll', sync)
++    return () => {
++      removeEventListener('resize', sync)
++      removeEventListener('focusin', sync)
++      removeEventListener('focusout', sync)
++      viewport?.removeEventListener('resize', sync)
++      viewport?.removeEventListener('scroll', sync)
++      root.style.removeProperty('--bt-sheet-foot')
++    }
++  }, [])
++}
++
+ export function NewChat({ mode, roster, actions }) {
++  useSheetFoot()
++  const paneRef = useRef(null)
++  useSheetGrip(paneRef)
+   const [query, setQuery] = useState('')
+   const [picked, setPicked] = useState([])
+   const [group, setGroup] = useState(mode === 'group')
+@@ -112,12 +185,15 @@ export function NewChat({ mode, roster, actions }) {
+   const drop = useRef(null)
+   useMorph(drop, listed)
+   if (draft) {
+-    return h('div', { className: 'bt-pane', style: { left: paneLeft } },
++    return h(Fragment, null,
++      h('div', { className: 'bt-sheet-catcher', onClick: close }),
++      h('div', { ref: paneRef, className: 'bt-pane', style: { left: paneLeft } },
++        h('div', { className: 'bt-sheet-grip', 'aria-hidden': true }),
+       h(CreateBot, {
+         roster, actions, start: draft, brief: message.trim(), canGoBack: draft.fromList,
+         onBack: draft.fromList ? () => { setDraft(null); setTimeout(() => inputRef.current?.focus()) } : close,
+         onCreated: created,
+-      }))
++      })))
+   }
+   const adminBot = admin === null ? undefined : roster.byId[admin]
+   const recipients = adminBot ? [adminBot, ...pickedBots] : pickedBots
+@@ -126,7 +202,10 @@ export function NewChat({ mode, roster, actions }) {
+     if (picked.length > 0) setPicked(current => current.slice(0, -1))
+     else if (admin !== null) setAdmin(null)
+   }
+-  return h('div', { className: 'bt-pane', style: { left: paneLeft } },
++  return h(Fragment, null,
++    h('div', { className: 'bt-sheet-catcher', onClick: close }),
++    h('div', { ref: paneRef, className: 'bt-pane', style: { left: paneLeft } },
++      h('div', { className: 'bt-sheet-grip', 'aria-hidden': true }),
+     h('div', { className: 'bt-newchat', role: 'dialog', 'aria-label': mode === 'search' ? t('Search') : t('New chat') },
+       h('div', { className: 'bt-to' },
+         h('span', { className: 'bt-to-label' }, t('To:')),
+@@ -176,5 +255,5 @@ export function NewChat({ mode, roster, actions }) {
+               if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); sendMessage() }
+             },
+           }),
+-          h('button', { type: 'button', className: 'bt-nc-send', 'aria-label': t('Send message'), disabled: busy || message.trim() === '' || picked.length === 0, onClick: sendMessage }, h(ArrowUpIcon))))))
++          h('button', { type: 'button', className: 'bt-nc-send', 'aria-label': t('Send message'), disabled: busy || message.trim() === '' || picked.length === 0, onClick: sendMessage }, h(ArrowUpIcon)))))))
+ }
+diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
+index 58d1840..d2cacb9 100644
+--- a/ds-bot/src/client/sidebar.js
++++ b/ds-bot/src/client/sidebar.js
+@@ -10,6 +10,7 @@ import { reducedMotion } from './activity-row.js'
+ import { Shimmer, workPhrase } from './cells.js'
+ import { springEasing, SPRING_SHAPE, useViewport, viewBottom } from './motion.js'
+ import { hostText, t } from './i18n.js'
++import { holdDrawerDismiss } from './drawer-dismiss.js'
+ import { showsDshRow } from './dsh-offer.js'
+ 
+ // -------------------------------------------------------------------------
+@@ -253,6 +254,16 @@ export function TeamSidebar(props) {
+   const listRef = useRef(null)
+   const closing = useRef(false)
+   useLayoutEffect(() => { closing.current = false })
++  // The collapse lives here because this component alone knows `wide` and the latch that
++  // `navigate` uses; entries inside the drawer ask for it (see drawer-dismiss.js).
++  const collapseDrawer = useRef(null)
++  collapseDrawer.current = () => {
++    if (!wide || window.innerWidth >= 1024 || closing.current) return
++    closing.current = true
++    expandSidebar?.()
++    actions.toggleSidebar()
++  }
++  useEffect(() => holdDrawerDismiss(() => collapseDrawer.current?.()), [])
+   const roster = useRoster(value => value)
+   const markedUnread = useUi(value => value.unread)
+   props.useRegistry(value => value)
+@@ -292,6 +303,8 @@ export function TeamSidebar(props) {
+     openAgent: id => navigate(actions.openAgent, id),
+     openAgentSession: id => navigate(actions.openAgentSession, id),
+     newAgentSession: id => navigate(actions.newAgentSession, id),
++    // A row's menu opens its page above the drawer, so the drawer collapses first.
++    openSettings: (page, id) => actions.openSettings(page, id, { fromDrawer: true }),
+   }
+   const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
+   // Typing while the sidebar has focus starts a search.
+@@ -299,18 +312,18 @@ export function TeamSidebar(props) {
+     if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
+     if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
+     event.preventDefault()
+-    actions.openPalette(event.key)
++    actions.openPalette(event.key, { fromDrawer: true })
+   }
+   return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
+     wide ? h('div', { className: 'bt-side-top' },
+       h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
+       h(UpdateButton, { useUpdate: props.useUpdate, actions }),
+-      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
+-      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
++      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette('', { fromDrawer: true }) }, h(SearchIcon)),
++      h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon)),
+       h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)))
+       : h(Fragment, null,
+           h(UpdateButton, { useUpdate: props.useUpdate, actions }),
+-          h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon))),
++          h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon))),
+     wide && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
+     h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
+       main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
+@@ -483,7 +496,17 @@ const NO_SNAPSHOT = () => null
+ // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
+ // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
+ // back in Agent mode; FooterAccount stands in while no seat exists at all.
+-export function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions }) {
++export function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions: baseActions }) {
++  // This menu sits in the drawer (the shell's settings seat renders the same component
++  // with the drawer closed, where the collapse is a no-op), so its page entries collapse
++  // the drawer on the way. Wrapped here so the entries keep their own shape.
++  const drawerSeat = seat === false ? { fromDrawer: true } : undefined
++  const actions = {
++    ...baseActions,
++    openSettings: (page, id) => baseActions.openSettings(page, id, drawerSeat),
++    openConnectors: () => baseActions.openConnectors(drawerSeat),
++    selectPanel: id => baseActions.selectPanel(id, drawerSeat),
++  }
+   const [open, setOpen] = useState(false)
+   useLayoutEffect(() => {
+     if (!seat) return undefined
+@@ -565,7 +588,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+   }, [open])
+   const groups = [
+     [
+-      [t('Usage'), GaugeIcon, () => actions.openSettings('usage')],
++      [t('Usage'), GaugeIcon, () => actions.openSettings('usage', null, { fromDrawer: true })],
+       [t('Connectors'), ConnectorIcon, () => actions.openConnectors()],
+       [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
+       [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
+diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
+index aa38a3b..e37dedc 100644
+--- a/ds-bot/src/client/styles.js
++++ b/ds-bot/src/client/styles.js
+@@ -150,7 +150,11 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+ .bt-side-foot{display:flex;padding-top:8px}
+ 
+ .bt-head{position:relative;display:flex;justify-content:center;align-items:center;height:40px;flex:none;pointer-events:none}
+-.bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:var(--bt-main);border:.5px solid var(--bt-line-2);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
++/* dsh-web-mobile zeroes the host header's 10px top padding on a phone, which leaves this
++   row flush with the status bar. Give the row a little air back, but only where that
++   plugin owns the header: on a desktop window the host padding is still there. */
++html:has([data-mobile-nav="frame"]) .bt-head{margin-top:8px}
++.bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:36px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 72%,transparent);border:0;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
+ .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
+ .bt-pill:active{transform:scale(.965)}
+ .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+@@ -317,6 +321,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+ .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
+ .bt-create-go{height:36px;padding:0 20px}
+ @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
++
++/* On a phone the new-chat pane hosts Create Bot, and a popover anchored to the composer
++   leaves that form squeezed into a column. Lift it into a bottom sheet instead. */
++html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){top:auto!important;left:0!important;right:0!important;width:auto;height:var(--bt-sheet-h,auto);max-height:var(--bt-sheet-h,88dvh);border-radius:20px 20px 0 0;padding-bottom:calc(var(--bt-sheet-foot,0px) + env(safe-area-inset-bottom,0px));box-sizing:border-box;box-shadow:0 -1px 0 var(--bt-line),0 -12px 40px -16px rgba(0,0,0,.24);overflow:hidden}
++html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){animation:bt-sheet-in .42s cubic-bezier(.32,.9,.24,1) both,bt-veil-in .18s ease-out both}
++html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head{position:relative;padding-top:15px;border-bottom:0}
++html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
++html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-body{padding:2px 16px calc(16px + env(safe-area-inset-bottom,0px))}
++.bt-sheet-catcher,.bt-sheet-grip{display:none}
++html:has([data-mobile-nav="frame"]) .bt-sheet-catcher{display:block;position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.32);animation:bt-veil-in .18s ease-out both}
++html:has([data-mobile-nav="frame"]) .bt-sheet-grip{display:block;position:absolute;left:0;right:0;top:0;height:16px;z-index:3;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent}
++html:has([data-mobile-nav="frame"]) .bt-pane[data-dragging]{animation:none;cursor:grabbing}
++html:has([data-mobile-nav="frame"]) .bt-pane[data-dragging] .bt-create-card{animation:none}
++/* The look picker is built in six-wide rows for the panel; on a phone the sixth wraps
++   onto a line of its own, so flatten the rows into one compact five-column tile. */
++html:has([data-mobile-nav="frame"]) .bt-shapes{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
++html:has([data-mobile-nav="frame"]) .bt-shapes>.bt-shape-row{display:contents}
++html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-to{position:relative;padding-top:15px;border-bottom:0}
++html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-to::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
++html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-drop{position:static;left:auto;top:auto;width:auto;max-height:none;flex:1 1 auto;min-height:0;padding:0 6px calc(8px + env(safe-area-inset-bottom,0px));border:0;border-radius:0;background:transparent;box-shadow:none;overflow-y:auto;transform-origin:50% 0}
+ .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
+ .bt-send:disabled{opacity:.35;cursor:default}
+ .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
+@@ -883,6 +907,44 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+ @media (max-width:640px) and (pointer:coarse){
+   .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
+ }
++/* Local patches (design/ds-bot-patches.md). Appended rather than edited into the rules
++   above, so an upstream change to those rules cannot conflict: same specificity, later
++   wins. Both only touch what this plugin renders itself. */
++.bt-mark-img{box-shadow:none}
++/* Unconditional: the overlay is absolutely placed under the avatar button, so it
++   overflows a short viewport in either orientation (a landscape phone is 844 wide and
++   a 640 max-width query misses it). A long window simply never scrolls. */
++.bt-avedit{max-height:calc(100dvh - 96px);overflow-y:auto}
++/* This renderer does not give border-radius its round default: a 50% radius alone paints a
++   rounded square. The shell ships the whole surface as superellipse(1.5) through this one
++   variable, so a round corner everywhere is one variable, not a pile of !important rules:
++   sizes, colours and layout stay exactly as the shell set them. */
++/* The shell's session-log export belongs in Settings, not at the bottom of the drawer. */
++[data-mobile-nav="drawer-actions"] [data-mobile-nav="session-log"]{display:none!important}
++html:root{--dsw-corner-shape:round}
++/* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
++   into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
++   that same plugin's marker rather than a width: the marker means "drawer form", where the
++   native button is gone. It is a private attribute of dsh-web-mobile used for visibility
++   only — if it is ever renamed the button stops showing (a safe failure) and the native one
++   returns, so two hangers never appear at once. */
++.bt-head-btn{display:none;position:absolute;left:0;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:color-mix(in srgb,var(--bt-main) 72%,transparent);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
++.bt-head-btn:hover,.bt-head-btn:active{background:var(--bt-hover)}
++.bt-head-btn:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}
++/* 32px is the circle; a finger still gets 44. Grow up, down and left only, so the pill
++   beside it keeps its space. */
++.bt-head-btn::after{content:'';position:absolute;inset:-4px 0 -4px -4px}
++html:has([data-mobile-nav="frame"]) .bt-head-btn{display:flex}
++/* The session menu sits at the mirror position. The popover is the panel menu's own, which
++   already opens right-aligned below its button. */
++.bt-head>.bt-pmenu{position:absolute;right:0;top:2px;display:none}
++.bt-head>.bt-pmenu .bt-head-btn{position:static;left:auto}
++html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{display:inline-flex}
++/* The head is pointer-events:none and the panel menu never restated it, so without this
++   the popover paints but no item can be tapped. */
++.bt-head>.bt-pmenu .bt-pmenu-pop{pointer-events:auto}
++/* The left button's hit area grows rightwards; this one mirrors it so it never reaches the pill. */
++.bt-head>.bt-pmenu .bt-head-btn::after{inset:-4px -4px -4px 0}
+ `
+ 
+ export const CONVERSATION_CSS = `
+@@ -982,8 +1044,28 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+ }
+ @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
+ @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
+-[data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;min-height:44px!important;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:var(--bt-main)!important;border:.5px solid var(--bt-line-2)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
+-[data-composer-card]:hover,[data-composer-card]:focus-within{border-color:color-mix(in srgb,var(--bt-ink) 30%,transparent)!important}
++html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:0!important;min-height:44px!important;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:color-mix(in srgb,var(--bt-main) 88%,transparent)!important;border:0!important;box-shadow:0 6px 18px -6px rgba(0,0,0,.10),0 2px 5px rgba(0,0,0,.045),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
++html:has([data-mobile-nav="frame"]) [data-composer-card]:hover,[data-composer-card]:focus-within{background:color-mix(in srgb,var(--bt-main) 96%,transparent)!important}
++/* The card was measuring 2px of top padding against 7.5px at the bottom, so its 32px row
++   sat a couple of pixels high inside the 44px box. Equal 6px insets centre it exactly; the
++   attribute is repeated so this beats whichever rule pinned the top to 2px. */
++html:has([data-mobile-nav="frame"]) [data-composer-card][data-composer-card][data-composer-card]{padding:2px 7.5px!important}
++/* The shell lifts its primary send button 2px to suit its own row; in this card the plus,
++   the mic and the card's centre line all agree, so that lift leaves the send button high. */
++html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_primary"]{transform:none!important}
++/* The voice-input control the shell puts at the far right of the composer draws an 18px
++   mark on a bare seat. This surface asks for the fuller microphone used elsewhere, so the
++   shell's glyph is hidden and the mark is painted through a mask: it takes the button's own
++   colour, which keeps it right in light and dark themes alike. */
++html:has([data-mobile-nav="frame"]) [data-composer-card] button[aria-label*="voice input" i]>svg{display:none}
++html:has([data-mobile-nav="frame"]) [data-composer-card] button[aria-label*="voice input" i]{background-color:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='7.25' y='2' width='5.5' height='10' rx='2.75' fill='%23000' stroke='none'/%3E%3Cpath d='M4.75 9.5a5.25 5.25 0 0 0 10.5 0'/%3E%3Cpath d='M10 14.75v2.75M7 17.5h6'/%3E%3C/svg%3E") center/20px 20px no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='7.25' y='2' width='5.5' height='10' rx='2.75' fill='%23000' stroke='none'/%3E%3Cpath d='M4.75 9.5a5.25 5.25 0 0 0 10.5 0'/%3E%3Cpath d='M10 14.75v2.75M7 17.5h6'/%3E%3C/svg%3E") center/20px 20px no-repeat}
++/* The card centers its children, but a child that carries its own alignment still rides
++   the top of the row; pin every direct child's cross-axis alignment to the same centre. */
++html:has([data-mobile-nav="frame"]) [data-composer-card]>*{align-self:center!important}
++/* In DS Bot mode the composer's own "+" menu carries both file and image upload, so the
++   paperclip dsh-web-mobile injects beside it is a duplicate way to the same picker. Agent
++   mode draws no "+", so the paperclip stays there. */
++html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus) [data-mobile-nav="file-upload"]{display:none!important}
+ [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
+ [class*="_root"]:has(> [data-composer-card]){padding:0 11px 13px 16px!important}
+ [class*="_root"]:has(> [data-composer-card])>[data-composer-card]{max-width:min(992px,100%)!important}
+@@ -1003,10 +1085,10 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+ [data-composer-placeholder]::before{content:var(--bt-placeholder,"Message")!important;display:block!important;font-size:14px!important;line-height:24px!important;color:color-mix(in srgb,var(--bt-ink) 36%,transparent)!important}
+ /* The team's "+" (ComposerPlus) takes the seat of the shell's command-menu button. */
+ [data-composer-card] button[class*="_add"]{display:none!important}
+-.bt-plus{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bt-ink) 5%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink-2);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
+-.bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
++.bt-plus{flex:none;align-self:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;box-shadow:none;color:var(--bt-ink);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
++.bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 8%,transparent);color:var(--bt-ink)}
+ .bt-plus:active{scale:.9}
+-.bt-plus svg{width:14px;height:14px;transition:${spring(SPRING_POP, 'rotate')}}
++.bt-plus svg{width:22px;height:22px;transition:${spring(SPRING_POP, 'rotate')}}
+ .bt-plus[aria-expanded=true] svg{rotate:45deg}
+ .bt-plus-menu{min-width:180px}
+ [data-composer-card] [class*="_tools"]{gap:0!important}
+@@ -1015,16 +1097,16 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+ [data-composer-card] [class*="_trailing"]{gap:8px!important}
+ /* No display here: DSH hides these controls with [hidden] while the Bot works. */
+ [data-composer-card] [class*="_standardControls"]{align-items:center!important;gap:8px!important}
+-[data-composer-card] button[class*="_primary"]{width:28px!important;height:28px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink,#fff)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
+-[data-composer-card] button[class*="_primary"]:hover:not(:disabled){opacity:.9}
+-[data-composer-card] button[class*="_primary"]:active:not(:disabled){scale:.9}
++html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]{width:28px!important;height:28px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink,#fff)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
++html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:hover:not(:disabled){opacity:.9}
++html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:active:not(:disabled){scale:.9}
+ @keyframes bt-icon-swap{from{opacity:0;transform:scale(.5) rotate(-30deg)}}
+-[data-composer-card] button[class*="_primary"] svg{width:14px;height:14px}
+-[data-composer-card] button[class*="_primary"]:disabled{display:none!important}
++html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"] svg{width:14px;height:14px}
++html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:disabled{display:none!important}
+ [data-composer-dock]{display:none!important}
+ .bt-mic,.bt-voice{flex:none;width:28px;height:28px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
+-.bt-mic{background:color-mix(in srgb,var(--bt-ink) 5%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink-2)}
+-.bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
++.bt-mic{background:transparent;box-shadow:none;color:var(--bt-ink)}
++.bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 8%,transparent);color:var(--bt-ink)}
+ .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
+ @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
+ .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
+@@ -1074,17 +1156,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+ .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
+ .bt-q-dock{width:100%;display:flex;justify-content:center}
+ .bt-q-dock .bt-q{margin:0 auto 8px}
+-[class*="_toBottomSlot"]{justify-content:center!important;padding-right:0!important}
+-[data-conversation-scroll] [class*="_toBottomSlot"]{bottom:calc(var(--dsh-composer-height,152px) + 8px)!important}
+-[class*="_toBottomSlot"]>button{width:36px!important;height:36px!important;margin-top:-36px!important;background:var(--bt-main)!important;color:var(--bt-ink)!important;box-shadow:0 0 0 .5px var(--bt-line-2),0 2px 8px -2px rgba(0,0,0,.12)!important;animation:bt-tobottom-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out;transition:background-color .12s ease,${spring(SPRING_TAP, 'scale')}}
+-[class*="_toBottomSlot"]>button:active{scale:.9}
+-[class*="_toBottomSlot"]>button:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))!important}
+-[class*="_toBottomSlot"]>button svg{display:none}
+-[class*="_toBottomSlot"]>button::before{content:"";width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4v12M5 11l5 5 5-5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4v12M5 11l5 5 5-5'/%3E%3C/svg%3E") center/contain no-repeat}
++html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]{justify-content:center!important;padding-right:0!important}
++html:has([data-mobile-nav="frame"]) [data-conversation-scroll] [class*="_toBottomSlot"]{bottom:calc(var(--dsh-composer-height,152px) + 8px)!important}
++html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button{width:36px!important;height:36px!important;margin-top:-36px!important;background:color-mix(in srgb,var(--bt-main) 72%,transparent)!important;color:var(--bt-ink)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)!important;animation:bt-tobottom-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out;transition:background-color .12s ease,${spring(SPRING_TAP, 'scale')}}
++html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button:active{scale:.9}
++html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))!important}
++html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button svg{display:none}
++html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button::before{content:"";width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4v12M5 11l5 5 5-5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4v12M5 11l5 5 5-5'/%3E%3C/svg%3E") center/contain no-repeat}
+ @keyframes bt-tobottom-in{from{translate:0 8px;scale:.8}}
+-[data-bt-news] [class*="_toBottomSlot"]>button{visibility:hidden!important;pointer-events:none!important}
++html:has([data-mobile-nav="frame"]) [data-bt-news] [class*="_toBottomSlot"]>button{visibility:hidden!important;pointer-events:none!important}
+ .bt-news{position:fixed;z-index:30;transform:translateX(-50%);display:inline-flex;align-items:center;overflow:hidden;border-radius:999px;background:var(--bt-accent);color:var(--bt-accent-ink);box-shadow:inset 0 0 0 1px rgba(20,20,20,.05),0 1px 3px 0 rgba(0,0,0,.12);font-family:var(--bt-font);animation:bt-news-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out}
+ @keyframes bt-news-in{from{translate:0 8px;scale:.9}}
++html:has([data-mobile-nav="frame"]) .bt-news{background:color-mix(in srgb,var(--bt-main) 72%,transparent);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
+ .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
+ @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
+ .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
+@@ -1093,7 +1176,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+ .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+ .bt-news-x svg{width:12px;height:12px}
+ .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
+-@media (prefers-reduced-motion:reduce){.bt-news,[class*="_toBottomSlot"]>button{animation:none}}
++html:has([data-mobile-nav="frame"]) @media (prefers-reduced-motion:reduce){.bt-news,[class*="_toBottomSlot"]>button{animation:none}}
+ .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
+ .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
+ .bt-open-new{display:flex;flex-direction:column}
+@@ -1134,6 +1217,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+ .bt-btw-answer p{margin:0}
+ .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
+ @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
++/* Local patch: the composer's four small controls get a finger-sized target on touch.
++   The send button restates !important because it is set that way above. */
++@media (pointer:coarse){
++  .bt-plus,.bt-mic,.bt-voice{width:32px;height:32px}
++  [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important}
++}
+ `
+ 
+ // -------------------------------------------------------------------------
+diff --git a/ds-bot/src/client/team-actions.js b/ds-bot/src/client/team-actions.js
+index 1f47624..83f2a14 100644
+--- a/ds-bot/src/client/team-actions.js
++++ b/ds-bot/src/client/team-actions.js
+@@ -1,5 +1,6 @@
+ import { countCards, heldCardKey } from './sources.js'
+ import { noteClientError } from './diagnostics.js'
++import { dismissDrawerIfOpen } from './drawer-dismiss.js'
+ 
+ // The actions every window that draws the Bot views shares: dialogs and panels (the `ui`
+ // source), requests to the host, and the notes the transcript keeps. The shell around the
+@@ -13,8 +14,8 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
+     ui.set(state => ({ ...state, details: sessionId, view: 'side', side: chatId ?? null, renaming: false, tab: null }))
+   }
+   return {
+-    openNewChat: (mode) => { ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null })) },
+-    openPalette: (query = '') => { ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null })) },
++    openNewChat: (mode, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null })) },
++    openPalette: (query = '', opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null })) },
+     // The token keeps a late exit timer from closing a palette opened again since.
+     closePalette: (token) => { ui.set(state => (state.palette && (token === undefined || state.palette.token === token) ? { ...state, palette: null } : state)) },
+     openExchange: (a, b) => { if (a && b) ui.set(state => ({ ...state, exchange: [a, b] })) },
+@@ -43,11 +44,11 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
+     // Opening the conversation would move focus to its composer and blur the name field.
+     renameBot: (id) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: true, tab: null })) },
+     // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
+-    openSettings: (page = 'general', id = null) => { ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null })) },
++    openSettings: (page = 'general', id = null, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null })) },
+     closeSettings: () => { ui.set(state => (state.settings ? { ...state, settings: null } : state)) },
+     openMemory: (id) => { ui.set(state => ({ ...state, memory: id, menu: null, palette: null })) },
+     closeMemory: () => { ui.set(state => (state.memory ? { ...state, memory: null } : state)) },
+-    openConnectors: () => { ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null })) },
++    openConnectors: (opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null })) },
+     setPanelView: (view) => {
+       if (view !== 'details' && view !== 'browser' && view !== 'side') return
+       ui.set(state => (state.details && state.view !== view ? { ...state, view } : state))

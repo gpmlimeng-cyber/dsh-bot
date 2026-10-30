@@ -24,4 +24,4 @@
 
 - 只含提示词、公告、记忆，**不含**任何密钥、会话记录、`state.json`、`avatars/`。
 - 记忆是**快照**，不会自动同步回写；以本机为准，这个目录是导出副本。
-- 补丁台账（`design/`）不在本仓库内，另存在工作区 `design/` 下。
+- 补丁台账在仓库 `design/` 下并随仓库推送：`ds-bot-patches.md`（说明与逐项批准记录）、`ds-bot-patches.hunks.md`（脚本生成的机械表，勿手改）、`ds-bot-patches.patch`（可重放的补丁）、`extension-points.md`（slot 注入点与已验证的结论）。
