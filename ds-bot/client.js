@@ -3456,7 +3456,11 @@ html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus) [data-mob
 html:not(:has([data-mobile-nav="frame"])) [data-composer-card]{flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;padding:6px 8px!important;border-radius:24px!important}
 [data-composer-card]>[class*="_row"]{display:contents!important}
 [data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:center!important;margin:0!important}
-[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0!important}
+/* The + button already carries its own inset, so the field starts 2px after it instead
+   of a further 8px: the caret sat 27px from the mark and read as a gap. */
+[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 4px!important;margin:0 0 0 -6px!important}
+/* The phone's + is a 32px seat with the same inset, so the field only needs to drop back to the mark. */
+html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{margin-left:4px!important}
 [data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:center!important;margin:0!important}
 /* The slot anchor is display:contents, so the rail inside it is the flex item. */
 [data-composer-card]>[data-slot="conversation.input.attachments"]>[class*="_rail"]{order:0!important;flex:0 0 100%!important;margin:0!important;padding:2px 8px 6px!important}
