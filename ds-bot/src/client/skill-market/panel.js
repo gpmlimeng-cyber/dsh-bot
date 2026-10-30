@@ -4,6 +4,7 @@
 // market's own Skills tab instead of a global main panel, so the panel, its stylesheet and
 // its state hydration are exported here and the plugin's `apply` is not used.
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import * as hostPrimitives from '@deepseek-ai/dsh-client-ui-primitives'
 
 const h = React.createElement
@@ -3302,7 +3303,7 @@ function Switch({ checked, label, onChange }) {
  * @param {object} props - Slot props injected by the registration.
  * @returns {object} Element.
  */
-function SkillMarketPanel(props) {
+function SkillMarketPanel({ headerHost } = {}) {
   const store = React.useMemo(() => readState(), [])
   const [view, setView] = React.useState(store.view)
   const [category, setCategory] = React.useState(store.category)
@@ -5655,21 +5656,25 @@ function SkillMarketPanel(props) {
     : status === 'error' ? 'status.error'
       : 'status.connected')
 
+  // Refresh and import sit in the market's own title row when it gives us one, and stay
+  // here otherwise: the panel keeps its whole behaviour, only the bar's home changes.
+  const topbar = h('header', { className: 'sm-topbar' },
+    h('div', { className: 'sm-topbar-actions' },
+      h('button', {
+        type: 'button',
+        className: 'sm-icon-btn',
+        'aria-label': t('search.refresh'),
+        title: t('search.refreshShort'),
+        onClick: () => setReloadNonce((current) => current + 1),
+      }, h(Icon, { name: 'i-refresh' })),
+      h('button', {
+        type: 'button',
+        className: 'sm-btn sm-btn-primary',
+        onClick: onImportAction,
+      }, h(Icon, { name: 'i-upload', size: 16 }), h('span', { className: 'sm-btn-label' }, t('import.pickFile')))))
+
   return h('div', { 'data-skill-market': '', 'data-skill-market-panel': PANEL_ID },
-    h('header', { className: 'sm-topbar' },
-      h('div', { className: 'sm-topbar-actions' },
-        h('button', {
-          type: 'button',
-          className: 'sm-icon-btn',
-          'aria-label': t('search.refresh'),
-          title: t('search.refreshShort'),
-          onClick: () => setReloadNonce((current) => current + 1),
-        }, h(Icon, { name: 'i-refresh' })),
-        h('button', {
-          type: 'button',
-          className: 'sm-btn sm-btn-primary',
-          onClick: onImportAction,
-        }, h(Icon, { name: 'i-upload', size: 16 }), h('span', { className: 'sm-btn-label' }, t('import.pickFile'))))),
+    headerHost ? createPortal(h('span', { className: 'bt-skill-topbar', 'data-skill-market': '' }, topbar), headerHost) : topbar,
 
     h('div', { className: 'sm-viewbar' },
       h('div', { className: 'sm-viewtabs', role: 'tablist', 'aria-label': t('panel.aria') },

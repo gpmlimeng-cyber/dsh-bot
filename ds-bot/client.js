@@ -2705,9 +2705,21 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The market floats over the conversation as frosted glass: a translucent surface, the
    page behind it blurred and lifted, and one hairline ring instead of a hard border. The
    tint is mixed from --bt-main, so the panel keeps following the theme. */
-.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 80%,transparent);backdrop-filter:blur(64px) saturate(2);-webkit-backdrop-filter:blur(64px) saturate(2);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
-.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:16px 12px;border-right:1px solid var(--bt-line);overflow-y:auto;background:color-mix(in srgb,var(--bt-main) 40%,transparent)}
-.bt-market-navhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px}
+.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;flex-direction:column;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 80%,transparent);backdrop-filter:blur(64px) saturate(2);-webkit-backdrop-filter:blur(64px) saturate(2);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
+/* One title row over both columns: the page's name on the left, its own action and the close
+   button on the right. Everything else starts at the very top of the pane under it. */
+.bt-market-bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px 12px 20px;border-bottom:1px solid var(--bt-line)}
+.bt-market-bartitle{display:flex;align-items:center;gap:10px;min-width:0}
+.bt-market-baractions{display:flex;align-items:center;gap:8px;flex:none}
+.bt-market-action{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.bt-market-action:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-market-action svg{width:15px;height:15px}
+.bt-market-action span{overflow:hidden;text-overflow:ellipsis}
+/* The skill market's refresh and import buttons, drawn by its panel into this slot. */
+.bt-market-skillslot{display:flex;align-items:center}
+.bt-skill-topbar[data-skill-market]{display:flex;align-items:center;height:auto;max-height:none;background:none;color:var(--bt-ink)}
+.bt-market-cols{flex:1 1 auto;min-height:0;display:flex}
+.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:12px;border-right:1px solid var(--bt-line);overflow-y:auto;background:color-mix(in srgb,var(--bt-main) 40%,transparent)}
 .bt-market-cats{display:flex;flex-direction:column;gap:2px}
 .bt-market-cat{height:32px;padding:0 10px;border:0;border-radius:10px;background:none;text-align:left;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink-2);cursor:pointer}
 .bt-market-cat:hover{background:var(--bt-hover);color:var(--bt-ink)}
@@ -2738,10 +2750,8 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The panel owns its whole pane: no market padding, no page scroll behind it. */
 .bt-market-body:has(.bt-market-skillhost){display:flex;flex-direction:column;padding:0;overflow:hidden}
 .bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
-.bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
 .bt-market-heading{min-width:0}
 .bt-market-h2{margin:0;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink)}
-.bt-market-sub{margin:4px 0 0;font-size:13px;line-height:20px;color:var(--bt-ink-3)}
 .bt-market-close{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
 .bt-market-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-market-search{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-3);flex:none;width:260px;max-width:40vw}
@@ -2770,8 +2780,6 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-market-state{flex:none;font-size:13px;line-height:18px;color:var(--bt-ink-3)}
 .bt-market-state[data-on]{color:var(--bt-ink-2)}
 .bt-market-note{font-size:13px;line-height:20px;color:var(--bt-ink-3)}
-.bt-market-more{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;border:0;background:none;padding:4px 0;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
-.bt-market-more:hover{color:var(--bt-ink)}
 .bt-market-empty{padding:24px 0;color:var(--bt-ink-3);font-size:13px}
 .bt-market-official{display:flex;align-items:center;justify-content:space-between;gap:12px}
 /* The plugin market's Discover pane, drawn the way the shell's own Discover tab draws it:
@@ -9053,6 +9061,7 @@ function ActivityIndicator({ sessionId, useRoster, useSessionStatus, useLive, us
 
 // src/client/skill-market/panel.js
 var React = __toESM(require("react"), 1);
+var import_react_dom3 = require("react-dom");
 var hostPrimitives = __toESM(require("@deepseek-ai/dsh-client-ui-primitives"), 1);
 var h14 = React.createElement;
 var primitives = hostPrimitives ?? null;
@@ -11690,7 +11699,7 @@ function Switch({ checked, label, onChange }) {
     h14("span", { className: "sm-thumb" })
   );
 }
-function SkillMarketPanel(props) {
+function SkillMarketPanel({ headerHost } = {}) {
   const store = React.useMemo(() => readState(), []);
   const [view, setView] = React.useState(store.view);
   const [category, setCategory] = React.useState(store.category);
@@ -13443,29 +13452,30 @@ function SkillMarketPanel(props) {
   }
   const liveClass = status === "loading" ? "is-idle" : status === "error" ? "is-error" : "";
   const liveText = t2(status === "loading" ? "status.syncing" : status === "error" ? "status.error" : "status.connected");
+  const topbar = h14(
+    "header",
+    { className: "sm-topbar" },
+    h14(
+      "div",
+      { className: "sm-topbar-actions" },
+      h14("button", {
+        type: "button",
+        className: "sm-icon-btn",
+        "aria-label": t2("search.refresh"),
+        title: t2("search.refreshShort"),
+        onClick: () => setReloadNonce((current) => current + 1)
+      }, h14(Icon, { name: "i-refresh" })),
+      h14("button", {
+        type: "button",
+        className: "sm-btn sm-btn-primary",
+        onClick: onImportAction
+      }, h14(Icon, { name: "i-upload", size: 16 }), h14("span", { className: "sm-btn-label" }, t2("import.pickFile")))
+    )
+  );
   return h14(
     "div",
     { "data-skill-market": "", "data-skill-market-panel": PANEL_ID },
-    h14(
-      "header",
-      { className: "sm-topbar" },
-      h14(
-        "div",
-        { className: "sm-topbar-actions" },
-        h14("button", {
-          type: "button",
-          className: "sm-icon-btn",
-          "aria-label": t2("search.refresh"),
-          title: t2("search.refreshShort"),
-          onClick: () => setReloadNonce((current) => current + 1)
-        }, h14(Icon, { name: "i-refresh" })),
-        h14("button", {
-          type: "button",
-          className: "sm-btn sm-btn-primary",
-          onClick: onImportAction
-        }, h14(Icon, { name: "i-upload", size: 16 }), h14("span", { className: "sm-btn-label" }, t2("import.pickFile")))
-      )
-    ),
+    headerHost ? (0, import_react_dom3.createPortal)(h14("span", { className: "bt-skill-topbar", "data-skill-market": "" }, topbar), headerHost) : topbar,
     h14(
       "div",
       { className: "sm-viewbar" },
@@ -13845,7 +13855,7 @@ function readySkillMarket() {
 
 // src/client/market.js
 var import_react15 = require("react");
-var import_react_dom3 = require("react-dom");
+var import_react_dom4 = require("react-dom");
 var CATEGORIES = () => [
   { id: "plugins", name: t("Plugins") },
   { id: "connectors", name: t("Connectors") },
@@ -14231,6 +14241,7 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   const [selected, setSelected] = (0, import_react15.useState)(null);
   const [busyRow, setBusyRow] = (0, import_react15.useState)("");
   const [menuFor, setMenuFor] = (0, import_react15.useState)(null);
+  const [headHost, setHeadHost] = (0, import_react15.useState)(null);
   const search = (0, import_react15.useRef)(null);
   (0, import_react15.useEffect)(() => {
     if (!open) return void 0;
@@ -14320,187 +14331,174 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
     }, (error) => actions.reportError?.(error, "plugins")).finally(() => setBusyRow(""));
   };
   const heading = current ? current.name : t(tab === "plugins" ? "Plugins" : tab === "connectors" ? "Connectors" : tab === "capabilities" ? "Capabilities" : "Skills");
-  return (0, import_react_dom3.createPortal)((0, import_react15.createElement)(
-    "div",
-    {
-      className: "bt-market-frame",
-      onMouseDown: (event) => {
-        if (event.target === event.currentTarget) onClose();
-      }
-    },
+  return (0, import_react_dom4.createPortal)(
     (0, import_react15.createElement)(
       "div",
-      { className: "bt-market-pane", role: "dialog", "aria-modal": "true", "aria-label": t("Market") },
+      {
+        className: "bt-market-frame",
+        onMouseDown: (event) => {
+          if (event.target === event.currentTarget) onClose();
+        }
+      },
       (0, import_react15.createElement)(
-        "aside",
-        { className: "bt-market-nav" },
+        "div",
+        { className: "bt-market-pane", role: "dialog", "aria-modal": "true", "aria-label": t("Market") },
+        // One title row for the whole market: the current page on the left, its own action and the
+        // close button on the right. The rail and the content start at the very top under it, so
+        // no page repeats a heading the row already carries.
         (0, import_react15.createElement)(
-          "div",
-          { className: "bt-market-navhead" },
-          (0, import_react15.createElement)("span", { className: "bt-market-h2" }, t("Market")),
-          (0, import_react15.createElement)("button", { type: "button", className: "bt-market-close", "aria-label": t("Close"), onClick: onClose }, (0, import_react15.createElement)(CloseIcon))
-        ),
-        (0, import_react15.createElement)(
-          "div",
-          { className: "bt-market-cats", role: "tablist" },
-          ...CATEGORIES().map((category) => (0, import_react15.createElement)("button", {
-            key: category.id,
-            type: "button",
-            role: "tab",
-            "aria-selected": tab === category.id,
-            className: "bt-market-cat",
-            onClick: () => setTab(category.id)
-          }, category.name))
-        ),
-        tab === "skills" ? null : (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t(tab === "plugins" ? "Enabled" : "Installed")),
-        tab === "skills" ? null : (0, import_react15.createElement)(
-          "div",
-          { className: "bt-market-installed" },
-          installed.length ? installed.map((entry) => {
-            const id = entry.id ?? entry.name;
-            return (0, import_react15.createElement)(
-              "div",
-              {
-                key: id,
-                className: "bt-market-instrow",
-                "data-open": menuFor === id ? "" : void 0,
-                "data-busy": busyRow === id ? "" : void 0
-              },
-              (0, import_react15.createElement)(
-                "button",
-                {
-                  type: "button",
-                  className: "bt-market-inst",
-                  "aria-current": selected === id ? "page" : void 0,
-                  onClick: () => setSelected(id)
-                },
-                tab === "plugins" ? (0, import_react15.createElement)(PluginIcon, { src: entry.icon }) : (0, import_react15.createElement)(Mark, { icon: entry.icon, state: entry.state ?? "ready" }),
-                (0, import_react15.createElement)("span", { className: "bt-market-instname" }, entry.name)
-              ),
-              tab === "plugins" ? (0, import_react15.createElement)("button", {
-                type: "button",
-                className: "bt-market-instmore",
-                "aria-haspopup": "menu",
-                "aria-expanded": menuFor === id,
-                "aria-label": entry.name,
-                onClick: (event) => {
-                  event.stopPropagation();
-                  setMenuFor(menuFor === id ? null : id);
-                }
-              }, (0, import_react15.createElement)(MoreDotsIcon)) : null,
-              menuFor === id ? (0, import_react15.createElement)(
-                "div",
-                { className: "bt-sec-menu bt-market-instmenu", role: "menu" },
-                (0, import_react15.createElement)("button", { type: "button", role: "menuitem", onClick: () => disableBundle(entry) }, (0, import_react15.createElement)(SwitchIcon), t("Disable")),
-                (0, import_react15.createElement)("button", { type: "button", role: "menuitem", onClick: () => {
-                  setMenuFor(null);
-                  onClose();
-                  actions.openPluginsPanel?.();
-                } }, (0, import_react15.createElement)(GearIcon), t("Manage")),
-                (0, import_react15.createElement)("button", { type: "button", role: "menuitem", className: "bt-danger", onClick: () => removeBundle(entry) }, (0, import_react15.createElement)(TrashIcon), t("Uninstall"))
-              ) : null
-            );
-          }) : (0, import_react15.createElement)("span", { className: "bt-market-hint" }, t(tab === "plugins" ? "No plugin is on yet" : "Nothing installed yet"))
-        )
-      ),
-      (0, import_react15.createElement)(
-        "main",
-        { className: "bt-market-main" },
-        // The Skills tab carries no second heading: the vendored panel brings its own title,
-        // search box and view tabs, and a market header above them only repeated them.
-        tab === "skills" ? null : (0, import_react15.createElement)(
           "header",
-          { className: "bt-market-head" },
+          { className: "bt-market-bar" },
           (0, import_react15.createElement)(
             "div",
-            { className: "bt-market-heading" },
-            (0, import_react15.createElement)("h2", { className: "bt-market-h2" }, heading),
-            (0, import_react15.createElement)("p", { className: "bt-market-sub" }, current ? current.detail : tab === "plugins" ? t("Browse the plugin markets this Harness lists") : t("Connect an app or your own server once, then choose which Bots may use it"))
+            { className: "bt-market-bartitle" },
+            current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : null,
+            (0, import_react15.createElement)("h2", { className: "bt-market-h2" }, heading)
           ),
-          current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : tab === "plugins" ? null : (0, import_react15.createElement)(
-            "label",
-            { className: "bt-market-search" },
-            (0, import_react15.createElement)(SearchIcon),
-            (0, import_react15.createElement)("input", {
-              ref: search,
-              type: "search",
-              value: query,
-              placeholder: t("Search apps"),
-              onChange: (event) => setQuery(event.target.value),
-              "aria-label": t("Search apps")
-            })
+          (0, import_react15.createElement)(
+            "div",
+            { className: "bt-market-baractions" },
+            tab === "skills" ? (0, import_react15.createElement)("span", { className: "bt-market-skillslot", ref: (node) => setHeadHost(node) }) : current ? null : tab === "plugins" ? null : (0, import_react15.createElement)(
+              "label",
+              { className: "bt-market-search" },
+              (0, import_react15.createElement)(SearchIcon),
+              (0, import_react15.createElement)("input", {
+                ref: search,
+                type: "search",
+                value: query,
+                placeholder: t("Search apps"),
+                onChange: (event) => setQuery(event.target.value),
+                "aria-label": t("Search apps")
+              })
+            ),
+            (0, import_react15.createElement)("button", {
+              type: "button",
+              className: "bt-market-action",
+              onClick: () => {
+                onClose();
+                if (tab === "plugins") actions.openPluginsPanel?.();
+                else if (tab !== "skills") actions.openConnectors?.();
+              }
+            }, (0, import_react15.createElement)(GearIcon), (0, import_react15.createElement)("span", null, t(tab === "plugins" ? "Open the page that manages plugins" : "Open the full connector page"))),
+            (0, import_react15.createElement)("button", { type: "button", className: "bt-market-close", "aria-label": t("Close"), onClick: onClose }, (0, import_react15.createElement)(CloseIcon))
           )
         ),
         (0, import_react15.createElement)(
           "div",
-          { className: "bt-market-body" },
-          // The Skills tab is the DeepSeek skill market itself, vendored from
-          // @montersy123/dsh-skill-market: discovery, detail drawer, install, favourites and
-          // local import all live in that panel, so nothing here reimplements them.
-          tab === "skills" ? (0, import_react15.createElement)("div", { className: "bt-market-skillhost", key: "skills" }, (0, import_react15.createElement)(SkillMarketPanel)) : tab === "plugins" && !current ? [
-            (0, import_react15.createElement)(Discover, { key: "discover", actions }),
+          { className: "bt-market-cols" },
+          (0, import_react15.createElement)(
+            "aside",
+            { className: "bt-market-nav" },
             (0, import_react15.createElement)(
-              "button",
-              { type: "button", className: "bt-market-more", key: "more", onClick: () => {
-                onClose();
-                actions.openPluginsPanel?.();
-              } },
-              (0, import_react15.createElement)(GearIcon),
-              (0, import_react15.createElement)("span", null, t("Open the page that manages plugins"))
+              "div",
+              { className: "bt-market-cats", role: "tablist" },
+              ...CATEGORIES().map((category) => (0, import_react15.createElement)("button", {
+                key: category.id,
+                type: "button",
+                role: "tab",
+                "aria-selected": tab === category.id,
+                className: "bt-market-cat",
+                onClick: () => setTab(category.id)
+              }, category.name))
+            ),
+            tab === "skills" ? null : (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t(tab === "plugins" ? "Enabled" : "Installed")),
+            tab === "skills" ? null : (0, import_react15.createElement)(
+              "div",
+              { className: "bt-market-installed" },
+              installed.length ? installed.map((entry) => {
+                const id = entry.id ?? entry.name;
+                return (0, import_react15.createElement)(
+                  "div",
+                  {
+                    key: id,
+                    className: "bt-market-instrow",
+                    "data-open": menuFor === id ? "" : void 0,
+                    "data-busy": busyRow === id ? "" : void 0
+                  },
+                  (0, import_react15.createElement)(
+                    "button",
+                    {
+                      type: "button",
+                      className: "bt-market-inst",
+                      "aria-current": selected === id ? "page" : void 0,
+                      onClick: () => setSelected(id)
+                    },
+                    tab === "plugins" ? (0, import_react15.createElement)(PluginIcon, { src: entry.icon }) : (0, import_react15.createElement)(Mark, { icon: entry.icon, state: entry.state ?? "ready" }),
+                    (0, import_react15.createElement)("span", { className: "bt-market-instname" }, entry.name)
+                  ),
+                  tab === "plugins" ? (0, import_react15.createElement)("button", {
+                    type: "button",
+                    className: "bt-market-instmore",
+                    "aria-haspopup": "menu",
+                    "aria-expanded": menuFor === id,
+                    "aria-label": entry.name,
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      setMenuFor(menuFor === id ? null : id);
+                    }
+                  }, (0, import_react15.createElement)(MoreDotsIcon)) : null,
+                  menuFor === id ? (0, import_react15.createElement)(
+                    "div",
+                    { className: "bt-sec-menu bt-market-instmenu", role: "menu" },
+                    (0, import_react15.createElement)("button", { type: "button", role: "menuitem", onClick: () => disableBundle(entry) }, (0, import_react15.createElement)(SwitchIcon), t("Disable")),
+                    (0, import_react15.createElement)("button", { type: "button", role: "menuitem", onClick: () => {
+                      setMenuFor(null);
+                      onClose();
+                      actions.openPluginsPanel?.();
+                    } }, (0, import_react15.createElement)(GearIcon), t("Manage")),
+                    (0, import_react15.createElement)("button", { type: "button", role: "menuitem", className: "bt-danger", onClick: () => removeBundle(entry) }, (0, import_react15.createElement)(TrashIcon), t("Uninstall"))
+                  ) : null
+                );
+              }) : (0, import_react15.createElement)("span", { className: "bt-market-hint" }, t(tab === "plugins" ? "No plugin is on yet" : "Nothing installed yet"))
             )
-          ] : current ? (0, import_react15.createElement)(
-            "div",
-            { className: "bt-market-detailpane" },
-            (0, import_react15.createElement)(Card, {
-              name: current.name,
-              detail: current.detail,
-              mark: current.icon,
-              state: current.state,
-              installed: true,
-              action: t("Manage"),
-              onOpen: () => {
-              },
-              onPick: () => {
-                onClose();
-                actions.openConnectors();
-              }
-            }),
-            (0, import_react15.createElement)("div", { className: "bt-market-note" }, t("The settings for this entry stay on the page that owns them.")),
+          ),
+          (0, import_react15.createElement)(
+            "main",
+            { className: "bt-market-main" },
             (0, import_react15.createElement)(
-              "button",
-              { type: "button", className: "bt-market-more", onClick: () => {
-                onClose();
-                actions.openConnectors();
-              } },
-              (0, import_react15.createElement)(GearIcon),
-              (0, import_react15.createElement)("span", null, t("Open the full connector page"))
+              "div",
+              { className: "bt-market-body" },
+              // The Skills tab is the DeepSeek skill market itself, vendored from
+              // @montersy123/dsh-skill-market: discovery, detail drawer, install, favourites and
+              // local import all live in that panel, so nothing here reimplements them.
+              tab === "skills" ? (0, import_react15.createElement)("div", { className: "bt-market-skillhost", key: "skills" }, (0, import_react15.createElement)(SkillMarketPanel, { headerHost: headHost })) : tab === "plugins" && !current ? (0, import_react15.createElement)(Discover, { key: "discover", actions }) : current ? (0, import_react15.createElement)(
+                "div",
+                { className: "bt-market-detailpane" },
+                (0, import_react15.createElement)(Card, {
+                  name: current.name,
+                  detail: current.detail,
+                  mark: current.icon,
+                  state: current.state,
+                  installed: true,
+                  action: t("Manage"),
+                  onOpen: () => {
+                  },
+                  onPick: () => {
+                    onClose();
+                    actions.openConnectors();
+                  }
+                }),
+                (0, import_react15.createElement)("div", { className: "bt-market-note" }, t("The settings for this entry stay on the page that owns them."))
+              ) : [
+                list.length ? (0, import_react15.createElement)("div", { className: "bt-market-grid", key: "grid" }, list.map((entry) => (0, import_react15.createElement)(Card, {
+                  key: entry.id ?? entry.name,
+                  name: entry.name,
+                  detail: entry.detail,
+                  mark: entry.icon,
+                  state: entry.state,
+                  installed: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)),
+                  action: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)) ? t("Manage") : t("Connect"),
+                  onOpen: () => setSelected(entry.id ?? entry.name),
+                  onPick: () => pick2(entry)
+                }))) : (0, import_react15.createElement)("div", { className: "bt-market-empty", key: "empty" }, t("Nothing here yet"))
+              ]
             )
-          ) : [
-            list.length ? (0, import_react15.createElement)("div", { className: "bt-market-grid", key: "grid" }, list.map((entry) => (0, import_react15.createElement)(Card, {
-              key: entry.id ?? entry.name,
-              name: entry.name,
-              detail: entry.detail,
-              mark: entry.icon,
-              state: entry.state,
-              installed: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)),
-              action: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)) ? t("Manage") : t("Connect"),
-              onOpen: () => setSelected(entry.id ?? entry.name),
-              onPick: () => pick2(entry)
-            }))) : (0, import_react15.createElement)("div", { className: "bt-market-empty", key: "empty" }, t("Nothing here yet")),
-            (0, import_react15.createElement)(
-              "button",
-              { type: "button", className: "bt-market-more", key: "more", onClick: () => {
-                onClose();
-                actions.openConnectors();
-              } },
-              (0, import_react15.createElement)(GearIcon),
-              (0, import_react15.createElement)("span", null, t("Open the full connector page"))
-            )
-          ]
+          )
         )
       )
-    )
-  ), document.body);
+    ),
+    document.body
+  );
 }
 
 // src/client/dsh-offer.js
@@ -14605,7 +14603,7 @@ var emptyArrangement = () => ({ ...EMPTY });
 
 // src/client/sidebar.js
 var import_react16 = require("react");
-var import_react_dom4 = require("react-dom");
+var import_react_dom5 = require("react-dom");
 function useMarkedUnread(id, active, marked, actions) {
   (0, import_react16.useEffect)(() => {
     if (active && marked) actions.clearUnread(id);
@@ -15262,7 +15260,7 @@ function UpdateButton({ useUpdate, actions }) {
       "aria-expanded": open,
       onClick: toggle
     }, (0, import_react16.createElement)(CloudDownloadIcon, { done: phase === "installed" || phase === "updated" }), phase === "failed" || dshPhase === "failed" ? (0, import_react16.createElement)("span", { className: "bt-update-dot", "aria-hidden": true }) : null),
-    open && box ? (0, import_react_dom4.createPortal)((0, import_react16.createElement)(
+    open && box ? (0, import_react_dom5.createPortal)((0, import_react16.createElement)(
       "div",
       { className: "bt-update-pop", role: "dialog", "aria-label": update?.available || phase !== "idle" ? t("DS Bot update") : t("DSH update"), style: box },
       update?.available || phase !== "idle" ? (0, import_react16.createElement)(
@@ -15496,7 +15494,7 @@ function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboardi
       { ref: button, type: "button", className: "bt-account", "aria-label": t("Account"), "aria-haspopup": "menu", "aria-expanded": open, onClick: toggle },
       (0, import_react16.createElement)("span", { className: "bt-you", "aria-hidden": true }, (0, import_react16.createElement)(BotMark, { look: MAIN_LOOK, size: 24 }))
     ),
-    open && box ? (0, import_react_dom4.createPortal)((0, import_react16.createElement)(
+    open && box ? (0, import_react_dom5.createPortal)((0, import_react16.createElement)(
       "div",
       { className: "bt-menu bt-menu-up bt-account-menu", role: "menu", "aria-label": t("Account"), style: box },
       confirm !== null ? (0, import_react16.createElement)(
@@ -15945,7 +15943,7 @@ function ProviderMark({ name, size = 16 }) {
 
 // src/client/model-menu.js
 var import_react19 = require("react");
-var import_react_dom5 = require("react-dom");
+var import_react_dom6 = require("react-dom");
 var MENU_EXIT_MS = 120;
 function groupModels(models) {
   const groups = /* @__PURE__ */ new Map();
@@ -16143,7 +16141,7 @@ function ModelMenu({ bot, roster, actions, run: run2, wide = false, onPick, onPi
       ),
       (0, import_react19.createElement)(Caret)
     ),
-    shownPlace ? (0, import_react_dom5.createPortal)((0, import_react19.createElement)(
+    shownPlace ? (0, import_react_dom6.createPortal)((0, import_react19.createElement)(
       "div",
       { ref: menu, className: `bt-menu bt-model-menu${shownPlace.bottom !== void 0 ? " bt-menu-up" : ""}`, role: "menu", "aria-label": t("Model for {name}", { name: bot.name }), style: shownPlace, "data-leaving": leaving || void 0 },
       models.length > 0 ? (0, import_react19.createElement)(ModelRows, { roster, current, onPick: pick2 }) : (0, import_react19.createElement)("div", { className: "bt-model-none" }, t("No models are set up in DeepSeek Harness yet.")),
@@ -16321,7 +16319,7 @@ var MODEL_CSS = `
 
 // src/client/folder-menu.js
 var import_react20 = require("react");
-var import_react_dom6 = require("react-dom");
+var import_react_dom7 = require("react-dom");
 var folderName = (path) => String(path).replace(/[\\/]+$/, "").split(/[\\/]/).pop() || String(path);
 var Tick = ({ on }) => (0, import_react20.createElement)("span", { className: "bt-model-tick", "aria-hidden": true }, on ? (0, import_react20.createElement)(CheckIcon) : null);
 function FolderMenu({ value, group = false, team = false, actions, run: run2, onPick, wide = false, disabled = false }) {
@@ -16451,7 +16449,7 @@ function FolderMenu({ value, group = false, team = false, actions, run: run2, on
       ),
       (0, import_react20.createElement)(Caret)
     ),
-    shownPlace ? (0, import_react_dom6.createPortal)((0, import_react20.createElement)(
+    shownPlace ? (0, import_react_dom7.createPortal)((0, import_react20.createElement)(
       "div",
       { ref: menu, className: `bt-menu bt-model-menu bt-folder-menu${shownPlace.bottom !== void 0 ? " bt-menu-up" : ""}`, role: "menu", "aria-label": team ? t("Team workspace") : t("Working folder"), style: shownPlace, "data-leaving": leaving || void 0 },
       shownView,
@@ -19094,7 +19092,7 @@ function rectsOverlap(a, b) {
 
 // src/client/browser-pane.js
 var import_react31 = require("react");
-var import_react_dom7 = require("react-dom");
+var import_react_dom8 = require("react-dom");
 var PANEL_LINGER_MS = 300;
 var WIDTH_KEY = STORAGE.browserWidth;
 var DEFAULT_WIDTH = 520;
@@ -20013,7 +20011,7 @@ function BotPanel({ pane, leaving, roster, actions, useSessions, useSessionStatu
     leaving || overlay ? null : (0, import_react31.createElement)("div", { className: "bt-panel-grip", role: "separator", "aria-orientation": "vertical", "aria-label": t("Resize panel"), onPointerDown: startResize }),
     // Over the whole window while dragging: the cursor stays a resize cursor and the
     // pages underneath (the chat, the guest) see no pointer.
-    dragging ? (0, import_react_dom7.createPortal)((0, import_react31.createElement)("div", { className: "bt-drag-shield", "aria-hidden": true }), document.body) : null,
+    dragging ? (0, import_react_dom8.createPortal)((0, import_react31.createElement)("div", { className: "bt-drag-shield", "aria-hidden": true }), document.body) : null,
     hasStrip ? (0, import_react31.createElement)(PanelStrip, { bot, subject: pane.id, view, ids: tabState.ids, active, sides: sideChats, side: pane.side, canBrowse, reading, onView: switchView, actions: panelActions, useBrowserPages }) : null,
     view === "browser" && bot ? (0, import_react31.createElement)(BrowserView, { key: `browser:${active}`, bot, tabId: active, leaving, landed: landed && !settling, actions, useBrowserPages, hold }) : view === "side" && sideChat ? (0, import_react31.createElement)("div", { key: `side:${sideChat.id}`, className: "bt-panel-view" }, (0, import_react31.createElement)(SideChatView, { subject: pane.id, chat: sideChat, actions: panelActions })) : (0, import_react31.createElement)(
       "div",
@@ -20160,7 +20158,7 @@ var BROWSER_CSS = `
 
 // src/client/header.js
 var import_react32 = require("react");
-var import_react_dom8 = require("react-dom");
+var import_react_dom9 = require("react-dom");
 var GoArrow = () => (0, import_react32.createElement)("svg", { width: 14, height: 14, viewBox: "-12 -12 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true }, (0, import_react32.createElement)("path", { d: "M-7 0H7M2 -5L7 0L2 5" }));
 var MEMORY_NOTICE_MS = 3200;
 var noNews = (select) => select({});
@@ -20414,7 +20412,7 @@ function NewMessagePills({ sessionId, useSessions, useUi, useTurnClock }) {
     else scroller?.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
   };
   const toDivider = () => document.querySelector("[data-conversation-scroll] .bt-new-sep")?.scrollIntoView({ block: "center", behavior: "smooth" });
-  return (0, import_react_dom8.createPortal)(
+  return (0, import_react_dom9.createPortal)(
     (0, import_react32.createElement)(
       import_react32.Fragment,
       null,
@@ -20427,7 +20425,7 @@ function NewMessagePills({ sessionId, useSessions, useUi, useTurnClock }) {
 
 // src/client/composer.js
 var import_react33 = require("react");
-var import_react_dom9 = require("react-dom");
+var import_react_dom10 = require("react-dom");
 var speechApi = () => window.SpeechRecognition ?? window.webkitSpeechRecognition;
 var keepComposerFocus = (event) => event.preventDefault();
 function useDictation(onText) {
@@ -20621,7 +20619,7 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       onMouseDown: keepComposerFocus,
       onClick: toggle
     }, (0, import_react33.createElement)(PlusIcon)),
-    shown ? (0, import_react_dom9.createPortal)((0, import_react33.createElement)(
+    shown ? (0, import_react_dom10.createPortal)((0, import_react33.createElement)(
       "div",
       {
         ref: menu,
@@ -24507,7 +24505,7 @@ function AgentMenu({ menu, roster, actions, leaving }) {
 
 // src/client/overlays.js
 var import_react47 = require("react");
-var import_react_dom10 = require("react-dom");
+var import_react_dom11 = require("react-dom");
 var DIALOG_EXIT_MS = 160;
 var MENU_EXIT_MS3 = 120;
 function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity, useWork, useRegistry, useBrowserPages, useBrowserTabs, useBrowserHolds, useUpdate, actions }) {
@@ -24545,14 +24543,14 @@ function Overlays({ useRoster, useUi, useSessions, useSessionStatus, useActivity
   return (0, import_react47.createElement)(
     import_react47.Fragment,
     null,
-    pane ? (0, import_react_dom10.createPortal)((0, import_react47.createElement)(BotPanel, { pane, leaving: open === null, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages, useBrowserHolds }), document.body) : null,
-    ui2.newChat ? (0, import_react_dom10.createPortal)((0, import_react47.createElement)(NewChat, { key: ui2.newChat, mode: ui2.newChat, roster, actions }), document.body) : null,
-    ui2.palette ? (0, import_react_dom10.createPortal)((0, import_react47.createElement)(CommandPalette, { key: ui2.palette.token, start: ui2.palette.query, token: ui2.palette.token, roster, actions, useSessions }), document.body) : null,
-    ui2.exchange ? (0, import_react_dom10.createPortal)((0, import_react47.createElement)(ExchangeDialog, { pair: ui2.exchange, roster, actions }), document.body) : null,
-    ui2.voice ? (0, import_react_dom10.createPortal)((0, import_react47.createElement)(VoiceMode, { key: ui2.voice, sessionId: ui2.voice, roster, actions, useSessions, useSessionStatus }), document.body) : null,
-    menu ? (0, import_react_dom10.createPortal)((0, import_react47.createElement)(ContextMenu, { key: `${menu.kind ?? ""}:${menu.id}:${menu.x}:${menu.y}`, menu, roster, actions, leaving: menuLeaving }), document.body) : null,
-    settings ? (0, import_react_dom10.createPortal)((0, import_react47.createElement)(SettingsDialog, { page: settings.page, id: settings.id, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
-    owner ? (0, import_react_dom10.createPortal)((0, import_react47.createElement)(MemoryDialog, { key: owner.id, owner, actions, leaving: memoryLeaving }), document.body) : null
+    pane ? (0, import_react_dom11.createPortal)((0, import_react47.createElement)(BotPanel, { pane, leaving: open === null, roster, actions, useSessions, useSessionStatus, useActivity, useWork, useBrowserTabs, useBrowserPages, useBrowserHolds }), document.body) : null,
+    ui2.newChat ? (0, import_react_dom11.createPortal)((0, import_react47.createElement)(NewChat, { key: ui2.newChat, mode: ui2.newChat, roster, actions }), document.body) : null,
+    ui2.palette ? (0, import_react_dom11.createPortal)((0, import_react47.createElement)(CommandPalette, { key: ui2.palette.token, start: ui2.palette.query, token: ui2.palette.token, roster, actions, useSessions }), document.body) : null,
+    ui2.exchange ? (0, import_react_dom11.createPortal)((0, import_react47.createElement)(ExchangeDialog, { pair: ui2.exchange, roster, actions }), document.body) : null,
+    ui2.voice ? (0, import_react_dom11.createPortal)((0, import_react47.createElement)(VoiceMode, { key: ui2.voice, sessionId: ui2.voice, roster, actions, useSessions, useSessionStatus }), document.body) : null,
+    menu ? (0, import_react_dom11.createPortal)((0, import_react47.createElement)(ContextMenu, { key: `${menu.kind ?? ""}:${menu.id}:${menu.x}:${menu.y}`, menu, roster, actions, leaving: menuLeaving }), document.body) : null,
+    settings ? (0, import_react_dom11.createPortal)((0, import_react47.createElement)(SettingsDialog, { page: settings.page, id: settings.id, roster, actions, useUpdate, leaving: settingsLeaving }), document.body) : null,
+    owner ? (0, import_react_dom11.createPortal)((0, import_react47.createElement)(MemoryDialog, { key: owner.id, owner, actions, leaving: memoryLeaving }), document.body) : null
   );
 }
 
