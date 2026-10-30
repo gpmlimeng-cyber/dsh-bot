@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { FishLogo } from './dsh-primitives.js'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
-import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon } from './icons.js'
+import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon } from './icons.js'
 import { MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
@@ -13,6 +13,7 @@ import { hostText, t } from './i18n.js'
 import { MarketPanel } from './market.js'
 import { holdDrawerDismiss } from './drawer-dismiss.js'
 import { showsDshRow } from './dsh-offer.js'
+import { STORAGE } from './storage.js'
 
 // -------------------------------------------------------------------------
 // Sidebar
@@ -309,6 +310,25 @@ export function TeamSidebar(props) {
     ]
     return entries.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at)
   }, [roster, updated])
+  // Sections, as the reference product draws them: pinned first, then Bots, then group
+  // chats. A section with nothing in it is not drawn at all.
+  const sections = useMemo(() => {
+    const pinned = order.filter(entry => entry.item.pinned)
+    const rest = order.filter(entry => !entry.item.pinned)
+    return [
+      { id: 'top', name: t('Top'), entries: pinned },
+      { id: 'bots', name: t('Bots'), entries: rest.filter(entry => entry.kind !== 'room') },
+      { id: 'rooms', name: t('Group chats'), entries: rest.filter(entry => entry.kind === 'room') },
+    ].filter(section => section.entries.length > 0)
+  }, [order, t])
+  const [folded, setFolded] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(STORAGE.folded) ?? '{}') ?? {} } catch { return {} }
+  })
+  const toggleSection = (id) => setFolded((current) => {
+    const next = { ...current, [id]: !current[id] }
+    try { localStorage.setItem(STORAGE.folded, JSON.stringify(next)) } catch { /* storage unavailable */ }
+    return next
+  })
   const main = roster.byId[roster.mainBotId]
   useListGlide(listRef, wide, order.map(entry => entry.item.id).join(','))
   useLandOnMainBot(roster, useSessions, actions)
@@ -356,11 +376,21 @@ export function TeamSidebar(props) {
     wide && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
     h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
       main ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
-      order.map(entry => (entry.kind === 'bot'
-        ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
-        : entry.kind === 'room'
-          ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
-          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })))),
+      ...sections.flatMap(section => [
+        h('button', {
+          key: `section:${section.id}`, type: 'button', className: 'bt-sec',
+          'aria-expanded': folded[section.id] !== true,
+          onClick: () => toggleSection(section.id),
+        },
+        h('span', { className: 'bt-sec-caret', 'data-open': folded[section.id] !== true ? '' : undefined, 'aria-hidden': true }, h(ChevronRightIcon)),
+        h('span', { className: 'bt-sec-name' }, section.name),
+        h('span', { className: 'bt-sec-count' }, String(section.entries.length))),
+        ...(folded[section.id] === true ? [] : section.entries.map(entry => (entry.kind === 'bot'
+          ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
+          : entry.kind === 'room'
+            ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
+            : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })))),
+      ])),
     h('div', { className: 'bt-side-foot' },
       h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
         h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),

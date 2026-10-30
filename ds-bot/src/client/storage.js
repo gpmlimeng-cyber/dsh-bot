@@ -6,6 +6,7 @@ export const STORAGE = {
   reactions: 'ds-bot:reactions',
   seen: 'ds-bot:seen',
   prefs: 'ds-bot:prefs',
+  folded: 'ds-bot:folded',
   surface: 'ds-bot:surface',
   agentSessions: 'ds-bot:agent-sessions',
   browserWidth: 'ds-bot:browser-width',

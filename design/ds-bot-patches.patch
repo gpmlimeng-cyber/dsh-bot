@@ -312,7 +312,7 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 32ba8c9..4b8faba 100644
+index 32ba8c9..dbbf2c0 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
 @@ -18,6 +18,51 @@ const ZH = {
@@ -367,7 +367,15 @@ index 32ba8c9..4b8faba 100644
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
    'Quiet': '安静',
-@@ -535,6 +580,19 @@ const ZH = {
+@@ -420,6 +465,7 @@ const ZH = {
+   // Settings dialog
+   General: '通用',
+   Bots: 'Bot',
++  Top: '置顶',
+   'Group chats': '群聊',
+   Secrets: '密钥',
+   Appearance: '外观',
+@@ -535,6 +581,19 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -387,7 +395,7 @@ index 32ba8c9..4b8faba 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -918,6 +976,10 @@ const ZH = {
+@@ -918,6 +977,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -398,7 +406,7 @@ index 32ba8c9..4b8faba 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -960,6 +1022,7 @@ const ZH = {
+@@ -960,6 +1023,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -406,7 +414,7 @@ index 32ba8c9..4b8faba 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1044,6 +1107,10 @@ const ZH = {
+@@ -1044,6 +1108,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -1458,19 +1466,29 @@ index b1e36f3..d198c0a 100644
          h('div', { className: 'bt-swatches' },
            h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 58d1840..ef40cfa 100644
+index 58d1840..45bacee 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
-@@ -10,6 +10,8 @@ import { reducedMotion } from './activity-row.js'
+@@ -3,14 +3,17 @@ import { createPortal } from 'react-dom'
+ import { FishLogo } from './dsh-primitives.js'
+ import { isMainOf } from './sources.js'
+ import { currentPart, previewOf, relativeShort } from './text.js'
+-import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon } from './icons.js'
++import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon } from './icons.js'
+ import { MAIN_LOOK } from './characters.js'
+ import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
+ import { reducedMotion } from './activity-row.js'
  import { Shimmer, workPhrase } from './cells.js'
  import { springEasing, SPRING_SHAPE, useViewport, viewBottom } from './motion.js'
  import { hostText, t } from './i18n.js'
 +import { MarketPanel } from './market.js'
 +import { holdDrawerDismiss } from './drawer-dismiss.js'
  import { showsDshRow } from './dsh-offer.js'
++import { STORAGE } from './storage.js'
  
  // -------------------------------------------------------------------------
-@@ -43,7 +45,7 @@ const waitingFor = (roster, waits) => {
+ // Sidebar
+@@ -43,7 +46,7 @@ const waitingFor = (roster, waits) => {
    return names.length === 0 ? '' : t('Waiting for {names}', { names: names.join(t(' and ')) })
  }
  
@@ -1479,7 +1497,7 @@ index 58d1840..ef40cfa 100644
    const id = bot.id
    const part = currentPart(bot)
    const preview = useSessions(list => previewOf(list, part, roster.exchangeTurns[part]))
-@@ -78,8 +80,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
+@@ -78,8 +81,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
        'data-bot-id': id, title: preview || bot.name, onClick: () => actions.openSession(id), onContextMenu,
      },
      h(BotAvatar, { bot, size: 60, state, main: true }),
@@ -1489,7 +1507,7 @@ index 58d1840..ef40cfa 100644
    }
    return h('button', {
      type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
-@@ -88,7 +89,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
+@@ -88,7 +90,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
    h(BotAvatar, { bot, size: 36, state, main }),
    pinned && !wide ? h(PinMark) : null,
    wide ? h('span', { className: 'bt-row-body' },
@@ -1498,7 +1516,7 @@ index 58d1840..ef40cfa 100644
      runningLine ? h('span', { className: 'bt-row-preview' }, runningLine)
        : awayLine ? h('span', { className: 'bt-row-preview' }, awayLine)
          : waitsFor ? h('span', { className: 'bt-row-preview' }, waitsFor)
-@@ -96,7 +97,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
+@@ -96,7 +98,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
    wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
  }
  
@@ -1507,7 +1525,7 @@ index 58d1840..ef40cfa 100644
    const id = room.id
    const fallback = useSessions(list => previewOf(list, id))
    const preview = room.preview?.replace(/\s+/g, ' ').trim() || fallback
-@@ -118,7 +119,7 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
+@@ -118,7 +120,7 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
    h(RoomAvatar, { room, roster, size: 36 }),
    pinned && !wide ? h(PinMark) : null,
    wide ? h('span', { className: 'bt-row-body' },
@@ -1516,7 +1534,7 @@ index 58d1840..ef40cfa 100644
      workingLine ? h('span', { className: 'bt-row-preview' }, workingLine) : preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
    wide && approval && !active ? h('span', { className: 'bt-unread bt-unread-wait', 'aria-hidden': true })
      : wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
-@@ -173,7 +174,14 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
+@@ -173,7 +175,14 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
  
  // The DSH Agent row: a plain dsh Session list lives in the Bot workspace, so it
  // sits among the Bots with the harness's own whale mark.
@@ -1532,7 +1550,7 @@ index 58d1840..ef40cfa 100644
    const info = useSessions(list => JSON.stringify(agent.sessions.map((id) => {
      const row = list.byId[id]
      return {
-@@ -211,7 +219,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide,
+@@ -211,7 +220,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide,
      },
      h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: 22 })),
      wide ? h('span', { className: 'bt-row-body' },
@@ -1541,7 +1559,7 @@ index 58d1840..ef40cfa 100644
        preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
      wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null),
      h('div', { className: 'bt-agent-sub', 'data-open': open || undefined },
-@@ -250,9 +258,39 @@ function useListGlide(listRef, layout, key) {
+@@ -250,9 +259,39 @@ function useListGlide(listRef, layout, key) {
  
  export function TeamSidebar(props) {
    const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
@@ -1581,7 +1599,33 @@ index 58d1840..ef40cfa 100644
    const roster = useRoster(value => value)
    const markedUnread = useUi(value => value.unread)
    props.useRegistry(value => value)
-@@ -292,6 +330,8 @@ export function TeamSidebar(props) {
+@@ -271,6 +310,25 @@ export function TeamSidebar(props) {
+     ]
+     return entries.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at)
+   }, [roster, updated])
++  // Sections, as the reference product draws them: pinned first, then Bots, then group
++  // chats. A section with nothing in it is not drawn at all.
++  const sections = useMemo(() => {
++    const pinned = order.filter(entry => entry.item.pinned)
++    const rest = order.filter(entry => !entry.item.pinned)
++    return [
++      { id: 'top', name: t('Top'), entries: pinned },
++      { id: 'bots', name: t('Bots'), entries: rest.filter(entry => entry.kind !== 'room') },
++      { id: 'rooms', name: t('Group chats'), entries: rest.filter(entry => entry.kind === 'room') },
++    ].filter(section => section.entries.length > 0)
++  }, [order, t])
++  const [folded, setFolded] = useState(() => {
++    try { return JSON.parse(localStorage.getItem(STORAGE.folded) ?? '{}') ?? {} } catch { return {} }
++  })
++  const toggleSection = (id) => setFolded((current) => {
++    const next = { ...current, [id]: !current[id] }
++    try { localStorage.setItem(STORAGE.folded, JSON.stringify(next)) } catch { /* storage unavailable */ }
++    return next
++  })
+   const main = roster.byId[roster.mainBotId]
+   useListGlide(listRef, wide, order.map(entry => entry.item.id).join(','))
+   useLandOnMainBot(roster, useSessions, actions)
+@@ -292,6 +350,8 @@ export function TeamSidebar(props) {
      openAgent: id => navigate(actions.openAgent, id),
      openAgentSession: id => navigate(actions.openAgentSession, id),
      newAgentSession: id => navigate(actions.newAgentSession, id),
@@ -1590,7 +1634,7 @@ index 58d1840..ef40cfa 100644
    }
    const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
    // Typing while the sidebar has focus starts a search.
-@@ -299,26 +339,33 @@ export function TeamSidebar(props) {
+@@ -299,26 +359,43 @@ export function TeamSidebar(props) {
      if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
      if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
      event.preventDefault()
@@ -1616,15 +1660,27 @@ index 58d1840..ef40cfa 100644
      wide && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
      h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
 -      main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
-+      main ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
-       order.map(entry => (entry.kind === 'bot'
+-      order.map(entry => (entry.kind === 'bot'
 -        ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
-+        ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
-         : entry.kind === 'room'
+-        : entry.kind === 'room'
 -          ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
 -          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))))
-+          ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
-+          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })))),
++      main ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
++      ...sections.flatMap(section => [
++        h('button', {
++          key: `section:${section.id}`, type: 'button', className: 'bt-sec',
++          'aria-expanded': folded[section.id] !== true,
++          onClick: () => toggleSection(section.id),
++        },
++        h('span', { className: 'bt-sec-caret', 'data-open': folded[section.id] !== true ? '' : undefined, 'aria-hidden': true }, h(ChevronRightIcon)),
++        h('span', { className: 'bt-sec-name' }, section.name),
++        h('span', { className: 'bt-sec-count' }, String(section.entries.length))),
++        ...(folded[section.id] === true ? [] : section.entries.map(entry => (entry.kind === 'bot'
++          ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
++          : entry.kind === 'room'
++            ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
++            : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })))),
++      ])),
 +    h('div', { className: 'bt-side-foot' },
 +      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
 +        h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
@@ -1633,7 +1689,7 @@ index 58d1840..ef40cfa 100644
  }
  
  // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -483,7 +530,17 @@ const NO_SNAPSHOT = () => null
+@@ -483,7 +560,17 @@ const NO_SNAPSHOT = () => null
  // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
  // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
  // back in Agent mode; FooterAccount stands in while no seat exists at all.
@@ -1652,7 +1708,7 @@ index 58d1840..ef40cfa 100644
    const [open, setOpen] = useState(false)
    useLayoutEffect(() => {
      if (!seat) return undefined
-@@ -565,7 +622,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
+@@ -565,7 +652,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
    }, [open])
    const groups = [
      [
@@ -1661,8 +1717,20 @@ index 58d1840..ef40cfa 100644
        [t('Connectors'), ConnectorIcon, () => actions.openConnectors()],
        [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
        [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
+diff --git a/ds-bot/src/client/storage.js b/ds-bot/src/client/storage.js
+index f74ffcb..e98e6ea 100644
+--- a/ds-bot/src/client/storage.js
++++ b/ds-bot/src/client/storage.js
+@@ -6,6 +6,7 @@ export const STORAGE = {
+   reactions: 'ds-bot:reactions',
+   seen: 'ds-bot:seen',
+   prefs: 'ds-bot:prefs',
++  folded: 'ds-bot:folded',
+   surface: 'ds-bot:surface',
+   agentSessions: 'ds-bot:agent-sessions',
+   browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index aa38a3b..572c579 100644
+index aa38a3b..807ad20 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -1708,7 +1776,7 @@ index aa38a3b..572c579 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,22 +147,203 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,22 +147,210 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -1722,6 +1790,13 @@ index aa38a3b..572c579 100644
 +html body[data-bt-density=roomy] .bt-tile{padding:8px 10px 6px}
 +html body[data-bt-density=roomy] .bt-market-card{padding:12px}
 +html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy] .bt-market-cat{height:36px}
++/* A section heading over its rows: small, quiet, and folding on a click. */
++.bt-sec{display:flex;align-items:center;gap:5px;width:100%;height:26px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:11px;line-height:16px;letter-spacing:.02em;color:var(--bt-ink-3);cursor:pointer;text-align:left}
++.bt-sec:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
++.bt-sec-caret{display:inline-flex;flex:none;transition:transform .15s ease}
++.bt-sec-caret[data-open]{transform:rotate(90deg)}
++.bt-sec-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
++.bt-sec-count{margin-left:auto;flex:none;font-variant-numeric:tabular-nums;color:var(--bt-ink-3)}
  .bt-row{display:flex;align-items:center;gap:8px;min-height:54px;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--bt-ink);text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-family:inherit;transition:background-color .12s ease}
  .bt-row:hover{background:var(--bt-hover)}
  .bt-row[aria-current=page]{background:var(--bt-active)}
@@ -1915,7 +1990,7 @@ index aa38a3b..572c579 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -317,6 +510,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -317,6 +517,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -1942,7 +2017,7 @@ index aa38a3b..572c579 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -548,7 +761,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -548,7 +768,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
  html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
  html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
@@ -1953,7 +2028,7 @@ index aa38a3b..572c579 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -588,7 +803,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -588,7 +810,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -1963,7 +2038,7 @@ index aa38a3b..572c579 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -883,6 +1099,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -883,6 +1106,61 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -2025,7 +2100,7 @@ index aa38a3b..572c579 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -982,49 +1253,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -982,49 +1260,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -2134,7 +2209,7 @@ index aa38a3b..572c579 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1074,17 +1381,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1074,17 +1388,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -2161,7 +2236,7 @@ index aa38a3b..572c579 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1093,7 +1401,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1093,7 +1408,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -2170,7 +2245,7 @@ index aa38a3b..572c579 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1134,6 +1442,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1134,6 +1449,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}

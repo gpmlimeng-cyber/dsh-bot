@@ -157,6 +157,13 @@ html body[data-bt-density=roomy] .bt-row{min-height:62px}
 html body[data-bt-density=roomy] .bt-tile{padding:8px 10px 6px}
 html body[data-bt-density=roomy] .bt-market-card{padding:12px}
 html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy] .bt-market-cat{height:36px}
+/* A section heading over its rows: small, quiet, and folding on a click. */
+.bt-sec{display:flex;align-items:center;gap:5px;width:100%;height:26px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:11px;line-height:16px;letter-spacing:.02em;color:var(--bt-ink-3);cursor:pointer;text-align:left}
+.bt-sec:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
+.bt-sec-caret{display:inline-flex;flex:none;transition:transform .15s ease}
+.bt-sec-caret[data-open]{transform:rotate(90deg)}
+.bt-sec-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.bt-sec-count{margin-left:auto;flex:none;font-variant-numeric:tabular-nums;color:var(--bt-ink-3)}
 .bt-row{display:flex;align-items:center;gap:8px;min-height:54px;padding:8px;border:0;border-radius:10px;background:transparent;color:var(--bt-ink);text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-family:inherit;transition:background-color .12s ease}
 .bt-row:hover{background:var(--bt-hover)}
 .bt-row[aria-current=page]{background:var(--bt-active)}
