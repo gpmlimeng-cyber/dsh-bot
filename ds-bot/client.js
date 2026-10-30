@@ -2705,10 +2705,10 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The market floats over the conversation as frosted glass: a translucent surface, the
    page behind it blurred and lifted, and one hairline ring instead of a hard border. The
    tint is mixed from --bt-main, so the panel keeps following the theme. */
-.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;flex-direction:column;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 80%,transparent);backdrop-filter:blur(64px) saturate(2);-webkit-backdrop-filter:blur(64px) saturate(2);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
-/* One title row over both columns: the page's name on the left, its own action and the close
-   button on the right. Everything else starts at the very top of the pane under it. */
-.bt-market-bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px 12px 20px;border-bottom:1px solid var(--bt-line)}
+.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 80%,transparent);backdrop-filter:blur(64px) saturate(2);-webkit-backdrop-filter:blur(64px) saturate(2);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
+/* The page's own title row inside the tab: its name on the left, its action on the right,
+   and the content starts at the very top beneath it. */
+.bt-market-bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px 0}
 .bt-market-bartitle{display:flex;align-items:center;gap:10px;min-width:0}
 .bt-market-baractions{display:flex;align-items:center;gap:8px;flex:none}
 .bt-market-action{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
@@ -2718,7 +2718,6 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The skill market's refresh and import buttons, drawn by its panel into this slot. */
 .bt-market-skillslot{display:flex;align-items:center}
 .bt-skill-topbar[data-skill-market]{display:flex;align-items:center;height:auto;max-height:none;background:none;color:var(--bt-ink)}
-.bt-market-cols{flex:1 1 auto;min-height:0;display:flex}
 .bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:12px;border-right:1px solid var(--bt-line);overflow-y:auto;background:color-mix(in srgb,var(--bt-main) 40%,transparent)}
 .bt-market-cats{display:flex;flex-direction:column;gap:2px}
 .bt-market-cat{height:32px;padding:0 10px;border:0;border-radius:10px;background:none;text-align:left;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink-2);cursor:pointer}
@@ -14343,156 +14342,157 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
       (0, import_react15.createElement)(
         "div",
         { className: "bt-market-pane", role: "dialog", "aria-modal": "true", "aria-label": t("Market") },
-        // One title row for the whole market: the current page on the left, its own action and the
-        // close button on the right. The rail and the content start at the very top under it, so
-        // no page repeats a heading the row already carries.
         (0, import_react15.createElement)(
-          "header",
-          { className: "bt-market-bar" },
+          "aside",
+          { className: "bt-market-nav" },
           (0, import_react15.createElement)(
             "div",
-            { className: "bt-market-bartitle" },
-            current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : null,
-            (0, import_react15.createElement)("h2", { className: "bt-market-h2" }, heading)
+            { className: "bt-market-navhead" },
+            (0, import_react15.createElement)("span", { className: "bt-market-h2" }, t("Market")),
+            (0, import_react15.createElement)("button", { type: "button", className: "bt-market-close", "aria-label": t("Close"), onClick: onClose }, (0, import_react15.createElement)(CloseIcon))
           ),
           (0, import_react15.createElement)(
             "div",
-            { className: "bt-market-baractions" },
-            tab === "skills" ? (0, import_react15.createElement)("span", { className: "bt-market-skillslot", ref: (node) => setHeadHost(node) }) : current ? null : tab === "plugins" ? null : (0, import_react15.createElement)(
-              "label",
-              { className: "bt-market-search" },
-              (0, import_react15.createElement)(SearchIcon),
-              (0, import_react15.createElement)("input", {
-                ref: search,
-                type: "search",
-                value: query,
-                placeholder: t("Search apps"),
-                onChange: (event) => setQuery(event.target.value),
-                "aria-label": t("Search apps")
-              })
-            ),
-            (0, import_react15.createElement)("button", {
+            { className: "bt-market-cats", role: "tablist" },
+            ...CATEGORIES().map((category) => (0, import_react15.createElement)("button", {
+              key: category.id,
               type: "button",
-              className: "bt-market-action",
-              onClick: () => {
-                onClose();
-                if (tab === "plugins") actions.openPluginsPanel?.();
-                else if (tab !== "skills") actions.openConnectors?.();
-              }
-            }, (0, import_react15.createElement)(GearIcon), (0, import_react15.createElement)("span", null, t(tab === "plugins" ? "Open the page that manages plugins" : "Open the full connector page"))),
-            (0, import_react15.createElement)("button", { type: "button", className: "bt-market-close", "aria-label": t("Close"), onClick: onClose }, (0, import_react15.createElement)(CloseIcon))
+              role: "tab",
+              "aria-selected": tab === category.id,
+              className: "bt-market-cat",
+              onClick: () => setTab(category.id)
+            }, category.name))
+          ),
+          tab === "skills" ? null : (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t(tab === "plugins" ? "Enabled" : "Installed")),
+          tab === "skills" ? null : (0, import_react15.createElement)(
+            "div",
+            { className: "bt-market-installed" },
+            installed.length ? installed.map((entry) => {
+              const id = entry.id ?? entry.name;
+              return (0, import_react15.createElement)(
+                "div",
+                {
+                  key: id,
+                  className: "bt-market-instrow",
+                  "data-open": menuFor === id ? "" : void 0,
+                  "data-busy": busyRow === id ? "" : void 0
+                },
+                (0, import_react15.createElement)(
+                  "button",
+                  {
+                    type: "button",
+                    className: "bt-market-inst",
+                    "aria-current": selected === id ? "page" : void 0,
+                    onClick: () => setSelected(id)
+                  },
+                  tab === "plugins" ? (0, import_react15.createElement)(PluginIcon, { src: entry.icon }) : (0, import_react15.createElement)(Mark, { icon: entry.icon, state: entry.state ?? "ready" }),
+                  (0, import_react15.createElement)("span", { className: "bt-market-instname" }, entry.name)
+                ),
+                tab === "plugins" ? (0, import_react15.createElement)("button", {
+                  type: "button",
+                  className: "bt-market-instmore",
+                  "aria-haspopup": "menu",
+                  "aria-expanded": menuFor === id,
+                  "aria-label": entry.name,
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    setMenuFor(menuFor === id ? null : id);
+                  }
+                }, (0, import_react15.createElement)(MoreDotsIcon)) : null,
+                menuFor === id ? (0, import_react15.createElement)(
+                  "div",
+                  { className: "bt-sec-menu bt-market-instmenu", role: "menu" },
+                  (0, import_react15.createElement)("button", { type: "button", role: "menuitem", onClick: () => disableBundle(entry) }, (0, import_react15.createElement)(SwitchIcon), t("Disable")),
+                  (0, import_react15.createElement)("button", { type: "button", role: "menuitem", onClick: () => {
+                    setMenuFor(null);
+                    onClose();
+                    actions.openPluginsPanel?.();
+                  } }, (0, import_react15.createElement)(GearIcon), t("Manage")),
+                  (0, import_react15.createElement)("button", { type: "button", role: "menuitem", className: "bt-danger", onClick: () => removeBundle(entry) }, (0, import_react15.createElement)(TrashIcon), t("Uninstall"))
+                ) : null
+              );
+            }) : (0, import_react15.createElement)("span", { className: "bt-market-hint" }, t(tab === "plugins" ? "No plugin is on yet" : "Nothing installed yet"))
           )
         ),
         (0, import_react15.createElement)(
-          "div",
-          { className: "bt-market-cols" },
+          "main",
+          { className: "bt-market-main" },
+          // The title row belongs to the page inside the tab, not to the market: its name on the
+          // left, that page's own action (or the skill market's refresh and import) on the right,
+          // and the content starts at the very top beneath it.
           (0, import_react15.createElement)(
-            "aside",
-            { className: "bt-market-nav" },
+            "header",
+            { className: "bt-market-bar" },
             (0, import_react15.createElement)(
               "div",
-              { className: "bt-market-cats", role: "tablist" },
-              ...CATEGORIES().map((category) => (0, import_react15.createElement)("button", {
-                key: category.id,
-                type: "button",
-                role: "tab",
-                "aria-selected": tab === category.id,
-                className: "bt-market-cat",
-                onClick: () => setTab(category.id)
-              }, category.name))
+              { className: "bt-market-bartitle" },
+              current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : null,
+              (0, import_react15.createElement)("h2", { className: "bt-market-h2" }, heading)
             ),
-            tab === "skills" ? null : (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t(tab === "plugins" ? "Enabled" : "Installed")),
-            tab === "skills" ? null : (0, import_react15.createElement)(
+            (0, import_react15.createElement)(
               "div",
-              { className: "bt-market-installed" },
-              installed.length ? installed.map((entry) => {
-                const id = entry.id ?? entry.name;
-                return (0, import_react15.createElement)(
-                  "div",
-                  {
-                    key: id,
-                    className: "bt-market-instrow",
-                    "data-open": menuFor === id ? "" : void 0,
-                    "data-busy": busyRow === id ? "" : void 0
-                  },
-                  (0, import_react15.createElement)(
-                    "button",
-                    {
-                      type: "button",
-                      className: "bt-market-inst",
-                      "aria-current": selected === id ? "page" : void 0,
-                      onClick: () => setSelected(id)
-                    },
-                    tab === "plugins" ? (0, import_react15.createElement)(PluginIcon, { src: entry.icon }) : (0, import_react15.createElement)(Mark, { icon: entry.icon, state: entry.state ?? "ready" }),
-                    (0, import_react15.createElement)("span", { className: "bt-market-instname" }, entry.name)
-                  ),
-                  tab === "plugins" ? (0, import_react15.createElement)("button", {
-                    type: "button",
-                    className: "bt-market-instmore",
-                    "aria-haspopup": "menu",
-                    "aria-expanded": menuFor === id,
-                    "aria-label": entry.name,
-                    onClick: (event) => {
-                      event.stopPropagation();
-                      setMenuFor(menuFor === id ? null : id);
-                    }
-                  }, (0, import_react15.createElement)(MoreDotsIcon)) : null,
-                  menuFor === id ? (0, import_react15.createElement)(
-                    "div",
-                    { className: "bt-sec-menu bt-market-instmenu", role: "menu" },
-                    (0, import_react15.createElement)("button", { type: "button", role: "menuitem", onClick: () => disableBundle(entry) }, (0, import_react15.createElement)(SwitchIcon), t("Disable")),
-                    (0, import_react15.createElement)("button", { type: "button", role: "menuitem", onClick: () => {
-                      setMenuFor(null);
-                      onClose();
-                      actions.openPluginsPanel?.();
-                    } }, (0, import_react15.createElement)(GearIcon), t("Manage")),
-                    (0, import_react15.createElement)("button", { type: "button", role: "menuitem", className: "bt-danger", onClick: () => removeBundle(entry) }, (0, import_react15.createElement)(TrashIcon), t("Uninstall"))
-                  ) : null
-                );
-              }) : (0, import_react15.createElement)("span", { className: "bt-market-hint" }, t(tab === "plugins" ? "No plugin is on yet" : "Nothing installed yet"))
+              { className: "bt-market-baractions" },
+              tab === "skills" ? (0, import_react15.createElement)("span", { className: "bt-market-skillslot", ref: (node) => setHeadHost(node) }) : current ? null : tab === "plugins" ? null : (0, import_react15.createElement)(
+                "label",
+                { className: "bt-market-search" },
+                (0, import_react15.createElement)(SearchIcon),
+                (0, import_react15.createElement)("input", {
+                  ref: search,
+                  type: "search",
+                  value: query,
+                  placeholder: t("Search apps"),
+                  onChange: (event) => setQuery(event.target.value),
+                  "aria-label": t("Search apps")
+                })
+              ),
+              tab === "skills" ? null : (0, import_react15.createElement)("button", {
+                type: "button",
+                className: "bt-market-action",
+                onClick: () => {
+                  onClose();
+                  if (tab === "plugins") actions.openPluginsPanel?.();
+                  else actions.openConnectors?.();
+                }
+              }, (0, import_react15.createElement)(GearIcon), (0, import_react15.createElement)("span", null, t(tab === "plugins" ? "Open the page that manages plugins" : "Open the full connector page")))
             )
           ),
           (0, import_react15.createElement)(
-            "main",
-            { className: "bt-market-main" },
-            (0, import_react15.createElement)(
+            "div",
+            { className: "bt-market-body" },
+            // The Skills tab is the DeepSeek skill market itself, vendored from
+            // @montersy123/dsh-skill-market: discovery, detail drawer, install, favourites and
+            // local import all live in that panel, so nothing here reimplements them.
+            tab === "skills" ? (0, import_react15.createElement)("div", { className: "bt-market-skillhost", key: "skills" }, (0, import_react15.createElement)(SkillMarketPanel, { headerHost: headHost })) : tab === "plugins" && !current ? (0, import_react15.createElement)(Discover, { key: "discover", actions }) : current ? (0, import_react15.createElement)(
               "div",
-              { className: "bt-market-body" },
-              // The Skills tab is the DeepSeek skill market itself, vendored from
-              // @montersy123/dsh-skill-market: discovery, detail drawer, install, favourites and
-              // local import all live in that panel, so nothing here reimplements them.
-              tab === "skills" ? (0, import_react15.createElement)("div", { className: "bt-market-skillhost", key: "skills" }, (0, import_react15.createElement)(SkillMarketPanel, { headerHost: headHost })) : tab === "plugins" && !current ? (0, import_react15.createElement)(Discover, { key: "discover", actions }) : current ? (0, import_react15.createElement)(
-                "div",
-                { className: "bt-market-detailpane" },
-                (0, import_react15.createElement)(Card, {
-                  name: current.name,
-                  detail: current.detail,
-                  mark: current.icon,
-                  state: current.state,
-                  installed: true,
-                  action: t("Manage"),
-                  onOpen: () => {
-                  },
-                  onPick: () => {
-                    onClose();
-                    actions.openConnectors();
-                  }
-                }),
-                (0, import_react15.createElement)("div", { className: "bt-market-note" }, t("The settings for this entry stay on the page that owns them."))
-              ) : [
-                list.length ? (0, import_react15.createElement)("div", { className: "bt-market-grid", key: "grid" }, list.map((entry) => (0, import_react15.createElement)(Card, {
-                  key: entry.id ?? entry.name,
-                  name: entry.name,
-                  detail: entry.detail,
-                  mark: entry.icon,
-                  state: entry.state,
-                  installed: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)),
-                  action: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)) ? t("Manage") : t("Connect"),
-                  onOpen: () => setSelected(entry.id ?? entry.name),
-                  onPick: () => pick2(entry)
-                }))) : (0, import_react15.createElement)("div", { className: "bt-market-empty", key: "empty" }, t("Nothing here yet"))
-              ]
-            )
+              { className: "bt-market-detailpane" },
+              (0, import_react15.createElement)(Card, {
+                name: current.name,
+                detail: current.detail,
+                mark: current.icon,
+                state: current.state,
+                installed: true,
+                action: t("Manage"),
+                onOpen: () => {
+                },
+                onPick: () => {
+                  onClose();
+                  actions.openConnectors();
+                }
+              }),
+              (0, import_react15.createElement)("div", { className: "bt-market-note" }, t("The settings for this entry stay on the page that owns them."))
+            ) : [
+              list.length ? (0, import_react15.createElement)("div", { className: "bt-market-grid", key: "grid" }, list.map((entry) => (0, import_react15.createElement)(Card, {
+                key: entry.id ?? entry.name,
+                name: entry.name,
+                detail: entry.detail,
+                mark: entry.icon,
+                state: entry.state,
+                installed: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)),
+                action: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)) ? t("Manage") : t("Connect"),
+                onOpen: () => setSelected(entry.id ?? entry.name),
+                onPick: () => pick2(entry)
+              }))) : (0, import_react15.createElement)("div", { className: "bt-market-empty", key: "empty" }, t("Nothing here yet"))
+            ]
           )
         )
       )

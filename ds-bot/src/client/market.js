@@ -428,39 +428,10 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
     onMouseDown: (event) => { if (event.target === event.currentTarget) onClose() },
   },
   h('div', { className: 'bt-market-pane', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('Market') },
-    // One title row for the whole market: the current page on the left, its own action and the
-    // close button on the right. The rail and the content start at the very top under it, so
-    // no page repeats a heading the row already carries.
-    h('header', { className: 'bt-market-bar' },
-      h('div', { className: 'bt-market-bartitle' },
-        current
-          ? h('button', { type: 'button', className: 'bt-market-back', onClick: () => setSelected(null) }, t('Back'))
-          : null,
-        h('h2', { className: 'bt-market-h2' }, heading)),
-      h('div', { className: 'bt-market-baractions' },
-        tab === 'skills'
-          ? h('span', { className: 'bt-market-skillslot', ref: (node) => setHeadHost(node) })
-          : current
-            ? null
-            : tab === 'plugins'
-              ? null
-              : h('label', { className: 'bt-market-search' },
-                h(SearchIcon),
-                h('input', {
-                  ref: search, type: 'search', value: query, placeholder: t('Search apps'),
-                  onChange: (event) => setQuery(event.target.value), 'aria-label': t('Search apps'),
-                })),
-        h('button', {
-          type: 'button', className: 'bt-market-action',
-          onClick: () => {
-            onClose()
-            if (tab === 'plugins') actions.openPluginsPanel?.()
-            else if (tab !== 'skills') actions.openConnectors?.()
-          },
-        }, h(GearIcon), h('span', null, t(tab === 'plugins' ? 'Open the page that manages plugins' : 'Open the full connector page'))),
-        h('button', { type: 'button', className: 'bt-market-close', 'aria-label': t('Close'), onClick: onClose }, h(CloseIcon)))),
-    h('div', { className: 'bt-market-cols' },
-      h('aside', { className: 'bt-market-nav' },
+    h('aside', { className: 'bt-market-nav' },
+      h('div', { className: 'bt-market-navhead' },
+        h('span', { className: 'bt-market-h2' }, t('Market')),
+        h('button', { type: 'button', className: 'bt-market-close', 'aria-label': t('Close'), onClick: onClose }, h(CloseIcon))),
       h('div', { className: 'bt-market-cats', role: 'tablist' },
         ...CATEGORIES().map((category) => h('button', {
           key: category.id, type: 'button', role: 'tab', 'aria-selected': tab === category.id,
@@ -502,6 +473,38 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
           })
           : h('span', { className: 'bt-market-hint' }, t(tab === 'plugins' ? 'No plugin is on yet' : 'Nothing installed yet')))),
     h('main', { className: 'bt-market-main' },
+      // The title row belongs to the page inside the tab, not to the market: its name on the
+      // left, that page's own action (or the skill market's refresh and import) on the right,
+      // and the content starts at the very top beneath it.
+      h('header', { className: 'bt-market-bar' },
+        h('div', { className: 'bt-market-bartitle' },
+          current
+            ? h('button', { type: 'button', className: 'bt-market-back', onClick: () => setSelected(null) }, t('Back'))
+            : null,
+          h('h2', { className: 'bt-market-h2' }, heading)),
+        h('div', { className: 'bt-market-baractions' },
+          tab === 'skills'
+            ? h('span', { className: 'bt-market-skillslot', ref: (node) => setHeadHost(node) })
+            : current
+              ? null
+              : tab === 'plugins'
+                ? null
+                : h('label', { className: 'bt-market-search' },
+                  h(SearchIcon),
+                  h('input', {
+                    ref: search, type: 'search', value: query, placeholder: t('Search apps'),
+                    onChange: (event) => setQuery(event.target.value), 'aria-label': t('Search apps'),
+                  })),
+          tab === 'skills'
+            ? null
+            : h('button', {
+              type: 'button', className: 'bt-market-action',
+              onClick: () => {
+                onClose()
+                if (tab === 'plugins') actions.openPluginsPanel?.()
+                else actions.openConnectors?.()
+              },
+            }, h(GearIcon), h('span', null, t(tab === 'plugins' ? 'Open the page that manages plugins' : 'Open the full connector page'))))),
       h('div', { className: 'bt-market-body' },
         // The Skills tab is the DeepSeek skill market itself, vendored from
         // @montersy123/dsh-skill-market: discovery, detail drawer, install, favourites and
@@ -528,6 +531,6 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
                   onPick: () => pick(entry),
                 })))
                 : h('div', { className: 'bt-market-empty', key: 'empty' }, t('Nothing here yet')),
-            ]))))),
+            ])))),
     document.body)
 }
