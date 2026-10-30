@@ -2890,6 +2890,21 @@ button.bt-mk-tag:hover{color:var(--bt-ink)}
 .bt-mk-more:disabled{opacity:.5;cursor:default}
 .bt-mk-empty{padding:28px 0;font-size:13px;color:var(--bt-ink-3)}
 @media (max-width:720px){.bt-market-pane{backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6)}.bt-mk-bar{flex-wrap:wrap}.bt-mk-search{order:-1;flex:1 1 100%}.bt-mk-mark{width:44px;height:44px;border-radius:14px}}
+/* The market on a phone: the rail is one row of tabs across the top and the panel fills the
+   screen, so a 240px column no longer eats most of it (this is the drawer form's marker,
+   the same one the other phone rules key on). The enabled list steps aside: each category
+   page already shows the same entries, and a horizontal rail would only push them down. */
+html:has([data-mobile-nav="frame"]) .bt-market-frame{padding:0;align-items:stretch}
+html:has([data-mobile-nav="frame"]) .bt-market-pane{width:100vw;max-width:100vw;height:100dvh;border-radius:0;flex-direction:column}
+html:has([data-mobile-nav="frame"]) .bt-market-nav{width:auto;flex:none;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px;border-right:0;border-bottom:1px solid var(--bt-line);overflow:visible;background:transparent}
+html:has([data-mobile-nav="frame"]) .bt-market-cats{flex-direction:row;gap:6px;overflow-x:auto;overflow-y:hidden;padding:0 0 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+html:has([data-mobile-nav="frame"]) .bt-market-cats::-webkit-scrollbar{display:none}
+html:has([data-mobile-nav="frame"]) .bt-market-cat{flex:none;height:30px;padding:0 12px;border-radius:999px;white-space:nowrap;text-align:center;background:transparent}
+html:has([data-mobile-nav="frame"]) .bt-market-cat[aria-selected=true]{background:var(--bt-hover);color:var(--bt-ink)}
+html:has([data-mobile-nav="frame"]) .bt-market-insthead,
+html:has([data-mobile-nav="frame"]) .bt-market-installed{display:none!important}
+html:has([data-mobile-nav="frame"]) .bt-market-head{padding:14px 16px 6px}
+html:has([data-mobile-nav="frame"]) .bt-market-body{padding:0 16px 16px}
 
 @media (max-width:720px){.bt-market-nav{width:200px}.bt-market-grid{grid-template-columns:1fr}}
 
@@ -27633,7 +27648,7 @@ function apply(ctx) {
         });
         window.addEventListener("resize", () => paintModeBar());
       }
-      modeBar.style.cssText = inDrawer() ? "position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:#141414" : `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414`;
+      modeBar.style.cssText = inDrawer() ? "position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)" : `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414`;
       placeRow();
       modeBar.textContent = "";
       const label = document.createElement("span");
