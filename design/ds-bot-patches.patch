@@ -549,7 +549,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..45a72ba 100644
+index daf7dd4..edd85be 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -758,7 +758,7 @@ index daf7dd4..45a72ba 100644
 +      modeMenu = document.createElement('div')
 +      modeMenu.className = 'bt-modebar-menu'
 +      modeMenu.setAttribute('role', 'menu')
-+      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 18px 40px -20px rgba(0,0,0,.32)`
++      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:164px;padding:5px;border-radius:10px;background:transparent;box-shadow:none;backdrop-filter:blur(22px) saturate(1.4)`
 +      for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
 +        const selected = mode === id
 +        const item = document.createElement('button')
