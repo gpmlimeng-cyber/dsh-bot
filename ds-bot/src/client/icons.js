@@ -58,6 +58,12 @@ export function CloudDownloadIcon({ done = false }) {
 export const SmileIcon = lineIcon(['M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z', 'M7.3 11.6a3.4 3.4 0 0 0 5.4 0', 'M7.75 8.25h.01M12.25 8.25h.01'])
 export const ReplyIcon = lineIcon(['M8 5L4 9l4 4', 'M4 9h7.5a4.5 4.5 0 0 1 4.5 4.5V15'])
 export const DotsIcon = lineIcon(['M5 10h.01M10 10h.01M15 10h.01'])
+// The three dots for a round button: same round caps, drawn at 20px with a weight that
+// still reads at that size.
+export function MoreDotsIcon() {
+  return h('svg', { width: 20, height: 20, viewBox: '0 0 20 20', 'aria-hidden': true },
+    h('path', { d: 'M4 10h.01M10 10h.01M16 10h.01', stroke: 'currentColor', strokeWidth: 2.9, strokeLinecap: 'round' }))
+}
 // The reference app's drawer mark: a long line over a short one, both starting at the same
 // left edge, at display weight.
 export function MenuLinesIcon() {
@@ -66,8 +72,8 @@ export function MenuLinesIcon() {
 }
 // The same dots as DotsIcon, drawn larger for the session header's button.
 export function BigDotsIcon() {
-  return h('svg', { width: 24, height: 24, viewBox: '0 0 20 20', 'aria-hidden': true },
-    h('path', { d: 'M2.8 10h.01M10 10h.01M17.2 10h.01', stroke: 'currentColor', strokeWidth: 4.6, strokeLinecap: 'round' }))
+  return h('svg', { width: 22, height: 22, viewBox: '0 0 20 20', 'aria-hidden': true },
+    h('path', { d: 'M4 10h.01M10 10h.01M16 10h.01', stroke: 'currentColor', strokeWidth: 3.2, strokeLinecap: 'round' }))
 }
 export const ImageIcon = lineIcon(['M4 4.5h12v11H4z', 'M4 12l3.5-3.5 3 3 2-2 3.5 3.5', 'M7.75 8h.01'])
 export const CheckIcon = lineIcon(['M4.5 10.5l3.5 3.5 7.5-8'])

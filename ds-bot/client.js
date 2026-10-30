@@ -3947,6 +3947,13 @@ function CloudDownloadIcon({ done = false }) {
 var SmileIcon = lineIcon(["M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z", "M7.3 11.6a3.4 3.4 0 0 0 5.4 0", "M7.75 8.25h.01M12.25 8.25h.01"]);
 var ReplyIcon = lineIcon(["M8 5L4 9l4 4", "M4 9h7.5a4.5 4.5 0 0 1 4.5 4.5V15"]);
 var DotsIcon = lineIcon(["M5 10h.01M10 10h.01M15 10h.01"]);
+function MoreDotsIcon() {
+  return (0, import_react3.createElement)(
+    "svg",
+    { width: 20, height: 20, viewBox: "0 0 20 20", "aria-hidden": true },
+    (0, import_react3.createElement)("path", { d: "M4 10h.01M10 10h.01M16 10h.01", stroke: "currentColor", strokeWidth: 2.9, strokeLinecap: "round" })
+  );
+}
 function MenuLinesIcon() {
   return (0, import_react3.createElement)(
     "svg",
@@ -3957,8 +3964,8 @@ function MenuLinesIcon() {
 function BigDotsIcon() {
   return (0, import_react3.createElement)(
     "svg",
-    { width: 24, height: 24, viewBox: "0 0 20 20", "aria-hidden": true },
-    (0, import_react3.createElement)("path", { d: "M2.8 10h.01M10 10h.01M17.2 10h.01", stroke: "currentColor", strokeWidth: 4.6, strokeLinecap: "round" })
+    { width: 22, height: 22, viewBox: "0 0 20 20", "aria-hidden": true },
+    (0, import_react3.createElement)("path", { d: "M4 10h.01M10 10h.01M16 10h.01", stroke: "currentColor", strokeWidth: 3.2, strokeLinecap: "round" })
   );
 }
 var ImageIcon = lineIcon(["M4 4.5h12v11H4z", "M4 12l3.5-3.5 3 3 2-2 3.5 3.5", "M7.75 8h.01"]);
@@ -12773,7 +12780,7 @@ function DetailsDrawer({ sessionId, startRenaming, startTab, hasStrip, roster, a
     "div",
     { className: "bt-drawer-top", "data-move": side },
     bot || room2 ? (0, import_react28.createElement)("button", { type: "button", className: "bt-round", "aria-label": bot ? t("Edit Bot") : t("Group settings"), title: bot ? t("Edit Bot") : t("Group settings"), "data-info-row": "settings", onClick: () => setView("settings") }, (0, import_react28.createElement)(GearIcon)) : null,
-    more.length > 0 ? (0, import_react28.createElement)("span", { "data-info-row": "more" }, (0, import_react28.createElement)(PanelMenu, { items: more, className: "bt-round", "aria-label": t("More") })) : null,
+    more.length > 0 ? (0, import_react28.createElement)("span", { "data-info-row": "more" }, (0, import_react28.createElement)(PanelMenu, { items: more, className: "bt-round", icon: MoreDotsIcon, "aria-label": t("More") })) : null,
     bot || room2 ? (0, import_react28.createElement)("button", { type: "button", className: "bt-round", "aria-label": copied ? t("Copied conversation") : t("Share conversation"), title: copied ? t("Copied") : t("Copy conversation as Markdown"), onClick: share }, copied ? (0, import_react28.createElement)("span", { key: "copied", className: "bt-pop-in" }, "✓") : (0, import_react28.createElement)(ShareIcon)) : null,
     hasStrip ? null : (0, import_react28.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Close details"), onClick: close }, (0, import_react28.createElement)(CloseIcon))
   );
