@@ -252,6 +252,17 @@ function useListGlide(listRef, layout, key) {
 export function TeamSidebar(props) {
   const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
   const listRef = useRef(null)
+  // The desktop window reserves a band for its own controls; when it does, the row rides
+  // that band and indents past them. Measured once, so a browser without the band is left
+  // alone instead of being pushed off the top.
+  useLayoutEffect(() => {
+    const row = listRef.current?.parentElement?.querySelector('.bt-side-top')
+    if (!row) return
+    const reserved = row.getBoundingClientRect().top
+    const lift = reserved > 6 ? Math.min(reserved, 44) : 0
+    row.style.setProperty('--bt-side-lift', lift ? `${lift}px` : '0px')
+    row.style.setProperty('--bt-side-indent', lift ? '78px' : '0px')
+  })
   const closing = useRef(false)
   useLayoutEffect(() => { closing.current = false })
   // The collapse lives here because this component alone knows `wide` and the latch that

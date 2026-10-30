@@ -120,7 +120,13 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 /* The sidebar's own controls sit a size below the panel buttons: 32px, where the round
    buttons elsewhere are 36. */
 .bt-side-top .bt-round{width:32px;height:32px}
-html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top{height:38px;padding:0 8px 0 0;margin-top:calc(-1 * var(--dsh-frame-chrome-top,0px))}
+/* The caption row has room for three marks, not three cards: plain icons, a 2px gap. */
+html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top{gap:2px}
+html[data-platform=darwin] .bt-side-top .bt-round,html[data-windows-titlebar] .bt-side-top .bt-round{width:28px;height:28px;background:none;box-shadow:none}
+html[data-platform=darwin] .bt-side-top .bt-round:hover,html[data-windows-titlebar] .bt-side-top .bt-round:hover{background:var(--bt-hover)}
+/* The row shares the caption band with the window's own controls: pulled up into it and
+   indented past the traffic lights, so the brand starts where they end. */
+html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top{height:38px;padding:0 8px 0 var(--bt-side-indent,0px);margin-top:calc(-1 * var(--bt-side-lift,0px))}
 .bt-brand{display:inline-flex;align-items:center;gap:6px;margin-right:auto;padding:4px 8px 4px 4px;border:0;border-radius:8px;background:none;cursor:pointer;font-family:inherit;font-size:15px;line-height:20px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink);white-space:nowrap}
 .bt-brand-whale{display:inline-flex;color:var(--bt-accent)}
 .bt-round{width:36px;height:36px;border-radius:50%;border:0;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .12s ease,transform .12s ease}
@@ -592,6 +598,8 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
 html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
 html:not([data-platform=darwin]):not([data-windows-titlebar]) .bt-side-collapse{display:none}
+/* ds-bot folds the side from its own row now, so the shell's copy in the caption band goes. */
+html[data-platform=darwin] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-platform=darwin] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right){display:none!important}
 /* The footer ends in the Bot row: the whale's settings seat, then the account menu
    when no plugin holds that seat. Every other plugin's entry takes a whole row above
    it, in the shell's order, so none of them squeezes the Bot row. */
