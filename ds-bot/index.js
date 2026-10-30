@@ -53,9 +53,22 @@ const MODULES = [diagnostics, store, models, providers, permissions, turns, hand
 export function apply(ctx, config = {}) {
   createRuntime(ctx, config)
   // The skill market is vendored whole (MIT, see NOTICE): its browser panel talks to its own
-  // same-origin routes, so its host half registers them here. A DSH without a web server
-  // simply leaves the Skills tab without data instead of failing the Bot plugin.
-  if (typeof ctx.inject === 'function') ctx.inject(['webServer'], scope => { skillMarket.apply(scope) })
+  // same-origin routes, so its host half registers them here. Nothing it does may fail the
+  // Bot plugin itself — a broken skill market leaves the Skills tab without data, not the
+  // sidebar without a team.
+  if (typeof ctx.inject === 'function') {
+    try {
+      ctx.inject(['webServer'], (scope) => {
+        try {
+          skillMarket.apply(scope)
+        } catch (error) {
+          scope.logger?.warn?.(`skill market: ${error instanceof Error ? error.message : String(error)}`)
+        }
+      })
+    } catch (error) {
+      ctx.logger?.warn?.(`skill market: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
 }
 
 export function createRuntime(ctx, config = {}) {
