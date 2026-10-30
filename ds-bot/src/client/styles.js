@@ -248,6 +248,10 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The Skills tab hands its whole pane to the vendored skill market; it wants a definite
    height, so the pane is a flex box the panel can fill. */
 .bt-market-skillhost{flex:1 1 auto;min-height:0;min-width:0;display:flex;overflow:hidden}
+/* The panel sizes itself from its content in a row flex box, which left a blank column on
+   the right of every page; as the host's only child it takes the whole pane instead. */
+.bt-market-skillhost>[data-skill-market]{flex:1 1 auto;min-width:0;width:100%}
+.bt-market-skillhost [data-skill-market] .sm-fixed,.bt-market-skillhost [data-skill-market] .sm-content,.bt-market-skillhost [data-skill-market] .sm-viewbar,.bt-market-skillhost [data-skill-market] .sm-statusbar{width:100%}
 /* Refresh and import ride the view tab row, pushed to its right end. */
 [data-skill-market] .sm-viewbar-actions{margin-left:auto;padding-left:12px;display:flex;align-items:center;gap:8px;flex:none}
 [data-skill-market] .sm-viewbar-actions .sm-icon-btn{width:28px;height:28px}
