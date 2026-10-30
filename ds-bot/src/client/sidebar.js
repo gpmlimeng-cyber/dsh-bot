@@ -257,21 +257,42 @@ export function TeamSidebar(props) {
   // The desktop window reserves a band for its own controls; when it does, the row rides
   // that band and indents past them. Measured once, so a browser without the band is left
   // alone instead of being pushed off the top.
-  const band = useRef(null)
+  // The window reserves a band above the sidebar for its own controls. The shell adds that
+  // band a moment after the first paint and does not mark the platform in every build, so
+  // the row is lifted inline: clear the lift, measure, apply. Once the band stops moving the
+  // observer keeps watching the document, since a window switch can reserve it again.
   useLayoutEffect(() => {
     const row = listRef.current?.parentElement?.querySelector('.bt-side-top')
-    if (!row) return
-    // Measured once, with any earlier lift cleared: measuring the lifted row answers 0 and
-    // would drop it back into the band on the next render.
-    if (band.current === null) {
-      row.style.setProperty('--bt-side-lift', '0px')
-      const reserved = row.getBoundingClientRect().top
-      band.current = reserved > 0 ? Math.min(reserved, 64) : 0
+    if (!row) return undefined
+    const measure = () => {
+      row.style.marginTop = '0px'
+      row.style.height = ''
+      const band = row.getBoundingClientRect().top
+      const lift = band > 0 ? Math.min(band, 120) : 0
+      row.style.marginTop = lift ? `${-lift}px` : '0px'
+      // A real caption band (not the few pixels a browser offsets the column by) is what the
+      // row then fills, so the buttons sit on the window's own control line.
+      row.style.height = lift >= 24 ? `${lift}px` : ''
+      row.style.paddingLeft = lift ? '78px' : ''
     }
-    const lift = band.current
-    row.style.setProperty('--bt-side-lift', lift ? `${lift}px` : '0px')
-    row.style.setProperty('--bt-side-indent', lift ? '78px' : '0px')
-  })
+    measure()
+    let frame = 0
+    let started = 0
+    const settle = (now) => {
+      if (!started) started = now
+      measure()
+      if (now - started < 6000) frame = requestAnimationFrame(settle)
+    }
+    frame = requestAnimationFrame(settle)
+    const observer = new MutationObserver(measure)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class', 'data-platform'] })
+    window.addEventListener('resize', measure)
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
   const closing = useRef(false)
   useLayoutEffect(() => { closing.current = false })
   // The collapse lives here because this component alone knows `wide` and the latch that
