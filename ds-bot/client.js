@@ -7441,6 +7441,36 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   })), [roster.connectors]);
   const capabilities = (0, import_react15.useMemo)(CAPABILITIES, [t]);
   const [shellPlugins, setShellPlugins] = (0, import_react15.useState)(null);
+  const embedRef = (0, import_react15.useRef)(null);
+  (0, import_react15.useEffect)(() => {
+    if (!open || tab !== "plugins") return void 0;
+    const host = embedRef.current;
+    if (!host) return void 0;
+    let frame = 0;
+    let moved = null;
+    const take = () => {
+      const slot = document.querySelector('[data-slot="main"]');
+      if (!slot || !slot.parentElement) return;
+      const home = slot.parentElement;
+      const next = slot.nextSibling;
+      try {
+        host.appendChild(slot);
+      } catch (error) {
+        return;
+      }
+      moved = { slot, home, next };
+    };
+    frame = requestAnimationFrame(() => requestAnimationFrame(take));
+    return () => {
+      cancelAnimationFrame(frame);
+      if (!moved) return;
+      const { slot, home, next } = moved;
+      try {
+        if (slot.isConnected && home && home.isConnected) home.insertBefore(slot, next && next.parentElement === home ? next : null);
+      } catch (error) {
+      }
+    };
+  }, [open, tab]);
   (0, import_react15.useEffect)(() => {
     if (!open || tab !== "plugins" || shellPlugins !== null) return void 0;
     let live = true;
@@ -7511,7 +7541,7 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
             className: "bt-market-cat",
             onClick: () => {
               if (category.id === "plugins") {
-                onClose();
+                setTab("plugins");
                 actions.openPluginsPanel?.();
                 return;
               }
@@ -7542,9 +7572,9 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
             "div",
             { className: "bt-market-heading" },
             (0, import_react15.createElement)("h2", { className: "bt-market-h2" }, heading),
-            (0, import_react15.createElement)("p", { className: "bt-market-sub" }, current ? current.detail : t("Connect an app or your own server once, then choose which Bots may use it"))
+            tab === "plugins" && !current ? null : (0, import_react15.createElement)("p", { className: "bt-market-sub" }, current ? current.detail : t("Connect an app or your own server once, then choose which Bots may use it"))
           ),
-          current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : (0, import_react15.createElement)(
+          tab === "plugins" && !current ? null : current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : (0, import_react15.createElement)(
             "label",
             { className: "bt-market-search" },
             (0, import_react15.createElement)(SearchIcon),
@@ -7561,6 +7591,7 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
         (0, import_react15.createElement)(
           "div",
           { className: "bt-market-body" },
+          tab === "plugins" ? (0, import_react15.createElement)("div", { ref: embedRef, className: "bt-market-embed" }) : null,
           current ? (0, import_react15.createElement)(
             "div",
             { className: "bt-market-detailpane" },
@@ -8975,6 +9006,8 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-market-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:14px;color:var(--bt-ink);outline:none}
 .bt-market-back{flex:none;height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
 .bt-market-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:10px 28px 28px}
+.bt-market-embed{display:flex;flex-direction:column;min-height:0;height:100%;overflow:auto}
+.bt-market-embed>[data-slot=main]{flex:1 1 auto;min-height:0;overflow:auto}
 .bt-market-grid{display:flex;flex-direction:column;gap:0;border-radius:14px;box-shadow:inset 0 0 0 .5px var(--bt-line);overflow:hidden}
 /* Tiles sit on the panel like the reference's: no frame, a 40px mark, the name over one
    line of description, and a pill on the right that appears with the row. */

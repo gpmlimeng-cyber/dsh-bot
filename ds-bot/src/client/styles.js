@@ -200,6 +200,8 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-market-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:14px;color:var(--bt-ink);outline:none}
 .bt-market-back{flex:none;height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
 .bt-market-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:10px 28px 28px}
+.bt-market-embed{display:flex;flex-direction:column;min-height:0;height:100%;overflow:auto}
+.bt-market-embed>[data-slot=main]{flex:1 1 auto;min-height:0;overflow:auto}
 .bt-market-grid{display:flex;flex-direction:column;gap:0;border-radius:14px;box-shadow:inset 0 0 0 .5px var(--bt-line);overflow:hidden}
 /* Tiles sit on the panel like the reference's: no frame, a 40px mark, the name over one
    line of description, and a pill on the right that appears with the row. */

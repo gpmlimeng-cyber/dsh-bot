@@ -62,6 +62,39 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
   const capabilities = useMemo(CAPABILITIES, [t])
   // The shell owns the plugin pages; its remote hands us the list, we draw the rows.
   const [shellPlugins, setShellPlugins] = useState(null)
+  const embedRef = useRef(null)
+  // The plugin pages belong to the shell, so the only way to show one inside this dialog is
+  // to move the element the shell renders into the dialog, and move it back on close. The
+  // shell keeps owning it; nothing here reads or rewrites its contents.
+  useEffect(() => {
+    if (!open || tab !== 'plugins') return undefined
+    const host = embedRef.current
+    if (!host) return undefined
+    // Wait for the shell to render the panel we just selected, then take its slot element —
+    // not the page inside it — and put it here. The shell keeps owning that subtree; React
+    // does not care where in the document its container sits.
+    let frame = 0
+    let moved = null
+    const take = () => {
+      const slot = document.querySelector('[data-slot="main"]')
+      if (!slot || !slot.parentElement) return
+      const home = slot.parentElement
+      const next = slot.nextSibling
+      try { host.appendChild(slot) } catch (error) { return }
+      moved = { slot, home, next }
+    }
+    frame = requestAnimationFrame(() => requestAnimationFrame(take))
+    return () => {
+      cancelAnimationFrame(frame)
+      if (!moved) return
+      const { slot, home, next } = moved
+      // Put it back where it came from; if the shell has moved on, leave it be rather than
+      // throwing inside a React commit.
+      try {
+        if (slot.isConnected && home && home.isConnected) home.insertBefore(slot, next && next.parentElement === home ? next : null)
+      } catch (error) { /* the shell will re-render it on its own */ }
+    }
+  }, [open, tab])
   useEffect(() => {
     if (!open || tab !== 'plugins' || shellPlugins !== null) return undefined
     let live = true
@@ -109,8 +142,9 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
           key: category.id, type: 'button', role: 'tab', 'aria-selected': tab === category.id,
           className: 'bt-market-cat',
           onClick: () => {
-            // The plugin pages are the shell's own; the market opens the real one.
-            if (category.id === 'plugins') { onClose(); actions.openPluginsPanel?.(); return }
+            // The plugin pages are the shell's own: select the panel so it renders, then
+            // the effect above moves it into this dialog.
+            if (category.id === 'plugins') { setTab('plugins'); actions.openPluginsPanel?.(); return }
             setTab(category.id)
           },
         }, category.name))),
@@ -127,8 +161,10 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
       h('header', { className: 'bt-market-head' },
         h('div', { className: 'bt-market-heading' },
           h('h2', { className: 'bt-market-h2' }, heading),
-          h('p', { className: 'bt-market-sub' }, current ? current.detail : t('Connect an app or your own server once, then choose which Bots may use it'))),
-        current
+          tab === 'plugins' && !current ? null : h('p', { className: 'bt-market-sub' }, current ? current.detail : t('Connect an app or your own server once, then choose which Bots may use it'))),
+        tab === 'plugins' && !current
+          ? null
+          : current
           ? h('button', { type: 'button', className: 'bt-market-back', onClick: () => setSelected(null) }, t('Back'))
           : h('label', { className: 'bt-market-search' },
             h(SearchIcon),
@@ -136,7 +172,7 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
               ref: search, type: 'search', value: query, placeholder: t('Search apps'),
               onChange: (event) => setQuery(event.target.value), 'aria-label': t('Search apps'),
             }))),
-      h('div', { className: 'bt-market-body' },
+      h('div', { className: 'bt-market-body' }, tab === 'plugins' ? h('div', { ref: embedRef, className: 'bt-market-embed' }) : null,
         current
           ? h('div', { className: 'bt-market-detailpane' },
             h(Card, {
