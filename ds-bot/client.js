@@ -61,6 +61,19 @@ var ZH = {
   "Plugins": "插件",
   "Apps": "应用市场",
   "Market": "市场",
+  "Skills": "技能",
+  "Installed": "已安装",
+  "Nothing installed yet": "还没有安装任何东西",
+  "Open the full connector page": "打开完整连接器页",
+  "Nothing here yet": "这里还什么都没有",
+  "Not connected": "未连接",
+  "The settings for this entry stay on the page that owns them.": "这个条目的设置在它原来的页面里。",
+  "Connect an app or your own server once, then choose which Bots may use it": "连接一个应用或你自己的服务器一次，再决定哪些 Bot 可以用它",
+  "What every Bot remembers about you": "每个 Bot 记住的关于你的事",
+  "Run commands in the session workspace": "在会话工作区里运行命令",
+  "Read and edit the session workspace": "读写会话工作区",
+  "Open pages and work inside them": "打开网页并在里面操作",
+  "Workspace files": "工作区文件",
   "Search apps": "搜索应用",
   "Animation": "动画",
   "Bot animation": "Bot 动画",
@@ -2553,40 +2566,51 @@ html[data-platform=darwin] .bt-side-top,html[data-windows-titlebar] .bt-side-top
 .bt-apps-mark{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--bt-ink) 22%,transparent);display:block}
 .bt-apps-mark-b{border-radius:50%;background:color-mix(in srgb,var(--bt-accent) 60%,transparent)}
 .bt-apps-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-/* The market panel: the reference app's Apps card, on our own surface tokens. */
-.bt-market-frame{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.28)}
-.bt-market{width:min(780px,100%);height:min(760px,100%);min-height:0;display:flex;flex-direction:column;border-radius:20px;background:var(--bt-card);box-shadow:0 24px 60px -24px rgba(0,0,0,.35),0 0 0 .5px var(--bt-float-ring);overflow:hidden}
-.bt-market-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 22px 0;flex:none}
-.bt-market-heading{display:flex;align-items:center;gap:10px;min-width:0}
+/* The market: main-area layout, categories and installed list on the left, the catalogue
+   or one entry's detail on the right. */
+/* The market is a dialog the size of the settings panel: a scrim, then a card holding the
+   category rail and the catalogue side by side. */
+.bt-market-frame{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.32)}
+.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:var(--bt-main);color:var(--bt-ink);box-shadow:0 24px 60px -24px rgba(0,0,0,.4)}
+.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:16px 12px;border-right:1px solid var(--bt-line);overflow-y:auto}
+.bt-market-navhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px}
+.bt-market-cats{display:flex;flex-direction:column;gap:2px}
+.bt-market-cat{height:32px;padding:0 10px;border:0;border-radius:10px;background:none;text-align:left;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink-2);cursor:pointer}
+.bt-market-cat:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-market-cat[aria-selected=true]{background:var(--bt-hover);color:var(--bt-ink);font-weight:600}
+.bt-market-insthead{margin-top:10px;padding:0 10px;font-size:11px;line-height:16px;letter-spacing:.04em;text-transform:uppercase;color:var(--bt-ink-3)}
+.bt-market-installed{display:flex;flex-direction:column;gap:2px}
+.bt-market-inst{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border:0;border-radius:10px;background:none;font:inherit;font-size:13px;color:var(--bt-ink);cursor:pointer;min-width:0}
+.bt-market-inst:hover,.bt-market-inst[aria-current=page]{background:var(--bt-hover)}
+.bt-market-instname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-hint{display:block;padding:4px 10px;font-size:12px;color:var(--bt-ink-3)}
+.bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
+.bt-market-heading{min-width:0}
 .bt-market-h2{margin:0;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink)}
-.bt-market-connected{display:inline-flex;align-items:center;gap:4px;border:0;background:none;padding:0;color:var(--bt-ink-3);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
-.bt-market-connected:hover{color:var(--bt-ink)}
-.bt-market-close{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
+.bt-market-sub{margin:4px 0 0;font-size:13px;line-height:20px;color:var(--bt-ink-3)}
+.bt-market-close{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
 .bt-market-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-market-sub{margin:4px 22px 0;flex:none;font-size:13px;line-height:20px;color:var(--bt-ink-3)}
-.bt-market-tools{display:flex;flex-direction:column;gap:10px;padding:14px 22px 0;flex:none}
-.bt-market-search{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-3)}
+.bt-market-search{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-3);flex:none;width:260px;max-width:40vw}
 .bt-market-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:14px;color:var(--bt-ink);outline:none}
-.bt-market-tabs{display:flex;gap:6px;flex-wrap:wrap}
-.bt-market-tab{height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:18px;cursor:pointer}
-.bt-market-tab:hover{background:var(--bt-hover)}
-.bt-market-tab[aria-selected=true]{background:var(--bt-ink);color:var(--bt-main)}
-.bt-market-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:14px 22px 22px;display:flex;flex-direction:column;gap:18px}
-.bt-market-title{margin:0 0 8px;font-size:13px;line-height:18px;font-weight:600;color:var(--bt-ink-3)}
+.bt-market-back{flex:none;height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
+.bt-market-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:10px 28px 28px}
 .bt-market-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .bt-market-card{display:flex;align-items:center;gap:10px;min-width:0;padding:10px 12px;border-radius:14px;box-shadow:inset 0 0 0 .5px var(--bt-line)}
 .bt-market-mark{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-2)}
 .bt-market-mark[data-state=ready]{background:color-mix(in srgb,var(--bt-accent) 16%,transparent);color:var(--bt-accent)}
-.bt-market-copy{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
-.bt-market-name{font-size:14px;line-height:20px;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bt-market-detail{font-size:12px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-copy{display:flex;flex-direction:column;align-items:flex-start;min-width:0;flex:1 1 auto;border:0;background:none;padding:0;font:inherit;text-align:left;cursor:pointer;color:inherit}
+.bt-market-name{max-width:100%;font-size:14px;line-height:20px;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-detail{max-width:100%;font-size:12px;line-height:16px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-market-go{flex:none;height:28px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
 .bt-market-go:hover{background:var(--bt-active,var(--bt-hover))}
 .bt-market-go[data-on]{background:var(--bt-accent);color:var(--bt-accent-ink,#fff)}
+.bt-market-detailpane{display:flex;flex-direction:column;gap:14px;max-width:640px}
+.bt-market-note{font-size:13px;line-height:20px;color:var(--bt-ink-3)}
 .bt-market-more{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;border:0;background:none;padding:4px 0;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
 .bt-market-more:hover{color:var(--bt-ink)}
-.bt-market-empty{padding:24px 0;text-align:center;color:var(--bt-ink-3);font-size:13px}
-@media (max-width:640px){.bt-market-grid{grid-template-columns:1fr}.bt-market{width:100%;height:100%;border-radius:20px}}
+.bt-market-empty{padding:24px 0;color:var(--bt-ink-3);font-size:13px}
+@media (max-width:720px){.bt-market-nav{width:200px}.bt-market-grid{grid-template-columns:1fr}}
 
 .bt-rail .bt-side-foot{position:static;flex-direction:column;gap:8px;padding:0 0 8px;margin-top:auto}
 .bt-rail .bt-apps-chip{flex:none;padding:0;width:40px;height:40px;justify-content:center;border-radius:12px}
@@ -8793,6 +8817,12 @@ function ActivityIndicator({ sessionId, useRoster, useSessionStatus, useLive, us
 // src/client/market.js
 var import_react15 = require("react");
 var import_react_dom3 = require("react-dom");
+var CATEGORIES = () => [
+  { id: "plugins", name: t("Plugins") },
+  { id: "connectors", name: t("Connectors") },
+  { id: "capabilities", name: t("Capabilities") },
+  { id: "skills", name: t("Skills") }
+];
 var CAPABILITIES = () => [
   { id: "memory", name: t("Memory"), detail: t("What every Bot remembers about you"), icon: MemoryIcon },
   { id: "terminal", name: t("Terminal"), detail: t("Run commands in the session workspace"), icon: TerminalIcon },
@@ -8802,23 +8832,24 @@ var CAPABILITIES = () => [
 function Mark({ icon: icon2, state }) {
   return (0, import_react15.createElement)("span", { className: "bt-market-mark", "data-state": state ?? "off", "aria-hidden": true }, icon2 ? (0, import_react15.createElement)(icon2) : (0, import_react15.createElement)(PlusIcon));
 }
-function Card({ name, detail, mark, state, action, onPick }) {
+function Card({ name, detail, mark, state, action, installed, onPick, onOpen }) {
   return (0, import_react15.createElement)(
     "div",
-    { className: "bt-market-card" },
+    { className: "bt-market-card", "data-installed": installed ? "" : void 0 },
     (0, import_react15.createElement)(Mark, { icon: mark, state }),
     (0, import_react15.createElement)(
-      "span",
-      { className: "bt-market-copy" },
+      "button",
+      { type: "button", className: "bt-market-copy", onClick: onOpen },
       (0, import_react15.createElement)("span", { className: "bt-market-name" }, name),
       detail ? (0, import_react15.createElement)("span", { className: "bt-market-detail" }, detail) : null
     ),
-    (0, import_react15.createElement)("button", { type: "button", className: "bt-market-go", "data-on": state === "ready" ? "" : void 0, onClick: onPick }, action)
+    (0, import_react15.createElement)("button", { type: "button", className: "bt-market-go", "data-on": state === "ready" || installed ? "" : void 0, onClick: onPick }, action)
   );
 }
-function MarketPanel({ open, onClose, roster, actions }) {
-  const [tab, setTab] = (0, import_react15.useState)("all");
+function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
+  const [tab, setTab] = (0, import_react15.useState)("connectors");
   const [query, setQuery] = (0, import_react15.useState)("");
+  const [selected, setSelected] = (0, import_react15.useState)(null);
   const search = (0, import_react15.useRef)(null);
   (0, import_react15.useEffect)(() => {
     if (!open) return void 0;
@@ -8826,12 +8857,12 @@ function MarketPanel({ open, onClose, roster, actions }) {
       if (event.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
-    const timer = setTimeout(() => search.current?.focus(), 40);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      clearTimeout(timer);
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+  (0, import_react15.useEffect)(() => {
+    setSelected(null);
+    setQuery("");
+  }, [tab]);
   const connectors = (0, import_react15.useMemo)(() => (roster.connectors ?? []).map((connector) => ({
     id: connector.id,
     name: connector.title ?? connector.name ?? connector.id,
@@ -8840,123 +8871,152 @@ function MarketPanel({ open, onClose, roster, actions }) {
   })), [roster.connectors]);
   const capabilities = (0, import_react15.useMemo)(CAPABILITIES, [t]);
   const plugins = roster.plugins ?? [];
-  const connected = connectors.filter((entry) => entry.state === "ready").length;
+  const skills = roster.skills ?? [];
   if (!open) return null;
-  const q = query.trim().toLowerCase();
-  const match = (entry) => !q || `${entry.name} ${entry.detail ?? ""}`.toLowerCase().includes(q);
-  const section = (title, entries2, kind, render) => {
-    if (tab !== "all" && tab !== kind) return null;
-    const shown = entries2.filter(match);
-    if (!shown.length) return null;
-    return (0, import_react15.createElement)(
-      "section",
-      { className: "bt-market-section", key: kind },
-      (0, import_react15.createElement)("h3", { className: "bt-market-title" }, title),
-      (0, import_react15.createElement)("div", { className: "bt-market-grid" }, shown.map(render))
-    );
+  const catalogue = (id) => id === "connectors" ? connectors : id === "capabilities" ? capabilities : id === "plugins" ? plugins : skills;
+  const installedOf = (id) => {
+    if (id === "connectors") return connectors.filter((entry) => entry.state === "ready");
+    if (id === "capabilities") return capabilities;
+    if (id === "plugins") return plugins;
+    return skills;
   };
+  const q = query.trim().toLowerCase();
+  const row = (entry) => !q || `${entry.name} ${entry.detail ?? ""}`.toLowerCase().includes(q);
+  const list = catalogue(tab).filter(row);
+  const installed = installedOf(tab);
+  const current = selected ? catalogue(tab).find((entry) => (entry.id ?? entry.name) === selected) : null;
+  const pick2 = (entry) => {
+    if (tab === "connectors" || tab === "capabilities") {
+      onClose();
+      actions.openConnectors();
+      return;
+    }
+    setSelected(entry.id ?? entry.name);
+  };
+  const heading = current ? current.name : t(tab === "plugins" ? "Plugins" : tab === "connectors" ? "Connectors" : tab === "capabilities" ? "Capabilities" : "Skills");
   return (0, import_react_dom3.createPortal)((0, import_react15.createElement)(
     "div",
     {
       className: "bt-market-frame",
-      role: "presentation",
       onMouseDown: (event) => {
         if (event.target === event.currentTarget) onClose();
       }
     },
     (0, import_react15.createElement)(
       "div",
-      { className: "bt-market", role: "dialog", "aria-modal": "true", "aria-label": t("Apps") },
+      { className: "bt-market-pane", role: "dialog", "aria-modal": "true", "aria-label": t("Market") },
       (0, import_react15.createElement)(
-        "header",
-        { className: "bt-market-head" },
+        "aside",
+        { className: "bt-market-nav" },
         (0, import_react15.createElement)(
           "div",
-          { className: "bt-market-heading" },
-          (0, import_react15.createElement)("h2", { className: "bt-market-h2" }, t("Apps")),
-          (0, import_react15.createElement)(
-            "button",
-            { type: "button", className: "bt-market-connected", onClick: () => setTab("connectors") },
-            t("Connected {n}", { n: connected }),
-            (0, import_react15.createElement)("span", { "aria-hidden": true }, "›")
-          )
-        ),
-        (0, import_react15.createElement)("button", { type: "button", className: "bt-market-close", "aria-label": t("Close"), onClick: onClose }, (0, import_react15.createElement)(CloseIcon))
-      ),
-      (0, import_react15.createElement)("p", { className: "bt-market-sub" }, t("Connect an app or your own server once, then choose which Bots may use it")),
-      (0, import_react15.createElement)(
-        "div",
-        { className: "bt-market-tools" },
-        (0, import_react15.createElement)(
-          "label",
-          { className: "bt-market-search" },
-          (0, import_react15.createElement)(SearchIcon),
-          (0, import_react15.createElement)("input", {
-            ref: search,
-            type: "search",
-            value: query,
-            placeholder: t("Search apps"),
-            onChange: (event) => setQuery(event.target.value),
-            "aria-label": t("Search apps")
-          })
+          { className: "bt-market-navhead" },
+          (0, import_react15.createElement)("span", { className: "bt-market-h2" }, t("Market")),
+          (0, import_react15.createElement)("button", { type: "button", className: "bt-market-close", "aria-label": t("Close"), onClick: onClose }, (0, import_react15.createElement)(CloseIcon))
         ),
         (0, import_react15.createElement)(
           "div",
-          { className: "bt-market-tabs", role: "tablist" },
-          ...[["all", t("All")], ["connectors", t("Connectors")], ["capabilities", t("Capabilities")], ["plugins", t("Plugins")]].map(([id, label]) => (0, import_react15.createElement)("button", {
-            key: id,
+          { className: "bt-market-cats", role: "tablist" },
+          ...CATEGORIES().map((category) => (0, import_react15.createElement)("button", {
+            key: category.id,
             type: "button",
             role: "tab",
-            "aria-selected": tab === id,
-            className: "bt-market-tab",
-            onClick: () => setTab(id)
-          }, label))
+            "aria-selected": tab === category.id,
+            className: "bt-market-cat",
+            onClick: () => setTab(category.id)
+          }, category.name))
+        ),
+        (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t("Installed")),
+        (0, import_react15.createElement)(
+          "div",
+          { className: "bt-market-installed" },
+          installed.length ? installed.map((entry) => (0, import_react15.createElement)("button", {
+            key: entry.id ?? entry.name,
+            type: "button",
+            className: "bt-market-inst",
+            "aria-current": selected === (entry.id ?? entry.name) ? "page" : void 0,
+            onClick: () => setSelected(entry.id ?? entry.name)
+          }, (0, import_react15.createElement)(Mark, { icon: entry.icon, state: entry.state ?? "ready" }), (0, import_react15.createElement)("span", { className: "bt-market-instname" }, entry.name))) : (0, import_react15.createElement)("span", { className: "bt-market-hint" }, t("Nothing installed yet"))
         )
       ),
       (0, import_react15.createElement)(
-        "div",
-        { className: "bt-market-body" },
-        section(t("Connectors"), connectors, "connectors", (entry) => (0, import_react15.createElement)(Card, {
-          key: entry.id,
-          name: entry.name,
-          detail: entry.detail,
-          state: entry.state,
-          action: entry.state === "ready" ? t("Manage") : t("Connect"),
-          onPick: () => {
-            onClose();
-            actions.openConnectors();
-          }
-        })),
-        section(t("Capabilities"), capabilities, "capabilities", (entry) => (0, import_react15.createElement)(Card, {
-          key: entry.id,
-          name: entry.name,
-          detail: entry.detail,
-          mark: entry.icon,
-          action: t("Open"),
-          onPick: () => {
-            onClose();
-            actions.openConnectors();
-          }
-        })),
-        section(t("Plugins"), plugins, "plugins", (entry) => (0, import_react15.createElement)(Card, {
-          key: entry.id ?? entry.name,
-          name: entry.name ?? entry.id,
-          detail: entry.detail ?? t("Installed in DeepSeek Harness"),
-          action: t("Open"),
-          onPick: () => {
-            onClose();
-            actions.openSettings?.();
-          }
-        })),
-        !connectors.length && !plugins.length ? (0, import_react15.createElement)("div", { className: "bt-market-empty" }, t("Nothing here yet")) : null,
+        "main",
+        { className: "bt-market-main" },
         (0, import_react15.createElement)(
-          "button",
-          { type: "button", className: "bt-market-more", onClick: () => {
-            onClose();
-            actions.openConnectors();
-          } },
-          (0, import_react15.createElement)(GearIcon),
-          (0, import_react15.createElement)("span", null, t("Open the full connector page"))
+          "header",
+          { className: "bt-market-head" },
+          (0, import_react15.createElement)(
+            "div",
+            { className: "bt-market-heading" },
+            (0, import_react15.createElement)("h2", { className: "bt-market-h2" }, heading),
+            (0, import_react15.createElement)("p", { className: "bt-market-sub" }, current ? current.detail : t("Connect an app or your own server once, then choose which Bots may use it"))
+          ),
+          current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : (0, import_react15.createElement)(
+            "label",
+            { className: "bt-market-search" },
+            (0, import_react15.createElement)(SearchIcon),
+            (0, import_react15.createElement)("input", {
+              ref: search,
+              type: "search",
+              value: query,
+              placeholder: t("Search apps"),
+              onChange: (event) => setQuery(event.target.value),
+              "aria-label": t("Search apps")
+            })
+          )
+        ),
+        (0, import_react15.createElement)(
+          "div",
+          { className: "bt-market-body" },
+          current ? (0, import_react15.createElement)(
+            "div",
+            { className: "bt-market-detailpane" },
+            (0, import_react15.createElement)(Card, {
+              name: current.name,
+              detail: current.detail,
+              mark: current.icon,
+              state: current.state,
+              installed: true,
+              action: t("Manage"),
+              onOpen: () => {
+              },
+              onPick: () => {
+                onClose();
+                actions.openConnectors();
+              }
+            }),
+            (0, import_react15.createElement)("div", { className: "bt-market-note" }, t("The settings for this entry stay on the page that owns them.")),
+            (0, import_react15.createElement)(
+              "button",
+              { type: "button", className: "bt-market-more", onClick: () => {
+                onClose();
+                actions.openConnectors();
+              } },
+              (0, import_react15.createElement)(GearIcon),
+              (0, import_react15.createElement)("span", null, t("Open the full connector page"))
+            )
+          ) : [
+            list.length ? (0, import_react15.createElement)("div", { className: "bt-market-grid", key: "grid" }, list.map((entry) => (0, import_react15.createElement)(Card, {
+              key: entry.id ?? entry.name,
+              name: entry.name,
+              detail: entry.detail,
+              mark: entry.icon,
+              state: entry.state,
+              installed: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)),
+              action: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)) ? t("Manage") : t("Connect"),
+              onOpen: () => setSelected(entry.id ?? entry.name),
+              onPick: () => pick2(entry)
+            }))) : (0, import_react15.createElement)("div", { className: "bt-market-empty", key: "empty" }, t("Nothing here yet")),
+            (0, import_react15.createElement)(
+              "button",
+              { type: "button", className: "bt-market-more", key: "more", onClick: () => {
+                onClose();
+                actions.openConnectors();
+              } },
+              (0, import_react15.createElement)(GearIcon),
+              (0, import_react15.createElement)("span", null, t("Open the full connector page"))
+            )
+          ]
         )
       )
     )
@@ -9367,7 +9427,7 @@ function TeamSidebar(props) {
         wide ? (0, import_react16.createElement)("span", { className: "bt-apps-label" }, t("Connect apps")) : null
       )
     ),
-    (0, import_react16.createElement)(MarketPanel, { open: market, onClose: () => setMarket(false), roster, actions })
+    market ? (0, import_react16.createElement)(MarketPanel, { open: true, onClose: () => setMarket(false), roster, actions }) : null
   );
 }
 function UpdateButton({ useUpdate, actions }) {

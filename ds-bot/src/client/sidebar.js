@@ -353,7 +353,7 @@ export function TeamSidebar(props) {
       h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
         h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
         wide ? h('span', { className: 'bt-apps-label' }, t('Connect apps')) : null)),
-    h(MarketPanel, { open: market, onClose: () => setMarket(false), roster, actions }))
+    market ? h(MarketPanel, { open: true, onClose: () => setMarket(false), roster, actions }) : null)
 }
 
 // The update button at the sidebar's top right: a cloud while a newer DS Bot —

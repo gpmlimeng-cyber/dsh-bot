@@ -3,15 +3,18 @@ import { createPortal } from 'react-dom'
 import { t } from './i18n.js'
 import { CloseIcon, SearchIcon, PlusIcon, GearIcon, GlobeIcon, TerminalIcon, FolderIcon, MemoryIcon } from './icons.js'
 
-// The market: one panel over the conversation that shows what DS Bot can reach — the
-// connectors it is wired to, the capabilities it runs on, and the DSH plugins installed
-// beside it. The pages themselves are untouched; every card opens the page that owns it.
-//
-// The shape follows the reference app's Apps panel: a centred card, 780 wide and never
-// taller than the window, a title row with the connected count, a search field, category
-// tabs, then two columns of cards with a mark, a name, one line and a button.
+// The market takes the main content area rather than a dialog: a rail of categories on the
+// left, the installed list under it, and the catalogue or one entry's detail on the right.
+// The pages that already own these settings stay where they are; every action here opens
+// them, so nothing about connectors, capabilities or plugins changes underneath.
 
-// What DS Bot brings itself. Each entry names what owns the setting today.
+const CATEGORIES = () => [
+  { id: 'plugins', name: t('Plugins') },
+  { id: 'connectors', name: t('Connectors') },
+  { id: 'capabilities', name: t('Capabilities') },
+  { id: 'skills', name: t('Skills') },
+]
+
 const CAPABILITIES = () => [
   { id: 'memory', name: t('Memory'), detail: t('What every Bot remembers about you'), icon: MemoryIcon },
   { id: 'terminal', name: t('Terminal'), detail: t('Run commands in the session workspace'), icon: TerminalIcon },
@@ -23,27 +26,29 @@ function Mark({ icon, state }) {
   return h('span', { className: 'bt-market-mark', 'data-state': state ?? 'off', 'aria-hidden': true }, icon ? h(icon) : h(PlusIcon))
 }
 
-function Card({ name, detail, mark, state, action, onPick }) {
-  return h('div', { className: 'bt-market-card' },
+function Card({ name, detail, mark, state, action, installed, onPick, onOpen }) {
+  return h('div', { className: 'bt-market-card', 'data-installed': installed ? '' : undefined },
     h(Mark, { icon: mark, state }),
-    h('span', { className: 'bt-market-copy' },
+    h('button', { type: 'button', className: 'bt-market-copy', onClick: onOpen },
       h('span', { className: 'bt-market-name' }, name),
       detail ? h('span', { className: 'bt-market-detail' }, detail) : null),
-    h('button', { type: 'button', className: 'bt-market-go', 'data-on': state === 'ready' ? '' : undefined, onClick: onPick }, action))
+    h('button', { type: 'button', className: 'bt-market-go', 'data-on': state === 'ready' || installed ? '' : undefined, onClick: onPick }, action))
 }
 
-export function MarketPanel({ open, onClose, roster, actions }) {
-  const [tab, setTab] = useState('all')
+export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
+  const [tab, setTab] = useState('connectors')
   const [query, setQuery] = useState('')
+  const [selected, setSelected] = useState(null)
   const search = useRef(null)
 
   useEffect(() => {
     if (!open) return undefined
     const onKey = (event) => { if (event.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
-    const timer = setTimeout(() => search.current?.focus(), 40)
-    return () => { document.removeEventListener('keydown', onKey); clearTimeout(timer) }
+    return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
+
+  useEffect(() => { setSelected(null); setQuery('') }, [tab])
 
   const connectors = useMemo(() => (roster.connectors ?? []).map((connector) => ({
     id: connector.id,
@@ -56,67 +61,88 @@ export function MarketPanel({ open, onClose, roster, actions }) {
 
   const capabilities = useMemo(CAPABILITIES, [t])
   const plugins = roster.plugins ?? []
-  const connected = connectors.filter((entry) => entry.state === 'ready').length
+  const skills = roster.skills ?? []
 
   if (!open) return null
 
-  const q = query.trim().toLowerCase()
-  const match = (entry) => !q || `${entry.name} ${entry.detail ?? ''}`.toLowerCase().includes(q)
-
-  const section = (title, entries, kind, render) => {
-    if (tab !== 'all' && tab !== kind) return null
-    const shown = entries.filter(match)
-    if (!shown.length) return null
-    return h('section', { className: 'bt-market-section', key: kind },
-      h('h3', { className: 'bt-market-title' }, title),
-      h('div', { className: 'bt-market-grid' }, shown.map(render)))
+  const catalogue = (id) => (id === 'connectors' ? connectors : id === 'capabilities' ? capabilities : id === 'plugins' ? plugins : skills)
+  const installedOf = (id) => {
+    if (id === 'connectors') return connectors.filter((entry) => entry.state === 'ready')
+    if (id === 'capabilities') return capabilities
+    if (id === 'plugins') return plugins
+    return skills
   }
 
+  const q = query.trim().toLowerCase()
+  const row = (entry) => !q || `${entry.name} ${entry.detail ?? ''}`.toLowerCase().includes(q)
+  const list = catalogue(tab).filter(row)
+  const installed = installedOf(tab)
+  const current = selected ? catalogue(tab).find((entry) => (entry.id ?? entry.name) === selected) : null
+
+  const pick = (entry) => {
+    if (tab === 'connectors' || tab === 'capabilities') { onClose(); actions.openConnectors(); return }
+    setSelected(entry.id ?? entry.name)
+  }
+
+  const heading = current ? current.name : t(tab === 'plugins' ? 'Plugins' : tab === 'connectors' ? 'Connectors' : tab === 'capabilities' ? 'Capabilities' : 'Skills')
+
   return createPortal(h('div', {
-    className: 'bt-market-frame', role: 'presentation',
+    className: 'bt-market-frame',
     onMouseDown: (event) => { if (event.target === event.currentTarget) onClose() },
   },
-  h('div', { className: 'bt-market', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('Apps') },
-    h('header', { className: 'bt-market-head' },
-      h('div', { className: 'bt-market-heading' },
-        h('h2', { className: 'bt-market-h2' }, t('Apps')),
-        h('button', { type: 'button', className: 'bt-market-connected', onClick: () => setTab('connectors') },
-          t('Connected {n}', { n: connected }), h('span', { 'aria-hidden': true }, '›'))),
-      h('button', { type: 'button', className: 'bt-market-close', 'aria-label': t('Close'), onClick: onClose }, h(CloseIcon))),
-    h('p', { className: 'bt-market-sub' }, t('Connect an app or your own server once, then choose which Bots may use it')),
-    h('div', { className: 'bt-market-tools' },
-      h('label', { className: 'bt-market-search' },
-        h(SearchIcon),
-        h('input', {
-          ref: search, type: 'search', value: query, placeholder: t('Search apps'),
-          onChange: (event) => setQuery(event.target.value), 'aria-label': t('Search apps'),
-        })),
-      h('div', { className: 'bt-market-tabs', role: 'tablist' },
-        ...[['all', t('All')], ['connectors', t('Connectors')], ['capabilities', t('Capabilities')], ['plugins', t('Plugins')]]
-          .map(([id, label]) => h('button', {
-            key: id, type: 'button', role: 'tab', 'aria-selected': tab === id, className: 'bt-market-tab',
-            onClick: () => setTab(id),
-          }, label)))),
-    h('div', { className: 'bt-market-body' },
-      section(t('Connectors'), connectors, 'connectors', (entry) => h(Card, {
-        key: entry.id, name: entry.name, detail: entry.detail, state: entry.state,
-        action: entry.state === 'ready' ? t('Manage') : t('Connect'),
-        onPick: () => { onClose(); actions.openConnectors() },
-      })),
-      section(t('Capabilities'), capabilities, 'capabilities', (entry) => h(Card, {
-        key: entry.id, name: entry.name, detail: entry.detail, mark: entry.icon,
-        action: t('Open'),
-        onPick: () => { onClose(); actions.openConnectors() },
-      })),
-      section(t('Plugins'), plugins, 'plugins', (entry) => h(Card, {
-        key: entry.id ?? entry.name, name: entry.name ?? entry.id,
-        detail: entry.detail ?? t('Installed in DeepSeek Harness'),
-        action: t('Open'),
-        onPick: () => { onClose(); actions.openSettings?.() },
-      })),
-      !connectors.length && !plugins.length
-        ? h('div', { className: 'bt-market-empty' }, t('Nothing here yet'))
-        : null,
-      h('button', { type: 'button', className: 'bt-market-more', onClick: () => { onClose(); actions.openConnectors() } },
-        h(GearIcon), h('span', null, t('Open the full connector page')))))), document.body)
+  h('div', { className: 'bt-market-pane', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('Market') },
+    h('aside', { className: 'bt-market-nav' },
+      h('div', { className: 'bt-market-navhead' },
+        h('span', { className: 'bt-market-h2' }, t('Market')),
+        h('button', { type: 'button', className: 'bt-market-close', 'aria-label': t('Close'), onClick: onClose }, h(CloseIcon))),
+      h('div', { className: 'bt-market-cats', role: 'tablist' },
+        ...CATEGORIES().map((category) => h('button', {
+          key: category.id, type: 'button', role: 'tab', 'aria-selected': tab === category.id,
+          className: 'bt-market-cat', onClick: () => setTab(category.id),
+        }, category.name))),
+      h('div', { className: 'bt-market-insthead' }, t('Installed')),
+      h('div', { className: 'bt-market-installed' },
+        installed.length
+          ? installed.map((entry) => h('button', {
+            key: entry.id ?? entry.name, type: 'button',
+            className: 'bt-market-inst', 'aria-current': selected === (entry.id ?? entry.name) ? 'page' : undefined,
+            onClick: () => setSelected(entry.id ?? entry.name),
+          }, h(Mark, { icon: entry.icon, state: entry.state ?? 'ready' }), h('span', { className: 'bt-market-instname' }, entry.name)))
+          : h('span', { className: 'bt-market-hint' }, t('Nothing installed yet')))),
+    h('main', { className: 'bt-market-main' },
+      h('header', { className: 'bt-market-head' },
+        h('div', { className: 'bt-market-heading' },
+          h('h2', { className: 'bt-market-h2' }, heading),
+          h('p', { className: 'bt-market-sub' }, current ? current.detail : t('Connect an app or your own server once, then choose which Bots may use it'))),
+        current
+          ? h('button', { type: 'button', className: 'bt-market-back', onClick: () => setSelected(null) }, t('Back'))
+          : h('label', { className: 'bt-market-search' },
+            h(SearchIcon),
+            h('input', {
+              ref: search, type: 'search', value: query, placeholder: t('Search apps'),
+              onChange: (event) => setQuery(event.target.value), 'aria-label': t('Search apps'),
+            }))),
+      h('div', { className: 'bt-market-body' },
+        current
+          ? h('div', { className: 'bt-market-detailpane' },
+            h(Card, {
+              name: current.name, detail: current.detail, mark: current.icon, state: current.state,
+              installed: true, action: t('Manage'), onOpen: () => {}, onPick: () => { onClose(); actions.openConnectors() },
+            }),
+            h('div', { className: 'bt-market-note' }, t('The settings for this entry stay on the page that owns them.')),
+            h('button', { type: 'button', className: 'bt-market-more', onClick: () => { onClose(); actions.openConnectors() } },
+              h(GearIcon), h('span', null, t('Open the full connector page'))))
+          : [
+            list.length
+              ? h('div', { className: 'bt-market-grid', key: 'grid' }, list.map((entry) => h(Card, {
+                key: entry.id ?? entry.name, name: entry.name, detail: entry.detail, mark: entry.icon, state: entry.state,
+                installed: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)),
+                action: installed.some((item) => (item.id ?? item.name) === (entry.id ?? entry.name)) ? t('Manage') : t('Connect'),
+                onOpen: () => setSelected(entry.id ?? entry.name),
+                onPick: () => pick(entry),
+              })))
+              : h('div', { className: 'bt-market-empty', key: 'empty' }, t('Nothing here yet')),
+            h('button', { type: 'button', className: 'bt-market-more', key: 'more', onClick: () => { onClose(); actions.openConnectors() } },
+              h(GearIcon), h('span', null, t('Open the full connector page'))),
+          ])))), document.body)
 }
