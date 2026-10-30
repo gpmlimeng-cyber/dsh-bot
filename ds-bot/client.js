@@ -3952,7 +3952,14 @@ function CloudDownloadIcon({ done = false }) {
 var SmileIcon = lineIcon(["M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13z", "M7.3 11.6a3.4 3.4 0 0 0 5.4 0", "M7.75 8.25h.01M12.25 8.25h.01"]);
 var ReplyIcon = lineIcon(["M8 5L4 9l4 4", "M4 9h7.5a4.5 4.5 0 0 1 4.5 4.5V15"]);
 var DotsIcon = lineIcon(["M5 10h.01M10 10h.01M15 10h.01"]);
-var PanelRightIcon = lineIcon(["M3 4h14v12H3z", "M13 4v12"]);
+function PanelRightIcon() {
+  return (0, import_react3.createElement)(
+    "svg",
+    { width: 16, height: 16, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true },
+    (0, import_react3.createElement)("rect", { x: 3, y: 4, width: 14, height: 12, rx: 3.5 }),
+    (0, import_react3.createElement)("path", { d: "M12.6 4.8v10.4" })
+  );
+}
 function MoreDotsIcon() {
   return (0, import_react3.createElement)(
     "svg",

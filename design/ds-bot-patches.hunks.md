@@ -22,7 +22,7 @@
 | 20 | `ds-bot/src/client/i18n.js` | 968 | 1 |
 | 21 | `ds-bot/src/client/i18n.js` | 1053–1056 | 4 |
 | 22 | `ds-bot/src/client/icons.js` | 21–30 | 7 |
-| 23 | `ds-bot/src/client/icons.js` | 61–80 | 20 |
+| 23 | `ds-bot/src/client/icons.js` | 61–83 | 23 |
 | 24 | `ds-bot/src/client/index.js` | 6 | 1 |
 | 25 | `ds-bot/src/client/index.js` | 480–489 | 9 |
 | 26 | `ds-bot/src/client/member-status.js` | 188–189 | 2 |
