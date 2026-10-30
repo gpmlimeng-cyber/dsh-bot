@@ -365,7 +365,16 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
     return () => { live = false }
   }, [open, tab, shellPlugins, actions])
   const plugins = Array.isArray(shellPlugins) ? shellPlugins : (roster.plugins ?? [])
-  const skills = roster.skills ?? []
+  // Skills live in the Session's own catalog; the shell's registry answers for one Session.
+  const [shellSkills, setShellSkills] = useState(null)
+  useEffect(() => {
+    if (!open || tab !== 'skills' || shellSkills !== null) return undefined
+    let live = true
+    Promise.resolve(actions.skillsList?.()).then((list) => { if (live) setShellSkills(Array.isArray(list) ? list : []) },
+      () => { if (live) setShellSkills([]) })
+    return () => { live = false }
+  }, [open, tab, shellSkills, actions])
+  const skills = Array.isArray(shellSkills) ? shellSkills : (roster.skills ?? [])
 
   if (!open) return null
 
@@ -429,7 +438,7 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
           className: 'bt-market-cat',
           onClick: () => setTab(category.id),
         }, category.name))),
-      h('div', { className: 'bt-market-insthead' }, t(tab === 'plugins' ? 'Enabled' : 'Installed')),
+      h('div', { className: 'bt-market-insthead' }, t(tab === 'plugins' ? 'Enabled' : tab === 'skills' ? 'Available' : 'Installed')),
       h('div', { className: 'bt-market-installed' },
         installed.length
           ? installed.map((entry) => {
@@ -469,7 +478,9 @@ export function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
           h('h2', { className: 'bt-market-h2' }, heading),
           h('p', { className: 'bt-market-sub' }, current
             ? current.detail
-            : tab === 'plugins' ? t('Browse the plugin markets this Harness lists') : t('Connect an app or your own server once, then choose which Bots may use it'))),
+            : tab === 'plugins' ? t('Browse the plugin markets this Harness lists')
+              : tab === 'skills' ? t('Skills this Session can load')
+                : t('Connect an app or your own server once, then choose which Bots may use it'))),
         current
           ? h('button', { type: 'button', className: 'bt-market-back', onClick: () => setSelected(null) }, t('Back'))
           : tab === 'plugins'

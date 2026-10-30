@@ -90,6 +90,8 @@ var ZH = {
   "Nothing installed yet": "还没有安装任何东西",
   "No plugin is on yet": "还没有启用任何插件",
   "Uninstall": "卸载",
+  "Available": "可用",
+  "Skills this Session can load": "这个会话可以加载的技能",
   "Disable": "停用",
   "Open the full connector page": "打开完整连接器页",
   "Nothing here yet": "这里还什么都没有",
@@ -9479,7 +9481,23 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
     };
   }, [open, tab, shellPlugins, actions]);
   const plugins = Array.isArray(shellPlugins) ? shellPlugins : roster.plugins ?? [];
-  const skills = roster.skills ?? [];
+  const [shellSkills, setShellSkills] = (0, import_react15.useState)(null);
+  (0, import_react15.useEffect)(() => {
+    if (!open || tab !== "skills" || shellSkills !== null) return void 0;
+    let live = true;
+    Promise.resolve(actions.skillsList?.()).then(
+      (list2) => {
+        if (live) setShellSkills(Array.isArray(list2) ? list2 : []);
+      },
+      () => {
+        if (live) setShellSkills([]);
+      }
+    );
+    return () => {
+      live = false;
+    };
+  }, [open, tab, shellSkills, actions]);
+  const skills = Array.isArray(shellSkills) ? shellSkills : roster.skills ?? [];
   if (!open) return null;
   const catalogue = (id) => id === "connectors" ? connectors : id === "capabilities" ? capabilities : id === "plugins" ? plugins : skills;
   const installedOf = (id) => {
@@ -9552,7 +9570,7 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
             onClick: () => setTab(category.id)
           }, category.name))
         ),
-        (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t(tab === "plugins" ? "Enabled" : "Installed")),
+        (0, import_react15.createElement)("div", { className: "bt-market-insthead" }, t(tab === "plugins" ? "Enabled" : tab === "skills" ? "Available" : "Installed")),
         (0, import_react15.createElement)(
           "div",
           { className: "bt-market-installed" },
@@ -9613,7 +9631,7 @@ function MarketPanel({ open, onClose, roster = {}, actions = {} }) {
             "div",
             { className: "bt-market-heading" },
             (0, import_react15.createElement)("h2", { className: "bt-market-h2" }, heading),
-            (0, import_react15.createElement)("p", { className: "bt-market-sub" }, current ? current.detail : tab === "plugins" ? t("Browse the plugin markets this Harness lists") : t("Connect an app or your own server once, then choose which Bots may use it"))
+            (0, import_react15.createElement)("p", { className: "bt-market-sub" }, current ? current.detail : tab === "plugins" ? t("Browse the plugin markets this Harness lists") : tab === "skills" ? t("Skills this Session can load") : t("Connect an app or your own server once, then choose which Bots may use it"))
           ),
           current ? (0, import_react15.createElement)("button", { type: "button", className: "bt-market-back", onClick: () => setSelected(null) }, t("Back")) : tab === "plugins" ? null : (0, import_react15.createElement)(
             "label",
@@ -21442,6 +21460,27 @@ function apply(ctx) {
       } catch (error) {
         actions.reportError(error, "plugins-panel");
       }
+    },
+    // Skills are per Session: the registry answers for one retained Session, so the market
+    // asks through the one the main view shows.
+    skillsList: async () => {
+      const skills = ctx.get("remote.skills");
+      if (typeof skills?.list !== "function") return [];
+      const byId = ctx.sessions.list.getSnapshot().byId ?? {};
+      const sessionId = Object.values(byId).find((session) => (session?.retainedBy?.mainView ?? 0) > 0)?.id ?? Object.values(byId)[0]?.id;
+      if (sessionId === void 0) return [];
+      const read = async () => {
+        const answer = await skills.list({ sessionId });
+        const value = answer && typeof answer === "object" && "ok" in answer ? answer.ok === false ? null : answer.value : answer;
+        return Array.isArray(value?.skills) ? value.skills : [];
+      };
+      const list = ctx.sessions.using === void 0 ? await read() : await ctx.sessions.using(sessionId, { source: "skillCatalog" }, read);
+      return (Array.isArray(list) ? list : []).map((entry) => ({
+        id: entry.name,
+        name: entry.name,
+        detail: entry.description ?? "",
+        state: "ready"
+      }));
     },
     // The installed list is the shell's Plugins page installed list, not everything loaded:
     // a bundle the installation ships with is not the user's to see or remove here.

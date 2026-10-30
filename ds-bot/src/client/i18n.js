@@ -54,6 +54,8 @@ const ZH = {
   'Nothing installed yet': '还没有安装任何东西',
   'No plugin is on yet': '还没有启用任何插件',
   'Uninstall': '卸载',
+  'Available': '可用',
+  'Skills this Session can load': '这个会话可以加载的技能',
   'Disable': '停用',
   'Open the full connector page': '打开完整连接器页',
   'Nothing here yet': '这里还什么都没有',

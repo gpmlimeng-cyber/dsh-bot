@@ -505,6 +505,29 @@ export function apply(ctx) {
         actions.reportError(error, 'plugins-panel')
       }
     },
+    // Skills are per Session: the registry answers for one retained Session, so the market
+    // asks through the one the main view shows.
+    skillsList: async () => {
+      const skills = ctx.get('remote.skills')
+      if (typeof skills?.list !== 'function') return []
+      const byId = ctx.sessions.list.getSnapshot().byId ?? {}
+      const sessionId = Object.values(byId).find(session => (session?.retainedBy?.mainView ?? 0) > 0)?.id ?? Object.values(byId)[0]?.id
+      if (sessionId === undefined) return []
+      const read = async () => {
+        const answer = await skills.list({ sessionId })
+        const value = answer && typeof answer === 'object' && 'ok' in answer ? (answer.ok === false ? null : answer.value) : answer
+        return Array.isArray(value?.skills) ? value.skills : []
+      }
+      const list = ctx.sessions.using === undefined
+        ? await read()
+        : await ctx.sessions.using(sessionId, { source: 'skillCatalog' }, read)
+      return (Array.isArray(list) ? list : []).map((entry) => ({
+        id: entry.name,
+        name: entry.name,
+        detail: entry.description ?? '',
+        state: 'ready',
+      }))
+    },
     // The installed list is the shell's Plugins page installed list, not everything loaded:
     // a bundle the installation ships with is not the user's to see or remove here.
     pluginsList: async () => {
