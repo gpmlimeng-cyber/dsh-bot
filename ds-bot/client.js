@@ -27632,8 +27632,15 @@ function McpMarketTab({ actions = {} }) {
       if (sourceWrap.current !== null && sourceWrap.current.contains(event.target)) return;
       setSourceMenu(false);
     };
+    const escape = (event) => {
+      if (event.key === "Escape") setSourceMenu(false);
+    };
     document.addEventListener("pointerdown", close, true);
-    return () => document.removeEventListener("pointerdown", close, true);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", close, true);
+      document.removeEventListener("keydown", escape);
+    };
   }, [sourceMenu]);
   (0, import_react55.useEffect)(() => {
     if (!moreLabels) return void 0;
@@ -27641,8 +27648,15 @@ function McpMarketTab({ actions = {} }) {
       if (labelRow.current !== null && labelRow.current.contains(event.target)) return;
       setMoreLabels(false);
     };
+    const escape = (event) => {
+      if (event.key === "Escape") setMoreLabels(false);
+    };
     document.addEventListener("pointerdown", close, true);
-    return () => document.removeEventListener("pointerdown", close, true);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", close, true);
+      document.removeEventListener("keydown", escape);
+    };
   }, [moreLabels]);
   const report = (failure) => setError(String(failure?.message ?? failure));
   const sourceName = () => ({

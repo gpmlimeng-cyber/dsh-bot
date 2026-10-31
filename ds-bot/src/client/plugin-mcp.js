@@ -299,17 +299,21 @@ export function McpMarketTab({ actions = {} }) {
   const [adding, setAdding] = useState(null)
   const timer = useRef(null)
 
-  // A menu hangs off its own trigger, so a press anywhere else simply closes it.
+  // A menu hangs off its own trigger, so a press anywhere else — or Escape — closes it.
   useEffect(() => {
     if (!sourceMenu) return undefined
     const close = (event) => {
       if (sourceWrap.current !== null && sourceWrap.current.contains(event.target)) return
       setSourceMenu(false)
     }
+    const escape = (event) => { if (event.key === 'Escape') setSourceMenu(false) }
     document.addEventListener('pointerdown', close, true)
-    return () => document.removeEventListener('pointerdown', close, true)
+    document.addEventListener('keydown', escape)
+    return () => {
+      document.removeEventListener('pointerdown', close, true)
+      document.removeEventListener('keydown', escape)
+    }
   }, [sourceMenu])
-
 
   useEffect(() => {
     if (!moreLabels) return undefined
@@ -317,8 +321,13 @@ export function McpMarketTab({ actions = {} }) {
       if (labelRow.current !== null && labelRow.current.contains(event.target)) return
       setMoreLabels(false)
     }
+    const escape = (event) => { if (event.key === 'Escape') setMoreLabels(false) }
     document.addEventListener('pointerdown', close, true)
-    return () => document.removeEventListener('pointerdown', close, true)
+    document.addEventListener('keydown', escape)
+    return () => {
+      document.removeEventListener('pointerdown', close, true)
+      document.removeEventListener('keydown', escape)
+    }
   }, [moreLabels])
 
   const report = (failure) => setError(String(failure?.message ?? failure))
