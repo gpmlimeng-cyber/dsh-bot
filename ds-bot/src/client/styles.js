@@ -274,7 +274,10 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    Only the class prefix changed, dq5LxG_ -> bt-mm-, and the market dropdown is named for
    what it picks here: bt-mm-source / bt-mm-source-name. Numbers, order and states are the
    ones it ships, so this panel measures the same as the shell's own page. */
-.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex}
+.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex;flex-wrap:wrap}
+.bt-mm-filterlabel{flex:none}
+.bt-mm-toolbar .bt-mm-categories{flex:1 1 320px;min-width:0}
+.bt-mm-toolbar .bt-mm-sort{margin-left:auto}
 /* ds-bot chrome around the vendored card list: the source picker, its menu and the
    add-source form. It follows the shell's menu look, not the vendored sheet's. */
 .bt-mm-sourcewrap{position:relative;flex:none}

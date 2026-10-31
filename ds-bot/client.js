@@ -2892,7 +2892,10 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    Only the class prefix changed, dq5LxG_ -> bt-mm-, and the market dropdown is named for
    what it picks here: bt-mm-source / bt-mm-source-name. Numbers, order and states are the
    ones it ships, so this panel measures the same as the shell's own page. */
-.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex}
+.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex;flex-wrap:wrap}
+.bt-mm-filterlabel{flex:none}
+.bt-mm-toolbar .bt-mm-categories{flex:1 1 320px;min-width:0}
+.bt-mm-toolbar .bt-mm-sort{margin-left:auto}
 /* ds-bot chrome around the vendored card list: the source picker, its menu and the
    add-source form. It follows the shell's menu look, not the vendored sheet's. */
 .bt-mm-sourcewrap{position:relative;flex:none}
@@ -27872,6 +27875,24 @@ function McpMarketTab({ actions = {} }) {
             onChange: (event) => setQuery(event.target.value)
           })
         ),
+        (0, import_react55.createElement)("span", { className: "bt-mm-muted bt-mm-filterlabel" }, t("Labels")),
+        categories.length === 0 ? null : (0, import_react55.createElement)(
+          "div",
+          { className: "bt-mm-categories", key: "categories", role: "group", "aria-label": t("Labels") },
+          (0, import_react55.createElement)("button", {
+            type: "button",
+            className: "bt-mm-pill" + (category === "" ? " is-on" : ""),
+            "aria-pressed": category === "",
+            onClick: () => pick2("")
+          }, t("All")),
+          categories.map((item) => (0, import_react55.createElement)("button", {
+            key: item.id,
+            type: "button",
+            className: "bt-mm-pill" + (category === item.id ? " is-on" : ""),
+            "aria-pressed": category === item.id,
+            onClick: () => pick2(item.id)
+          }, categoryName(item.id)))
+        ),
         (0, import_react55.createElement)(
           "label",
           { className: "bt-mm-sort" },
@@ -27882,25 +27903,7 @@ function McpMarketTab({ actions = {} }) {
             (0, import_react55.createElement)("option", { value: "default" }, t("Default order")),
             (0, import_react55.createElement)("option", { value: "installs" }, t("Downloads"))
           )
-        ),
-        loading && list.servers.length === 0 ? (0, import_react55.createElement)("span", { className: "bt-mm-total" }, t("Reading…")) : null
-      ),
-      categories.length === 0 ? null : (0, import_react55.createElement)(
-        "div",
-        { className: "bt-mm-categories", key: "categories", role: "group", "aria-label": t("Labels") },
-        (0, import_react55.createElement)("button", {
-          type: "button",
-          className: "bt-mm-pill" + (category === "" ? " is-on" : ""),
-          "aria-pressed": category === "",
-          onClick: () => pick2("")
-        }, t("All")),
-        categories.map((item) => (0, import_react55.createElement)("button", {
-          key: item.id,
-          type: "button",
-          className: "bt-mm-pill" + (category === item.id ? " is-on" : ""),
-          "aria-pressed": category === item.id,
-          onClick: () => pick2(item.id)
-        }, categoryName(item.id)))
+        )
       )
     ] : null,
     error ? (0, import_react55.createElement)("p", { className: "bt-mm-error" }, error) : null,
