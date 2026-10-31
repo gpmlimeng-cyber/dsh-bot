@@ -359,6 +359,7 @@ const ZH = {
   About: '简介',
   'Show less': '收起',
   'Show more': '展开',
+  'View {count} more': '另有 {count} 项',
   'View {names}, and {count} more': '查看{names}，另有 {count} 项',
   'View {names}': '查看{names}',
   'Admin leads': '管理员主持',

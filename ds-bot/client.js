@@ -391,6 +391,7 @@ var ZH = {
   About: "简介",
   "Show less": "收起",
   "Show more": "展开",
+  "View {count} more": "另有 {count} 项",
   "View {names}, and {count} more": "查看{names}，另有 {count} 项",
   "View {names}": "查看{names}",
   "Admin leads": "管理员主持",
@@ -27699,7 +27700,7 @@ function McpMarketTab({ actions = {} }) {
     setError("");
     const custom = sources.find((item) => item.id === source) ?? null;
     const ask = (at) => Promise.resolve(actions.mcpMarket?.({ kind: "search", query: sent, page: at, category, source, custom }));
-    const fill2 = page === 1 && category === "" && sent === "" && custom === null;
+    const fill2 = page === 1 && category === "" && sent === "" && custom === null && source !== "modelscope";
     const run2 = async () => {
       const first = await ask(page);
       if (!live) return;
@@ -27829,31 +27830,62 @@ function McpMarketTab({ actions = {} }) {
       });
     }).catch(giveUp);
   };
+  const [sections, setSections] = (0, import_react55.useState)([]);
+  const sectionCache = (0, import_react55.useRef)(/* @__PURE__ */ new Map());
+  (0, import_react55.useEffect)(() => {
+    if (view !== "discover" || category !== "" || sent !== "" || source !== "modelscope" || categories.length === 0) return void 0;
+    let live = true;
+    const key = `${source}|${categories.map((item) => item.id).join("|")}`;
+    const kept = sectionCache.current.get(key);
+    if (kept !== void 0) {
+      setSections(kept);
+      return void 0;
+    }
+    const read = (id) => Promise.resolve(actions.mcpMarket?.({ kind: "search", query: "", page: 1, category: id, source, custom: null })).then((next) => ({ id, total: next?.total ?? 0, servers: next?.servers ?? [] }), () => ({ id, total: 0, servers: [] }));
+    const run2 = async () => {
+      const out = [];
+      for (let at = 0; at < categories.length && at < 24; at += 4) {
+        out.push(...await Promise.all(categories.slice(at, at + 4).map((item) => read(item.id))));
+        if (!live) return;
+      }
+      sectionCache.current.set(key, out);
+      setSections(out);
+    };
+    run2();
+    return () => {
+      live = false;
+    };
+  }, [actions, view, category, sent, source, categories]);
   const names = (0, import_react55.useMemo)(() => new Set(installed), [installed]);
   const shown = (0, import_react55.useMemo)(
     () => sort === "installs" ? list.servers.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : list.servers,
     [list.servers, sort]
   );
   const groups = (0, import_react55.useMemo)(() => {
+    const rank = (id) => {
+      const at = categories.findIndex((item) => item.id === id);
+      return at < 0 ? categories.length : at;
+    };
+    const order = (servers) => sort === "installs" ? servers.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : servers;
+    if (category === "" && sections.length > 0) {
+      return sections.filter((entry) => entry.servers.length > 0).map((entry) => ({ id: entry.id, name: categoryName(entry.id), total: entry.total, servers: order(entry.servers) })).sort((left, right) => rank(left.id) - rank(right.id) || right.total - left.total);
+    }
     const buckets = /* @__PURE__ */ new Map();
     for (const server of shown) {
       const key = category !== "" ? "" : server.categories?.[0] ?? server.publisher ?? "";
       if (!buckets.has(key)) buckets.set(key, []);
       buckets.get(key).push(server);
     }
-    const rank = (id) => {
-      const at = categories.findIndex((item) => item.id === id);
-      return at < 0 ? categories.length : at;
-    };
-    return [...buckets.entries()].map(([id, servers]) => ({ id, name: category !== "" ? categoryName(category) : id === "" ? t("All") : categoryName(id), servers })).sort((left, right) => rank(left.id) - rank(right.id) || right.servers.length - left.servers.length);
-  }, [shown, category, categories, t]);
+    return [...buckets.entries()].map(([id, servers]) => ({ id, name: category !== "" ? categoryName(category) : id === "" ? t("All") : categoryName(id), total: servers.length, servers })).sort((left, right) => rank(left.id) - rank(right.id) || right.servers.length - left.servers.length);
+  }, [shown, sections, sort, category, categories, t]);
   const sectionMore = (group) => {
     const rest = group.servers.slice(6);
-    if (rest.length === 0) return null;
+    const left = Math.max(0, (group.total ?? group.servers.length) - 6);
+    if (left === 0) return null;
     const names2 = rest.slice(0, 2).map((server) => server.name).join(", ");
-    return rest.length > 2 ? t("View {names}, and {count} more", { names: names2, count: rest.length - 2 }) : t("View {names}", { names: names2 });
+    return names2 === "" || left <= 2 ? t("View {count} more", { count: left }) : t("View {names}, and {count} more", { names: names2, count: left - 2 });
   };
-  const more = list.servers.length < list.total;
+  const more = category !== "" && list.servers.length < list.total;
   const body = view === "installed" ? (0, import_react55.createElement)(Installed, { key: "installed", servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove }) : view === "custom" ? (0, import_react55.createElement)(Custom, {
     key: "custom",
     actions,

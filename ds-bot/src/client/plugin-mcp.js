@@ -370,7 +370,8 @@ export function McpMarketTab({ actions = {} }) {
     // Every section shows six cards, and one plaza page of twenty cannot fill them: a
     // grouped browse reads a few pages before it draws. A hundred rows is the plaza's own
     // ceiling for one search, so five pages of twenty is as far as this goes.
-    const fill = page === 1 && category === '' && sent === '' && custom === null
+    // A grouped browse reads each label for itself, so the mixed page stays one page.
+    const fill = page === 1 && category === '' && sent === '' && custom === null && source !== 'modelscope'
     const run = async () => {
       const first = await ask(page)
       if (!live) return
@@ -509,6 +510,34 @@ export function McpMarketTab({ actions = {} }) {
       .catch(giveUp)
   }
 
+  // A label's own page answers how many servers it holds, which no page of the whole plaza
+  // can say. Four labels at a time, so a dozen of them do not all hit the plaza at once.
+  const [sections, setSections] = useState([])
+  const sectionCache = useRef(new Map())
+  useEffect(() => {
+    if (view !== 'discover' || category !== '' || sent !== '' || source !== 'modelscope' || categories.length === 0) return undefined
+    let live = true
+    const key = `${source}|${categories.map(item => item.id).join('|')}`
+    const kept = sectionCache.current.get(key)
+    if (kept !== undefined) {
+      setSections(kept)
+      return undefined
+    }
+    const read = (id) => Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: '', page: 1, category: id, source, custom: null }))
+      .then(next => ({ id, total: next?.total ?? 0, servers: next?.servers ?? [] }), () => ({ id, total: 0, servers: [] }))
+    const run = async () => {
+      const out = []
+      for (let at = 0; at < categories.length && at < 24; at += 4) {
+        out.push(...await Promise.all(categories.slice(at, at + 4).map(item => read(item.id))))
+        if (!live) return
+      }
+      sectionCache.current.set(key, out)
+      setSections(out)
+    }
+    run()
+    return () => { live = false }
+  }, [actions, view, category, sent, source, categories])
+
   const names = useMemo(() => new Set(installed), [installed])
   const shown = useMemo(
     () => (sort === 'installs'
@@ -517,35 +546,43 @@ export function McpMarketTab({ actions = {} }) {
     [list.servers, sort],
   )
   // Cards are grouped the way the shell's own Discover list groups them: one section per
-  // category (a README section for the catalogue sources), three rows of two in each, and
-  // the section's own control narrows the list to that category.
+  // category, six cards in each, and the section's own control narrows the list to it. A
+  // page of the whole plaza cannot say how many a label holds, so every label is asked for
+  // its own first page; that answer carries the count the section reports.
   const groups = useMemo(() => {
+    const rank = (id) => { const at = categories.findIndex(item => item.id === id); return at < 0 ? categories.length : at }
+    const order = (servers) => (sort === 'installs' ? servers.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : servers)
+    if (category === '' && sections.length > 0) {
+      return sections
+        .filter(entry => entry.servers.length > 0)
+        .map(entry => ({ id: entry.id, name: categoryName(entry.id), total: entry.total, servers: order(entry.servers) }))
+        .sort((left, right) => rank(left.id) - rank(right.id) || right.total - left.total)
+    }
     const buckets = new Map()
     for (const server of shown) {
       const key = category !== '' ? '' : (server.categories?.[0] ?? server.publisher ?? '')
       if (!buckets.has(key)) buckets.set(key, [])
       buckets.get(key).push(server)
     }
-    // A section keeps its label's place in the chip row, and that row is ordered by how
-    // much each category is downloaded: label and section are the same list.
-    const rank = (id) => { const at = categories.findIndex(item => item.id === id); return at < 0 ? categories.length : at }
     return [...buckets.entries()]
       // A filtered list keeps the name of the category it was filtered to, so opening a
       // section does not rename it to "all".
-      .map(([id, servers]) => ({ id, name: category !== '' ? categoryName(category) : (id === '' ? t('All') : categoryName(id)), servers }))
+      .map(([id, servers]) => ({ id, name: category !== '' ? categoryName(category) : (id === '' ? t('All') : categoryName(id)), total: servers.length, servers }))
       .sort((left, right) => rank(left.id) - rank(right.id) || right.servers.length - left.servers.length)
-  }, [shown, category, categories, t])
+  }, [shown, sections, sort, category, categories, t])
   // A section shows six cards, and names what it leaves out the way the shell's own skill
   // list does: the first missing names, then how many more there are.
   const sectionMore = (group) => {
     const rest = group.servers.slice(6)
-    if (rest.length === 0) return null
+    const left = Math.max(0, (group.total ?? group.servers.length) - 6)
+    if (left === 0) return null
     const names = rest.slice(0, 2).map(server => server.name).join(', ')
-    return rest.length > 2
-      ? t('View {names}, and {count} more', { names, count: rest.length - 2 })
-      : t('View {names}', { names })
+    return names === '' || left <= 2
+      ? t('View {count} more', { count: left })
+      : t('View {names}, and {count} more', { names, count: left - 2 })
   }
-  const more = list.servers.length < list.total
+  // A section already says how much it holds, so the footer pages only inside one label.
+  const more = category !== '' && list.servers.length < list.total
 
   const body = view === 'installed'
     ? h(Installed, { key: 'installed', servers: rows, busy: busyRow, onToggle: toggle, onRemove: remove })
