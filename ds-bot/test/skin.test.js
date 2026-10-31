@@ -50,7 +50,25 @@ test('the skin reads the width setting on the Bot’s side and leaves the host�
   const user = /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{([^}]*)\}/.exec(bundle)
   assert.ok(user !== null, 'no rule for the host’s user bubbles')
   assert.ok(!user[1].includes('max-width'), 'the skin still caps the host’s user bubble width')
-  // The host draws the user's bubble with one shorthand and no per-corner rule, so the same
+  // The bubble this plugin draws for the user's own messages drops its time on the phone; the
+// desktop keeps it, and the shell's user row has no time of its own to touch.
+test('the phone leaves the time out of the user’s own bubble', () => {
+  const ours = /:not\(\[data-bt-skin=ours\]\) \.bt-utime\{display:none\}/.exec(bundle)
+  assert.ok(ours !== null, 'the plugin’s own bubble time still shows on the phone')
+  const line = bundle.slice(bundle.lastIndexOf('\n', ours.index) + 1, bundle.indexOf('}', ours.index))
+  assert.ok(line.includes('[data-mobile-nav="frame"]'), `a time is hidden off the phone: ${line.slice(0, 120)}`)
+  assert.ok(!bundle.includes('_userRow"] [class*="_time"]'), 'the empty shell-row time selector came back')
+})
+
+// The group's own bubble is drawn by this plugin, so it has to read the same tokens.
+test('the plugin’s own user bubble follows the skin’s padding and radius', () => {
+  const rule = /:not\(\[data-bt-skin=ours\]\) \.bt-ububble\{([^}]*)\}/.exec(bundle)
+  assert.ok(rule !== null, 'the plugin’s own user bubble ignores the skin')
+  assert.match(rule[1], /padding:var\(--bt-app-pad\)/)
+  assert.match(rule[1], /border-radius:var\(--bt-app-radius-bubble\)/)
+})
+
+// The host draws the user's bubble with one shorthand and no per-corner rule, so the same
   // shorthand here covers all four corners; a longhand would only add a way to miss one.
   assert.match(user[1], /border-radius:var\(--bt-app-radius-bubble\)!important/)
   assert.ok(!/border-(?:start|end)-(?:start|end)-radius/.test(user[1]), 'the user bubble grew a per-corner radius')
@@ -66,7 +84,7 @@ test('the phone skin carries the app’s own bubble metrics', () => {
   assert.match(body, /padding:var\(--bt-app-pad\)/)
   assert.match(body, /line-height:1\.625/)
   assert.match(bundle, /--bt-app-radius-bubble:5px/)
-  assert.match(bundle, /--bt-app-pad:12px 16px/)
+  assert.match(bundle, /--bt-app-pad:8px 10px/)
   // Neighbouring bubbles use the radius minus the padding step, not a hand-written 9px.
   assert.match(bundle, /border-start-start-radius:var\(--bt-app-radius-bubble-inset\)/)
   assert.match(bundle, /--bt-app-radius-bubble-inset:max\(2px, calc\(var\(--bt-app-radius-bubble\) - 12px - 1px\)\)/)

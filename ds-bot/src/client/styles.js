@@ -1473,7 +1473,7 @@ html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]){
   --bt-app-text-sub:13px;    --bt-app-leading-sub:18px;
   --bt-app-text-meta:12px;   --bt-app-leading-meta:16px;
   --bt-app-gap:8px;
-  --bt-app-pad:12px 16px;
+  --bt-app-pad:8px 10px;
   --bt-app-row:48px;
   --bt-app-shadow-float:var(--bt-float-shadow);
 }
@@ -1493,6 +1493,12 @@ html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-empty{font-size
    draws. Radius and padding only: a width here would resolve against the width the host has
    already shrunk, which squeezes the bubble instead of matching the Bot's side. */
 html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important}
+/* On the phone the bubble this plugin draws for the user's own messages drops its time; the
+   desktop keeps it. The shell's user row carries no time of its own to hide. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-utime{display:none}
+/* A group's own bubble is drawn here, so the skin's padding and radius reach it through the
+   same tokens as the rest. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-ububble{padding:var(--bt-app-pad);border-radius:var(--bt-app-radius-bubble)}
 `
 
 export const CONVERSATION_CSS = `
