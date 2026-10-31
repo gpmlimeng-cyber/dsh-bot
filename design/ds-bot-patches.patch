@@ -9415,7 +9415,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..a02c238 100644
+index eac6ea5..fe5f887 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -9985,7 +9985,7 @@ index eac6ea5..a02c238 100644
 -[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0!important}
 -[data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:flex-end!important;margin:0!important}
 +[data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:center!important;margin:0!important}
-+[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0 0 0 -22px!important}
++[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0 0 0 -15px!important}
 +/* The desktop field keeps ds-bot's stock inset; the phone pulls its field up to the mark. */
 +html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{margin-left:-10px!important}
 +[data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:center!important;margin:0!important}
