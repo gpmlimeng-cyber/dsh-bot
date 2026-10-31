@@ -1201,7 +1201,7 @@ export function apply(ctx) {
       modeMenu = document.createElement('div')
       modeMenu.className = 'bt-modebar-menu'
       modeMenu.setAttribute('role', 'menu')
-      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:42;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 16px 36px -18px rgba(0,0,0,.3)`
+      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:61;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 16px 36px -18px rgba(0,0,0,.3)`
       for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
         const selected = mode === id
         const item = document.createElement('button')
@@ -1288,7 +1288,7 @@ export function apply(ctx) {
       }
       bandActions.style.cssText = inDrawer()
         ? 'position:static;display:flex;align-items:center;gap:2px;margin-left:auto'
-        : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:41;display:flex;align-items:center;gap:2px`
+        : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:60;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`
       bandActions.textContent = ''
       // In the shell's own view these three do what the shell's own controls do, so the row
       // never lies about what a click will get.
@@ -1366,7 +1366,7 @@ export function apply(ctx) {
       }
       modeBar.style.cssText = inDrawer()
         ? 'position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)'
-        : `position:fixed;left:${left}px;top:${top}px;z-index:41;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414`
+        : `position:fixed;left:${left}px;top:${top}px;z-index:60;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`
       // The drawer has no band: the row keeps the drawer's top, and a closed drawer takes it
       // off the page with everything else instead of leaving it floating over the content.
       placeRow()
