@@ -16253,7 +16253,9 @@ function TeamSidebar(props) {
       { className: "bt-side-foot" },
       (0, import_react20.createElement)(
         "button",
-        { type: "button", className: "bt-apps-chip", "aria-label": t("Connect apps"), title: t("Connect apps"), onClick: () => setMarket(true) },
+        { type: "button", className: "bt-apps-chip", "aria-label": t("Connect apps"), title: t("Connect apps"), onClick: () => {
+          actions.openPluginsPanel?.();
+        } },
         (0, import_react20.createElement)("span", { className: "bt-apps-marks", "aria-hidden": true }, (0, import_react20.createElement)("i", { className: "bt-apps-mark" }), (0, import_react20.createElement)("i", { className: "bt-apps-mark bt-apps-mark-b" })),
         wide ? (0, import_react20.createElement)("span", { className: "bt-apps-label" }, t("Connect apps")) : null
       )

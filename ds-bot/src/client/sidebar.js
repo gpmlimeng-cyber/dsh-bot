@@ -498,7 +498,7 @@ export function TeamSidebar(props) {
         : h('button', { key: 'new-group', type: 'button', className: 'bt-sec-new', onClick: beginCreate },
           h(PlusIcon), h('span', null, t('New section')))),
     h('div', { className: 'bt-side-foot' },
-      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
+      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => { actions.openPluginsPanel?.() } },
         h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
         wide ? h('span', { className: 'bt-apps-label' }, t('Connect apps')) : null)),
     market ? h(MarketPanel, { open: true, onClose: () => setMarket(false), roster, actions }) : null)
