@@ -41,8 +41,8 @@
 | 39 | `ds-bot/src/client/index.js` | 323–352 | 16 |
 | 40 | `ds-bot/src/client/index.js` | 496–634 | 138 |
 | 41 | `ds-bot/src/client/index.js` | 1100 | 1 |
-| 42 | `ds-bot/src/client/index.js` | 1115–1322 | 206 |
-| 43 | `ds-bot/src/client/index.js` | 1333–1339 | 7 |
+| 42 | `ds-bot/src/client/index.js` | 1115–1327 | 211 |
+| 43 | `ds-bot/src/client/index.js` | 1338–1344 | 7 |
 | 44 | `ds-bot/src/client/market.js` | 1–532 | 532 |
 | 45 | `ds-bot/src/client/mcp-panel.js` | 1–264 | 264 |
 | 46 | `ds-bot/src/client/member-status.js` | 188–189 | 2 |
