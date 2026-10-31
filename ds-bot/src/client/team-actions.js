@@ -124,6 +124,7 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     // MCP servers: the reading calls answer with the profile's own rows; the mutating
     // ones answer with the fresh list so the panel never reads twice.
     mcpList: () => call('mcp-list'),
+    mcpMarket: payload => call('mcp-market', payload),
     mcpTools: serverName => call('mcp-tools', { serverName }),
     mcpSave: payload => after(call('mcp-save', payload)),
     mcpToggle: payload => after(call('mcp-toggle', payload)),

@@ -37,6 +37,7 @@ import { USAGE_CSS } from './usage-page.js'
 import { SCHEDULE_CSS } from './schedules.js'
 import { STORAGE, migrateStorage } from './storage.js'
 import { SkillsTab } from './plugin-skills.js'
+import { McpMarketTab } from './plugin-mcp.js'
 import { noteLeft, setUnread, sharedMap, toggleReaction } from './shared-map.js'
 import { drawerSlot, modeRowSlot, placeModeRow } from './mode-row.js'
 import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
@@ -1042,6 +1043,7 @@ export function apply(ctx) {
     // The shell's Plugins page grows its own tabs through this slot; skills come from the
     // market panel we already ship, so the page shows them beside Installed.
     () => shadow('plugins.tab', { id: 'skills', order: 20, label: () => t('Skills') }, SkillsTab),
+    () => shadow('plugins.tab', { id: 'mcp', order: 30, label: () => t('MCP'), inject: face }, McpMarketTab),
   ]
   const installConversation = () => [
     () => installCompiledStyles(CONVERSATION_CSS, 'conversation'),

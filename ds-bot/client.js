@@ -87,6 +87,20 @@ var ZH = {
   "Open it": "打开",
   "Skills": "技能",
   "MCP": "MCP",
+  "Hosted": "已托管",
+  "Added as {name}": "已添加为 {name}",
+  "Add to DSH": "添加到 DSH",
+  "Adding…": "添加中…",
+  "Reading…": "读取中…",
+  "Reading the server…": "正在读取服务器…",
+  "Search MCP servers": "搜索 MCP 服务器",
+  "{count} servers": "{count} 个服务器",
+  "No MCP server matches that search.": "没有匹配的 MCP 服务器。",
+  "Hosted endpoint": "托管地址",
+  "Launch line": "启动命令",
+  "Needs {names} set in the profile": "需要在档案里设置 {names}",
+  "This server has no connection this profile can use on its own.": "这个服务器没有本档案可以直接使用的连接方式。",
+  "Server name": "服务器名",
   "Add server": "新增服务器",
   "New MCP server": "新建 MCP 服务器",
   "Edit MCP server": "编辑 MCP 服务器",
@@ -1588,8 +1602,8 @@ function bodyOf(def, paint, flat = false) {
     return "";
   }
 }
-var eyeMarkup = ([cx, cy, w, h54, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h54 / 2}" width="${w}" height="${h54}" rx="${w / 2}"/></g>`;
-var happyEyeMarkup = ([cx, cy, w, h54, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h54 * 0.14}Q0 ${-h54 * 0.42} ${w * 0.62} ${h54 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
+var eyeMarkup = ([cx, cy, w, h55, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><rect class="bt-eye" x="${-w / 2}" y="${-h55 / 2}" width="${w}" height="${h55}" rx="${w / 2}"/></g>`;
+var happyEyeMarkup = ([cx, cy, w, h55, tilt]) => `<g transform="translate(${cx} ${cy}) rotate(${tilt})"><path class="bt-eye-happy" opacity="0" d="M${-w * 0.62} ${h55 * 0.14}Q0 ${-h55 * 0.42} ${w * 0.62} ${h55 * 0.14}" fill="none" stroke="#000" stroke-width="${w * 0.5}" stroke-linecap="round"/></g>`;
 var maskBox = (size) => `maskUnits="userSpaceOnUse" x="${-size}" y="${-size}" width="${size * 3}" height="${size * 3}"`;
 var holes = (def, eyes) => `<rect x="${-def.size}" y="${-def.size}" width="${def.size * 3}" height="${def.size * 3}" fill="#fff"/>${eyes}`;
 var MASK_ID = "%MASK%";
@@ -1837,6 +1851,7 @@ function teamActions({ call: call2, after, partFor, roster, ui: ui2, live, cards
     // MCP servers: the reading calls answer with the profile's own rows; the mutating
     // ones answer with the fresh list so the panel never reads twice.
     mcpList: () => call2("mcp-list"),
+    mcpMarket: (payload) => call2("mcp-market", payload),
     mcpTools: (serverName) => call2("mcp-tools", { serverName }),
     mcpSave: (payload) => after(call2("mcp-save", payload)),
     mcpToggle: (payload) => after(call2("mcp-toggle", payload)),
@@ -2394,12 +2409,12 @@ function liveSprings(apply2) {
     const dt = Math.min(0.5, Math.max(1e-3, (now - last) / 1e3));
     last = now;
     const steps = Math.ceil(dt * 240);
-    const h54 = dt / steps;
+    const h55 = dt / steps;
     let moving = false;
     for (const value of values.values()) {
       for (let index = 0; index < steps; index += 1) {
-        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h54;
-        value.x += value.v * h54;
+        value.v += (-value.k * (value.x - value.to) - value.c * value.v) * h55;
+        value.x += value.v * h55;
       }
       if (Math.abs(value.x - value.to) < 0.05 && Math.abs(value.v) < 1) {
         value.x = value.to;
@@ -2829,6 +2844,47 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    panel's clipping stops the drawer but not its shadow, which painted a grey band down the
    inside of that edge; the drawer only paints a shadow while it is open. */
 [data-bt-skills] .sm-inspector:not(.open){box-shadow:none}
+/* The MCP tab: the ModelScope plaza as plain rows at the page's own measure, with one
+   server's connection details behind a row. */
+.bt-mm{display:flex;flex-direction:column;gap:12px;max-width:960px;padding-bottom:32px}
+.bt-mm-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bt-mm-search{display:flex;align-items:center;gap:8px;flex:1 1 auto;max-width:420px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
+.bt-mm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
+.bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
+.bt-mm-list{display:flex;flex-direction:column}
+.bt-mm-row{display:flex;align-items:flex-start;gap:12px;width:100%;padding:12px 8px;border:0;border-radius:12px;background:none;text-align:left;color:var(--bt-ink);font:inherit;cursor:pointer}
+.bt-mm-row:hover{background:var(--bt-hover)}
+.bt-mm-logo{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
+.bt-mm-logo-lg{width:48px;height:48px;border-radius:12px}
+.bt-mm-logo-empty{display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;background:var(--bt-hover);color:var(--bt-ink-2)}
+.bt-mm-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 auto}
+.bt-mm-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.bt-mm-name{font-size:14px;font-weight:600}
+.bt-mm-tag{font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3)}
+.bt-mm-tag-on{color:var(--bt-accent)}
+.bt-mm-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:19px;color:var(--bt-ink-2)}
+.bt-mm-end{display:flex;align-items:center;gap:8px;flex:none;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-more{align-self:center;height:32px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
+.bt-mm-note{margin:0;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-error{margin:0;font-size:13px;color:#c0392b}
+.bt-mm-detail{display:flex;flex-direction:column;gap:14px;max-width:820px}
+.bt-mm-detail-head{display:flex;align-items:center;gap:12px}
+.bt-mm-detail-title{flex:1 1 auto;min-width:0}
+.bt-mm-detail-title h3{margin:0;font-size:17px;font-weight:600}
+.bt-mm-detail-title p{margin:2px 0 0;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-close{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
+.bt-mm-close:hover{background:var(--bt-hover)}
+.bt-mm-detail-desc{margin:0;font-size:13.5px;line-height:21px;color:var(--bt-ink-2)}
+.bt-mm-card{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
+.bt-mm-card-label{font-size:12px;color:var(--bt-ink-3)}
+.bt-mm-code{font-family:var(--bt-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:12.5px;line-height:18px;color:var(--bt-ink);word-break:break-all}
+.bt-mm-field{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--bt-ink-2)}
+.bt-mm-field input{flex:1 1 auto;min-width:0;height:32px;padding:0 10px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:13px;color:var(--bt-ink);outline:none}
+.bt-mm-readme{margin:0;max-height:320px;overflow:auto;padding:12px 14px;border-radius:12px;background:var(--bt-hover);font-family:var(--bt-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:12.5px;line-height:19px;white-space:pre-wrap;color:var(--bt-ink-2)}
+.bt-mm-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+.bt-mm-add{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 16px;border:0;border-radius:999px;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.bt-mm-add:disabled{opacity:.5;cursor:default}
+.bt-mm-add svg{width:15px;height:15px}
 .bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 .bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
 .bt-market-heading{min-width:0}
@@ -23252,7 +23308,7 @@ function VoiceMode({ sessionId, roster, actions, useSessions, useSessionStatus }
 
 // src/client/kept-private.js
 var import_react43 = require("react");
-function KeptPrivateSection({ roster, actions, run: run2, Section, Row: Row3 }) {
+function KeptPrivateSection({ roster, actions, run: run2, Section, Row: Row4 }) {
   const kept = roster.privateArchives ?? [];
   const [confirming, setConfirming] = (0, import_react43.useState)(null);
   (0, import_react43.useEffect)(() => {
@@ -23272,7 +23328,7 @@ function KeptPrivateSection({ roster, actions, run: run2, Section, Row: Row3 }) 
   return (0, import_react43.createElement)(
     Section,
     { title: t("Closed after deletion · {count}", { count: kept.length }) },
-    kept.map((entry) => (0, import_react43.createElement)(Row3, {
+    kept.map((entry) => (0, import_react43.createElement)(Row4, {
       key: entry.id,
       label: entry.name,
       hint: confirming === entry.id ? t("Click again to remove. Other Bots can then read its folder, memory and chats.") : entry.workDir
@@ -24391,7 +24447,7 @@ function grantKinds(grant) {
   if (grant.kinds.includes("*")) return [t("All four")];
   return ACTIONS.filter(([kind]) => grant.kinds.includes(kind)).map(([, label]) => t(label));
 }
-function BrowserPage({ roster, actions, run: run2, Section, Row: Row3 }) {
+function BrowserPage({ roster, actions, run: run2, Section, Row: Row4 }) {
   const bots = roster.bots ?? [];
   const [botId, setBotId] = (0, import_react46.useState)(bots[0]?.id ?? "");
   const [site, setSite] = (0, import_react46.useState)("");
@@ -24443,7 +24499,7 @@ function BrowserPage({ roster, actions, run: run2, Section, Row: Row3 }) {
     (0, import_react46.createElement)(
       Section,
       { title: t("Allowed actions") },
-      grants.length === 0 ? (0, import_react46.createElement)(Row3, { label: t("Nothing allowed yet.") }) : grants.map(({ bot, grant, index, expired: expired2 }) => (0, import_react46.createElement)(
+      grants.length === 0 ? (0, import_react46.createElement)(Row4, { label: t("Nothing allowed yet.") }) : grants.map(({ bot, grant, index, expired: expired2 }) => (0, import_react46.createElement)(
         "div",
         {
           key: `${bot.id}:${index}`,
@@ -24477,7 +24533,7 @@ function BrowserPage({ roster, actions, run: run2, Section, Row: Row3 }) {
         "form",
         { className: "bt-browser-form", onSubmit: add },
         (0, import_react46.createElement)(
-          Row3,
+          Row4,
           { label: t("Bot") },
           (0, import_react46.createElement)(
             "select",
@@ -24486,7 +24542,7 @@ function BrowserPage({ roster, actions, run: run2, Section, Row: Row3 }) {
           )
         ),
         (0, import_react46.createElement)(
-          Row3,
+          Row4,
           { label: t("Site") },
           (0, import_react46.createElement)("input", {
             className: "bt-select bt-browser-site",
@@ -24497,7 +24553,7 @@ function BrowserPage({ roster, actions, run: run2, Section, Row: Row3 }) {
           })
         ),
         (0, import_react46.createElement)(
-          Row3,
+          Row4,
           { label: t("Actions") },
           (0, import_react46.createElement)(
             "div",
@@ -24515,7 +24571,7 @@ function BrowserPage({ roster, actions, run: run2, Section, Row: Row3 }) {
           )
         ),
         (0, import_react46.createElement)(
-          Row3,
+          Row4,
           { label: t("Duration") },
           (0, import_react46.createElement)(
             "div",
@@ -24586,7 +24642,7 @@ function issueWindow() {
     }
   };
 }
-function FeedbackPage({ actions, run: run2, Section, Row: Row3 }) {
+function FeedbackPage({ actions, run: run2, Section, Row: Row4 }) {
   const [what, setWhat] = (0, import_react47.useState)("");
   const [report, setReport] = (0, import_react47.useState)(null);
   const [preview, setPreview] = (0, import_react47.useState)(false);
@@ -24645,14 +24701,14 @@ function FeedbackPage({ actions, run: run2, Section, Row: Row3 }) {
         (0, import_react47.createElement)("textarea", { id: "bt-fb-what", className: "bt-input bt-input-area", value: what, maxLength: WHAT_MAX, placeholder: t("For example: I asked Writer in the group chat and it showed an error."), onChange: (event) => setWhat(event.target.value) })
       ),
       (0, import_react47.createElement)(
-        Row3,
+        Row4,
         { label: t("Diagnostics"), hint: t("Versions, system, models, and the latest errors. Saved keys, tokens, and your home folder are hidden.") },
         (0, import_react47.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: () => setPreview(!preview), "aria-expanded": preview }, preview ? t("Hide") : t("Show")),
         (0, import_react47.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: copyReport }, t("Copy"))
       ),
       preview ? (0, import_react47.createElement)("div", { className: "bt-set-row bt-fb-preview" }, (0, import_react47.createElement)("pre", { tabIndex: 0, "aria-label": t("Diagnostics") }, report?.markdown || t("Loading…"))) : null,
       (0, import_react47.createElement)(
-        Row3,
+        Row4,
         { label: t("GitHub issue"), hint: t("Opens a new issue in the DS Bot repository with all of this filled in. Nothing is sent until you submit it there.") },
         (0, import_react47.createElement)("button", { type: "button", className: "bt-fb-primary", onClick: openIssue }, t("Report on GitHub"))
       )
@@ -24666,7 +24722,7 @@ function FeedbackPage({ actions, run: run2, Section, Row: Row3 }) {
     (0, import_react47.createElement)(
       Section,
       { key: "errors", title: report ? t("Recent errors · {count}", { count: total }) : t("Recent errors") },
-      shown.length === 0 ? (0, import_react47.createElement)(Row3, { label: t("No errors recorded."), hint: t("Failed model calls and DS Bot problems show here, newest first.") }) : shown.map((entry, index) => (0, import_react47.createElement)(
+      shown.length === 0 ? (0, import_react47.createElement)(Row4, { label: t("No errors recorded."), hint: t("Failed model calls and DS Bot problems show here, newest first.") }) : shown.map((entry, index) => (0, import_react47.createElement)(
         "div",
         { key: `${entry.time}-${index}`, className: "bt-set-row bt-fb-entry", title: entry.text },
         (0, import_react47.createElement)("span", { className: "bt-fb-dot", "data-level": entry.level, "aria-hidden": true }),
@@ -24679,7 +24735,7 @@ function FeedbackPage({ actions, run: run2, Section, Row: Row3 }) {
         entry.code ? (0, import_react47.createElement)("span", { className: "bt-tag bt-fb-code" }, entry.status ? `${entry.code} ${entry.status}` : entry.code) : null
       )),
       (0, import_react47.createElement)(
-        Row3,
+        Row4,
         { label: t("Error log"), hint: t("Kept on this computer across restarts, up to about 1 MB.") },
         (0, import_react47.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: downloadLog }, t("Download")),
         (0, import_react47.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: clearLog, disabled: !report || total === 0 }, t("Clear"))
@@ -24788,7 +24844,7 @@ function dshHint(dsh, shown) {
   return t("Version {version}", { version: dsh.current });
 }
 var linkProps = (href) => ({ className: "bt-soft bt-soft-sm bt-about-link", href, target: "_blank", rel: "noopener noreferrer" });
-function AboutPage({ useUpdate, actions, run: run2, Section, Row: Row3 }) {
+function AboutPage({ useUpdate, actions, run: run2, Section, Row: Row4 }) {
   const update = useUpdate((value) => value) ?? {};
   const [checking, setChecking] = (0, import_react48.useState)(false);
   const [stars, setStars] = (0, import_react48.useState)(null);
@@ -24878,14 +24934,14 @@ function AboutPage({ useUpdate, actions, run: run2, Section, Row: Row3 }) {
     (0, import_react48.createElement)(
       Section,
       { key: "updates", title: t("Updates") },
-      (0, import_react48.createElement)(Row3, { label: "DS Bot", hint: ownRow?.hint ?? botHint(update) }, botControl, update.available && update.notesUrl ? (0, import_react48.createElement)("a", linkProps(update.notesUrl), t("What's new")) : null),
-      dsh?.current ? (0, import_react48.createElement)(Row3, { label: "DeepSeek Harness", hint: dshHint(dsh, dshShown) }, dshControl) : null
+      (0, import_react48.createElement)(Row4, { label: "DS Bot", hint: ownRow?.hint ?? botHint(update) }, botControl, update.available && update.notesUrl ? (0, import_react48.createElement)("a", linkProps(update.notesUrl), t("What's new")) : null),
+      dsh?.current ? (0, import_react48.createElement)(Row4, { label: "DeepSeek Harness", hint: dshHint(dsh, dshShown) }, dshControl) : null
     ),
     (0, import_react48.createElement)(
       Section,
       { key: "session", title: t("Session") },
       (0, import_react48.createElement)(
-        Row3,
+        Row4,
         { label: t("Export session log"), hint: t("A ZIP of this Session, written by the Shell") },
         (0, import_react48.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", disabled: !hasChat, onClick: exportLog }, t("Export"))
       )
@@ -24893,9 +24949,9 @@ function AboutPage({ useUpdate, actions, run: run2, Section, Row: Row3 }) {
     (0, import_react48.createElement)(
       Section,
       { key: "links", title: t("Links") },
-      repo ? (0, import_react48.createElement)(Row3, { label: t("Source code"), hint: repo.replace(/^https:\/\//, "") }, (0, import_react48.createElement)("a", linkProps(repo), (0, import_react48.createElement)(GitHubMark), t("Open"))) : null,
-      update.notesUrl ? (0, import_react48.createElement)(Row3, { label: t("Release notes") }, (0, import_react48.createElement)("a", linkProps(update.notesUrl), t("Open"))) : null,
-      (0, import_react48.createElement)(Row3, { label: t("Report a problem") }, (0, import_react48.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: () => actions.openSettings("feedback") }, t("Open")))
+      repo ? (0, import_react48.createElement)(Row4, { label: t("Source code"), hint: repo.replace(/^https:\/\//, "") }, (0, import_react48.createElement)("a", linkProps(repo), (0, import_react48.createElement)(GitHubMark), t("Open"))) : null,
+      update.notesUrl ? (0, import_react48.createElement)(Row4, { label: t("Release notes") }, (0, import_react48.createElement)("a", linkProps(update.notesUrl), t("Open"))) : null,
+      (0, import_react48.createElement)(Row4, { label: t("Report a problem") }, (0, import_react48.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: () => actions.openSettings("feedback") }, t("Open")))
     )
   ];
 }
@@ -25897,7 +25953,7 @@ function readPage(limits) {
     items.push(item);
     return { item, number: items.length, secret };
   };
-  const nameOf = (el, text2, secret) => collapse2(
+  const nameOf2 = (el, text2, secret) => collapse2(
     el.getAttribute("aria-label") || text2 || (el.localName === "input" && !secret && NO_VALUE_TYPES.has(el.type) ? el.value : "") || el.getAttribute("placeholder") || el.title || el.getAttribute("alt") || el.querySelector?.("img[alt]")?.alt || el.getAttribute("name") || ""
   ).slice(0, 80);
   const fenced = (code, lang) => {
@@ -26073,7 +26129,7 @@ ${body2 || "(no text)"}
     const found = itemFor(el, style);
     const mark = found ? `[#${found.number}]` : "";
     if (tag === "input" || tag === "textarea" || tag === "select") {
-      if (found) found.item.name = nameOf(el, tag === "select" ? "" : el.labels?.[0] ? collapse2(el.labels[0].textContent) : "", found.secret);
+      if (found) found.item.name = nameOf2(el, tag === "select" ? "" : el.labels?.[0] ? collapse2(el.labels[0].textContent) : "", found.secret);
       return mark ? ` ${mark} ` : "";
     }
     let body2;
@@ -26091,7 +26147,7 @@ ${body2 || "(no text)"}
     } else {
       body2 = children(el, { ...next, pre: keepsSpace });
     }
-    if (found) found.item.name = nameOf(el, oneLine(body2), found.secret);
+    if (found) found.item.name = nameOf2(el, oneLine(body2), found.secret);
     const level = /^h([1-6])$/.exec(tag)?.[1] || (el.getAttribute("role") === "heading" ? el.getAttribute("aria-level") || "2" : "");
     if (level) {
       const title = oneLine(body2);
@@ -27105,6 +27161,225 @@ function SkillsTab() {
   return (0, import_react54.createElement)("div", { className: "bt-market-skillhost", "data-bt-skills": "" }, (0, import_react54.createElement)(SkillMarketPanel));
 }
 
+// src/client/plugin-mcp.js
+var import_react55 = require("react");
+var nameOf = (id) => {
+  const tail = String(id ?? "").split("/").pop() ?? "";
+  const slug = tail.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+  return slug.slice(0, 32) || "mcp-server";
+};
+var shortCount = (value) => {
+  const n = Number(value ?? 0);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return String(n);
+};
+function Row3({ server, added, onOpen }) {
+  return (0, import_react55.createElement)(
+    "button",
+    { type: "button", className: "bt-mm-row", onClick: onOpen },
+    server.logo ? (0, import_react55.createElement)("img", { className: "bt-mm-logo", src: server.logo, alt: "", loading: "lazy" }) : (0, import_react55.createElement)("span", { className: "bt-mm-logo bt-mm-logo-empty", "aria-hidden": true }, server.name.slice(0, 1)),
+    (0, import_react55.createElement)(
+      "span",
+      { className: "bt-mm-main" },
+      (0, import_react55.createElement)(
+        "span",
+        { className: "bt-mm-title" },
+        (0, import_react55.createElement)("span", { className: "bt-mm-name" }, server.name),
+        server.hosted ? (0, import_react55.createElement)("span", { className: "bt-mm-tag" }, t("Hosted")) : null,
+        added ? (0, import_react55.createElement)("span", { className: "bt-mm-tag bt-mm-tag-on" }, t("Added")) : null
+      ),
+      (0, import_react55.createElement)("span", { className: "bt-mm-desc" }, server.description)
+    ),
+    (0, import_react55.createElement)(
+      "span",
+      { className: "bt-mm-end" },
+      server.installs ? (0, import_react55.createElement)("span", { className: "bt-mm-count" }, shortCount(server.installs)) : null,
+      (0, import_react55.createElement)("span", { className: "bt-mm-go", "aria-hidden": true }, "›")
+    )
+  );
+}
+function Detail({ actions, server, state, report, onClose, onAdded }) {
+  const [detail, setDetail] = (0, import_react55.useState)(null);
+  const [error, setError] = (0, import_react55.useState)("");
+  const [busy, setBusy] = (0, import_react55.useState)(false);
+  const [name, setName] = (0, import_react55.useState)(nameOf(server.id));
+  (0, import_react55.useEffect)(() => {
+    let live = true;
+    setName(nameOf(server.id));
+    setError("");
+    Promise.resolve(actions.mcpMarket?.({ kind: "detail", id: server.id })).then((next) => {
+      if (live) setDetail(next);
+    }, (failure) => {
+      if (live) setError(String(failure?.message ?? failure));
+    });
+    return () => {
+      live = false;
+    };
+  }, [actions, server.id]);
+  const url = detail?.urls?.[0]?.url ?? "";
+  const stdio = detail?.stdio ?? null;
+  const config = url ? { transport: "streamable-http", serverName: name, url } : stdio?.command ? { transport: "stdio", serverName: name, command: stdio.command, args: stdio.args } : null;
+  const install = () => {
+    if (config === null || busy) return;
+    setBusy(true);
+    setError("");
+    Promise.resolve(actions.mcpAdd?.({ config })).then((next) => {
+      setBusy(false);
+      onAdded(next, name);
+    }, (failure) => {
+      setBusy(false);
+      report(failure);
+    });
+  };
+  return (0, import_react55.createElement)(
+    "div",
+    { className: "bt-mm-detail" },
+    (0, import_react55.createElement)(
+      "div",
+      { className: "bt-mm-detail-head" },
+      server.logo ? (0, import_react55.createElement)("img", { className: "bt-mm-logo bt-mm-logo-lg", src: server.logo, alt: "", loading: "lazy" }) : null,
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-detail-title" },
+        (0, import_react55.createElement)("h3", null, server.name),
+        (0, import_react55.createElement)("p", null, server.publisher || server.id)
+      ),
+      (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-close", "aria-label": t("Close"), title: t("Close"), onClick: onClose }, (0, import_react55.createElement)(CloseIcon))
+    ),
+    (0, import_react55.createElement)("p", { className: "bt-mm-detail-desc" }, detail?.description || server.description),
+    error ? (0, import_react55.createElement)("p", { className: "bt-mm-error" }, error) : null,
+    detail === null && error === "" ? (0, import_react55.createElement)("p", { className: "bt-mm-note" }, t("Reading the server…")) : null,
+    config !== null ? (0, import_react55.createElement)(
+      "div",
+      { className: "bt-mm-card" },
+      (0, import_react55.createElement)("span", { className: "bt-mm-card-label" }, url ? t("Hosted endpoint") : t("Launch line")),
+      (0, import_react55.createElement)("code", { className: "bt-mm-code" }, url || `${stdio.command} ${stdio.args.join(" ")}`.trim()),
+      stdio?.env?.length ? (0, import_react55.createElement)("span", { className: "bt-mm-note" }, t("Needs {names} set in the profile", { names: stdio.env.join(", ") })) : null,
+      (0, import_react55.createElement)(
+        "label",
+        { className: "bt-mm-field" },
+        (0, import_react55.createElement)("span", null, t("Server name")),
+        (0, import_react55.createElement)("input", { value: name, onChange: (event) => setName(event.target.value), spellCheck: false })
+      )
+    ) : detail === null ? null : (0, import_react55.createElement)("p", { className: "bt-mm-note" }, t("This server has no connection this profile can use on its own.")),
+    detail?.readme ? (0, import_react55.createElement)("pre", { className: "bt-mm-readme" }, detail.readme) : null,
+    (0, import_react55.createElement)(
+      "div",
+      { className: "bt-mm-actions" },
+      (0, import_react55.createElement)("span", { className: "bt-mm-note" }, state ? t("Added as {name}", { name: state }) : ""),
+      (0, import_react55.createElement)("button", {
+        type: "button",
+        className: "bt-mm-add",
+        disabled: config === null || busy || name.trim() === "",
+        onClick: install
+      }, busy ? t("Adding…") : (0, import_react55.createElement)("span", null, (0, import_react55.createElement)(PlusIcon), t("Add to DSH")))
+    )
+  );
+}
+function McpMarketTab({ actions = {} }) {
+  const [query, setQuery] = (0, import_react55.useState)("");
+  const [sent, setSent] = (0, import_react55.useState)("");
+  const [page, setPage] = (0, import_react55.useState)(1);
+  const [list, setList] = (0, import_react55.useState)({ total: 0, servers: [] });
+  const [error, setError] = (0, import_react55.useState)("");
+  const [loading, setLoading] = (0, import_react55.useState)(false);
+  const [open, setOpen] = (0, import_react55.useState)(null);
+  const [added, setAdded] = (0, import_react55.useState)({});
+  const [installed, setInstalled] = (0, import_react55.useState)([]);
+  const timer = (0, import_react55.useRef)(null);
+  const report = (failure) => setError(String(failure?.message ?? failure));
+  (0, import_react55.useEffect)(() => {
+    let live = true;
+    Promise.resolve(actions.mcpList?.()).then((next) => {
+      if (!live) return;
+      setInstalled((next?.servers ?? []).map((server) => server.serverName));
+    }, () => {
+    });
+    return () => {
+      live = false;
+    };
+  }, [actions]);
+  (0, import_react55.useEffect)(() => {
+    if (timer.current !== null) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      setSent(query.trim());
+      setPage(1);
+    }, 320);
+    return () => {
+      if (timer.current !== null) clearTimeout(timer.current);
+    };
+  }, [query]);
+  (0, import_react55.useEffect)(() => {
+    let live = true;
+    setLoading(true);
+    setError("");
+    Promise.resolve(actions.mcpMarket?.({ kind: "search", query: sent, page })).then((next) => {
+      if (!live) return;
+      setLoading(false);
+      setList((now) => page === 1 ? { total: next?.total ?? 0, servers: next?.servers ?? [] } : { total: next?.total ?? now.total, servers: [...now.servers, ...next?.servers ?? []] });
+    }, (failure) => {
+      if (live) {
+        setLoading(false);
+        report(failure);
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [actions, sent, page]);
+  const names = (0, import_react55.useMemo)(() => new Set(installed), [installed]);
+  const more = list.servers.length < list.total;
+  return (0, import_react55.createElement)(
+    "div",
+    { className: "bt-mm" },
+    (0, import_react55.createElement)(
+      "div",
+      { className: "bt-mm-head" },
+      (0, import_react55.createElement)(
+        "label",
+        { className: "bt-mm-search" },
+        (0, import_react55.createElement)(SearchIcon),
+        (0, import_react55.createElement)("input", {
+          value: query,
+          placeholder: t("Search MCP servers"),
+          "aria-label": t("Search MCP servers"),
+          onChange: (event) => setQuery(event.target.value)
+        })
+      ),
+      (0, import_react55.createElement)("span", { className: "bt-mm-total" }, loading && list.servers.length === 0 ? t("Reading…") : t("{count} servers", { count: list.total.toLocaleString() }))
+    ),
+    error ? (0, import_react55.createElement)("p", { className: "bt-mm-error" }, error) : null,
+    open === null ? [
+      (0, import_react55.createElement)("div", { className: "bt-mm-list", key: "list" }, list.servers.map((server) => (0, import_react55.createElement)(Row3, {
+        key: server.id,
+        server,
+        added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
+        onOpen: () => setOpen(server)
+      }))),
+      more ? (0, import_react55.createElement)(
+        "button",
+        { type: "button", className: "bt-mm-more", key: "more", disabled: loading, onClick: () => setPage(page + 1) },
+        loading ? t("Reading…") : t("Show more")
+      ) : null,
+      !loading && list.servers.length === 0 && error === "" ? (0, import_react55.createElement)("p", { className: "bt-mm-note", key: "empty" }, t("No MCP server matches that search.")) : null
+    ] : (0, import_react55.createElement)(Detail, {
+      key: open.id,
+      actions,
+      server: open,
+      state: added[open.id] ?? null,
+      report,
+      onClose: () => setOpen(null),
+      onAdded: (next, serverName) => {
+        setAdded((now) => ({ ...now, [open.id]: serverName }));
+        setInstalled((next?.servers ?? []).map((server) => server.serverName));
+        setOpen(null);
+      }
+    })
+  );
+}
+
 // src/client/mode-row.js
 function bandHost(document2) {
   try {
@@ -27171,7 +27446,7 @@ function createSwitchWindow(settle) {
 }
 
 // src/client/user-message.js
-var import_react55 = require("react");
+var import_react56 = require("react");
 var ui = __toESM(require("@deepseek-ai/dsh-client-ui-primitives"), 1);
 var canDrawUserMessages = () => typeof ui.projectUserText === "function";
 function contentParts(content) {
@@ -27203,38 +27478,38 @@ function userTextParts(text, bots, referenceLabels = []) {
   return parts;
 }
 function UserText({ text, bots, referenceLabels, skillNames, references, actions }) {
-  return userTextParts(text, bots, referenceLabels).map((part, index) => part.bot ? (0, import_react55.createElement)(
+  return userTextParts(text, bots, referenceLabels).map((part, index) => part.bot ? (0, import_react56.createElement)(
     "button",
     { key: index, type: "button", className: "bt-umention", title: `@${part.bot.name}`, onClick: () => actions.openSession(part.bot.id) },
-    (0, import_react55.createElement)(BotMark, { bot: part.bot, size: 16 }),
+    (0, import_react56.createElement)(BotMark, { bot: part.bot, size: 16 }),
     part.label
-  ) : (0, import_react55.createElement)(import_react55.Fragment, { key: index }, ui.projectUserText(part.text, referenceLabels, skillNames, "skill", references)));
+  ) : (0, import_react56.createElement)(import_react56.Fragment, { key: index }, ui.projectUserText(part.text, referenceLabels, skillNames, "skill", references)));
 }
 function Attachments({ attachments, renderMessageImages }) {
   const compact3 = attachments.length > 1;
-  return (0, import_react55.createElement)("div", { className: "bt-uattach" }, attachments.map((block, index) => {
+  return (0, import_react56.createElement)("div", { className: "bt-uattach" }, attachments.map((block, index) => {
     if (block.type === "image") {
-      return renderMessageImages ? (0, import_react55.createElement)(import_react55.Fragment, { key: index }, renderMessageImages({ images: [{ attachment: block.attachment }], align: "end", compact: compact3 })) : null;
+      return renderMessageImages ? (0, import_react56.createElement)(import_react56.Fragment, { key: index }, renderMessageImages({ images: [{ attachment: block.attachment }], align: "end", compact: compact3 })) : null;
     }
     const file = block.attachment;
     const meta = [ui.fileExtension?.(file.name)?.toUpperCase().slice(0, 8), ui.fileSizeText?.(file.bytes)].filter(Boolean).join(" · ");
-    return (0, import_react55.createElement)(
+    return (0, import_react56.createElement)(
       "span",
       { key: index, className: "bt-ufile", title: file.name },
-      ui.FileTypeIcon ? (0, import_react55.createElement)(ui.FileTypeIcon, { path: file.name, className: "bt-ufile-icon" }) : null,
-      (0, import_react55.createElement)("span", { className: "bt-ufile-text" }, (0, import_react55.createElement)("span", { className: "bt-ufile-name" }, file.name), meta ? (0, import_react55.createElement)("span", { className: "bt-ufile-meta" }, meta) : null)
+      ui.FileTypeIcon ? (0, import_react56.createElement)(ui.FileTypeIcon, { path: file.name, className: "bt-ufile-icon" }) : null,
+      (0, import_react56.createElement)("span", { className: "bt-ufile-text" }, (0, import_react56.createElement)("span", { className: "bt-ufile-name" }, file.name), meta ? (0, import_react56.createElement)("span", { className: "bt-ufile-meta" }, meta) : null)
     );
   }));
 }
 function CopyButton({ text }) {
-  const [copied, setCopied] = (0, import_react55.useState)(false);
+  const [copied, setCopied] = (0, import_react56.useState)(false);
   const copy2 = () => {
     void navigator.clipboard?.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1e3);
     });
   };
-  return (0, import_react55.createElement)("button", { type: "button", className: "bt-tool", "aria-label": copied ? t("Copied") : t("Copy"), title: copied ? t("Copied") : t("Copy"), onClick: copy2 }, copied ? (0, import_react55.createElement)(CheckIcon) : (0, import_react55.createElement)(CopyIcon));
+  return (0, import_react56.createElement)("button", { type: "button", className: "bt-tool", "aria-label": copied ? t("Copied") : t("Copy"), title: copied ? t("Copied") : t("Copy"), onClick: copy2 }, copied ? (0, import_react56.createElement)(CheckIcon) : (0, import_react56.createElement)(CopyIcon));
 }
 var clock3 = (time) => typeof time === "number" ? new Date(time).toLocaleTimeString(dateLocale(), { hour: "numeric", minute: "2-digit" }) : void 0;
 function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageImages, openFile, openSkill }) {
@@ -27246,10 +27521,10 @@ function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageIma
   const steering = node.kind === "steering";
   const groupTime = roster.roomsById?.[sessionId] && Number.isFinite(data.time) ? messageClock(data.time) : void 0;
   const { shown, folded, control } = useFold(text, { markdown: false });
-  const body = (0, import_react55.createElement)(UserText, { text: shown, bots: mentionableBots(roster, sessionId), referenceLabels, skillNames: data.skillNames ?? [], references, actions });
-  const row = (0, import_react55.useRef)(null);
-  const [toolsOpen, setToolsOpen] = (0, import_react55.useState)(false);
-  (0, import_react55.useEffect)(() => {
+  const body = (0, import_react56.createElement)(UserText, { text: shown, bots: mentionableBots(roster, sessionId), referenceLabels, skillNames: data.skillNames ?? [], references, actions });
+  const row = (0, import_react56.useRef)(null);
+  const [toolsOpen, setToolsOpen] = (0, import_react56.useState)(false);
+  (0, import_react56.useEffect)(() => {
     if (!toolsOpen) return void 0;
     const onDown = (event) => {
       if (!row.current?.contains(event.target)) setToolsOpen(false);
@@ -27265,24 +27540,24 @@ function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageIma
     if (!noHover() || event.target instanceof Element && event.target.closest("a,button,input,textarea,select,pre,code,[role=button],[role=link]")) return;
     setToolsOpen((value) => !value);
   };
-  return (0, import_react55.createElement)(
+  return (0, import_react56.createElement)(
     "div",
     { ref: row, className: "bt-umsg", "data-steering": steering || void 0 },
-    (0, import_react55.createElement)(
+    (0, import_react56.createElement)(
       "div",
       { className: "bt-ustack" },
-      attachments.length > 0 ? (0, import_react55.createElement)(Attachments, { attachments, renderMessageImages }) : null,
-      text !== "" || rest.length > 0 ? (0, import_react55.createElement)(
+      attachments.length > 0 ? (0, import_react56.createElement)(Attachments, { attachments, renderMessageImages }) : null,
+      text !== "" || rest.length > 0 ? (0, import_react56.createElement)(
         "div",
         { className: "bt-ubody", title: clock3(data.time), "data-folded": folded || void 0, onClick: tapTools },
-        control ? (0, import_react55.createElement)("div", { className: "bt-fold-body" }, body) : body,
+        control ? (0, import_react56.createElement)("div", { className: "bt-fold-body" }, body) : body,
         control,
-        rest.map((block, index) => ui.JsonBlock ? (0, import_react55.createElement)(ui.JsonBlock, { key: index, label: t("Content"), payload: block }) : null)
+        rest.map((block, index) => ui.JsonBlock ? (0, import_react56.createElement)(ui.JsonBlock, { key: index, label: t("Content"), payload: block }) : null)
       ) : null,
-      referenceLabels.length > 0 ? (0, import_react55.createElement)("div", { className: "bt-urefs" }, t("Referenced {labels}", { labels: referenceLabels.join(t(", ")) })) : null,
-      groupTime ? (0, import_react55.createElement)("div", { className: "bt-utime", title: clockLabel(data.time) }, groupTime) : null
+      referenceLabels.length > 0 ? (0, import_react56.createElement)("div", { className: "bt-urefs" }, t("Referenced {labels}", { labels: referenceLabels.join(t(", ")) })) : null,
+      groupTime ? (0, import_react56.createElement)("div", { className: "bt-utime", title: clockLabel(data.time) }, groupTime) : null
     ),
-    text === "" ? null : (0, import_react55.createElement)("div", { className: "bt-utools", "data-open": toolsOpen || void 0 }, (0, import_react55.createElement)(CopyButton, { text }))
+    text === "" ? null : (0, import_react56.createElement)("div", { className: "bt-utools", "data-open": toolsOpen || void 0 }, (0, import_react56.createElement)(CopyButton, { text }))
   );
 }
 var USER_MESSAGE_CSS = `
@@ -28340,7 +28615,8 @@ function apply(ctx) {
     () => shadow("shell.overlay", { id: "bot-toast", order: 60, inject: face }, ErrorToast),
     // The shell's Plugins page grows its own tabs through this slot; skills come from the
     // market panel we already ship, so the page shows them beside Installed.
-    () => shadow("plugins.tab", { id: "skills", order: 20, label: () => t("Skills") }, SkillsTab)
+    () => shadow("plugins.tab", { id: "skills", order: 20, label: () => t("Skills") }, SkillsTab),
+    () => shadow("plugins.tab", { id: "mcp", order: 30, label: () => t("MCP"), inject: face }, McpMarketTab)
   ];
   const installConversation = () => [
     () => installCompiledStyles(CONVERSATION_CSS, "conversation"),

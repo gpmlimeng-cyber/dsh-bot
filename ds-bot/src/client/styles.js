@@ -267,6 +267,47 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    panel's clipping stops the drawer but not its shadow, which painted a grey band down the
    inside of that edge; the drawer only paints a shadow while it is open. */
 [data-bt-skills] .sm-inspector:not(.open){box-shadow:none}
+/* The MCP tab: the ModelScope plaza as plain rows at the page's own measure, with one
+   server's connection details behind a row. */
+.bt-mm{display:flex;flex-direction:column;gap:12px;max-width:960px;padding-bottom:32px}
+.bt-mm-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bt-mm-search{display:flex;align-items:center;gap:8px;flex:1 1 auto;max-width:420px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
+.bt-mm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
+.bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
+.bt-mm-list{display:flex;flex-direction:column}
+.bt-mm-row{display:flex;align-items:flex-start;gap:12px;width:100%;padding:12px 8px;border:0;border-radius:12px;background:none;text-align:left;color:var(--bt-ink);font:inherit;cursor:pointer}
+.bt-mm-row:hover{background:var(--bt-hover)}
+.bt-mm-logo{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
+.bt-mm-logo-lg{width:48px;height:48px;border-radius:12px}
+.bt-mm-logo-empty{display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;background:var(--bt-hover);color:var(--bt-ink-2)}
+.bt-mm-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 auto}
+.bt-mm-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.bt-mm-name{font-size:14px;font-weight:600}
+.bt-mm-tag{font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3)}
+.bt-mm-tag-on{color:var(--bt-accent)}
+.bt-mm-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:19px;color:var(--bt-ink-2)}
+.bt-mm-end{display:flex;align-items:center;gap:8px;flex:none;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-more{align-self:center;height:32px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
+.bt-mm-note{margin:0;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-error{margin:0;font-size:13px;color:#c0392b}
+.bt-mm-detail{display:flex;flex-direction:column;gap:14px;max-width:820px}
+.bt-mm-detail-head{display:flex;align-items:center;gap:12px}
+.bt-mm-detail-title{flex:1 1 auto;min-width:0}
+.bt-mm-detail-title h3{margin:0;font-size:17px;font-weight:600}
+.bt-mm-detail-title p{margin:2px 0 0;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-close{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
+.bt-mm-close:hover{background:var(--bt-hover)}
+.bt-mm-detail-desc{margin:0;font-size:13.5px;line-height:21px;color:var(--bt-ink-2)}
+.bt-mm-card{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
+.bt-mm-card-label{font-size:12px;color:var(--bt-ink-3)}
+.bt-mm-code{font-family:var(--bt-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:12.5px;line-height:18px;color:var(--bt-ink);word-break:break-all}
+.bt-mm-field{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--bt-ink-2)}
+.bt-mm-field input{flex:1 1 auto;min-width:0;height:32px;padding:0 10px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:13px;color:var(--bt-ink);outline:none}
+.bt-mm-readme{margin:0;max-height:320px;overflow:auto;padding:12px 14px;border-radius:12px;background:var(--bt-hover);font-family:var(--bt-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:12.5px;line-height:19px;white-space:pre-wrap;color:var(--bt-ink-2)}
+.bt-mm-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+.bt-mm-add{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 16px;border:0;border-radius:999px;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.bt-mm-add:disabled{opacity:.5;cursor:default}
+.bt-mm-add svg{width:15px;height:15px}
 .bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 .bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
 .bt-market-heading{min-width:0}

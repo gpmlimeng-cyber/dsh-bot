@@ -23,6 +23,10 @@ const SERVER_NAME = /^[A-Za-z0-9_-]{1,32}$/
 const ID_PREFIX = 'mcp-'
 const RECHECK_MS = 1200
 const SCHEMA_TEXT_MAX = 4000
+// The ModelScope plaza answers one page of twenty rows; the panel asks for a page at a time.
+const MARKET_PAGE_SIZE = 20
+const MARKET_README_MAX = 4000
+const MARKET_TIMEOUT_MS = 15000
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -238,6 +242,63 @@ export function install(rt) {
       const lines = [...cut.lines.slice(0, cut.start), ...cut.lines.slice(cut.end)]
       await writePatch(path, lines.join('\n'), async () => !(await servers()).servers.some(item => item.serverName === serverName))
       return servers()
+    },
+    // The ModelScope MCP plaza, read through its own open API. Search lists the catalogue
+    // (PUT on the collection, the only verb it answers), and one server's detail carries
+    // what a client needs to connect: either a hosted endpoint under the user's account
+    // or a stdio launch line to run locally.
+    async 'mcp-market'(body) {
+      const base = 'https://modelscope.cn/openapi/v1/mcp/servers'
+      const timeout = AbortSignal.timeout(MARKET_TIMEOUT_MS)
+      if (body.kind === 'detail') {
+        const id = String(body.id ?? '')
+        if (!/^@?[\w.-]+\/[\w.-]+$/.test(id)) throw fail('Unknown MCP server id')
+        const answer = await fetch(`${base}/${id.split('/').map(encodeURIComponent).join('/')}`, { headers: { accept: 'application/json' }, signal: timeout })
+        if (!answer.ok) throw fail(`ModelScope answered ${answer.status}`, 'bot/upstream')
+        const data = (await answer.json())?.data ?? {}
+        const readme = String(data.readme ?? '')
+        const hosted = (Array.isArray(data.operational_urls) ? data.operational_urls : [])
+          .map(entry => ({ type: String(entry?.url ?? '').split('/').pop() ?? '', url: String(entry?.url ?? '') }))
+          .filter(entry => /^https?:\/\//.test(entry.url))
+        const groups = data.server_config?.[0]?.mcpServers
+        const first = groups !== null && typeof groups === 'object' ? Object.entries(groups)[0] : null
+        const stdio = first === null || first === undefined ? null : {
+          name: String(first[0]),
+          command: String(first[1]?.command ?? ''),
+          args: Array.isArray(first[1]?.args) ? first[1].args.map(String) : [],
+          env: Object.keys(first[1]?.env ?? {}).map(String),
+        }
+        return {
+          id: String(data.id ?? id),
+          name: String(data.name || data.chinese_name || id),
+          description: String(data.description ?? ''),
+          readme: readme.length > MARKET_README_MAX ? `${readme.slice(0, MARKET_README_MAX)}\n…` : readme,
+          urls: hosted,
+          stdio,
+        }
+      }
+      const page = Math.max(1, Math.min(10, Number(body.page ?? 1) || 1))
+      const answer = await fetch(base, {
+        method: 'PUT',
+        headers: { accept: 'application/json', 'content-type': 'application/json' },
+        body: JSON.stringify({ page_number: page, page_size: MARKET_PAGE_SIZE, search: String(body.query ?? '') }),
+        signal: timeout,
+      })
+      if (!answer.ok) throw fail(`ModelScope answered ${answer.status}`, 'bot/upstream')
+      const data = (await answer.json())?.data ?? {}
+      const rows = Array.isArray(data.mcp_server_list) ? data.mcp_server_list : []
+      return {
+        total: Number(data.total_count ?? rows.length),
+        servers: rows.map(row => ({
+          id: String(row.id ?? ''),
+          name: String(row.name || row.chinese_name || row.id || ''),
+          publisher: String(row.publisher ?? ''),
+          description: String(row.description ?? ''),
+          logo: String(row.logo_url ?? ''),
+          hosted: row.is_hosted === true,
+          installs: Number(row.view_count ?? 0),
+        })).filter(row => row.id !== ''),
+      }
     },
     // A schema has no size limit, a chat message does; the panel shows a summary, so the
     // text is cut here rather than shipped whole.
