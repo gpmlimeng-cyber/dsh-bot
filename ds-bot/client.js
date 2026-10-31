@@ -16185,7 +16185,7 @@ function TeamSidebar(props) {
     panel: uiNow.details ? { view: uiNow.view, yielded: uiNow.panelYield === true } : null
   });
   const [drag, setDrag] = (0, import_react20.useState)(null);
-  const mode = drag?.left ?? layout.left;
+  const mode = drag?.left === "hidden" ? "rail" : drag?.left ?? (layout.left === "hidden" ? "rail" : layout.left);
   const wideContent = mode !== "rail";
   const updated = useSessions((list) => {
     const stamps = {};

@@ -331,7 +331,9 @@ export function TeamSidebar(props) {
   })
   // A drag of the column's edge shows where it would land, live.
   const [drag, setDrag] = useState(null)
-  const mode = drag?.left ?? layout.left
+  // The narrowest the column may get is the rail: a fully hidden column leaves a window with
+  // nothing in it and no visible way back, and the rail is already narrow enough for that.
+  const mode = drag?.left === 'hidden' ? 'rail' : drag?.left ?? (layout.left === 'hidden' ? 'rail' : layout.left)
   const wideContent = mode !== 'rail'
   const updated = useSessions(list => {
     const stamps = {}
