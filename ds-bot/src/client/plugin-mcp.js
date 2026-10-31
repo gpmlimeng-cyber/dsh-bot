@@ -25,20 +25,30 @@ const shortCount = (value) => {
   return String(n)
 }
 
+// A catalogue card, drawn the way the shell's own plugin market draws one: the logo, then
+// the name with its badges, what it does, and the facts beside an install control.
 function Row({ server, added, onOpen }) {
-  return h('button', { type: 'button', className: 'bt-mm-row', onClick: onOpen },
+  return h('div', { className: 'bt-mm-plug' + (added ? ' is-added' : '') },
+    h('button', { type: 'button', className: 'bt-mm-plugopen', 'aria-label': server.name, onClick: onOpen }),
     server.logo
       ? h('img', { className: 'bt-mm-logo', src: server.logo, alt: '', loading: 'lazy' })
       : h('span', { className: 'bt-mm-logo bt-mm-logo-empty', 'aria-hidden': true }, server.name.slice(0, 1)),
-    h('span', { className: 'bt-mm-main' },
-      h('span', { className: 'bt-mm-title' },
+    h('div', { className: 'bt-mm-main' },
+      h('div', { className: 'bt-mm-title' },
         h('span', { className: 'bt-mm-name' }, server.name),
         server.hosted ? h('span', { className: 'bt-mm-tag' }, t('Hosted')) : null,
         added ? h('span', { className: 'bt-mm-tag bt-mm-tag-on' }, t('Added')) : null),
-      h('span', { className: 'bt-mm-desc' }, server.description)),
-    h('span', { className: 'bt-mm-end' },
-      server.installs ? h('span', { className: 'bt-mm-count' }, shortCount(server.installs)) : null,
-      h('span', { className: 'bt-mm-go', 'aria-hidden': true }, '›')))
+      h('div', { className: 'bt-mm-meta' },
+        server.installs ? h('span', { className: 'bt-mm-count' }, `↓ ${shortCount(server.installs)}`) : null,
+        server.publisher ? h('span', { className: 'bt-mm-pub' }, server.publisher) : null),
+      h('p', { className: 'bt-mm-desc' }, server.description)),
+    h('div', { className: 'bt-mm-end' },
+      h('button', {
+        type: 'button',
+        className: 'bt-mm-install',
+        'data-added': added ? '' : undefined,
+        onClick: onOpen,
+      }, added ? t('Installed') : t('Install'))))
 }
 
 // One server: what it is, and how this profile would connect to it — a hosted endpoint

@@ -2873,9 +2873,13 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-search{display:flex;align-items:center;gap:8px;flex:1 1 auto;max-width:420px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
 .bt-mm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
 .bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
-.bt-mm-list{display:flex;flex-direction:column}
-.bt-mm-row{display:flex;align-items:flex-start;gap:12px;width:100%;padding:12px 8px;border:0;border-radius:12px;background:none;text-align:left;color:var(--bt-ink);font:inherit;cursor:pointer}
-.bt-mm-row:hover{background:var(--bt-hover)}
+.bt-mm-list{display:flex;flex-direction:column;gap:8px}
+/* Catalogue cards, the shape the shell's plugin market uses: a bordered card whose whole
+   face opens the entry, with the install control at the right end. */
+.bt-mm-plug{position:relative;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;box-shadow:inset 0 0 0 .5px var(--bt-line-2);background:var(--bt-main,transparent);transition:box-shadow .14s ease}
+.bt-mm-plug:hover{box-shadow:inset 0 0 0 .5px var(--bt-line-2),0 4px 14px -6px rgba(0,0,0,.16)}
+.bt-mm-plugopen{position:absolute;inset:0;border:0;background:none;cursor:pointer;border-radius:14px}
+.bt-mm-plugopen:focus-visible{outline:2px solid var(--bt-accent);outline-offset:2px}
 .bt-mm-section{display:flex;flex-direction:column;gap:6px}
 .bt-mm-h{margin:0;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--bt-ink-3);text-transform:none}
 .bt-mm-installed{display:flex;flex-direction:column;box-shadow:inset 0 0 0 .5px var(--bt-line-2);border-radius:12px;padding:4px}
@@ -2889,16 +2893,20 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-switch[data-on]{color:var(--bt-accent)}
 .bt-mm-switch svg,.bt-mm-remove svg{width:16px;height:16px}
 .bt-mm-switch:disabled,.bt-mm-remove:disabled{opacity:.5;cursor:default}
-.bt-mm-logo{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
-.bt-mm-logo-lg{width:48px;height:48px;border-radius:12px}
-.bt-mm-logo-empty{display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;background:var(--bt-hover);color:var(--bt-ink-2)}
-.bt-mm-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 auto}
+.bt-mm-logo{position:relative;width:48px;height:48px;border-radius:12px;object-fit:cover;flex:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
+.bt-mm-logo-lg{width:56px;height:56px;border-radius:14px}
+.bt-mm-logo-empty{display:inline-flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;background:var(--bt-hover);color:var(--bt-ink-2)}
+.bt-mm-main{position:relative;display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 auto;pointer-events:none}
 .bt-mm-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .bt-mm-name{font-size:14px;font-weight:600}
 .bt-mm-tag{font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3)}
 .bt-mm-tag-on{color:var(--bt-accent)}
-.bt-mm-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:19px;color:var(--bt-ink-2)}
-.bt-mm-end{display:flex;align-items:center;gap:8px;flex:none;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--bt-ink-3)}
+.bt-mm-desc{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:2px 0 0;font-size:13px;line-height:19px;color:var(--bt-ink-2)}
+.bt-mm-end{position:relative;display:flex;align-items:center;gap:8px;flex:none}
+.bt-mm-install{height:30px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.bt-mm-install:hover{background:color-mix(in srgb,var(--bt-ink) 12%,transparent)}
+.bt-mm-install[data-added]{background:none;color:var(--bt-ink-3);font-weight:500;cursor:default;padding:0 6px}
 .bt-mm-more{align-self:center;height:32px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
 .bt-mm-note{margin:0;font-size:12.5px;color:var(--bt-ink-3)}
 .bt-mm-error{margin:0;font-size:13px;color:#c0392b}
@@ -27213,26 +27221,37 @@ var shortCount = (value) => {
 };
 function Row3({ server, added, onOpen }) {
   return (0, import_react55.createElement)(
-    "button",
-    { type: "button", className: "bt-mm-row", onClick: onOpen },
+    "div",
+    { className: "bt-mm-plug" + (added ? " is-added" : "") },
+    (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-plugopen", "aria-label": server.name, onClick: onOpen }),
     server.logo ? (0, import_react55.createElement)("img", { className: "bt-mm-logo", src: server.logo, alt: "", loading: "lazy" }) : (0, import_react55.createElement)("span", { className: "bt-mm-logo bt-mm-logo-empty", "aria-hidden": true }, server.name.slice(0, 1)),
     (0, import_react55.createElement)(
-      "span",
+      "div",
       { className: "bt-mm-main" },
       (0, import_react55.createElement)(
-        "span",
+        "div",
         { className: "bt-mm-title" },
         (0, import_react55.createElement)("span", { className: "bt-mm-name" }, server.name),
         server.hosted ? (0, import_react55.createElement)("span", { className: "bt-mm-tag" }, t("Hosted")) : null,
         added ? (0, import_react55.createElement)("span", { className: "bt-mm-tag bt-mm-tag-on" }, t("Added")) : null
       ),
-      (0, import_react55.createElement)("span", { className: "bt-mm-desc" }, server.description)
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-meta" },
+        server.installs ? (0, import_react55.createElement)("span", { className: "bt-mm-count" }, `↓ ${shortCount(server.installs)}`) : null,
+        server.publisher ? (0, import_react55.createElement)("span", { className: "bt-mm-pub" }, server.publisher) : null
+      ),
+      (0, import_react55.createElement)("p", { className: "bt-mm-desc" }, server.description)
     ),
     (0, import_react55.createElement)(
-      "span",
+      "div",
       { className: "bt-mm-end" },
-      server.installs ? (0, import_react55.createElement)("span", { className: "bt-mm-count" }, shortCount(server.installs)) : null,
-      (0, import_react55.createElement)("span", { className: "bt-mm-go", "aria-hidden": true }, "›")
+      (0, import_react55.createElement)("button", {
+        type: "button",
+        className: "bt-mm-install",
+        "data-added": added ? "" : void 0,
+        onClick: onOpen
+      }, added ? t("Installed") : t("Install"))
     )
   );
 }
