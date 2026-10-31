@@ -168,5 +168,5 @@ export const SKIN_CHOICES = { ours: { label: 'Ours' }, app: { label: 'App' } }
 export const skinOf = (prefs, { phone = false } = {}) => (SKIN_CHOICES[prefs?.skin] ? prefs.skin : phone ? 'app' : 'ours')
 export const layoutOf = prefs => (prefs?.layout === 'flat' ? 'flat' : 'bubble')
 export const thinkingShown = prefs => prefs?.thinking === true
-export const widthOf = prefs => percent(prefs?.width, 80)
+export const widthOf = prefs => percent(prefs?.width, 90)
 export const flatWidthOf = prefs => percent(prefs?.flatWidth, 100)

@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { runInNewContext } from 'node:vm'
 import { build } from 'esbuild'
-import { SKIN_CHOICES, skinOf } from '../src/client/themes.js'
+import { SKIN_CHOICES, skinOf, widthOf } from '../src/client/themes.js'
 
 const bundle = readFileSync(new URL('../client.js', import.meta.url), 'utf8')
 
@@ -39,6 +39,18 @@ test('every skin rule is scoped to the phone', () => {
   }
 })
 
+// The width setting has to keep working on the phone: the same percentage of the column,
+// on both the Bot's bubbles and the user's own, which the host draws.
+test('the phone skin reads the width setting on both sides', () => {
+  // The setting's own default is 90% of the column; a pick is honoured as it is.
+  assert.equal(widthOf({}), 90)
+  assert.equal(widthOf({ width: 50 }), 50)
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg,[^{]*\{max-width:calc\(var\(--bt-msg-w\) \* 100%\)\}/)
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{[^}]*max-width:calc\(var\(--bt-msg-w\) \* 100%\)!important\}/)
+  // Nothing pins the skin back to a full-width bubble.
+  assert.ok(!bundle.includes('--bt-app-msg-max'), 'the skin still carries its own width token')
+})
+
 test('the phone skin carries the app’s own bubble metrics', () => {
   const rule = /:not\(\[data-bt-skin=ours\]\) body:not\(\[data-bt-layout=flat\]\) \.bt-bubble\{([^}]*)\}/.exec(bundle)
   assert.ok(rule !== null, 'no bubble rule for the skin')
@@ -48,7 +60,6 @@ test('the phone skin carries the app’s own bubble metrics', () => {
   assert.match(body, /line-height:1\.625/)
   assert.match(bundle, /--bt-app-radius-bubble:30px/)
   assert.match(bundle, /--bt-app-pad:12px 16px/)
-  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg,[^{]*\{max-width:var\(--bt-app-msg-max\)\}/)
   // Neighbouring bubbles use the radius minus the padding step, not a hand-written 9px.
   assert.match(bundle, /border-start-start-radius:var\(--bt-app-radius-bubble-inset\)/)
   assert.match(bundle, /--bt-app-radius-bubble-inset:calc\(var\(--bt-app-radius-bubble\) - 12px - 1px\)/)
