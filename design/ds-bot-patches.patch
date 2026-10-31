@@ -742,7 +742,7 @@ index eee56758..df5ba78f 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index 31f66057..686911f4 100644
+index 31f66057..ff94d074 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -751,7 +751,7 @@ index 31f66057..686911f4 100644
  import { teamActions } from './team-actions.js'
 -import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
 +import { dismissDrawerIfOpen } from './drawer-dismiss.js'
-+import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, skinOf, SIZE_CHOICES } from './themes.js'
++import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, skinOf, SKIN_CHOICES, SIZE_CHOICES } from './themes.js'
  import { MENTION_ORIGIN, currentPart } from './text.js'
  import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
  import { lookOf } from './mark.js'
@@ -775,19 +775,21 @@ index 31f66057..686911f4 100644
    const writeUnread = (id, value) => {
      const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
      ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
-@@ -326,23 +332,40 @@ export function apply(ctx) {
+@@ -326,23 +332,42 @@ export function apply(ctx) {
        const layout = layoutOf(prefs)
        const width = widthOf(prefs)
        const flatWidth = flatWidthOf(prefs)
 +      const font = fontOf(prefs.font ? prefs : savedPrefs)
 +      const size = sizeOf(prefs.size ? prefs : savedPrefs)
 +      const density = densityOf(prefs.density ? prefs : savedPrefs)
-+      // The skin is this device's own pick, so it never comes from the host's prefs.
-+      const skin = skinOf(savedPrefs)
++      // The skin is this device's own pick, so it never comes from the host's prefs. Until
++      // there is one, the attribute stays off and the CSS gives the phone the app's shape:
++      // the drawer can mount after this runs, and the default still follows it.
++      const skin = SKIN_CHOICES[savedPrefs.skin] ? savedPrefs.skin : null
        document.body.dataset.btMotion = motion
 +      document.body.dataset.btFont = font
 +      document.body.dataset.btDensity = density
-+      if (skin === 'ours') delete document.documentElement.dataset.btSkin
++      if (skin === null) delete document.documentElement.dataset.btSkin
 +      else document.documentElement.dataset.btSkin = skin
 +      if (size === 'm') delete document.body.dataset.btSize
 +      else document.body.dataset.btSize = size
@@ -800,7 +802,7 @@ index 31f66057..686911f4 100644
        document.body.style.setProperty('--bt-msg-w', String(width / 100))
        document.body.style.setProperty('--bt-flat-w', String(flatWidth / 100))
 -      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${registry.getSnapshot()}`
-+      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${skin}|${registry.getSnapshot()}`
++      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${skin ?? 'auto'}|${registry.getSnapshot()}`
        if (next === key) return
        key = next
 -      style.textContent = themeCss(themes[id], accent)
@@ -819,7 +821,7 @@ index 31f66057..686911f4 100644
      const offRegistry = registry.subscribe(render)
      return () => {
        offRoster()
-@@ -352,6 +375,7 @@ export function apply(ctx) {
+@@ -352,6 +377,7 @@ export function apply(ctx) {
        } finally {
          delete document.body.dataset.btMotion
          delete document.body.dataset.btLayout
@@ -827,7 +829,7 @@ index 31f66057..686911f4 100644
          document.body.style.removeProperty('--bt-msg-w')
          document.body.style.removeProperty('--bt-flat-w')
          style.remove()
-@@ -497,8 +521,149 @@ export function apply(ctx) {
+@@ -497,8 +523,150 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
@@ -949,8 +951,9 @@ index 31f66057..686911f4 100644
 +    },
 +    // The font picker shows what this device already uses, not what the host last answered.
 +    fontPref: () => fontOf(savedPrefs),
-+    // Same for the skin, which the host never hears about: the row must show this device's pick.
-+    skinPref: () => skinOf(savedPrefs),
++    // Same for the skin, which the host never hears about: the row must show this device's pick,
++    // and with none the phone still wears the app's shape.
++    skinPref: () => skinOf(savedPrefs, { phone: document.querySelector('[data-mobile-nav="frame"]') !== null }),
 +    // A bundle is the unit the enabled list shows, so its switch is the bundle switch the
 +    // shell's own Plugins page offers; the identity is the package name.
 +    setBundleEnabled: async (name, enabled) => {
@@ -978,7 +981,7 @@ index 31f66057..686911f4 100644
      // The left column's own preference: 'open', 'rail' or 'hidden'. The switch
      // remembers the shown one it hid; a drag sets the open column's width.
      setSidebarPref: (pref) => {
-@@ -884,6 +1049,10 @@ export function apply(ctx) {
+@@ -884,6 +1052,10 @@ export function apply(ctx) {
      () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
      () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
      () => shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
@@ -989,7 +992,7 @@ index 31f66057..686911f4 100644
    ]
    const installConversation = () => [
      () => installCompiledStyles(CONVERSATION_CSS, 'conversation'),
-@@ -1016,7 +1185,7 @@ export function apply(ctx) {
+@@ -1016,7 +1188,7 @@ export function apply(ctx) {
        } catch {
          declared = false
        }
@@ -998,7 +1001,7 @@ index 31f66057..686911f4 100644
        if (!declared) {
          // The slot itself is not declared yet; keep watching for a while.
          if (verifyAttempts < 20) {
-@@ -1031,8 +1200,297 @@ export function apply(ctx) {
+@@ -1031,8 +1203,297 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -1296,7 +1299,7 @@ index 31f66057..686911f4 100644
        clearTimeout(verifyTimer)
        verifyAttempts = 0
        verifyTimer = setTimeout(verifySidebar, 250)
-@@ -1043,6 +1501,13 @@ export function apply(ctx) {
+@@ -1043,6 +1504,13 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
@@ -10422,7 +10425,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..430ef938 100644
+index eac6ea54..1db4b2e0 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10982,7 +10985,7 @@ index eac6ea54..430ef938 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1334,132 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1334,161 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -11100,22 +11103,51 @@ index eac6ea54..430ef938 100644
 +.bt-mcp-formfoot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
 +@media (max-width:720px){.bt-mcp-head{flex-direction:column;align-items:stretch}.bt-mcp-actions{justify-content:space-between}.bt-mcp-search{width:auto;max-width:none;flex:1 1 auto}.bt-mcp-body{padding:0 16px 20px}.bt-mcp-confirm,.bt-mcp-note{margin-left:16px;margin-right:16px}}
 +
-+/* The phone skin: the mobile app's chat shape, on this device, chosen in Settings and off by
-+   default. A variable carries its 26px bubble radius, so the sheet's radius steps still hold;
-+   the flat layout keeps its own bubble-less look. */
-+html[data-bt-skin=app]{--bt-skin-bubble:26px}
-+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-astack{gap:10px}
-+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg,
-+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-astack[data-lead]>.bt-msg{max-width:90%}
-+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) body:not([data-bt-layout=flat]) .bt-bubble{border-radius:var(--bt-skin-bubble);padding:13px 18px;font-size:calc(var(--dsh-content-font-size,14px) + 4px);line-height:calc(var(--dsh-content-font-size,14px) + 13px)}
-+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:var(--bt-skin-bubble)}
-+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:var(--bt-skin-bubble)}
-+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-row{min-height:48px}
-+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-bubble .bt-tools{border-radius:999px}
++/* The phone skin: the OpenBot chat shape, on this device. One --bt-app-* layer holds the
++   surfaces, radii and type pairs; every consumer carries the drawer marker, and no pick
++   leaves the attribute off, so the phone gets it and the desktop never can. Colours map to
++   the existing --bt-* set (style-debt forbids a second palette) and dark mode follows. */
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]){
++  --bt-app-surface:var(--bt-card);
++  --bt-app-raised:var(--bt-bubble);
++  --bt-app-control:var(--bt-card);
++  --bt-app-control-hover:var(--bt-hover);
++  --bt-app-border:var(--bt-line);
++  --bt-app-accent:var(--bt-accent);
++  --bt-app-radius-bubble:30px;
++  --bt-app-radius-bubble-inset:calc(var(--bt-app-radius-bubble) - 12px - 1px);
++  --bt-app-radius-card:14px;
++  --bt-app-radius-group:16px;
++  --bt-app-radius-modal:30px;
++  --bt-app-text-title:24px;  --bt-app-leading-title:30px;
++  --bt-app-text-row:16px;    --bt-app-leading-row:22px;
++  --bt-app-text-body:14px;   --bt-app-leading-body:20px;
++  --bt-app-text-sub:13px;    --bt-app-leading-sub:18px;
++  --bt-app-text-meta:12px;   --bt-app-leading-meta:16px;
++  --bt-app-gap:8px;
++  --bt-app-pad:12px 16px;
++  --bt-app-msg-max:100%;
++  --bt-app-row:48px;
++  --bt-app-shadow-float:var(--bt-float-shadow);
++}
++/* The head buttons and composer controls already sit at the shell's sizes on a phone
++   (36/32px, 44px hit areas), so only the bubble, its stack, the row height and the empty
++   note take the app's own numbers here. */
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack{gap:var(--bt-app-gap)}
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg,
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack[data-lead]>.bt-msg{max-width:var(--bt-app-msg-max)}
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) body:not([data-bt-layout=flat]) .bt-bubble{border-radius:var(--bt-app-radius-bubble);padding:var(--bt-app-pad);font-size:var(--bt-app-text-body);line-height:1.625;overflow-wrap:anywhere}
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:var(--bt-app-radius-bubble-inset)}
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:var(--bt-app-radius-bubble-inset)}
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-row{min-height:var(--bt-app-row)}
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-bubble .bt-tools{border-radius:999px}
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-empty{font-size:var(--bt-app-text-sub);line-height:var(--bt-app-leading-sub)}
++/* The user's own bubbles are the host's, so the skin reaches them through the row marker it draws. */
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important}
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1559,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1588,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -11224,7 +11256,7 @@ index eac6ea54..430ef938 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1112,17 +1687,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1716,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -11251,7 +11283,7 @@ index eac6ea54..430ef938 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1707,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1736,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -11260,7 +11292,7 @@ index eac6ea54..430ef938 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1748,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1777,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -11326,7 +11358,7 @@ index 47d791d4..1695a5b8 100644
      connectorDisconnect: id => after(call('connector-disconnect', { id })),
      connectorRetry: id => after(call('connector-retry', { id })),
 diff --git a/ds-bot/src/client/themes.js b/ds-bot/src/client/themes.js
-index 82c3b3b9..34c4f978 100644
+index 82c3b3b9..87aca163 100644
 --- a/ds-bot/src/client/themes.js
 +++ b/ds-bot/src/client/themes.js
 @@ -23,6 +23,16 @@ const THEMES = {
@@ -11346,7 +11378,7 @@ index 82c3b3b9..34c4f978 100644
    moonlight: {
      label: 'Moonlight',
      light: { bg: '#f7f9fc', sidebar: '#eef2f8', bubble: '#e5ebf5', card: '#ffffff', text: '#121826', user: '#1e3a8a', userText: '#ffffff', accent: '#1e86ff' },
-@@ -122,6 +132,38 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
+@@ -122,6 +132,40 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
  // flat one.
  export const MESSAGE_WIDTH = { min: 50, max: 100, step: 5 }
  const percent = (value, initial) => (Number.isInteger(value) && value >= MESSAGE_WIDTH.min && value <= MESSAGE_WIDTH.max ? value : initial)
@@ -11381,7 +11413,9 @@ index 82c3b3b9..34c4f978 100644
 +// A phone look, not a colour: `ours` keeps this plugin's own rows and bubbles, `app` follows
 +// the mobile app's chat shape. Kept on this device only, like the size and density.
 +export const SKIN_CHOICES = { ours: { label: 'Ours' }, app: { label: 'App' } }
-+export const skinOf = prefs => (SKIN_CHOICES[prefs?.skin] ? prefs.skin : 'ours')
++// No pick yet means the phone wears the app's own shape and the desktop keeps ours; an
++// explicit pick always wins, whichever way the device goes.
++export const skinOf = (prefs, { phone = false } = {}) => (SKIN_CHOICES[prefs?.skin] ? prefs.skin : phone ? 'app' : 'ours')
  export const layoutOf = prefs => (prefs?.layout === 'flat' ? 'flat' : 'bubble')
  export const thinkingShown = prefs => prefs?.thinking === true
  export const widthOf = prefs => percent(prefs?.width, 80)
@@ -16107,6 +16141,52 @@ index 00000000..65ba6fba
 +  assert.equal(side.querySelectorAll('.bt-modebar').length, 1)
 +  assert.equal(bar.parentNode, side)
 +})
+diff --git a/ds-bot/test/phone-scope.test.js b/ds-bot/test/phone-scope.test.js
+new file mode 100644
+index 00000000..c352b04d
+--- /dev/null
++++ b/ds-bot/test/phone-scope.test.js
+@@ -0,0 +1,40 @@
++import assert from 'node:assert/strict'
++import { readFileSync } from 'node:fs'
++import { test } from 'node:test'
++
++// The phone's rules all key off the drawer marker. A class cannot tell them apart: every
++// class that appears under the marker also carries a desktop base rule (`.bt-row`,
++// `.bt-head-btn` …), so the sheet's own count of marked rules is the only honest record.
++// Adding phone rules means adding the marker first, then bumping this number.
++const MARKED_PHONE_RULES = 66
++const MARKER = '[data-mobile-nav="frame"]'
++
++// Plain one-line rules: everything in `src/client/styles.js` that looks like CSS.
++function selectors(text) {
++  const found = []
++  for (const line of text.split('\n')) {
++    const code = line.trim()
++    if (!code.includes('{') || !code.includes(':') || code.startsWith('//') || code.startsWith('*')) continue
++    if (code.includes('/* vendored */')) continue
++    const open = code.indexOf('{')
++    if (!code.slice(open + 1).includes(':')) continue
++    found.push(code.slice(0, open).replace(/^.*[}]\s*/, '').trim())
++  }
++  return found.filter(name => name && !name.includes('${') && !name.includes('`') && !name.includes('=>'))
++}
++
++const rules = selectors(readFileSync(new URL('../src/client/styles.js', import.meta.url), 'utf8'))
++const marked = rules.filter(selector => selector.includes(MARKER))
++
++test('the phone keeps every rule that carries the drawer marker', () => {
++  assert.ok(marked.length >= MARKED_PHONE_RULES, `the phone lost rules: ${marked.length} of ${MARKED_PHONE_RULES}`)
++})
++
++test('the skin never adds a rule outside the phone', () => {
++  // The skin's tokens paint nothing on their own; every consumer must carry the marker.
++  const skin = rules.filter(selector => selector.includes(':not([data-bt-skin=ours])'))
++  assert.ok(skin.length >= 7, `expected the skin rules, found ${skin.length}`)
++  for (const selector of skin) {
++    assert.ok(selector.includes(MARKER), `a skin rule is not scoped to the phone: ${selector}`)
++  }
++})
 diff --git a/ds-bot/test/sidebar-switch.test.js b/ds-bot/test/sidebar-switch.test.js
 index 59109a99..429e92e8 100644
 --- a/ds-bot/test/sidebar-switch.test.js
@@ -16234,10 +16314,10 @@ index 59109a99..429e92e8 100644
  test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
 diff --git a/ds-bot/test/skin.test.js b/ds-bot/test/skin.test.js
 new file mode 100644
-index 00000000..70bef81e
+index 00000000..4becdf95
 --- /dev/null
 +++ b/ds-bot/test/skin.test.js
-@@ -0,0 +1,143 @@
+@@ -0,0 +1,153 @@
 +import assert from 'node:assert/strict'
 +import { readFileSync } from 'node:fs'
 +import { test } from 'node:test'
@@ -16248,40 +16328,50 @@ index 00000000..70bef81e
 +
 +const bundle = readFileSync(new URL('../client.js', import.meta.url), 'utf8')
 +
-+test('a skin the plugin does not know is this plugin’s own', () => {
++test('the skin follows the device until the user picks one', () => {
 +  assert.equal(skinOf(undefined), 'ours')
 +  assert.equal(skinOf({}), 'ours')
-+  assert.equal(skinOf({ skin: 'neon' }), 'ours')
++  // A phone with no pick wears the app's shape; a desktop with no pick keeps ours.
++  assert.equal(skinOf({}, { phone: true }), 'app')
++  assert.equal(skinOf({ skin: 'neon' }, { phone: true }), 'app')
++  // A pick always wins, whichever way the device goes.
++  assert.equal(skinOf({ skin: 'ours' }, { phone: true }), 'ours')
 +  assert.equal(skinOf({ skin: 'app' }), 'app')
 +  assert.deepEqual(Object.keys(SKIN_CHOICES), ['ours', 'app'])
 +})
 +
 +// The skin is a phone look: a rule that could reach the desktop would restyle a window the
-+// user never asked about, so every rule but the token carries the drawer marker.
++// user never asked about, so every skin rule carries the drawer marker. No pick leaves the
++// attribute off, which is how a phone gets the skin by default.
 +test('every skin rule is scoped to the phone', () => {
 +  const selectors = []
-+  for (let at = bundle.indexOf('[data-bt-skin=app]'); at >= 0; at = bundle.indexOf('[data-bt-skin=app]', at + 1)) {
++  for (let at = bundle.indexOf(':not([data-bt-skin=ours])'); at >= 0; at = bundle.indexOf(':not([data-bt-skin=ours])', at + 1)) {
 +    const open = bundle.indexOf('{', at)
 +    const start = Math.max(bundle.lastIndexOf('}', at), bundle.lastIndexOf('\n', at), bundle.lastIndexOf('`', at))
 +    selectors.push(bundle.slice(start + 1, open).trim())
 +  }
-+  assert.ok(selectors.length >= 3, `expected the skin rules, found ${selectors.length}`)
++  assert.ok(selectors.length >= 6, `expected the skin rules, found ${selectors.length}`)
 +  for (const selector of selectors) {
 +    assert.ok(
-+      selector.includes('[data-mobile-nav="frame"]') || selector === 'html[data-bt-skin=app]',
++      selector.includes('[data-mobile-nav="frame"]'),
 +      `the skin rule is not scoped to the phone: ${selector}`,
 +    )
 +  }
 +})
 +
 +test('the phone skin carries the app’s own bubble metrics', () => {
-+  const rule = /\[data-bt-skin=app\]:has\(\[data-mobile-nav="frame"\]\) body:not\(\[data-bt-layout=flat\]\) \.bt-bubble\{([^}]*)\}/.exec(bundle)
++  const rule = /:not\(\[data-bt-skin=ours\]\) body:not\(\[data-bt-layout=flat\]\) \.bt-bubble\{([^}]*)\}/.exec(bundle)
 +  assert.ok(rule !== null, 'no bubble rule for the skin')
 +  const body = rule[1]
-+  assert.match(body, /border-radius:var\(--bt-skin-bubble\)/)
-+  assert.match(body, /padding:13px 18px/)
-+  assert.match(bundle, /html\[data-bt-skin=app\]\{--bt-skin-bubble:26px\}/)
-+  assert.match(bundle, /\[data-bt-skin=app\]:has\(\[data-mobile-nav="frame"\]\) \.bt-msg,[^{]*\{max-width:90%\}/)
++  assert.match(body, /border-radius:var\(--bt-app-radius-bubble\)/)
++  assert.match(body, /padding:var\(--bt-app-pad\)/)
++  assert.match(body, /line-height:1\.625/)
++  assert.match(bundle, /--bt-app-radius-bubble:30px/)
++  assert.match(bundle, /--bt-app-pad:12px 16px/)
++  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg,[^{]*\{max-width:var\(--bt-app-msg-max\)\}/)
++  // Neighbouring bubbles use the radius minus the padding step, not a hand-written 9px.
++  assert.match(bundle, /border-start-start-radius:var\(--bt-app-radius-bubble-inset\)/)
++  assert.match(bundle, /--bt-app-radius-bubble-inset:calc\(var\(--bt-app-radius-bubble\) - 12px - 1px\)/)
 +})
 +
 +// The settings row is the only place the skin is chosen, and the host never hears about it,
@@ -16368,11 +16458,11 @@ index 00000000..70bef81e
 +  assert.deepEqual(skin.calls, [['skin', 'ours']])
 +})
 +
-+// The token itself is defined unscoped so its consumers can stay readable; the phone marker
-+// has to be on every consumer, or a rule that reaches the desktop would repaint it.
-+test('every rule that uses the skin bubble token is scoped to the phone', () => {
++// A token declaration paints nothing; its consumers do, so the marker has to be on every one
++// of them or a rule that reaches the desktop would repaint it.
++test('every rule that uses a skin token is scoped to the phone', () => {
 +  const consumers = []
-+  for (let at = bundle.indexOf('var(--bt-skin-bubble'); at >= 0; at = bundle.indexOf('var(--bt-skin-bubble', at + 1)) {
++  for (let at = bundle.indexOf('var(--bt-app-'); at >= 0; at = bundle.indexOf('var(--bt-app-', at + 1)) {
 +    const start = Math.max(bundle.lastIndexOf('}', at), bundle.lastIndexOf('\n', at), bundle.lastIndexOf('`', at))
 +    consumers.push(bundle.slice(start + 1, bundle.indexOf('{', start + 1)).trim())
 +  }
