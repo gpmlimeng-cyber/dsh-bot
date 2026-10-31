@@ -1300,24 +1300,32 @@ export function apply(ctx) {
       }
     }
 
-    // The element the caption band actually is in this build: probed under the row itself,
-    // then walked up while its ancestor still starts at the top of the window.
+    // The caption band is a draggable region, and a draggable region takes every press in it
+    // no matter what paints above. Only a descendant of that very element can opt out, so the
+    // row is mounted inside the element that actually carries the region. The stack under the
+    // row names it; when nothing there is draggable, the topmost element is used instead.
     const bandOwner = () => {
       if (modeBar === null || modeBar.parentNode === null) return undefined
       const box = modeBar.getBoundingClientRect()
       if (box.width === 0) return undefined
       const x = Math.round(box.left + Math.min(12, box.width / 2))
       const y = Math.round(box.top + box.height / 2)
-      const probe = document.elementFromPoint(x, y)
-      if (probe === null || probe === document.body || probe === document.documentElement) return undefined
-      if (probe.closest('.bt-modebar,.bt-band-actions')) return undefined
-      let owner = probe
-      for (let up = probe.parentElement; up !== null && up !== document.body; up = up.parentElement) {
-        const rect = up.getBoundingClientRect()
-        if (rect.top > 8) break
-        owner = up
+      const stack = typeof document.elementsFromPoint === 'function'
+        ? document.elementsFromPoint(x, y)
+        : [document.elementFromPoint(x, y)].filter(node => node !== null)
+      const usable = stack.filter(node => node !== document.body && node !== document.documentElement
+        && (typeof node.closest !== 'function' || node.closest('.bt-modebar, .bt-band-actions') === null))
+      if (usable.length === 0) return undefined
+      const draggable = usable.find((node) => appRegion(node) === 'drag')
+      return draggable ?? usable[0]
+    }
+
+    const appRegion = (node) => {
+      try {
+        return getComputedStyle(node).getPropertyValue('-webkit-app-region').trim()
+      } catch {
+        return ''
       }
-      return owner
     }
     const paintActions = () => {
       const box = modeBar.getBoundingClientRect()

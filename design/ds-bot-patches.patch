@@ -652,7 +652,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index 31f6605..79b8824 100644
+index 31f6605..3775f7a 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -878,7 +878,7 @@ index 31f6605..79b8824 100644
        if (!declared) {
          // The slot itself is not declared yet; keep watching for a while.
          if (verifyAttempts < 20) {
-@@ -1031,8 +1185,260 @@ export function apply(ctx) {
+@@ -1031,8 +1185,275 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -979,7 +979,22 @@ index 31f6605..79b8824 100644
 +      // band, whatever paints above it. A child of that header can take the press back with
 +      // app-region: no-drag, so the row is mounted inside whatever element the band really
 +      // is, and only falls back to the body when the band belongs to nothing.
-+      placeModeRow(document, [modeBar, bandActions], bandOwner())
++      const owner = bandOwner()
++      placeModeRow(document, [modeBar, bandActions], owner)
++      // Inside the band's element the row is positioned against that element instead of the
++      // window, so it is measured where it paints now and pinned to the same spot in the
++      // element's own coordinates. Both surfaces then draw it at the same place.
++      const host = modeBar.parentNode
++      if (host !== null && host !== document.body && typeof host.getBoundingClientRect === 'function') {
++        const hosted = host.getBoundingClientRect()
++        for (const node of [modeBar, bandActions]) {
++          if (node === null || node.parentNode !== host) continue
++          const box = node.getBoundingClientRect()
++          node.style.position = 'absolute'
++          node.style.left = `${Math.round(box.left - hosted.left)}px`
++          node.style.top = `${Math.round(box.top - hosted.top)}px`
++        }
++      }
 +    }
 +
 +    // The element the caption band actually is in this build: probed under the row itself,
@@ -1139,7 +1154,7 @@ index 31f6605..79b8824 100644
        clearTimeout(verifyTimer)
        verifyAttempts = 0
        verifyTimer = setTimeout(verifySidebar, 250)
-@@ -1043,6 +1449,13 @@ export function apply(ctx) {
+@@ -1043,6 +1464,13 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)

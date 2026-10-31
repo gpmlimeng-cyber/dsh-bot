@@ -28758,16 +28758,18 @@ function apply(ctx) {
       if (box.width === 0) return void 0;
       const x = Math.round(box.left + Math.min(12, box.width / 2));
       const y = Math.round(box.top + box.height / 2);
-      const probe = document.elementFromPoint(x, y);
-      if (probe === null || probe === document.body || probe === document.documentElement) return void 0;
-      if (probe.closest(".bt-modebar,.bt-band-actions")) return void 0;
-      let owner = probe;
-      for (let up = probe.parentElement; up !== null && up !== document.body; up = up.parentElement) {
-        const rect = up.getBoundingClientRect();
-        if (rect.top > 8) break;
-        owner = up;
+      const stack = typeof document.elementsFromPoint === "function" ? document.elementsFromPoint(x, y) : [document.elementFromPoint(x, y)].filter((node) => node !== null);
+      const usable = stack.filter((node) => node !== document.body && node !== document.documentElement && (typeof node.closest !== "function" || node.closest(".bt-modebar, .bt-band-actions") === null));
+      if (usable.length === 0) return void 0;
+      const draggable = usable.find((node) => appRegion(node) === "drag");
+      return draggable ?? usable[0];
+    };
+    const appRegion = (node) => {
+      try {
+        return getComputedStyle(node).getPropertyValue("-webkit-app-region").trim();
+      } catch {
+        return "";
       }
-      return owner;
     };
     const paintActions = () => {
       const box = modeBar.getBoundingClientRect();
