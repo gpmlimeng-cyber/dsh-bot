@@ -2895,8 +2895,8 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    ones it ships, so this panel measures the same as the shell's own page. */
 .bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex;flex-wrap:nowrap}
 .bt-mm-filterlabel{flex:none}
-.bt-mm-categories{flex-wrap:nowrap;align-items:center;gap:6px;display:flex;overflow:hidden}
-.bt-mm-morewrap{position:relative;margin-left:auto;flex:none}
+.bt-mm-categories{flex-wrap:nowrap;align-items:center;gap:6px;display:flex;overflow:visible;flex:none}
+.bt-mm-tagrow{position:relative;min-width:0}.bt-mm-tagmeasure{position:absolute;left:-9999px;top:0;display:flex;gap:6px;white-space:nowrap;visibility:hidden;pointer-events:none;flex:none}.bt-mm-morewrap{position:relative;margin-left:auto;flex:none}
 .bt-mm-morepill{white-space:nowrap;gap:4px}
 .bt-mm-labelmenu{right:0;left:auto;max-height:320px;overflow-y:auto}
 /* The discover view is one column: the shell's toolbar row, its category row, then the
@@ -2922,17 +2922,17 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The dropdown card is the shell's own, copied verbatim from its primitives
    (_float_ / _menuItem_ in dsh-web-frontend, MIT): same layer, panel radius and
    elevation, so a ds-bot menu reads as one of the shell's. */
-.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 6px);left:-8px;min-width:200px;display:flex;flex-direction:column;padding:4px;overflow:hidden;background-color:var(--bt-card,#fff);background-image:none;border-radius:var(--dsw-radius-panel,14px);--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);box-shadow:var(--dsw-elevation-prominent)} /* vendored */
-.bt-mm-menuitem{display:flex;align-items:center;gap:8px;padding:4px 7px;color:var(--dsw-alias-label-primary);font-size:calc(var(--dsh-content-font-size-secondary,13px) - 1px);text-align:left;background:transparent;border:none;border-radius:var(--dsw-radius-md);cursor:pointer;white-space:nowrap} /* vendored */
-.bt-mm-menuitem:hover{background:var(--dsw-alias-interactive-bg-hover)} /* vendored */
+.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 6px);left:-8px;min-width:168px;display:flex;flex-direction:column;padding:4px;overflow:hidden;background-color:color-mix(in srgb,var(--bt-card) 82%,transparent);background-image:none;backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-radius:8px;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);box-shadow:var(--dsw-elevation-prominent)} /* vendored */
+.bt-mm-menuitem{display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;color:var(--dsw-alias-label-primary);font-size:13px;line-height:18px;text-align:left;background:transparent;border:none;border-radius:var(--dsw-radius-md,6px);cursor:pointer;white-space:nowrap} /* vendored */
+.bt-mm-menuitem:hover{background:var(--bt-hover)}.bt-mm-menuitem.is-on{background:var(--bt-hover)} /* vendored */
 .bt-mm-menuitem.is-on{font-weight:600}
-.bt-mm-menuitem-check{margin-left:auto;width:16px;text-align:center;color:var(--dsw-alias-brand-primary);visibility:hidden}
-.bt-mm-menuitem.is-on .bt-mm-menuitem-check{visibility:visible}
+.bt-mm-menuitem-check{flex:none;width:14px;text-align:center;color:var(--bt-accent);visibility:hidden}
+.bt-mm-menuitem.is-on .bt-mm-menuitem.is-on .bt-mm-menuitem-check{visibility:visible}
 .bt-mm-menuitem-gear{margin-left:auto;color:var(--dsw-alias-label-tertiary)}
 .bt-mm-menuitem-x{margin-left:auto;width:20px;height:20px;line-height:18px;text-align:center;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary)}
 .bt-mm-menuitem-x:hover{background:var(--dsw-alias-interactive-bg-hover)}
 .bt-mm-menuitem-add{border-top:.5px solid var(--bt-line-2);border-radius:0 0 8px 8px;margin-top:4px;padding-top:10px}
-.bt-mm-addsource{position:fixed;z-index:40;right:32px;top:96px;width:min(360px,90vw);display:flex;flex-direction:column;gap:10px;padding:16px;overflow:hidden;background-color:var(--bt-card,#fff);background-image:none;border-radius:var(--dsw-radius-panel,14px);--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);box-shadow:var(--dsw-elevation-prominent)} /* vendored */
+.bt-mm-addsource{position:fixed;z-index:40;right:32px;top:96px;width:min(360px,90vw);display:flex;flex-direction:column;gap:10px;padding:16px;overflow:hidden;background-color:color-mix(in srgb,var(--bt-card) 82%,transparent);background-image:none;backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-radius:8px;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);box-shadow:var(--dsw-elevation-prominent)} /* vendored */
 .bt-mm-addsource-head{display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px}
 .bt-mm-btn-ghost{background:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2);color:var(--bt-ink-2)}
 /* Two cards a row on a desktop column, one when the column is narrow. The vendored card
@@ -2942,24 +2942,24 @@ ul.bt-mm-cards>.bt-mm-card{margin:0}
 /* Section headers over the card grid, the shape the shell's Discover list uses: a name and
    its own control on the right. */
 .bt-mm-group{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
-.bt-mm-grouphead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 2px}
+.bt-mm-grouphead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 8px;border-bottom:.5px solid var(--bt-line)}
 .bt-mm-grouptitle{margin:0;font-size:14px;font-weight:600;line-height:22px;color:var(--dsw-alias-label-primary)}
 .bt-mm-groupmore{border:0;background:none;padding:0;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:12.5px;cursor:pointer}
 .bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary)}
 /* The installed card's switch is the shell's own switch, copied from its stylesheet:
    36x20, layer-3 track, brand fill when on, 16px thumb that slides 16px. */
-.bt-mm-switch{box-sizing:border-box;position:relative;flex:0 0 auto;width:36px;height:20px;padding:2px;border:0;border-radius:999px;corner-shape:round;background:var(--bt-line-2);cursor:pointer}
-.bt-mm-switch[aria-checked=true]{background:var(--bt-accent)}
-.bt-mm-switch:disabled{cursor:default;opacity:.5} /* vendored */
-.bt-mm-switch-thumb{display:block;width:16px;height:16px;border-radius:50%;corner-shape:round;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .12s ease}
-.bt-mm-switch[aria-checked=false] .bt-mm-switch-thumb{background:#fff}
-.bt-mm-switch[aria-checked=true] .bt-mm-switch-thumb{transform:translate(16px)}
+.bt-mm-toggle{box-sizing:border-box;position:relative;flex:0 0 auto;width:36px;height:20px;padding:2px;border:0;border-radius:999px;corner-shape:round;background:var(--bt-line-2);cursor:pointer}
+.bt-mm-toggle[aria-checked=true]{background:var(--bt-accent)}
+.bt-mm-toggle:disabled{cursor:default;opacity:.5}
+.bt-mm-toggle-thumb{display:block;width:16px;height:16px;border-radius:50%;corner-shape:round;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .12s ease}
+.bt-mm-toggle[aria-checked=false] .bt-mm-toggle-thumb{background:#fff}
+.bt-mm-toggle[aria-checked=true] .bt-mm-toggle-thumb{transform:translate(16px)}
 .bt-mm-rowmenu{position:relative}
 .bt-mm-dots{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:var(--dsw-radius-md);background:none;color:var(--dsw-alias-label-tertiary);cursor:pointer}
 .bt-mm-dots:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
 .bt-mm-rowmenupop{right:0;left:auto;top:calc(100% + 4px);min-width:140px}
-@media (max-width:900px){ul.bt-mm-cards{grid-template-columns:minmax(0,1fr)}}.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500;border:0;box-shadow:none;background:none;padding:0 4px;color:var(--dsw-alias-label-primary);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}.bt-mm-source-name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.bt-mm-search{flex:1;min-width:120px}.bt-mm-categories{flex-wrap:nowrap;align-items:center;gap:6px;display:flex;overflow:hidden}
-.bt-mm-morewrap{position:relative;margin-left:auto;flex:none}
+@media (max-width:900px){ul.bt-mm-cards{grid-template-columns:minmax(0,1fr)}}.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500;border:0;box-shadow:none;background:none;padding:0 4px;color:var(--dsw-alias-label-primary);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}.bt-mm-source-name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.bt-mm-search{flex:1;min-width:120px}.bt-mm-categories{flex-wrap:nowrap;align-items:center;gap:6px;display:flex;overflow:visible;flex:none}
+.bt-mm-tagrow{position:relative;min-width:0}.bt-mm-tagmeasure{position:absolute;left:-9999px;top:0;display:flex;gap:6px;white-space:nowrap;visibility:hidden;pointer-events:none;flex:none}.bt-mm-morewrap{position:relative;margin-left:auto;flex:none}
 .bt-mm-morepill{white-space:nowrap;gap:4px}
 .bt-mm-labelmenu{right:0;left:auto;max-height:320px;overflow-y:auto}.bt-mm-muted,.bt-mm-meta{color:var(--dsw-alias-label-tertiary);margin:0;font-size:13px;line-height:20px}.bt-mm-meta{overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-strong{overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:20px}.bt-mm-error{color:var(--dsw-alias-state-error-primary);align-items:center;gap:6px;margin:0;font-size:13px;line-height:20px;display:inline-flex}.bt-mm-failure{align-items:center;gap:10px;display:flex}.bt-mm-notice{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);align-items:flex-start;gap:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px;display:flex}.bt-mm-notice>svg{color:var(--dsw-alias-state-warn-primary);flex:none;margin-top:2px}.bt-mm-cards{flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;display:flex}.bt-mm-card{border-radius:var(--dsw-radius-xl);align-items:center;gap:14px;margin:0 -8px;padding:8px;display:flex;position:relative}.bt-mm-card:hover{background:var(--dsw-alias-interactive-bg-hover)}.bt-mm-icon{border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);width:48px;height:48px;color:var(--dsw-alias-label-secondary);flex:none;justify-content:center;align-items:center;display:inline-flex}.bt-mm-image{object-fit:contain}.bt-mm-main{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.bt-mm-titleRow{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.bt-mm-cardOpen{max-width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;font-size:14px;font-weight:500;line-height:20px;overflow:hidden}.bt-mm-cardOpen:after{content:"";border-radius:var(--dsw-radius-xl);position:absolute;inset:0}.bt-mm-cardOpen:focus-visible{outline:none}.bt-mm-cardOpen:focus-visible:after{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-description{color:var(--dsw-alias-label-tertiary);-webkit-line-clamp:1;-webkit-box-orient:vertical;font-size:13px;line-height:18px;display:-webkit-box;overflow:hidden}.bt-mm-cardEnd{z-index:1;flex:none;align-items:center;gap:8px;display:inline-flex;position:relative}.bt-mm-blocked{opacity:.5;cursor:not-allowed}.bt-mm-more{align-self:center}.bt-mm-empty{text-align:center;flex-direction:column;align-items:center;gap:8px;padding:64px 0;display:flex}.bt-mm-emptyTitle{margin:8px 0 0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-empty>button{margin-top:8px}.bt-mm-detail{flex-direction:column;gap:16px;display:flex}.bt-mm-crumb{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:0;align-self:flex-start;align-items:center;gap:6px;padding:0;font-size:12.5px;display:inline-flex}.bt-mm-crumb:hover{color:var(--dsw-alias-label-primary)}.bt-mm-crumb:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-crumbIcon{transform:rotate(90deg)}.bt-mm-detailHead{align-items:center;gap:14px;display:flex}.bt-mm-detailTitle{margin:0;font-size:20px;font-weight:500;line-height:28px}.bt-mm-detailDescription{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.bt-mm-detailSection{flex-direction:column;gap:12px;margin-top:16px;display:flex}.bt-mm-sectionTitle{margin:0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-facts{margin:0}.bt-mm-facts div{border-bottom:.5px solid var(--dsw-alias-border-l2);justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:8px 2px;display:flex}.bt-mm-facts dt{color:var(--dsw-alias-label-secondary);flex:none;font-size:13px;line-height:20px}.bt-mm-facts dd{text-align:end;overflow-wrap:anywhere;min-width:0;margin:0;font-size:13px;line-height:20px}.bt-mm-facts code{background:var(--dsw-alias-bg-module-platform);box-decoration-break:clone;font-family:var(--ds-font-family-code);border-radius:4px;padding:2px 6px;font-size:12px}.bt-mm-tags{flex-wrap:wrap;justify-content:flex-end;gap:6px;display:flex}.bt-mm-dialog{width:min(480px,100vw - 32px)}.bt-mm-dialogBody{flex-direction:column;gap:12px;display:flex}.bt-mm-sourceList,.bt-mm-versions{flex-direction:column;margin:0;padding:0;list-style:none;display:flex}.bt-mm-sourceRow,.bt-mm-versionRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:8px 0;display:flex}.bt-mm-sourceError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-sourceForm{align-items:center;gap:8px;display:flex}.bt-mm-grow{flex:1;min-width:0}.bt-mm-confirmHead{align-items:center;gap:14px;display:flex}.bt-mm-skeletonFill{background:var(--dsw-alias-bg-skeleton);animation:2s cubic-bezier(.36,0,.64,1) infinite bt-mm-dsh-market-skeleton}.bt-mm-icon.bt-mm-skeletonFill{border-color:#0000}.bt-mm-skeletonBar{border-radius:var(--dsw-radius-xs);height:12px;margin:4px 0;display:block}.bt-mm-skeletonTitle{width:min(144px,60%)}.bt-mm-skeletonDescription{width:min(280px,85%)}@keyframes bt-mm-dsh-market-skeleton{0%{opacity:1}40%{opacity:.6}80%,to{opacity:1}}@media (prefers-reduced-motion:reduce){.bt-mm-skeletonFill{animation:none}}.bt-mm-link{color:var(--dsw-alias-link);overflow-wrap:anywhere;text-decoration:none}.bt-mm-link:hover{text-decoration:underline} /* vendored */
 /* The three controls the shell draws with its own primitives (Input, Pill, Button): the
@@ -2968,7 +2968,7 @@ ul.bt-mm-cards>.bt-mm-card{margin:0}
 .bt-mm-box input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
 /* The category chips are the shell's Pill primitive, copied from its stylesheet: 24px,
    8px padding, layer-2 fill, and the ghost-active pair for the chosen one. */
-.bt-mm-pill{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border:none;border-radius:999px;corner-shape:round;font:inherit;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);background:transparent;cursor:pointer} /* vendored */
+.bt-mm-pill{display:inline-flex;align-items:center;gap:4px;flex:none;height:24px;padding:0 8px;border:none;border-radius:999px;corner-shape:round;font:inherit;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);background:transparent;cursor:pointer} /* vendored */
 .bt-mm-pill:hover{background:var(--dsw-alias-interactive-bg-hover)} /* vendored */
 .bt-mm-pill.is-on{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-ghost-active-fill);box-shadow:inset 0 0 0 1px var(--dsw-alias-button-ghost-active-border)} /* vendored */
 .bt-mm-btn{height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink);box-shadow:inset 0 0 0 .5px var(--bt-line-2);font:inherit;font-size:12.5px;font-weight:500;cursor:pointer}
@@ -3006,11 +3006,11 @@ ul.bt-mm-cards>.bt-mm-card{margin:0}
 .bt-mm-inst-row[data-off] .bt-mm-name{color:var(--bt-ink-3)}
 .bt-mm-inst-main{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}
 .bt-mm-inst-end{display:flex;align-items:center;gap:4px;flex:none}
-.bt-mm-switch,.bt-mm-remove{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--bt-ink-3);cursor:pointer}
-.bt-mm-switch:hover,.bt-mm-remove:hover{background:var(--bt-hover);color:var(--bt-ink)}
-.bt-mm-switch[data-on]{color:var(--bt-accent)}
-.bt-mm-switch svg,.bt-mm-remove svg{width:16px;height:16px}
-.bt-mm-switch:disabled,.bt-mm-remove:disabled{opacity:.5;cursor:default}
+.bt-mm-remove{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--bt-ink-3);cursor:pointer}
+.bt-mm-remove:hover{background:var(--bt-hover);color:var(--bt-ink)}
+
+.bt-mm-remove svg{width:16px;height:16px}
+.bt-mm-remove:disabled{opacity:.5;cursor:default}
 .bt-mm-name{font-size:14px;font-weight:600}
 .bt-mm-tag{font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3);font-weight:400}
 .bt-mm-tag-on{color:var(--bt-accent)}
@@ -27363,7 +27363,19 @@ var CATEGORY_NAMES = {
   "social-media": "Social media"
 };
 var categoryName = (id) => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, " "));
-function Row3({ server, added, busy, onInstall, onOpen, onHome, onMenu }) {
+function Toggle({ on, busy, label, onClick }) {
+  return (0, import_react55.createElement)("button", {
+    type: "button",
+    className: "bt-mm-toggle",
+    role: "switch",
+    "aria-checked": on ? "true" : "false",
+    "aria-label": label,
+    title: label,
+    disabled: busy,
+    onClick
+  }, (0, import_react55.createElement)("span", { className: "bt-mm-toggle-thumb", "aria-hidden": true }));
+}
+function Row3({ server, added, enabled, busy, onInstall, onOpen, onHome, onMenu }) {
   return (0, import_react55.createElement)(
     "li",
     { className: "bt-mm-card", "data-mcp-entry": server.id },
@@ -27390,16 +27402,12 @@ function Row3({ server, added, busy, onInstall, onOpen, onHome, onMenu }) {
       { className: "bt-mm-cardEnd" },
       // An added server has nothing left to install, so its control is the menu that
       // switches it off or takes it away; a card that cannot install only opens.
-      added ? (0, import_react55.createElement)("button", {
-        type: "button",
-        className: "bt-mm-switch",
-        role: "switch",
-        "aria-checked": server.enabled === false ? "false" : "true",
-        "aria-label": server.enabled === false ? t("Turn on") : t("Turn off"),
-        title: server.enabled === false ? t("Turn on") : t("Turn off"),
-        disabled: busy,
+      added ? (0, import_react55.createElement)(Toggle, {
+        on: enabled !== false,
+        busy,
+        label: enabled === false ? t("Turn on") : t("Turn off"),
         onClick: onMenu
-      }, (0, import_react55.createElement)("span", { className: "bt-mm-switch-thumb", "aria-hidden": true })) : server.installable === false ? server.homepage ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-btn bt-mm-btn-ghost", onClick: onHome }, t("Open page")) : null : (0, import_react55.createElement)("button", {
+      }) : server.installable === false ? server.homepage ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-btn bt-mm-btn-ghost", onClick: onHome }, t("Open page")) : null : (0, import_react55.createElement)("button", {
         type: "button",
         className: "bt-mm-btn",
         disabled: busy,
@@ -27510,16 +27518,12 @@ function Installed({ servers, busy, onToggle, onRemove }) {
     (0, import_react55.createElement)(
       "span",
       { className: "bt-mm-inst-end" },
-      (0, import_react55.createElement)("button", {
-        type: "button",
-        className: "bt-mm-switch",
-        "aria-pressed": server.enabled,
-        "data-on": server.enabled ? "" : void 0,
-        "aria-label": server.enabled ? t("Turn off") : t("Turn on"),
-        title: server.enabled ? t("Turn off") : t("Turn on"),
-        disabled: busy !== "" || server.pending === true,
+      (0, import_react55.createElement)(Toggle, {
+        on: server.enabled !== false,
+        busy: busy !== "" || server.pending === true,
+        label: server.enabled ? t("Turn off") : t("Turn on"),
         onClick: () => onToggle(server)
-      }, (0, import_react55.createElement)(SwitchIcon)),
+      }),
       (0, import_react55.createElement)("button", {
         type: "button",
         className: "bt-mm-remove",
@@ -27615,9 +27619,31 @@ function McpMarketTab({ actions = {} }) {
   const [sources, setSources] = (0, import_react55.useState)(() => readSources());
   const [sourceMenu, setSourceMenu] = (0, import_react55.useState)(false);
   const [moreLabels, setMoreLabels] = (0, import_react55.useState)(false);
+  const [labelFit, setLabelFit] = (0, import_react55.useState)(0);
+  const labelRow = (0, import_react55.useRef)(null);
+  const labelBox = (0, import_react55.useRef)(null);
+  const sourceWrap = (0, import_react55.useRef)(null);
   const [reload, setReload] = (0, import_react55.useState)(0);
   const [adding, setAdding] = (0, import_react55.useState)(null);
   const timer = (0, import_react55.useRef)(null);
+  (0, import_react55.useEffect)(() => {
+    if (!sourceMenu) return void 0;
+    const close = (event) => {
+      if (sourceWrap.current !== null && sourceWrap.current.contains(event.target)) return;
+      setSourceMenu(false);
+    };
+    document.addEventListener("pointerdown", close, true);
+    return () => document.removeEventListener("pointerdown", close, true);
+  }, [sourceMenu]);
+  (0, import_react55.useEffect)(() => {
+    if (!moreLabels) return void 0;
+    const close = (event) => {
+      if (labelRow.current !== null && labelRow.current.contains(event.target)) return;
+      setMoreLabels(false);
+    };
+    document.addEventListener("pointerdown", close, true);
+    return () => document.removeEventListener("pointerdown", close, true);
+  }, [moreLabels]);
   const report = (failure) => setError(String(failure?.message ?? failure));
   const sourceName = () => ({
     modelscope: t("ModelScope MCP"),
@@ -27706,6 +27732,35 @@ function McpMarketTab({ actions = {} }) {
     setPage(1);
     setReload((count) => count + 1);
   };
+  const fitLabels = () => {
+    const row = labelRow.current;
+    const box = labelBox.current;
+    if (row === null || box === null) return;
+    const width = row.clientWidth;
+    if (width === 0) return;
+    const pills = box.querySelectorAll("[data-mm-measure]");
+    if (pills.length === 0) return;
+    const more2 = box.querySelector("[data-mm-measure-more]");
+    const room2 = width - (more2 === null ? 0 : more2.offsetWidth + 6);
+    let used = 0;
+    let fit2 = 0;
+    for (const pill of pills) {
+      const next = fit2 === 0 ? pill.offsetWidth : used + 6 + pill.offsetWidth;
+      if (next > room2) break;
+      used = next;
+      fit2 += 1;
+    }
+    setLabelFit(fit2 >= pills.length ? 0 : Math.max(1, fit2));
+  };
+  (0, import_react55.useLayoutEffect)(fitLabels, [categories, category, source]);
+  (0, import_react55.useEffect)(() => {
+    if (typeof ResizeObserver === "undefined") return void 0;
+    const row = labelRow.current;
+    if (row === null) return void 0;
+    const observer = new ResizeObserver(fitLabels);
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [categories, category, source]);
   const install = (server) => {
     if (installing !== "") return;
     setInstalling(server.id);
@@ -27873,6 +27928,9 @@ function McpMarketTab({ actions = {} }) {
       setOpen(null);
     }
   });
+  const shownLabels = labelFit > 0 ? Math.max(0, labelFit - 1) : categories.length;
+  const hiddenLabels = categories.slice(shownLabels);
+  const moreLabel = hiddenLabels.some((item) => item.id === category) ? categoryName(category) : t("More labels");
   return (0, import_react55.createElement)(
     "div",
     { className: "bt-mm" },
@@ -27897,7 +27955,7 @@ function McpMarketTab({ actions = {} }) {
         { className: "bt-mm-toolbar" },
         (0, import_react55.createElement)(
           "div",
-          { className: "bt-mm-sourcewrap" },
+          { className: "bt-mm-sourcewrap", ref: sourceWrap },
           (0, import_react55.createElement)(
             "button",
             {
@@ -27918,32 +27976,26 @@ function McpMarketTab({ actions = {} }) {
               { id: "reference", name: t("MCP reference servers") },
               { id: "awesome", name: t("awesome-mcp-servers") },
               ...sources.map((item) => ({ id: item.id, name: item.name, custom: true }))
-            ].map((item) => (0, import_react55.createElement)(
-              "button",
-              {
-                key: item.id,
-                type: "button",
-                role: "menuitem",
-                className: "bt-mm-menuitem" + (item.id === source ? " is-on" : ""),
-                onClick: () => {
-                  setSource(item.id);
-                  setSourceMenu(false);
-                  setPage(1);
-                  setList({ total: 0, servers: [] });
-                  setCategories([]);
-                  setCategory("");
-                }
-              },
-              item.name,
-              item.custom ? (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-x", role: "button", "aria-label": t("Remove"), title: t("Remove"), onClick: (event) => {
-                event.stopPropagation();
-                const next = sources.filter((one) => one.id !== item.id);
-                setSources(next);
-                writeSources(next);
-                if (source === item.id) setSource("modelscope");
-              } }, "×") : null,
-              (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-check", "aria-hidden": true }, "✓")
-            )),
+            ].map((item) => (0, import_react55.createElement)("button", {
+              key: item.id,
+              type: "button",
+              role: "menuitem",
+              className: "bt-mm-menuitem" + (item.id === source ? " is-on" : ""),
+              onClick: () => {
+                setSource(item.id);
+                setSourceMenu(false);
+                setPage(1);
+                setList({ total: 0, servers: [] });
+                setCategories([]);
+                setCategory("");
+              }
+            }, (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-check", "aria-hidden": true }, "✓"), item.name, item.custom ? (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-x", role: "button", "aria-label": t("Remove"), title: t("Remove"), onClick: (event) => {
+              event.stopPropagation();
+              const next = sources.filter((one) => one.id !== item.id);
+              setSources(next);
+              writeSources(next);
+              if (source === item.id) setSource("modelscope");
+            } }, "×") : null)),
             (0, import_react55.createElement)("button", { type: "button", role: "menuitem", className: "bt-mm-menuitem bt-mm-menuitem-add", onClick: () => {
               setSourceMenu(false);
               setAdding({ name: "", url: "", kind: "readme" });
@@ -27976,46 +28028,56 @@ function McpMarketTab({ actions = {} }) {
       ),
       categories.length === 0 ? null : (0, import_react55.createElement)(
         "div",
-        { className: "bt-mm-categories", role: "group", "aria-label": t("Labels") },
-        (0, import_react55.createElement)("button", {
-          type: "button",
-          className: "bt-mm-pill" + (category === "" ? " is-on" : ""),
-          "aria-pressed": category === "",
-          onClick: () => pick2("")
-        }, t("All")),
-        // One row of labels: the ones past the first row live in the trailing menu, so a
-        // long catalogue never pushes the cards down.
-        categories.slice(0, 11).map((item) => (0, import_react55.createElement)("button", {
-          key: item.id,
-          type: "button",
-          className: "bt-mm-pill" + (category === item.id ? " is-on" : ""),
-          "aria-pressed": category === item.id,
-          onClick: () => pick2(item.id)
-        }, categoryName(item.id))),
+        { className: "bt-mm-tagrow" },
         (0, import_react55.createElement)(
           "div",
-          { className: "bt-mm-morewrap" },
+          { className: "bt-mm-categories", role: "group", "aria-label": t("Labels"), ref: labelRow },
           (0, import_react55.createElement)("button", {
             type: "button",
-            className: "bt-mm-pill bt-mm-morepill" + (categories.slice(11).some((item) => item.id === category) ? " is-on" : ""),
-            "aria-haspopup": "menu",
-            "aria-expanded": moreLabels ? "true" : "false",
-            onClick: () => setMoreLabels(!moreLabels)
-          }, categories.slice(11).some((item) => item.id === category) ? categoryName(category) : t("More labels"), (0, import_react55.createElement)("span", { "aria-hidden": true }, "▾")),
-          moreLabels ? (0, import_react55.createElement)(
+            className: "bt-mm-pill" + (category === "" ? " is-on" : ""),
+            "aria-pressed": category === "",
+            onClick: () => pick2("")
+          }, t("All")),
+          categories.slice(0, shownLabels).map((item) => (0, import_react55.createElement)("button", {
+            key: item.id,
+            type: "button",
+            className: "bt-mm-pill" + (category === item.id ? " is-on" : ""),
+            "aria-pressed": category === item.id,
+            onClick: () => pick2(item.id)
+          }, categoryName(item.id))),
+          hiddenLabels.length === 0 ? null : (0, import_react55.createElement)(
             "div",
-            { className: "bt-mm-menu bt-mm-labelmenu", role: "menu" },
-            categories.map((item) => (0, import_react55.createElement)("button", {
-              key: item.id,
+            { className: "bt-mm-morewrap" },
+            (0, import_react55.createElement)("button", {
               type: "button",
-              role: "menuitem",
-              className: "bt-mm-menuitem" + (category === item.id ? " is-on" : ""),
-              onClick: () => {
-                pick2(item.id);
-                setMoreLabels(false);
-              }
-            }, categoryName(item.id), (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-check", "aria-hidden": true }, "✓")))
-          ) : null
+              className: "bt-mm-pill bt-mm-morepill" + (hiddenLabels.some((item) => item.id === category) ? " is-on" : ""),
+              "aria-haspopup": "menu",
+              "aria-expanded": moreLabels ? "true" : "false",
+              onClick: () => setMoreLabels(!moreLabels)
+            }, moreLabel, (0, import_react55.createElement)("span", { "aria-hidden": true }, "▾")),
+            moreLabels ? (0, import_react55.createElement)(
+              "div",
+              { className: "bt-mm-menu bt-mm-labelmenu", role: "menu" },
+              hiddenLabels.map((item) => (0, import_react55.createElement)("button", {
+                key: item.id,
+                type: "button",
+                role: "menuitem",
+                className: "bt-mm-menuitem" + (category === item.id ? " is-on" : ""),
+                onClick: () => {
+                  setMoreLabels(false);
+                  pick2(item.id);
+                }
+              }, (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-check", "aria-hidden": true }, "✓"), categoryName(item.id)))
+            ) : null
+          )
+        ),
+        // Off-screen copy of the row, only ever measured.
+        (0, import_react55.createElement)(
+          "div",
+          { className: "bt-mm-tagmeasure", ref: labelBox, "aria-hidden": "true" },
+          (0, import_react55.createElement)("span", { className: "bt-mm-pill", "data-mm-measure": "" }, t("All")),
+          categories.map((item) => (0, import_react55.createElement)("span", { key: item.id, className: "bt-mm-pill", "data-mm-measure": "" }, categoryName(item.id))),
+          (0, import_react55.createElement)("span", { className: "bt-mm-pill bt-mm-morepill", "data-mm-measure-more": "" }, moreLabel, (0, import_react55.createElement)("span", { "aria-hidden": true }, "▾"))
         )
       ),
       error ? (0, import_react55.createElement)("p", { className: "bt-mm-error" }, error) : null,

@@ -508,6 +508,7 @@ export function install(rt) {
         const now = Date.now()
         if (categoryCache.at !== 0 && now - categoryCache.at < MARKET_CATEGORIES_TTL_MS) return categoryCache.value
         const counts = new Map()
+        const installs = new Map()
         for (const step of MARKET_SCAN) {
           // One refused page leaves the rest of the scan alone: a thin chip row still
           // beats the empty one a thrown page would leave.
@@ -517,10 +518,15 @@ export function install(rt) {
             for (const raw of Array.isArray(row.categories) ? row.categories : []) {
               const id = String(raw).toLowerCase()
               counts.set(id, (counts.get(id) ?? 0) + 1)
+              installs.set(id, (installs.get(id) ?? 0) + Number(row.view_count ?? 0))
             }
           }
         }
-        const value = [...counts.entries()].map(([id, count]) => ({ id, count })).sort((left, right) => right.count - left.count || left.id.localeCompare(right.id))
+        // A label and a section are the same thing here, so both are ordered by what the
+        // category has been downloaded: the busiest first.
+        const value = [...counts.entries()]
+          .map(([id, count]) => ({ id, count, installs: installs.get(id) ?? 0 }))
+          .sort((left, right) => right.installs - left.installs || right.count - left.count || left.id.localeCompare(right.id))
         // An empty scan is an upstream hiccup, not a market with no categories: caching it
         // would hide the labels for ten minutes, so only a real set is kept.
         if (value.length > 0) {

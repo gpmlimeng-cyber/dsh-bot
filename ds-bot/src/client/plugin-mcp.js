@@ -6,9 +6,9 @@
 // What a row can promise: the plaza's own words about a server, and whether this profile
 // already runs it. Nothing here claims a server works until it is added and DSH lists its
 // tools on the MCP page.
-import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
+import { createElement as h, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { t } from './i18n.js'
-import { CloseIcon, PlusIcon, SearchIcon, SwitchIcon, TrashIcon } from './icons.js'
+import { CloseIcon, PlusIcon, SearchIcon, TrashIcon } from './icons.js'
 
 // A server name has to fit the profile's own rule; the plaza's ids are `@owner/name`.
 const nameOf = (id) => {
@@ -72,7 +72,22 @@ const CATEGORY_NAMES = {
 
 const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
 
-function Row({ server, added, busy, onInstall, onOpen, onHome, onMenu }) {
+// The shell's own switch: a 36x20 track with a 16px knob. A card and an installed row both
+// use it, so switching a server on or off looks the same wherever it happens.
+function Toggle({ on, busy, label, onClick }) {
+  return h('button', {
+    type: 'button',
+    className: 'bt-mm-toggle',
+    role: 'switch',
+    'aria-checked': on ? 'true' : 'false',
+    'aria-label': label,
+    title: label,
+    disabled: busy,
+    onClick,
+  }, h('span', { className: 'bt-mm-toggle-thumb', 'aria-hidden': true }))
+}
+
+function Row({ server, added, enabled, busy, onInstall, onOpen, onHome, onMenu }) {
   return h('li', { className: 'bt-mm-card', 'data-mcp-entry': server.id },
     h('span', { className: 'bt-mm-icon', 'aria-hidden': true },
       server.logo
@@ -89,16 +104,12 @@ function Row({ server, added, busy, onInstall, onOpen, onHome, onMenu }) {
       // An added server has nothing left to install, so its control is the menu that
       // switches it off or takes it away; a card that cannot install only opens.
       added
-        ? h('button', {
-          type: 'button',
-          className: 'bt-mm-switch',
-          role: 'switch',
-          'aria-checked': server.enabled === false ? 'false' : 'true',
-          'aria-label': server.enabled === false ? t('Turn on') : t('Turn off'),
-          title: server.enabled === false ? t('Turn on') : t('Turn off'),
-          disabled: busy,
+        ? h(Toggle, {
+          on: enabled !== false,
+          busy,
+          label: enabled === false ? t('Turn on') : t('Turn off'),
           onClick: onMenu,
-        }, h('span', { className: 'bt-mm-switch-thumb', 'aria-hidden': true }))
+        })
         : server.installable === false
           ? (server.homepage
             ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-btn-ghost', onClick: onHome }, t('Open page'))
@@ -191,11 +202,12 @@ function Installed({ servers, busy, onToggle, onRemove }) {
       server.pending ? ` · ${t('Starts with the next DSH')}` : server.enabled ? '' : ` · ${t('Off')}`,
       server.toolCount ? ` · ${t('{count} tools', { count: server.toolCount })}` : '')),
   h('span', { className: 'bt-mm-inst-end' },
-    h('button', {
-      type: 'button', className: 'bt-mm-switch', 'aria-pressed': server.enabled, 'data-on': server.enabled ? '' : undefined,
-      'aria-label': server.enabled ? t('Turn off') : t('Turn on'), title: server.enabled ? t('Turn off') : t('Turn on'),
-      disabled: busy !== '' || server.pending === true, onClick: () => onToggle(server),
-    }, h(SwitchIcon)),
+    h(Toggle, {
+      on: server.enabled !== false,
+      busy: busy !== '' || server.pending === true,
+      label: server.enabled ? t('Turn off') : t('Turn on'),
+      onClick: () => onToggle(server),
+    }),
     h('button', {
       type: 'button', className: 'bt-mm-remove', 'aria-label': t('Remove'), title: t('Remove'),
       disabled: busy !== '', onClick: () => onRemove(server),
@@ -277,9 +289,37 @@ export function McpMarketTab({ actions = {} }) {
   const [sources, setSources] = useState(() => readSources())
   const [sourceMenu, setSourceMenu] = useState(false)
   const [moreLabels, setMoreLabels] = useState(false)
+  // How many label pills the row has room for, the trailing menu included. 0 means the
+  // whole catalogue fits and no menu is drawn.
+  const [labelFit, setLabelFit] = useState(0)
+  const labelRow = useRef(null)
+  const labelBox = useRef(null)
+  const sourceWrap = useRef(null)
   const [reload, setReload] = useState(0)
   const [adding, setAdding] = useState(null)
   const timer = useRef(null)
+
+  // A menu hangs off its own trigger, so a press anywhere else simply closes it.
+  useEffect(() => {
+    if (!sourceMenu) return undefined
+    const close = (event) => {
+      if (sourceWrap.current !== null && sourceWrap.current.contains(event.target)) return
+      setSourceMenu(false)
+    }
+    document.addEventListener('pointerdown', close, true)
+    return () => document.removeEventListener('pointerdown', close, true)
+  }, [sourceMenu])
+
+
+  useEffect(() => {
+    if (!moreLabels) return undefined
+    const close = (event) => {
+      if (labelRow.current !== null && labelRow.current.contains(event.target)) return
+      setMoreLabels(false)
+    }
+    document.addEventListener('pointerdown', close, true)
+    return () => document.removeEventListener('pointerdown', close, true)
+  }, [moreLabels])
 
   const report = (failure) => setError(String(failure?.message ?? failure))
 
@@ -356,6 +396,41 @@ export function McpMarketTab({ actions = {} }) {
     // asked for again even though the category did not change.
     setReload(count => count + 1)
   }
+
+  // The label row is one line: the pills that fit, then a trailing menu for the rest. The
+  // widths come from an off-screen copy of the pills, because a row that is merely clipped
+  // would also cut off the menu hanging from its last pill.
+  const fitLabels = () => {
+    const row = labelRow.current
+    const box = labelBox.current
+    if (row === null || box === null) return
+    const width = row.clientWidth
+    if (width === 0) return
+    const pills = box.querySelectorAll('[data-mm-measure]')
+    if (pills.length === 0) return
+    const more = box.querySelector('[data-mm-measure-more]')
+    const room = width - (more === null ? 0 : more.offsetWidth + 6)
+    let used = 0
+    let fit = 0
+    for (const pill of pills) {
+      const next = fit === 0 ? pill.offsetWidth : used + 6 + pill.offsetWidth
+      if (next > room) break
+      used = next
+      fit += 1
+    }
+    setLabelFit(fit >= pills.length ? 0 : Math.max(1, fit))
+  }
+
+  useLayoutEffect(fitLabels, [categories, category, source])
+
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return undefined
+    const row = labelRow.current
+    if (row === null) return undefined
+    const observer = new ResizeObserver(fitLabels)
+    observer.observe(row)
+    return () => observer.disconnect()
+  }, [categories, category, source])
 
   // The card installs the way the shell's own market installs: read the server, then add
   // it. Anything that cannot be added from that much — no hosted endpoint and no launch
@@ -519,6 +594,10 @@ export function McpMarketTab({ actions = {} }) {
           },
         })
 
+  const shownLabels = labelFit > 0 ? Math.max(0, labelFit - 1) : categories.length
+  const hiddenLabels = categories.slice(shownLabels)
+  const moreLabel = hiddenLabels.some(item => item.id === category) ? categoryName(category) : t('More labels')
+
   return h('div', { className: 'bt-mm' },
     h('div', { className: 'bt-mm-tabs', role: 'tablist', 'aria-label': t('MCP') }, VIEWS().map(item => h('button', {
       key: item.id,
@@ -532,7 +611,7 @@ export function McpMarketTab({ actions = {} }) {
     view === 'discover'
       ? h('div', { className: 'bt-mm-discover', key: 'discover' },
         h('div', { className: 'bt-mm-toolbar' },
-          h('div', { className: 'bt-mm-sourcewrap' },
+          h('div', { className: 'bt-mm-sourcewrap', ref: sourceWrap },
             h('button', {
               type: 'button',
               className: 'bt-mm-source',
@@ -555,8 +634,7 @@ export function McpMarketTab({ actions = {} }) {
                   role: 'menuitem',
                   className: 'bt-mm-menuitem' + (item.id === source ? ' is-on' : ''),
                   onClick: () => { setSource(item.id); setSourceMenu(false); setPage(1); setList({ total: 0, servers: [] }); setCategories([]); setCategory('') },
-                }, item.name, item.custom ? h('span', { className: 'bt-mm-menuitem-x', role: 'button', 'aria-label': t('Remove'), title: t('Remove'), onClick: (event) => { event.stopPropagation(); const next = sources.filter(one => one.id !== item.id); setSources(next); writeSources(next); if (source === item.id) setSource('modelscope') } }, '×') : null,
-                h('span', { className: 'bt-mm-menuitem-check', 'aria-hidden': true }, '✓'))),
+                }, h('span', { className: 'bt-mm-menuitem-check', 'aria-hidden': true }, '✓'), item.name, item.custom ? h('span', { className: 'bt-mm-menuitem-x', role: 'button', 'aria-label': t('Remove'), title: t('Remove'), onClick: (event) => { event.stopPropagation(); const next = sources.filter(one => one.id !== item.id); setSources(next); writeSources(next); if (source === item.id) setSource('modelscope') } }, '×') : null)),
                 h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem bt-mm-menuitem-add', onClick: () => { setSourceMenu(false); setAdding({ name: '', url: '', kind: 'readme' }) } }, t('Manage sources…'), h('span', { className: 'bt-mm-menuitem-gear', 'aria-hidden': true }, '⚙')))
               : null),
           h('label', { className: 'bt-mm-search' },
@@ -573,40 +651,46 @@ export function McpMarketTab({ actions = {} }) {
             h('select', { value: sort, 'aria-label': t('Sort'), onChange: (event) => setSort(event.target.value) },
               h('option', { value: 'default' }, t('Default order')),
               h('option', { value: 'installs' }, t('Downloads'))))),
-        categories.length === 0 ? null : h('div', { className: 'bt-mm-categories', role: 'group', 'aria-label': t('Labels') },
-          h('button', {
-            type: 'button',
-            className: 'bt-mm-pill' + (category === '' ? ' is-on' : ''),
-            'aria-pressed': category === '',
-            onClick: () => pick(''),
-          }, t('All')),
-          // One row of labels: the ones past the first row live in the trailing menu, so a
-          // long catalogue never pushes the cards down.
-          categories.slice(0, 11).map(item => h('button', {
-            key: item.id,
-            type: 'button',
-            className: 'bt-mm-pill' + (category === item.id ? ' is-on' : ''),
-            'aria-pressed': category === item.id,
-            onClick: () => pick(item.id),
-          }, categoryName(item.id))),
-          h('div', { className: 'bt-mm-morewrap' },
+        categories.length === 0 ? null : h('div', { className: 'bt-mm-tagrow' },
+          h('div', { className: 'bt-mm-categories', role: 'group', 'aria-label': t('Labels'), ref: labelRow },
             h('button', {
               type: 'button',
-              className: 'bt-mm-pill bt-mm-morepill' + (categories.slice(11).some(item => item.id === category) ? ' is-on' : ''),
-              'aria-haspopup': 'menu',
-              'aria-expanded': moreLabels ? 'true' : 'false',
-              onClick: () => setMoreLabels(!moreLabels),
-            }, categories.slice(11).some(item => item.id === category) ? categoryName(category) : t('More labels'), h('span', { 'aria-hidden': true }, '▾')),
-            moreLabels
-              ? h('div', { className: 'bt-mm-menu bt-mm-labelmenu', role: 'menu' },
-                categories.map(item => h('button', {
-                  key: item.id,
+              className: 'bt-mm-pill' + (category === '' ? ' is-on' : ''),
+              'aria-pressed': category === '',
+              onClick: () => pick(''),
+            }, t('All')),
+            categories.slice(0, shownLabels).map(item => h('button', {
+              key: item.id,
+              type: 'button',
+              className: 'bt-mm-pill' + (category === item.id ? ' is-on' : ''),
+              'aria-pressed': category === item.id,
+              onClick: () => pick(item.id),
+            }, categoryName(item.id))),
+            hiddenLabels.length === 0
+              ? null
+              : h('div', { className: 'bt-mm-morewrap' },
+                h('button', {
                   type: 'button',
-                  role: 'menuitem',
-                  className: 'bt-mm-menuitem' + (category === item.id ? ' is-on' : ''),
-                  onClick: () => { pick(item.id); setMoreLabels(false) },
-                }, categoryName(item.id), h('span', { className: 'bt-mm-menuitem-check', 'aria-hidden': true }, '✓'))))
-              : null)),
+                  className: 'bt-mm-pill bt-mm-morepill' + (hiddenLabels.some(item => item.id === category) ? ' is-on' : ''),
+                  'aria-haspopup': 'menu',
+                  'aria-expanded': moreLabels ? 'true' : 'false',
+                  onClick: () => setMoreLabels(!moreLabels),
+                }, moreLabel, h('span', { 'aria-hidden': true }, '▾')),
+                moreLabels
+                  ? h('div', { className: 'bt-mm-menu bt-mm-labelmenu', role: 'menu' },
+                    hiddenLabels.map(item => h('button', {
+                      key: item.id,
+                      type: 'button',
+                      role: 'menuitem',
+                      className: 'bt-mm-menuitem' + (category === item.id ? ' is-on' : ''),
+                      onClick: () => { setMoreLabels(false); pick(item.id) },
+                    }, h('span', { className: 'bt-mm-menuitem-check', 'aria-hidden': true }, '✓'), categoryName(item.id))))
+                  : null)),
+          // Off-screen copy of the row, only ever measured.
+          h('div', { className: 'bt-mm-tagmeasure', ref: labelBox, 'aria-hidden': 'true' },
+            h('span', { className: 'bt-mm-pill', 'data-mm-measure': '' }, t('All')),
+            categories.map(item => h('span', { key: item.id, className: 'bt-mm-pill', 'data-mm-measure': '' }, categoryName(item.id))),
+            h('span', { className: 'bt-mm-pill bt-mm-morepill', 'data-mm-measure-more': '' }, moreLabel, h('span', { 'aria-hidden': true }, '▾')))),
         error ? h('p', { className: 'bt-mm-error' }, error) : null,
         body)
       : h('div', { className: 'bt-mm-other' },
