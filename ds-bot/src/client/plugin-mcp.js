@@ -366,14 +366,41 @@ export function McpMarketTab({ actions = {} }) {
     setLoading(true)
     setError('')
     const custom = sources.find(item => item.id === source) ?? null
-    Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page, category, source, custom }))
-      .then((next) => {
+    const ask = (at) => Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page: at, category, source, custom }))
+    // Every section shows six cards, and one plaza page of twenty cannot fill them: a
+    // grouped browse reads a few pages before it draws. A hundred rows is the plaza's own
+    // ceiling for one search, so five pages of twenty is as far as this goes.
+    const fill = page === 1 && category === '' && sent === '' && custom === null
+    const run = async () => {
+      const first = await ask(page)
+      if (!live) return
+      const rows = []
+      const seen = new Set()
+      const collect = (next) => {
+        for (const server of next?.servers ?? []) {
+          if (seen.has(server.id)) continue
+          seen.add(server.id)
+          rows.push(server)
+        }
+      }
+      collect(first)
+      let total = first?.total ?? 0
+      let at = page
+      while (fill && at < 5 && rows.length < 60 && (total === 0 || rows.length < total)) {
+        at += 1
+        const more = await ask(at).catch(() => null)
         if (!live) return
-        setLoading(false)
-        setList((now) => page === 1
-          ? { total: next?.total ?? 0, servers: next?.servers ?? [] }
-          : { total: next?.total ?? now.total, servers: [...now.servers, ...(next?.servers ?? [])] })
-      }, (failure) => { if (live) { setLoading(false); report(failure) } })
+        if (more === null || (more.servers ?? []).length === 0) break
+        total = more.total ?? total
+        collect(more)
+      }
+      if (!live) return
+      setLoading(false)
+      setList((now) => page === 1
+        ? { total, servers: rows }
+        : { total: total === 0 ? now.total : total, servers: [...now.servers, ...rows] })
+    }
+    run().catch((failure) => { if (live) { setLoading(false); report(failure) } })
     return () => { live = false }
   }, [actions, sent, page, category, view, source, sources, reload])
 

@@ -27696,11 +27696,36 @@ function McpMarketTab({ actions = {} }) {
     setLoading(true);
     setError("");
     const custom = sources.find((item) => item.id === source) ?? null;
-    Promise.resolve(actions.mcpMarket?.({ kind: "search", query: sent, page, category, source, custom })).then((next) => {
+    const ask = (at) => Promise.resolve(actions.mcpMarket?.({ kind: "search", query: sent, page: at, category, source, custom }));
+    const fill2 = page === 1 && category === "" && sent === "" && custom === null;
+    const run2 = async () => {
+      const first = await ask(page);
+      if (!live) return;
+      const rows3 = [];
+      const seen = /* @__PURE__ */ new Set();
+      const collect = (next) => {
+        for (const server of next?.servers ?? []) {
+          if (seen.has(server.id)) continue;
+          seen.add(server.id);
+          rows3.push(server);
+        }
+      };
+      collect(first);
+      let total = first?.total ?? 0;
+      let at = page;
+      while (fill2 && at < 5 && rows3.length < 60 && (total === 0 || rows3.length < total)) {
+        at += 1;
+        const more2 = await ask(at).catch(() => null);
+        if (!live) return;
+        if (more2 === null || (more2.servers ?? []).length === 0) break;
+        total = more2.total ?? total;
+        collect(more2);
+      }
       if (!live) return;
       setLoading(false);
-      setList((now) => page === 1 ? { total: next?.total ?? 0, servers: next?.servers ?? [] } : { total: next?.total ?? now.total, servers: [...now.servers, ...next?.servers ?? []] });
-    }, (failure) => {
+      setList((now) => page === 1 ? { total, servers: rows3 } : { total: total === 0 ? now.total : total, servers: [...now.servers, ...rows3] });
+    };
+    run2().catch((failure) => {
       if (live) {
         setLoading(false);
         report(failure);
