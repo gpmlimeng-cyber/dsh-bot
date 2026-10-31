@@ -2926,7 +2926,7 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-menuitem{display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;color:var(--dsw-alias-label-primary);font-size:13px;line-height:18px;text-align:left;background:transparent;border:none;border-radius:var(--dsw-radius-md,6px);cursor:pointer;white-space:nowrap} /* vendored */
 .bt-mm-menuitem:hover{background:var(--bt-hover)}.bt-mm-menuitem.is-on{background:var(--bt-hover)} /* vendored */
 .bt-mm-menuitem.is-on{font-weight:600}
-.bt-mm-menuitem-check{flex:none;width:14px;text-align:center;color:var(--bt-accent);visibility:hidden}
+.bt-mm-menuitem-check{margin-left:auto;flex:none;width:14px;text-align:center;color:var(--bt-accent);visibility:hidden}
 .bt-mm-menuitem.is-on .bt-mm-menuitem.is-on .bt-mm-menuitem-check{visibility:visible}
 .bt-mm-menuitem-gear{margin-left:auto;color:var(--dsw-alias-label-tertiary)}
 .bt-mm-menuitem-x{margin-left:auto;width:20px;height:20px;line-height:18px;text-align:center;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary)}
@@ -27989,17 +27989,17 @@ function McpMarketTab({ actions = {} }) {
                 setCategories([]);
                 setCategory("");
               }
-            }, (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-check", "aria-hidden": true }, "✓"), item.name, item.custom ? (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-x", role: "button", "aria-label": t("Remove"), title: t("Remove"), onClick: (event) => {
+            }, item.name, item.custom ? (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-x", role: "button", "aria-label": t("Remove"), title: t("Remove"), onClick: (event) => {
               event.stopPropagation();
               const next = sources.filter((one) => one.id !== item.id);
               setSources(next);
               writeSources(next);
               if (source === item.id) setSource("modelscope");
-            } }, "×") : null)),
+            } }, "×") : null, (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-check", "aria-hidden": true }, "✓"))),
             (0, import_react55.createElement)("button", { type: "button", role: "menuitem", className: "bt-mm-menuitem bt-mm-menuitem-add", onClick: () => {
               setSourceMenu(false);
               setAdding({ name: "", url: "", kind: "readme" });
-            } }, (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-check", "aria-hidden": true }), t("Manage sources…"), (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-gear", "aria-hidden": true }, "⚙"))
+            } }, t("Manage sources…"), (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-gear", "aria-hidden": true }, "⚙"))
           ) : null
         ),
         (0, import_react55.createElement)(
@@ -28067,7 +28067,7 @@ function McpMarketTab({ actions = {} }) {
                   setMoreLabels(false);
                   pick2(item.id);
                 }
-              }, (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-check", "aria-hidden": true }, "✓"), categoryName(item.id)))
+              }, categoryName(item.id), (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-check", "aria-hidden": true }, "✓")))
             ) : null
           )
         ),

@@ -307,7 +307,7 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-menuitem{display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;color:var(--dsw-alias-label-primary);font-size:13px;line-height:18px;text-align:left;background:transparent;border:none;border-radius:var(--dsw-radius-md,6px);cursor:pointer;white-space:nowrap} /* vendored */
 .bt-mm-menuitem:hover{background:var(--bt-hover)}.bt-mm-menuitem.is-on{background:var(--bt-hover)} /* vendored */
 .bt-mm-menuitem.is-on{font-weight:600}
-.bt-mm-menuitem-check{flex:none;width:14px;text-align:center;color:var(--bt-accent);visibility:hidden}
+.bt-mm-menuitem-check{margin-left:auto;flex:none;width:14px;text-align:center;color:var(--bt-accent);visibility:hidden}
 .bt-mm-menuitem.is-on .bt-mm-menuitem.is-on .bt-mm-menuitem-check{visibility:visible}
 .bt-mm-menuitem-gear{margin-left:auto;color:var(--dsw-alias-label-tertiary)}
 .bt-mm-menuitem-x{margin-left:auto;width:20px;height:20px;line-height:18px;text-align:center;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary)}
