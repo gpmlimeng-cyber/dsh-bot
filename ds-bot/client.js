@@ -15668,159 +15668,6 @@ function writeArrangement(next) {
 }
 var emptyArrangement = () => ({ ...EMPTY });
 
-// src/client/frame-layout.js
-var MIN_CHAT = 420;
-var RAIL_WIDTH = 88;
-var PANEL_MIN = { details: 320, browser: 360, side: 320 };
-var DSH_NARROW = 1024;
-var SIDEBAR_MIN = 264;
-var SIDEBAR_MAX = 420;
-var FALLBACK_SIDEBAR_WIDTH = 280;
-var RAIL_SNAP = (RAIL_WIDTH + SIDEBAR_MIN) / 2;
-function frameLayout({ viewport, sidebarWidth, pref, drawer = false, panel = null }) {
-  const fits = pref === "open" && viewport >= sidebarWidth + MIN_CHAT;
-  let left = pref === "hidden" ? "hidden" : fits ? "open" : drawer && pref === "open" ? "drawer" : "rail";
-  let occupied = left === "open" ? sidebarWidth : left === "hidden" ? 0 : RAIL_WIDTH;
-  let panelState = "none";
-  if (panel !== null) {
-    const need = (PANEL_MIN[panel.view] ?? PANEL_MIN.details) + MIN_CHAT;
-    if (occupied + need <= viewport) panelState = "shown";
-    else if (panel.yielded === true) {
-      if (left !== "hidden") {
-        left = "rail";
-        occupied = RAIL_WIDTH;
-      }
-      panelState = occupied + need <= viewport ? "shown" : "overlay";
-    } else panelState = "folded";
-  }
-  return { left, panel: panelState, room: Math.max(0, viewport - occupied) };
-}
-function dragColumn(x, viewport) {
-  if (x < RAIL_SNAP) return { left: "rail", width: RAIL_WIDTH };
-  const docks = viewport >= SIDEBAR_MIN + MIN_CHAT;
-  const high = docks ? Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, viewport - MIN_CHAT)) : SIDEBAR_MAX;
-  return { left: docks ? "open" : "drawer", width: Math.round(Math.max(SIDEBAR_MIN, Math.min(x, high))) };
-}
-var toggledPref = (pref, shown) => pref === "hidden" ? shown : "hidden";
-var RESIZE_SETTLE_MS = 500;
-var userSidebarToggle = ({ before, after, requested = false, sinceResize = Infinity }) => before.collapsed !== after.collapsed && !requested && sinceResize >= RESIZE_SETTLE_MS && before.viewport < DSH_NARROW === after.viewport < DSH_NARROW;
-var PREFS = ["open", "rail", "hidden"];
-function readSidebar(storage = globalThis.localStorage) {
-  try {
-    const saved = JSON.parse(storage.getItem(STORAGE.sidebar) ?? "null");
-    const pref = PREFS.includes(saved?.pref) ? saved.pref : "open";
-    const shown = saved?.shown === "rail" ? "rail" : "open";
-    const width = Number.isFinite(saved?.width) ? Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, saved.width)) : FALLBACK_SIDEBAR_WIDTH;
-    return { pref, shown, width };
-  } catch {
-    return { pref: "open", shown: "open", width: FALLBACK_SIDEBAR_WIDTH };
-  }
-}
-function writeSidebar(value, storage = globalThis.localStorage) {
-  try {
-    storage.setItem(STORAGE.sidebar, JSON.stringify(value));
-  } catch {
-  }
-}
-
-// src/client/frame-watch.js
-var sidebarTrackWidth = () => typeof document === "undefined" ? null : document.querySelector('[class*="_sidebarCol"]')?.getBoundingClientRect().width ?? null;
-var dshCollapsed = () => {
-  if (typeof document === "undefined") return null;
-  const column = document.querySelector('[class*="_sidebarCol"]');
-  return column ? column.parentElement?.hasAttribute("data-sidebar-collapsed") ?? false : null;
-};
-var collapsedTrackWidth = () => document.documentElement.hasAttribute("data-windows-titlebar") || document.documentElement.dataset.platform === "darwin" ? 0 : 56;
-var room = { rule: null, selector: "" };
-var roomRule = () => {
-  const live = room.rule?.parentStyleSheet?.ownerNode?.isConnected;
-  if (live && room.selector) return room.rule;
-  const column = document.querySelector('[class*="_centerCol"]');
-  const selector = column ? [...column.classList].filter((name) => name.includes("_centerCol")).map((name) => `.${CSS.escape(name)}`).join(",") : "";
-  if (live && !selector) return room.rule;
-  const declarations2 = room.rule?.style.cssText ?? "";
-  room.rule?.parentStyleSheet?.ownerNode?.remove();
-  const style = installStyles(`${selector || '[class*="_centerCol"]'}{${declarations2}}`, "chat-room");
-  room.rule = style.sheet.cssRules[0];
-  room.selector = selector;
-  return room.rule;
-};
-var margin = (side, width, style) => {
-  if (width === null) style.removeProperty(`margin-${side}`);
-  else style.setProperty(`margin-${side}`, `${width}px`, "important");
-};
-var roomHold = 0;
-var chatRoom = {
-  /** The margin the Bot panel takes on the right, in px, or null for the shell's own. */
-  setRight(width) {
-    margin("right", width, roomRule().style);
-  },
-  /** The margin our own left column takes while the shell sidebar is collapsed. */
-  setLeft(width) {
-    margin("left", width, roomRule().style);
-  },
-  /** While on, a margin change lands at once instead of gliding. */
-  hold(on) {
-    cancelAnimationFrame(roomHold);
-    if (on) {
-      roomRule().style.setProperty("transition", "none", "important");
-      return;
-    }
-    roomHold = requestAnimationFrame(() => {
-      roomHold = requestAnimationFrame(() => roomRule().style.removeProperty("transition"));
-    });
-  },
-  /** The columns themselves, for a drag's per-frame writes. */
-  columns() {
-    roomRule();
-    return room.selector ? [...document.querySelectorAll(room.selector)] : [];
-  }
-};
-function installFrameWatch(frame) {
-  let collapsedWidth = collapsedTrackWidth();
-  let raf = 0;
-  const watched = /* @__PURE__ */ new Set();
-  const observer = typeof ResizeObserver === "function" ? new ResizeObserver(() => schedule()) : null;
-  const read = () => {
-    const column = document.querySelector('[class*="_sidebarCol"]');
-    const animating = column?.closest("[data-animating]") != null;
-    const width = animating ? null : sidebarTrackWidth();
-    const collapsed = dshCollapsed();
-    if (width !== null && collapsed === true) collapsedWidth = width;
-    frame.set((state) => {
-      const next = { ...state, viewport: window.innerWidth, collapsedWidth, collapsed: collapsed === true };
-      return state.viewport === next.viewport && state.collapsedWidth === next.collapsedWidth && state.collapsed === next.collapsed ? state : next;
-    });
-  };
-  const measure = () => {
-    for (const selector of ['[class*="_sidebarCol"]', '[class*="_centerCol"]']) {
-      for (const column of document.querySelectorAll(selector)) {
-        if (!watched.has(column)) {
-          watched.add(column);
-          observer?.observe(column);
-        }
-      }
-    }
-    read();
-  };
-  const schedule = () => {
-    if (raf === 0) raf = requestAnimationFrame(() => {
-      raf = 0;
-      measure();
-    });
-  };
-  measure();
-  const mutations = new MutationObserver(schedule);
-  mutations.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-sidebar-collapsed", "data-animating"] });
-  window.addEventListener("resize", schedule);
-  return () => {
-    cancelAnimationFrame(raf);
-    mutations.disconnect();
-    observer?.disconnect();
-    window.removeEventListener("resize", schedule);
-  };
-}
-
 // src/client/sidebar.js
 var import_react20 = require("react");
 var import_react_dom4 = require("react-dom");
@@ -15830,12 +15677,6 @@ function useMarkedUnread(id, active, marked, actions) {
   }, [active, marked]);
 }
 var PinMark = () => (0, import_react20.createElement)("span", { className: "bt-pin", "aria-hidden": true }, (0, import_react20.createElement)(PinMarkIcon));
-var nameIfCut = (event) => {
-  const row = event.currentTarget;
-  const name = row.querySelector(".bt-row-title");
-  if (name && name.scrollWidth > name.clientWidth) row.title = name.textContent;
-  else row.removeAttribute("title");
-};
 var useApproval = (useWork, match) => useWork ? useWork((work) => (work.approvals ?? []).some(match)) : false;
 var useGroupWork = (useWork, pick2) => useWork ? useWork((work) => JSON.stringify(pick2(work.rooms ?? {}))) : "[]";
 var workKeys = (text) => JSON.parse(text);
@@ -15899,7 +15740,6 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
       "aria-current": active ? "page" : void 0,
       "data-bot-id": id,
       title: wide ? void 0 : bot.name,
-      onMouseEnter: wide ? nameIfCut : void 0,
       onClick: () => actions.openSession(id),
       onContextMenu,
       draggable: true,
@@ -15908,7 +15748,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
         event.dataTransfer.effectAllowed = "move";
       }
     },
-    (0, import_react20.createElement)(BotAvatar, { bot, size: wide ? 36 : 44, state, main }),
+    (0, import_react20.createElement)(BotAvatar, { bot, size: 36, state, main }),
     pinned && !wide ? (0, import_react20.createElement)(PinMark) : null,
     wide ? (0, import_react20.createElement)(
       "span",
@@ -15916,7 +15756,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
       (0, import_react20.createElement)("span", { className: "bt-row-name" }, (0, import_react20.createElement)("span", { className: "bt-row-title" }, bot.name), pinned ? (0, import_react20.createElement)(PinMark) : null, (0, import_react20.createElement)(RowTime, { at })),
       runningLine ? (0, import_react20.createElement)("span", { className: "bt-row-preview" }, runningLine) : awayLine ? (0, import_react20.createElement)("span", { className: "bt-row-preview" }, awayLine) : waitsFor ? (0, import_react20.createElement)("span", { className: "bt-row-preview" }, waitsFor) : preview ? (0, import_react20.createElement)("span", { className: "bt-row-preview" }, preview) : null
     ) : null,
-    wide && unread && !active ? (0, import_react20.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : !wide && !active && (alert || unread) ? (0, import_react20.createElement)("span", { className: `bt-dot${alert ? " bt-dot-wait" : ""}`, "aria-hidden": true }) : null
+    wide && unread && !active ? (0, import_react20.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
   );
 }
 function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked, at }) {
@@ -15941,8 +15781,6 @@ function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, 
       "aria-label": label,
       "aria-current": active ? "page" : void 0,
       "data-room-id": id,
-      title: wide ? void 0 : room2.name,
-      onMouseEnter: wide ? nameIfCut : void 0,
       onClick: () => actions.openSession(id),
       onContextMenu: (event) => {
         event.preventDefault();
@@ -15954,7 +15792,7 @@ function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, 
         event.dataTransfer.effectAllowed = "move";
       }
     },
-    (0, import_react20.createElement)(RoomAvatar, { room: room2, roster, size: wide ? 36 : 44 }),
+    (0, import_react20.createElement)(RoomAvatar, { room: room2, roster, size: 36 }),
     pinned && !wide ? (0, import_react20.createElement)(PinMark) : null,
     wide ? (0, import_react20.createElement)(
       "span",
@@ -15962,7 +15800,7 @@ function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, 
       (0, import_react20.createElement)("span", { className: "bt-row-name" }, (0, import_react20.createElement)("span", { className: "bt-row-title" }, room2.name), pinned ? (0, import_react20.createElement)(PinMark) : null, (0, import_react20.createElement)(RowTime, { at })),
       workingLine ? (0, import_react20.createElement)("span", { className: "bt-row-preview" }, workingLine) : preview ? (0, import_react20.createElement)("span", { className: "bt-row-preview" }, preview) : null
     ) : null,
-    wide && approval && !active ? (0, import_react20.createElement)("span", { className: "bt-unread bt-unread-wait", "aria-hidden": true }) : wide && unread && !active ? (0, import_react20.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : !wide && !active && (approval || unread) ? (0, import_react20.createElement)("span", { className: `bt-dot${approval ? " bt-dot-wait" : ""}`, "aria-hidden": true }) : null
+    wide && approval && !active ? (0, import_react20.createElement)("span", { className: "bt-unread bt-unread-wait", "aria-hidden": true }) : wide && unread && !active ? (0, import_react20.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
   );
 }
 function AgentSessionRow({ session, agent, actions, renaming, index }) {
@@ -16081,14 +15919,14 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
           actions.openMenu({ kind: "agent", id: agent.id, x: event.clientX, y: event.clientY });
         }
       },
-      (0, import_react20.createElement)("span", { className: `bt-agent-ava${running ? " bt-run" : ""}` }, (0, import_react20.createElement)(import_dsh_client_ui_primitives.FishLogo, { size: wide ? 22 : 24 })),
+      (0, import_react20.createElement)("span", { className: `bt-agent-ava${running ? " bt-run" : ""}` }, (0, import_react20.createElement)(import_dsh_client_ui_primitives.FishLogo, { size: 22 })),
       wide ? (0, import_react20.createElement)(
         "span",
         { className: "bt-row-body" },
         (0, import_react20.createElement)("span", { className: "bt-row-name" }, (0, import_react20.createElement)("span", { className: "bt-row-title" }, "DSH Agent"), (0, import_react20.createElement)(RowTime, { at })),
         preview ? (0, import_react20.createElement)("span", { className: "bt-row-preview" }, preview) : null
       ) : null,
-      wide && unread && !active ? (0, import_react20.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : !wide && unread && !active ? (0, import_react20.createElement)("span", { className: "bt-dot", "aria-hidden": true }) : null
+      wide && unread && !active ? (0, import_react20.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : null
     ),
     (0, import_react20.createElement)(
       "div",
@@ -16136,27 +15974,6 @@ function useListGlide(listRef, layout, key) {
     tops.current = { layout, map: next };
   }, [layout, key]);
 }
-function LeftColumn({ mode, width, onGrip, children }) {
-  return (0, import_react_dom4.createPortal)((0, import_react20.createElement)(
-    "div",
-    { className: "bt-leftcol", "data-left": mode, style: { width: `${width}px` } },
-    children,
-    (0, import_react20.createElement)("div", { className: "bt-leftcol-grip", role: "separator", "aria-orientation": "vertical", "aria-label": t("Resize sidebar"), title: t("Resize sidebar"), onPointerDown: onGrip })
-  ), document.body);
-}
-function TitleToggle({ hidden, onToggle }) {
-  if (typeof document === "undefined") return null;
-  const titlebar = document.documentElement.hasAttribute("data-windows-titlebar");
-  if (!titlebar && !hidden) return null;
-  const label = t(hidden ? "Expand sidebar" : "Collapse sidebar");
-  return (0, import_react_dom4.createPortal)((0, import_react20.createElement)("button", {
-    type: "button",
-    className: titlebar ? "bt-title-toggle" : "bt-round bt-title-toggle",
-    "aria-label": label,
-    title: label,
-    onClick: onToggle
-  }, (0, import_react20.createElement)(SidebarIcon)), document.body);
-}
 function TeamSidebar(props) {
   const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props;
   const [market, setMarket] = (0, import_react20.useState)(false);
@@ -16175,20 +15992,7 @@ function TeamSidebar(props) {
   (0, import_react20.useEffect)(() => holdDrawerDismiss(() => collapseDrawer.current?.()), []);
   const roster = useRoster((value) => value);
   const markedUnread = useUi((value) => value.unread);
-  const uiNow = useUi((value) => value);
   props.useRegistry((value) => value);
-  const frameSnap = props.useFrame ? props.useFrame((value) => value) : { viewport: typeof window === "undefined" ? 0 : window.innerWidth, sidebarWidth: FALLBACK_SIDEBAR_WIDTH, collapsedWidth: 0 };
-  const pref = props.useSidebarPref ? props.useSidebarPref((value) => value) : "open";
-  const layout = frameLayout({
-    viewport: frameSnap.viewport,
-    sidebarWidth: frameSnap.sidebarWidth,
-    pref,
-    drawer: uiNow.leftDrawer === true,
-    panel: uiNow.details ? { view: uiNow.view, yielded: uiNow.panelYield === true } : null
-  });
-  const [drag, setDrag] = (0, import_react20.useState)(null);
-  const mode = drag?.left === "hidden" ? "rail" : drag?.left ?? (layout.left === "hidden" ? "rail" : layout.left);
-  const wideContent = mode !== "rail";
   const updated = useSessions((list) => {
     const stamps = {};
     for (const id of list.ids) stamps[id] = list.byId[id]?.updatedAt ?? 0;
@@ -16297,121 +16101,15 @@ function TeamSidebar(props) {
     }
     return next;
   });
-  useListGlide(listRef, wideContent, order.map((entry) => entry.item.id).join(","));
+  useListGlide(listRef, wide, order.map((entry) => entry.item.id).join(","));
   useLandOnMainBot(roster, useSessions, actions);
-  const openWidth = drag?.width ?? frameSnap.sidebarWidth;
-  const ourWidth = mode === "rail" ? RAIL_WIDTH : openWidth;
-  const pushed = mode === "open" ? openWidth : mode === "hidden" ? 0 : RAIL_WIDTH;
-  (0, import_react20.useLayoutEffect)(() => {
-    if (typeof document === "undefined") return;
-    chatRoom.setLeft(Math.max(0, pushed - (frameSnap.collapsedWidth ?? 0)));
-  }, [pushed, frameSnap.collapsedWidth]);
-  (0, import_react20.useEffect)(() => () => {
-    if (typeof document !== "undefined") chatRoom.setLeft(null);
-  }, []);
-  const startDrag = (event) => {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    const grip = event.currentTarget;
-    grip.setPointerCapture?.(event.pointerId);
-    chatRoom.hold(true);
-    let last = null;
-    let done = false;
-    const onMove = (move) => {
-      last = dragColumn(move.clientX, window.innerWidth);
-      setDrag(last);
-    };
-    const ends = ["pointerup", "pointercancel", "lostpointercapture"];
-    const onEnd = (end) => {
-      if (done) return;
-      done = true;
-      if (end.type === "pointerup") last = dragColumn(end.clientX, window.innerWidth);
-      grip.removeEventListener("pointermove", onMove);
-      for (const name of ends) grip.removeEventListener(name, onEnd);
-      setDrag(null);
-      chatRoom.hold(false);
-      if (last === null) return;
-      actions.setPanelYield?.(false);
-      if (last.left === "rail") {
-        actions.setLeftDrawer?.(false);
-        actions.setSidebarPref?.("rail");
-        return;
-      }
-      actions.setSidebarWidth?.(last.width);
-      actions.setSidebarPref?.("open");
-      actions.setLeftDrawer?.(last.left === "drawer");
-    };
-    grip.addEventListener("pointermove", onMove);
-    for (const name of ends) grip.addEventListener(name, onEnd);
-  };
-  const dsh = (0, import_react20.useRef)(null);
-  const requested = (0, import_react20.useRef)(false);
-  const requestLapse = (0, import_react20.useRef)(0);
-  const [lapsed, setLapsed] = (0, import_react20.useState)(0);
-  (0, import_react20.useEffect)(() => () => clearTimeout(requestLapse.current), []);
-  const resizedAt = (0, import_react20.useRef)(0);
-  (0, import_react20.useEffect)(() => {
-    const onResize = () => {
-      resizedAt.current = performance.now();
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-  const quiet = (on) => {
-    if (on) document.documentElement.setAttribute("data-bt-collapsing", "");
-    else document.documentElement.removeAttribute("data-bt-collapsing");
-  };
-  (0, import_react20.useEffect)(() => () => quiet(false), []);
-  (0, import_react20.useLayoutEffect)(() => {
-    if (typeof document === "undefined" || typeof actions.toggleSidebar !== "function") return void 0;
-    const collapsed = dshCollapsed() ?? !wide;
-    const prev = dsh.current;
-    const viewport = window.innerWidth;
-    dsh.current = { collapsed, viewport };
-    if (prev !== null && collapsed !== prev.collapsed) {
-      if (requested.current) requested.current = false;
-      else if (!collapsed && userSidebarToggle({ before: prev, after: { collapsed, viewport }, sinceResize: performance.now() - resizedAt.current })) {
-        toggleRef.current();
-      }
-    }
-    if (collapsed) {
-      requested.current = false;
-      quiet(false);
-      return void 0;
-    }
-    if (requested.current) return void 0;
-    requested.current = true;
-    quiet(true);
-    actions.toggleSidebar();
-    clearTimeout(requestLapse.current);
-    requestLapse.current = setTimeout(() => {
-      requested.current = false;
-      quiet(false);
-      setLapsed((value) => value + 1);
-    }, 300);
-    return void 0;
-  }, [wide, frameSnap.viewport, lapsed]);
-  (0, import_react20.useEffect)(() => {
-    if (mode !== "drawer") return void 0;
-    const onDown = (event) => {
-      if (event.target instanceof Element && event.target.closest(".bt-leftcol")) return;
-      actions.setLeftDrawer?.(false);
-    };
-    const onKey = (event) => {
-      if (event.key !== "Escape") return;
-      event.stopPropagation();
-      actions.setLeftDrawer?.(false);
-    };
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("keydown", onKey, true);
-    return () => {
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("keydown", onKey, true);
-    };
-  }, [mode]);
   const navigate = (open, id) => {
     const result = open(id);
-    if (uiNow.leftDrawer === true) actions.setLeftDrawer?.(false);
+    if (wide && window.innerWidth < 1024 && !closing.current) {
+      closing.current = true;
+      expandSidebar?.();
+      actions.toggleSidebar();
+    }
     return result;
   };
   const rowActions = {
@@ -16423,55 +16121,25 @@ function TeamSidebar(props) {
     // A row's menu opens its page above the drawer, so the drawer collapses first.
     openSettings: (page, id) => actions.openSettings(page, id, { fromDrawer: true })
   };
-  const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide: wideContent };
+  const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide };
   const typeToSearch = (event) => {
     if (event.defaultPrevented || event.key.length !== 1 || event.key === " " || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return;
     if (event.target instanceof Element && event.target.closest("input,textarea,[contenteditable]")) return;
     event.preventDefault();
     actions.openPalette(event.key, { fromDrawer: true });
   };
-  const onToggle = () => actions.toggleLeftHidden?.();
-  const toggleRef = (0, import_react20.useRef)(onToggle);
-  toggleRef.current = onToggle;
-  (0, import_react20.useEffect)(() => {
-    const onKey = (event) => {
-      if (event.defaultPrevented || event.isComposing || !pressesShellShortcut(event, "sidebar.left.toggle")) return;
-      if (event.target instanceof Element && event.target.closest(".xterm")) return;
-      if (document.querySelector('[aria-modal="true"]')) return;
-      event.preventDefault();
-      event.stopPropagation();
-      toggleRef.current();
-    };
-    document.addEventListener("keydown", onKey, true);
-    return () => document.removeEventListener("keydown", onKey, true);
-  }, []);
-  const top = wideContent ? (0, import_react20.createElement)(
+  return (0, import_react20.createElement)(
     "div",
-    { className: "bt-side-top" },
-    (0, import_react20.createElement)("span", { className: "bt-brand" }, (0, import_react20.createElement)(BrandMark, { size: 22 }), (0, import_react20.createElement)(BrandName)),
-    (0, import_react20.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
-    (0, import_react20.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("Search"), title: t("Search"), onClick: () => actions.openPalette() }, (0, import_react20.createElement)(SearchIcon)),
-    (0, import_react20.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react20.createElement)(PlusIcon)),
-    (0, import_react20.createElement)("button", { type: "button", className: "bt-round bt-side-collapse", "aria-label": t("Collapse sidebar"), title: t("Collapse sidebar"), onClick: onToggle }, (0, import_react20.createElement)(SidebarIcon))
-  ) : (0, import_react20.createElement)(
-    "div",
-    { className: "bt-rail-top" },
-    (0, import_react20.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
-    (0, import_react20.createElement)("button", { type: "button", className: "bt-round bt-side-collapse", "aria-label": t("Collapse sidebar"), title: t("Collapse sidebar"), onClick: onToggle }, (0, import_react20.createElement)(SidebarIcon)),
-    main ? (0, import_react20.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react20.createElement)("div", { className: "bt-hint" }, t("Setting up your Main Bot…")),
-    (0, import_react20.createElement)("span", { className: "bt-rail-sep", "aria-hidden": true })
-  );
-  const foot = wideContent ? (0, import_react20.createElement)("div", { className: "bt-leftcol-foot" }, (0, import_react20.createElement)(AccountLauncher, { seat: false, actions })) : (0, import_react20.createElement)(
-    "div",
-    { className: "bt-leftcol-foot bt-leftcol-foot-rail" },
-    (0, import_react20.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new") }, (0, import_react20.createElement)(PlusIcon)),
-    (0, import_react20.createElement)(AccountLauncher, { seat: false, actions })
-  );
-  const content = (0, import_react20.createElement)(
-    "div",
-    { className: wideContent ? "bt-side" : "bt-side bt-rail", onKeyDown: typeToSearch },
-    top,
-    wideContent && roster.readOnly ? (0, import_react20.createElement)("div", { className: "bt-hint bt-read-only", role: "status" }, hostText(roster.readOnly)) : null,
+    { className: wide ? "bt-side" : "bt-side bt-rail", onKeyDown: typeToSearch },
+    wide ? null : (0, import_react20.createElement)(
+      import_react20.Fragment,
+      null,
+      // The rail opens with the way back: the same control that folded it.
+      (0, import_react20.createElement)("button", { type: "button", className: "bt-round bt-side-expand", "aria-label": t("Expand sidebar"), title: t("Expand sidebar"), onClick: () => actions.toggleSidebar() }, (0, import_react20.createElement)(SidebarIcon)),
+      (0, import_react20.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
+      (0, import_react20.createElement)("button", { type: "button", className: "bt-round", "aria-label": t("New…"), title: t("New…"), onClick: () => actions.openNewChat("new", { fromDrawer: true }) }, (0, import_react20.createElement)(PlusIcon))
+    ),
+    wide && roster.readOnly ? (0, import_react20.createElement)("div", { className: "bt-hint bt-read-only", role: "status" }, hostText(roster.readOnly)) : null,
     (0, import_react20.createElement)(
       "div",
       { ref: listRef, className: "bt-list", role: "region", "aria-label": t("Bot list") },
@@ -16587,16 +16255,9 @@ function TeamSidebar(props) {
         "button",
         { type: "button", className: "bt-apps-chip", "aria-label": t("Connect apps"), title: t("Connect apps"), onClick: () => setMarket(true) },
         (0, import_react20.createElement)("span", { className: "bt-apps-marks", "aria-hidden": true }, (0, import_react20.createElement)("i", { className: "bt-apps-mark" }), (0, import_react20.createElement)("i", { className: "bt-apps-mark bt-apps-mark-b" })),
-        wideContent ? (0, import_react20.createElement)("span", { className: "bt-apps-label" }, t("Connect apps")) : null
+        wide ? (0, import_react20.createElement)("span", { className: "bt-apps-label" }, t("Connect apps")) : null
       )
     ),
-    foot
-  );
-  return (0, import_react20.createElement)(
-    import_react20.Fragment,
-    null,
-    (0, import_react20.createElement)(TitleToggle, { hidden: mode === "hidden", onToggle }),
-    mode === "hidden" ? null : (0, import_react20.createElement)(LeftColumn, { mode, width: ourWidth, onGrip: startDrag }, content),
     market ? (0, import_react20.createElement)(MarketPanel, { open: true, onClose: () => setMarket(false), roster, actions }) : null
   );
 }
@@ -16769,12 +16430,6 @@ function pressSettingsShortcut() {
     shiftKey: held.has("shift"),
     metaKey: held.has("meta")
   }));
-}
-function pressesShellShortcut(event, id) {
-  const binding = shellShortcuts?.catalog.getSnapshot().find((row) => row.id === id)?.binding;
-  if (!binding) return false;
-  const held = new Set(binding.modifiers);
-  return event.code === binding.code && event.ctrlKey === held.has("control") && event.altKey === held.has("alt") && event.shiftKey === held.has("shift") && event.metaKey === held.has("meta");
 }
 var NO_SUBSCRIBE = () => () => {
 };
@@ -17008,7 +16663,7 @@ var SIDEBAR_CSS = `
 .bt-brand .bt-mark{flex:none}
 .bt-pin{flex:none;display:inline-flex;color:var(--bt-ink-3)}
 .bt-rail .bt-row{position:relative}
-.bt-rail .bt-pin{position:absolute;top:1px;left:calc(50% + 14px)}
+.bt-rail .bt-pin{position:absolute;top:3px;left:calc(50% + 12px)}
 .bt-side .bt-read-only{margin:4px 8px 6px;padding:8px 10px;border-radius:10px;background:var(--bt-hover);font-size:12px;line-height:1.45;text-align:left}
 [class*="_footArea"]:has(.bt-foot-account){grid-template-columns:auto minmax(0,1fr) auto;column-gap:6px}
 [class*="_footArea"]>[class*="_footerActions"]>div>.bt-foot-account{grid-column:1;order:1;display:inline-flex}
@@ -17060,6 +16715,159 @@ var SIDEBAR_CSS = `
 @keyframes bt-agent-row-in{from{opacity:0;filter:blur(4px)}to{opacity:1;filter:blur(0)}}
 @media (prefers-reduced-motion:reduce){.bt-agent-sub{transition:none}.bt-agent-sub .bt-agent-sub-row{animation:none}}
 `;
+
+// src/client/frame-layout.js
+var MIN_CHAT = 420;
+var RAIL_WIDTH = 88;
+var PANEL_MIN = { details: 320, browser: 360, side: 320 };
+var DSH_NARROW = 1024;
+var SIDEBAR_MIN = 264;
+var SIDEBAR_MAX = 420;
+var FALLBACK_SIDEBAR_WIDTH = 280;
+var RAIL_SNAP = (RAIL_WIDTH + SIDEBAR_MIN) / 2;
+function frameLayout({ viewport, sidebarWidth, pref, drawer = false, panel = null }) {
+  const fits = pref === "open" && viewport >= sidebarWidth + MIN_CHAT;
+  let left = pref === "hidden" ? "hidden" : fits ? "open" : drawer && pref === "open" ? "drawer" : "rail";
+  let occupied = left === "open" ? sidebarWidth : left === "hidden" ? 0 : RAIL_WIDTH;
+  let panelState = "none";
+  if (panel !== null) {
+    const need = (PANEL_MIN[panel.view] ?? PANEL_MIN.details) + MIN_CHAT;
+    if (occupied + need <= viewport) panelState = "shown";
+    else if (panel.yielded === true) {
+      if (left !== "hidden") {
+        left = "rail";
+        occupied = RAIL_WIDTH;
+      }
+      panelState = occupied + need <= viewport ? "shown" : "overlay";
+    } else panelState = "folded";
+  }
+  return { left, panel: panelState, room: Math.max(0, viewport - occupied) };
+}
+function dragColumn(x, viewport) {
+  if (x < RAIL_SNAP) return { left: "rail", width: RAIL_WIDTH };
+  const docks = viewport >= SIDEBAR_MIN + MIN_CHAT;
+  const high = docks ? Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, viewport - MIN_CHAT)) : SIDEBAR_MAX;
+  return { left: docks ? "open" : "drawer", width: Math.round(Math.max(SIDEBAR_MIN, Math.min(x, high))) };
+}
+var toggledPref = (pref, shown) => pref === "hidden" ? shown : "hidden";
+var RESIZE_SETTLE_MS = 500;
+var userSidebarToggle = ({ before, after, requested = false, sinceResize = Infinity }) => before.collapsed !== after.collapsed && !requested && sinceResize >= RESIZE_SETTLE_MS && before.viewport < DSH_NARROW === after.viewport < DSH_NARROW;
+var PREFS = ["open", "rail", "hidden"];
+function readSidebar(storage = globalThis.localStorage) {
+  try {
+    const saved = JSON.parse(storage.getItem(STORAGE.sidebar) ?? "null");
+    const pref = PREFS.includes(saved?.pref) ? saved.pref : "open";
+    const shown = saved?.shown === "rail" ? "rail" : "open";
+    const width = Number.isFinite(saved?.width) ? Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, saved.width)) : FALLBACK_SIDEBAR_WIDTH;
+    return { pref, shown, width };
+  } catch {
+    return { pref: "open", shown: "open", width: FALLBACK_SIDEBAR_WIDTH };
+  }
+}
+function writeSidebar(value, storage = globalThis.localStorage) {
+  try {
+    storage.setItem(STORAGE.sidebar, JSON.stringify(value));
+  } catch {
+  }
+}
+
+// src/client/frame-watch.js
+var sidebarTrackWidth = () => typeof document === "undefined" ? null : document.querySelector('[class*="_sidebarCol"]')?.getBoundingClientRect().width ?? null;
+var dshCollapsed = () => {
+  if (typeof document === "undefined") return null;
+  const column = document.querySelector('[class*="_sidebarCol"]');
+  return column ? column.parentElement?.hasAttribute("data-sidebar-collapsed") ?? false : null;
+};
+var collapsedTrackWidth = () => document.documentElement.hasAttribute("data-windows-titlebar") || document.documentElement.dataset.platform === "darwin" ? 0 : 56;
+var room = { rule: null, selector: "" };
+var roomRule = () => {
+  const live = room.rule?.parentStyleSheet?.ownerNode?.isConnected;
+  if (live && room.selector) return room.rule;
+  const column = document.querySelector('[class*="_centerCol"]');
+  const selector = column ? [...column.classList].filter((name) => name.includes("_centerCol")).map((name) => `.${CSS.escape(name)}`).join(",") : "";
+  if (live && !selector) return room.rule;
+  const declarations2 = room.rule?.style.cssText ?? "";
+  room.rule?.parentStyleSheet?.ownerNode?.remove();
+  const style = installStyles(`${selector || '[class*="_centerCol"]'}{${declarations2}}`, "chat-room");
+  room.rule = style.sheet.cssRules[0];
+  room.selector = selector;
+  return room.rule;
+};
+var margin = (side, width, style) => {
+  if (width === null) style.removeProperty(`margin-${side}`);
+  else style.setProperty(`margin-${side}`, `${width}px`, "important");
+};
+var roomHold = 0;
+var chatRoom = {
+  /** The margin the Bot panel takes on the right, in px, or null for the shell's own. */
+  setRight(width) {
+    margin("right", width, roomRule().style);
+  },
+  /** The margin our own left column takes while the shell sidebar is collapsed. */
+  setLeft(width) {
+    margin("left", width, roomRule().style);
+  },
+  /** While on, a margin change lands at once instead of gliding. */
+  hold(on) {
+    cancelAnimationFrame(roomHold);
+    if (on) {
+      roomRule().style.setProperty("transition", "none", "important");
+      return;
+    }
+    roomHold = requestAnimationFrame(() => {
+      roomHold = requestAnimationFrame(() => roomRule().style.removeProperty("transition"));
+    });
+  },
+  /** The columns themselves, for a drag's per-frame writes. */
+  columns() {
+    roomRule();
+    return room.selector ? [...document.querySelectorAll(room.selector)] : [];
+  }
+};
+function installFrameWatch(frame) {
+  let collapsedWidth = collapsedTrackWidth();
+  let raf = 0;
+  const watched = /* @__PURE__ */ new Set();
+  const observer = typeof ResizeObserver === "function" ? new ResizeObserver(() => schedule()) : null;
+  const read = () => {
+    const column = document.querySelector('[class*="_sidebarCol"]');
+    const animating = column?.closest("[data-animating]") != null;
+    const width = animating ? null : sidebarTrackWidth();
+    const collapsed = dshCollapsed();
+    if (width !== null && collapsed === true) collapsedWidth = width;
+    frame.set((state) => {
+      const next = { ...state, viewport: window.innerWidth, collapsedWidth, collapsed: collapsed === true };
+      return state.viewport === next.viewport && state.collapsedWidth === next.collapsedWidth && state.collapsed === next.collapsed ? state : next;
+    });
+  };
+  const measure = () => {
+    for (const selector of ['[class*="_sidebarCol"]', '[class*="_centerCol"]']) {
+      for (const column of document.querySelectorAll(selector)) {
+        if (!watched.has(column)) {
+          watched.add(column);
+          observer?.observe(column);
+        }
+      }
+    }
+    read();
+  };
+  const schedule = () => {
+    if (raf === 0) raf = requestAnimationFrame(() => {
+      raf = 0;
+      measure();
+    });
+  };
+  measure();
+  const mutations = new MutationObserver(schedule);
+  mutations.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-sidebar-collapsed", "data-animating"] });
+  window.addEventListener("resize", schedule);
+  return () => {
+    cancelAnimationFrame(raf);
+    mutations.disconnect();
+    observer?.disconnect();
+    window.removeEventListener("resize", schedule);
+  };
+}
 
 // src/client/side-model.js
 var SIDE_SOURCE = "ds-bot-side";
