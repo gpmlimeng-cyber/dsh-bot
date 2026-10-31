@@ -4128,7 +4128,10 @@ html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-utime{display:n
    bubble's left edge — no plate, no shadow, no padding — instead of floating beside it. The
    bubble's line already carries a position, so only the placement changes here, and a row
    with a sender avatar starts the bubble 22+8px in. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools{top:calc(100% + 2px);right:auto;left:0;margin-left:0;transform:none;background:none;box-shadow:none;padding:0;z-index:1000}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools{top:calc(100% - 6px);right:auto;left:0;margin-left:0;transform:none;background:none;box-shadow:none;padding:0;z-index:1000}
+/* The 44px tap target puts 12px of empty button around each glyph, which reads as a gap under
+   the bubble; the icons take a 32px box here so the row sits against the bubble's bottom. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools .bt-tool{width:32px;height:32px}
 /* What a tap on the bubble opens comes above everything this plugin draws, its own sheets at
    61 and its palette layer at 70 included, so nothing covers the icons or their popovers. */
 html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) :is(.bt-menu,.bt-react-strip){z-index:1001}
