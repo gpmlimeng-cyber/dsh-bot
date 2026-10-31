@@ -55,7 +55,17 @@ test('the skin reads the width setting on the Bot’s side and leaves the host�
 // A tap on the bubble opens its tools; on the phone the icons sit bare right under the
 // bubble's left edge, and a row with a sender avatar starts them after it.
 test('the phone rests a bubble’s tools under its left edge', () => {
-  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-tools\{top:calc\(100% \+ 2px\);right:auto;left:0;margin-left:0;transform:none;background:none;box-shadow:none;padding:0\}/)
+  const tools = /:not\(\[data-bt-skin=ours\]\) \.bt-tools\{([^}]*)\}/.exec(bundle)
+  assert.ok(tools !== null, 'no tools rule for the skin')
+  assert.match(tools[1], /top:calc\(100% \+ 2px\)/)
+  assert.match(tools[1], /left:0/)
+  // Bare icons: no plate, no shadow, no padding around them.
+  assert.match(tools[1], /background:none/)
+  assert.match(tools[1], /box-shadow:none/)
+  assert.match(tools[1], /padding:0/)
+  // A tap opens them above every layer this plugin draws (sheets at 61, palette at 70).
+  assert.match(tools[1], /z-index:1000/)
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) :is\(\.bt-menu,\.bt-react-strip\)\{z-index:1001\}/)
   assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg-line:has\(>\.bt-lead\) \.bt-tools\{left:30px\}/)
   assert.doesNotMatch(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg\{position:relative\}/)
 })
