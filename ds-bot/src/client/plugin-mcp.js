@@ -8,7 +8,7 @@
 // tools on the MCP page.
 import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
 import { t } from './i18n.js'
-import { CloseIcon, MoreDotsIcon, PlusIcon, SearchIcon, SwitchIcon, TrashIcon } from './icons.js'
+import { CloseIcon, PlusIcon, SearchIcon, SwitchIcon, TrashIcon } from './icons.js'
 
 // A server name has to fit the profile's own rule; the plaza's ids are `@owner/name`.
 const nameOf = (id) => {
@@ -89,16 +89,16 @@ function Row({ server, added, busy, onInstall, onOpen, onHome, onMenu, menuOpen 
       // An added server has nothing left to install, so its control is the menu that
       // switches it off or takes it away; a card that cannot install only opens.
       added
-        ? h('div', { className: 'bt-mm-rowmenu' },
-          h('button', {
-            type: 'button', className: 'bt-mm-dots', 'aria-haspopup': 'menu', 'aria-expanded': menuOpen ? 'true' : 'false',
-            'aria-label': t('More actions'), title: t('More actions'), onClick: onMenu,
-          }, h(MoreDotsIcon)),
-          menuOpen
-            ? h('div', { className: 'bt-mm-menu bt-mm-rowmenupop', role: 'menu' },
-              h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem', onClick: () => onMenu('off') }, t('Turn off')),
-              h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem', onClick: () => onMenu('remove') }, t('Remove')))
-            : null)
+        ? h('button', {
+          type: 'button',
+          className: 'bt-mm-switch',
+          role: 'switch',
+          'aria-checked': server.enabled === false ? 'false' : 'true',
+          'aria-label': server.enabled === false ? t('Turn on') : t('Turn off'),
+          title: server.enabled === false ? t('Turn on') : t('Turn off'),
+          disabled: busy,
+          onClick: onMenu,
+        }, h('span', { className: 'bt-mm-switch-thumb', 'aria-hidden': true }))
         : server.installable === false
           ? (server.homepage
             ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-btn-ghost', onClick: onHome }, t('Open page'))
@@ -277,6 +277,8 @@ export function McpMarketTab({ actions = {} }) {
   const [sources, setSources] = useState(() => readSources())
   const [sourceMenu, setSourceMenu] = useState(false)
   const [rowMenu, setRowMenu] = useState('')
+  const [moreLabels, setMoreLabels] = useState(false)
+  const [reload, setReload] = useState(0)
   const [adding, setAdding] = useState(null)
   const timer = useRef(null)
 
@@ -325,7 +327,7 @@ export function McpMarketTab({ actions = {} }) {
           : { total: next?.total ?? now.total, servers: [...now.servers, ...(next?.servers ?? [])] })
       }, (failure) => { if (live) { setLoading(false); report(failure) } })
     return () => { live = false }
-  }, [actions, sent, page, category, view, source, sources])
+  }, [actions, sent, page, category, view, source, sources, reload])
 
   useEffect(() => {
     if (view !== 'discover' || categories.length > 0 || source !== 'modelscope') return undefined
@@ -351,7 +353,9 @@ export function McpMarketTab({ actions = {} }) {
   const pick = (value) => {
     setCategory(value)
     setPage(1)
-    setList({ total: 0, servers: [] })
+    // Picking the label that is already on has to bring the list back too, so the read is
+    // asked for again even though the category did not change.
+    setReload(count => count + 1)
   }
 
   // The card installs the way the shell's own market installs: read the server, then add
@@ -412,12 +416,15 @@ export function McpMarketTab({ actions = {} }) {
       if (!buckets.has(key)) buckets.set(key, [])
       buckets.get(key).push(server)
     }
+    // A section keeps its label's place in the chip row, and that row is ordered by how
+    // much each category is downloaded: label and section are the same list.
+    const rank = (id) => { const at = categories.findIndex(item => item.id === id); return at < 0 ? categories.length : at }
     return [...buckets.entries()]
       // A filtered list keeps the name of the category it was filtered to, so opening a
       // section does not rename it to "all".
       .map(([id, servers]) => ({ id, name: category !== '' ? categoryName(category) : (id === '' ? t('All') : categoryName(id)), servers }))
-      .sort((left, right) => right.servers.length - left.servers.length)
-  }, [shown, category])
+      .sort((left, right) => rank(left.id) - rank(right.id) || right.servers.length - left.servers.length)
+  }, [shown, category, categories, t])
   const more = list.servers.length < list.total
 
   const body = view === 'installed'
@@ -454,13 +461,11 @@ export function McpMarketTab({ actions = {} }) {
                 added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
                 busy: installing === server.id,
                 menuOpen: rowMenu === server.id,
-                onMenu: (action) => {
-                  if (action === undefined) { setRowMenu(rowMenu === server.id ? '' : server.id); return }
+                enabled: (rows.find(item => item.serverName === (added[server.id] ?? nameOf(server.id))) ?? {}).enabled !== false,
+                onMenu: () => {
                   const name = added[server.id] ?? nameOf(server.id)
                   const entry = rows.find(item => item.serverName === name)
-                  if (action === 'off' && entry !== undefined) toggle(entry)
-                  if (action === 'remove') remove({ serverName: name })
-                  setRowMenu('')
+                  if (entry !== undefined) toggle(entry)
                 },
                 onInstall: () => install(server),
                 onOpen: () => setOpen(server),
@@ -577,13 +582,33 @@ export function McpMarketTab({ actions = {} }) {
             'aria-pressed': category === '',
             onClick: () => pick(''),
           }, t('All')),
-          categories.map(item => h('button', {
+          // One row of labels: the ones past the first row live in the trailing menu, so a
+          // long catalogue never pushes the cards down.
+          categories.slice(0, 11).map(item => h('button', {
             key: item.id,
             type: 'button',
             className: 'bt-mm-pill' + (category === item.id ? ' is-on' : ''),
             'aria-pressed': category === item.id,
             onClick: () => pick(item.id),
-          }, categoryName(item.id)))),
+          }, categoryName(item.id))),
+          h('div', { className: 'bt-mm-morewrap' },
+            h('button', {
+              type: 'button',
+              className: 'bt-mm-pill bt-mm-morepill' + (categories.slice(11).some(item => item.id === category) ? ' is-on' : ''),
+              'aria-haspopup': 'menu',
+              'aria-expanded': moreLabels ? 'true' : 'false',
+              onClick: () => setMoreLabels(!moreLabels),
+            }, categories.slice(11).some(item => item.id === category) ? categoryName(category) : t('More labels'), h('span', { 'aria-hidden': true }, '▾')),
+            moreLabels
+              ? h('div', { className: 'bt-mm-menu bt-mm-labelmenu', role: 'menu' },
+                categories.map(item => h('button', {
+                  key: item.id,
+                  type: 'button',
+                  role: 'menuitem',
+                  className: 'bt-mm-menuitem' + (category === item.id ? ' is-on' : ''),
+                  onClick: () => { pick(item.id); setMoreLabels(false) },
+                }, categoryName(item.id), h('span', { className: 'bt-mm-menuitem-check', 'aria-hidden': true }, '✓'))))
+              : null)),
         error ? h('p', { className: 'bt-mm-error' }, error) : null,
         body)
       : h('div', { className: 'bt-mm-other' },

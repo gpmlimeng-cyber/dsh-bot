@@ -54,6 +54,7 @@ const ZH = {
   'MCP': 'MCP',
   'Hosted': '已托管',
   'In this profile': '本档案里',
+  'More labels': '更多标签',
   'ModelScope MCP': 'ModelScope MCP',
   'MCP reference servers': 'MCP 官方参考服务器',
   'awesome-mcp-servers': 'awesome-mcp-servers',
