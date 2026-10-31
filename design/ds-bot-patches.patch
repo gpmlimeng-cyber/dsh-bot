@@ -2447,7 +2447,7 @@ index 0000000..ae11666
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index b8f0a61..15bb97b 100644
+index b8f0a61..df6534d 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -3,16 +3,19 @@ import { createPortal } from 'react-dom'
@@ -3022,7 +3022,7 @@ index b8f0a61..15bb97b 100644
 +        : h('button', { key: 'new-group', type: 'button', className: 'bt-sec-new', onClick: beginCreate },
 +          h(PlusIcon), h('span', null, t('New section')))),
 +    h('div', { className: 'bt-side-foot' },
-+      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => setMarket(true) },
++      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => { actions.openPluginsPanel?.() } },
 +        h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
 +        wide ? h('span', { className: 'bt-apps-label' }, t('Connect apps')) : null)),
 +    market ? h(MarketPanel, { open: true, onClose: () => setMarket(false), roster, actions }) : null)
