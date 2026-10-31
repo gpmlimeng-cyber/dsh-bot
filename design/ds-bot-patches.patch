@@ -10452,7 +10452,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..10dbb4cc 100644
+index eac6ea54..798e5e21 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -11021,7 +11021,7 @@ index eac6ea54..10dbb4cc 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1334,162 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1334,165 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -11150,8 +11150,11 @@ index eac6ea54..10dbb4cc 100644
 +  --bt-app-control-hover:var(--bt-hover);
 +  --bt-app-border:var(--bt-line);
 +  --bt-app-accent:var(--bt-accent);
-+  --bt-app-radius-bubble:30px;
-+  --bt-app-radius-bubble-inset:calc(var(--bt-app-radius-bubble) - 12px - 1px);
++  --bt-app-radius-bubble:5px;
++  /* The small corner is the radius minus the 12px pad step; at or below 13px that would go
++     negative, which the browser drops whole, so it bottoms out at 2px. */
++  --bt-app-radius-bubble-inset:max(2px, calc(var(--bt-app-radius-bubble) - 12px - 1px));
++  --bt-app-blur:18px;
 +  --bt-app-radius-card:14px;
 +  --bt-app-radius-group:16px;
 +  --bt-app-radius-modal:30px;
@@ -11184,7 +11187,7 @@ index eac6ea54..10dbb4cc 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1589,94 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1592,102 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -11215,6 +11218,14 @@ index eac6ea54..10dbb4cc 100644
 +/* The paperclip is the shell's own mobile adaptation, and our plus reuses its file input;
 +   where both can upload, one entry is enough. */
 +html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus):has(input[type=file]) [data-mobile-nav="file-upload"]{display:none!important}
++/* The drawer's top edge is glass, in a layer of its own: the slide-in carries a transform,
++   so backdrop-filter cannot sample the page until it lands, and a transition would never
++   start (its computed value does not change). A delayed fade-in stands in. Known cost: the
++   first 0.42s of the slide has no blur; the material settles in just after it, not before. */
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){background:color-mix(in srgb,var(--bt-card) 76%,transparent)}
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-pane:has(> :is(.bt-create,.bt-newchat))::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;backdrop-filter:blur(var(--bt-app-blur)) saturate(1.4);-webkit-backdrop-filter:blur(var(--bt-app-blur)) saturate(1.4);animation:bt-sheet-glass .22s .4s ease-out both}
++@keyframes bt-sheet-glass{from{backdrop-filter:none;-webkit-backdrop-filter:none}}
++
 +/* Where the plus is missing, the shell's button keeps its file input and wears the same plus
 +   glyph through a mask, so the phone's left side always reads the same way. */
 +html:has([data-mobile-nav="frame"]) [data-composer-card]:not(:has(.bt-plus)) [data-mobile-nav="file-upload"]{background-color:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M10 3.5v13M3.5 10h13'/%3E%3C/svg%3E") center/20px 20px no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M10 3.5v13M3.5 10h13'/%3E%3C/svg%3E") center/20px 20px no-repeat}
@@ -11302,7 +11313,7 @@ index eac6ea54..10dbb4cc 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1081,7 +1695,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1081,7 +1706,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
  body[data-bt-room] .bt-voice{display:none!important}
@@ -11311,7 +11322,7 @@ index eac6ea54..10dbb4cc 100644
  .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
  [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
  .bt-q{order:1}
-@@ -1112,17 +1726,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1737,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -11338,7 +11349,7 @@ index eac6ea54..10dbb4cc 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1746,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1757,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -11347,7 +11358,7 @@ index eac6ea54..10dbb4cc 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1787,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1798,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -16523,10 +16534,10 @@ index 59109a99..429e92e8 100644
  test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
 diff --git a/ds-bot/test/skin.test.js b/ds-bot/test/skin.test.js
 new file mode 100644
-index 00000000..2bdebb31
+index 00000000..7842fd00
 --- /dev/null
 +++ b/ds-bot/test/skin.test.js
-@@ -0,0 +1,167 @@
+@@ -0,0 +1,173 @@
 +import assert from 'node:assert/strict'
 +import { readFileSync } from 'node:fs'
 +import { test } from 'node:test'
@@ -16579,6 +16590,10 @@ index 00000000..2bdebb31
 +  const user = /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{([^}]*)\}/.exec(bundle)
 +  assert.ok(user !== null, 'no rule for the host’s user bubbles')
 +  assert.ok(!user[1].includes('max-width'), 'the skin still caps the host’s user bubble width')
++  // The host draws the user's bubble with one shorthand and no per-corner rule, so the same
++  // shorthand here covers all four corners; a longhand would only add a way to miss one.
++  assert.match(user[1], /border-radius:var\(--bt-app-radius-bubble\)!important/)
++  assert.ok(!/border-(?:start|end)-(?:start|end)-radius/.test(user[1]), 'the user bubble grew a per-corner radius')
 +  // Nothing pins the skin back to a full-width bubble.
 +  assert.ok(!bundle.includes('--bt-app-msg-max'), 'the skin still carries its own width token')
 +})
@@ -16590,11 +16605,13 @@ index 00000000..2bdebb31
 +  assert.match(body, /border-radius:var\(--bt-app-radius-bubble\)/)
 +  assert.match(body, /padding:var\(--bt-app-pad\)/)
 +  assert.match(body, /line-height:1\.625/)
-+  assert.match(bundle, /--bt-app-radius-bubble:30px/)
++  assert.match(bundle, /--bt-app-radius-bubble:5px/)
 +  assert.match(bundle, /--bt-app-pad:12px 16px/)
 +  // Neighbouring bubbles use the radius minus the padding step, not a hand-written 9px.
 +  assert.match(bundle, /border-start-start-radius:var\(--bt-app-radius-bubble-inset\)/)
-+  assert.match(bundle, /--bt-app-radius-bubble-inset:calc\(var\(--bt-app-radius-bubble\) - 12px - 1px\)/)
++  assert.match(bundle, /--bt-app-radius-bubble-inset:max\(2px, calc\(var\(--bt-app-radius-bubble\) - 12px - 1px\)\)/)
++  // A negative corner would be dropped whole, so the floor has to stay.
++  assert.match(bundle, /max\(2px,/)
 +})
 +
 +// The settings row is the only place the skin is chosen, and the host never hears about it,
