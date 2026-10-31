@@ -644,7 +644,9 @@ export function McpMarketTab({ actions = {} }) {
                   className: 'bt-mm-menuitem' + (item.id === source ? ' is-on' : ''),
                   onClick: () => { setSource(item.id); setSourceMenu(false); setPage(1); setList({ total: 0, servers: [] }); setCategories([]); setCategory('') },
                 }, item.name, item.custom ? h('span', { className: 'bt-mm-menuitem-x', role: 'button', 'aria-label': t('Remove'), title: t('Remove'), onClick: (event) => { event.stopPropagation(); const next = sources.filter(one => one.id !== item.id); setSources(next); writeSources(next); if (source === item.id) setSource('modelscope') } }, '×') : null, h('span', { className: 'bt-mm-menuitem-check', 'aria-hidden': true }, '✓'))),
-                h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem bt-mm-menuitem-add', onClick: () => { setSourceMenu(false); setAdding({ name: '', url: '', kind: 'readme' }) } }, t('Manage sources…'), h('span', { className: 'bt-mm-menuitem-gear', 'aria-hidden': true }, '⚙')))
+                // The shell hangs its footer items off a hairline inside the list.
+                h('div', { className: 'bt-mm-menu-footer' },
+                  h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem', onClick: () => { setSourceMenu(false); setAdding({ name: '', url: '', kind: 'readme' }) } }, t('Manage sources…'), h('span', { className: 'bt-mm-menuitem-gear', 'aria-hidden': true }, '⚙'))))
               : null),
           h('label', { className: 'bt-mm-search' },
             h(SearchIcon),

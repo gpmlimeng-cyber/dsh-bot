@@ -303,16 +303,16 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The dropdown card is the shell's own, copied verbatim from its primitives
    (_float_ / _menuItem_ in dsh-web-frontend, MIT): same layer, panel radius and
    elevation, so a ds-bot menu reads as one of the shell's. */
-.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 6px);left:-8px;min-width:96px;max-width:320px;display:flex;flex-direction:column;padding:4px;overflow:hidden;background:var(--dsw-alias-bg-layer-3,var(--bt-card));background-image:none;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:.5px solid var(--dsw-alias-border-l2,var(--bt-line-2));border-radius:6px} /* vendored */
-.bt-mm-menuitem{display:flex;align-items:center;gap:6px;padding:5px 8px;color:var(--dsw-alias-label-primary,var(--bt-ink));font-size:var(--dsh-content-font-size-secondary,13px);line-height:18px;text-align:left;background:transparent;border:none;border-radius:4px;cursor:pointer;white-space:nowrap} /* vendored */
+.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 4px);left:0;box-sizing:border-box;display:flex;flex-direction:column;gap:0;padding:2px;overflow:hidden;min-width:164px;max-width:360px;background:var(--dsw-specific-menu,var(--bt-card));background-image:none;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:0;border-radius:7px;box-shadow:var(--dsw-elevation-prominent,0 0 0 .5px rgba(0,0,0,.08),0 6px 16px rgba(0,0,0,.10))} /* vendored */
+.bt-mm-menuitem{display:flex;align-items:center;gap:6px;width:100%;min-height:26px;padding:3px 7px;color:var(--dsw-alias-label-primary,var(--bt-ink));font-size:12px;line-height:18px;text-align:left;background:transparent;border:none;border-radius:5px;cursor:pointer;white-space:nowrap} /* vendored */
 .bt-mm-menuitem:hover{background:var(--dsw-alias-interactive-bg-hover,var(--bt-hover))} /* vendored */
 
-.bt-mm-menuitem-check{margin-left:auto;flex:none;width:14px;text-align:center;color:var(--bt-accent);visibility:hidden}
+.bt-mm-menuitem-check{margin-left:auto;flex:none;width:14px;text-align:center;color:var(--dsw-alias-label-primary,var(--bt-ink));visibility:hidden}
 .bt-mm-menuitem.is-on .bt-mm-menuitem-check{visibility:visible}
 .bt-mm-menuitem-gear{margin-left:auto;color:var(--dsw-alias-label-tertiary)}
 .bt-mm-menuitem-x{margin-left:auto;width:20px;height:20px;line-height:18px;text-align:center;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary)}
 .bt-mm-menuitem-x:hover{background:var(--dsw-alias-interactive-bg-hover)}
-.bt-mm-menuitem-add{border-top:.5px solid var(--bt-line-2);border-radius:0 0 8px 8px;margin-top:4px;padding-top:10px}
+.bt-mm-menu-footer{flex:none;margin-top:4px;padding-top:4px;border-top:.5px solid var(--dsw-alias-border-l2,var(--bt-line-2))}
 .bt-mm-addsource{position:fixed;z-index:40;right:32px;top:96px;width:min(360px,90vw);display:flex;flex-direction:column;gap:10px;padding:16px;overflow:hidden;background-color:color-mix(in srgb,var(--bt-card) 82%,transparent);background-image:none;backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-radius:8px;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);box-shadow:var(--dsw-elevation-prominent)} /* vendored */
 .bt-mm-addsource-head{display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px}
 .bt-mm-btn-ghost{background:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2);color:var(--bt-ink-2)}
