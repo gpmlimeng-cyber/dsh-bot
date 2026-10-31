@@ -600,6 +600,12 @@ export function McpMarketTab({ actions = {} }) {
       })
       : open === null
         ? [
+          rows.length > 0 && category === '' && sent === ''
+            ? h('section', { className: 'bt-mm-group', key: 'installed' },
+              h('div', { className: 'bt-mm-grouphead' },
+                h('h3', { className: 'bt-mm-grouptitle' }, t('Installed'))),
+              h(Installed, { servers: rows, busy: busyRow, onToggle: toggle, onRemove: remove }))
+            : null,
           loading && list.servers.length === 0
             ? h('ul', { className: 'bt-mm-cards', key: 'skeleton', 'aria-busy': true }, [0, 1, 2].map(index => h('li', { key: index, className: 'bt-mm-card' },
               h('span', { className: 'bt-mm-icon bt-mm-skeletonFill', 'aria-hidden': true }),

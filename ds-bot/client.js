@@ -27897,6 +27897,16 @@ function McpMarketTab({ actions = {} }) {
       loadRows();
     }
   }) : open === null ? [
+    rows2.length > 0 && category === "" && sent === "" ? (0, import_react55.createElement)(
+      "section",
+      { className: "bt-mm-group", key: "installed" },
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-grouphead" },
+        (0, import_react55.createElement)("h3", { className: "bt-mm-grouptitle" }, t("Installed"))
+      ),
+      (0, import_react55.createElement)(Installed, { servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove })
+    ) : null,
     loading && list.servers.length === 0 ? (0, import_react55.createElement)("ul", { className: "bt-mm-cards", key: "skeleton", "aria-busy": true }, [0, 1, 2].map((index) => (0, import_react55.createElement)(
       "li",
       { key: index, className: "bt-mm-card" },
