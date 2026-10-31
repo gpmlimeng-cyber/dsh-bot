@@ -10452,7 +10452,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..566b00f9 100644
+index eac6ea54..8f770d3f 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -11021,7 +11021,7 @@ index eac6ea54..566b00f9 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1334,176 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1334,177 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -11187,10 +11187,11 @@ index eac6ea54..566b00f9 100644
 +/* On the phone the bubble this plugin draws for the user's own messages drops its time; the
 +   desktop keeps it. The shell's user row carries no time of its own to hide. */
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-utime{display:none}
-+/* A tap on the bubble opens its tools; on the phone they rest under the bubble's left edge
-+   instead of floating beside it. The bubble's line already carries a position, so only the
-+   placement changes here, and a row with a sender avatar starts the bubble 22+8px in. */
-+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools{top:calc(100% + 4px);right:auto;left:0;margin-left:0;transform:none}
++/* A tap on the bubble opens its tools; on the phone the three icons sit bare right under the
++   bubble's left edge — no plate, no shadow, no padding — instead of floating beside it. The
++   bubble's line already carries a position, so only the placement changes here, and a row
++   with a sender avatar starts the bubble 22+8px in. */
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools{top:calc(100% + 2px);right:auto;left:0;margin-left:0;transform:none;background:none;box-shadow:none;padding:0}
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg-line:has(>.bt-lead) .bt-tools{left:30px}
 +/* A group's own bubble is drawn here, so the skin's padding and radius reach it through the
 +   same tokens as the rest. */
@@ -11198,7 +11199,7 @@ index eac6ea54..566b00f9 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1603,102 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1604,102 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -11324,7 +11325,7 @@ index eac6ea54..566b00f9 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1081,7 +1717,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1081,7 +1718,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
  body[data-bt-room] .bt-voice{display:none!important}
@@ -11333,7 +11334,7 @@ index eac6ea54..566b00f9 100644
  .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
  [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
  .bt-q{order:1}
-@@ -1112,17 +1748,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1749,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -11360,7 +11361,7 @@ index eac6ea54..566b00f9 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1768,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1769,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -11369,7 +11370,7 @@ index eac6ea54..566b00f9 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1809,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1810,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -16545,7 +16546,7 @@ index 59109a99..429e92e8 100644
  test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
 diff --git a/ds-bot/test/skin.test.js b/ds-bot/test/skin.test.js
 new file mode 100644
-index 00000000..30fadbbb
+index 00000000..a46fe0cf
 --- /dev/null
 +++ b/ds-bot/test/skin.test.js
 @@ -0,0 +1,204 @@
@@ -16603,10 +16604,10 @@ index 00000000..30fadbbb
 +  assert.ok(!user[1].includes('max-width'), 'the skin still caps the host’s user bubble width')
 +})
 +
-+// A tap on the bubble opens its tools; on the phone they sit under the bubble's left edge,
-+// and a row with a sender avatar starts them after it. Nothing lifts them onto the name row.
++// A tap on the bubble opens its tools; on the phone the icons sit bare right under the
++// bubble's left edge, and a row with a sender avatar starts them after it.
 +test('the phone rests a bubble’s tools under its left edge', () => {
-+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-tools\{top:calc\(100% \+ 4px\);right:auto;left:0;/)
++  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-tools\{top:calc\(100% \+ 2px\);right:auto;left:0;margin-left:0;transform:none;background:none;box-shadow:none;padding:0\}/)
 +  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg-line:has\(>\.bt-lead\) \.bt-tools\{left:30px\}/)
 +  assert.doesNotMatch(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg\{position:relative\}/)
 +})
