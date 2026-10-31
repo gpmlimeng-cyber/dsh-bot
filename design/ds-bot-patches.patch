@@ -652,7 +652,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index 31f6605..5fde191 100644
+index 31f6605..193edbf 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -665,15 +665,17 @@ index 31f6605..5fde191 100644
  import { MENTION_ORIGIN, currentPart } from './text.js'
  import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
  import { lookOf } from './mark.js'
-@@ -36,6 +37,7 @@ import { USAGE_CSS } from './usage-page.js'
+@@ -35,7 +36,9 @@ import { FOLDER_CSS } from './folder-menu.js'
+ import { USAGE_CSS } from './usage-page.js'
  import { SCHEDULE_CSS } from './schedules.js'
  import { STORAGE, migrateStorage } from './storage.js'
++import { SkillsTab } from './plugin-skills.js'
  import { noteLeft, setUnread, sharedMap, toggleReaction } from './shared-map.js'
 +import { drawerSlot, modeRowSlot, placeModeRow } from './mode-row.js'
  import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
  import { installLocale, language, t } from './i18n.js'
  import { noteClientError, quietly } from './diagnostics.js'
-@@ -144,6 +146,8 @@ export function apply(ctx) {
+@@ -144,6 +147,8 @@ export function apply(ctx) {
    const PREFS_KEY = STORAGE.prefs
    let savedPrefs = {}
    try { savedPrefs = JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') ?? {} } catch { savedPrefs = {} }
@@ -682,7 +684,7 @@ index 31f6605..5fde191 100644
    const writeUnread = (id, value) => {
      const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
      ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
-@@ -326,23 +330,36 @@ export function apply(ctx) {
+@@ -326,23 +331,36 @@ export function apply(ctx) {
        const layout = layoutOf(prefs)
        const width = widthOf(prefs)
        const flatWidth = flatWidthOf(prefs)
@@ -722,7 +724,7 @@ index 31f6605..5fde191 100644
      const offRegistry = registry.subscribe(render)
      return () => {
        offRoster()
-@@ -497,8 +514,145 @@ export function apply(ctx) {
+@@ -497,8 +515,145 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
@@ -869,7 +871,17 @@ index 31f6605..5fde191 100644
      // The left column's own preference: 'open', 'rail' or 'hidden'. The switch
      // remembers the shown one it hid; a drag sets the open column's width.
      setSidebarPref: (pref) => {
-@@ -1016,7 +1170,7 @@ export function apply(ctx) {
+@@ -884,6 +1039,9 @@ export function apply(ctx) {
+     () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
+     () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
+     () => shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
++    // The shell's Plugins page grows its own tabs through this slot; skills come from the
++    // market panel we already ship, so the page shows them beside Installed.
++    () => shadow('plugins.tab', { id: 'skills', order: 20, label: () => t('Skills') }, SkillsTab),
+   ]
+   const installConversation = () => [
+     () => installCompiledStyles(CONVERSATION_CSS, 'conversation'),
+@@ -1016,7 +1174,7 @@ export function apply(ctx) {
        } catch {
          declared = false
        }
@@ -878,7 +890,7 @@ index 31f6605..5fde191 100644
        if (!declared) {
          // The slot itself is not declared yet; keep watching for a while.
          if (verifyAttempts < 20) {
-@@ -1031,8 +1185,297 @@ export function apply(ctx) {
+@@ -1031,8 +1189,297 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -1176,7 +1188,7 @@ index 31f6605..5fde191 100644
        clearTimeout(verifyTimer)
        verifyAttempts = 0
        verifyTimer = setTimeout(verifySidebar, 250)
-@@ -1043,6 +1486,13 @@ export function apply(ctx) {
+@@ -1043,6 +1490,13 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
@@ -2236,6 +2248,22 @@ index fd53a99..69c8de0 100644
 -          h('button', { type: 'button', className: 'bt-nc-send', 'aria-label': t('Send message'), disabled: busy || message.trim() === '' || picked.length === 0, onClick: sendMessage }, h(ArrowUpIcon))))))
 +          h('button', { type: 'button', className: 'bt-nc-send', 'aria-label': t('Send message'), disabled: busy || message.trim() === '' || picked.length === 0, onClick: sendMessage }, h(ArrowUpIcon)))))))
  }
+diff --git a/ds-bot/src/client/plugin-skills.js b/ds-bot/src/client/plugin-skills.js
+new file mode 100644
+index 0000000..1cfe89d
+--- /dev/null
++++ b/ds-bot/src/client/plugin-skills.js
+@@ -0,0 +1,10 @@
++import { createElement as h, useEffect } from 'react'
++import { SkillMarketPanel, readySkillMarket } from './skill-market/panel.js'
++
++// The shell's Plugins page takes extra tabs through its `plugins.tab` slot, and the entry
++// draws the whole tab body. Skills live in the vendored market panel, so the tab is that
++// panel in a frame that has a definite height: the panel sizes itself to its parent.
++export function SkillsTab() {
++  useEffect(() => { readySkillMarket() }, [])
++  return h('div', { className: 'bt-market-skillhost', 'data-bt-skills': '' }, h(SkillMarketPanel))
++}
 diff --git a/ds-bot/src/client/provider-marks.js b/ds-bot/src/client/provider-marks.js
 new file mode 100644
 index 0000000..0328db2
@@ -9415,7 +9443,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..fe5f887 100644
+index eac6ea5..3b96169 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -9456,7 +9484,7 @@ index eac6ea5..fe5f887 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,49 +141,276 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,49 +141,283 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -9606,6 +9634,13 @@ index eac6ea5..fe5f887 100644
 +[data-skill-market] .sm-viewbar-actions .sm-btn{height:28px}
 +/* The panel owns its whole pane: no market padding, no page scroll behind it. */
 +.bt-market-body:has(.bt-market-skillhost){display:flex;flex-direction:column;padding:0;overflow:hidden}
++/* On the shell's Plugins page the pane is the page body: the page is a scrolling column
++   with its own measure, which draws a border and a shadow down its right edge and caps the
++   panel at 960px. The skills tab owns the viewport instead, so the page stops scrolling and
++   the panel's own body scrolls. */
++[class*="_page"]:has([data-bt-skills]){height:100%!important;overflow:hidden!important;padding-bottom:0!important}
++[class*="_page"]:has([data-bt-skills])>[role="tabpanel"]{flex:1 1 auto!important;min-height:0!important;width:100%!important;max-width:min(1760px,100%)!important;gap:0!important}
++[data-bt-skills]{flex:1 1 auto;height:auto;min-height:0;width:100%}
 +.bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 +.bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
 +.bt-market-heading{min-width:0}
@@ -9763,7 +9798,7 @@ index eac6ea5..fe5f887 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -344,6 +577,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -344,6 +584,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -9790,7 +9825,7 @@ index eac6ea5..fe5f887 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -571,7 +824,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -571,7 +831,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -9801,7 +9836,7 @@ index eac6ea5..fe5f887 100644
  /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
     collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -587,6 +842,9 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+@@ -587,6 +849,9 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
  /* Elsewhere the switch shows only while the column is hidden, where the column's
     own top row had it. */
  html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
@@ -9811,7 +9846,7 @@ index eac6ea5..fe5f887 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -626,7 +884,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -626,7 +891,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -9821,7 +9856,7 @@ index eac6ea5..fe5f887 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1180,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1187,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -9942,7 +9977,7 @@ index eac6ea5..fe5f887 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1393,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1400,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -10051,7 +10086,7 @@ index eac6ea5..fe5f887 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1112,17 +1521,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1528,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -10078,7 +10113,7 @@ index eac6ea5..fe5f887 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1541,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1548,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -10087,7 +10122,7 @@ index eac6ea5..fe5f887 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1582,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1589,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
