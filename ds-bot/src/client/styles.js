@@ -325,7 +325,7 @@ ul.bt-mm-cards>.bt-mm-card{margin:0}
 .bt-mm-group{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
 .bt-mm-grouphead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 8px;border-bottom:.5px solid var(--bt-line)}
 .bt-mm-grouptitle{margin:0;font-size:14px;font-weight:600;line-height:22px;color:var(--dsw-alias-label-primary)}
-.bt-mm-groupmore{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin:-4px -6px -4px 0;border:0;border-radius:6px;background:none;color:var(--dsw-alias-label-tertiary,var(--bt-ink-3));cursor:pointer}.bt-mm-groupmore:hover{background:var(--dsw-alias-interactive-bg-hover,var(--bt-hover));color:var(--dsw-alias-label-primary,var(--bt-ink))}
+.bt-mm-groupmore{min-width:0;max-width:62%;margin-left:auto;padding:0;border:0;background:none;color:var(--dsw-alias-label-tertiary,var(--bt-ink-3));font:inherit;font-size:12.5px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary,var(--bt-ink))}
 .bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary)}
 /* The installed card's switch is the shell's own switch, copied from its stylesheet:
    36x20, layer-3 track, brand fill when on, 16px thumb that slides 16px. */

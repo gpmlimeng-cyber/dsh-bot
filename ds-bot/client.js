@@ -391,7 +391,8 @@ var ZH = {
   About: "简介",
   "Show less": "收起",
   "Show more": "展开",
-  "Show all": "查看全部",
+  "View {names}, and {count} more": "查看{names}，另有 {count} 项",
+  "View {names}": "查看{names}",
   "Admin leads": "管理员主持",
   "Plain messages go to the admin, who calls others with @Name.": "普通消息先给管理员，由管理员用 @名字 点名其他成员。",
   Everyone: "所有人",
@@ -2945,7 +2946,7 @@ ul.bt-mm-cards>.bt-mm-card{margin:0}
 .bt-mm-group{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
 .bt-mm-grouphead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 8px;border-bottom:.5px solid var(--bt-line)}
 .bt-mm-grouptitle{margin:0;font-size:14px;font-weight:600;line-height:22px;color:var(--dsw-alias-label-primary)}
-.bt-mm-groupmore{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin:-4px -6px -4px 0;border:0;border-radius:6px;background:none;color:var(--dsw-alias-label-tertiary,var(--bt-ink-3));cursor:pointer}.bt-mm-groupmore:hover{background:var(--dsw-alias-interactive-bg-hover,var(--bt-hover));color:var(--dsw-alias-label-primary,var(--bt-ink))}
+.bt-mm-groupmore{min-width:0;max-width:62%;margin-left:auto;padding:0;border:0;background:none;color:var(--dsw-alias-label-tertiary,var(--bt-ink-3));font:inherit;font-size:12.5px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary,var(--bt-ink))}
 .bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary)}
 /* The installed card's switch is the shell's own switch, copied from its stylesheet:
    36x20, layer-3 track, brand fill when on, 16px thumb that slides 16px. */
@@ -27846,6 +27847,12 @@ function McpMarketTab({ actions = {} }) {
     };
     return [...buckets.entries()].map(([id, servers]) => ({ id, name: category !== "" ? categoryName(category) : id === "" ? t("All") : categoryName(id), servers })).sort((left, right) => rank(left.id) - rank(right.id) || right.servers.length - left.servers.length);
   }, [shown, category, categories, t]);
+  const sectionMore = (group) => {
+    const rest = group.servers.slice(6);
+    if (rest.length === 0) return null;
+    const names2 = rest.slice(0, 2).map((server) => server.name).join(", ");
+    return rest.length > 2 ? t("View {names}, and {count} more", { names: names2, count: rest.length - 2 }) : t("View {names}", { names: names2 });
+  };
   const more = list.servers.length < list.total;
   const body = view === "installed" ? (0, import_react55.createElement)(Installed, { key: "installed", servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove }) : view === "custom" ? (0, import_react55.createElement)(Custom, {
     key: "custom",
@@ -27868,45 +27875,49 @@ function McpMarketTab({ actions = {} }) {
         (0, import_react55.createElement)("span", { className: "bt-mm-skeletonBar bt-mm-skeletonTitle" }),
         (0, import_react55.createElement)("span", { className: "bt-mm-skeletonBar bt-mm-skeletonDescription" })
       )
-    ))) : groups.map((group) => (0, import_react55.createElement)(
-      "section",
-      { className: "bt-mm-group", key: group.id || "all" },
-      (0, import_react55.createElement)(
-        "div",
-        { className: "bt-mm-grouphead" },
-        (0, import_react55.createElement)("h3", { className: "bt-mm-grouptitle" }, group.name),
-        category === "" && group.id !== "" ? (0, import_react55.createElement)("button", {
-          type: "button",
-          className: "bt-mm-groupmore",
-          "aria-label": t("Show all"),
-          title: t("Show all"),
-          onClick: () => {
-            pick2(group.id);
-            setPage(1);
-          }
-        }, (0, import_react55.createElement)(ChevronRightIcon)) : null
-      ),
-      (0, import_react55.createElement)("ul", { className: "bt-mm-cards" }, group.servers.slice(0, category === "" ? 6 : group.servers.length).map((server) => (0, import_react55.createElement)(Row3, {
-        key: server.id,
-        server,
-        added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
-        busy: installing === server.id,
-        enabled: (rows2.find((item) => item.serverName === (added[server.id] ?? nameOf(server.id))) ?? {}).enabled !== false,
-        onMenu: () => {
-          const name = added[server.id] ?? nameOf(server.id);
-          const entry = rows2.find((item) => item.serverName === name);
-          if (entry !== void 0) toggle(entry);
-        },
-        onInstall: () => install(server),
-        onOpen: () => setOpen(server),
-        onHome: () => {
-          try {
-            window.open(server.homepage, "_blank", "noopener");
-          } catch {
-          }
-        }
-      })))
-    )),
+    ))) : groups.map(
+      (group) => {
+        const more2 = category === "" && group.id !== "" ? sectionMore(group) : null;
+        return (0, import_react55.createElement)(
+          "section",
+          { className: "bt-mm-group", key: group.id || "all" },
+          (0, import_react55.createElement)(
+            "div",
+            { className: "bt-mm-grouphead" },
+            (0, import_react55.createElement)("h3", { className: "bt-mm-grouptitle" }, group.name),
+            more2 === null ? null : (0, import_react55.createElement)("button", {
+              type: "button",
+              className: "bt-mm-groupmore",
+              title: group.name,
+              onClick: () => {
+                pick2(group.id);
+                setPage(1);
+              }
+            }, more2)
+          ),
+          (0, import_react55.createElement)("ul", { className: "bt-mm-cards" }, group.servers.slice(0, category === "" ? 6 : group.servers.length).map((server) => (0, import_react55.createElement)(Row3, {
+            key: server.id,
+            server,
+            added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
+            busy: installing === server.id,
+            enabled: (rows2.find((item) => item.serverName === (added[server.id] ?? nameOf(server.id))) ?? {}).enabled !== false,
+            onMenu: () => {
+              const name = added[server.id] ?? nameOf(server.id);
+              const entry = rows2.find((item) => item.serverName === name);
+              if (entry !== void 0) toggle(entry);
+            },
+            onInstall: () => install(server),
+            onOpen: () => setOpen(server),
+            onHome: () => {
+              try {
+                window.open(server.homepage, "_blank", "noopener");
+              } catch {
+              }
+            }
+          })))
+        );
+      }
+    ),
     more ? (0, import_react55.createElement)(
       "button",
       { type: "button", className: "bt-mm-btn bt-mm-more", key: "more", disabled: loading, onClick: () => setPage(page + 1) },

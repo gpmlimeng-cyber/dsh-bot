@@ -8,7 +8,7 @@
 // tools on the MCP page.
 import { createElement as h, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { t } from './i18n.js'
-import { ChevronRightIcon, CloseIcon, PlusIcon, SearchIcon, TrashIcon } from './icons.js'
+import { CloseIcon, PlusIcon, SearchIcon, TrashIcon } from './icons.js'
 
 // A server name has to fit the profile's own rule; the plaza's ids are `@owner/name`.
 const nameOf = (id) => {
@@ -535,6 +535,16 @@ export function McpMarketTab({ actions = {} }) {
       .map(([id, servers]) => ({ id, name: category !== '' ? categoryName(category) : (id === '' ? t('All') : categoryName(id)), servers }))
       .sort((left, right) => rank(left.id) - rank(right.id) || right.servers.length - left.servers.length)
   }, [shown, category, categories, t])
+  // A section shows six cards, and names what it leaves out the way the shell's own skill
+  // list does: the first missing names, then how many more there are.
+  const sectionMore = (group) => {
+    const rest = group.servers.slice(6)
+    if (rest.length === 0) return null
+    const names = rest.slice(0, 2).map(server => server.name).join(', ')
+    return rest.length > 2
+      ? t('View {names}, and {count} more', { names, count: rest.length - 2 })
+      : t('View {names}', { names })
+  }
   const more = list.servers.length < list.total
 
   const body = view === 'installed'
@@ -559,18 +569,19 @@ export function McpMarketTab({ actions = {} }) {
               h('div', { className: 'bt-mm-main' },
                 h('span', { className: 'bt-mm-skeletonBar bt-mm-skeletonTitle' }),
                 h('span', { className: 'bt-mm-skeletonBar bt-mm-skeletonDescription' })))))
-            : groups.map(group => h('section', { className: 'bt-mm-group', key: group.id || 'all' },
+            : groups.map((group) => {
+              const more = category === '' && group.id !== '' ? sectionMore(group) : null
+              return h('section', { className: 'bt-mm-group', key: group.id || 'all' },
               h('div', { className: 'bt-mm-grouphead' },
                 h('h3', { className: 'bt-mm-grouptitle' }, group.name),
-                category === '' && group.id !== ''
-                  ? h('button', {
+                more === null
+                  ? null
+                  : h('button', {
                     type: 'button',
                     className: 'bt-mm-groupmore',
-                    'aria-label': t('Show all'),
-                    title: t('Show all'),
+                    title: group.name,
                     onClick: () => { pick(group.id); setPage(1) },
-                  }, h(ChevronRightIcon))
-                  : null),
+                  }, more)),
               h('ul', { className: 'bt-mm-cards' }, group.servers.slice(0, category === '' ? 6 : group.servers.length).map(server => h(Row, {
                 key: server.id,
                 server,
@@ -585,7 +596,8 @@ export function McpMarketTab({ actions = {} }) {
                 onInstall: () => install(server),
                 onOpen: () => setOpen(server),
                 onHome: () => { try { window.open(server.homepage, '_blank', 'noopener') } catch { /* no window */ } },
-              }))))),
+              }))))}
+            ),
           more
             ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
               loading ? t('Reading…') : t('Show more'))
