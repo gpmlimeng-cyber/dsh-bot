@@ -416,10 +416,10 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 0696236..0d12dac 100644
+index 0696236..a5be753 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,84 @@ const ZH = {
+@@ -18,6 +18,98 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
@@ -456,6 +456,20 @@ index 0696236..0d12dac 100644
 +  'Open it': '打开',
 +  'Skills': '技能',
 +  'MCP': 'MCP',
++  'Hosted': '已托管',
++  'Added as {name}': '已添加为 {name}',
++  'Add to DSH': '添加到 DSH',
++  'Adding…': '添加中…',
++  'Reading…': '读取中…',
++  'Reading the server…': '正在读取服务器…',
++  'Search MCP servers': '搜索 MCP 服务器',
++  '{count} servers': '{count} 个服务器',
++  'No MCP server matches that search.': '没有匹配的 MCP 服务器。',
++  'Hosted endpoint': '托管地址',
++  'Launch line': '启动命令',
++  'Needs {names} set in the profile': '需要在档案里设置 {names}',
++  'This server has no connection this profile can use on its own.': '这个服务器没有本档案可以直接使用的连接方式。',
++  'Server name': '服务器名',
 +  'Add server': '新增服务器',
 +  'New MCP server': '新建 MCP 服务器',
 +  'Edit MCP server': '编辑 MCP 服务器',
@@ -504,7 +518,7 @@ index 0696236..0d12dac 100644
    'Resize sidebar': '调整侧边栏宽度',
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
-@@ -170,7 +248,6 @@ const ZH = {
+@@ -170,7 +262,6 @@ const ZH = {
    'A provider id is lowercase letters, digits and dashes, starting with a letter': '服务商 ID 只能用小写字母、数字和短横线，并以字母开头',
    'Add at least one model': '至少添加一个模型',
    'Two models have the same id': '有两个模型的 ID 相同',
@@ -512,7 +526,7 @@ index 0696236..0d12dac 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -430,6 +507,23 @@ const ZH = {
+@@ -430,6 +521,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -536,7 +550,7 @@ index 0696236..0d12dac 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -545,6 +639,19 @@ const ZH = {
+@@ -545,6 +653,19 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -556,7 +570,7 @@ index 0696236..0d12dac 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +789,6 @@ const ZH = {
+@@ -682,7 +803,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -564,7 +578,7 @@ index 0696236..0d12dac 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1037,10 @@ const ZH = {
+@@ -931,6 +1051,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -575,7 +589,7 @@ index 0696236..0d12dac 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1083,7 @@ const ZH = {
+@@ -973,6 +1097,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -583,7 +597,7 @@ index 0696236..0d12dac 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1179,10 @@ const ZH = {
+@@ -1068,6 +1193,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -652,7 +666,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index 31f6605..193edbf 100644
+index 31f6605..fa4c147 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -665,17 +679,18 @@ index 31f6605..193edbf 100644
  import { MENTION_ORIGIN, currentPart } from './text.js'
  import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
  import { lookOf } from './mark.js'
-@@ -35,7 +36,9 @@ import { FOLDER_CSS } from './folder-menu.js'
+@@ -35,7 +36,10 @@ import { FOLDER_CSS } from './folder-menu.js'
  import { USAGE_CSS } from './usage-page.js'
  import { SCHEDULE_CSS } from './schedules.js'
  import { STORAGE, migrateStorage } from './storage.js'
 +import { SkillsTab } from './plugin-skills.js'
++import { McpMarketTab } from './plugin-mcp.js'
  import { noteLeft, setUnread, sharedMap, toggleReaction } from './shared-map.js'
 +import { drawerSlot, modeRowSlot, placeModeRow } from './mode-row.js'
  import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
  import { installLocale, language, t } from './i18n.js'
  import { noteClientError, quietly } from './diagnostics.js'
-@@ -144,6 +147,8 @@ export function apply(ctx) {
+@@ -144,6 +148,8 @@ export function apply(ctx) {
    const PREFS_KEY = STORAGE.prefs
    let savedPrefs = {}
    try { savedPrefs = JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') ?? {} } catch { savedPrefs = {} }
@@ -684,7 +699,7 @@ index 31f6605..193edbf 100644
    const writeUnread = (id, value) => {
      const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
      ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
-@@ -326,23 +331,36 @@ export function apply(ctx) {
+@@ -326,23 +332,36 @@ export function apply(ctx) {
        const layout = layoutOf(prefs)
        const width = widthOf(prefs)
        const flatWidth = flatWidthOf(prefs)
@@ -724,7 +739,7 @@ index 31f6605..193edbf 100644
      const offRegistry = registry.subscribe(render)
      return () => {
        offRoster()
-@@ -497,8 +515,145 @@ export function apply(ctx) {
+@@ -497,8 +516,145 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
@@ -871,17 +886,18 @@ index 31f6605..193edbf 100644
      // The left column's own preference: 'open', 'rail' or 'hidden'. The switch
      // remembers the shown one it hid; a drag sets the open column's width.
      setSidebarPref: (pref) => {
-@@ -884,6 +1039,9 @@ export function apply(ctx) {
+@@ -884,6 +1040,10 @@ export function apply(ctx) {
      () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
      () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
      () => shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
 +    // The shell's Plugins page grows its own tabs through this slot; skills come from the
 +    // market panel we already ship, so the page shows them beside Installed.
 +    () => shadow('plugins.tab', { id: 'skills', order: 20, label: () => t('Skills') }, SkillsTab),
++    () => shadow('plugins.tab', { id: 'mcp', order: 30, label: () => t('MCP'), inject: face }, McpMarketTab),
    ]
    const installConversation = () => [
      () => installCompiledStyles(CONVERSATION_CSS, 'conversation'),
-@@ -1016,7 +1174,7 @@ export function apply(ctx) {
+@@ -1016,7 +1176,7 @@ export function apply(ctx) {
        } catch {
          declared = false
        }
@@ -890,7 +906,7 @@ index 31f6605..193edbf 100644
        if (!declared) {
          // The slot itself is not declared yet; keep watching for a while.
          if (verifyAttempts < 20) {
-@@ -1031,8 +1189,297 @@ export function apply(ctx) {
+@@ -1031,8 +1191,297 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -1188,7 +1204,7 @@ index 31f6605..193edbf 100644
        clearTimeout(verifyTimer)
        verifyAttempts = 0
        verifyTimer = setTimeout(verifySidebar, 250)
-@@ -1043,6 +1490,13 @@ export function apply(ctx) {
+@@ -1043,6 +1492,13 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
@@ -2248,6 +2264,206 @@ index fd53a99..69c8de0 100644
 -          h('button', { type: 'button', className: 'bt-nc-send', 'aria-label': t('Send message'), disabled: busy || message.trim() === '' || picked.length === 0, onClick: sendMessage }, h(ArrowUpIcon))))))
 +          h('button', { type: 'button', className: 'bt-nc-send', 'aria-label': t('Send message'), disabled: busy || message.trim() === '' || picked.length === 0, onClick: sendMessage }, h(ArrowUpIcon)))))))
  }
+diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
+new file mode 100644
+index 0000000..840b6cc
+--- /dev/null
++++ b/ds-bot/src/client/plugin-mcp.js
+@@ -0,0 +1,194 @@
++// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
++// with the connection details behind a row and one press to add the server to this
++// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
++// the page itself never talks to modelscope.cn.
++//
++// What a row can promise: the plaza's own words about a server, and whether this profile
++// already runs it. Nothing here claims a server works until it is added and DSH lists its
++// tools on the MCP page.
++import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
++import { t } from './i18n.js'
++import { CloseIcon, PlusIcon, SearchIcon } from './icons.js'
++
++// A server name has to fit the profile's own rule; the plaza's ids are `@owner/name`.
++const nameOf = (id) => {
++  const tail = String(id ?? '').split('/').pop() ?? ''
++  const slug = tail.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '')
++  return slug.slice(0, 32) || 'mcp-server'
++}
++
++const shortCount = (value) => {
++  const n = Number(value ?? 0)
++  if (!Number.isFinite(n) || n <= 0) return ''
++  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`
++  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`
++  return String(n)
++}
++
++function Row({ server, added, onOpen }) {
++  return h('button', { type: 'button', className: 'bt-mm-row', onClick: onOpen },
++    server.logo
++      ? h('img', { className: 'bt-mm-logo', src: server.logo, alt: '', loading: 'lazy' })
++      : h('span', { className: 'bt-mm-logo bt-mm-logo-empty', 'aria-hidden': true }, server.name.slice(0, 1)),
++    h('span', { className: 'bt-mm-main' },
++      h('span', { className: 'bt-mm-title' },
++        h('span', { className: 'bt-mm-name' }, server.name),
++        server.hosted ? h('span', { className: 'bt-mm-tag' }, t('Hosted')) : null,
++        added ? h('span', { className: 'bt-mm-tag bt-mm-tag-on' }, t('Added')) : null),
++      h('span', { className: 'bt-mm-desc' }, server.description)),
++    h('span', { className: 'bt-mm-end' },
++      server.installs ? h('span', { className: 'bt-mm-count' }, shortCount(server.installs)) : null,
++      h('span', { className: 'bt-mm-go', 'aria-hidden': true }, '›')))
++}
++
++// One server: what it is, and how this profile would connect to it — a hosted endpoint
++// when the plaza has one, otherwise the stdio launch line the server ships.
++function Detail({ actions, server, state, report, onClose, onAdded }) {
++  const [detail, setDetail] = useState(null)
++  const [error, setError] = useState('')
++  const [busy, setBusy] = useState(false)
++  const [name, setName] = useState(nameOf(server.id))
++
++  useEffect(() => {
++    let live = true
++    setName(nameOf(server.id))
++    setError('')
++    Promise.resolve(actions.mcpMarket?.({ kind: 'detail', id: server.id }))
++      .then((next) => { if (live) setDetail(next) }, (failure) => { if (live) setError(String(failure?.message ?? failure)) })
++    return () => { live = false }
++  }, [actions, server.id])
++
++  const url = detail?.urls?.[0]?.url ?? ''
++  const stdio = detail?.stdio ?? null
++  const config = url
++    ? { transport: 'streamable-http', serverName: name, url }
++    : stdio?.command
++      ? { transport: 'stdio', serverName: name, command: stdio.command, args: stdio.args }
++      : null
++
++  const install = () => {
++    if (config === null || busy) return
++    setBusy(true)
++    setError('')
++    Promise.resolve(actions.mcpAdd?.({ config }))
++      .then((next) => { setBusy(false); onAdded(next, name) }, (failure) => { setBusy(false); report(failure) })
++  }
++
++  return h('div', { className: 'bt-mm-detail' },
++    h('div', { className: 'bt-mm-detail-head' },
++      server.logo ? h('img', { className: 'bt-mm-logo bt-mm-logo-lg', src: server.logo, alt: '', loading: 'lazy' }) : null,
++      h('div', { className: 'bt-mm-detail-title' },
++        h('h3', null, server.name),
++        h('p', null, server.publisher || server.id)),
++      h('button', { type: 'button', className: 'bt-mm-close', 'aria-label': t('Close'), title: t('Close'), onClick: onClose }, h(CloseIcon))),
++    h('p', { className: 'bt-mm-detail-desc' }, detail?.description || server.description),
++    error ? h('p', { className: 'bt-mm-error' }, error) : null,
++    detail === null && error === '' ? h('p', { className: 'bt-mm-note' }, t('Reading the server…')) : null,
++    config !== null
++      ? h('div', { className: 'bt-mm-card' },
++        h('span', { className: 'bt-mm-card-label' }, url ? t('Hosted endpoint') : t('Launch line')),
++        h('code', { className: 'bt-mm-code' }, url || `${stdio.command} ${stdio.args.join(' ')}`.trim()),
++        stdio?.env?.length ? h('span', { className: 'bt-mm-note' }, t('Needs {names} set in the profile', { names: stdio.env.join(', ') })) : null,
++        h('label', { className: 'bt-mm-field' },
++          h('span', null, t('Server name')),
++          h('input', { value: name, onChange: (event) => setName(event.target.value), spellCheck: false })))
++      : detail === null ? null : h('p', { className: 'bt-mm-note' }, t('This server has no connection this profile can use on its own.')),
++    detail?.readme ? h('pre', { className: 'bt-mm-readme' }, detail.readme) : null,
++    h('div', { className: 'bt-mm-actions' },
++      h('span', { className: 'bt-mm-note' }, state ? t('Added as {name}', { name: state }) : ''),
++      h('button', {
++        type: 'button',
++        className: 'bt-mm-add',
++        disabled: config === null || busy || name.trim() === '',
++        onClick: install,
++      }, busy ? t('Adding…') : h('span', null, h(PlusIcon), t('Add to DSH')))))
++}
++
++export function McpMarketTab({ actions = {} }) {
++  const [query, setQuery] = useState('')
++  const [sent, setSent] = useState('')
++  const [page, setPage] = useState(1)
++  const [list, setList] = useState({ total: 0, servers: [] })
++  const [error, setError] = useState('')
++  const [loading, setLoading] = useState(false)
++  const [open, setOpen] = useState(null)
++  const [added, setAdded] = useState({})
++  const [installed, setInstalled] = useState([])
++  const timer = useRef(null)
++
++  const report = (failure) => setError(String(failure?.message ?? failure))
++
++  useEffect(() => {
++    let live = true
++    Promise.resolve(actions.mcpList?.()).then((next) => {
++      if (!live) return
++      setInstalled((next?.servers ?? []).map(server => server.serverName))
++    }, () => {})
++    return () => { live = false }
++  }, [actions])
++
++  // Typing settles before the plaza is asked: one request per pause, not per key.
++  useEffect(() => {
++    if (timer.current !== null) clearTimeout(timer.current)
++    timer.current = setTimeout(() => { setSent(query.trim()); setPage(1) }, 320)
++    return () => { if (timer.current !== null) clearTimeout(timer.current) }
++  }, [query])
++
++  useEffect(() => {
++    let live = true
++    setLoading(true)
++    setError('')
++    Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page }))
++      .then((next) => {
++        if (!live) return
++        setLoading(false)
++        setList((now) => page === 1
++          ? { total: next?.total ?? 0, servers: next?.servers ?? [] }
++          : { total: next?.total ?? now.total, servers: [...now.servers, ...(next?.servers ?? [])] })
++      }, (failure) => { if (live) { setLoading(false); report(failure) } })
++    return () => { live = false }
++  }, [actions, sent, page])
++
++  const names = useMemo(() => new Set(installed), [installed])
++  const more = list.servers.length < list.total
++
++  return h('div', { className: 'bt-mm' },
++    h('div', { className: 'bt-mm-head' },
++      h('label', { className: 'bt-mm-search' },
++        h(SearchIcon),
++        h('input', {
++          value: query,
++          placeholder: t('Search MCP servers'),
++          'aria-label': t('Search MCP servers'),
++          onChange: (event) => setQuery(event.target.value),
++        })),
++      h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() }))),
++    error ? h('p', { className: 'bt-mm-error' }, error) : null,
++    open === null
++      ? [
++        h('div', { className: 'bt-mm-list', key: 'list' }, list.servers.map(server => h(Row, {
++          key: server.id,
++          server,
++          added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
++          onOpen: () => setOpen(server),
++        }))),
++        more
++          ? h('button', { type: 'button', className: 'bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
++            loading ? t('Reading…') : t('Show more'))
++          : null,
++        !loading && list.servers.length === 0 && error === '' ? h('p', { className: 'bt-mm-note', key: 'empty' }, t('No MCP server matches that search.')) : null,
++      ]
++      : h(Detail, {
++        key: open.id,
++        actions,
++        server: open,
++        state: added[open.id] ?? null,
++        report,
++        onClose: () => setOpen(null),
++        onAdded: (next, serverName) => {
++          setAdded((now) => ({ ...now, [open.id]: serverName }))
++          setInstalled((next?.servers ?? []).map(server => server.serverName))
++          setOpen(null)
++        },
++      }))
++}
 diff --git a/ds-bot/src/client/plugin-skills.js b/ds-bot/src/client/plugin-skills.js
 new file mode 100644
 index 0000000..1cfe89d
@@ -9443,7 +9659,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..029f161 100644
+index eac6ea5..211741f 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -9484,7 +9700,7 @@ index eac6ea5..029f161 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,49 +141,285 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,49 +141,326 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -9643,6 +9859,47 @@ index eac6ea5..029f161 100644
 +   panel's clipping stops the drawer but not its shadow, which painted a grey band down the
 +   inside of that edge; the drawer only paints a shadow while it is open. */
 +[data-bt-skills] .sm-inspector:not(.open){box-shadow:none}
++/* The MCP tab: the ModelScope plaza as plain rows at the page's own measure, with one
++   server's connection details behind a row. */
++.bt-mm{display:flex;flex-direction:column;gap:12px;max-width:960px;padding-bottom:32px}
++.bt-mm-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
++.bt-mm-search{display:flex;align-items:center;gap:8px;flex:1 1 auto;max-width:420px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
++.bt-mm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
++.bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
++.bt-mm-list{display:flex;flex-direction:column}
++.bt-mm-row{display:flex;align-items:flex-start;gap:12px;width:100%;padding:12px 8px;border:0;border-radius:12px;background:none;text-align:left;color:var(--bt-ink);font:inherit;cursor:pointer}
++.bt-mm-row:hover{background:var(--bt-hover)}
++.bt-mm-logo{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
++.bt-mm-logo-lg{width:48px;height:48px;border-radius:12px}
++.bt-mm-logo-empty{display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;background:var(--bt-hover);color:var(--bt-ink-2)}
++.bt-mm-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 auto}
++.bt-mm-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
++.bt-mm-name{font-size:14px;font-weight:600}
++.bt-mm-tag{font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3)}
++.bt-mm-tag-on{color:var(--bt-accent)}
++.bt-mm-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:19px;color:var(--bt-ink-2)}
++.bt-mm-end{display:flex;align-items:center;gap:8px;flex:none;font-size:12.5px;color:var(--bt-ink-3)}
++.bt-mm-more{align-self:center;height:32px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
++.bt-mm-note{margin:0;font-size:12.5px;color:var(--bt-ink-3)}
++.bt-mm-error{margin:0;font-size:13px;color:#c0392b}
++.bt-mm-detail{display:flex;flex-direction:column;gap:14px;max-width:820px}
++.bt-mm-detail-head{display:flex;align-items:center;gap:12px}
++.bt-mm-detail-title{flex:1 1 auto;min-width:0}
++.bt-mm-detail-title h3{margin:0;font-size:17px;font-weight:600}
++.bt-mm-detail-title p{margin:2px 0 0;font-size:12.5px;color:var(--bt-ink-3)}
++.bt-mm-close{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
++.bt-mm-close:hover{background:var(--bt-hover)}
++.bt-mm-detail-desc{margin:0;font-size:13.5px;line-height:21px;color:var(--bt-ink-2)}
++.bt-mm-card{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
++.bt-mm-card-label{font-size:12px;color:var(--bt-ink-3)}
++.bt-mm-code{font-family:var(--bt-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:12.5px;line-height:18px;color:var(--bt-ink);word-break:break-all}
++.bt-mm-field{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--bt-ink-2)}
++.bt-mm-field input{flex:1 1 auto;min-width:0;height:32px;padding:0 10px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:13px;color:var(--bt-ink);outline:none}
++.bt-mm-readme{margin:0;max-height:320px;overflow:auto;padding:12px 14px;border-radius:12px;background:var(--bt-hover);font-family:var(--bt-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:12.5px;line-height:19px;white-space:pre-wrap;color:var(--bt-ink-2)}
++.bt-mm-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px}
++.bt-mm-add{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 16px;border:0;border-radius:999px;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
++.bt-mm-add:disabled{opacity:.5;cursor:default}
++.bt-mm-add svg{width:15px;height:15px}
 +.bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 +.bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
 +.bt-market-heading{min-width:0}
@@ -9800,7 +10057,7 @@ index eac6ea5..029f161 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -344,6 +586,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -344,6 +627,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -9827,7 +10084,7 @@ index eac6ea5..029f161 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -571,7 +833,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -571,7 +874,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -9838,7 +10095,7 @@ index eac6ea5..029f161 100644
  /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
     collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -587,6 +851,9 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+@@ -587,6 +892,9 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
  /* Elsewhere the switch shows only while the column is hidden, where the column's
     own top row had it. */
  html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
@@ -9848,7 +10105,7 @@ index eac6ea5..029f161 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -626,7 +893,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -626,7 +934,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -9858,7 +10115,7 @@ index eac6ea5..029f161 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1189,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1230,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -9979,7 +10236,7 @@ index eac6ea5..029f161 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1402,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1443,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -10088,7 +10345,7 @@ index eac6ea5..029f161 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1112,17 +1530,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1571,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -10115,7 +10372,7 @@ index eac6ea5..029f161 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1550,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1591,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -10124,7 +10381,7 @@ index eac6ea5..029f161 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1591,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1632,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -10138,7 +10395,7 @@ index eac6ea5..029f161 100644
  
  // -------------------------------------------------------------------------
 diff --git a/ds-bot/src/client/team-actions.js b/ds-bot/src/client/team-actions.js
-index 47d791d..a91f814 100644
+index 47d791d..1695a5b 100644
 --- a/ds-bot/src/client/team-actions.js
 +++ b/ds-bot/src/client/team-actions.js
 @@ -1,5 +1,6 @@
@@ -10173,13 +10430,14 @@ index 47d791d..a91f814 100644
      setPanelView: (view) => {
        if (view !== 'details' && view !== 'browser' && view !== 'side') return
        ui.set(state => (state.details && state.view !== view ? { ...state, view, panelYield: yieldTo(state, view) } : state))
-@@ -120,6 +121,14 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
+@@ -120,6 +121,15 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
      secretCancel: requestId => after(call('secret-cancel', { requestId })),
      secretUpdate: (name, { scope, purpose } = {}) => after(call('secret-update', { name, scope, purpose })),
      secretDelete: name => after(call('secret-delete', { name })),
 +    // MCP servers: the reading calls answer with the profile's own rows; the mutating
 +    // ones answer with the fresh list so the panel never reads twice.
 +    mcpList: () => call('mcp-list'),
++    mcpMarket: payload => call('mcp-market', payload),
 +    mcpTools: serverName => call('mcp-tools', { serverName }),
 +    mcpSave: payload => after(call('mcp-save', payload)),
 +    mcpToggle: payload => after(call('mcp-toggle', payload)),
@@ -10245,7 +10503,7 @@ index 82c3b3b..de970c2 100644
  export const thinkingShown = prefs => prefs?.thinking === true
  export const widthOf = prefs => percent(prefs?.width, 80)
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
-index 3fc5c7c..37955da 100644
+index 3fc5c7c..ae5f4c3 100644
 --- a/ds-bot/src/host/channel.js
 +++ b/ds-bot/src/host/channel.js
 @@ -99,7 +99,7 @@ export function install(rt) {
@@ -10253,7 +10511,7 @@ index 3fc5c7c..37955da 100644
    // What a host that only reads the team may still answer.
    // Updates change the dsh profile, not the team, so a reading host may run them too.
 -  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library'])
-+  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools'])
++  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market'])
  
    function setPrefs(body) {
      if (body.theme !== undefined) {
@@ -10279,7 +10537,7 @@ index 3fc5c7c..37955da 100644
      if (body.layout !== undefined) {
        if (body.layout === null || body.layout === 'bubble') delete state.prefs.layout
        else if (body.layout === 'flat') state.prefs.layout = body.layout
-@@ -352,6 +367,17 @@ export function install(rt) {
+@@ -352,6 +367,18 @@ export function install(rt) {
          case 'secret-delete':
            await rt.load()
            return ok(await rt.secretEndpoint(endpoint, body))
@@ -10291,6 +10549,7 @@ index 3fc5c7c..37955da 100644
 +          await rt.load()
 +          return ok(await rt.mcpEndpoint(endpoint, body))
 +        case 'mcp-tools':
++        case 'mcp-market':
 +          return ok(await rt.mcpEndpoint(endpoint, body))
 +        case 'mcp-list':
 +          return ok(await rt.mcpView())
@@ -10299,10 +10558,10 @@ index 3fc5c7c..37955da 100644
          case 'connector-retry':
 diff --git a/ds-bot/src/host/mcp.js b/ds-bot/src/host/mcp.js
 new file mode 100644
-index 0000000..4b8c5b1
+index 0000000..dea73d4
 --- /dev/null
 +++ b/ds-bot/src/host/mcp.js
-@@ -0,0 +1,283 @@
+@@ -0,0 +1,344 @@
 +// MCP servers: the DSH MCP client instances this profile runs, read and changed through
 +// the profile's own two services — `configEditor` for an entry's config and
 +// `pluginManager` for its switch. Both are shipped with DSH (`dsh-base` mounts them), so
@@ -10328,6 +10587,10 @@ index 0000000..4b8c5b1
 +const ID_PREFIX = 'mcp-'
 +const RECHECK_MS = 1200
 +const SCHEMA_TEXT_MAX = 4000
++// The ModelScope plaza answers one page of twenty rows; the panel asks for a page at a time.
++const MARKET_PAGE_SIZE = 20
++const MARKET_README_MAX = 4000
++const MARKET_TIMEOUT_MS = 15000
 +
 +const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 +
@@ -10543,6 +10806,63 @@ index 0000000..4b8c5b1
 +      const lines = [...cut.lines.slice(0, cut.start), ...cut.lines.slice(cut.end)]
 +      await writePatch(path, lines.join('\n'), async () => !(await servers()).servers.some(item => item.serverName === serverName))
 +      return servers()
++    },
++    // The ModelScope MCP plaza, read through its own open API. Search lists the catalogue
++    // (PUT on the collection, the only verb it answers), and one server's detail carries
++    // what a client needs to connect: either a hosted endpoint under the user's account
++    // or a stdio launch line to run locally.
++    async 'mcp-market'(body) {
++      const base = 'https://modelscope.cn/openapi/v1/mcp/servers'
++      const timeout = AbortSignal.timeout(MARKET_TIMEOUT_MS)
++      if (body.kind === 'detail') {
++        const id = String(body.id ?? '')
++        if (!/^@?[\w.-]+\/[\w.-]+$/.test(id)) throw fail('Unknown MCP server id')
++        const answer = await fetch(`${base}/${id.split('/').map(encodeURIComponent).join('/')}`, { headers: { accept: 'application/json' }, signal: timeout })
++        if (!answer.ok) throw fail(`ModelScope answered ${answer.status}`, 'bot/upstream')
++        const data = (await answer.json())?.data ?? {}
++        const readme = String(data.readme ?? '')
++        const hosted = (Array.isArray(data.operational_urls) ? data.operational_urls : [])
++          .map(entry => ({ type: String(entry?.url ?? '').split('/').pop() ?? '', url: String(entry?.url ?? '') }))
++          .filter(entry => /^https?:\/\//.test(entry.url))
++        const groups = data.server_config?.[0]?.mcpServers
++        const first = groups !== null && typeof groups === 'object' ? Object.entries(groups)[0] : null
++        const stdio = first === null || first === undefined ? null : {
++          name: String(first[0]),
++          command: String(first[1]?.command ?? ''),
++          args: Array.isArray(first[1]?.args) ? first[1].args.map(String) : [],
++          env: Object.keys(first[1]?.env ?? {}).map(String),
++        }
++        return {
++          id: String(data.id ?? id),
++          name: String(data.name || data.chinese_name || id),
++          description: String(data.description ?? ''),
++          readme: readme.length > MARKET_README_MAX ? `${readme.slice(0, MARKET_README_MAX)}\n…` : readme,
++          urls: hosted,
++          stdio,
++        }
++      }
++      const page = Math.max(1, Math.min(10, Number(body.page ?? 1) || 1))
++      const answer = await fetch(base, {
++        method: 'PUT',
++        headers: { accept: 'application/json', 'content-type': 'application/json' },
++        body: JSON.stringify({ page_number: page, page_size: MARKET_PAGE_SIZE, search: String(body.query ?? '') }),
++        signal: timeout,
++      })
++      if (!answer.ok) throw fail(`ModelScope answered ${answer.status}`, 'bot/upstream')
++      const data = (await answer.json())?.data ?? {}
++      const rows = Array.isArray(data.mcp_server_list) ? data.mcp_server_list : []
++      return {
++        total: Number(data.total_count ?? rows.length),
++        servers: rows.map(row => ({
++          id: String(row.id ?? ''),
++          name: String(row.name || row.chinese_name || row.id || ''),
++          publisher: String(row.publisher ?? ''),
++          description: String(row.description ?? ''),
++          logo: String(row.logo_url ?? ''),
++          hosted: row.is_hosted === true,
++          installs: Number(row.view_count ?? 0),
++        })).filter(row => row.id !== ''),
++      }
 +    },
 +    // A schema has no size limit, a chat message does; the panel shows a summary, so the
 +    // text is cut here rather than shipped whole.
