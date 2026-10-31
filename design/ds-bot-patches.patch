@@ -10,7 +10,7 @@ index 190fbf3..0df0cbc 100644
      "no-undef": "error",
      "no-unused-vars": ["error", { "ignoreRestSiblings": true }]
 diff --git a/ds-bot/index.js b/ds-bot/index.js
-index b146590..3e9c599 100644
+index b146590..00f838a 100644
 --- a/ds-bot/index.js
 +++ b/ds-bot/index.js
 @@ -30,6 +30,7 @@ import * as browser from './src/host/browser.js'
@@ -34,7 +34,7 @@ index b146590..3e9c599 100644
  // usage meters model requests after every listener that rewrites them. privacy checks a
  // call before the hooks of tools do, so a closed call never reaches a card they show.
 -const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, officeSkills]
-+const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, mcp, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, officeSkills]
++const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, mcp, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, officeSkills]
  
  export function apply(ctx, config = {}) {
    createRuntime(ctx, config)
@@ -416,10 +416,10 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 0696236..7417132 100644
+index 0696236..c1e3cfe 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,128 @@ const ZH = {
+@@ -18,6 +18,129 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
@@ -448,6 +448,7 @@ index 0696236..7417132 100644
 +  '{count} plugins': '{count} 个插件',
 +  'Browse the plugin markets this Harness lists': '浏览宿主已配置的插件市场',
 +  'Default order': '默认顺序',
++  'Downloads': '下载量',
 +  'Smart picks': '✨ 智能推荐',
 +  'GitHub stars': 'GitHub 星标数',
 +  'Random': '随机资源',
@@ -548,7 +549,7 @@ index 0696236..7417132 100644
    'Resize sidebar': '调整侧边栏宽度',
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
-@@ -170,7 +292,6 @@ const ZH = {
+@@ -170,7 +293,6 @@ const ZH = {
    'A provider id is lowercase letters, digits and dashes, starting with a letter': '服务商 ID 只能用小写字母、数字和短横线，并以字母开头',
    'Add at least one model': '至少添加一个模型',
    'Two models have the same id': '有两个模型的 ID 相同',
@@ -556,7 +557,7 @@ index 0696236..7417132 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -430,6 +551,23 @@ const ZH = {
+@@ -430,6 +552,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -580,7 +581,7 @@ index 0696236..7417132 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -545,6 +683,19 @@ const ZH = {
+@@ -545,6 +684,19 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -600,7 +601,7 @@ index 0696236..7417132 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +833,6 @@ const ZH = {
+@@ -682,7 +834,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -608,7 +609,7 @@ index 0696236..7417132 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1081,10 @@ const ZH = {
+@@ -931,6 +1082,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -619,7 +620,7 @@ index 0696236..7417132 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1127,7 @@ const ZH = {
+@@ -973,6 +1128,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -627,7 +628,7 @@ index 0696236..7417132 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1223,10 @@ const ZH = {
+@@ -1068,6 +1224,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -2296,10 +2297,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..4dcd293
+index 0000000..ca36e7d
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,395 @@
+@@ -0,0 +1,448 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2359,7 +2360,7 @@ index 0000000..4dcd293
 +
 +const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
 +
-+function Row({ server, added, onOpen }) {
++function Row({ server, added, busy, onInstall, onOpen }) {
 +  return h('div', { className: 'bt-mm-plug' + (added ? ' is-added' : '') },
 +    h('button', { type: 'button', className: 'bt-mm-plugopen', 'aria-label': server.name, onClick: onOpen }),
 +    server.logo
@@ -2375,12 +2376,15 @@ index 0000000..4dcd293
 +        server.publisher ? h('span', { className: 'bt-mm-pub' }, server.publisher) : null),
 +      h('p', { className: 'bt-mm-desc' }, server.description)),
 +    h('div', { className: 'bt-mm-end' },
++      // The button installs here, like the shell's own market: already installed is a
++      // state, not a control, so it is disabled rather than a click that does nothing.
 +      h('button', {
 +        type: 'button',
 +        className: 'bt-mm-install',
 +        'data-added': added ? '' : undefined,
-+        onClick: onOpen,
-+      }, added ? t('Installed') : t('Install'))))
++        disabled: added || busy,
++        onClick: onInstall,
++      }, busy ? t('Adding…') : added ? t('Installed') : t('Install'))))
 +}
 +
 +// One server: what it is, and how this profile would connect to it — a hosted endpoint
@@ -2540,6 +2544,7 @@ index 0000000..4dcd293
 +  const [installed, setInstalled] = useState([])
 +  const [rows, setRows] = useState([])
 +  const [busyRow, setBusyRow] = useState('')
++  const [installing, setInstalling] = useState('')
 +  const [notice, setNotice] = useState('')
 +  const [categories, setCategories] = useState([])
 +  const [category, setCategory] = useState('')
@@ -2568,12 +2573,14 @@ index 0000000..4dcd293
 +    return () => { if (timer.current !== null) clearTimeout(timer.current) }
 +  }, [query])
 +
++  // The category goes to the plaza with the search: the list is that category's own page
++  // from the first one, not twenty rows cut down after they arrive.
 +  useEffect(() => {
 +    if (view !== 'discover') return undefined
 +    let live = true
 +    setLoading(true)
 +    setError('')
-+    Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page }))
++    Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page, category }))
 +      .then((next) => {
 +        if (!live) return
 +        setLoading(false)
@@ -2582,7 +2589,7 @@ index 0000000..4dcd293
 +          : { total: next?.total ?? now.total, servers: [...now.servers, ...(next?.servers ?? [])] })
 +      }, (failure) => { if (live) { setLoading(false); report(failure) } })
 +    return () => { live = false }
-+  }, [actions, sent, page, view])
++  }, [actions, sent, page, category, view])
 +
 +  useEffect(() => {
 +    if (view !== 'discover' || categories.length > 0) return undefined
@@ -2603,11 +2610,56 @@ index 0000000..4dcd293
 +      .then((next) => { setBusyRow(''); applyRows(next) }, (failure) => { setBusyRow(''); report(failure) })
 +  }
 +
++  // The chip is part of the search, so a new one starts the list again from the plaza's
++  // first page of that category instead of cutting down what is already on screen.
++  const pick = (value) => {
++    setCategory(value)
++    setPage(1)
++    setList({ total: 0, servers: [] })
++  }
++
++  // The card installs the way the shell's own market installs: read the server, then add
++  // it. Anything that cannot be added from that much — no hosted endpoint and no launch
++  // line, or a write that fails — opens the detail page with the reason.
++  const install = (server) => {
++    if (installing !== '') return
++    setInstalling(server.id)
++    const giveUp = (reason) => {
++      setInstalling('')
++      setOpen(server)
++      setNotice(String(reason?.message ?? reason ?? ''))
++    }
++    Promise.resolve(actions.mcpMarket?.({ kind: 'detail', id: server.id }))
++      .then((detail) => {
++        const name = nameOf(server.id)
++        const url = detail?.urls?.[0]?.url ?? ''
++        const stdio = detail?.stdio ?? null
++        const config = url
++          ? { transport: 'streamable-http', serverName: name, url }
++          : stdio?.command
++            ? { transport: 'stdio', serverName: name, command: stdio.command, args: stdio.args }
++            : null
++        if (config === null) {
++          giveUp(t('This server has no connection this profile can use on its own.'))
++          return undefined
++        }
++        return Promise.resolve(actions.mcpAdd?.({ config })).then((next) => {
++          setInstalling('')
++          setAdded((now) => ({ ...now, [server.id]: name }))
++          applyRows(next)
++          setNotice(next?.pending ? t('Added {name}. Restart DSH to run it.', { name }) : '')
++        })
++      })
++      .catch(giveUp)
++  }
++
 +  const names = useMemo(() => new Set(installed), [installed])
-+  const shown = useMemo(() => {
-+    const rows = category === '' ? list.servers : list.servers.filter(server => (server.categories ?? []).includes(category))
-+    return sort === 'installs' ? rows.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : rows
-+  }, [list.servers, category, sort])
++  const shown = useMemo(
++    () => (sort === 'installs'
++      ? list.servers.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0))
++      : list.servers),
++    [list.servers, sort],
++  )
 +  const more = list.servers.length < list.total
 +
 +  const body = view === 'installed'
@@ -2630,6 +2682,8 @@ index 0000000..4dcd293
 +            key: server.id,
 +            server,
 +            added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
++            busy: installing === server.id,
++            onInstall: () => install(server),
 +            onOpen: () => setOpen(server),
 +          }))),
 +          more
@@ -2683,12 +2737,12 @@ index 0000000..4dcd293
 +        h('div', { className: 'bt-mm-filters', key: 'filters' },
 +          h('span', { className: 'bt-mm-filter-label' }, t('Labels')),
 +          h('div', { className: 'bt-mm-chips' },
-+            h('button', { type: 'button', className: 'bt-mm-chip' + (category === '' ? ' is-on' : ''), onClick: () => setCategory('') }, t('All')),
++            h('button', { type: 'button', className: 'bt-mm-chip' + (category === '' ? ' is-on' : ''), onClick: () => pick('') }, t('All')),
 +            categories.map(item => h('button', {
 +              key: item.id,
 +              type: 'button',
 +              className: 'bt-mm-chip' + (category === item.id ? ' is-on' : ''),
-+              onClick: () => setCategory(item.id),
++              onClick: () => pick(item.id),
 +            }, categoryName(item.id))))),
 +      ]
 +      : null,
@@ -2922,7 +2976,7 @@ index 0000000..ae11666
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index b8f0a61..df6534d 100644
+index b8f0a61..7f880c6 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -3,16 +3,19 @@ import { createPortal } from 'react-dom'
@@ -2930,7 +2984,7 @@ index b8f0a61..df6534d 100644
  import { isMainOf } from './sources.js'
  import { currentPart, previewOf, relativeShort } from './text.js'
 -import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon } from './icons.js'
-+import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon } from './icons.js'
++import { PlusIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon } from './icons.js'
  import { MAIN_LOOK } from './characters.js'
  import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
  import { reducedMotion } from './activity-row.js'
@@ -10833,10 +10887,10 @@ index 3fc5c7c..ae5f4c3 100644
          case 'connector-retry':
 diff --git a/ds-bot/src/host/mcp.js b/ds-bot/src/host/mcp.js
 new file mode 100644
-index 0000000..970223b
+index 0000000..23bfee2
 --- /dev/null
 +++ b/ds-bot/src/host/mcp.js
-@@ -0,0 +1,447 @@
+@@ -0,0 +1,463 @@
 +// MCP servers: the DSH MCP client instances this profile runs, read and changed through
 +// the profile's own two services — `configEditor` for an entry's config and
 +// `pluginManager` for its switch. Both are shipped with DSH (`dsh-base` mounts them), so
@@ -11160,11 +11214,15 @@ index 0000000..970223b
 +      const next = base === '' || base === '[]' ? row : `${base}\n${row}`
 +      // A row added here is read when DSH next starts, so the write is checked against the
 +      // document itself; `pending` tells the page the server is not running yet.
++      // Known gap, not a race this write closes: `next` was read before it, so an entry
++      // that lands in this window is put back over and silently dropped — the self-check
++      // passes because our own row does appear. Two adds at once can lose one.
 +      await writePatch(path, next, async () => (await readFile(path, 'utf8')).includes(`- id: ${quote(id)}`))
 +      return { ...(await servers()), pending: serverName }
 +    },
 +    async 'mcp-remove'(body) {
 +      const serverName = String(body.serverName ?? '')
++      if (!SERVER_NAME.test(serverName)) throw fail('Unknown server')
 +      const id = `${ID_PREFIX}${serverName}`
 +      const { path, text } = await readPatch()
 +      const cut = cutRow(text, id)
@@ -11218,14 +11276,26 @@ index 0000000..970223b
 +          }
 +        }
 +        const value = [...counts.entries()].map(([id, count]) => ({ id, count })).sort((left, right) => right.count - left.count || left.id.localeCompare(right.id))
-+        categoryCache.at = now
-+        categoryCache.value = value
++        // An empty scan is an upstream hiccup, not a market with no categories: caching it
++        // would hide the labels for ten minutes, so only a real set is kept.
++        if (value.length > 0) {
++          categoryCache.at = now
++          categoryCache.value = value
++        }
 +        return value
 +      }
 +      const page = Math.max(1, Math.min(10, Number(body.page ?? 1) || 1))
++      // The chip the person picked narrows the search on the plaza's own side, so the list
++      // it pages through holds only that category and the count above it agrees.
++      const category = /^[\w-]{1,64}$/.test(String(body.category ?? '')) ? String(body.category).toLowerCase() : ''
 +      const data = (await httpsJson(base, {
 +        method: 'PUT',
-+        body: { page_number: page, page_size: MARKET_PAGE_SIZE, search: String(body.query ?? '') },
++        body: {
++          page_number: page,
++          page_size: MARKET_PAGE_SIZE,
++          search: String(body.query ?? ''),
++          ...(category === '' ? {} : { filter: { category } }),
++        },
 +      }))?.data ?? {}
 +      const rows = Array.isArray(data.mcp_server_list) ? data.mcp_server_list : []
 +      return {
@@ -15028,16 +15098,16 @@ index 0000000..31469fd
 +})
 diff --git a/ds-bot/test/mcp.test.js b/ds-bot/test/mcp.test.js
 new file mode 100644
-index 0000000..a84df2d
+index 0000000..37b1fbd
 --- /dev/null
 +++ b/ds-bot/test/mcp.test.js
-@@ -0,0 +1,198 @@
+@@ -0,0 +1,237 @@
 +import assert from 'node:assert/strict'
 +import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 +import { tmpdir } from 'node:os'
 +import { join } from 'node:path'
 +import { test } from 'node:test'
-+import { cutRow, install, rowText, schemaSummary } from '../src/host/mcp.js'
++import { cutRow, install, pendingRows, rowText, schemaSummary } from '../src/host/mcp.js'
 +import { fakeContext } from './fake-ctx.js'
 +
 +const CLIENT = '@deepseek-ai/dsh-mcp-client'
@@ -15229,6 +15299,45 @@ index 0000000..a84df2d
 +    await assert.rejects(env.rt.mcpEndpoint('mcp-remove', { serverName: 'files' }), /not in the profile/)
 +    assert.match(readFileSync(env.file, 'utf8'), /another-plugin/)
 +  } finally { env.done() }
++})
++
++test('mcp-remove refuses a name that cannot be a server name', async () => {
++  const env = setup()
++  try {
++    await assert.rejects(env.rt.mcpEndpoint('mcp-remove', { serverName: 'a/b' }), /Unknown server/)
++    await assert.rejects(env.rt.mcpEndpoint('mcp-remove', { serverName: '' }), /Unknown server/)
++  } finally { env.done() }
++})
++
++// The page shows the rows it wrote that the profile has not started yet; everything else
++// in the document is the user's or another client's and is never taken for one of ours.
++test('pendingRows reads our waiting rows, both shapes', () => {
++  const [stdioRow] = pendingRows(rowText('mcp-files', stdio))
++  assert.deepEqual(
++    {
++      serverName: stdioRow.serverName,
++      transport: stdioRow.transport,
++      entryId: stdioRow.entryId,
++      enabled: stdioRow.enabled,
++      pending: stdioRow.pending,
++    },
++    { serverName: 'files', transport: 'stdio', entryId: '', enabled: false, pending: true },
++  )
++  const [httpRow] = pendingRows(rowText('mcp-remote', http))
++  assert.deepEqual([httpRow.serverName, httpRow.transport, httpRow.url], ['remote', 'streamable-http', 'https://mcp.test/sse'])
++})
++
++test('pendingRows leaves another client\'s insert and a row with no server name', () => {
++  const other = rowText('mcp-files', stdio).replace(`name: "${CLIENT}"`, 'name: "@deepseek-ai/dsh-other"')
++  assert.deepEqual(pendingRows(other), [])
++  const nameless = rowText('mcp-files', stdio).split('\n').filter(line => !line.includes('serverName:')).join('\n')
++  assert.deepEqual(pendingRows(nameless), [])
++})
++
++test('pendingRows leaves a row whose block was cut off', () => {
++  const lines = rowText('mcp-files', stdio).split('\n')
++  assert.deepEqual(pendingRows(lines.slice(0, 3).join('\n')), [])
++  assert.deepEqual(pendingRows(lines.filter(line => !line.startsWith('    - id:')).join('\n')), [])
 +})
 diff --git a/ds-bot/test/mode-row.test.js b/ds-bot/test/mode-row.test.js
 new file mode 100644

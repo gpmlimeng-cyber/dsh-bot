@@ -1,15 +1,15 @@
 # ds-bot 本地补丁台账
 
-已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）；⑬ 移动端三个自绘控件的密度对齐 OpenMausBot；⑭ 全站统一的悬浮面（实底 + 0.5px 发丝环 + 浮动投影）；⑮ 输入框形态对标 OpenMausBot（圆角 26/24、内边距 6x12、正文 15px/24px）；⑯ 会话标题右侧的模型选择器（桌面，样式对标 OpenMausBot 的头部模型胶囊）；⑰ 模型厂商图标（12 家，按墨迹高度归一）；⑱ 桌面「更多」与三个点的粗细；⑲ 侧栏折叠钮与 32px 侧栏按钮；⑳ 折叠后的 56px 单列图标栏；㉑ 底部「连接应用」入口；㉒–㉔ 应用市场弹窗：插件发现页、磨砂玻璃面板、连接器/能力列表；㉕ 字体设置（系统默认 / Geist / Inter，随主题一起应用）；㉖ Codex 主题（浅色与深色两套调色板）；㉗ 字号与密度；㉘ 顶栏去掉品牌标、行贴到窗口最顶（固定定位）并修掉上提抖动；㉙ 侧栏行尾时间；㉚ 侧栏列表分组（置顶 / Bot / 群聊，可折叠）；㉛ 用户自建分组（新建 / 改名 / 删除 / 拖入 / 移出）；㉜ 品牌位改成模式选择器（胶囊 + 面板），专业模式下同一行固定在 DSH 的 Logo 位；㉝ 桌面端顶栏与 Web 一致；㉞ 应用市场新增「MCP」页签（列表 / 单服务器工具 / 新增编辑 / 启停 / 删除）；㉟ 窄屏把模式选择器那一行放进左侧抽屉顶部（桌面仍在窗口标题带）；㊱ 窄屏应用市场改成铺满屏幕、分类页签横排在顶部（「已启用」列表在窄屏隐藏）。
+已登记的改动：① Gaze 形象一排（头像编辑器 + 新建 Bot）；② 去图片头像的 1px 内描边；③ 移动端两条纯 CSS；④ 从抽屉点开的入口自动收起抽屉；⑤ 窄屏会话头部的展开汉堡；⑥ 全站圆角走 `--dsw-corner-shape`；⑦ 会话头部右上「···」会话操作菜单；⑧–⑪ 移动端头部悬浮面、输入框、控件图标、底部抽屉；⑫ PC 端输入框回到宿主原生（布局 + 按钮 + 间距）；⑬ 移动端三个自绘控件的密度对齐 OpenMausBot；⑭ 全站统一的悬浮面（实底 + 0.5px 发丝环 + 浮动投影）；⑮ 输入框形态对标 OpenMausBot（圆角 26/24、内边距 6x12、正文 15px/24px）；⑯ 会话标题右侧的模型选择器（桌面，样式对标 OpenMausBot 的头部模型胶囊）；⑰ 模型厂商图标（12 家，按墨迹高度归一）；⑱ 桌面「更多」与三个点的粗细；⑲ 侧栏折叠钮与 32px 侧栏按钮；⑳ 折叠后的 56px 单列图标栏；㉑ 底部「连接应用」入口；㉒–㉔ 应用市场弹窗：插件发现页、磨砂玻璃面板、连接器/能力列表；㉕ 字体设置（系统默认 / Geist / Inter，随主题一起应用）；㉖ Codex 主题（浅色与深色两套调色板）；㉗ 字号与密度；㉘ 顶栏去掉品牌标、行贴到窗口最顶（固定定位）并修掉上提抖动；㉙ 侧栏行尾时间；㉚ 侧栏列表分组（置顶 / Bot / 群聊，可折叠）；㉛ 用户自建分组（新建 / 改名 / 删除 / 拖入 / 移出）；㉜ 品牌位改成模式选择器（胶囊 + 面板），专业模式下同一行固定在 DSH 的 Logo 位；㉝ 桌面端顶栏与 Web 一致；㉞ 应用市场新增「MCP」页签（列表 / 单服务器工具 / 新增编辑 / 启停 / 删除）；㉟ 窄屏把模式选择器那一行放进左侧抽屉顶部（桌面仍在窗口标题带）；㊱ 窄屏应用市场改成铺满屏幕、分类页签横排在顶部（「已启用」列表在窄屏隐藏）；㊲ MCP 广场：发现页卡片（对齐宿主市场卡片）、标签 chips 走**服务端**分类筛选、卡片上的「安装」就地装。
 **追加优先**：能写在文件末尾的绝不改上游已有行，把上游合并冲突面积压到最小。
 
-- 基线：**上游 `4a7b550`**。生成口径（唯一来源，别凭记忆）：
-  `git diff 4a7b550 -- ds-bot/src/client ':(exclude)ds-bot/src/client/gaze.js' ds-bot/src/host/channel.js ds-bot/src/host/mcp.js ds-bot/index.js > design/ds-bot-patches.patch`
-- 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，31 个文件，含宿主侧 `src/host/channel.js`、`src/host/mcp.js` 与 `ds-bot/index.js` 的模块注册；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
-- hunk 数：**98**（`grep -c '^@@' design/ds-bot-patches.patch`）
+- 基线：**本仓标签 `v0.2.4`**（`f823773`）。生成口径（唯一来源，别凭记忆）：
+  `git diff v0.2.4 HEAD -- ds-bot ':!ds-bot/client.js' ':!ds-bot/src/client/gaze.js' > design/ds-bot-patches.patch`
+- 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，**42** 个文件，含宿主侧 `src/host/channel.js`、`src/host/mcp.js` 与 `ds-bot/index.js` 的模块注册；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
+- hunk 数：**112**（`grep -c '^@@' design/ds-bot-patches.patch`）
 - **行号**：见 `design/ds-bot-patches.hunks.md`，由 `node tools/patch-ledger.mjs` 生成，勿手改。
   这里**不写行号**：手写行号已经错了三次，机械表是唯一来源。
-- minus 行共 **108**，分布在 17 个文件：`styles.js` 41、`sidebar.js` 25、`index.js` 6、`icons.js` 6、`bot-settings.js` 5、`new-chat.js` 5、`team-actions.js` 4、`i18n.js` 2、`browser-pane.js` 2、`composer.js` 2、`create-bot.js` 2、`details-drawer.js` 2、`member-status.js` 2、`header.js` 1、`settings.js` 1、`src/host/channel.js` 1、`ds-bot/index.js` 1；其余为纯 `+`
+- minus 行共 **357**，分布在 19 个文件：`sidebar.js` 245、`styles.js` 68、`icons.js` 6、`index.js` 6、`bot-settings.js` 5、`new-chat.js` 5、`team-actions.js` 4、`browser-pane.js` 2、`composer.js` 2、`create-bot.js` 2、`details-drawer.js` 2、`i18n.js` 2、`member-status.js` 2、`ds-bot/index.js` 1、`header.js` 1、`settings.js` 1、`src/host/channel.js` 1、`test/client-bundle.test.js` 1、`test/style-debt.json` 1；其余为纯 `+`
 - 冲突自检：`tools/patch-conflict-check.sh <ref>`（升级前先跑，输出 `clean` 才合并）
 
 ## 1. 手改的文件（进补丁，共 31 个）
@@ -75,6 +75,22 @@ hunk 3、5 是唯一的 minus 行（挂载点，各 1 处组件插入），其�
 
 「切换 Agent 模式」走 `setSurface`，**故意不接**。
 
+## 1c. MCP 广场（㊲）
+
+| 部位 | 文件 | 改前 → 改后 | 为什么 |
+|---|---|---|---|
+| 分类筛选 | `src/host/mcp.js`、`src/client/plugin-mcp.js` | host 的 `mcp-market` `kind:'search'` 收 `category`（`/^[\w-]{1,64}$/` 校验后小写）并拼进 `body.filter = { category }`；client 的 chip 点击走 `pick()`：`setCategory` + `page=1` + 清空已加载列表，请求带上 `category` | 分类只筛**已加载的 20 行**时，冷门分类整页 0 条而顶部计数与「加载更多」还在；放到广场侧筛，翻页与计数才和 chips 一致。`filter:{category}` 已实测：`databases` → `total_count` 496、返回行只含该分类 |
+| 就地安装 | `src/client/plugin-mcp.js` | 卡片的「安装」不再打开详情：先 `kind:'detail'` 取地址，有托管地址或有 stdio 配置就直接 `mcpAdd`；取不到或写失败才 `setOpen(server)` 进详情页并把原因放进 notice。已安装的按钮 `disabled`（原来 `cursor:default` 但点得动） | 对齐宿主市场卡片的交互：按钮就是装。失败原因不留白，详情页本身也会自取 detail |
+| 排序 | 不改（只有两项） | 「默认顺序 / 下载量」 | 广场列表接口的行只有 `view_count`，没有更新时间、没有 `is_verified`（后者只在 detail 上）；试过 `order_by` / `sort_by` / `sort` / `order` / `rank_by` / `sort_field` × `updated_at`/`newest`/`created_at`，返回顺序一字不变 —— 「最近更新」「经过验证」没有数据支撑，做了也是假的 |
+| 空扫描不缓存 | `src/host/mcp.js` | `categoryCache` 只在 `value.length > 0` 时写 | 上游抖一下扫成空数组，原来会把「没有分类」记住十分钟，chips 整段时间都不出现 |
+| `mcp-remove` 校验 | `src/host/mcp.js` | 补 `SERVER_NAME` 检查，文案与 `mcp-tools` 一致（`Unknown server`） | 与 `mcp-add` 对称。`cutRow` 本来就是整行字面匹配 `id: "mcp-<name>"`，不构成注入，这条是一致性而非安全 |
+| `pendingRows` 单测 | `test/mcp.test.js` | 四条：我们写的等待行（stdio / http 两种形态）、别人的 client 的 insert、缺 `serverName`、行被截断（块没写完 / id 行没了） | 导出的纯函数，之前只有 add/remove 有覆盖 |
+| **已知缺口（保持现状）** | `src/host/mcp.js` `mcp-add` | 注释写明：`next` 是在更早一次 `readPatch` 基础上拼的，窗口内的另一条写入会被**静默覆盖且不回滚**；自检查不出来，因为我们自己那行确实出现了 | 修它要把写入串进编辑器的锁（内部实现），口径 B 不碰宿主内部。台账如实记「并发写会丢一条」，**不写成可安全并发** |
+
+分类 chips 来自市场前两页（`page_size=100`）一次扫描，TTL 10 分钟；chips 只有 `view === 'discover'` 才拉。
+
+> **踩坑（已修，`a3c1860`）**：`d958a54` 合并上游 v0.2.4 时，`index.js` 的 `MODULES` 列表被解到了上游那一侧 —— 上游没有 `folders` 模块，于是 fork 的整个文件夹护栏**根本没装**：`rt.cleanWorkDir` / `defaultTeamFolder` / `workDirOf` 全部缺失，一次红 **167** 条（症状是 `rt.cleanWorkDir is not a function`、`mainBotId` undefined、`cleanWorkDir is not a function`），看起来像宿主包版本不匹配，其实与 `dev/harness` 的版本无关（rc.2 与 rc.4 复现完全一致）。**合并上游后必须逐项 diff `MODULES`**：它是 fork 与上游唯一的结构性差异点，丢了哪一项都不会报错，只会在用到时炸。
+
 ## 2. 生成物（不进补丁）
 
 | 文件 | 类别 | 重生成方式 |
@@ -106,7 +122,7 @@ tools/patch-conflict-check.sh <upstream-ref>   # 输出 clean / 冲突文件
 ```sh
 cd repo/ds-bot && npm run build && npm test && node scripts/build-client.mjs --check && npm run lint
 git -C repo apply --check -R design/ds-bot-patches.patch   # 当前树 = 基线 + 本补丁
-bash tools/patch-conflict-check.sh 4a7b550                 # 对基线整包可干净重放（HEAD 已含①–⑤，对 HEAD 必冲突）
+bash tools/patch-conflict-check.sh v0.2.4                   # 对基线整包可干净重放（HEAD 已含全部补丁，对 HEAD 必冲突）
 node tools/patch-ledger.mjs > design/ds-bot-patches.hunks.md  # 台账行号重新生成
 
 `npm test` 直接跑会红 13 条：宿主自己的 `DS_BOT_APP` / `DSH_HOME` 等变量会漏进来。清掉再跑：
@@ -116,4 +132,5 @@ env -u DS_BOT_APP -u DS_BOT_USER_DSH_HOME -u DS_BOT_WORKSPACE -u DSH_HOME -u DSH
     -u DSH_PROFILE_DIR -u DSH_SESSION_ID -u DSH_SHELL -u DSH_WEB_URL \
     node --import ./test/harness-resolve.mjs --test "test/*.test.js"
 ```
-```
+
+`dev/harness` 里宿主包的版本要跟 `dev/harness/package.json` 的 pin 一致（现在是 `0.2.1-rc.4`）。带 `--ignore-scripts` 重装时 koffi 的原生绑定不会装，之后要补一次 `npm rebuild koffi --prefix dev/harness`（这台机器上它不需要 cmake，直接成功）。
