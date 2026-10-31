@@ -138,10 +138,83 @@ export function pendingRows(text) {
   return rows
 }
 
+// The plaza is one source among several. The other built-in ones are GitHub catalogues
+// whose README is a list of `- **[Name](url)** - description` lines under `##` headings;
+// a custom source is either such a README or a JSON array of entries.
+const README_SOURCES = {
+  reference: {
+    name: 'MCP reference servers',
+    url: 'https://raw.githubusercontent.com/modelcontextprotocol/servers/main/README.md',
+    base: 'https://github.com/modelcontextprotocol/servers/',
+    // These are the packages the repository ships, so a reference entry can be installed
+    // from its name without the README having to spell the command out.
+    packageOf: name => `@modelcontextprotocol/server-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`,
+  },
+  awesome: {
+    name: 'awesome-mcp-servers',
+    url: 'https://raw.githubusercontent.com/wong2/awesome-mcp-servers/main/README.md',
+    base: 'https://github.com/wong2/awesome-mcp-servers/',
+    packageOf: null,
+  },
+}
+
+const readmeCache = new Map()
+
+// One README parse: the current `##` heading names the group an entry sits in, and a
+// bullet with a bold or plain link followed by a dash is one entry.
+export function parseReadme(text, base) {
+  const rows = []
+  let section = ''
+  for (const line of String(text ?? '').split('\n')) {
+    const heading = /^#{2,3}\s+(.+?)\s*$/.exec(line)
+    if (heading !== null) {
+      section = heading[1].replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim()
+      continue
+    }
+    const item = /^\s*[-*]\s+\*\*\[([^\]]+)\]\(([^)\s]+)\)\*\*\s*[-\u2013\u2014]\s*(.+?)\s*$/.exec(line)
+      ?? /^\s*[-*]\s+\[([^\]]+)\]\(([^)\s]+)\)\s*[-\u2013\u2014]\s*(.+?)\s*$/.exec(line)
+    if (item === null) continue
+    let url = item[2]
+    try { url = new URL(url, base).toString() } catch { /* keep as written */ }
+    rows.push({ name: item[1].trim(), url, description: item[3].replace(/\s+/g, ' ').trim(), section })
+  }
+  return rows
+}
+
+async function readmeRows(source) {
+  const now = Date.now()
+  const hit = readmeCache.get(source.url)
+  if (hit !== undefined && now - hit.at < MARKET_CATEGORIES_TTL_MS) return hit.rows
+  const text = await httpsText(source.url)
+  const rows = parseReadme(text, source.base)
+  if (rows.length > 0) readmeCache.set(source.url, { at: now, rows })
+  return rows
+}
+
 // The plaza answers JSON over https. `fetch` is not used here: inside the running app it
 // left the request hanging past any reasonable timeout, while a plain https request from
 // the same runtime answers in a few hundred milliseconds.
 const MARKET_TIMEOUT_MS = 12000
+
+// A README is text, not JSON; the same request path serves both.
+function httpsText(url, timeoutMs = MARKET_TIMEOUT_MS) {
+  return new Promise((resolve, reject) => {
+    const target = new URL(url)
+    const request = httpsRequest({ method: 'GET', hostname: target.hostname, path: `${target.pathname}${target.search}`, headers: { accept: 'text/plain', 'user-agent': 'ds-bot' }, timeout: timeoutMs }, (response) => {
+      if (response.statusCode !== undefined && response.statusCode >= 400) {
+        response.resume()
+        reject(Object.assign(new Error(`Fetch answered ${response.statusCode}`), { code: 'bot/upstream' }))
+        return
+      }
+      const chunks = []
+      response.on('data', chunk => chunks.push(chunk))
+      response.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
+    })
+    request.on('timeout', () => request.destroy(Object.assign(new Error('The source did not answer in time'), { code: 'bot/upstream' })))
+    request.on('error', reject)
+    request.end()
+  })
+}
 const categoryCache = { at: 0, value: [] }
 function httpsJson(url, { method = 'GET', body = null } = {}) {
   return new Promise((resolve, reject) => {
@@ -346,6 +419,64 @@ export function install(rt) {
     },
     async 'mcp-market'(body) {
       const base = 'https://modelscope.cn/openapi/v1/mcp/servers'
+      const source = String(body.source ?? 'modelscope')
+      const custom = body.custom !== null && typeof body.custom === 'object' ? body.custom : null
+      if (body.kind === 'sources') {
+        return {
+          builtin: [
+            { id: 'modelscope', name: 'ModelScope MCP' },
+            { id: 'reference', name: 'MCP reference servers' },
+            { id: 'awesome', name: 'awesome-mcp-servers' },
+          ],
+        }
+      }
+      if (source === 'reference' || source === 'awesome' || custom !== null) {
+        const query = String(body.query ?? '').trim().toLowerCase()
+        const page = Math.max(1, Math.min(50, Number(body.page ?? 1) || 1))
+        const size = MARKET_PAGE_SIZE
+        if (custom !== null && custom.kind === 'json') {
+          const url = String(custom.url ?? '')
+          if (!/^https?:\/\//i.test(url)) throw fail('A custom source needs an http(s) URL')
+          const data = await httpsJson(url).catch(() => null)
+          const all = Array.isArray(data) ? data : Array.isArray(data?.servers) ? data.servers : []
+          const rows = all.map(entry => ({
+            id: String(entry.id ?? entry.name ?? ''),
+            name: String(entry.name ?? entry.id ?? ''),
+            publisher: String(custom.name ?? ''),
+            description: String(entry.description ?? ''),
+            logo: String(entry.logo ?? ''),
+            hosted: false,
+            installs: 0,
+            categories: [],
+            homepage: String(entry.homepage ?? ''),
+            install: entry.install !== null && typeof entry.install === 'object' ? entry.install : null,
+          })).filter(entry => entry.id !== '' && (!query || `${entry.name} ${entry.description}`.toLowerCase().includes(query)))
+          return { total: rows.length, servers: rows.slice((page - 1) * size, page * size) }
+        }
+        const definition = custom !== null
+          ? { name: String(custom.name ?? 'Custom source'), url: String(custom.url ?? ''), base: String(custom.url ?? ''), packageOf: null }
+          : README_SOURCES[source]
+        if (definition === undefined || !/^https?:\/\//i.test(definition.url)) throw fail('That source has no readable URL')
+        const all = await readmeRows(definition)
+        const rows = all
+          .filter(entry => !query || `${entry.name} ${entry.description} ${entry.section}`.toLowerCase().includes(query))
+          .map((entry, index) => {
+            const pkg = definition.packageOf === null || definition.packageOf === undefined ? null : definition.packageOf(entry.name)
+            return {
+              id: `${source}:${index}:${entry.name}`,
+              name: entry.name,
+              publisher: entry.section,
+              description: entry.description,
+              logo: '',
+              hosted: false,
+              installs: 0,
+              categories: [],
+              homepage: entry.url,
+              install: pkg === null ? null : { transport: 'stdio', command: 'npx', args: ['-y', pkg] },
+            }
+          })
+        return { total: rows.length, servers: rows.slice((page - 1) * size, page * size) }
+      }
       if (body.kind === 'detail') {
         const id = String(body.id ?? '')
         if (!/^@?[\w.-]+\/[\w.-]+$/.test(id)) throw fail('Unknown MCP server id')

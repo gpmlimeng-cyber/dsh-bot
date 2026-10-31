@@ -90,6 +90,15 @@ var ZH = {
   "MCP": "MCP",
   "Hosted": "已托管",
   "In this profile": "本档案里",
+  "ModelScope MCP": "ModelScope MCP",
+  "MCP reference servers": "MCP 官方参考服务器",
+  "awesome-mcp-servers": "awesome-mcp-servers",
+  "Add a source…": "添加源…",
+  "Add a custom source": "添加自定义源",
+  "Add source": "添加源",
+  "Open page": "打开主页",
+  "README": "README",
+  "My MCP list": "我的 MCP 列表",
   "Developer tools": "开发工具",
   "Browser automation": "浏览器自动化",
   "Knowledge and memory": "知识与记忆",
@@ -2882,7 +2891,22 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    Only the class prefix changed, dq5LxG_ -> bt-mm-, and the market dropdown is named for
    what it picks here: bt-mm-source / bt-mm-source-name. Numbers, order and states are the
    ones it ships, so this panel measures the same as the shell's own page. */
-.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex}.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500}.bt-mm-source-name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.bt-mm-search{flex:1;min-width:120px}.bt-mm-categories{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.bt-mm-muted,.bt-mm-meta{color:var(--dsw-alias-label-tertiary);margin:0;font-size:13px;line-height:20px}.bt-mm-meta{overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-strong{overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:20px}.bt-mm-error{color:var(--dsw-alias-state-error-primary);align-items:center;gap:6px;margin:0;font-size:13px;line-height:20px;display:inline-flex}.bt-mm-failure{align-items:center;gap:10px;display:flex}.bt-mm-notice{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);align-items:flex-start;gap:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px;display:flex}.bt-mm-notice>svg{color:var(--dsw-alias-state-warn-primary);flex:none;margin-top:2px}.bt-mm-cards{flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;display:flex}.bt-mm-card{border-radius:var(--dsw-radius-xl);align-items:center;gap:14px;margin:0 -8px;padding:8px;display:flex;position:relative}.bt-mm-card:hover{background:var(--dsw-alias-interactive-bg-hover)}.bt-mm-icon{border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);width:48px;height:48px;color:var(--dsw-alias-label-secondary);flex:none;justify-content:center;align-items:center;display:inline-flex}.bt-mm-image{object-fit:contain}.bt-mm-main{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.bt-mm-titleRow{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.bt-mm-cardOpen{max-width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;font-size:14px;font-weight:500;line-height:20px;overflow:hidden}.bt-mm-cardOpen:after{content:"";border-radius:var(--dsw-radius-xl);position:absolute;inset:0}.bt-mm-cardOpen:focus-visible{outline:none}.bt-mm-cardOpen:focus-visible:after{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-description{color:var(--dsw-alias-label-tertiary);-webkit-line-clamp:1;-webkit-box-orient:vertical;font-size:13px;line-height:18px;display:-webkit-box;overflow:hidden}.bt-mm-cardEnd{z-index:1;flex:none;align-items:center;gap:8px;display:inline-flex;position:relative}.bt-mm-blocked{opacity:.5;cursor:not-allowed}.bt-mm-more{align-self:center}.bt-mm-empty{text-align:center;flex-direction:column;align-items:center;gap:8px;padding:64px 0;display:flex}.bt-mm-emptyTitle{margin:8px 0 0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-empty>button{margin-top:8px}.bt-mm-detail{flex-direction:column;gap:16px;display:flex}.bt-mm-crumb{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:0;align-self:flex-start;align-items:center;gap:6px;padding:0;font-size:12.5px;display:inline-flex}.bt-mm-crumb:hover{color:var(--dsw-alias-label-primary)}.bt-mm-crumb:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-crumbIcon{transform:rotate(90deg)}.bt-mm-detailHead{align-items:center;gap:14px;display:flex}.bt-mm-detailTitle{margin:0;font-size:20px;font-weight:500;line-height:28px}.bt-mm-detailDescription{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.bt-mm-detailSection{flex-direction:column;gap:12px;margin-top:16px;display:flex}.bt-mm-sectionTitle{margin:0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-facts{margin:0}.bt-mm-facts div{border-bottom:.5px solid var(--dsw-alias-border-l2);justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:8px 2px;display:flex}.bt-mm-facts dt{color:var(--dsw-alias-label-secondary);flex:none;font-size:13px;line-height:20px}.bt-mm-facts dd{text-align:end;overflow-wrap:anywhere;min-width:0;margin:0;font-size:13px;line-height:20px}.bt-mm-facts code{background:var(--dsw-alias-bg-module-platform);box-decoration-break:clone;font-family:var(--ds-font-family-code);border-radius:4px;padding:2px 6px;font-size:12px}.bt-mm-tags{flex-wrap:wrap;justify-content:flex-end;gap:6px;display:flex}.bt-mm-dialog{width:min(480px,100vw - 32px)}.bt-mm-dialogBody{flex-direction:column;gap:12px;display:flex}.bt-mm-sourceList,.bt-mm-versions{flex-direction:column;margin:0;padding:0;list-style:none;display:flex}.bt-mm-sourceRow,.bt-mm-versionRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:8px 0;display:flex}.bt-mm-sourceError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-sourceForm{align-items:center;gap:8px;display:flex}.bt-mm-grow{flex:1;min-width:0}.bt-mm-confirmHead{align-items:center;gap:14px;display:flex}.bt-mm-skeletonFill{background:var(--dsw-alias-bg-skeleton);animation:2s cubic-bezier(.36,0,.64,1) infinite bt-mm-dsh-market-skeleton}.bt-mm-icon.bt-mm-skeletonFill{border-color:#0000}.bt-mm-skeletonBar{border-radius:var(--dsw-radius-xs);height:12px;margin:4px 0;display:block}.bt-mm-skeletonTitle{width:min(144px,60%)}.bt-mm-skeletonDescription{width:min(280px,85%)}@keyframes bt-mm-dsh-market-skeleton{0%{opacity:1}40%{opacity:.6}80%,to{opacity:1}}@media (prefers-reduced-motion:reduce){.bt-mm-skeletonFill{animation:none}}.bt-mm-link{color:var(--dsw-alias-link);overflow-wrap:anywhere;text-decoration:none}.bt-mm-link:hover{text-decoration:underline} /* vendored */
+.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex}
+/* ds-bot chrome around the vendored card list: the source picker, its menu and the
+   add-source form. It follows the shell's menu look, not the vendored sheet's. */
+.bt-mm-sourcewrap{position:relative;flex:none}
+.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500}
+.bt-mm-source-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mm-menu{position:absolute;z-index:20;top:calc(100% + 6px);left:-8px;min-width:220px;display:flex;flex-direction:column;padding:6px;border-radius:12px;background:var(--bt-main);box-shadow:var(--bt-float-ring,0 0 0 .5px rgba(0,0,0,.12)),var(--bt-float-shadow,0 12px 32px rgba(0,0,0,.16))}
+.bt-mm-menuitem{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:0;border-radius:8px;background:none;color:var(--bt-ink);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.bt-mm-menuitem:hover{background:var(--bt-hover)}
+.bt-mm-menuitem.is-on{font-weight:600}
+.bt-mm-menuitem-x{margin-left:auto;width:20px;height:20px;line-height:18px;text-align:center;border-radius:6px;color:var(--bt-ink-3)}
+.bt-mm-menuitem-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mm-menuitem-add{border-top:.5px solid var(--bt-line-2);border-radius:0 0 8px 8px;margin-top:4px;padding-top:10px}
+.bt-mm-addsource{position:fixed;z-index:40;right:32px;top:96px;width:min(360px,90vw);display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:14px;background:var(--bt-main)}
+.bt-mm-addsource-head{display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px}
+.bt-mm-btn-ghost{background:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2);color:var(--bt-ink-2)}.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500}.bt-mm-source-name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.bt-mm-search{flex:1;min-width:120px}.bt-mm-categories{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.bt-mm-muted,.bt-mm-meta{color:var(--dsw-alias-label-tertiary);margin:0;font-size:13px;line-height:20px}.bt-mm-meta{overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-strong{overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:20px}.bt-mm-error{color:var(--dsw-alias-state-error-primary);align-items:center;gap:6px;margin:0;font-size:13px;line-height:20px;display:inline-flex}.bt-mm-failure{align-items:center;gap:10px;display:flex}.bt-mm-notice{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);align-items:flex-start;gap:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px;display:flex}.bt-mm-notice>svg{color:var(--dsw-alias-state-warn-primary);flex:none;margin-top:2px}.bt-mm-cards{flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;display:flex}.bt-mm-card{border-radius:var(--dsw-radius-xl);align-items:center;gap:14px;margin:0 -8px;padding:8px;display:flex;position:relative}.bt-mm-card:hover{background:var(--dsw-alias-interactive-bg-hover)}.bt-mm-icon{border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);width:48px;height:48px;color:var(--dsw-alias-label-secondary);flex:none;justify-content:center;align-items:center;display:inline-flex}.bt-mm-image{object-fit:contain}.bt-mm-main{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.bt-mm-titleRow{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.bt-mm-cardOpen{max-width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;font-size:14px;font-weight:500;line-height:20px;overflow:hidden}.bt-mm-cardOpen:after{content:"";border-radius:var(--dsw-radius-xl);position:absolute;inset:0}.bt-mm-cardOpen:focus-visible{outline:none}.bt-mm-cardOpen:focus-visible:after{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-description{color:var(--dsw-alias-label-tertiary);-webkit-line-clamp:1;-webkit-box-orient:vertical;font-size:13px;line-height:18px;display:-webkit-box;overflow:hidden}.bt-mm-cardEnd{z-index:1;flex:none;align-items:center;gap:8px;display:inline-flex;position:relative}.bt-mm-blocked{opacity:.5;cursor:not-allowed}.bt-mm-more{align-self:center}.bt-mm-empty{text-align:center;flex-direction:column;align-items:center;gap:8px;padding:64px 0;display:flex}.bt-mm-emptyTitle{margin:8px 0 0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-empty>button{margin-top:8px}.bt-mm-detail{flex-direction:column;gap:16px;display:flex}.bt-mm-crumb{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:0;align-self:flex-start;align-items:center;gap:6px;padding:0;font-size:12.5px;display:inline-flex}.bt-mm-crumb:hover{color:var(--dsw-alias-label-primary)}.bt-mm-crumb:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-crumbIcon{transform:rotate(90deg)}.bt-mm-detailHead{align-items:center;gap:14px;display:flex}.bt-mm-detailTitle{margin:0;font-size:20px;font-weight:500;line-height:28px}.bt-mm-detailDescription{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.bt-mm-detailSection{flex-direction:column;gap:12px;margin-top:16px;display:flex}.bt-mm-sectionTitle{margin:0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-facts{margin:0}.bt-mm-facts div{border-bottom:.5px solid var(--dsw-alias-border-l2);justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:8px 2px;display:flex}.bt-mm-facts dt{color:var(--dsw-alias-label-secondary);flex:none;font-size:13px;line-height:20px}.bt-mm-facts dd{text-align:end;overflow-wrap:anywhere;min-width:0;margin:0;font-size:13px;line-height:20px}.bt-mm-facts code{background:var(--dsw-alias-bg-module-platform);box-decoration-break:clone;font-family:var(--ds-font-family-code);border-radius:4px;padding:2px 6px;font-size:12px}.bt-mm-tags{flex-wrap:wrap;justify-content:flex-end;gap:6px;display:flex}.bt-mm-dialog{width:min(480px,100vw - 32px)}.bt-mm-dialogBody{flex-direction:column;gap:12px;display:flex}.bt-mm-sourceList,.bt-mm-versions{flex-direction:column;margin:0;padding:0;list-style:none;display:flex}.bt-mm-sourceRow,.bt-mm-versionRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:8px 0;display:flex}.bt-mm-sourceError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-sourceForm{align-items:center;gap:8px;display:flex}.bt-mm-grow{flex:1;min-width:0}.bt-mm-confirmHead{align-items:center;gap:14px;display:flex}.bt-mm-skeletonFill{background:var(--dsw-alias-bg-skeleton);animation:2s cubic-bezier(.36,0,.64,1) infinite bt-mm-dsh-market-skeleton}.bt-mm-icon.bt-mm-skeletonFill{border-color:#0000}.bt-mm-skeletonBar{border-radius:var(--dsw-radius-xs);height:12px;margin:4px 0;display:block}.bt-mm-skeletonTitle{width:min(144px,60%)}.bt-mm-skeletonDescription{width:min(280px,85%)}@keyframes bt-mm-dsh-market-skeleton{0%{opacity:1}40%{opacity:.6}80%,to{opacity:1}}@media (prefers-reduced-motion:reduce){.bt-mm-skeletonFill{animation:none}}.bt-mm-link{color:var(--dsw-alias-link);overflow-wrap:anywhere;text-decoration:none}.bt-mm-link:hover{text-decoration:underline} /* vendored */
 /* The three controls the shell draws with its own primitives (Input, Pill, Button): the
    geometry is the section's, this is only the chrome those primitives carry. */
 .bt-mm-box{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
@@ -3535,7 +3559,6 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
 /* Elsewhere the switch shows only while the column is hidden, where the column's
    own top row had it. */
 html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
-html:not([data-platform=darwin]):not([data-windows-titlebar]) .bt-side-collapse{display:none}
 /* ds-bot folds the side from its own row now, so the shell's copy in the caption band goes. */
 html[data-platform=darwin] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-platform=darwin] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right){display:none!important}
 /* The footer ends in the Bot row: the whale's settings seat, then the account menu
@@ -15912,6 +15935,7 @@ function RoomRow({ room: room2, roster, actions, useSessions, useSessionStatus, 
       "aria-label": label,
       "aria-current": active ? "page" : void 0,
       "data-room-id": id,
+      title: wide ? void 0 : room2.name,
       onClick: () => actions.openSession(id),
       onContextMenu: (event) => {
         event.preventDefault();
@@ -27234,6 +27258,21 @@ var nameOf = (id) => {
   const slug = tail.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
   return slug.slice(0, 32) || "mcp-server";
 };
+var SOURCES_KEY = "ds-bot.mcp-sources";
+var readSources = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SOURCES_KEY) ?? "[]");
+    return Array.isArray(raw) ? raw.filter((item) => item && typeof item.id === "string" && typeof item.url === "string") : [];
+  } catch {
+    return [];
+  }
+};
+var writeSources = (next) => {
+  try {
+    localStorage.setItem(SOURCES_KEY, JSON.stringify(next));
+  } catch {
+  }
+};
 var shortCount = (value) => {
   const n = Number(value ?? 0);
   if (!Number.isFinite(n) || n <= 0) return "";
@@ -27267,7 +27306,7 @@ var CATEGORY_NAMES = {
   "social-media": "Social media"
 };
 var categoryName = (id) => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, " "));
-function Row3({ server, added, busy, onInstall, onOpen }) {
+function Row3({ server, added, busy, onInstall, onOpen, onHome }) {
   return (0, import_react55.createElement)(
     "li",
     { className: "bt-mm-card", "data-mcp-entry": server.id },
@@ -27297,9 +27336,9 @@ function Row3({ server, added, busy, onInstall, onOpen }) {
     (0, import_react55.createElement)(
       "div",
       { className: "bt-mm-cardEnd" },
-      // The button installs here, like the shell's own market: already installed is a
-      // state, not a control, so it is disabled rather than a click that does nothing.
-      (0, import_react55.createElement)("button", {
+      // A catalogue entry with no connection of its own can only be opened, never
+      // installed; a fake install button would promise something it cannot do.
+      server.install === null || server.install === void 0 ? server.homepage ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-btn bt-mm-btn-ghost", onClick: onHome }, t("Open page")) : null : (0, import_react55.createElement)("button", {
         type: "button",
         className: "bt-mm-btn",
         "data-added": added ? "" : void 0,
@@ -27512,8 +27551,17 @@ function McpMarketTab({ actions = {} }) {
   const [categories, setCategories] = (0, import_react55.useState)([]);
   const [category, setCategory] = (0, import_react55.useState)("");
   const [sort, setSort] = (0, import_react55.useState)("default");
+  const [source, setSource] = (0, import_react55.useState)("modelscope");
+  const [sources, setSources] = (0, import_react55.useState)(() => readSources());
+  const [sourceMenu, setSourceMenu] = (0, import_react55.useState)(false);
+  const [adding, setAdding] = (0, import_react55.useState)(null);
   const timer = (0, import_react55.useRef)(null);
   const report = (failure) => setError(String(failure?.message ?? failure));
+  const sourceName = () => ({
+    modelscope: t("ModelScope MCP"),
+    reference: t("MCP reference servers"),
+    awesome: t("awesome-mcp-servers")
+  })[source] ?? (sources.find((item) => item.id === source)?.name ?? source);
   const applyRows = (next) => {
     setRows(next?.servers ?? []);
     setInstalled((next?.servers ?? []).map((server) => server.serverName));
@@ -27545,7 +27593,8 @@ function McpMarketTab({ actions = {} }) {
     let live = true;
     setLoading(true);
     setError("");
-    Promise.resolve(actions.mcpMarket?.({ kind: "search", query: sent, page, category })).then((next) => {
+    const custom = sources.find((item) => item.id === source) ?? null;
+    Promise.resolve(actions.mcpMarket?.({ kind: "search", query: sent, page, category, source, custom })).then((next) => {
       if (!live) return;
       setLoading(false);
       setList((now) => page === 1 ? { total: next?.total ?? 0, servers: next?.servers ?? [] } : { total: next?.total ?? now.total, servers: [...now.servers, ...next?.servers ?? []] });
@@ -27558,9 +27607,9 @@ function McpMarketTab({ actions = {} }) {
     return () => {
       live = false;
     };
-  }, [actions, sent, page, category, view]);
+  }, [actions, sent, page, category, view, source, sources]);
   (0, import_react55.useEffect)(() => {
-    if (view !== "discover" || categories.length > 0) return void 0;
+    if (view !== "discover" || categories.length > 0 || source !== "modelscope") return void 0;
     let live = true;
     Promise.resolve(actions.mcpMarket?.({ kind: "categories" })).then((next) => {
       if (live && Array.isArray(next)) setCategories(next);
@@ -27569,7 +27618,7 @@ function McpMarketTab({ actions = {} }) {
     return () => {
       live = false;
     };
-  }, [actions, view, categories.length]);
+  }, [actions, view, categories.length, source]);
   const toggle = (server) => {
     setBusyRow(server.entryId ?? server.serverName);
     Promise.resolve(actions.mcpToggle?.({ entryId: server.entryId, enabled: !server.enabled })).then((next) => {
@@ -27603,11 +27652,13 @@ function McpMarketTab({ actions = {} }) {
       setOpen(server);
       setNotice(String(reason?.message ?? reason ?? ""));
     };
-    Promise.resolve(actions.mcpMarket?.({ kind: "detail", id: server.id })).then((detail) => {
+    const carried = server.install !== null && server.install !== void 0 ? server.install : null;
+    const readDetail = carried === null ? Promise.resolve(actions.mcpMarket?.({ kind: "detail", id: server.id })) : Promise.resolve(null);
+    readDetail.then((detail) => {
       const name = nameOf(server.id);
       const url = detail?.urls?.[0]?.url ?? "";
       const stdio = detail?.stdio ?? null;
-      const config = url ? { transport: "streamable-http", serverName: name, url } : stdio?.command ? { transport: "stdio", serverName: name, command: stdio.command, args: stdio.args } : null;
+      const config = carried !== null ? { ...carried, serverName: name } : url ? { transport: "streamable-http", serverName: name, url } : stdio?.command ? { transport: "stdio", serverName: name, command: stdio.command, args: stdio.args } : null;
       if (config === null) {
         giveUp(t("This server has no connection this profile can use on its own."));
         return void 0;
@@ -27653,14 +27704,67 @@ function McpMarketTab({ actions = {} }) {
       added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
       busy: installing === server.id,
       onInstall: () => install(server),
-      onOpen: () => setOpen(server)
+      onOpen: () => setOpen(server),
+      onHome: () => {
+        try {
+          window.open(server.homepage, "_blank", "noopener");
+        } catch {
+        }
+      }
     }))),
     more ? (0, import_react55.createElement)(
       "button",
       { type: "button", className: "bt-mm-btn bt-mm-more", key: "more", disabled: loading, onClick: () => setPage(page + 1) },
       loading ? t("Reading…") : t("Show more")
     ) : null,
-    !loading && shown.length === 0 && error === "" ? (0, import_react55.createElement)("p", { className: "bt-mm-muted", key: "empty" }, t("No MCP server matches that search.")) : null
+    !loading && shown.length === 0 && error === "" ? (0, import_react55.createElement)("p", { className: "bt-mm-muted", key: "empty" }, t("No MCP server matches that search.")) : null,
+    adding === null ? null : (0, import_react55.createElement)(
+      "div",
+      { className: "bt-mm-addsource bt-mm-box", key: "addsource" },
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-addsource-head" },
+        (0, import_react55.createElement)("span", null, t("Add a custom source")),
+        (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-close", "aria-label": t("Close"), title: t("Close"), onClick: () => setAdding(null) }, (0, import_react55.createElement)(CloseIcon))
+      ),
+      (0, import_react55.createElement)(
+        "label",
+        { className: "bt-mm-field" },
+        (0, import_react55.createElement)("span", null, t("Name")),
+        (0, import_react55.createElement)("input", { value: adding.name, placeholder: "My MCP list", spellCheck: false, onChange: (event) => setAdding({ ...adding, name: event.target.value }) })
+      ),
+      (0, import_react55.createElement)(
+        "label",
+        { className: "bt-mm-field" },
+        (0, import_react55.createElement)("span", null, "URL"),
+        (0, import_react55.createElement)("input", { value: adding.url, placeholder: "https://raw.githubusercontent.com/…/README.md", spellCheck: false, onChange: (event) => setAdding({ ...adding, url: event.target.value }) })
+      ),
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-switchbar" },
+        (0, import_react55.createElement)("button", { type: "button", "data-on": adding.kind === "readme" ? "" : void 0, onClick: () => setAdding({ ...adding, kind: "readme" }) }, t("README")),
+        (0, import_react55.createElement)("button", { type: "button", "data-on": adding.kind === "json" ? "" : void 0, onClick: () => setAdding({ ...adding, kind: "json" }) }, "JSON")
+      ),
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-actions" },
+        (0, import_react55.createElement)("button", {
+          type: "button",
+          className: "bt-mm-btn",
+          disabled: adding.name.trim() === "" || !/^https?:\/\//i.test(adding.url.trim()),
+          onClick: () => {
+            const entry = { id: `custom:${Date.now()}`, name: adding.name.trim(), url: adding.url.trim(), kind: adding.kind };
+            const next = [...sources, entry];
+            setSources(next);
+            writeSources(next);
+            setAdding(null);
+            setSource(entry.id);
+            setPage(1);
+            setList({ total: 0, servers: [] });
+          }
+        }, t("Add source"))
+      )
+    )
   ] : (0, import_react55.createElement)(Detail, {
     key: open.id,
     actions,
@@ -27695,6 +27799,55 @@ function McpMarketTab({ actions = {} }) {
       (0, import_react55.createElement)(
         "div",
         { className: "bt-mm-toolbar", key: "toolbar" },
+        (0, import_react55.createElement)(
+          "div",
+          { className: "bt-mm-sourcewrap" },
+          (0, import_react55.createElement)(
+            "button",
+            {
+              type: "button",
+              className: "bt-mm-source bt-mm-btn",
+              "aria-haspopup": "menu",
+              "aria-expanded": sourceMenu ? "true" : "false",
+              onClick: () => setSourceMenu(!sourceMenu)
+            },
+            (0, import_react55.createElement)("span", { className: "bt-mm-source-name" }, sourceName()),
+            (0, import_react55.createElement)("span", { "aria-hidden": true }, "▾")
+          ),
+          sourceMenu ? (0, import_react55.createElement)(
+            "div",
+            { className: "bt-mm-menu bt-mm-box", role: "menu" },
+            [
+              { id: "modelscope", name: t("ModelScope MCP") },
+              { id: "reference", name: t("MCP reference servers") },
+              { id: "awesome", name: t("awesome-mcp-servers") },
+              ...sources.map((item) => ({ id: item.id, name: item.name, custom: true }))
+            ].map((item) => (0, import_react55.createElement)("button", {
+              key: item.id,
+              type: "button",
+              role: "menuitem",
+              className: "bt-mm-menuitem" + (item.id === source ? " is-on" : ""),
+              onClick: () => {
+                setSource(item.id);
+                setSourceMenu(false);
+                setPage(1);
+                setList({ total: 0, servers: [] });
+                setCategories([]);
+                setCategory("");
+              }
+            }, item.name, item.custom ? (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-x", role: "button", "aria-label": t("Remove"), title: t("Remove"), onClick: (event) => {
+              event.stopPropagation();
+              const next = sources.filter((one) => one.id !== item.id);
+              setSources(next);
+              writeSources(next);
+              if (source === item.id) setSource("modelscope");
+            } }, "×") : null)),
+            (0, import_react55.createElement)("button", { type: "button", role: "menuitem", className: "bt-mm-menuitem bt-mm-menuitem-add", onClick: () => {
+              setSourceMenu(false);
+              setAdding({ name: "", url: "", kind: "readme" });
+            } }, t("Add a source…"))
+          ) : null
+        ),
         (0, import_react55.createElement)(
           "label",
           { className: "bt-mm-search bt-mm-box" },

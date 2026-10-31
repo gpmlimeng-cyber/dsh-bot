@@ -17,6 +17,21 @@ const nameOf = (id) => {
   return slug.slice(0, 32) || 'mcp-server'
 }
 
+// Custom sources live on this device, like the sidebar's grouping: they are how this
+// person reads the catalogue, not part of the team.
+const SOURCES_KEY = 'ds-bot.mcp-sources'
+
+const readSources = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SOURCES_KEY) ?? '[]')
+    return Array.isArray(raw) ? raw.filter(item => item && typeof item.id === 'string' && typeof item.url === 'string') : []
+  } catch { return [] }
+}
+
+const writeSources = (next) => {
+  try { localStorage.setItem(SOURCES_KEY, JSON.stringify(next)) } catch { /* storage unavailable */ }
+}
+
 const shortCount = (value) => {
   const n = Number(value ?? 0)
   if (!Number.isFinite(n) || n <= 0) return ''
@@ -57,7 +72,7 @@ const CATEGORY_NAMES = {
 
 const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
 
-function Row({ server, added, busy, onInstall, onOpen }) {
+function Row({ server, added, busy, onInstall, onOpen, onHome }) {
   return h('li', { className: 'bt-mm-card', 'data-mcp-entry': server.id },
     h('span', { className: 'bt-mm-icon', 'aria-hidden': true },
       server.logo
@@ -73,15 +88,19 @@ function Row({ server, added, busy, onInstall, onOpen }) {
         server.installs ? h('span', null, `↓ ${shortCount(server.installs)}`) : null,
         server.publisher ? h('span', null, server.publisher) : null)),
     h('div', { className: 'bt-mm-cardEnd' },
-      // The button installs here, like the shell's own market: already installed is a
-      // state, not a control, so it is disabled rather than a click that does nothing.
-      h('button', {
-        type: 'button',
-        className: 'bt-mm-btn',
-        'data-added': added ? '' : undefined,
-        disabled: added || busy,
-        onClick: onInstall,
-      }, busy ? t('Adding…') : added ? t('Installed') : t('Install'))))
+      // A catalogue entry with no connection of its own can only be opened, never
+      // installed; a fake install button would promise something it cannot do.
+      server.install === null || server.install === undefined
+        ? (server.homepage
+          ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-btn-ghost', onClick: onHome }, t('Open page'))
+          : null)
+        : h('button', {
+          type: 'button',
+          className: 'bt-mm-btn',
+          'data-added': added ? '' : undefined,
+          disabled: added || busy,
+          onClick: onInstall,
+        }, busy ? t('Adding…') : added ? t('Installed') : t('Install'))))
 }
 
 // One server: what it is, and how this profile would connect to it — a hosted endpoint
@@ -246,9 +265,19 @@ export function McpMarketTab({ actions = {} }) {
   const [categories, setCategories] = useState([])
   const [category, setCategory] = useState('')
   const [sort, setSort] = useState('default')
+  const [source, setSource] = useState('modelscope')
+  const [sources, setSources] = useState(() => readSources())
+  const [sourceMenu, setSourceMenu] = useState(false)
+  const [adding, setAdding] = useState(null)
   const timer = useRef(null)
 
   const report = (failure) => setError(String(failure?.message ?? failure))
+
+  const sourceName = () => ({
+    modelscope: t('ModelScope MCP'),
+    reference: t('MCP reference servers'),
+    awesome: t('awesome-mcp-servers'),
+  }[source] ?? (sources.find(item => item.id === source)?.name ?? source))
 
   const applyRows = (next) => {
     setRows(next?.servers ?? [])
@@ -277,7 +306,8 @@ export function McpMarketTab({ actions = {} }) {
     let live = true
     setLoading(true)
     setError('')
-    Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page, category }))
+    const custom = sources.find(item => item.id === source) ?? null
+    Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page, category, source, custom }))
       .then((next) => {
         if (!live) return
         setLoading(false)
@@ -286,15 +316,15 @@ export function McpMarketTab({ actions = {} }) {
           : { total: next?.total ?? now.total, servers: [...now.servers, ...(next?.servers ?? [])] })
       }, (failure) => { if (live) { setLoading(false); report(failure) } })
     return () => { live = false }
-  }, [actions, sent, page, category, view])
+  }, [actions, sent, page, category, view, source, sources])
 
   useEffect(() => {
-    if (view !== 'discover' || categories.length > 0) return undefined
+    if (view !== 'discover' || categories.length > 0 || source !== 'modelscope') return undefined
     let live = true
     Promise.resolve(actions.mcpMarket?.({ kind: 'categories' }))
       .then((next) => { if (live && Array.isArray(next)) setCategories(next) }, () => {})
     return () => { live = false }
-  }, [actions, view, categories.length])
+  }, [actions, view, categories.length, source])
 
   const toggle = (server) => {
     setBusyRow(server.entryId ?? server.serverName)
@@ -326,16 +356,22 @@ export function McpMarketTab({ actions = {} }) {
       setOpen(server)
       setNotice(String(reason?.message ?? reason ?? ''))
     }
-    Promise.resolve(actions.mcpMarket?.({ kind: 'detail', id: server.id }))
+    const carried = server.install !== null && server.install !== undefined ? server.install : null
+    const readDetail = carried === null
+      ? Promise.resolve(actions.mcpMarket?.({ kind: 'detail', id: server.id }))
+      : Promise.resolve(null)
+    readDetail
       .then((detail) => {
         const name = nameOf(server.id)
         const url = detail?.urls?.[0]?.url ?? ''
         const stdio = detail?.stdio ?? null
-        const config = url
-          ? { transport: 'streamable-http', serverName: name, url }
-          : stdio?.command
-            ? { transport: 'stdio', serverName: name, command: stdio.command, args: stdio.args }
-            : null
+        const config = carried !== null
+          ? { ...carried, serverName: name }
+          : url
+            ? { transport: 'streamable-http', serverName: name, url }
+            : stdio?.command
+              ? { transport: 'stdio', serverName: name, command: stdio.command, args: stdio.args }
+              : null
         if (config === null) {
           giveUp(t('This server has no connection this profile can use on its own.'))
           return undefined
@@ -388,12 +424,42 @@ export function McpMarketTab({ actions = {} }) {
               busy: installing === server.id,
               onInstall: () => install(server),
               onOpen: () => setOpen(server),
+              onHome: () => { try { window.open(server.homepage, '_blank', 'noopener') } catch { /* no window */ } },
             }))),
           more
             ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
               loading ? t('Reading…') : t('Show more'))
             : null,
           !loading && shown.length === 0 && error === '' ? h('p', { className: 'bt-mm-muted', key: 'empty' }, t('No MCP server matches that search.')) : null,
+          adding === null
+            ? null
+            : h('div', { className: 'bt-mm-addsource bt-mm-box', key: 'addsource' },
+              h('div', { className: 'bt-mm-addsource-head' },
+                h('span', null, t('Add a custom source')),
+                h('button', { type: 'button', className: 'bt-mm-close', 'aria-label': t('Close'), title: t('Close'), onClick: () => setAdding(null) }, h(CloseIcon))),
+              h('label', { className: 'bt-mm-field' }, h('span', null, t('Name')),
+                h('input', { value: adding.name, placeholder: 'My MCP list', spellCheck: false, onChange: (event) => setAdding({ ...adding, name: event.target.value }) })),
+              h('label', { className: 'bt-mm-field' }, h('span', null, 'URL'),
+                h('input', { value: adding.url, placeholder: 'https://raw.githubusercontent.com/…/README.md', spellCheck: false, onChange: (event) => setAdding({ ...adding, url: event.target.value }) })),
+              h('div', { className: 'bt-mm-switchbar' },
+                h('button', { type: 'button', 'data-on': adding.kind === 'readme' ? '' : undefined, onClick: () => setAdding({ ...adding, kind: 'readme' }) }, t('README')),
+                h('button', { type: 'button', 'data-on': adding.kind === 'json' ? '' : undefined, onClick: () => setAdding({ ...adding, kind: 'json' }) }, 'JSON')),
+              h('div', { className: 'bt-mm-actions' },
+                h('button', {
+                  type: 'button',
+                  className: 'bt-mm-btn',
+                  disabled: adding.name.trim() === '' || !/^https?:\/\//i.test(adding.url.trim()),
+                  onClick: () => {
+                    const entry = { id: `custom:${Date.now()}`, name: adding.name.trim(), url: adding.url.trim(), kind: adding.kind }
+                    const next = [...sources, entry]
+                    setSources(next)
+                    writeSources(next)
+                    setAdding(null)
+                    setSource(entry.id)
+                    setPage(1)
+                    setList({ total: 0, servers: [] })
+                  },
+                }, t('Add source')))),
         ]
         : h(Detail, {
           key: open.id,
@@ -423,6 +489,32 @@ export function McpMarketTab({ actions = {} }) {
     view === 'discover'
       ? [
         h('div', { className: 'bt-mm-toolbar', key: 'toolbar' },
+          h('div', { className: 'bt-mm-sourcewrap' },
+            h('button', {
+              type: 'button',
+              className: 'bt-mm-source bt-mm-btn',
+              'aria-haspopup': 'menu',
+              'aria-expanded': sourceMenu ? 'true' : 'false',
+              onClick: () => setSourceMenu(!sourceMenu),
+            },
+            h('span', { className: 'bt-mm-source-name' }, sourceName()),
+            h('span', { 'aria-hidden': true }, '▾')),
+            sourceMenu
+              ? h('div', { className: 'bt-mm-menu bt-mm-box', role: 'menu' },
+                [
+                  { id: 'modelscope', name: t('ModelScope MCP') },
+                  { id: 'reference', name: t('MCP reference servers') },
+                  { id: 'awesome', name: t('awesome-mcp-servers') },
+                  ...sources.map(item => ({ id: item.id, name: item.name, custom: true })),
+                ].map(item => h('button', {
+                  key: item.id,
+                  type: 'button',
+                  role: 'menuitem',
+                  className: 'bt-mm-menuitem' + (item.id === source ? ' is-on' : ''),
+                  onClick: () => { setSource(item.id); setSourceMenu(false); setPage(1); setList({ total: 0, servers: [] }); setCategories([]); setCategory('') },
+                }, item.name, item.custom ? h('span', { className: 'bt-mm-menuitem-x', role: 'button', 'aria-label': t('Remove'), title: t('Remove'), onClick: (event) => { event.stopPropagation(); const next = sources.filter(one => one.id !== item.id); setSources(next); writeSources(next); if (source === item.id) setSource('modelscope') } }, '×') : null)),
+                h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem bt-mm-menuitem-add', onClick: () => { setSourceMenu(false); setAdding({ name: '', url: '', kind: 'readme' }) } }, t('Add a source…')))
+              : null),
           h('label', { className: 'bt-mm-search bt-mm-box' },
             h(SearchIcon),
             h('input', {
