@@ -28800,6 +28800,23 @@ function apply(ctx) {
           const box = modeBar.getBoundingClientRect();
           openModeMenu(Math.round(box.left), Math.round(box.bottom + 6));
         });
+        window.addEventListener("pointerdown", (event) => {
+          if (!modeBar.isConnected || event.defaultPrevented) return;
+          const target = event.target;
+          if (target instanceof Element && (target.closest(".bt-modebar") || target.closest(".bt-modebar-menu"))) return;
+          const rect = modeBar.getBoundingClientRect();
+          if (rect.width === 0) return;
+          if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) return;
+          event.preventDefault();
+          event.stopPropagation();
+          if (modeOpen) {
+            closeModeMenu();
+            return;
+          }
+          paintModeBar();
+          const box = modeBar.getBoundingClientRect();
+          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6));
+        }, true);
         window.addEventListener("resize", () => paintModeBar());
       }
       modeBar.style.cssText = inDrawer() ? "position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)" : `position:fixed;left:${left}px;top:${top}px;z-index:2147483000;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`;

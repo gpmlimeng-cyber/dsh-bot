@@ -1362,6 +1362,23 @@ export function apply(ctx) {
           const box = modeBar.getBoundingClientRect()
           openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
         })
+        // A layer over the caption band can take the press before the row sees it. The window
+        // sees it first, so a press that lands on the row's own box but belongs to another
+        // element is handled here instead: the row then works wherever it is painted.
+        window.addEventListener('pointerdown', (event) => {
+          if (!modeBar.isConnected || event.defaultPrevented) return
+          const target = event.target
+          if (target instanceof Element && (target.closest('.bt-modebar') || target.closest('.bt-modebar-menu'))) return
+          const rect = modeBar.getBoundingClientRect()
+          if (rect.width === 0) return
+          if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) return
+          event.preventDefault()
+          event.stopPropagation()
+          if (modeOpen) { closeModeMenu(); return }
+          paintModeBar()
+          const box = modeBar.getBoundingClientRect()
+          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
+        }, true)
         window.addEventListener('resize', () => paintModeBar())
       }
       modeBar.style.cssText = inDrawer()

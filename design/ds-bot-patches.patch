@@ -652,7 +652,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index 31f6605..de011dd 100644
+index 31f6605..7f49d95 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -669,7 +669,7 @@ index 31f6605..de011dd 100644
  import { SCHEDULE_CSS } from './schedules.js'
  import { STORAGE, migrateStorage } from './storage.js'
  import { noteLeft, setUnread, sharedMap, toggleReaction } from './shared-map.js'
-+import { placeModeRow, modeRowSlot } from './mode-row.js'
++import { drawerSlot, modeRowSlot, placeModeRow } from './mode-row.js'
  import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
  import { installLocale, language, t } from './i18n.js'
  import { noteClientError, quietly } from './diagnostics.js'
@@ -961,7 +961,7 @@ index 31f6605..de011dd 100644
 +    }
 +    // The drawer stacks its children, so the two parts of the row share one line here.
 +    let modeRow = null
-+    const inDrawer = () => modeRowSlot(document) !== document.body
++    const inDrawer = () => drawerSlot(document) !== null
 +    const placeRow = () => {
 +      const drew = inDrawer()
 +      if (drew) {
@@ -985,7 +985,7 @@ index 31f6605..de011dd 100644
 +      }
 +      bandActions.style.cssText = inDrawer()
 +        ? 'position:static;display:flex;align-items:center;gap:2px;margin-left:auto'
-+        : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:60;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`
++        : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:2147483000;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`
 +      bandActions.textContent = ''
 +      // In the shell's own view these three do what the shell's own controls do, so the row
 +      // never lies about what a click will get.
@@ -1063,7 +1063,7 @@ index 31f6605..de011dd 100644
 +      }
 +      modeBar.style.cssText = inDrawer()
 +        ? 'position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)'
-+        : `position:fixed;left:${left}px;top:${top}px;z-index:60;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`
++        : `position:fixed;left:${left}px;top:${top}px;z-index:2147483000;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`
 +      // The drawer has no band: the row keeps the drawer's top, and a closed drawer takes it
 +      // off the page with everything else instead of leaving it floating over the content.
 +      placeRow()
@@ -1937,10 +1937,10 @@ index 018478e..fd94ddf 100644
  .bt-mw-pill-in{display:inline-flex;align-items:center;gap:8px;flex:none;padding:0 13px 0 6px;white-space:nowrap}
 diff --git a/ds-bot/src/client/mode-row.js b/ds-bot/src/client/mode-row.js
 new file mode 100644
-index 0000000..142934a
+index 0000000..6a4469e
 --- /dev/null
 +++ b/ds-bot/src/client/mode-row.js
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,53 @@
 +// Where the mode row (the surface switcher and the band's own three controls) lives. A
 +// desktop window keeps it in the caption band; a phone has no band, and a fixed row would
 +// float over whatever the page shows first, so there it takes the drawer's first row and
@@ -1948,9 +1948,39 @@ index 0000000..142934a
 +//
 +// The drawer's marker belongs to dsh-web-mobile; without the plugin there is no drawer
 +// form at all, so the row stays in the band (a safe failure: one row, in the band).
++// The band is the window's drag region on a desktop, and Chromium gives a drag region's
++// clicks to the window instead of the page. A button inside that region can take them back
++// with -webkit-app-region: no-drag; one floating above it cannot, because hit testing never
++// reaches it. So on a desktop the row goes inside the band element when the shell has one,
++// and back to the body when it does not.
++export function bandHost(document) {
++  try {
++    for (const element of document.querySelectorAll('header, [class*="_title"], [class*="_titlebar"], [class*="_caption"], [class*="_drag"], [class*="_window"]')) {
++      const rect = element.getBoundingClientRect()
++      if (rect.top > 6 || rect.bottom > 96 || rect.height <= 0) continue
++      if (readAppRegion(element) === 'drag') return element
++    }
++  } catch { /* a document without layout keeps the body */ }
++  return null
++}
++
++function readAppRegion(element) {
++  try {
++    return getComputedStyle(element).getPropertyValue('-webkit-app-region').trim()
++  } catch {
++    return ''
++  }
++}
++
++// A phone has no caption band: the row takes the drawer's first row and scrolls out of sight
++// with it. This is also what tells the caller which of the two layouts it is painting.
++export function drawerSlot(document) {
++  if (document.querySelector('[data-mobile-nav="frame"]') === null) return null
++  return document.querySelector('.bt-side') ?? null
++}
++
 +export function modeRowSlot(document) {
-+  if (document.querySelector('[data-mobile-nav="frame"]') === null) return document.body
-+  return document.querySelector('.bt-side') ?? document.body
++  return drawerSlot(document) ?? bandHost(document) ?? document.body
 +}
 +
 +// Moves the row into `slot` in the given order, once. Prepending in reverse keeps the order

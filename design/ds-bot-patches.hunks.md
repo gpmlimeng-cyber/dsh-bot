@@ -47,7 +47,7 @@
 | 45 | `ds-bot/src/client/market.js` | 1–532 | 532 |
 | 46 | `ds-bot/src/client/mcp-panel.js` | 1–264 | 264 |
 | 47 | `ds-bot/src/client/member-status.js` | 203–204 | 2 |
-| 48 | `ds-bot/src/client/mode-row.js` | 1–23 | 23 |
+| 48 | `ds-bot/src/client/mode-row.js` | 1–53 | 53 |
 | 49 | `ds-bot/src/client/model-menu.js` | 9 | 1 |
 | 50 | `ds-bot/src/client/model-menu.js` | 95 | 1 |
 | 51 | `ds-bot/src/client/model-menu.js` | 185 | 1 |
