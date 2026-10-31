@@ -641,7 +641,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index daf7dd4..b69129f 100644
+index daf7dd4..c77a0ed 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -867,7 +867,7 @@ index daf7dd4..b69129f 100644
        if (!declared) {
          // The slot itself is not declared yet; keep watching for a while.
          if (verifyAttempts < 20) {
-@@ -958,8 +1112,210 @@ export function apply(ctx) {
+@@ -958,8 +1112,214 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -1000,6 +1000,7 @@ index daf7dd4..b69129f 100644
 +      rules.id = 'bt-modebar-rules'
 +      rules.textContent = 'button[aria-label="打开侧边栏"],button[aria-label="收起侧边栏"]:not(.bt-band-action),button[aria-label="展开侧边栏"]:not(.bt-side-expand),button[aria-label="Open sidebar"],button[aria-label="Close sidebar"]{display:none!important}'
 +        + 'html.bt-agent [class*="_logoRow"]{display:none!important}'
++        + '.bt-modebar-row:empty{display:none}'
 +      document.head.appendChild(rules)
 +    }
 +    const paintModeBar = () => {
@@ -1021,7 +1022,10 @@ index daf7dd4..b69129f 100644
 +      if (!modeBar) {
 +        // A surface effect that re-runs gets a fresh closure; clear anything an earlier
 +        // closure left on the page so the row never stacks up.
-+        for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions')) stale.remove()
++        for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row')) stale.remove()
++        // The row the stale wrapper lived in is gone too; a kept handle would place the new
++        // row into a detached div and leave the drawer showing an empty line.
++        modeRow = null
 +        modeBar = document.createElement('button')
 +        modeBar.type = 'button'
 +        modeBar.className = 'bt-modebar'
@@ -1078,7 +1082,7 @@ index daf7dd4..b69129f 100644
        clearTimeout(verifyTimer)
        verifyAttempts = 0
        verifyTimer = setTimeout(verifySidebar, 250)
-@@ -970,6 +1326,13 @@ export function apply(ctx) {
+@@ -970,6 +1330,13 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
