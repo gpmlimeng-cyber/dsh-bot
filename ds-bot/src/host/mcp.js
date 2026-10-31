@@ -449,6 +449,7 @@ export function install(rt) {
             installs: 0,
             categories: [],
             homepage: String(entry.homepage ?? ''),
+            installable: entry.install !== null && typeof entry.install === 'object',
             install: entry.install !== null && typeof entry.install === 'object' ? entry.install : null,
           })).filter(entry => entry.id !== '' && (!query || `${entry.name} ${entry.description}`.toLowerCase().includes(query)))
           return { total: rows.length, servers: rows.slice((page - 1) * size, page * size) }
@@ -472,6 +473,7 @@ export function install(rt) {
               installs: 0,
               categories: [],
               homepage: entry.url,
+              installable: pkg !== null,
               install: pkg === null ? null : { transport: 'stdio', command: 'npx', args: ['-y', pkg] },
             }
           })
@@ -551,6 +553,7 @@ export function install(rt) {
           logo: String(row.logo_url ?? ''),
           hosted: row.is_hosted === true,
           installs: Number(row.view_count ?? 0),
+          installable: true,
           categories: (Array.isArray(row.categories) ? row.categories : []).map(item => String(item).toLowerCase()),
         })).filter(row => row.id !== ''),
       }

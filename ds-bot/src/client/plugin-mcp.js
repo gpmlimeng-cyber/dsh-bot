@@ -90,7 +90,7 @@ function Row({ server, added, busy, onInstall, onOpen, onHome }) {
     h('div', { className: 'bt-mm-cardEnd' },
       // A catalogue entry with no connection of its own can only be opened, never
       // installed; a fake install button would promise something it cannot do.
-      server.install === null || server.install === undefined
+      server.installable === false
         ? (server.homepage
           ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-btn-ghost', onClick: onHome }, t('Open page'))
           : null)
@@ -529,7 +529,7 @@ export function McpMarketTab({ actions = {} }) {
             h('select', { value: sort, 'aria-label': t('Sort'), onChange: (event) => setSort(event.target.value) },
               h('option', { value: 'default' }, t('Default order')),
               h('option', { value: 'installs' }, t('Downloads')))),
-          h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() }))),
+          loading && list.servers.length === 0 ? h('span', { className: 'bt-mm-total' }, t('Reading…')) : null),
         categories.length === 0 ? null : h('div', { className: 'bt-mm-categories', key: 'categories', role: 'group', 'aria-label': t('Labels') },
           h('button', {
             type: 'button',

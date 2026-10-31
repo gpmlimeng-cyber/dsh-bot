@@ -27345,7 +27345,7 @@ function Row3({ server, added, busy, onInstall, onOpen, onHome }) {
       { className: "bt-mm-cardEnd" },
       // A catalogue entry with no connection of its own can only be opened, never
       // installed; a fake install button would promise something it cannot do.
-      server.install === null || server.install === void 0 ? server.homepage ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-btn bt-mm-btn-ghost", onClick: onHome }, t("Open page")) : null : (0, import_react55.createElement)("button", {
+      server.installable === false ? server.homepage ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-btn bt-mm-btn-ghost", onClick: onHome }, t("Open page")) : null : (0, import_react55.createElement)("button", {
         type: "button",
         className: "bt-mm-btn",
         "data-added": added ? "" : void 0,
@@ -27883,7 +27883,7 @@ function McpMarketTab({ actions = {} }) {
             (0, import_react55.createElement)("option", { value: "installs" }, t("Downloads"))
           )
         ),
-        (0, import_react55.createElement)("span", { className: "bt-mm-total" }, loading && list.servers.length === 0 ? t("Reading…") : t("{count} servers", { count: list.total.toLocaleString() }))
+        loading && list.servers.length === 0 ? (0, import_react55.createElement)("span", { className: "bt-mm-total" }, t("Reading…")) : null
       ),
       categories.length === 0 ? null : (0, import_react55.createElement)(
         "div",
