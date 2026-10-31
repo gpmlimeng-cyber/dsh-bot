@@ -2328,10 +2328,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..49287d6
+index 0000000..f93a996
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,737 @@
+@@ -0,0 +1,739 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2978,7 +2978,9 @@ index 0000000..49287d6
 +                  className: 'bt-mm-menuitem' + (item.id === source ? ' is-on' : ''),
 +                  onClick: () => { setSource(item.id); setSourceMenu(false); setPage(1); setList({ total: 0, servers: [] }); setCategories([]); setCategory('') },
 +                }, item.name, item.custom ? h('span', { className: 'bt-mm-menuitem-x', role: 'button', 'aria-label': t('Remove'), title: t('Remove'), onClick: (event) => { event.stopPropagation(); const next = sources.filter(one => one.id !== item.id); setSources(next); writeSources(next); if (source === item.id) setSource('modelscope') } }, '×') : null, h('span', { className: 'bt-mm-menuitem-check', 'aria-hidden': true }, '✓'))),
-+                h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem bt-mm-menuitem-add', onClick: () => { setSourceMenu(false); setAdding({ name: '', url: '', kind: 'readme' }) } }, t('Manage sources…'), h('span', { className: 'bt-mm-menuitem-gear', 'aria-hidden': true }, '⚙')))
++                // The shell hangs its footer items off a hairline inside the list.
++                h('div', { className: 'bt-mm-menu-footer' },
++                  h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem', onClick: () => { setSourceMenu(false); setAdding({ name: '', url: '', kind: 'readme' }) } }, t('Manage sources…'), h('span', { className: 'bt-mm-menuitem-gear', 'aria-hidden': true }, '⚙'))))
 +              : null),
 +          h('label', { className: 'bt-mm-search' },
 +            h(SearchIcon),
@@ -10264,7 +10266,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..b152876 100644
+index eac6ea5..5666488 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10500,16 +10502,16 @@ index eac6ea5..b152876 100644
 +/* The dropdown card is the shell's own, copied verbatim from its primitives
 +   (_float_ / _menuItem_ in dsh-web-frontend, MIT): same layer, panel radius and
 +   elevation, so a ds-bot menu reads as one of the shell's. */
-+.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 6px);left:-8px;min-width:96px;max-width:320px;display:flex;flex-direction:column;padding:4px;overflow:hidden;background:var(--dsw-alias-bg-layer-3,var(--bt-card));background-image:none;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:.5px solid var(--dsw-alias-border-l2,var(--bt-line-2));border-radius:6px} /* vendored */
-+.bt-mm-menuitem{display:flex;align-items:center;gap:6px;padding:5px 8px;color:var(--dsw-alias-label-primary,var(--bt-ink));font-size:var(--dsh-content-font-size-secondary,13px);line-height:18px;text-align:left;background:transparent;border:none;border-radius:4px;cursor:pointer;white-space:nowrap} /* vendored */
++.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 4px);left:0;box-sizing:border-box;display:flex;flex-direction:column;gap:0;padding:2px;overflow:hidden;min-width:164px;max-width:360px;background:var(--dsw-specific-menu,var(--bt-card));background-image:none;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:0;border-radius:7px;box-shadow:var(--dsw-elevation-prominent,0 0 0 .5px rgba(0,0,0,.08),0 6px 16px rgba(0,0,0,.10))} /* vendored */
++.bt-mm-menuitem{display:flex;align-items:center;gap:6px;width:100%;min-height:26px;padding:3px 7px;color:var(--dsw-alias-label-primary,var(--bt-ink));font-size:12px;line-height:18px;text-align:left;background:transparent;border:none;border-radius:5px;cursor:pointer;white-space:nowrap} /* vendored */
 +.bt-mm-menuitem:hover{background:var(--dsw-alias-interactive-bg-hover,var(--bt-hover))} /* vendored */
 +
-+.bt-mm-menuitem-check{margin-left:auto;flex:none;width:14px;text-align:center;color:var(--bt-accent);visibility:hidden}
++.bt-mm-menuitem-check{margin-left:auto;flex:none;width:14px;text-align:center;color:var(--dsw-alias-label-primary,var(--bt-ink));visibility:hidden}
 +.bt-mm-menuitem.is-on .bt-mm-menuitem-check{visibility:visible}
 +.bt-mm-menuitem-gear{margin-left:auto;color:var(--dsw-alias-label-tertiary)}
 +.bt-mm-menuitem-x{margin-left:auto;width:20px;height:20px;line-height:18px;text-align:center;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary)}
 +.bt-mm-menuitem-x:hover{background:var(--dsw-alias-interactive-bg-hover)}
-+.bt-mm-menuitem-add{border-top:.5px solid var(--bt-line-2);border-radius:0 0 8px 8px;margin-top:4px;padding-top:10px}
++.bt-mm-menu-footer{flex:none;margin-top:4px;padding-top:4px;border-top:.5px solid var(--dsw-alias-border-l2,var(--bt-line-2))}
 +.bt-mm-addsource{position:fixed;z-index:40;right:32px;top:96px;width:min(360px,90vw);display:flex;flex-direction:column;gap:10px;padding:16px;overflow:hidden;background-color:color-mix(in srgb,var(--bt-card) 82%,transparent);background-image:none;backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-radius:8px;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);box-shadow:var(--dsw-elevation-prominent)} /* vendored */
 +.bt-mm-addsource-head{display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px}
 +.bt-mm-btn-ghost{background:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2);color:var(--bt-ink-2)}
