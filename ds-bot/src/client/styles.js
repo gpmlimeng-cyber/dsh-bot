@@ -1588,12 +1588,13 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
 }
 @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
 @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
-html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:0!important;min-height:44px!important;border-radius:26px!important;padding:7.5px!important;box-sizing:border-box;border:0!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
+html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:12px!important;min-height:48px!important;border-radius:26px!important;padding:7.5px!important;box-sizing:border-box;border:0!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
 html:has([data-mobile-nav="frame"]) [data-composer-card]:hover,html:has([data-mobile-nav="frame"]) [data-composer-card]:focus-within{background:color-mix(in srgb,var(--bt-main) 96%,transparent)!important}
 /* The card was measuring 2px of top padding against 7.5px at the bottom, so its 32px row
-   sat a couple of pixels high inside the 44px box. Equal 6px insets centre it exactly; the
-   attribute is repeated so this beats whichever rule pinned the top to 2px. */
-html:has([data-mobile-nav="frame"]) [data-composer-card][data-composer-card][data-composer-card]{padding:6px 12px!important}
+   sat a couple of pixels high inside the box. Equal 6px insets centre it exactly inside the
+   48px box (mobile-ui.md v3: 16px on the sides, as the app's composer has); the attribute is
+   repeated so this beats whichever rule pinned the top to 2px. */
+html:has([data-mobile-nav="frame"]) [data-composer-card][data-composer-card][data-composer-card]{padding:6px 16px!important}
 /* The shell lifts its primary send button 2px to suit its own row; in this card the plus,
    the mic and the card's centre line all agree, so that lift leaves the send button high. */
 [data-composer-card] [class*="_primary"]{transform:none!important}
@@ -1623,8 +1624,11 @@ html:not(:has([data-mobile-nav="frame"])) [data-composer-card]{flex-direction:ro
 [data-composer-card]>[class*="_row"]{display:contents!important}
 [data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:center!important;margin:0!important}
 [data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0 0 0 -15px!important}
-/* The desktop field keeps ds-bot's stock inset; the phone pulls its field up to the mark. */
-html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{margin-left:-10px!important}
+/* The row's gap is 12 and the field adds 8 of its own inset, so pulling 8 back leaves 4
+   here and 12 from the plus's box edge to the text; 17px from the icon edge to the text is
+   that plus the 5px the 32px box keeps around its 22px icon. The desktop field keeps its
+   stock inset. */
+html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{margin-left:-8px!important}
 [data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:center!important;margin:0!important}
 /* The slot anchor is display:contents, so the rail inside it is the flex item. */
 [data-composer-card]>[data-slot="conversation.input.attachments"]>[class*="_rail"]{order:0!important;flex:0 0 100%!important;margin:0!important;padding:2px 8px 6px!important}
