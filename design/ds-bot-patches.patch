@@ -436,10 +436,10 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 0696236..1d572a7 100644
+index 0696236..8acd1ed 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,139 @@ const ZH = {
+@@ -18,6 +18,140 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
@@ -479,6 +479,7 @@ index 0696236..1d572a7 100644
 +  'MCP': 'MCP',
 +  'Hosted': '已托管',
 +  'In this profile': '本档案里',
++  'More labels': '更多标签',
 +  'ModelScope MCP': 'ModelScope MCP',
 +  'MCP reference servers': 'MCP 官方参考服务器',
 +  'awesome-mcp-servers': 'awesome-mcp-servers',
@@ -579,7 +580,7 @@ index 0696236..1d572a7 100644
    'Resize sidebar': '调整侧边栏宽度',
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
-@@ -170,7 +303,6 @@ const ZH = {
+@@ -170,7 +304,6 @@ const ZH = {
    'A provider id is lowercase letters, digits and dashes, starting with a letter': '服务商 ID 只能用小写字母、数字和短横线，并以字母开头',
    'Add at least one model': '至少添加一个模型',
    'Two models have the same id': '有两个模型的 ID 相同',
@@ -587,7 +588,7 @@ index 0696236..1d572a7 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -430,6 +562,23 @@ const ZH = {
+@@ -430,6 +563,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -611,7 +612,7 @@ index 0696236..1d572a7 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -545,6 +694,19 @@ const ZH = {
+@@ -545,6 +695,19 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -631,7 +632,7 @@ index 0696236..1d572a7 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +844,6 @@ const ZH = {
+@@ -682,7 +845,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -639,7 +640,7 @@ index 0696236..1d572a7 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1092,10 @@ const ZH = {
+@@ -931,6 +1093,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -650,7 +651,7 @@ index 0696236..1d572a7 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1138,7 @@ const ZH = {
+@@ -973,6 +1139,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -658,7 +659,7 @@ index 0696236..1d572a7 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1234,10 @@ const ZH = {
+@@ -1068,6 +1235,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -2327,10 +2328,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..2083549
+index 0000000..bf32c50
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,621 @@
+@@ -0,0 +1,646 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2341,7 +2342,7 @@ index 0000000..2083549
 +// tools on the MCP page.
 +import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
 +import { t } from './i18n.js'
-+import { CloseIcon, MoreDotsIcon, PlusIcon, SearchIcon, SwitchIcon, TrashIcon } from './icons.js'
++import { CloseIcon, PlusIcon, SearchIcon, SwitchIcon, TrashIcon } from './icons.js'
 +
 +// A server name has to fit the profile's own rule; the plaza's ids are `@owner/name`.
 +const nameOf = (id) => {
@@ -2422,16 +2423,16 @@ index 0000000..2083549
 +      // An added server has nothing left to install, so its control is the menu that
 +      // switches it off or takes it away; a card that cannot install only opens.
 +      added
-+        ? h('div', { className: 'bt-mm-rowmenu' },
-+          h('button', {
-+            type: 'button', className: 'bt-mm-dots', 'aria-haspopup': 'menu', 'aria-expanded': menuOpen ? 'true' : 'false',
-+            'aria-label': t('More actions'), title: t('More actions'), onClick: onMenu,
-+          }, h(MoreDotsIcon)),
-+          menuOpen
-+            ? h('div', { className: 'bt-mm-menu bt-mm-rowmenupop', role: 'menu' },
-+              h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem', onClick: () => onMenu('off') }, t('Turn off')),
-+              h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem', onClick: () => onMenu('remove') }, t('Remove')))
-+            : null)
++        ? h('button', {
++          type: 'button',
++          className: 'bt-mm-switch',
++          role: 'switch',
++          'aria-checked': server.enabled === false ? 'false' : 'true',
++          'aria-label': server.enabled === false ? t('Turn on') : t('Turn off'),
++          title: server.enabled === false ? t('Turn on') : t('Turn off'),
++          disabled: busy,
++          onClick: onMenu,
++        }, h('span', { className: 'bt-mm-switch-thumb', 'aria-hidden': true }))
 +        : server.installable === false
 +          ? (server.homepage
 +            ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-btn-ghost', onClick: onHome }, t('Open page'))
@@ -2610,6 +2611,8 @@ index 0000000..2083549
 +  const [sources, setSources] = useState(() => readSources())
 +  const [sourceMenu, setSourceMenu] = useState(false)
 +  const [rowMenu, setRowMenu] = useState('')
++  const [moreLabels, setMoreLabels] = useState(false)
++  const [reload, setReload] = useState(0)
 +  const [adding, setAdding] = useState(null)
 +  const timer = useRef(null)
 +
@@ -2658,7 +2661,7 @@ index 0000000..2083549
 +          : { total: next?.total ?? now.total, servers: [...now.servers, ...(next?.servers ?? [])] })
 +      }, (failure) => { if (live) { setLoading(false); report(failure) } })
 +    return () => { live = false }
-+  }, [actions, sent, page, category, view, source, sources])
++  }, [actions, sent, page, category, view, source, sources, reload])
 +
 +  useEffect(() => {
 +    if (view !== 'discover' || categories.length > 0 || source !== 'modelscope') return undefined
@@ -2684,7 +2687,9 @@ index 0000000..2083549
 +  const pick = (value) => {
 +    setCategory(value)
 +    setPage(1)
-+    setList({ total: 0, servers: [] })
++    // Picking the label that is already on has to bring the list back too, so the read is
++    // asked for again even though the category did not change.
++    setReload(count => count + 1)
 +  }
 +
 +  // The card installs the way the shell's own market installs: read the server, then add
@@ -2745,12 +2750,15 @@ index 0000000..2083549
 +      if (!buckets.has(key)) buckets.set(key, [])
 +      buckets.get(key).push(server)
 +    }
++    // A section keeps its label's place in the chip row, and that row is ordered by how
++    // much each category is downloaded: label and section are the same list.
++    const rank = (id) => { const at = categories.findIndex(item => item.id === id); return at < 0 ? categories.length : at }
 +    return [...buckets.entries()]
 +      // A filtered list keeps the name of the category it was filtered to, so opening a
 +      // section does not rename it to "all".
 +      .map(([id, servers]) => ({ id, name: category !== '' ? categoryName(category) : (id === '' ? t('All') : categoryName(id)), servers }))
-+      .sort((left, right) => right.servers.length - left.servers.length)
-+  }, [shown, category])
++      .sort((left, right) => rank(left.id) - rank(right.id) || right.servers.length - left.servers.length)
++  }, [shown, category, categories, t])
 +  const more = list.servers.length < list.total
 +
 +  const body = view === 'installed'
@@ -2787,13 +2795,11 @@ index 0000000..2083549
 +                added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
 +                busy: installing === server.id,
 +                menuOpen: rowMenu === server.id,
-+                onMenu: (action) => {
-+                  if (action === undefined) { setRowMenu(rowMenu === server.id ? '' : server.id); return }
++                enabled: (rows.find(item => item.serverName === (added[server.id] ?? nameOf(server.id))) ?? {}).enabled !== false,
++                onMenu: () => {
 +                  const name = added[server.id] ?? nameOf(server.id)
 +                  const entry = rows.find(item => item.serverName === name)
-+                  if (action === 'off' && entry !== undefined) toggle(entry)
-+                  if (action === 'remove') remove({ serverName: name })
-+                  setRowMenu('')
++                  if (entry !== undefined) toggle(entry)
 +                },
 +                onInstall: () => install(server),
 +                onOpen: () => setOpen(server),
@@ -2910,13 +2916,33 @@ index 0000000..2083549
 +            'aria-pressed': category === '',
 +            onClick: () => pick(''),
 +          }, t('All')),
-+          categories.map(item => h('button', {
++          // One row of labels: the ones past the first row live in the trailing menu, so a
++          // long catalogue never pushes the cards down.
++          categories.slice(0, 11).map(item => h('button', {
 +            key: item.id,
 +            type: 'button',
 +            className: 'bt-mm-pill' + (category === item.id ? ' is-on' : ''),
 +            'aria-pressed': category === item.id,
 +            onClick: () => pick(item.id),
-+          }, categoryName(item.id)))),
++          }, categoryName(item.id))),
++          h('div', { className: 'bt-mm-morewrap' },
++            h('button', {
++              type: 'button',
++              className: 'bt-mm-pill bt-mm-morepill' + (categories.slice(11).some(item => item.id === category) ? ' is-on' : ''),
++              'aria-haspopup': 'menu',
++              'aria-expanded': moreLabels ? 'true' : 'false',
++              onClick: () => setMoreLabels(!moreLabels),
++            }, categories.slice(11).some(item => item.id === category) ? categoryName(category) : t('More labels'), h('span', { 'aria-hidden': true }, '▾')),
++            moreLabels
++              ? h('div', { className: 'bt-mm-menu bt-mm-labelmenu', role: 'menu' },
++                categories.map(item => h('button', {
++                  key: item.id,
++                  type: 'button',
++                  role: 'menuitem',
++                  className: 'bt-mm-menuitem' + (category === item.id ? ' is-on' : ''),
++                  onClick: () => { pick(item.id); setMoreLabels(false) },
++                }, categoryName(item.id), h('span', { className: 'bt-mm-menuitem-check', 'aria-hidden': true }, '✓'))))
++              : null)),
 +        error ? h('p', { className: 'bt-mm-error' }, error) : null,
 +        body)
 +      : h('div', { className: 'bt-mm-other' },
@@ -10147,7 +10173,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..23e3852 100644
+index eac6ea5..3fe87c3 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10188,7 +10214,7 @@ index eac6ea5..23e3852 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,49 +141,417 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,49 +141,431 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -10356,7 +10382,10 @@ index eac6ea5..23e3852 100644
 +   ones it ships, so this panel measures the same as the shell's own page. */
 +.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex;flex-wrap:nowrap}
 +.bt-mm-filterlabel{flex:none}
-+.bt-mm-categories{flex-wrap:wrap;align-items:center;gap:6px;display:flex}
++.bt-mm-categories{flex-wrap:nowrap;align-items:center;gap:6px;display:flex;overflow:hidden}
++.bt-mm-morewrap{position:relative;margin-left:auto;flex:none}
++.bt-mm-morepill{white-space:nowrap;gap:4px}
++.bt-mm-labelmenu{right:0;left:auto;max-height:320px;overflow-y:auto}
 +/* The discover view is one column: the shell's toolbar row, its category row, then the
 +   grouped cards. Everything here follows the vendored sheet's own metrics. */
 +.bt-mm-discover{display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -10404,11 +10433,22 @@ index eac6ea5..23e3852 100644
 +.bt-mm-grouptitle{margin:0;font-size:14px;font-weight:600;line-height:22px;color:var(--dsw-alias-label-primary)}
 +.bt-mm-groupmore{border:0;background:none;padding:0;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:12.5px;cursor:pointer}
 +.bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary)}
++/* The installed card's switch is the shell's own switch, copied from its stylesheet:
++   36x20, layer-3 track, brand fill when on, 16px thumb that slides 16px. */
++.bt-mm-switch{box-sizing:border-box;position:relative;flex:0 0 auto;width:36px;height:20px;padding:2px;border:0;border-radius:999px;corner-shape:round;background:var(--bt-line-2);cursor:pointer}
++.bt-mm-switch[aria-checked=true]{background:var(--bt-accent)}
++.bt-mm-switch:disabled{cursor:default;opacity:.5} /* vendored */
++.bt-mm-switch-thumb{display:block;width:16px;height:16px;border-radius:50%;corner-shape:round;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .12s ease}
++.bt-mm-switch[aria-checked=false] .bt-mm-switch-thumb{background:#fff}
++.bt-mm-switch[aria-checked=true] .bt-mm-switch-thumb{transform:translate(16px)}
 +.bt-mm-rowmenu{position:relative}
 +.bt-mm-dots{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:var(--dsw-radius-md);background:none;color:var(--dsw-alias-label-tertiary);cursor:pointer}
 +.bt-mm-dots:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
 +.bt-mm-rowmenupop{right:0;left:auto;top:calc(100% + 4px);min-width:140px}
-+@media (max-width:900px){ul.bt-mm-cards{grid-template-columns:minmax(0,1fr)}}.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500;border:0;box-shadow:none;background:none;padding:0 4px;color:var(--dsw-alias-label-primary);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}.bt-mm-source-name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.bt-mm-search{flex:1;min-width:120px}.bt-mm-categories{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.bt-mm-muted,.bt-mm-meta{color:var(--dsw-alias-label-tertiary);margin:0;font-size:13px;line-height:20px}.bt-mm-meta{overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-strong{overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:20px}.bt-mm-error{color:var(--dsw-alias-state-error-primary);align-items:center;gap:6px;margin:0;font-size:13px;line-height:20px;display:inline-flex}.bt-mm-failure{align-items:center;gap:10px;display:flex}.bt-mm-notice{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);align-items:flex-start;gap:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px;display:flex}.bt-mm-notice>svg{color:var(--dsw-alias-state-warn-primary);flex:none;margin-top:2px}.bt-mm-cards{flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;display:flex}.bt-mm-card{border-radius:var(--dsw-radius-xl);align-items:center;gap:14px;margin:0 -8px;padding:8px;display:flex;position:relative}.bt-mm-card:hover{background:var(--dsw-alias-interactive-bg-hover)}.bt-mm-icon{border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);width:48px;height:48px;color:var(--dsw-alias-label-secondary);flex:none;justify-content:center;align-items:center;display:inline-flex}.bt-mm-image{object-fit:contain}.bt-mm-main{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.bt-mm-titleRow{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.bt-mm-cardOpen{max-width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;font-size:14px;font-weight:500;line-height:20px;overflow:hidden}.bt-mm-cardOpen:after{content:"";border-radius:var(--dsw-radius-xl);position:absolute;inset:0}.bt-mm-cardOpen:focus-visible{outline:none}.bt-mm-cardOpen:focus-visible:after{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-description{color:var(--dsw-alias-label-tertiary);-webkit-line-clamp:1;-webkit-box-orient:vertical;font-size:13px;line-height:18px;display:-webkit-box;overflow:hidden}.bt-mm-cardEnd{z-index:1;flex:none;align-items:center;gap:8px;display:inline-flex;position:relative}.bt-mm-blocked{opacity:.5;cursor:not-allowed}.bt-mm-more{align-self:center}.bt-mm-empty{text-align:center;flex-direction:column;align-items:center;gap:8px;padding:64px 0;display:flex}.bt-mm-emptyTitle{margin:8px 0 0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-empty>button{margin-top:8px}.bt-mm-detail{flex-direction:column;gap:16px;display:flex}.bt-mm-crumb{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:0;align-self:flex-start;align-items:center;gap:6px;padding:0;font-size:12.5px;display:inline-flex}.bt-mm-crumb:hover{color:var(--dsw-alias-label-primary)}.bt-mm-crumb:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-crumbIcon{transform:rotate(90deg)}.bt-mm-detailHead{align-items:center;gap:14px;display:flex}.bt-mm-detailTitle{margin:0;font-size:20px;font-weight:500;line-height:28px}.bt-mm-detailDescription{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.bt-mm-detailSection{flex-direction:column;gap:12px;margin-top:16px;display:flex}.bt-mm-sectionTitle{margin:0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-facts{margin:0}.bt-mm-facts div{border-bottom:.5px solid var(--dsw-alias-border-l2);justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:8px 2px;display:flex}.bt-mm-facts dt{color:var(--dsw-alias-label-secondary);flex:none;font-size:13px;line-height:20px}.bt-mm-facts dd{text-align:end;overflow-wrap:anywhere;min-width:0;margin:0;font-size:13px;line-height:20px}.bt-mm-facts code{background:var(--dsw-alias-bg-module-platform);box-decoration-break:clone;font-family:var(--ds-font-family-code);border-radius:4px;padding:2px 6px;font-size:12px}.bt-mm-tags{flex-wrap:wrap;justify-content:flex-end;gap:6px;display:flex}.bt-mm-dialog{width:min(480px,100vw - 32px)}.bt-mm-dialogBody{flex-direction:column;gap:12px;display:flex}.bt-mm-sourceList,.bt-mm-versions{flex-direction:column;margin:0;padding:0;list-style:none;display:flex}.bt-mm-sourceRow,.bt-mm-versionRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:8px 0;display:flex}.bt-mm-sourceError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-sourceForm{align-items:center;gap:8px;display:flex}.bt-mm-grow{flex:1;min-width:0}.bt-mm-confirmHead{align-items:center;gap:14px;display:flex}.bt-mm-skeletonFill{background:var(--dsw-alias-bg-skeleton);animation:2s cubic-bezier(.36,0,.64,1) infinite bt-mm-dsh-market-skeleton}.bt-mm-icon.bt-mm-skeletonFill{border-color:#0000}.bt-mm-skeletonBar{border-radius:var(--dsw-radius-xs);height:12px;margin:4px 0;display:block}.bt-mm-skeletonTitle{width:min(144px,60%)}.bt-mm-skeletonDescription{width:min(280px,85%)}@keyframes bt-mm-dsh-market-skeleton{0%{opacity:1}40%{opacity:.6}80%,to{opacity:1}}@media (prefers-reduced-motion:reduce){.bt-mm-skeletonFill{animation:none}}.bt-mm-link{color:var(--dsw-alias-link);overflow-wrap:anywhere;text-decoration:none}.bt-mm-link:hover{text-decoration:underline} /* vendored */
++@media (max-width:900px){ul.bt-mm-cards{grid-template-columns:minmax(0,1fr)}}.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500;border:0;box-shadow:none;background:none;padding:0 4px;color:var(--dsw-alias-label-primary);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}.bt-mm-source-name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.bt-mm-search{flex:1;min-width:120px}.bt-mm-categories{flex-wrap:nowrap;align-items:center;gap:6px;display:flex;overflow:hidden}
++.bt-mm-morewrap{position:relative;margin-left:auto;flex:none}
++.bt-mm-morepill{white-space:nowrap;gap:4px}
++.bt-mm-labelmenu{right:0;left:auto;max-height:320px;overflow-y:auto}.bt-mm-muted,.bt-mm-meta{color:var(--dsw-alias-label-tertiary);margin:0;font-size:13px;line-height:20px}.bt-mm-meta{overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-strong{overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:20px}.bt-mm-error{color:var(--dsw-alias-state-error-primary);align-items:center;gap:6px;margin:0;font-size:13px;line-height:20px;display:inline-flex}.bt-mm-failure{align-items:center;gap:10px;display:flex}.bt-mm-notice{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);align-items:flex-start;gap:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px;display:flex}.bt-mm-notice>svg{color:var(--dsw-alias-state-warn-primary);flex:none;margin-top:2px}.bt-mm-cards{flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;display:flex}.bt-mm-card{border-radius:var(--dsw-radius-xl);align-items:center;gap:14px;margin:0 -8px;padding:8px;display:flex;position:relative}.bt-mm-card:hover{background:var(--dsw-alias-interactive-bg-hover)}.bt-mm-icon{border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);width:48px;height:48px;color:var(--dsw-alias-label-secondary);flex:none;justify-content:center;align-items:center;display:inline-flex}.bt-mm-image{object-fit:contain}.bt-mm-main{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.bt-mm-titleRow{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.bt-mm-cardOpen{max-width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;font-size:14px;font-weight:500;line-height:20px;overflow:hidden}.bt-mm-cardOpen:after{content:"";border-radius:var(--dsw-radius-xl);position:absolute;inset:0}.bt-mm-cardOpen:focus-visible{outline:none}.bt-mm-cardOpen:focus-visible:after{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-description{color:var(--dsw-alias-label-tertiary);-webkit-line-clamp:1;-webkit-box-orient:vertical;font-size:13px;line-height:18px;display:-webkit-box;overflow:hidden}.bt-mm-cardEnd{z-index:1;flex:none;align-items:center;gap:8px;display:inline-flex;position:relative}.bt-mm-blocked{opacity:.5;cursor:not-allowed}.bt-mm-more{align-self:center}.bt-mm-empty{text-align:center;flex-direction:column;align-items:center;gap:8px;padding:64px 0;display:flex}.bt-mm-emptyTitle{margin:8px 0 0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-empty>button{margin-top:8px}.bt-mm-detail{flex-direction:column;gap:16px;display:flex}.bt-mm-crumb{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:0;align-self:flex-start;align-items:center;gap:6px;padding:0;font-size:12.5px;display:inline-flex}.bt-mm-crumb:hover{color:var(--dsw-alias-label-primary)}.bt-mm-crumb:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-crumbIcon{transform:rotate(90deg)}.bt-mm-detailHead{align-items:center;gap:14px;display:flex}.bt-mm-detailTitle{margin:0;font-size:20px;font-weight:500;line-height:28px}.bt-mm-detailDescription{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.bt-mm-detailSection{flex-direction:column;gap:12px;margin-top:16px;display:flex}.bt-mm-sectionTitle{margin:0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-facts{margin:0}.bt-mm-facts div{border-bottom:.5px solid var(--dsw-alias-border-l2);justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:8px 2px;display:flex}.bt-mm-facts dt{color:var(--dsw-alias-label-secondary);flex:none;font-size:13px;line-height:20px}.bt-mm-facts dd{text-align:end;overflow-wrap:anywhere;min-width:0;margin:0;font-size:13px;line-height:20px}.bt-mm-facts code{background:var(--dsw-alias-bg-module-platform);box-decoration-break:clone;font-family:var(--ds-font-family-code);border-radius:4px;padding:2px 6px;font-size:12px}.bt-mm-tags{flex-wrap:wrap;justify-content:flex-end;gap:6px;display:flex}.bt-mm-dialog{width:min(480px,100vw - 32px)}.bt-mm-dialogBody{flex-direction:column;gap:12px;display:flex}.bt-mm-sourceList,.bt-mm-versions{flex-direction:column;margin:0;padding:0;list-style:none;display:flex}.bt-mm-sourceRow,.bt-mm-versionRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:8px 0;display:flex}.bt-mm-sourceError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-sourceForm{align-items:center;gap:8px;display:flex}.bt-mm-grow{flex:1;min-width:0}.bt-mm-confirmHead{align-items:center;gap:14px;display:flex}.bt-mm-skeletonFill{background:var(--dsw-alias-bg-skeleton);animation:2s cubic-bezier(.36,0,.64,1) infinite bt-mm-dsh-market-skeleton}.bt-mm-icon.bt-mm-skeletonFill{border-color:#0000}.bt-mm-skeletonBar{border-radius:var(--dsw-radius-xs);height:12px;margin:4px 0;display:block}.bt-mm-skeletonTitle{width:min(144px,60%)}.bt-mm-skeletonDescription{width:min(280px,85%)}@keyframes bt-mm-dsh-market-skeleton{0%{opacity:1}40%{opacity:.6}80%,to{opacity:1}}@media (prefers-reduced-motion:reduce){.bt-mm-skeletonFill{animation:none}}.bt-mm-link{color:var(--dsw-alias-link);overflow-wrap:anywhere;text-decoration:none}.bt-mm-link:hover{text-decoration:underline} /* vendored */
 +/* The three controls the shell draws with its own primitives (Input, Pill, Button): the
 +   geometry is the section's, this is only the chrome those primitives carry. */
 +.bt-mm-box{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
@@ -10636,7 +10676,7 @@ index eac6ea5..23e3852 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -344,6 +718,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -344,6 +732,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -10663,7 +10703,7 @@ index eac6ea5..23e3852 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -571,7 +965,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -571,7 +979,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -10674,7 +10714,7 @@ index eac6ea5..23e3852 100644
  /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
     collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -587,6 +983,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+@@ -587,6 +997,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
  /* Elsewhere the switch shows only while the column is hidden, where the column's
     own top row had it. */
  html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
@@ -10683,7 +10723,7 @@ index eac6ea5..23e3852 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -626,7 +1024,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -626,7 +1038,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -10693,7 +10733,7 @@ index eac6ea5..23e3852 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1320,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1334,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -10814,7 +10854,7 @@ index eac6ea5..23e3852 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1533,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1547,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -10923,7 +10963,7 @@ index eac6ea5..23e3852 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1112,17 +1661,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1675,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -10950,7 +10990,7 @@ index eac6ea5..23e3852 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1681,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1695,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -10959,7 +10999,7 @@ index eac6ea5..23e3852 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1722,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1736,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
