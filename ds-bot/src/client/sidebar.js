@@ -117,7 +117,7 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
   const label = [room.name, pinned ? t('Pinned') : '', members.length > 0 ? t('Working') : '', approval ? t('Waiting for your approval') : ''].filter(Boolean).join(', ')
   return h('button', {
     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
-    'data-room-id': id, onClick: () => actions.openSession(id),
+    'data-room-id': id, title: wide ? undefined : room.name, onClick: () => actions.openSession(id),
     onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'room', id, x: event.clientX, y: event.clientY }) },
     draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', id); event.dataTransfer.effectAllowed = 'move' },
   },

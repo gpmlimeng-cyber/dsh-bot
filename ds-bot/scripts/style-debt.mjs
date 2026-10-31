@@ -109,7 +109,10 @@ const code = text => text.split(/\r?\n/)
 
 export function findStyles(dir = CLIENT) {
   const found = Object.fromEntries(Object.keys(checks).map(kind => [kind, {}]))
-  for (const file of readdirSync(dir, { recursive: true }).filter(name => name.endsWith('.js')).map(name => name.replaceAll('\\', '/'))) {
+  // The vendored skill market is third-party code taken as it ships (MIT, see NOTICE):
+  // its colors and radii are that project's, so our token rules do not judge them.
+  const ours = file => !file.startsWith('skill-market/')
+  for (const file of readdirSync(dir, { recursive: true }).filter(name => name.endsWith('.js')).map(name => name.replaceAll('\\', '/')).filter(ours)) {
     // A line ending in `/* vendored */` is third-party CSS taken as it ships (MIT, see
     // NOTICE); its literals belong to that project, not to our token rules.
     const text = code(readFileSync(join(dir, file), 'utf8'))

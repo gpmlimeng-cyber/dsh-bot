@@ -92,21 +92,27 @@ for (const width of [390, 1023, 1024, 1280]) {
       assert.equal(initial.rows.length, 3)
       for (const [index, row] of initial.rows.entries()) {
         const names = row.type.name === 'AgentRow' ? ['openAgent', 'openAgentSession', 'newAgentSession'] : ['openSession']
+        // Picking an entry inside the drawer folds it again: `navigate` toggles the sidebar
+        // when the content is wide on a narrow window, and only then.
+        const closesDrawer = wide && width < 1024
         for (const name of names) {
           const { rows, calls } = navigationSidebar(wide)
           assert.equal(rows[index].props.actions[name]('selected'), 'selected')
-          assert.deepEqual(calls, [[name, 'selected']])
+          assert.deepEqual(calls, closesDrawer ? [[name, 'selected'], ['toggleSidebar']] : [[name, 'selected']])
         }
       }
     })
   }
 }
 
-test('a row picked from the floating drawer closes it', () => {
+test('a row picked from the drawer closes it, once', () => {
   viewport.innerWidth = 390
-  const side = navigationSidebar(false, { leftDrawer: true })
-  side.rows[0].props.actions.openSession('picked')
-  assert.deepEqual(side.calls, [['openSession', 'picked'], ['setLeftDrawer', false]])
+  const side = navigationSidebar(true)
+  const pick = side.rows[0].props.actions.openSession
+  pick('picked')
+  // The latch holds for the rest of this commit: a second entry does not fold again.
+  pick('again')
+  assert.deepEqual(side.calls, [['openSession', 'picked'], ['toggleSidebar'], ['openSession', 'again']])
 })
 
 test('a row picked outside the drawer leaves it alone', () => {
@@ -284,7 +290,7 @@ const showing = rules.filter(rule => /display:inline-flex/.test(rule.body))
 function shell({ platform, collapsed }) {
   const darwin = platform === 'mac'
   const toggle = '<button class="x_iconButton x_toggle" aria-label="Toggle sidebar"></button>'
-  const html = `<!doctype html><html${platform === 'windows' ? ' data-windows-titlebar' : ''}${darwin ? ' data-platform="darwin"' : ''}><body>
+  const html = `<!doctype html><html class="bt-bot"${platform === 'windows' ? ' data-windows-titlebar' : ''}${darwin ? ' data-platform="darwin"' : ''}><body>
     <div${collapsed ? ' data-sidebar-collapsed="true"' : ''}>
       <div class="x_root${collapsed ? ' x_collapsed' : ''}">
         ${darwin ? `<div class="x_topStrip">${toggle}</div>` : ''}
@@ -336,45 +342,37 @@ test('what the team view replaces in the shell sidebar stays out of sight', () =
   }
 })
 
-// The shell's collapsed sidebar keeps no track in the Bot view, so a hidden
-// column leaves nothing behind; the shell's right column keeps its own geometry.
-test('the shell\'s collapsed sidebar keeps no track while its right column is closed', () => {
-  const frame = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].find(rule => rule.selector.includes('[data-sidebar-collapsed][data-rightbar-collapsed]'))
-  assert.match(frame?.body ?? '', /grid-template-columns:0px/)
+// The sidebar is drawn inside the shell's own column now, so the sheets keep out of the
+// frame's column geometry: an override there left a zero-width track behind.
+test('the sheets keep out of the shell frame\'s column geometry', () => {
+  const own = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].filter(rule => /data-sidebar-collapsed|data-rightbar-collapsed/.test(rule.selector))
+  assert.deepEqual(own.filter(rule => /grid-template-columns/.test(rule.body)), [])
 })
 
-test('the column\'s top row hides it, on the rail too, and its edge is a drag grip', () => {
+// The rail's own way back: the folded sidebar draws one button that unfolds it, and the
+// drawn column carries none, since folding that one is the caption band's action.
+test('the rail draws one way back and the drawn column none', () => {
   viewport.innerWidth = 1280
   const calls = []
   const roster = { bots: [], rooms: [], agents: [], byId: {}, ready: true }
-  const props = pref => ({
-    wide: false,
+  const props = wide => ({
+    wide,
     useRoster: pick => pick(roster), useUi: pick => pick({ unread: {} }), useRegistry: pick => pick({}),
     useSessions: pick => pick({ ids: [], byId: {} }), useUpdate: () => ({}),
-    useSidebarPref: pick => pick(pref),
-    actions: { toggleLeftHidden: () => calls.push('toggle'), toggleSidebar: () => {} },
+    actions: { toggleSidebar: () => calls.push('toggle') },
   })
   const find = (node, match) => {
     if (Array.isArray(node)) return node.map(child => find(child, match)).find(Boolean)
     if (!node || typeof node !== 'object') return undefined
     return match(node) ? node : find(node.props?.children, match)
   }
-  const collapse = node => node.type === 'button' && node.props['aria-label'] === 'Collapse sidebar'
-  for (const pref of ['open', 'rail']) {
-    const tree = TeamSidebar(props(pref))
-    const button = find(tree, collapse)
-    assert.ok(button?.props.className.split(' ').includes('bt-side-collapse'), pref)
-    button.props.onClick()
-    const column = find(tree, node => node.type?.name === 'LeftColumn')
-    assert.equal(column.props.mode, pref)
-    assert.equal(typeof column.props.onGrip, 'function')
-  }
-  assert.deepEqual(calls, ['toggle', 'toggle'])
-  // Hidden, there is no column at all; the floating switch brings it back.
-  const hidden = TeamSidebar(props('hidden'))
-  assert.equal(find(hidden, node => node.type?.name === 'LeftColumn'), undefined)
-  const toggle = find(hidden, node => node.type?.name === 'TitleToggle')
-  assert.equal(toggle.props.hidden, true)
+  const expand = node => node.type === 'button' && node.props['aria-label'] === 'Expand sidebar'
+  const rail = TeamSidebar(props(false))
+  const button = find(rail, expand)
+  assert.ok(button?.props.className.split(' ').includes('bt-side-expand'))
+  button.props.onClick()
+  assert.deepEqual(calls, ['toggle'])
+  assert.equal(find(TeamSidebar(props(true)), expand), undefined)
 })
 
 test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
