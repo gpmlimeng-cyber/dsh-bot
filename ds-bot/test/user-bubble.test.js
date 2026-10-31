@@ -28,8 +28,13 @@ const ruleFor = selector => {
   return rule
 }
 
+// The vendored skill-market sheet is in the same bundle and the crude rule walk above
+// cannot always tell where one of its rules starts; those rules follow the vendor's own
+// tokens, so only ds-bot's own selectors are judged here.
+const ours = selector => /^(\.bt-|\[data-bt|html|body|:root|\[data-slot)/.test(selector)
+
 test('every rule that writes in the user ink paints the user surface under it', () => {
-  const rules = rulesWith(/(?<=[{;])color:var\(--bt-user-ink\)/g)
+  const rules = rulesWith(/(?<=[{;])color:var\(--bt-user-ink\)/g).filter(rule => ours(rule.selector))
   assert.ok(rules.length >= 3)
   for (const { selector, body } of rules) {
     assert.match(surface(body) ?? '', /^var\(--bt-user\)(!important)?$/, selector)
@@ -131,6 +136,7 @@ test('every danger color reads --bt-danger, which the base sheet sets once', () 
     || before.endsWith('var(--bt-danger,') // feedback.js: its toast shows without the base sheet too
     || before.endsWith('.bt-voice-end:hover{background:') // recording reds: not decided yet
     || /FF3E51['"],\s*['"]$/i.test(before) // the red Bot color, not a danger color
+    || before.endsWith('var(--sm-danger, ') // the vendored skill-market sheet's own token
   const loose = [...bundle.matchAll(/#e02135|#c21d2e/gi)]
     .map(match => bundle.slice(Math.max(0, match.index - 40), match.index))
     .filter(before => !allowed(before))
