@@ -824,7 +824,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 
 /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
    shell offers them and CSS-module name suffixes elsewhere. */
-[class*="_newSession"],nav[class*="_panelList"],[class*="_logoRow"]>[class*="_brand"],[class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
+/* Only the team view replaces the shell's own sidebar rows. The shell's own view keeps them:
+   hiding them there left that view with an empty column. */
+html.bt-bot [class*="_newSession"],html.bt-bot nav[class*="_panelList"],html.bt-bot [class*="_logoRow"]>[class*="_brand"],html.bt-bot [class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
 /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
    collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
    the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */

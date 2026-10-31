@@ -1391,6 +1391,7 @@ export function apply(ctx) {
       // The shell's logo row belongs to its own view; hide it there, since the band carries
       // the controls. The Bot view never renders that row.
       document.documentElement.classList.toggle('bt-agent', mode === 'agent')
+      document.documentElement.classList.toggle('bt-bot', mode !== 'agent')
       // Clear of the traffic lights: past them in the window, at the edge without one.
       // A Mac window's traffic lights take the left corner, so the control sits well past
       // them; everywhere else it sits 15px from the window's left edge.

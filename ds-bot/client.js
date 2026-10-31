@@ -3386,7 +3386,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 
 /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
    shell offers them and CSS-module name suffixes elsewhere. */
-[class*="_newSession"],nav[class*="_panelList"],[class*="_logoRow"]>[class*="_brand"],[class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
+/* Only the team view replaces the shell's own sidebar rows. The shell's own view keeps them:
+   hiding them there left that view with an empty column. */
+html.bt-bot [class*="_newSession"],html.bt-bot nav[class*="_panelList"],html.bt-bot [class*="_logoRow"]>[class*="_brand"],html.bt-bot [class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
 /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
    collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
    the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
@@ -28821,6 +28823,7 @@ function apply(ctx) {
       const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue("--dsh-frame-chrome-top")) || (mac ? 44 : 0);
       const mode = surface.getSnapshot().mode;
       document.documentElement.classList.toggle("bt-agent", mode === "agent");
+      document.documentElement.classList.toggle("bt-bot", mode !== "agent");
       const left = mac ? 84 : 15;
       const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9;
       if (!modeBar) {
