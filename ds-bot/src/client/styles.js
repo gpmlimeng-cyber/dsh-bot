@@ -258,13 +258,11 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 [data-skill-market] .sm-viewbar-actions .sm-btn{height:28px}
 /* The panel owns its whole pane: no market padding, no page scroll behind it. */
 .bt-market-body:has(.bt-market-skillhost){display:flex;flex-direction:column;padding:0;overflow:hidden}
-/* On the shell's Plugins page the pane is the page body: the page is a scrolling column
-   with its own measure, which draws a border and a shadow down its right edge and caps the
-   panel at 960px. The skills tab owns the viewport instead, so the page stops scrolling and
-   the panel's own body scrolls. */
-[class*="_page"]:has([data-bt-skills]){height:100%!important;overflow:hidden!important;padding-bottom:0!important}
-[class*="_page"]:has([data-bt-skills])>[role="tabpanel"]{flex:1 1 auto!important;min-height:0!important;width:100%!important;max-width:min(1760px,100%)!important;gap:0!important}
-[data-bt-skills]{flex:1 1 auto;height:auto;min-height:0;width:100%}
+/* The skills tab scrolls with the page, the way the shell's own Discover tab does: the
+   panel gives up its viewport height and its inner scroll, so the page carries the scroll. */
+[data-bt-skills]{min-height:0;width:100%;max-width:100%;height:auto}
+[data-bt-skills] [data-skill-market]{height:auto;max-height:none;overflow:visible}
+[data-bt-skills] .sm-content{flex:0 0 auto;overflow:visible}
 /* The market parks its skill drawer just past the panel's right edge and slides it in. The
    panel's clipping stops the drawer but not its shadow, which painted a grey band down the
    inside of that edge; the drawer only paints a shadow while it is open. */
