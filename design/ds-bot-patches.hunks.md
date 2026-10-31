@@ -43,11 +43,11 @@
 | 41 | `ds-bot/src/client/index.js` | 151–152 | 2 |
 | 42 | `ds-bot/src/client/index.js` | 335–368 | 20 |
 | 43 | `ds-bot/src/client/index.js` | 378 | 1 |
-| 44 | `ds-bot/src/client/index.js` | 524–664 | 140 |
-| 45 | `ds-bot/src/client/index.js` | 1050–1053 | 4 |
-| 46 | `ds-bot/src/client/index.js` | 1186 | 1 |
-| 47 | `ds-bot/src/client/index.js` | 1201–1491 | 289 |
-| 48 | `ds-bot/src/client/index.js` | 1502–1508 | 7 |
+| 44 | `ds-bot/src/client/index.js` | 524–666 | 142 |
+| 45 | `ds-bot/src/client/index.js` | 1052–1055 | 4 |
+| 46 | `ds-bot/src/client/index.js` | 1188 | 1 |
+| 47 | `ds-bot/src/client/index.js` | 1203–1493 | 289 |
+| 48 | `ds-bot/src/client/index.js` | 1504–1510 | 7 |
 | 49 | `ds-bot/src/client/market.js` | 1–532 | 532 |
 | 50 | `ds-bot/src/client/mcp-panel.js` | 1–264 | 264 |
 | 51 | `ds-bot/src/client/member-status.js` | 203–204 | 2 |
@@ -65,8 +65,8 @@
 | 63 | `ds-bot/src/client/plugin-skills.js` | 1–10 | 10 |
 | 64 | `ds-bot/src/client/provider-marks.js` | 1–131 | 131 |
 | 65 | `ds-bot/src/client/settings.js` | 4 | 1 |
-| 66 | `ds-bot/src/client/settings.js` | 83–84 | 2 |
-| 67 | `ds-bot/src/client/settings.js` | 97–108 | 12 |
+| 66 | `ds-bot/src/client/settings.js` | 83–86 | 4 |
+| 67 | `ds-bot/src/client/settings.js` | 99–110 | 12 |
 | 68 | `ds-bot/src/client/sidebar-groups.js` | 1–28 | 28 |
 | 69 | `ds-bot/src/client/sidebar.js` | 6–18 | 6 |
 | 70 | `ds-bot/src/client/sidebar.js` | 29 | 0 |
@@ -117,7 +117,7 @@
 | 115 | `ds-bot/test/sidebar-switch.test.js` | 95–115 | 11 |
 | 116 | `ds-bot/test/sidebar-switch.test.js` | 293 | 1 |
 | 117 | `ds-bot/test/sidebar-switch.test.js` | 345–375 | 18 |
-| 118 | `ds-bot/test/skin.test.js` | 1–42 | 42 |
+| 118 | `ds-bot/test/skin.test.js` | 1–129 | 129 |
 | 119 | `ds-bot/test/style-debt.json` | 22–57 | 28 |
 | 120 | `ds-bot/test/style-debt.json` | 84–89 | 2 |
 | 121 | `ds-bot/test/style-debt.json` | 108–111 | 4 |
