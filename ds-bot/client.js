@@ -27999,7 +27999,7 @@ function McpMarketTab({ actions = {} }) {
             (0, import_react55.createElement)("button", { type: "button", role: "menuitem", className: "bt-mm-menuitem bt-mm-menuitem-add", onClick: () => {
               setSourceMenu(false);
               setAdding({ name: "", url: "", kind: "readme" });
-            } }, t("Manage sources…"), (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-gear", "aria-hidden": true }, "⚙"))
+            } }, (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-check", "aria-hidden": true }), t("Manage sources…"), (0, import_react55.createElement)("span", { className: "bt-mm-menuitem-gear", "aria-hidden": true }, "⚙"))
           ) : null
         ),
         (0, import_react55.createElement)(
