@@ -50,7 +50,16 @@ test('the skin reads the width setting on the Bot’s side and leaves the host�
   const user = /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{([^}]*)\}/.exec(bundle)
   assert.ok(user !== null, 'no rule for the host’s user bubbles')
   assert.ok(!user[1].includes('max-width'), 'the skin still caps the host’s user bubble width')
-  // The bubble this plugin draws for the user's own messages drops its time on the phone; the
+  // A group's tools sit on the name row's right instead of behind a tap on the bubble; the
+// block's last bubble carries them so several bubbles share one row.
+test('the phone puts a group’s tools on the name row', () => {
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg\{position:relative\}/)
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg \.bt-msg-line\{position:static\}/)
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg>\.bt-group-name\{padding-right:84px/)
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg>\.bt-msg:last-child \.bt-tools\{display:flex\}/)
+})
+
+// The bubble this plugin draws for the user's own messages drops its time on the phone; the
 // desktop keeps it, and the shell's user row has no time of its own to touch.
 test('the phone leaves the time out of the user’s own bubble', () => {
   const ours = /:not\(\[data-bt-skin=ours\]\) \.bt-utime\{display:none\}/.exec(bundle)
