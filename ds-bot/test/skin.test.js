@@ -52,10 +52,10 @@ test('the skin reads the width setting on the Bot’s side and leaves the host�
   assert.ok(!user[1].includes('max-width'), 'the skin still caps the host’s user bubble width')
 })
 
-// A tap on the bubble opens its tools; on the phone they sit under the bubble's left edge,
-// and a row with a sender avatar starts them after it. Nothing lifts them onto the name row.
+// A tap on the bubble opens its tools; on the phone the icons sit bare right under the
+// bubble's left edge, and a row with a sender avatar starts them after it.
 test('the phone rests a bubble’s tools under its left edge', () => {
-  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-tools\{top:calc\(100% \+ 4px\);right:auto;left:0;/)
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-tools\{top:calc\(100% \+ 2px\);right:auto;left:0;margin-left:0;transform:none;background:none;box-shadow:none;padding:0\}/)
   assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg-line:has\(>\.bt-lead\) \.bt-tools\{left:30px\}/)
   assert.doesNotMatch(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg\{position:relative\}/)
 })

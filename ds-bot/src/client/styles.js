@@ -1496,10 +1496,11 @@ html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"]
 /* On the phone the bubble this plugin draws for the user's own messages drops its time; the
    desktop keeps it. The shell's user row carries no time of its own to hide. */
 html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-utime{display:none}
-/* A tap on the bubble opens its tools; on the phone they rest under the bubble's left edge
-   instead of floating beside it. The bubble's line already carries a position, so only the
-   placement changes here, and a row with a sender avatar starts the bubble 22+8px in. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools{top:calc(100% + 4px);right:auto;left:0;margin-left:0;transform:none}
+/* A tap on the bubble opens its tools; on the phone the three icons sit bare right under the
+   bubble's left edge — no plate, no shadow, no padding — instead of floating beside it. The
+   bubble's line already carries a position, so only the placement changes here, and a row
+   with a sender avatar starts the bubble 22+8px in. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools{top:calc(100% + 2px);right:auto;left:0;margin-left:0;transform:none;background:none;box-shadow:none;padding:0}
 html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg-line:has(>.bt-lead) .bt-tools{left:30px}
 /* A group's own bubble is drawn here, so the skin's padding and radius reach it through the
    same tokens as the rest. */
