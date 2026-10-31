@@ -1268,6 +1268,7 @@ export function apply(ctx) {
     const placeRow = () => {
       const drew = inDrawer()
       if (drew) {
+        bandPatch?.remove()
         if (modeRow === null) {
           modeRow = document.createElement('div')
           modeRow.className = 'bt-modebar-row'
@@ -1278,46 +1279,57 @@ export function apply(ctx) {
         return
       }
       modeRow?.remove()
-      // A draggable region of the shell's own header swallows every press in the caption
-      // band, whatever paints above it. A child of that header can take the press back with
-      // app-region: no-drag, so the row is mounted inside whatever element the band really
-      // is, and only falls back to the body when the band belongs to nothing.
+      // The row stays where the window puts it — a body child, so a re-render of the shell
+      // never takes it with it. The band's draggable region is cancelled under it instead,
+      // by a transparent patch inside that region that opts out of dragging.
+      placeModeRow(document, [modeBar, bandActions], document.body)
       const owner = bandOwner()
-      placeModeRow(document, [modeBar, bandActions], owner)
-      // Inside the band's element the row is positioned against that element instead of the
-      // window, so it is measured where it paints now and pinned to the same spot in the
-      // element's own coordinates. Both surfaces then draw it at the same place.
-      const host = modeBar.parentNode
-      if (host !== null && host !== document.body && typeof host.getBoundingClientRect === 'function') {
-        const hosted = host.getBoundingClientRect()
-        for (const node of [modeBar, bandActions]) {
-          if (node === null || node.parentNode !== host) continue
-          const box = node.getBoundingClientRect()
-          node.style.position = 'absolute'
-          node.style.left = `${Math.round(box.left - hosted.left)}px`
-          node.style.top = `${Math.round(box.top - hosted.top)}px`
-        }
+      const patch = dragPatch()
+      if (owner === null) {
+        patch.remove()
+        return
       }
+      owner.appendChild(patch)
+      const hosted = owner.getBoundingClientRect()
+      const box = modeBar.getBoundingClientRect()
+      const actions = bandActions?.isConnected === true ? bandActions.getBoundingClientRect() : box
+      const left = Math.min(box.left, actions.left)
+      const right = Math.max(box.right, actions.right)
+      const top = Math.min(box.top, actions.top)
+      const bottom = Math.max(box.bottom, actions.bottom)
+      patch.style.cssText = `position:absolute;left:${Math.round(left - hosted.left)}px;top:${Math.round(top - hosted.top)}px;`
+        + `width:${Math.round(right - left)}px;height:${Math.round(bottom - top)}px;`
+        + '-webkit-app-region:no-drag;pointer-events:auto;background:transparent'
     }
 
-    // The caption band is a draggable region, and a draggable region takes every press in it
-    // no matter what paints above. Only a descendant of that very element can opt out, so the
-    // row is mounted inside the element that actually carries the region. The stack under the
-    // row names it; when nothing there is draggable, the topmost element is used instead.
+    let bandPatch = null
+    const dragPatch = () => {
+      if (bandPatch === null || !bandPatch.isConnected) {
+        bandPatch = document.createElement('div')
+        bandPatch.className = 'bt-band-patch'
+        bandPatch.setAttribute('aria-hidden', 'true')
+      }
+      return bandPatch
+    }
+
+    // The element that declares the caption band's draggable region, found in the stack under
+    // the row: a draggable region takes every press in it whatever paints above, and only a
+    // descendant of that very element can opt out.
     const bandOwner = () => {
-      if (modeBar === null || modeBar.parentNode === null) return undefined
+      if (modeBar === null) return null
       const box = modeBar.getBoundingClientRect()
-      if (box.width === 0) return undefined
+      if (box.width === 0) return null
       const x = Math.round(box.left + Math.min(12, box.width / 2))
       const y = Math.round(box.top + box.height / 2)
       const stack = typeof document.elementsFromPoint === 'function'
         ? document.elementsFromPoint(x, y)
         : [document.elementFromPoint(x, y)].filter(node => node !== null)
-      const usable = stack.filter(node => node !== document.body && node !== document.documentElement
-        && (typeof node.closest !== 'function' || node.closest('.bt-modebar, .bt-band-actions') === null))
-      if (usable.length === 0) return undefined
-      const draggable = usable.find((node) => appRegion(node) === 'drag')
-      return draggable ?? usable[0]
+      for (const node of stack) {
+        if (node === document.body || node === document.documentElement) continue
+        if (typeof node.closest === 'function' && node.closest('.bt-modebar, .bt-band-actions, .bt-band-patch') !== null) continue
+        if (appRegion(node) === 'drag') return node
+      }
+      return null
     }
 
     const appRegion = (node) => {
@@ -1327,6 +1339,7 @@ export function apply(ctx) {
         return ''
       }
     }
+
     const paintActions = () => {
       const box = modeBar.getBoundingClientRect()
       if (!bandActions) {

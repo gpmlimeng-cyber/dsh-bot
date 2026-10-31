@@ -28728,6 +28728,7 @@ function apply(ctx) {
     const placeRow = () => {
       const drew = inDrawer();
       if (drew) {
+        bandPatch?.remove();
         if (modeRow === null) {
           modeRow = document.createElement("div");
           modeRow.className = "bt-modebar-row";
@@ -28738,31 +28739,45 @@ function apply(ctx) {
         return;
       }
       modeRow?.remove();
+      placeModeRow(document, [modeBar, bandActions], document.body);
       const owner = bandOwner();
-      placeModeRow(document, [modeBar, bandActions], owner);
-      const host = modeBar.parentNode;
-      if (host !== null && host !== document.body && typeof host.getBoundingClientRect === "function") {
-        const hosted = host.getBoundingClientRect();
-        for (const node of [modeBar, bandActions]) {
-          if (node === null || node.parentNode !== host) continue;
-          const box = node.getBoundingClientRect();
-          node.style.position = "absolute";
-          node.style.left = `${Math.round(box.left - hosted.left)}px`;
-          node.style.top = `${Math.round(box.top - hosted.top)}px`;
-        }
+      const patch = dragPatch();
+      if (owner === null) {
+        patch.remove();
+        return;
       }
+      owner.appendChild(patch);
+      const hosted = owner.getBoundingClientRect();
+      const box = modeBar.getBoundingClientRect();
+      const actions2 = bandActions?.isConnected === true ? bandActions.getBoundingClientRect() : box;
+      const left = Math.min(box.left, actions2.left);
+      const right = Math.max(box.right, actions2.right);
+      const top = Math.min(box.top, actions2.top);
+      const bottom = Math.max(box.bottom, actions2.bottom);
+      patch.style.cssText = `position:absolute;left:${Math.round(left - hosted.left)}px;top:${Math.round(top - hosted.top)}px;width:${Math.round(right - left)}px;height:${Math.round(bottom - top)}px;-webkit-app-region:no-drag;pointer-events:auto;background:transparent`;
+    };
+    let bandPatch = null;
+    const dragPatch = () => {
+      if (bandPatch === null || !bandPatch.isConnected) {
+        bandPatch = document.createElement("div");
+        bandPatch.className = "bt-band-patch";
+        bandPatch.setAttribute("aria-hidden", "true");
+      }
+      return bandPatch;
     };
     const bandOwner = () => {
-      if (modeBar === null || modeBar.parentNode === null) return void 0;
+      if (modeBar === null) return null;
       const box = modeBar.getBoundingClientRect();
-      if (box.width === 0) return void 0;
+      if (box.width === 0) return null;
       const x = Math.round(box.left + Math.min(12, box.width / 2));
       const y = Math.round(box.top + box.height / 2);
       const stack = typeof document.elementsFromPoint === "function" ? document.elementsFromPoint(x, y) : [document.elementFromPoint(x, y)].filter((node) => node !== null);
-      const usable = stack.filter((node) => node !== document.body && node !== document.documentElement && (typeof node.closest !== "function" || node.closest(".bt-modebar, .bt-band-actions") === null));
-      if (usable.length === 0) return void 0;
-      const draggable = usable.find((node) => appRegion(node) === "drag");
-      return draggable ?? usable[0];
+      for (const node of stack) {
+        if (node === document.body || node === document.documentElement) continue;
+        if (typeof node.closest === "function" && node.closest(".bt-modebar, .bt-band-actions, .bt-band-patch") !== null) continue;
+        if (appRegion(node) === "drag") return node;
+      }
+      return null;
     };
     const appRegion = (node) => {
       try {
