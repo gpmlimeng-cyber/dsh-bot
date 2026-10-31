@@ -333,9 +333,11 @@ ul.bt-mm-cards>.bt-mm-card{margin:0}
    geometry is the section's, this is only the chrome those primitives carry. */
 .bt-mm-box{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
 .bt-mm-box input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
-.bt-mm-pill{flex:none;height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
-.bt-mm-pill:hover{color:var(--bt-ink);background:var(--bt-hover)}
-.bt-mm-pill.is-on{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink);box-shadow:none;font-weight:500}
+/* The category chips are the shell's Pill primitive, copied from its stylesheet: 24px,
+   8px padding, layer-2 fill, and the ghost-active pair for the chosen one. */
+.bt-mm-pill{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border:none;border-radius:999px;corner-shape:round;font:inherit;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);background:transparent;cursor:pointer} /* vendored */
+.bt-mm-pill:hover{background:var(--dsw-alias-interactive-bg-hover)} /* vendored */
+.bt-mm-pill.is-on{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-ghost-active-fill);box-shadow:inset 0 0 0 1px var(--dsw-alias-button-ghost-active-border)} /* vendored */
 .bt-mm-btn{height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink);box-shadow:inset 0 0 0 .5px var(--bt-line-2);font:inherit;font-size:12.5px;font-weight:500;cursor:pointer}
 .bt-mm-btn:hover{background:var(--bt-hover)}
 .bt-mm-btn[data-added]{box-shadow:none;color:var(--bt-ink-3);cursor:default}
