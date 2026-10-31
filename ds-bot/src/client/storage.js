@@ -11,6 +11,7 @@ export const STORAGE = {
   surface: 'ds-bot:surface',
   agentSessions: 'ds-bot:agent-sessions',
   browserWidth: 'ds-bot:browser-width',
+  sidebar: 'ds-bot:sidebar',
   browsers: 'ds-bot.browser.v2',
 }
 

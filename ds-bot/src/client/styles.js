@@ -638,6 +638,8 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
 .bt-panel[data-leaving]{transform:translateX(100%);transition:transform .3s cubic-bezier(.2,0,0,1);pointer-events:none}
 .bt-panel[data-instant]{transition:none}
 @keyframes bt-pane-in{from{transform:translateX(100%)}}
+/* The right margin glides with the Bot panel's slide; the left one lands at once,
+   as our left column appears, folds and hides without a slide of its own. */
 [class*="_centerCol"]{transition:margin-right ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
 .bt-panel-grip{position:absolute;left:-5px;top:0;bottom:0;width:8px;cursor:col-resize;z-index:3;touch-action:none}
 .bt-panel-grip:hover,.bt-panel[data-dragging] .bt-panel-grip{background:linear-gradient(to right,transparent 4px,var(--bt-line-2) 4px,var(--bt-line-2) 6px,transparent 6px)}
@@ -828,6 +830,16 @@ button.bt-set-row:hover{background:var(--bt-hover)}
    the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
 html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
 html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
+html[data-windows-titlebar] .bt-side-collapse{display:none}
+/* Under a Windows title bar our own switch replaces the shell's: the shell's
+   toggle expands the shell sidebar first, and pulling it back afterwards is a
+   visible flash of the shell's column. */
+html[data-windows-titlebar] [class*="_logoRow"]>[class*="_toggle"]{display:none!important}
+html[data-windows-titlebar] .bt-title-toggle{position:fixed;left:12px;top:calc((var(--dsh-windows-titlebar-height,0px) - 28px) / 2);width:28px;height:28px;z-index:30;-webkit-app-region:no-drag;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;padding:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:var(--bt-font)}
+html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+/* Elsewhere the switch shows only while the column is hidden, where the column's
+   own top row had it. */
+html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
 html:not([data-platform=darwin]):not([data-windows-titlebar]) .bt-side-collapse{display:none}
 /* ds-bot folds the side from its own row now, so the shell's copy in the caption band goes. */
 html[data-platform=darwin] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-platform=darwin] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right){display:none!important}
