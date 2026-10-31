@@ -72,7 +72,7 @@ const CATEGORY_NAMES = {
 
 const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
 
-function Row({ server, added, busy, onInstall, onOpen, onHome, onMenu, menuOpen }) {
+function Row({ server, added, busy, onInstall, onOpen, onHome, onMenu }) {
   return h('li', { className: 'bt-mm-card', 'data-mcp-entry': server.id },
     h('span', { className: 'bt-mm-icon', 'aria-hidden': true },
       server.logo
@@ -276,7 +276,6 @@ export function McpMarketTab({ actions = {} }) {
   const [source, setSource] = useState('modelscope')
   const [sources, setSources] = useState(() => readSources())
   const [sourceMenu, setSourceMenu] = useState(false)
-  const [rowMenu, setRowMenu] = useState('')
   const [moreLabels, setMoreLabels] = useState(false)
   const [reload, setReload] = useState(0)
   const [adding, setAdding] = useState(null)
@@ -460,7 +459,6 @@ export function McpMarketTab({ actions = {} }) {
                 server,
                 added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
                 busy: installing === server.id,
-                menuOpen: rowMenu === server.id,
                 enabled: (rows.find(item => item.serverName === (added[server.id] ?? nameOf(server.id))) ?? {}).enabled !== false,
                 onMenu: () => {
                   const name = added[server.id] ?? nameOf(server.id)

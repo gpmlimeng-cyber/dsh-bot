@@ -27363,7 +27363,7 @@ var CATEGORY_NAMES = {
   "social-media": "Social media"
 };
 var categoryName = (id) => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, " "));
-function Row3({ server, added, busy, onInstall, onOpen, onHome, onMenu, menuOpen }) {
+function Row3({ server, added, busy, onInstall, onOpen, onHome, onMenu }) {
   return (0, import_react55.createElement)(
     "li",
     { className: "bt-mm-card", "data-mcp-entry": server.id },
@@ -27614,7 +27614,6 @@ function McpMarketTab({ actions = {} }) {
   const [source, setSource] = (0, import_react55.useState)("modelscope");
   const [sources, setSources] = (0, import_react55.useState)(() => readSources());
   const [sourceMenu, setSourceMenu] = (0, import_react55.useState)(false);
-  const [rowMenu, setRowMenu] = (0, import_react55.useState)("");
   const [moreLabels, setMoreLabels] = (0, import_react55.useState)(false);
   const [reload, setReload] = (0, import_react55.useState)(0);
   const [adding, setAdding] = (0, import_react55.useState)(null);
@@ -27791,7 +27790,6 @@ function McpMarketTab({ actions = {} }) {
         server,
         added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
         busy: installing === server.id,
-        menuOpen: rowMenu === server.id,
         enabled: (rows2.find((item) => item.serverName === (added[server.id] ?? nameOf(server.id))) ?? {}).enabled !== false,
         onMenu: () => {
           const name = added[server.id] ?? nameOf(server.id);
