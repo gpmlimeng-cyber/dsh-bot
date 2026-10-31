@@ -61,11 +61,13 @@ test('the phone skin carries the app’s own bubble metrics', () => {
   assert.match(body, /border-radius:var\(--bt-app-radius-bubble\)/)
   assert.match(body, /padding:var\(--bt-app-pad\)/)
   assert.match(body, /line-height:1\.625/)
-  assert.match(bundle, /--bt-app-radius-bubble:30px/)
+  assert.match(bundle, /--bt-app-radius-bubble:10px/)
   assert.match(bundle, /--bt-app-pad:12px 16px/)
   // Neighbouring bubbles use the radius minus the padding step, not a hand-written 9px.
   assert.match(bundle, /border-start-start-radius:var\(--bt-app-radius-bubble-inset\)/)
-  assert.match(bundle, /--bt-app-radius-bubble-inset:calc\(var\(--bt-app-radius-bubble\) - 12px - 1px\)/)
+  assert.match(bundle, /--bt-app-radius-bubble-inset:max\(2px, calc\(var\(--bt-app-radius-bubble\) - 12px - 1px\)\)/)
+  // A negative corner would be dropped whole, so the floor has to stay.
+  assert.match(bundle, /max\(2px,/)
 })
 
 // The settings row is the only place the skin is chosen, and the host never hears about it,

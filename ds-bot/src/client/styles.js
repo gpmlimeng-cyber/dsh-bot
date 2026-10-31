@@ -1459,8 +1459,11 @@ html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]){
   --bt-app-control-hover:var(--bt-hover);
   --bt-app-border:var(--bt-line);
   --bt-app-accent:var(--bt-accent);
-  --bt-app-radius-bubble:30px;
-  --bt-app-radius-bubble-inset:calc(var(--bt-app-radius-bubble) - 12px - 1px);
+  --bt-app-radius-bubble:10px;
+  /* The small corner is the radius minus the 12px pad step; at or below 13px that would go
+     negative, which the browser drops whole, so it bottoms out at 2px. */
+  --bt-app-radius-bubble-inset:max(2px, calc(var(--bt-app-radius-bubble) - 12px - 1px));
+  --bt-app-blur:18px;
   --bt-app-radius-card:14px;
   --bt-app-radius-group:16px;
   --bt-app-radius-modal:30px;
@@ -1614,6 +1617,14 @@ html:has([data-mobile-nav="frame"]) [data-composer-card]>*{align-self:center!imp
 /* The paperclip is the shell's own mobile adaptation, and our plus reuses its file input;
    where both can upload, one entry is enough. */
 html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus):has(input[type=file]) [data-mobile-nav="file-upload"]{display:none!important}
+/* The drawer's top edge is glass, in a layer of its own: the slide-in carries a transform,
+   so backdrop-filter cannot sample the page until it lands, and a transition would never
+   start (its computed value does not change). A delayed fade-in stands in. Known cost: the
+   first 0.42s of the slide has no blur; the material settles in just after it, not before. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){background:color-mix(in srgb,var(--bt-card) 76%,transparent)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-pane:has(> :is(.bt-create,.bt-newchat))::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;backdrop-filter:blur(var(--bt-app-blur)) saturate(1.4);-webkit-backdrop-filter:blur(var(--bt-app-blur)) saturate(1.4);animation:bt-sheet-glass .22s .4s ease-out both}
+@keyframes bt-sheet-glass{from{backdrop-filter:none;-webkit-backdrop-filter:none}}
+
 /* Where the plus is missing, the shell's button keeps its file input and wears the same plus
    glyph through a mask, so the phone's left side always reads the same way. */
 html:has([data-mobile-nav="frame"]) [data-composer-card]:not(:has(.bt-plus)) [data-mobile-nav="file-upload"]{background-color:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M10 3.5v13M3.5 10h13'/%3E%3C/svg%3E") center/20px 20px no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M10 3.5v13M3.5 10h13'/%3E%3C/svg%3E") center/20px 20px no-repeat}
