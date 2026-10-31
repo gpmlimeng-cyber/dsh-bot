@@ -118,13 +118,13 @@ function Installed({ servers, busy, onToggle, onRemove }) {
     h('span', { className: 'bt-mm-name' }, server.serverName),
     h('span', { className: 'bt-mm-note' },
       server.transport === 'streamable-http' ? t('Hosted endpoint') : t('Local process'),
-      server.enabled ? '' : ` · ${t('Off')}`,
+      server.pending ? ` · ${t('Starts with the next DSH')}` : server.enabled ? '' : ` · ${t('Off')}`,
       server.toolCount ? ` · ${t('{count} tools', { count: server.toolCount })}` : '')),
   h('span', { className: 'bt-mm-inst-end' },
     h('button', {
       type: 'button', className: 'bt-mm-switch', 'aria-pressed': server.enabled, 'data-on': server.enabled ? '' : undefined,
       'aria-label': server.enabled ? t('Turn off') : t('Turn on'), title: server.enabled ? t('Turn off') : t('Turn on'),
-      disabled: busy !== '', onClick: () => onToggle(server),
+      disabled: busy !== '' || server.pending === true, onClick: () => onToggle(server),
     }, h(SwitchIcon)),
     h('button', {
       type: 'button', className: 'bt-mm-remove', 'aria-label': t('Remove'), title: t('Remove'),

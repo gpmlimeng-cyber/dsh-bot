@@ -53,6 +53,7 @@ const ZH = {
   'MCP': 'MCP',
   'Hosted': '已托管',
   'In this profile': '本档案里',
+  'Starts with the next DSH': '重启 DSH 后启动',
   'Discover': '发现',
   'No MCP server is running in this profile yet.': '本档案还没有运行中的 MCP 服务器。',
   'Local process': '本地进程',

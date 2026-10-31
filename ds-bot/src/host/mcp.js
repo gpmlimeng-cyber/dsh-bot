@@ -91,6 +91,47 @@ function pairs(value) {
     .map(([key, item]) => [key.trim(), item])
 }
 
+// Rows this page wrote into the patch document that the running profile has not loaded
+// yet: a row is only started when DSH next starts, and the panel shows it as waiting.
+export function pendingRows(text) {
+  const lines = String(text ?? '').split('\n')
+  const rows = []
+  for (let index = 0; index < lines.length; index += 1) {
+    const head = /^    - id: "([^"]+)"$/.exec(lines[index])
+    if (head === null || !head[1].startsWith(ID_PREFIX)) continue
+    const block = []
+    let cursor = index + 1
+    while (cursor < lines.length && !lines[cursor].startsWith('- ') && !/^    - /.test(lines[cursor])) {
+      block.push(lines[cursor])
+      cursor += 1
+    }
+    if (!block.includes(`      name: ${quote(MCP_CLIENT)}`)) continue
+    const read = (key) => {
+      const line = block.find(item => item.trimStart().startsWith(`${key}: `))
+      if (line === undefined) return undefined
+      const raw = line.trimStart().slice(key.length + 2)
+      try { return JSON.parse(raw) } catch { return undefined }
+    }
+    const serverName = read('serverName')
+    if (typeof serverName !== 'string' || serverName === '') continue
+    rows.push({
+      serverName,
+      transport: read('transport') === 'streamable-http' ? 'streamable-http' : 'stdio',
+      entryId: '',
+      enabled: false,
+      pending: true,
+      readOnly: null,
+      toolCount: 0,
+      command: read('command') ?? null,
+      args: [],
+      env: [],
+      url: read('url') ?? null,
+      headers: [],
+    })
+  }
+  return rows
+}
+
 // The plaza answers JSON over https. `fetch` is not used here: inside the running app it
 // left the request hanging past any reasonable timeout, while a plain https request from
 // the same runtime answers in a few hundred milliseconds.
@@ -178,10 +219,18 @@ export function install(rt) {
         headers: transport === 'streamable-http' ? pairs(config.headers) : [],
       })
     }
+    // A row written but not loaded yet is still in the document: the page lists it so a
+    // fresh install shows up at once, marked as waiting for the next start.
+    const text = await readFile(patchPathSafe(), 'utf8').catch(() => '')
+    const known = new Set(list.map(server => server.serverName))
+    for (const row of pendingRows(text)) if (!known.has(row.serverName)) list.push(row)
     list.sort((left, right) => left.serverName.localeCompare(right.serverName))
     return { servers: list, available: true }
   }
 
+  const patchPathSafe = () => {
+    try { return patchPath() } catch { return '' }
+  }
   const patchPath = () => {
     const path = editor()?.documentPath
     if (typeof path !== 'string' || path === '') throw fail('This DSH does not expose its profile configuration')

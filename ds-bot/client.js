@@ -89,6 +89,7 @@ var ZH = {
   "MCP": "MCP",
   "Hosted": "已托管",
   "In this profile": "本档案里",
+  "Starts with the next DSH": "重启 DSH 后启动",
   "Discover": "发现",
   "No MCP server is running in this profile yet.": "本档案还没有运行中的 MCP 服务器。",
   "Local process": "本地进程",
@@ -27330,7 +27331,7 @@ function Installed({ servers, busy, onToggle, onRemove }) {
         "span",
         { className: "bt-mm-note" },
         server.transport === "streamable-http" ? t("Hosted endpoint") : t("Local process"),
-        server.enabled ? "" : ` · ${t("Off")}`,
+        server.pending ? ` · ${t("Starts with the next DSH")}` : server.enabled ? "" : ` · ${t("Off")}`,
         server.toolCount ? ` · ${t("{count} tools", { count: server.toolCount })}` : ""
       )
     ),
@@ -27344,7 +27345,7 @@ function Installed({ servers, busy, onToggle, onRemove }) {
         "data-on": server.enabled ? "" : void 0,
         "aria-label": server.enabled ? t("Turn off") : t("Turn on"),
         title: server.enabled ? t("Turn off") : t("Turn on"),
-        disabled: busy !== "",
+        disabled: busy !== "" || server.pending === true,
         onClick: () => onToggle(server)
       }, (0, import_react55.createElement)(SwitchIcon)),
       (0, import_react55.createElement)("button", {
