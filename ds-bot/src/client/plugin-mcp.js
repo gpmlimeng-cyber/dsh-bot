@@ -433,7 +433,7 @@ export function McpMarketTab({ actions = {} }) {
           !loading && shown.length === 0 && error === '' ? h('p', { className: 'bt-mm-muted', key: 'empty' }, t('No MCP server matches that search.')) : null,
           adding === null
             ? null
-            : h('div', { className: 'bt-mm-addsource bt-mm-box', key: 'addsource' },
+            : h('div', { className: 'bt-mm-addsource', key: 'addsource' },
               h('div', { className: 'bt-mm-addsource-head' },
                 h('span', null, t('Add a custom source')),
                 h('button', { type: 'button', className: 'bt-mm-close', 'aria-label': t('Close'), title: t('Close'), onClick: () => setAdding(null) }, h(CloseIcon))),
@@ -500,7 +500,7 @@ export function McpMarketTab({ actions = {} }) {
             h('span', { className: 'bt-mm-source-name' }, sourceName()),
             h('span', { 'aria-hidden': true }, '▾')),
             sourceMenu
-              ? h('div', { className: 'bt-mm-menu bt-mm-box', role: 'menu' },
+              ? h('div', { className: 'bt-mm-menu', role: 'menu' },
                 [
                   { id: 'modelscope', name: t('ModelScope MCP') },
                   { id: 'reference', name: t('MCP reference servers') },
@@ -512,8 +512,9 @@ export function McpMarketTab({ actions = {} }) {
                   role: 'menuitem',
                   className: 'bt-mm-menuitem' + (item.id === source ? ' is-on' : ''),
                   onClick: () => { setSource(item.id); setSourceMenu(false); setPage(1); setList({ total: 0, servers: [] }); setCategories([]); setCategory('') },
-                }, item.name, item.custom ? h('span', { className: 'bt-mm-menuitem-x', role: 'button', 'aria-label': t('Remove'), title: t('Remove'), onClick: (event) => { event.stopPropagation(); const next = sources.filter(one => one.id !== item.id); setSources(next); writeSources(next); if (source === item.id) setSource('modelscope') } }, '×') : null)),
-                h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem bt-mm-menuitem-add', onClick: () => { setSourceMenu(false); setAdding({ name: '', url: '', kind: 'readme' }) } }, t('Add a source…')))
+                }, item.name, item.custom ? h('span', { className: 'bt-mm-menuitem-x', role: 'button', 'aria-label': t('Remove'), title: t('Remove'), onClick: (event) => { event.stopPropagation(); const next = sources.filter(one => one.id !== item.id); setSources(next); writeSources(next); if (source === item.id) setSource('modelscope') } }, '×') : null,
+                h('span', { className: 'bt-mm-menuitem-check', 'aria-hidden': true }, '✓'))),
+                h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem bt-mm-menuitem-add', onClick: () => { setSourceMenu(false); setAdding({ name: '', url: '', kind: 'readme' }) } }, t('Manage sources…'), h('span', { className: 'bt-mm-menuitem-gear', 'aria-hidden': true }, '⚙')))
               : null),
           h('label', { className: 'bt-mm-search bt-mm-box' },
             h(SearchIcon),

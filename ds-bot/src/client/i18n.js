@@ -58,6 +58,7 @@ const ZH = {
   'MCP reference servers': 'MCP 官方参考服务器',
   'awesome-mcp-servers': 'awesome-mcp-servers',
   'Add a source…': '添加源…',
+  'Manage sources…': '管理源…',
   'Add a custom source': '添加自定义源',
   'Add source': '添加源',
   'Open page': '打开主页',
