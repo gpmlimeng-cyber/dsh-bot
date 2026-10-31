@@ -2856,11 +2856,12 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    server's connection details behind a row. */
 .bt-mm{display:flex;flex-direction:column;gap:12px;max-width:960px;padding-bottom:32px}
 .bt-mm-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.bt-mm-tabs{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:10px;background:var(--bt-hover);align-self:flex-start}
-.bt-mm-tab{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
+/* The tabs copy the skills page: words on a rule, the active one underlined. */
+.bt-mm-tabs{display:flex;align-items:center;gap:0;align-self:stretch;box-shadow:inset 0 -1px var(--bt-line-2)}
+.bt-mm-tab{display:inline-flex;align-items:center;gap:7px;padding:12px 4px;margin:0 18px -1px 0;border:0;border-bottom:2px solid transparent;background:none;color:var(--bt-ink-3);font:inherit;font-size:13.5px;font-weight:500;white-space:nowrap;cursor:pointer;transition:color .13s ease,border-color .13s ease}
 .bt-mm-tab:hover{color:var(--bt-ink)}
-.bt-mm-tab.is-on{background:var(--bt-main,#fff);color:var(--bt-ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
-.bt-mm-tabcount{font-size:11px;color:var(--bt-ink-3)}
+.bt-mm-tab.is-on{color:var(--bt-ink);border-bottom-color:var(--bt-ink)}
+.bt-mm-tabcount{font-size:11px;font-weight:400;color:var(--bt-ink-3)}
 .bt-mm-custom{display:flex;flex-direction:column;gap:12px;max-width:560px}
 .bt-mm-custom .bt-mm-field{align-items:flex-start}
 .bt-mm-custom .bt-mm-field>span{flex:0 0 88px;padding-top:8px;font-size:12.5px;color:var(--bt-ink-3)}
