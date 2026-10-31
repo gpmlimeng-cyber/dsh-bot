@@ -3988,7 +3988,7 @@ html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus) [data-mob
 html:not(:has([data-mobile-nav="frame"])) [data-composer-card]{flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;padding:6px 8px!important;border-radius:24px!important}
 [data-composer-card]>[class*="_row"]{display:contents!important}
 [data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:center!important;margin:0!important}
-[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0 0 0 -20px!important}
+[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0 0 0 -18px!important}
 /* The desktop field keeps ds-bot's stock inset; the phone pulls its field up to the mark. */
 html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{margin-left:-10px!important}
 [data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:center!important;margin:0!important}
