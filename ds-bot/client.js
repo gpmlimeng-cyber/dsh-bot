@@ -27879,7 +27879,7 @@ function McpMarketTab({ actions = {} }) {
           setPage(1);
         } }, t("Show more")) : null
       ),
-      (0, import_react55.createElement)("ul", { className: "bt-mm-cards" }, group.servers.slice(0, 6).map((server) => (0, import_react55.createElement)(Row3, {
+      (0, import_react55.createElement)("ul", { className: "bt-mm-cards" }, group.servers.slice(0, category === "" ? 6 : group.servers.length).map((server) => (0, import_react55.createElement)(Row3, {
         key: server.id,
         server,
         added: names.has(nameOf(server.id)) || added[server.id] !== void 0,

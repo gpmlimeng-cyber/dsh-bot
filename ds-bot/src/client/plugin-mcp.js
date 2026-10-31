@@ -565,7 +565,7 @@ export function McpMarketTab({ actions = {} }) {
                 category === '' && group.id !== ''
                   ? h('button', { type: 'button', className: 'bt-mm-groupmore', onClick: () => { pick(group.id); setPage(1) } }, t('Show more'))
                   : null),
-              h('ul', { className: 'bt-mm-cards' }, group.servers.slice(0, 6).map(server => h(Row, {
+              h('ul', { className: 'bt-mm-cards' }, group.servers.slice(0, category === '' ? 6 : group.servers.length).map(server => h(Row, {
                 key: server.id,
                 server,
                 added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
