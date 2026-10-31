@@ -258,6 +258,13 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 [data-skill-market] .sm-viewbar-actions .sm-btn{height:28px}
 /* The panel owns its whole pane: no market padding, no page scroll behind it. */
 .bt-market-body:has(.bt-market-skillhost){display:flex;flex-direction:column;padding:0;overflow:hidden}
+/* On the shell's Plugins page the pane is the page body: the page is a scrolling column
+   with its own measure, which draws a border and a shadow down its right edge and caps the
+   panel at 960px. The skills tab owns the viewport instead, so the page stops scrolling and
+   the panel's own body scrolls. */
+[class*="_page"]:has([data-bt-skills]){height:100%!important;overflow:hidden!important;padding-bottom:0!important}
+[class*="_page"]:has([data-bt-skills])>[role="tabpanel"]{flex:1 1 auto!important;min-height:0!important;width:100%!important;max-width:min(1760px,100%)!important;gap:0!important}
+[data-bt-skills]{flex:1 1 auto;height:auto;min-height:0;width:100%}
 .bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 .bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
 .bt-market-heading{min-width:0}
