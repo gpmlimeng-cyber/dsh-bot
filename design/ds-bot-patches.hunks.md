@@ -93,10 +93,10 @@
 | 91 | `ds-bot/src/client/styles.js` | 1000–1001 | 2 |
 | 92 | `ds-bot/src/client/styles.js` | 1041–1042 | 2 |
 | 93 | `ds-bot/src/client/styles.js` | 1337–1491 | 155 |
-| 94 | `ds-bot/src/client/styles.js` | 1591–1669 | 59 |
-| 95 | `ds-bot/src/client/styles.js` | 1719–1730 | 9 |
-| 96 | `ds-bot/src/client/styles.js` | 1739 | 1 |
-| 97 | `ds-bot/src/client/styles.js` | 1780–1785 | 6 |
+| 94 | `ds-bot/src/client/styles.js` | 1591–1673 | 63 |
+| 95 | `ds-bot/src/client/styles.js` | 1723–1734 | 9 |
+| 96 | `ds-bot/src/client/styles.js` | 1743 | 1 |
+| 97 | `ds-bot/src/client/styles.js` | 1784–1789 | 6 |
 | 98 | `ds-bot/src/client/team-actions.js` | 3 | 1 |
 | 99 | `ds-bot/src/client/team-actions.js` | 22–23 | 2 |
 | 100 | `ds-bot/src/client/team-actions.js` | 55–59 | 2 |
