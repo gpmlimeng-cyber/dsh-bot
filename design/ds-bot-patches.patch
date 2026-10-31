@@ -10425,7 +10425,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..d3e35294 100644
+index eac6ea54..efbdd6e5 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -11151,9 +11151,9 @@ index eac6ea54..d3e35294 100644
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-bubble .bt-tools{border-radius:999px}
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-empty{font-size:var(--bt-app-text-sub);line-height:var(--bt-app-leading-sub)}
 +/* The user's own bubbles are the host's, so the skin reaches them through the row marker it
-+   draws. The width has to come along: the host keeps its own limit, which would leave only
-+   the Bot's side narrower once a width is picked. */
-+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important;max-width:calc(var(--bt-msg-w) * 100%)!important}
++   draws. Radius and padding only: a width here would resolve against the width the host has
++   already shrunk, which squeezes the bubble instead of matching the Bot's side. */
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important}
  `
  
  export const CONVERSATION_CSS = `
@@ -16354,10 +16354,10 @@ index 59109a99..429e92e8 100644
  test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
 diff --git a/ds-bot/test/skin.test.js b/ds-bot/test/skin.test.js
 new file mode 100644
-index 00000000..bd024ca8
+index 00000000..2bdebb31
 --- /dev/null
 +++ b/ds-bot/test/skin.test.js
-@@ -0,0 +1,164 @@
+@@ -0,0 +1,167 @@
 +import assert from 'node:assert/strict'
 +import { readFileSync } from 'node:fs'
 +import { test } from 'node:test'
@@ -16399,14 +16399,17 @@ index 00000000..bd024ca8
 +  }
 +})
 +
-+// The width setting has to keep working on the phone: the same percentage of the column,
-+// on both the Bot's bubbles and the user's own, which the host draws.
-+test('the phone skin reads the width setting on both sides', () => {
++// The width setting drives the Bot's bubbles. The user's own bubbles are the host's: their
++// percentage would resolve against the width the host already shrank, so the skin leaves
++// them alone and only restyles their shape.
++test('the skin reads the width setting on the Bot’s side and leaves the host’s alone', () => {
 +  // The setting's own default is 90% of the column; a pick is honoured as it is.
 +  assert.equal(widthOf({}), 90)
 +  assert.equal(widthOf({ width: 50 }), 50)
 +  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg,[^{]*\{max-width:calc\(var\(--bt-msg-w\) \* 100%\)\}/)
-+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{[^}]*max-width:calc\(var\(--bt-msg-w\) \* 100%\)!important\}/)
++  const user = /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{([^}]*)\}/.exec(bundle)
++  assert.ok(user !== null, 'no rule for the host’s user bubbles')
++  assert.ok(!user[1].includes('max-width'), 'the skin still caps the host’s user bubble width')
 +  // Nothing pins the skin back to a full-width bubble.
 +  assert.ok(!bundle.includes('--bt-app-msg-max'), 'the skin still carries its own width token')
 +})

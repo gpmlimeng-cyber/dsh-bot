@@ -121,7 +121,7 @@
 | 119 | `ds-bot/test/sidebar-switch.test.js` | 95–115 | 11 |
 | 120 | `ds-bot/test/sidebar-switch.test.js` | 293 | 1 |
 | 121 | `ds-bot/test/sidebar-switch.test.js` | 345–375 | 18 |
-| 122 | `ds-bot/test/skin.test.js` | 1–164 | 164 |
+| 122 | `ds-bot/test/skin.test.js` | 1–167 | 167 |
 | 123 | `ds-bot/test/style-debt.json` | 22–57 | 28 |
 | 124 | `ds-bot/test/style-debt.json` | 84–89 | 2 |
 | 125 | `ds-bot/test/style-debt.json` | 108–111 | 4 |
