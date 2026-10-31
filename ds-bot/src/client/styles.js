@@ -1496,14 +1496,11 @@ html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"]
 /* On the phone the bubble this plugin draws for the user's own messages drops its time; the
    desktop keeps it. The shell's user row carries no time of its own to hide. */
 html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-utime{display:none}
-/* A group's tools sit still: three icons on the name row's right, not hidden behind a tap on
-   the bubble. The block's last bubble carries them, so several bubbles share one row. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-group-msg{position:relative}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-group-msg .bt-msg-line{position:static}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-group-msg>.bt-group-name{padding-right:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-group-msg .bt-tools{position:absolute;top:0;right:0;left:auto;margin-left:0;transform:none;display:none;padding:2px;border-radius:999px;opacity:1;visibility:visible}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-group-msg>.bt-msg:last-child .bt-tools{display:flex}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-group-msg .bt-tools::after{content:none}
+/* A tap on the bubble opens its tools; on the phone they rest under the bubble's left edge
+   instead of floating beside it. The bubble's line already carries a position, so only the
+   placement changes here, and a row with a sender avatar starts the bubble 22+8px in. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools{top:calc(100% + 4px);right:auto;left:0;margin-left:0;transform:none}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg-line:has(>.bt-lead) .bt-tools{left:30px}
 /* A group's own bubble is drawn here, so the skin's padding and radius reach it through the
    same tokens as the rest. */
 html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-ububble{padding:var(--bt-app-pad);border-radius:var(--bt-app-radius-bubble)}

@@ -50,13 +50,14 @@ test('the skin reads the width setting on the Bot’s side and leaves the host�
   const user = /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{([^}]*)\}/.exec(bundle)
   assert.ok(user !== null, 'no rule for the host’s user bubbles')
   assert.ok(!user[1].includes('max-width'), 'the skin still caps the host’s user bubble width')
-  // A group's tools sit on the name row's right instead of behind a tap on the bubble; the
-// block's last bubble carries them so several bubbles share one row.
-test('the phone puts a group’s tools on the name row', () => {
-  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg\{position:relative\}/)
-  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg \.bt-msg-line\{position:static\}/)
-  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg>\.bt-group-name\{padding-right:84px/)
-  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg>\.bt-msg:last-child \.bt-tools\{display:flex\}/)
+})
+
+// A tap on the bubble opens its tools; on the phone they sit under the bubble's left edge,
+// and a row with a sender avatar starts them after it. Nothing lifts them onto the name row.
+test('the phone rests a bubble’s tools under its left edge', () => {
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-tools\{top:calc\(100% \+ 4px\);right:auto;left:0;/)
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg-line:has\(>\.bt-lead\) \.bt-tools\{left:30px\}/)
+  assert.doesNotMatch(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-group-msg\{position:relative\}/)
 })
 
 // The bubble this plugin draws for the user's own messages drops its time on the phone; the
@@ -78,7 +79,10 @@ test('the plugin’s own user bubble follows the skin’s padding and radius', (
 })
 
 // The host draws the user's bubble with one shorthand and no per-corner rule, so the same
-  // shorthand here covers all four corners; a longhand would only add a way to miss one.
+// shorthand here covers all four corners; a longhand would only add a way to miss one.
+test('the host’s user bubble keeps one radius shorthand', () => {
+  const user = /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{([^}]*)\}/.exec(bundle)
+  assert.ok(user !== null, 'no rule for the host’s user bubbles')
   assert.match(user[1], /border-radius:var\(--bt-app-radius-bubble\)!important/)
   assert.ok(!/border-(?:start|end)-(?:start|end)-radius/.test(user[1]), 'the user bubble grew a per-corner radius')
   // Nothing pins the skin back to a full-width bubble.
