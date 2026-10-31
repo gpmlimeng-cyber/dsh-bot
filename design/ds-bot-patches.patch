@@ -10425,7 +10425,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..612e415c 100644
+index eac6ea54..d3e35294 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10928,6 +10928,15 @@ index eac6ea54..612e415c 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+@@ -201,7 +589,7 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
+ @media (prefers-reduced-motion:reduce){.bt-pill,.bt-pill-go,.bt-pill-go svg{transition:none!important}.bt-pill-go{filter:none}.bt-pill:active{transform:none}}
+ 
+ /* The width settings: the share of the column a bubble may take, and the flat text. */
+-body{--bt-msg-w:.8;--bt-flat-w:1}
++body{--bt-msg-w:.9;--bt-flat-w:1}
+ .bt-astack{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0}
+ .bt-bubble{max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px));background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 10px);box-sizing:border-box;overflow-wrap:anywhere;text-wrap:pretty;text-autospace:normal}
+ .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:6px}
 @@ -344,6 +732,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
@@ -10985,7 +10994,7 @@ index eac6ea54..612e415c 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1334,161 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1334,162 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -11126,7 +11135,6 @@ index eac6ea54..612e415c 100644
 +  --bt-app-text-meta:12px;   --bt-app-leading-meta:16px;
 +  --bt-app-gap:8px;
 +  --bt-app-pad:12px 16px;
-+  --bt-app-msg-max:100%;
 +  --bt-app-row:48px;
 +  --bt-app-shadow-float:var(--bt-float-shadow);
 +}
@@ -11135,19 +11143,21 @@ index eac6ea54..612e415c 100644
 +   note take the app's own numbers here. */
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack{gap:var(--bt-app-gap)}
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg,
-+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack[data-lead]>.bt-msg{max-width:var(--bt-app-msg-max)}
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack[data-lead]>.bt-msg{max-width:calc(var(--bt-msg-w) * 100%)}
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) body:not([data-bt-layout=flat]) .bt-bubble{border-radius:var(--bt-app-radius-bubble);padding:var(--bt-app-pad);font-size:var(--bt-app-text-body);line-height:1.625;overflow-wrap:anywhere}
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:var(--bt-app-radius-bubble-inset)}
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:var(--bt-app-radius-bubble-inset)}
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-row{min-height:var(--bt-app-row)}
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-bubble .bt-tools{border-radius:999px}
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-empty{font-size:var(--bt-app-text-sub);line-height:var(--bt-app-leading-sub)}
-+/* The user's own bubbles are the host's, so the skin reaches them through the row marker it draws. */
-+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important}
++/* The user's own bubbles are the host's, so the skin reaches them through the row marker it
++   draws. The width has to come along: the host keeps its own limit, which would leave only
++   the Bot's side narrower once a width is picked. */
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important;max-width:calc(var(--bt-msg-w) * 100%)!important}
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1588,89 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1589,89 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -11260,7 +11270,7 @@ index eac6ea54..612e415c 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1112,17 +1720,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1721,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -11287,7 +11297,7 @@ index eac6ea54..612e415c 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1740,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1741,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -11296,7 +11306,7 @@ index eac6ea54..612e415c 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1781,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1782,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -11362,7 +11372,7 @@ index 47d791d4..1695a5b8 100644
      connectorDisconnect: id => after(call('connector-disconnect', { id })),
      connectorRetry: id => after(call('connector-retry', { id })),
 diff --git a/ds-bot/src/client/themes.js b/ds-bot/src/client/themes.js
-index 82c3b3b9..87aca163 100644
+index 82c3b3b9..e8190d47 100644
 --- a/ds-bot/src/client/themes.js
 +++ b/ds-bot/src/client/themes.js
 @@ -23,6 +23,16 @@ const THEMES = {
@@ -11382,7 +11392,7 @@ index 82c3b3b9..87aca163 100644
    moonlight: {
      label: 'Moonlight',
      light: { bg: '#f7f9fc', sidebar: '#eef2f8', bubble: '#e5ebf5', card: '#ffffff', text: '#121826', user: '#1e3a8a', userText: '#ffffff', accent: '#1e86ff' },
-@@ -122,6 +132,40 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
+@@ -122,7 +132,41 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
  // flat one.
  export const MESSAGE_WIDTH = { min: 50, max: 100, step: 5 }
  const percent = (value, initial) => (Number.isInteger(value) && value >= MESSAGE_WIDTH.min && value <= MESSAGE_WIDTH.max ? value : initial)
@@ -11422,7 +11432,9 @@ index 82c3b3b9..87aca163 100644
 +export const skinOf = (prefs, { phone = false } = {}) => (SKIN_CHOICES[prefs?.skin] ? prefs.skin : phone ? 'app' : 'ours')
  export const layoutOf = prefs => (prefs?.layout === 'flat' ? 'flat' : 'bubble')
  export const thinkingShown = prefs => prefs?.thinking === true
- export const widthOf = prefs => percent(prefs?.width, 80)
+-export const widthOf = prefs => percent(prefs?.width, 80)
++export const widthOf = prefs => percent(prefs?.width, 90)
+ export const flatWidthOf = prefs => percent(prefs?.flatWidth, 100)
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
 index 3fc5c7c6..ae5f4c3e 100644
 --- a/ds-bot/src/host/channel.js
@@ -16076,6 +16088,30 @@ index 00000000..37b1fbde
 +  assert.deepEqual(pendingRows(lines.slice(0, 3).join('\n')), [])
 +  assert.deepEqual(pendingRows(lines.filter(line => !line.startsWith('    - id:')).join('\n')), [])
 +})
+diff --git a/ds-bot/test/message-layout.test.js b/ds-bot/test/message-layout.test.js
+index ebcae6d3..5ee242cb 100644
+--- a/ds-bot/test/message-layout.test.js
++++ b/ds-bot/test/message-layout.test.js
+@@ -16,8 +16,8 @@ test('a layout or width the plugin does not know reads as the default', () => {
+   assert.equal(layoutOf(undefined), 'bubble')
+   assert.equal(layoutOf({ layout: 'grid' }), 'bubble')
+   assert.equal(layoutOf({ layout: 'flat' }), 'flat')
+-  assert.equal(widthOf({}), 80)
+-  assert.deepEqual([40, 101, 72.5, 'wide'].map(width => widthOf({ width })), [80, 80, 80, 80])
++  assert.equal(widthOf({}), 90)
++  assert.deepEqual([40, 101, 72.5, 'wide'].map(width => widthOf({ width })), [90, 90, 90, 90])
+   assert.deepEqual([50, 95, 100].map(width => widthOf({ width })), [50, 95, 100])
+   assert.equal(flatWidthOf({ width: 60 }), 100)
+   assert.deepEqual([70, 101].map(flatWidth => flatWidthOf({ flatWidth })), [70, 100])
+@@ -27,7 +27,7 @@ test('every message takes the share of the column that the width setting gives',
+   for (const selector of ['.bt-msg', '.bt-astack[data-lead]>.bt-msg', '.bt-ustack', '.bt-ububble', '.bt-think']) {
+     assert.match(ruleOf(selector), /max-width:[^;]*var\(--bt-msg-w\)/, selector)
+   }
+-  assert.match(bundle, /\nbody\{--bt-msg-w:\.8;--bt-flat-w:1\}/)
++  assert.match(bundle, /\nbody\{--bt-msg-w:\.9;--bt-flat-w:1\}/)
+ })
+ 
+ test('a Bot bubble keeps room for the toolbar beside it; flat Bot text takes the flat width', () => {
 diff --git a/ds-bot/test/mode-row.test.js b/ds-bot/test/mode-row.test.js
 new file mode 100644
 index 00000000..65ba6fba
@@ -16318,17 +16354,17 @@ index 59109a99..429e92e8 100644
  test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
 diff --git a/ds-bot/test/skin.test.js b/ds-bot/test/skin.test.js
 new file mode 100644
-index 00000000..4becdf95
+index 00000000..bd024ca8
 --- /dev/null
 +++ b/ds-bot/test/skin.test.js
-@@ -0,0 +1,153 @@
+@@ -0,0 +1,164 @@
 +import assert from 'node:assert/strict'
 +import { readFileSync } from 'node:fs'
 +import { test } from 'node:test'
 +import { fileURLToPath } from 'node:url'
 +import { runInNewContext } from 'node:vm'
 +import { build } from 'esbuild'
-+import { SKIN_CHOICES, skinOf } from '../src/client/themes.js'
++import { SKIN_CHOICES, skinOf, widthOf } from '../src/client/themes.js'
 +
 +const bundle = readFileSync(new URL('../client.js', import.meta.url), 'utf8')
 +
@@ -16363,6 +16399,18 @@ index 00000000..4becdf95
 +  }
 +})
 +
++// The width setting has to keep working on the phone: the same percentage of the column,
++// on both the Bot's bubbles and the user's own, which the host draws.
++test('the phone skin reads the width setting on both sides', () => {
++  // The setting's own default is 90% of the column; a pick is honoured as it is.
++  assert.equal(widthOf({}), 90)
++  assert.equal(widthOf({ width: 50 }), 50)
++  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg,[^{]*\{max-width:calc\(var\(--bt-msg-w\) \* 100%\)\}/)
++  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{[^}]*max-width:calc\(var\(--bt-msg-w\) \* 100%\)!important\}/)
++  // Nothing pins the skin back to a full-width bubble.
++  assert.ok(!bundle.includes('--bt-app-msg-max'), 'the skin still carries its own width token')
++})
++
 +test('the phone skin carries the app’s own bubble metrics', () => {
 +  const rule = /:not\(\[data-bt-skin=ours\]\) body:not\(\[data-bt-layout=flat\]\) \.bt-bubble\{([^}]*)\}/.exec(bundle)
 +  assert.ok(rule !== null, 'no bubble rule for the skin')
@@ -16372,7 +16420,6 @@ index 00000000..4becdf95
 +  assert.match(body, /line-height:1\.625/)
 +  assert.match(bundle, /--bt-app-radius-bubble:30px/)
 +  assert.match(bundle, /--bt-app-pad:12px 16px/)
-+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg,[^{]*\{max-width:var\(--bt-app-msg-max\)\}/)
 +  // Neighbouring bubbles use the radius minus the padding step, not a hand-written 9px.
 +  assert.match(bundle, /border-start-start-radius:var\(--bt-app-radius-bubble-inset\)/)
 +  assert.match(bundle, /--bt-app-radius-bubble-inset:calc\(var\(--bt-app-radius-bubble\) - 12px - 1px\)/)
