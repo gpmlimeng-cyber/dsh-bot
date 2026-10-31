@@ -2327,10 +2327,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..b5dbf61
+index 0000000..2083549
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,619 @@
+@@ -0,0 +1,621 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2746,7 +2746,9 @@ index 0000000..b5dbf61
 +      buckets.get(key).push(server)
 +    }
 +    return [...buckets.entries()]
-+      .map(([id, servers]) => ({ id, name: id === '' ? t('All') : categoryName(id), servers }))
++      // A filtered list keeps the name of the category it was filtered to, so opening a
++      // section does not rename it to "all".
++      .map(([id, servers]) => ({ id, name: category !== '' ? categoryName(category) : (id === '' ? t('All') : categoryName(id)), servers }))
 +      .sort((left, right) => right.servers.length - left.servers.length)
 +  }, [shown, category])
 +  const more = list.servers.length < list.total
@@ -2776,7 +2778,7 @@ index 0000000..b5dbf61
 +            : groups.map(group => h('section', { className: 'bt-mm-group', key: group.id || 'all' },
 +              h('div', { className: 'bt-mm-grouphead' },
 +                h('h3', { className: 'bt-mm-grouptitle' }, group.name),
-+                group.id !== ''
++                category === '' && group.id !== ''
 +                  ? h('button', { type: 'button', className: 'bt-mm-groupmore', onClick: () => { pick(group.id); setPage(1) } }, t('Show more'))
 +                  : null),
 +              h('ul', { className: 'bt-mm-cards' }, group.servers.slice(0, 6).map(server => h(Row, {
