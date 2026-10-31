@@ -413,7 +413,9 @@ export function McpMarketTab({ actions = {} }) {
       buckets.get(key).push(server)
     }
     return [...buckets.entries()]
-      .map(([id, servers]) => ({ id, name: id === '' ? t('All') : categoryName(id), servers }))
+      // A filtered list keeps the name of the category it was filtered to, so opening a
+      // section does not rename it to "all".
+      .map(([id, servers]) => ({ id, name: category !== '' ? categoryName(category) : (id === '' ? t('All') : categoryName(id)), servers }))
       .sort((left, right) => right.servers.length - left.servers.length)
   }, [shown, category])
   const more = list.servers.length < list.total
@@ -443,7 +445,7 @@ export function McpMarketTab({ actions = {} }) {
             : groups.map(group => h('section', { className: 'bt-mm-group', key: group.id || 'all' },
               h('div', { className: 'bt-mm-grouphead' },
                 h('h3', { className: 'bt-mm-grouptitle' }, group.name),
-                group.id !== ''
+                category === '' && group.id !== ''
                   ? h('button', { type: 'button', className: 'bt-mm-groupmore', onClick: () => { pick(group.id); setPage(1) } }, t('Show more'))
                   : null),
               h('ul', { className: 'bt-mm-cards' }, group.servers.slice(0, 6).map(server => h(Row, {

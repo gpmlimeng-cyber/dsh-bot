@@ -27730,7 +27730,7 @@ function McpMarketTab({ actions = {} }) {
       if (!buckets.has(key)) buckets.set(key, []);
       buckets.get(key).push(server);
     }
-    return [...buckets.entries()].map(([id, servers]) => ({ id, name: id === "" ? t("All") : categoryName(id), servers })).sort((left, right) => right.servers.length - left.servers.length);
+    return [...buckets.entries()].map(([id, servers]) => ({ id, name: category !== "" ? categoryName(category) : id === "" ? t("All") : categoryName(id), servers })).sort((left, right) => right.servers.length - left.servers.length);
   }, [shown, category]);
   const more = list.servers.length < list.total;
   const body = view === "installed" ? (0, import_react55.createElement)(Installed, { key: "installed", servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove }) : view === "custom" ? (0, import_react55.createElement)(Custom, {
@@ -27761,7 +27761,7 @@ function McpMarketTab({ actions = {} }) {
         "div",
         { className: "bt-mm-grouphead" },
         (0, import_react55.createElement)("h3", { className: "bt-mm-grouptitle" }, group.name),
-        group.id !== "" ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-groupmore", onClick: () => {
+        category === "" && group.id !== "" ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-groupmore", onClick: () => {
           pick2(group.id);
           setPage(1);
         } }, t("Show more")) : null
