@@ -1278,7 +1278,31 @@ export function apply(ctx) {
         return
       }
       modeRow?.remove()
-      placeModeRow(document, [modeBar, bandActions])
+      // A draggable region of the shell's own header swallows every press in the caption
+      // band, whatever paints above it. A child of that header can take the press back with
+      // app-region: no-drag, so the row is mounted inside whatever element the band really
+      // is, and only falls back to the body when the band belongs to nothing.
+      placeModeRow(document, [modeBar, bandActions], bandOwner())
+    }
+
+    // The element the caption band actually is in this build: probed under the row itself,
+    // then walked up while its ancestor still starts at the top of the window.
+    const bandOwner = () => {
+      if (modeBar === null || modeBar.parentNode === null) return undefined
+      const box = modeBar.getBoundingClientRect()
+      if (box.width === 0) return undefined
+      const x = Math.round(box.left + Math.min(12, box.width / 2))
+      const y = Math.round(box.top + box.height / 2)
+      const probe = document.elementFromPoint(x, y)
+      if (probe === null || probe === document.body || probe === document.documentElement) return undefined
+      if (probe.closest('.bt-modebar,.bt-band-actions')) return undefined
+      let owner = probe
+      for (let up = probe.parentElement; up !== null && up !== document.body; up = up.parentElement) {
+        const rect = up.getBoundingClientRect()
+        if (rect.top > 8) break
+        owner = up
+      }
+      return owner
     }
     const paintActions = () => {
       const box = modeBar.getBoundingClientRect()
@@ -1337,12 +1361,7 @@ export function apply(ctx) {
       const left = mac ? 84 : 15
       // A few pixels lower than the band's own centre, so the control sits on the traffic
       // lights' horizontal line instead of above it.
-      // The shell's own view can put a native layer over the caption band, and a layer like
-      // that takes the press before the page does — no z-index or capture listener reaches
-      // it. The row stays in the band on the Bot surface, and drops just under it in the
-      // shell's, where the page still owns the pixels.
-      const bandTop = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9
-      const top = mode === 'agent' ? Math.round(chrome + 8) : bandTop
+      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9
       if (!modeBar) {
         // A surface effect that re-runs gets a fresh closure; clear anything an earlier
         // closure left on the page so the row never stacks up.

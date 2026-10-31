@@ -27301,8 +27301,8 @@ function drawerSlot(document2) {
 function modeRowSlot(document2) {
   return drawerSlot(document2) ?? bandHost(document2) ?? document2.body;
 }
-function placeModeRow(document2, nodes) {
-  const slot = modeRowSlot(document2);
+function placeModeRow(document2, nodes, target) {
+  const slot = target ?? modeRowSlot(document2);
   const wanted = nodes.filter((node) => node !== null && node !== void 0);
   if (wanted.length > 0 && wanted.every((node) => node.parentNode === slot)) return slot;
   for (const node of [...wanted].reverse()) {
@@ -28738,7 +28738,24 @@ function apply(ctx) {
         return;
       }
       modeRow?.remove();
-      placeModeRow(document, [modeBar, bandActions]);
+      placeModeRow(document, [modeBar, bandActions], bandOwner());
+    };
+    const bandOwner = () => {
+      if (modeBar === null || modeBar.parentNode === null) return void 0;
+      const box = modeBar.getBoundingClientRect();
+      if (box.width === 0) return void 0;
+      const x = Math.round(box.left + Math.min(12, box.width / 2));
+      const y = Math.round(box.top + box.height / 2);
+      const probe = document.elementFromPoint(x, y);
+      if (probe === null || probe === document.body || probe === document.documentElement) return void 0;
+      if (probe.closest(".bt-modebar,.bt-band-actions")) return void 0;
+      let owner = probe;
+      for (let up = probe.parentElement; up !== null && up !== document.body; up = up.parentElement) {
+        const rect = up.getBoundingClientRect();
+        if (rect.top > 8) break;
+        owner = up;
+      }
+      return owner;
     };
     const paintActions = () => {
       const box = modeBar.getBoundingClientRect();
@@ -28776,8 +28793,7 @@ function apply(ctx) {
       const mode = surface.getSnapshot().mode;
       document.documentElement.classList.toggle("bt-agent", mode === "agent");
       const left = mac ? 84 : 15;
-      const bandTop = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9;
-      const top = mode === "agent" ? Math.round(chrome + 8) : bandTop;
+      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9;
       if (!modeBar) {
         for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row")) stale.remove();
         modeRow = null;

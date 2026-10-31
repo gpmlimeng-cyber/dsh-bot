@@ -42,8 +42,8 @@ export function modeRowSlot(document) {
 
 // Moves the row into `slot` in the given order, once. Prepending in reverse keeps the order
 // the caller means, and a row already there is left alone so a repaint never doubles it.
-export function placeModeRow(document, nodes) {
-  const slot = modeRowSlot(document)
+export function placeModeRow(document, nodes, target) {
+  const slot = target ?? modeRowSlot(document)
   const wanted = nodes.filter(node => node !== null && node !== undefined)
   if (wanted.length > 0 && wanted.every(node => node.parentNode === slot)) return slot
   for (const node of [...wanted].reverse()) {
