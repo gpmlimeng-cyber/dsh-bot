@@ -2328,7 +2328,7 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..61ba269
+index 0000000..6ce79f9
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
 @@ -0,0 +1,765 @@
@@ -2899,7 +2899,7 @@ index 0000000..61ba269
 +                category === '' && group.id !== ''
 +                  ? h('button', { type: 'button', className: 'bt-mm-groupmore', onClick: () => { pick(group.id); setPage(1) } }, t('Show more'))
 +                  : null),
-+              h('ul', { className: 'bt-mm-cards' }, group.servers.slice(0, 6).map(server => h(Row, {
++              h('ul', { className: 'bt-mm-cards' }, group.servers.slice(0, category === '' ? 6 : group.servers.length).map(server => h(Row, {
 +                key: server.id,
 +                server,
 +                added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
