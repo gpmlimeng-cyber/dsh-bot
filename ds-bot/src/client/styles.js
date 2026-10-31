@@ -1448,6 +1448,18 @@ html:not(:has([data-mobile-nav="frame"])) .bt-head>.bt-head-right{display:inline
 .bt-mcp-formfoot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
 @media (max-width:720px){.bt-mcp-head{flex-direction:column;align-items:stretch}.bt-mcp-actions{justify-content:space-between}.bt-mcp-search{width:auto;max-width:none;flex:1 1 auto}.bt-mcp-body{padding:0 16px 20px}.bt-mcp-confirm,.bt-mcp-note{margin-left:16px;margin-right:16px}}
 
+/* The phone skin: the mobile app's chat shape, on this device, chosen in Settings and off by
+   default. A variable carries its 26px bubble radius, so the sheet's radius steps still hold;
+   the flat layout keeps its own bubble-less look. */
+html[data-bt-skin=app]{--bt-skin-bubble:26px}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-astack{gap:10px}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg,
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-astack[data-lead]>.bt-msg{max-width:90%}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) body:not([data-bt-layout=flat]) .bt-bubble{border-radius:var(--bt-skin-bubble);padding:13px 18px;font-size:calc(var(--dsh-content-font-size,14px) + 4px);line-height:calc(var(--dsh-content-font-size,14px) + 13px)}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:var(--bt-skin-bubble)}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:var(--bt-skin-bubble)}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-row{min-height:48px}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-bubble .bt-tools{border-radius:999px}
 `
 
 export const CONVERSATION_CSS = `

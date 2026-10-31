@@ -4,7 +4,7 @@ import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
 import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
 import { teamActions } from './team-actions.js'
 import { dismissDrawerIfOpen } from './drawer-dismiss.js'
-import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, SIZE_CHOICES } from './themes.js'
+import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, skinOf, SIZE_CHOICES } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
 import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
 import { lookOf } from './mark.js'
@@ -335,9 +335,13 @@ export function apply(ctx) {
       const font = fontOf(prefs.font ? prefs : savedPrefs)
       const size = sizeOf(prefs.size ? prefs : savedPrefs)
       const density = densityOf(prefs.density ? prefs : savedPrefs)
+      // The skin is this device's own pick, so it never comes from the host's prefs.
+      const skin = skinOf(savedPrefs)
       document.body.dataset.btMotion = motion
       document.body.dataset.btFont = font
       document.body.dataset.btDensity = density
+      if (skin === 'ours') delete document.documentElement.dataset.btSkin
+      else document.documentElement.dataset.btSkin = skin
       if (size === 'm') delete document.body.dataset.btSize
       else document.body.dataset.btSize = size
       // The shell writes this one inline, so it has to be answered inline as well; the rest
@@ -348,7 +352,7 @@ export function apply(ctx) {
       document.body.dataset.btLayout = layout
       document.body.style.setProperty('--bt-msg-w', String(width / 100))
       document.body.style.setProperty('--bt-flat-w', String(flatWidth / 100))
-      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${registry.getSnapshot()}`
+      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${skin}|${registry.getSnapshot()}`
       if (next === key) return
       key = next
       style.textContent = themeCss(themes[id], accent) + fontCss(font) + sizeCss(size)
@@ -356,7 +360,7 @@ export function apply(ctx) {
       releaseTokens = ctx.theme.overrideTokens('ds-bot', shellTokens(themes[id]))
       if (typeof release === 'function') release()
       if (snapshot.ready) {
-        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font, size: prefs.size ?? savedPrefs.size, density: prefs.density ?? savedPrefs.density })) } catch { /* storage unavailable */ }
+        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font, size: prefs.size ?? savedPrefs.size, density: prefs.density ?? savedPrefs.density, skin: savedPrefs.skin })) } catch { /* storage unavailable */ }
       }
     }
     render()
@@ -371,6 +375,7 @@ export function apply(ctx) {
       } finally {
         delete document.body.dataset.btMotion
         delete document.body.dataset.btLayout
+        delete document.documentElement.dataset.btSkin
         document.body.style.removeProperty('--bt-msg-w')
         document.body.style.removeProperty('--bt-flat-w')
         style.remove()
@@ -627,6 +632,8 @@ export function apply(ctx) {
       savedPrefs = { ...savedPrefs, [key]: value === 'normal' || value === 'm' || value === 'system' ? undefined : value }
       try { localStorage.setItem(PREFS_KEY, JSON.stringify(savedPrefs)) } catch { /* storage unavailable */ }
       reapplyPrefs()
+      // The skin is a phone look of this device only; there is nothing for the host to keep.
+      if (key === 'skin') return undefined
       return actions.setPrefs({ [key]: value })
     },
     // The font picker shows what this device already uses, not what the host last answered.

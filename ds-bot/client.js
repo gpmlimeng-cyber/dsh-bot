@@ -759,6 +759,10 @@ var ZH = {
   "Large": "大",
   "Largest": "特大",
   "Density": "密度",
+  "Mobile skin": "手机皮肤",
+  "Ours": "我们自己的",
+  "App": "那个 App",
+  "How chat looks on a phone. The desktop keeps this plugin's own shape.": "手机上聊天页的形态。桌面端仍然保持本插件自己的样子。",
   "How much room rows and lists take.": "侧栏和列表的行占多少空间。",
   "Compact": "紧凑",
   "Roomier": "宽松",
@@ -2121,6 +2125,8 @@ var sizeCss = (id) => {
 };
 var DENSITY_CHOICES = { tight: { label: "Compact" }, normal: { label: "Standard" }, roomy: { label: "Roomier" } };
 var densityOf = (prefs) => DENSITY_CHOICES[prefs?.density] ? prefs.density : "normal";
+var SKIN_CHOICES = { ours: { label: "Ours" }, app: { label: "App" } };
+var skinOf = (prefs) => SKIN_CHOICES[prefs?.skin] ? prefs.skin : "ours";
 var layoutOf = (prefs) => prefs?.layout === "flat" ? "flat" : "bubble";
 var thinkingShown = (prefs) => prefs?.thinking === true;
 var widthOf = (prefs) => percent(prefs?.width, 80);
@@ -4070,6 +4076,18 @@ html:not(:has([data-mobile-nav="frame"])) .bt-head>.bt-head-right{display:inline
 .bt-mcp-formfoot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
 @media (max-width:720px){.bt-mcp-head{flex-direction:column;align-items:stretch}.bt-mcp-actions{justify-content:space-between}.bt-mcp-search{width:auto;max-width:none;flex:1 1 auto}.bt-mcp-body{padding:0 16px 20px}.bt-mcp-confirm,.bt-mcp-note{margin-left:16px;margin-right:16px}}
 
+/* The phone skin: the mobile app's chat shape, on this device, chosen in Settings and off by
+   default. A variable carries its 26px bubble radius, so the sheet's radius steps still hold;
+   the flat layout keeps its own bubble-less look. */
+html[data-bt-skin=app]{--bt-skin-bubble:26px}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-astack{gap:10px}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg,
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-astack[data-lead]>.bt-msg{max-width:90%}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) body:not([data-bt-layout=flat]) .bt-bubble{border-radius:var(--bt-skin-bubble);padding:13px 18px;font-size:calc(var(--dsh-content-font-size,14px) + 4px);line-height:calc(var(--dsh-content-font-size,14px) + 13px)}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:var(--bt-skin-bubble)}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:var(--bt-skin-bubble)}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-row{min-height:48px}
+html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-bubble .bt-tools{border-radius:999px}
 `;
 var CONVERSATION_CSS = `
 .bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:calc(var(--bt-msg-w) * 100%)}
@@ -25524,6 +25542,11 @@ function GeneralPage({ roster, actions, run: run2 }) {
       ),
       (0, import_react50.createElement)(
         SetRow,
+        { label: t("Mobile skin"), hint: t("How chat looks on a phone. The desktop keeps this plugin's own shape.") },
+        (0, import_react50.createElement)(Choice, { label: t("Mobile skin"), value: skinOf(prefs), options: Object.entries(SKIN_CHOICES).map(([id, face]) => [id, t(face.label)]), pick: (id) => run2(actions.localPref("skin", id)) })
+      ),
+      (0, import_react50.createElement)(
+        SetRow,
         { label: t("Accent"), hint: t("Unread marks, badges, and the brand mark.") },
         (0, import_react50.createElement)(
           "div",
@@ -28823,9 +28846,12 @@ function apply(ctx) {
       const font = fontOf(prefs.font ? prefs : savedPrefs);
       const size = sizeOf(prefs.size ? prefs : savedPrefs);
       const density = densityOf(prefs.density ? prefs : savedPrefs);
+      const skin = skinOf(savedPrefs);
       document.body.dataset.btMotion = motion;
       document.body.dataset.btFont = font;
       document.body.dataset.btDensity = density;
+      if (skin === "ours") delete document.documentElement.dataset.btSkin;
+      else document.documentElement.dataset.btSkin = skin;
       if (size === "m") delete document.body.dataset.btSize;
       else document.body.dataset.btSize = size;
       const px = (SIZE_CHOICES[size] ?? SIZE_CHOICES.m).px;
@@ -28834,7 +28860,7 @@ function apply(ctx) {
       document.body.dataset.btLayout = layout;
       document.body.style.setProperty("--bt-msg-w", String(width / 100));
       document.body.style.setProperty("--bt-flat-w", String(flatWidth / 100));
-      const next = `${id}|${accent ?? ""}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${registry.getSnapshot()}`;
+      const next = `${id}|${accent ?? ""}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${skin}|${registry.getSnapshot()}`;
       if (next === key) return;
       key = next;
       style.textContent = themeCss(themes[id], accent) + fontCss(font) + sizeCss(size);
@@ -28843,7 +28869,7 @@ function apply(ctx) {
       if (typeof release === "function") release();
       if (snapshot.ready) {
         try {
-          localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font, size: prefs.size ?? savedPrefs.size, density: prefs.density ?? savedPrefs.density }));
+          localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font, size: prefs.size ?? savedPrefs.size, density: prefs.density ?? savedPrefs.density, skin: savedPrefs.skin }));
         } catch {
         }
       }
@@ -28860,6 +28886,7 @@ function apply(ctx) {
       } finally {
         delete document.body.dataset.btMotion;
         delete document.body.dataset.btLayout;
+        delete document.documentElement.dataset.btSkin;
         document.body.style.removeProperty("--bt-msg-w");
         document.body.style.removeProperty("--bt-flat-w");
         style.remove();
@@ -29125,6 +29152,7 @@ function apply(ctx) {
       } catch {
       }
       reapplyPrefs();
+      if (key === "skin") return void 0;
       return actions.setPrefs({ [key]: value });
     },
     // The font picker shows what this device already uses, not what the host last answered.

@@ -1,7 +1,7 @@
 import { createElement as h, useCallback, useEffect, useRef, useState } from 'react'
 import { ACCENT_INKS, INKS } from './inks.js'
 import { isMainOf } from './sources.js'
-import { DENSITY_CHOICES, FONT_CHOICES, MESSAGE_WIDTH, SIZE_CHOICES, allThemes, densityOf, flatWidthOf, fontOf, layoutOf, sizeOf, thinkingShown, widthOf } from './themes.js'
+import { DENSITY_CHOICES, FONT_CHOICES, MESSAGE_WIDTH, SIZE_CHOICES, SKIN_CHOICES, allThemes, densityOf, flatWidthOf, fontOf, layoutOf, sizeOf, skinOf, thinkingShown, widthOf } from './themes.js'
 import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, InfoIcon, PlugIcon, PlusIcon, SlidersIcon, SETTINGS_ICONS } from './icons.js'
 import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
 import { useEscape } from './overlay-hooks.js'
@@ -104,6 +104,8 @@ function GeneralPage({ roster, actions, run }) {
         h(Choice, { label: t('Text size'), value: sizeOf(prefs), options: Object.entries(SIZE_CHOICES).map(([id, face]) => [id, face.label]), pick: id => run(actions.localPref('size', id)) })),
       h(SetRow, { label: t('Density'), hint: t('How much room rows and lists take.') },
         h(Choice, { label: t('Density'), value: densityOf(prefs), options: Object.entries(DENSITY_CHOICES).map(([id, face]) => [id, face.label]), pick: id => run(actions.localPref('density', id)) })),
+      h(SetRow, { label: t('Mobile skin'), hint: t('How chat looks on a phone. The desktop keeps this plugin\'s own shape.') },
+        h(Choice, { label: t('Mobile skin'), value: skinOf(prefs), options: Object.entries(SKIN_CHOICES).map(([id, face]) => [id, t(face.label)]), pick: id => run(actions.localPref('skin', id)) })),
       h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },
         h('div', { className: 'bt-swatches' },
           h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
