@@ -8,40 +8,50 @@ import { SKIN_CHOICES, skinOf } from '../src/client/themes.js'
 
 const bundle = readFileSync(new URL('../client.js', import.meta.url), 'utf8')
 
-test('a skin the plugin does not know is this plugin’s own', () => {
+test('the skin follows the device until the user picks one', () => {
   assert.equal(skinOf(undefined), 'ours')
   assert.equal(skinOf({}), 'ours')
-  assert.equal(skinOf({ skin: 'neon' }), 'ours')
+  // A phone with no pick wears the app's shape; a desktop with no pick keeps ours.
+  assert.equal(skinOf({}, { phone: true }), 'app')
+  assert.equal(skinOf({ skin: 'neon' }, { phone: true }), 'app')
+  // A pick always wins, whichever way the device goes.
+  assert.equal(skinOf({ skin: 'ours' }, { phone: true }), 'ours')
   assert.equal(skinOf({ skin: 'app' }), 'app')
   assert.deepEqual(Object.keys(SKIN_CHOICES), ['ours', 'app'])
 })
 
 // The skin is a phone look: a rule that could reach the desktop would restyle a window the
-// user never asked about, so every rule but the token carries the drawer marker.
+// user never asked about, so every skin rule carries the drawer marker. No pick leaves the
+// attribute off, which is how a phone gets the skin by default.
 test('every skin rule is scoped to the phone', () => {
   const selectors = []
-  for (let at = bundle.indexOf('[data-bt-skin=app]'); at >= 0; at = bundle.indexOf('[data-bt-skin=app]', at + 1)) {
+  for (let at = bundle.indexOf(':not([data-bt-skin=ours])'); at >= 0; at = bundle.indexOf(':not([data-bt-skin=ours])', at + 1)) {
     const open = bundle.indexOf('{', at)
     const start = Math.max(bundle.lastIndexOf('}', at), bundle.lastIndexOf('\n', at), bundle.lastIndexOf('`', at))
     selectors.push(bundle.slice(start + 1, open).trim())
   }
-  assert.ok(selectors.length >= 3, `expected the skin rules, found ${selectors.length}`)
+  assert.ok(selectors.length >= 6, `expected the skin rules, found ${selectors.length}`)
   for (const selector of selectors) {
     assert.ok(
-      selector.includes('[data-mobile-nav="frame"]') || selector === 'html[data-bt-skin=app]',
+      selector.includes('[data-mobile-nav="frame"]'),
       `the skin rule is not scoped to the phone: ${selector}`,
     )
   }
 })
 
 test('the phone skin carries the app’s own bubble metrics', () => {
-  const rule = /\[data-bt-skin=app\]:has\(\[data-mobile-nav="frame"\]\) body:not\(\[data-bt-layout=flat\]\) \.bt-bubble\{([^}]*)\}/.exec(bundle)
+  const rule = /:not\(\[data-bt-skin=ours\]\) body:not\(\[data-bt-layout=flat\]\) \.bt-bubble\{([^}]*)\}/.exec(bundle)
   assert.ok(rule !== null, 'no bubble rule for the skin')
   const body = rule[1]
-  assert.match(body, /border-radius:var\(--bt-skin-bubble\)/)
-  assert.match(body, /padding:13px 18px/)
-  assert.match(bundle, /html\[data-bt-skin=app\]\{--bt-skin-bubble:26px\}/)
-  assert.match(bundle, /\[data-bt-skin=app\]:has\(\[data-mobile-nav="frame"\]\) \.bt-msg,[^{]*\{max-width:90%\}/)
+  assert.match(body, /border-radius:var\(--bt-app-radius-bubble\)/)
+  assert.match(body, /padding:var\(--bt-app-pad\)/)
+  assert.match(body, /line-height:1\.625/)
+  assert.match(bundle, /--bt-app-radius-bubble:30px/)
+  assert.match(bundle, /--bt-app-pad:12px 16px/)
+  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg,[^{]*\{max-width:var\(--bt-app-msg-max\)\}/)
+  // Neighbouring bubbles use the radius minus the padding step, not a hand-written 9px.
+  assert.match(bundle, /border-start-start-radius:var\(--bt-app-radius-bubble-inset\)/)
+  assert.match(bundle, /--bt-app-radius-bubble-inset:calc\(var\(--bt-app-radius-bubble\) - 12px - 1px\)/)
 })
 
 // The settings row is the only place the skin is chosen, and the host never hears about it,
@@ -128,11 +138,11 @@ test('picking a skin keeps it on the row and never sends it to the host', () => 
   assert.deepEqual(skin.calls, [['skin', 'ours']])
 })
 
-// The token itself is defined unscoped so its consumers can stay readable; the phone marker
-// has to be on every consumer, or a rule that reaches the desktop would repaint it.
-test('every rule that uses the skin bubble token is scoped to the phone', () => {
+// A token declaration paints nothing; its consumers do, so the marker has to be on every one
+// of them or a rule that reaches the desktop would repaint it.
+test('every rule that uses a skin token is scoped to the phone', () => {
   const consumers = []
-  for (let at = bundle.indexOf('var(--bt-skin-bubble'); at >= 0; at = bundle.indexOf('var(--bt-skin-bubble', at + 1)) {
+  for (let at = bundle.indexOf('var(--bt-app-'); at >= 0; at = bundle.indexOf('var(--bt-app-', at + 1)) {
     const start = Math.max(bundle.lastIndexOf('}', at), bundle.lastIndexOf('\n', at), bundle.lastIndexOf('`', at))
     consumers.push(bundle.slice(start + 1, bundle.indexOf('{', start + 1)).trim())
   }

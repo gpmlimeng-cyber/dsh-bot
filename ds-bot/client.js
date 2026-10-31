@@ -2126,7 +2126,7 @@ var sizeCss = (id) => {
 var DENSITY_CHOICES = { tight: { label: "Compact" }, normal: { label: "Standard" }, roomy: { label: "Roomier" } };
 var densityOf = (prefs) => DENSITY_CHOICES[prefs?.density] ? prefs.density : "normal";
 var SKIN_CHOICES = { ours: { label: "Ours" }, app: { label: "App" } };
-var skinOf = (prefs) => SKIN_CHOICES[prefs?.skin] ? prefs.skin : "ours";
+var skinOf = (prefs, { phone = false } = {}) => SKIN_CHOICES[prefs?.skin] ? prefs.skin : phone ? "app" : "ours";
 var layoutOf = (prefs) => prefs?.layout === "flat" ? "flat" : "bubble";
 var thinkingShown = (prefs) => prefs?.thinking === true;
 var widthOf = (prefs) => percent(prefs?.width, 80);
@@ -4076,18 +4076,47 @@ html:not(:has([data-mobile-nav="frame"])) .bt-head>.bt-head-right{display:inline
 .bt-mcp-formfoot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
 @media (max-width:720px){.bt-mcp-head{flex-direction:column;align-items:stretch}.bt-mcp-actions{justify-content:space-between}.bt-mcp-search{width:auto;max-width:none;flex:1 1 auto}.bt-mcp-body{padding:0 16px 20px}.bt-mcp-confirm,.bt-mcp-note{margin-left:16px;margin-right:16px}}
 
-/* The phone skin: the mobile app's chat shape, on this device, chosen in Settings and off by
-   default. A variable carries its 26px bubble radius, so the sheet's radius steps still hold;
-   the flat layout keeps its own bubble-less look. */
-html[data-bt-skin=app]{--bt-skin-bubble:26px}
-html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-astack{gap:10px}
-html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg,
-html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-astack[data-lead]>.bt-msg{max-width:90%}
-html[data-bt-skin=app]:has([data-mobile-nav="frame"]) body:not([data-bt-layout=flat]) .bt-bubble{border-radius:var(--bt-skin-bubble);padding:13px 18px;font-size:calc(var(--dsh-content-font-size,14px) + 4px);line-height:calc(var(--dsh-content-font-size,14px) + 13px)}
-html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:var(--bt-skin-bubble)}
-html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:var(--bt-skin-bubble)}
-html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-row{min-height:48px}
-html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-bubble .bt-tools{border-radius:999px}
+/* The phone skin: the OpenBot chat shape, on this device. One --bt-app-* layer holds the
+   surfaces, radii and type pairs; every consumer carries the drawer marker, and no pick
+   leaves the attribute off, so the phone gets it and the desktop never can. Colours map to
+   the existing --bt-* set (style-debt forbids a second palette) and dark mode follows. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]){
+  --bt-app-surface:var(--bt-card);
+  --bt-app-raised:var(--bt-bubble);
+  --bt-app-control:var(--bt-card);
+  --bt-app-control-hover:var(--bt-hover);
+  --bt-app-border:var(--bt-line);
+  --bt-app-accent:var(--bt-accent);
+  --bt-app-radius-bubble:30px;
+  --bt-app-radius-bubble-inset:calc(var(--bt-app-radius-bubble) - 12px - 1px);
+  --bt-app-radius-card:14px;
+  --bt-app-radius-group:16px;
+  --bt-app-radius-modal:30px;
+  --bt-app-text-title:24px;  --bt-app-leading-title:30px;
+  --bt-app-text-row:16px;    --bt-app-leading-row:22px;
+  --bt-app-text-body:14px;   --bt-app-leading-body:20px;
+  --bt-app-text-sub:13px;    --bt-app-leading-sub:18px;
+  --bt-app-text-meta:12px;   --bt-app-leading-meta:16px;
+  --bt-app-gap:8px;
+  --bt-app-pad:12px 16px;
+  --bt-app-msg-max:100%;
+  --bt-app-row:48px;
+  --bt-app-shadow-float:var(--bt-float-shadow);
+}
+/* The head buttons and composer controls already sit at the shell's sizes on a phone
+   (36/32px, 44px hit areas), so only the bubble, its stack, the row height and the empty
+   note take the app's own numbers here. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack{gap:var(--bt-app-gap)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg,
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack[data-lead]>.bt-msg{max-width:var(--bt-app-msg-max)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) body:not([data-bt-layout=flat]) .bt-bubble{border-radius:var(--bt-app-radius-bubble);padding:var(--bt-app-pad);font-size:var(--bt-app-text-body);line-height:1.625;overflow-wrap:anywhere}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:var(--bt-app-radius-bubble-inset)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:var(--bt-app-radius-bubble-inset)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-row{min-height:var(--bt-app-row)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-bubble .bt-tools{border-radius:999px}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-empty{font-size:var(--bt-app-text-sub);line-height:var(--bt-app-leading-sub)}
+/* The user's own bubbles are the host's, so the skin reaches them through the row marker it draws. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important}
 `;
 var CONVERSATION_CSS = `
 .bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:calc(var(--bt-msg-w) * 100%)}
@@ -28850,11 +28879,11 @@ function apply(ctx) {
       const font = fontOf(prefs.font ? prefs : savedPrefs);
       const size = sizeOf(prefs.size ? prefs : savedPrefs);
       const density = densityOf(prefs.density ? prefs : savedPrefs);
-      const skin = skinOf(savedPrefs);
+      const skin = SKIN_CHOICES[savedPrefs.skin] ? savedPrefs.skin : null;
       document.body.dataset.btMotion = motion;
       document.body.dataset.btFont = font;
       document.body.dataset.btDensity = density;
-      if (skin === "ours") delete document.documentElement.dataset.btSkin;
+      if (skin === null) delete document.documentElement.dataset.btSkin;
       else document.documentElement.dataset.btSkin = skin;
       if (size === "m") delete document.body.dataset.btSize;
       else document.body.dataset.btSize = size;
@@ -28864,7 +28893,7 @@ function apply(ctx) {
       document.body.dataset.btLayout = layout;
       document.body.style.setProperty("--bt-msg-w", String(width / 100));
       document.body.style.setProperty("--bt-flat-w", String(flatWidth / 100));
-      const next = `${id}|${accent ?? ""}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${skin}|${registry.getSnapshot()}`;
+      const next = `${id}|${accent ?? ""}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${skin ?? "auto"}|${registry.getSnapshot()}`;
       if (next === key) return;
       key = next;
       style.textContent = themeCss(themes[id], accent) + fontCss(font) + sizeCss(size);
@@ -29161,8 +29190,9 @@ function apply(ctx) {
     },
     // The font picker shows what this device already uses, not what the host last answered.
     fontPref: () => fontOf(savedPrefs),
-    // Same for the skin, which the host never hears about: the row must show this device's pick.
-    skinPref: () => skinOf(savedPrefs),
+    // Same for the skin, which the host never hears about: the row must show this device's pick,
+    // and with none the phone still wears the app's shape.
+    skinPref: () => skinOf(savedPrefs, { phone: document.querySelector('[data-mobile-nav="frame"]') !== null }),
     // A bundle is the unit the enabled list shows, so its switch is the bundle switch the
     // shell's own Plugins page offers; the identity is the package name.
     setBundleEnabled: async (name, enabled) => {

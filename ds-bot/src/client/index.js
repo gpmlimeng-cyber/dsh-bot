@@ -4,7 +4,7 @@ import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
 import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
 import { teamActions } from './team-actions.js'
 import { dismissDrawerIfOpen } from './drawer-dismiss.js'
-import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, skinOf, SIZE_CHOICES } from './themes.js'
+import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, skinOf, SKIN_CHOICES, SIZE_CHOICES } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
 import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
 import { lookOf } from './mark.js'
@@ -335,12 +335,14 @@ export function apply(ctx) {
       const font = fontOf(prefs.font ? prefs : savedPrefs)
       const size = sizeOf(prefs.size ? prefs : savedPrefs)
       const density = densityOf(prefs.density ? prefs : savedPrefs)
-      // The skin is this device's own pick, so it never comes from the host's prefs.
-      const skin = skinOf(savedPrefs)
+      // The skin is this device's own pick, so it never comes from the host's prefs. Until
+      // there is one, the attribute stays off and the CSS gives the phone the app's shape:
+      // the drawer can mount after this runs, and the default still follows it.
+      const skin = SKIN_CHOICES[savedPrefs.skin] ? savedPrefs.skin : null
       document.body.dataset.btMotion = motion
       document.body.dataset.btFont = font
       document.body.dataset.btDensity = density
-      if (skin === 'ours') delete document.documentElement.dataset.btSkin
+      if (skin === null) delete document.documentElement.dataset.btSkin
       else document.documentElement.dataset.btSkin = skin
       if (size === 'm') delete document.body.dataset.btSize
       else document.body.dataset.btSize = size
@@ -352,7 +354,7 @@ export function apply(ctx) {
       document.body.dataset.btLayout = layout
       document.body.style.setProperty('--bt-msg-w', String(width / 100))
       document.body.style.setProperty('--bt-flat-w', String(flatWidth / 100))
-      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${skin}|${registry.getSnapshot()}`
+      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${skin ?? 'auto'}|${registry.getSnapshot()}`
       if (next === key) return
       key = next
       style.textContent = themeCss(themes[id], accent) + fontCss(font) + sizeCss(size)
@@ -638,8 +640,9 @@ export function apply(ctx) {
     },
     // The font picker shows what this device already uses, not what the host last answered.
     fontPref: () => fontOf(savedPrefs),
-    // Same for the skin, which the host never hears about: the row must show this device's pick.
-    skinPref: () => skinOf(savedPrefs),
+    // Same for the skin, which the host never hears about: the row must show this device's pick,
+    // and with none the phone still wears the app's shape.
+    skinPref: () => skinOf(savedPrefs, { phone: document.querySelector('[data-mobile-nav="frame"]') !== null }),
     // A bundle is the unit the enabled list shows, so its switch is the bundle switch the
     // shell's own Plugins page offers; the identity is the package name.
     setBundleEnabled: async (name, enabled) => {
