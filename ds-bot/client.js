@@ -2892,9 +2892,17 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    Only the class prefix changed, dq5LxG_ -> bt-mm-, and the market dropdown is named for
    what it picks here: bt-mm-source / bt-mm-source-name. Numbers, order and states are the
    ones it ships, so this panel measures the same as the shell's own page. */
-.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex;flex-wrap:wrap}
+.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex;flex-wrap:nowrap}
 .bt-mm-filterlabel{flex:none}
-.bt-mm-toolbar .bt-mm-categories{flex:1 1 320px;min-width:0}
+.bt-mm-categories{flex-wrap:wrap;align-items:center;gap:6px;display:flex}
+/* The discover view is one column: the shell's toolbar row, its category row, then the
+   grouped cards. Everything here follows the vendored sheet's own metrics. */
+.bt-mm-discover{display:flex;flex-direction:column;gap:12px;min-width:0}
+.bt-mm-toolbar{display:flex;align-items:center;gap:8px;min-width:0}
+.bt-mm-toolbar .bt-mm-source{flex:none}
+.bt-mm-toolbar .bt-mm-search{flex:1;min-width:120px}
+.bt-mm-filterlabel{flex:none;color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:20px;margin:0}
+.bt-mm-toolbar .bt-mm-sort{margin-left:auto}
 .bt-mm-toolbar .bt-mm-sort{margin-left:auto}
 /* ds-bot chrome around the vendored card list: the source picker, its menu and the
    add-source form. It follows the shell's menu look, not the vendored sheet's. */
@@ -2921,6 +2929,17 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    keeps its -8px side margin for a list; in a grid the cells provide the gutter. */
 ul.bt-mm-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));row-gap:2px;column-gap:50px;align-items:stretch}
 ul.bt-mm-cards>.bt-mm-card{margin:0}
+/* Section headers over the card grid, the shape the shell's Discover list uses: a name and
+   its own control on the right. */
+.bt-mm-group{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
+.bt-mm-grouphead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 2px}
+.bt-mm-grouptitle{margin:0;font-size:14px;font-weight:600;line-height:22px;color:var(--dsw-alias-label-primary)}
+.bt-mm-groupmore{border:0;background:none;padding:0;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:12.5px;cursor:pointer}
+.bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary)}
+.bt-mm-rowmenu{position:relative}
+.bt-mm-dots{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:var(--dsw-radius-md);background:none;color:var(--dsw-alias-label-tertiary);cursor:pointer}
+.bt-mm-dots:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.bt-mm-rowmenupop{right:0;left:auto;top:calc(100% + 4px);min-width:140px}
 @media (max-width:900px){ul.bt-mm-cards{grid-template-columns:minmax(0,1fr)}}.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500;box-shadow:none;background:none;padding:0 4px}.bt-mm-source-name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.bt-mm-search{flex:1;min-width:120px}.bt-mm-categories{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.bt-mm-muted,.bt-mm-meta{color:var(--dsw-alias-label-tertiary);margin:0;font-size:13px;line-height:20px}.bt-mm-meta{overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-strong{overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:20px}.bt-mm-error{color:var(--dsw-alias-state-error-primary);align-items:center;gap:6px;margin:0;font-size:13px;line-height:20px;display:inline-flex}.bt-mm-failure{align-items:center;gap:10px;display:flex}.bt-mm-notice{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);align-items:flex-start;gap:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px;display:flex}.bt-mm-notice>svg{color:var(--dsw-alias-state-warn-primary);flex:none;margin-top:2px}.bt-mm-cards{flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;display:flex}.bt-mm-card{border-radius:var(--dsw-radius-xl);align-items:center;gap:14px;margin:0 -8px;padding:8px;display:flex;position:relative}.bt-mm-card:hover{background:var(--dsw-alias-interactive-bg-hover)}.bt-mm-icon{border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);width:48px;height:48px;color:var(--dsw-alias-label-secondary);flex:none;justify-content:center;align-items:center;display:inline-flex}.bt-mm-image{object-fit:contain}.bt-mm-main{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.bt-mm-titleRow{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.bt-mm-cardOpen{max-width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;font-size:14px;font-weight:500;line-height:20px;overflow:hidden}.bt-mm-cardOpen:after{content:"";border-radius:var(--dsw-radius-xl);position:absolute;inset:0}.bt-mm-cardOpen:focus-visible{outline:none}.bt-mm-cardOpen:focus-visible:after{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-description{color:var(--dsw-alias-label-tertiary);-webkit-line-clamp:1;-webkit-box-orient:vertical;font-size:13px;line-height:18px;display:-webkit-box;overflow:hidden}.bt-mm-cardEnd{z-index:1;flex:none;align-items:center;gap:8px;display:inline-flex;position:relative}.bt-mm-blocked{opacity:.5;cursor:not-allowed}.bt-mm-more{align-self:center}.bt-mm-empty{text-align:center;flex-direction:column;align-items:center;gap:8px;padding:64px 0;display:flex}.bt-mm-emptyTitle{margin:8px 0 0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-empty>button{margin-top:8px}.bt-mm-detail{flex-direction:column;gap:16px;display:flex}.bt-mm-crumb{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:0;align-self:flex-start;align-items:center;gap:6px;padding:0;font-size:12.5px;display:inline-flex}.bt-mm-crumb:hover{color:var(--dsw-alias-label-primary)}.bt-mm-crumb:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-crumbIcon{transform:rotate(90deg)}.bt-mm-detailHead{align-items:center;gap:14px;display:flex}.bt-mm-detailTitle{margin:0;font-size:20px;font-weight:500;line-height:28px}.bt-mm-detailDescription{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.bt-mm-detailSection{flex-direction:column;gap:12px;margin-top:16px;display:flex}.bt-mm-sectionTitle{margin:0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-facts{margin:0}.bt-mm-facts div{border-bottom:.5px solid var(--dsw-alias-border-l2);justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:8px 2px;display:flex}.bt-mm-facts dt{color:var(--dsw-alias-label-secondary);flex:none;font-size:13px;line-height:20px}.bt-mm-facts dd{text-align:end;overflow-wrap:anywhere;min-width:0;margin:0;font-size:13px;line-height:20px}.bt-mm-facts code{background:var(--dsw-alias-bg-module-platform);box-decoration-break:clone;font-family:var(--ds-font-family-code);border-radius:4px;padding:2px 6px;font-size:12px}.bt-mm-tags{flex-wrap:wrap;justify-content:flex-end;gap:6px;display:flex}.bt-mm-dialog{width:min(480px,100vw - 32px)}.bt-mm-dialogBody{flex-direction:column;gap:12px;display:flex}.bt-mm-sourceList,.bt-mm-versions{flex-direction:column;margin:0;padding:0;list-style:none;display:flex}.bt-mm-sourceRow,.bt-mm-versionRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:8px 0;display:flex}.bt-mm-sourceError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-sourceForm{align-items:center;gap:8px;display:flex}.bt-mm-grow{flex:1;min-width:0}.bt-mm-confirmHead{align-items:center;gap:14px;display:flex}.bt-mm-skeletonFill{background:var(--dsw-alias-bg-skeleton);animation:2s cubic-bezier(.36,0,.64,1) infinite bt-mm-dsh-market-skeleton}.bt-mm-icon.bt-mm-skeletonFill{border-color:#0000}.bt-mm-skeletonBar{border-radius:var(--dsw-radius-xs);height:12px;margin:4px 0;display:block}.bt-mm-skeletonTitle{width:min(144px,60%)}.bt-mm-skeletonDescription{width:min(280px,85%)}@keyframes bt-mm-dsh-market-skeleton{0%{opacity:1}40%{opacity:.6}80%,to{opacity:1}}@media (prefers-reduced-motion:reduce){.bt-mm-skeletonFill{animation:none}}.bt-mm-link{color:var(--dsw-alias-link);overflow-wrap:anywhere;text-decoration:none}.bt-mm-link:hover{text-decoration:underline} /* vendored */
 /* The three controls the shell draws with its own primitives (Input, Pill, Button): the
    geometry is the section's, this is only the chrome those primitives carry. */
@@ -27321,7 +27340,7 @@ var CATEGORY_NAMES = {
   "social-media": "Social media"
 };
 var categoryName = (id) => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, " "));
-function Row3({ server, added, busy, onInstall, onOpen, onHome }) {
+function Row3({ server, added, busy, onInstall, onOpen, onHome, onMenu, menuOpen }) {
   return (0, import_react55.createElement)(
     "li",
     { className: "bt-mm-card", "data-mcp-entry": server.id },
@@ -27346,15 +27365,32 @@ function Row3({ server, added, busy, onInstall, onOpen, onHome }) {
     (0, import_react55.createElement)(
       "div",
       { className: "bt-mm-cardEnd" },
-      // A catalogue entry with no connection of its own can only be opened, never
-      // installed; a fake install button would promise something it cannot do.
-      server.installable === false ? server.homepage ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-btn bt-mm-btn-ghost", onClick: onHome }, t("Open page")) : null : (0, import_react55.createElement)("button", {
+      // An added server has nothing left to install, so its control is the menu that
+      // switches it off or takes it away; a card that cannot install only opens.
+      added ? (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-rowmenu" },
+        (0, import_react55.createElement)("button", {
+          type: "button",
+          className: "bt-mm-dots",
+          "aria-haspopup": "menu",
+          "aria-expanded": menuOpen ? "true" : "false",
+          "aria-label": t("More actions"),
+          title: t("More actions"),
+          onClick: onMenu
+        }, (0, import_react55.createElement)(MoreDotsIcon)),
+        menuOpen ? (0, import_react55.createElement)(
+          "div",
+          { className: "bt-mm-menu bt-mm-rowmenupop", role: "menu" },
+          (0, import_react55.createElement)("button", { type: "button", role: "menuitem", className: "bt-mm-menuitem", onClick: () => onMenu("off") }, t("Turn off")),
+          (0, import_react55.createElement)("button", { type: "button", role: "menuitem", className: "bt-mm-menuitem", onClick: () => onMenu("remove") }, t("Remove"))
+        ) : null
+      ) : server.installable === false ? server.homepage ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-btn bt-mm-btn-ghost", onClick: onHome }, t("Open page")) : null : (0, import_react55.createElement)("button", {
         type: "button",
         className: "bt-mm-btn",
-        "data-added": added ? "" : void 0,
-        disabled: added || busy,
+        disabled: busy,
         onClick: onInstall
-      }, busy ? t("Adding…") : added ? t("Installed") : t("Install"))
+      }, busy ? t("Adding…") : t("Install"))
     )
   );
 }
@@ -27564,6 +27600,7 @@ function McpMarketTab({ actions = {} }) {
   const [source, setSource] = (0, import_react55.useState)("modelscope");
   const [sources, setSources] = (0, import_react55.useState)(() => readSources());
   const [sourceMenu, setSourceMenu] = (0, import_react55.useState)(false);
+  const [rowMenu, setRowMenu] = (0, import_react55.useState)("");
   const [adding, setAdding] = (0, import_react55.useState)(null);
   const timer = (0, import_react55.useRef)(null);
   const report = (failure) => setError(String(failure?.message ?? failure));
@@ -27686,6 +27723,15 @@ function McpMarketTab({ actions = {} }) {
     () => sort === "installs" ? list.servers.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : list.servers,
     [list.servers, sort]
   );
+  const groups = (0, import_react55.useMemo)(() => {
+    const buckets = /* @__PURE__ */ new Map();
+    for (const server of shown) {
+      const key = category !== "" ? "" : server.categories?.[0] ?? server.publisher ?? "";
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push(server);
+    }
+    return [...buckets.entries()].map(([id, servers]) => ({ id, name: id === "" ? t("All") : categoryName(id), servers })).sort((left, right) => right.servers.length - left.servers.length);
+  }, [shown, category]);
   const more = list.servers.length < list.total;
   const body = view === "installed" ? (0, import_react55.createElement)(Installed, { key: "installed", servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove }) : view === "custom" ? (0, import_react55.createElement)(Custom, {
     key: "custom",
@@ -27708,20 +27754,45 @@ function McpMarketTab({ actions = {} }) {
         (0, import_react55.createElement)("span", { className: "bt-mm-skeletonBar bt-mm-skeletonTitle" }),
         (0, import_react55.createElement)("span", { className: "bt-mm-skeletonBar bt-mm-skeletonDescription" })
       )
-    ))) : (0, import_react55.createElement)("ul", { className: "bt-mm-cards", key: "list" }, shown.map((server) => (0, import_react55.createElement)(Row3, {
-      key: server.id,
-      server,
-      added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
-      busy: installing === server.id,
-      onInstall: () => install(server),
-      onOpen: () => setOpen(server),
-      onHome: () => {
-        try {
-          window.open(server.homepage, "_blank", "noopener");
-        } catch {
+    ))) : groups.map((group) => (0, import_react55.createElement)(
+      "section",
+      { className: "bt-mm-group", key: group.id || "all" },
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-grouphead" },
+        (0, import_react55.createElement)("h3", { className: "bt-mm-grouptitle" }, group.name),
+        group.id !== "" ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-groupmore", onClick: () => {
+          pick2(group.id);
+          setPage(1);
+        } }, t("Show more")) : null
+      ),
+      (0, import_react55.createElement)("ul", { className: "bt-mm-cards" }, group.servers.slice(0, 6).map((server) => (0, import_react55.createElement)(Row3, {
+        key: server.id,
+        server,
+        added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
+        busy: installing === server.id,
+        menuOpen: rowMenu === server.id,
+        onMenu: (action) => {
+          if (action === void 0) {
+            setRowMenu(rowMenu === server.id ? "" : server.id);
+            return;
+          }
+          const name = added[server.id] ?? nameOf(server.id);
+          const entry = rows2.find((item) => item.serverName === name);
+          if (action === "off" && entry !== void 0) toggle(entry);
+          if (action === "remove") remove({ serverName: name });
+          setRowMenu("");
+        },
+        onInstall: () => install(server),
+        onOpen: () => setOpen(server),
+        onHome: () => {
+          try {
+            window.open(server.homepage, "_blank", "noopener");
+          } catch {
+          }
         }
-      }
-    }))),
+      })))
+    )),
     more ? (0, import_react55.createElement)(
       "button",
       { type: "button", className: "bt-mm-btn bt-mm-more", key: "more", disabled: loading, onClick: () => setPage(page + 1) },
@@ -27805,10 +27876,12 @@ function McpMarketTab({ actions = {} }) {
       }
     }, item.name, item.id === "installed" && rows2.length > 0 ? (0, import_react55.createElement)("span", { className: "bt-mm-tabcount" }, String(rows2.length)) : null))),
     notice ? (0, import_react55.createElement)("p", { className: "bt-mm-done" }, notice) : null,
-    view === "discover" ? [
+    view === "discover" ? (0, import_react55.createElement)(
+      "div",
+      { className: "bt-mm-discover", key: "discover" },
       (0, import_react55.createElement)(
         "div",
-        { className: "bt-mm-toolbar", key: "toolbar" },
+        { className: "bt-mm-toolbar" },
         (0, import_react55.createElement)(
           "div",
           { className: "bt-mm-sourcewrap" },
@@ -27816,7 +27889,7 @@ function McpMarketTab({ actions = {} }) {
             "button",
             {
               type: "button",
-              className: "bt-mm-source bt-mm-btn",
+              className: "bt-mm-source",
               "aria-haspopup": "menu",
               "aria-expanded": sourceMenu ? "true" : "false",
               onClick: () => setSourceMenu(!sourceMenu)
@@ -27866,7 +27939,7 @@ function McpMarketTab({ actions = {} }) {
         ),
         (0, import_react55.createElement)(
           "label",
-          { className: "bt-mm-search bt-mm-box" },
+          { className: "bt-mm-search" },
           (0, import_react55.createElement)(SearchIcon),
           (0, import_react55.createElement)("input", {
             value: query,
@@ -27875,24 +27948,7 @@ function McpMarketTab({ actions = {} }) {
             onChange: (event) => setQuery(event.target.value)
           })
         ),
-        (0, import_react55.createElement)("span", { className: "bt-mm-muted bt-mm-filterlabel" }, t("Labels")),
-        categories.length === 0 ? null : (0, import_react55.createElement)(
-          "div",
-          { className: "bt-mm-categories", key: "categories", role: "group", "aria-label": t("Labels") },
-          (0, import_react55.createElement)("button", {
-            type: "button",
-            className: "bt-mm-pill" + (category === "" ? " is-on" : ""),
-            "aria-pressed": category === "",
-            onClick: () => pick2("")
-          }, t("All")),
-          categories.map((item) => (0, import_react55.createElement)("button", {
-            key: item.id,
-            type: "button",
-            className: "bt-mm-pill" + (category === item.id ? " is-on" : ""),
-            "aria-pressed": category === item.id,
-            onClick: () => pick2(item.id)
-          }, categoryName(item.id)))
-        ),
+        (0, import_react55.createElement)("span", { className: "bt-mm-filterlabel" }, t("Labels")),
         (0, import_react55.createElement)(
           "label",
           { className: "bt-mm-sort" },
@@ -27904,10 +27960,79 @@ function McpMarketTab({ actions = {} }) {
             (0, import_react55.createElement)("option", { value: "installs" }, t("Downloads"))
           )
         )
+      ),
+      categories.length === 0 ? null : (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-categories", role: "group", "aria-label": t("Labels") },
+        (0, import_react55.createElement)("button", {
+          type: "button",
+          className: "bt-mm-pill" + (category === "" ? " is-on" : ""),
+          "aria-pressed": category === "",
+          onClick: () => pick2("")
+        }, t("All")),
+        categories.map((item) => (0, import_react55.createElement)("button", {
+          key: item.id,
+          type: "button",
+          className: "bt-mm-pill" + (category === item.id ? " is-on" : ""),
+          "aria-pressed": category === item.id,
+          onClick: () => pick2(item.id)
+        }, categoryName(item.id)))
+      ),
+      error ? (0, import_react55.createElement)("p", { className: "bt-mm-error" }, error) : null,
+      body
+    ) : (0, import_react55.createElement)(
+      "div",
+      { className: "bt-mm-other" },
+      error ? (0, import_react55.createElement)("p", { className: "bt-mm-error" }, error) : null,
+      body
+    ),
+    adding === null ? null : (0, import_react55.createElement)(
+      "div",
+      { className: "bt-mm-addsource" },
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-addsource-head" },
+        (0, import_react55.createElement)("span", null, t("Add a custom source")),
+        (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-close", "aria-label": t("Close"), title: t("Close"), onClick: () => setAdding(null) }, (0, import_react55.createElement)(CloseIcon))
+      ),
+      (0, import_react55.createElement)(
+        "label",
+        { className: "bt-mm-field" },
+        (0, import_react55.createElement)("span", null, t("Name")),
+        (0, import_react55.createElement)("input", { value: adding.name, placeholder: t("My MCP list"), spellCheck: false, onChange: (event) => setAdding({ ...adding, name: event.target.value }) })
+      ),
+      (0, import_react55.createElement)(
+        "label",
+        { className: "bt-mm-field" },
+        (0, import_react55.createElement)("span", null, "URL"),
+        (0, import_react55.createElement)("input", { value: adding.url, placeholder: "https://raw.githubusercontent.com/…/README.md", spellCheck: false, onChange: (event) => setAdding({ ...adding, url: event.target.value }) })
+      ),
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-switchbar" },
+        (0, import_react55.createElement)("button", { type: "button", "data-on": adding.kind === "readme" ? "" : void 0, onClick: () => setAdding({ ...adding, kind: "readme" }) }, t("README")),
+        (0, import_react55.createElement)("button", { type: "button", "data-on": adding.kind === "json" ? "" : void 0, onClick: () => setAdding({ ...adding, kind: "json" }) }, "JSON")
+      ),
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-actions" },
+        (0, import_react55.createElement)("button", {
+          type: "button",
+          className: "bt-mm-btn",
+          disabled: adding.name.trim() === "" || !/^https?:\/\//i.test(adding.url.trim()),
+          onClick: () => {
+            const entry = { id: `custom:${Date.now()}`, name: adding.name.trim(), url: adding.url.trim(), kind: adding.kind };
+            const next = [...sources, entry];
+            setSources(next);
+            writeSources(next);
+            setAdding(null);
+            setSource(entry.id);
+            setPage(1);
+            setList({ total: 0, servers: [] });
+          }
+        }, t("Add source"))
       )
-    ] : null,
-    error ? (0, import_react55.createElement)("p", { className: "bt-mm-error" }, error) : null,
-    body
+    )
   );
 }
 

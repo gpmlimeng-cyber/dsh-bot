@@ -8,7 +8,7 @@
 // tools on the MCP page.
 import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
 import { t } from './i18n.js'
-import { CloseIcon, PlusIcon, SearchIcon, SwitchIcon, TrashIcon } from './icons.js'
+import { CloseIcon, MoreDotsIcon, PlusIcon, SearchIcon, SwitchIcon, TrashIcon } from './icons.js'
 
 // A server name has to fit the profile's own rule; the plaza's ids are `@owner/name`.
 const nameOf = (id) => {
@@ -72,7 +72,7 @@ const CATEGORY_NAMES = {
 
 const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
 
-function Row({ server, added, busy, onInstall, onOpen, onHome }) {
+function Row({ server, added, busy, onInstall, onOpen, onHome, onMenu, menuOpen }) {
   return h('li', { className: 'bt-mm-card', 'data-mcp-entry': server.id },
     h('span', { className: 'bt-mm-icon', 'aria-hidden': true },
       server.logo
@@ -86,19 +86,29 @@ function Row({ server, added, busy, onInstall, onOpen, onHome }) {
         added ? h('span', { className: 'bt-mm-tag bt-mm-tag-on' }, t('Added')) : null),
       server.description ? h('span', { className: 'bt-mm-description' }, server.description) : null),
     h('div', { className: 'bt-mm-cardEnd' },
-      // A catalogue entry with no connection of its own can only be opened, never
-      // installed; a fake install button would promise something it cannot do.
-      server.installable === false
-        ? (server.homepage
-          ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-btn-ghost', onClick: onHome }, t('Open page'))
-          : null)
-        : h('button', {
-          type: 'button',
-          className: 'bt-mm-btn',
-          'data-added': added ? '' : undefined,
-          disabled: added || busy,
-          onClick: onInstall,
-        }, busy ? t('Adding…') : added ? t('Installed') : t('Install'))))
+      // An added server has nothing left to install, so its control is the menu that
+      // switches it off or takes it away; a card that cannot install only opens.
+      added
+        ? h('div', { className: 'bt-mm-rowmenu' },
+          h('button', {
+            type: 'button', className: 'bt-mm-dots', 'aria-haspopup': 'menu', 'aria-expanded': menuOpen ? 'true' : 'false',
+            'aria-label': t('More actions'), title: t('More actions'), onClick: onMenu,
+          }, h(MoreDotsIcon)),
+          menuOpen
+            ? h('div', { className: 'bt-mm-menu bt-mm-rowmenupop', role: 'menu' },
+              h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem', onClick: () => onMenu('off') }, t('Turn off')),
+              h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem', onClick: () => onMenu('remove') }, t('Remove')))
+            : null)
+        : server.installable === false
+          ? (server.homepage
+            ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-btn-ghost', onClick: onHome }, t('Open page'))
+            : null)
+          : h('button', {
+            type: 'button',
+            className: 'bt-mm-btn',
+            disabled: busy,
+            onClick: onInstall,
+          }, busy ? t('Adding…') : t('Install'))))
 }
 
 // One server: what it is, and how this profile would connect to it — a hosted endpoint
@@ -266,6 +276,7 @@ export function McpMarketTab({ actions = {} }) {
   const [source, setSource] = useState('modelscope')
   const [sources, setSources] = useState(() => readSources())
   const [sourceMenu, setSourceMenu] = useState(false)
+  const [rowMenu, setRowMenu] = useState('')
   const [adding, setAdding] = useState(null)
   const timer = useRef(null)
 
@@ -391,6 +402,20 @@ export function McpMarketTab({ actions = {} }) {
       : list.servers),
     [list.servers, sort],
   )
+  // Cards are grouped the way the shell's own Discover list groups them: one section per
+  // category (a README section for the catalogue sources), three rows of two in each, and
+  // the section's own control narrows the list to that category.
+  const groups = useMemo(() => {
+    const buckets = new Map()
+    for (const server of shown) {
+      const key = category !== '' ? '' : (server.categories?.[0] ?? server.publisher ?? '')
+      if (!buckets.has(key)) buckets.set(key, [])
+      buckets.get(key).push(server)
+    }
+    return [...buckets.entries()]
+      .map(([id, servers]) => ({ id, name: id === '' ? t('All') : categoryName(id), servers }))
+      .sort((left, right) => right.servers.length - left.servers.length)
+  }, [shown, category])
   const more = list.servers.length < list.total
 
   const body = view === 'installed'
@@ -415,15 +440,30 @@ export function McpMarketTab({ actions = {} }) {
               h('div', { className: 'bt-mm-main' },
                 h('span', { className: 'bt-mm-skeletonBar bt-mm-skeletonTitle' }),
                 h('span', { className: 'bt-mm-skeletonBar bt-mm-skeletonDescription' })))))
-            : h('ul', { className: 'bt-mm-cards', key: 'list' }, shown.map(server => h(Row, {
-              key: server.id,
-              server,
-              added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
-              busy: installing === server.id,
-              onInstall: () => install(server),
-              onOpen: () => setOpen(server),
-              onHome: () => { try { window.open(server.homepage, '_blank', 'noopener') } catch { /* no window */ } },
-            }))),
+            : groups.map(group => h('section', { className: 'bt-mm-group', key: group.id || 'all' },
+              h('div', { className: 'bt-mm-grouphead' },
+                h('h3', { className: 'bt-mm-grouptitle' }, group.name),
+                group.id !== ''
+                  ? h('button', { type: 'button', className: 'bt-mm-groupmore', onClick: () => { pick(group.id); setPage(1) } }, t('Show more'))
+                  : null),
+              h('ul', { className: 'bt-mm-cards' }, group.servers.slice(0, 6).map(server => h(Row, {
+                key: server.id,
+                server,
+                added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
+                busy: installing === server.id,
+                menuOpen: rowMenu === server.id,
+                onMenu: (action) => {
+                  if (action === undefined) { setRowMenu(rowMenu === server.id ? '' : server.id); return }
+                  const name = added[server.id] ?? nameOf(server.id)
+                  const entry = rows.find(item => item.serverName === name)
+                  if (action === 'off' && entry !== undefined) toggle(entry)
+                  if (action === 'remove') remove({ serverName: name })
+                  setRowMenu('')
+                },
+                onInstall: () => install(server),
+                onOpen: () => setOpen(server),
+                onHome: () => { try { window.open(server.homepage, '_blank', 'noopener') } catch { /* no window */ } },
+              }))))),
           more
             ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
               loading ? t('Reading…') : t('Show more'))
@@ -485,12 +525,12 @@ export function McpMarketTab({ actions = {} }) {
     }, item.name, item.id === 'installed' && rows.length > 0 ? h('span', { className: 'bt-mm-tabcount' }, String(rows.length)) : null))),
     notice ? h('p', { className: 'bt-mm-done' }, notice) : null,
     view === 'discover'
-      ? [
-        h('div', { className: 'bt-mm-toolbar', key: 'toolbar' },
+      ? h('div', { className: 'bt-mm-discover', key: 'discover' },
+        h('div', { className: 'bt-mm-toolbar' },
           h('div', { className: 'bt-mm-sourcewrap' },
             h('button', {
               type: 'button',
-              className: 'bt-mm-source bt-mm-btn',
+              className: 'bt-mm-source',
               'aria-haspopup': 'menu',
               'aria-expanded': sourceMenu ? 'true' : 'false',
               onClick: () => setSourceMenu(!sourceMenu),
@@ -514,7 +554,7 @@ export function McpMarketTab({ actions = {} }) {
                 h('span', { className: 'bt-mm-menuitem-check', 'aria-hidden': true }, '✓'))),
                 h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem bt-mm-menuitem-add', onClick: () => { setSourceMenu(false); setAdding({ name: '', url: '', kind: 'readme' }) } }, t('Manage sources…'), h('span', { className: 'bt-mm-menuitem-gear', 'aria-hidden': true }, '⚙')))
               : null),
-          h('label', { className: 'bt-mm-search bt-mm-box' },
+          h('label', { className: 'bt-mm-search' },
             h(SearchIcon),
             h('input', {
               value: query,
@@ -522,8 +562,13 @@ export function McpMarketTab({ actions = {} }) {
               'aria-label': t('Search MCP servers'),
               onChange: (event) => setQuery(event.target.value),
             })),
-          h('span', { className: 'bt-mm-muted bt-mm-filterlabel' }, t('Labels')),
-          categories.length === 0 ? null : h('div', { className: 'bt-mm-categories', key: 'categories', role: 'group', 'aria-label': t('Labels') },
+          h('span', { className: 'bt-mm-filterlabel' }, t('Labels')),
+          h('label', { className: 'bt-mm-sort' },
+            h('span', null, t('Sort')),
+            h('select', { value: sort, 'aria-label': t('Sort'), onChange: (event) => setSort(event.target.value) },
+              h('option', { value: 'default' }, t('Default order')),
+              h('option', { value: 'installs' }, t('Downloads'))))),
+        categories.length === 0 ? null : h('div', { className: 'bt-mm-categories', role: 'group', 'aria-label': t('Labels') },
           h('button', {
             type: 'button',
             className: 'bt-mm-pill' + (category === '' ? ' is-on' : ''),
@@ -537,13 +582,38 @@ export function McpMarketTab({ actions = {} }) {
             'aria-pressed': category === item.id,
             onClick: () => pick(item.id),
           }, categoryName(item.id)))),
-          h('label', { className: 'bt-mm-sort' },
-            h('span', null, t('Sort')),
-            h('select', { value: sort, 'aria-label': t('Sort'), onChange: (event) => setSort(event.target.value) },
-              h('option', { value: 'default' }, t('Default order')),
-              h('option', { value: 'installs' }, t('Downloads'))))),
-      ]
-      : null,
-    error ? h('p', { className: 'bt-mm-error' }, error) : null,
-    body)
+        error ? h('p', { className: 'bt-mm-error' }, error) : null,
+        body)
+      : h('div', { className: 'bt-mm-other' },
+        error ? h('p', { className: 'bt-mm-error' }, error) : null,
+        body),
+    adding === null
+      ? null
+      : h('div', { className: 'bt-mm-addsource' },
+        h('div', { className: 'bt-mm-addsource-head' },
+          h('span', null, t('Add a custom source')),
+          h('button', { type: 'button', className: 'bt-mm-close', 'aria-label': t('Close'), title: t('Close'), onClick: () => setAdding(null) }, h(CloseIcon))),
+        h('label', { className: 'bt-mm-field' }, h('span', null, t('Name')),
+          h('input', { value: adding.name, placeholder: t('My MCP list'), spellCheck: false, onChange: (event) => setAdding({ ...adding, name: event.target.value }) })),
+        h('label', { className: 'bt-mm-field' }, h('span', null, 'URL'),
+          h('input', { value: adding.url, placeholder: 'https://raw.githubusercontent.com/…/README.md', spellCheck: false, onChange: (event) => setAdding({ ...adding, url: event.target.value }) })),
+        h('div', { className: 'bt-mm-switchbar' },
+          h('button', { type: 'button', 'data-on': adding.kind === 'readme' ? '' : undefined, onClick: () => setAdding({ ...adding, kind: 'readme' }) }, t('README')),
+          h('button', { type: 'button', 'data-on': adding.kind === 'json' ? '' : undefined, onClick: () => setAdding({ ...adding, kind: 'json' }) }, 'JSON')),
+        h('div', { className: 'bt-mm-actions' },
+          h('button', {
+            type: 'button',
+            className: 'bt-mm-btn',
+            disabled: adding.name.trim() === '' || !/^https?:\/\//i.test(adding.url.trim()),
+            onClick: () => {
+              const entry = { id: `custom:${Date.now()}`, name: adding.name.trim(), url: adding.url.trim(), kind: adding.kind }
+              const next = [...sources, entry]
+              setSources(next)
+              writeSources(next)
+              setAdding(null)
+              setSource(entry.id)
+              setPage(1)
+              setList({ total: 0, servers: [] })
+            },
+          }, t('Add source')))))
 }
