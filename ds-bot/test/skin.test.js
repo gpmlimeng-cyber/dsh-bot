@@ -50,6 +50,10 @@ test('the skin reads the width setting on the Bot’s side and leaves the host�
   const user = /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{([^}]*)\}/.exec(bundle)
   assert.ok(user !== null, 'no rule for the host’s user bubbles')
   assert.ok(!user[1].includes('max-width'), 'the skin still caps the host’s user bubble width')
+  // The host draws the user's bubble with one shorthand and no per-corner rule, so the same
+  // shorthand here covers all four corners; a longhand would only add a way to miss one.
+  assert.match(user[1], /border-radius:var\(--bt-app-radius-bubble\)!important/)
+  assert.ok(!/border-(?:start|end)-(?:start|end)-radius/.test(user[1]), 'the user bubble grew a per-corner radius')
   // Nothing pins the skin back to a full-width bubble.
   assert.ok(!bundle.includes('--bt-app-msg-max'), 'the skin still carries its own width token')
 })
@@ -61,7 +65,7 @@ test('the phone skin carries the app’s own bubble metrics', () => {
   assert.match(body, /border-radius:var\(--bt-app-radius-bubble\)/)
   assert.match(body, /padding:var\(--bt-app-pad\)/)
   assert.match(body, /line-height:1\.625/)
-  assert.match(bundle, /--bt-app-radius-bubble:10px/)
+  assert.match(bundle, /--bt-app-radius-bubble:5px/)
   assert.match(bundle, /--bt-app-pad:12px 16px/)
   // Neighbouring bubbles use the radius minus the padding step, not a hand-written 9px.
   assert.match(bundle, /border-start-start-radius:var\(--bt-app-radius-bubble-inset\)/)

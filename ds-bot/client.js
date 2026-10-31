@@ -4087,7 +4087,7 @@ html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]){
   --bt-app-control-hover:var(--bt-hover);
   --bt-app-border:var(--bt-line);
   --bt-app-accent:var(--bt-accent);
-  --bt-app-radius-bubble:10px;
+  --bt-app-radius-bubble:5px;
   /* The small corner is the radius minus the 12px pad step; at or below 13px that would go
      negative, which the browser drops whole, so it bottoms out at 2px. */
   --bt-app-radius-bubble-inset:max(2px, calc(var(--bt-app-radius-bubble) - 12px - 1px));
