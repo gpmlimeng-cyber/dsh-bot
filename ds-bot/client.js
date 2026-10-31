@@ -27276,9 +27276,30 @@ var LEARNING_CSS = `
 `;
 
 // src/client/mode-row.js
+function bandHost(document2) {
+  try {
+    for (const element of document2.querySelectorAll('header, [class*="_title"], [class*="_titlebar"], [class*="_caption"], [class*="_drag"], [class*="_window"]')) {
+      const rect = element.getBoundingClientRect();
+      if (rect.top > 6 || rect.bottom > 96 || rect.height <= 0) continue;
+      if (readAppRegion(element) === "drag") return element;
+    }
+  } catch {
+  }
+  return null;
+}
+function readAppRegion(element) {
+  try {
+    return getComputedStyle(element).getPropertyValue("-webkit-app-region").trim();
+  } catch {
+    return "";
+  }
+}
+function drawerSlot(document2) {
+  if (document2.querySelector('[data-mobile-nav="frame"]') === null) return null;
+  return document2.querySelector(".bt-side") ?? null;
+}
 function modeRowSlot(document2) {
-  if (document2.querySelector('[data-mobile-nav="frame"]') === null) return document2.body;
-  return document2.querySelector(".bt-side") ?? document2.body;
+  return drawerSlot(document2) ?? bandHost(document2) ?? document2.body;
 }
 function placeModeRow(document2, nodes) {
   const slot = modeRowSlot(document2);
@@ -28703,7 +28724,7 @@ function apply(ctx) {
       return button;
     };
     let modeRow = null;
-    const inDrawer = () => modeRowSlot(document) !== document.body;
+    const inDrawer = () => drawerSlot(document) !== null;
     const placeRow = () => {
       const drew = inDrawer();
       if (drew) {
@@ -28725,7 +28746,7 @@ function apply(ctx) {
         bandActions = document.createElement("div");
         bandActions.className = "bt-band-actions";
       }
-      bandActions.style.cssText = inDrawer() ? "position:static;display:flex;align-items:center;gap:2px;margin-left:auto" : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:60;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`;
+      bandActions.style.cssText = inDrawer() ? "position:static;display:flex;align-items:center;gap:2px;margin-left:auto" : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:2147483000;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`;
       bandActions.textContent = "";
       const hostClick = (selector) => document.querySelector(selector)?.click();
       const inAgent = () => surface.getSnapshot().mode === "agent";
@@ -28781,7 +28802,7 @@ function apply(ctx) {
         });
         window.addEventListener("resize", () => paintModeBar());
       }
-      modeBar.style.cssText = inDrawer() ? "position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)" : `position:fixed;left:${left}px;top:${top}px;z-index:60;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`;
+      modeBar.style.cssText = inDrawer() ? "position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)" : `position:fixed;left:${left}px;top:${top}px;z-index:2147483000;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`;
       placeRow();
       modeBar.textContent = "";
       const label = document.createElement("span");

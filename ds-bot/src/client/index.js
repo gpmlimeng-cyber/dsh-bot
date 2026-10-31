@@ -37,7 +37,7 @@ import { USAGE_CSS } from './usage-page.js'
 import { SCHEDULE_CSS } from './schedules.js'
 import { STORAGE, migrateStorage } from './storage.js'
 import { noteLeft, setUnread, sharedMap, toggleReaction } from './shared-map.js'
-import { placeModeRow, modeRowSlot } from './mode-row.js'
+import { drawerSlot, modeRowSlot, placeModeRow } from './mode-row.js'
 import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
 import { installLocale, language, t } from './i18n.js'
 import { noteClientError, quietly } from './diagnostics.js'
@@ -1264,7 +1264,7 @@ export function apply(ctx) {
     }
     // The drawer stacks its children, so the two parts of the row share one line here.
     let modeRow = null
-    const inDrawer = () => modeRowSlot(document) !== document.body
+    const inDrawer = () => drawerSlot(document) !== null
     const placeRow = () => {
       const drew = inDrawer()
       if (drew) {
@@ -1288,7 +1288,7 @@ export function apply(ctx) {
       }
       bandActions.style.cssText = inDrawer()
         ? 'position:static;display:flex;align-items:center;gap:2px;margin-left:auto'
-        : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:60;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`
+        : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:2147483000;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`
       bandActions.textContent = ''
       // In the shell's own view these three do what the shell's own controls do, so the row
       // never lies about what a click will get.
@@ -1366,7 +1366,7 @@ export function apply(ctx) {
       }
       modeBar.style.cssText = inDrawer()
         ? 'position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)'
-        : `position:fixed;left:${left}px;top:${top}px;z-index:60;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`
+        : `position:fixed;left:${left}px;top:${top}px;z-index:2147483000;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`
       // The drawer has no band: the row keeps the drawer's top, and a closed drawer takes it
       // off the page with everything else instead of leaving it floating over the content.
       placeRow()

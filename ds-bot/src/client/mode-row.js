@@ -5,9 +5,39 @@
 //
 // The drawer's marker belongs to dsh-web-mobile; without the plugin there is no drawer
 // form at all, so the row stays in the band (a safe failure: one row, in the band).
+// The band is the window's drag region on a desktop, and Chromium gives a drag region's
+// clicks to the window instead of the page. A button inside that region can take them back
+// with -webkit-app-region: no-drag; one floating above it cannot, because hit testing never
+// reaches it. So on a desktop the row goes inside the band element when the shell has one,
+// and back to the body when it does not.
+export function bandHost(document) {
+  try {
+    for (const element of document.querySelectorAll('header, [class*="_title"], [class*="_titlebar"], [class*="_caption"], [class*="_drag"], [class*="_window"]')) {
+      const rect = element.getBoundingClientRect()
+      if (rect.top > 6 || rect.bottom > 96 || rect.height <= 0) continue
+      if (readAppRegion(element) === 'drag') return element
+    }
+  } catch { /* a document without layout keeps the body */ }
+  return null
+}
+
+function readAppRegion(element) {
+  try {
+    return getComputedStyle(element).getPropertyValue('-webkit-app-region').trim()
+  } catch {
+    return ''
+  }
+}
+
+// A phone has no caption band: the row takes the drawer's first row and scrolls out of sight
+// with it. This is also what tells the caller which of the two layouts it is painting.
+export function drawerSlot(document) {
+  if (document.querySelector('[data-mobile-nav="frame"]') === null) return null
+  return document.querySelector('.bt-side') ?? null
+}
+
 export function modeRowSlot(document) {
-  if (document.querySelector('[data-mobile-nav="frame"]') === null) return document.body
-  return document.querySelector('.bt-side') ?? document.body
+  return drawerSlot(document) ?? bandHost(document) ?? document.body
 }
 
 // Moves the row into `slot` in the given order, once. Prepending in reverse keeps the order
