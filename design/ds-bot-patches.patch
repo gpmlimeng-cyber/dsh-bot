@@ -59,13 +59,18 @@ index b146590..00f838a 100644
  
  export function createRuntime(ctx, config = {}) {
 diff --git a/ds-bot/scripts/style-debt.mjs b/ds-bot/scripts/style-debt.mjs
-index 2d3f9d6..30023f5 100644
+index 2d3f9d6..b4d9b53 100644
 --- a/ds-bot/scripts/style-debt.mjs
 +++ b/ds-bot/scripts/style-debt.mjs
-@@ -110,7 +110,10 @@ const code = text => text.split(/\r?\n/)
+@@ -109,8 +109,14 @@ const code = text => text.split(/\r?\n/)
+ 
  export function findStyles(dir = CLIENT) {
    const found = Object.fromEntries(Object.keys(checks).map(kind => [kind, {}]))
-   for (const file of readdirSync(dir, { recursive: true }).filter(name => name.endsWith('.js')).map(name => name.replaceAll('\\', '/'))) {
+-  for (const file of readdirSync(dir, { recursive: true }).filter(name => name.endsWith('.js')).map(name => name.replaceAll('\\', '/'))) {
++  // The vendored skill market is third-party code taken as it ships (MIT, see NOTICE):
++  // its colors and radii are that project's, so our token rules do not judge them.
++  const ours = file => !file.startsWith('skill-market/')
++  for (const file of readdirSync(dir, { recursive: true }).filter(name => name.endsWith('.js')).map(name => name.replaceAll('\\', '/')).filter(ours)) {
 +    // A line ending in `/* vendored */` is third-party CSS taken as it ships (MIT, see
 +    // NOTICE); its literals belong to that project, not to our token rules.
      const text = code(readFileSync(join(dir, file), 'utf8'))
@@ -431,10 +436,10 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 0696236..c1e3cfe 100644
+index 0696236..5ef1cf9 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,129 @@ const ZH = {
+@@ -18,6 +18,138 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
@@ -474,6 +479,15 @@ index 0696236..c1e3cfe 100644
 +  'MCP': 'MCP',
 +  'Hosted': '已托管',
 +  'In this profile': '本档案里',
++  'ModelScope MCP': 'ModelScope MCP',
++  'MCP reference servers': 'MCP 官方参考服务器',
++  'awesome-mcp-servers': 'awesome-mcp-servers',
++  'Add a source…': '添加源…',
++  'Add a custom source': '添加自定义源',
++  'Add source': '添加源',
++  'Open page': '打开主页',
++  'README': 'README',
++  'My MCP list': '我的 MCP 列表',
 +  'Developer tools': '开发工具',
 +  'Browser automation': '浏览器自动化',
 +  'Knowledge and memory': '知识与记忆',
@@ -564,7 +578,7 @@ index 0696236..c1e3cfe 100644
    'Resize sidebar': '调整侧边栏宽度',
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
-@@ -170,7 +293,6 @@ const ZH = {
+@@ -170,7 +302,6 @@ const ZH = {
    'A provider id is lowercase letters, digits and dashes, starting with a letter': '服务商 ID 只能用小写字母、数字和短横线，并以字母开头',
    'Add at least one model': '至少添加一个模型',
    'Two models have the same id': '有两个模型的 ID 相同',
@@ -572,7 +586,7 @@ index 0696236..c1e3cfe 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -430,6 +552,23 @@ const ZH = {
+@@ -430,6 +561,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -596,7 +610,7 @@ index 0696236..c1e3cfe 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -545,6 +684,19 @@ const ZH = {
+@@ -545,6 +693,19 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -616,7 +630,7 @@ index 0696236..c1e3cfe 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +834,6 @@ const ZH = {
+@@ -682,7 +843,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -624,7 +638,7 @@ index 0696236..c1e3cfe 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1082,10 @@ const ZH = {
+@@ -931,6 +1091,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -635,7 +649,7 @@ index 0696236..c1e3cfe 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1128,7 @@ const ZH = {
+@@ -973,6 +1137,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -643,7 +657,7 @@ index 0696236..c1e3cfe 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1224,10 @@ const ZH = {
+@@ -1068,6 +1233,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -2312,10 +2326,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..6c6e21b
+index 0000000..99eed2a
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,458 @@
+@@ -0,0 +1,550 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2333,6 +2347,21 @@ index 0000000..6c6e21b
 +  const tail = String(id ?? '').split('/').pop() ?? ''
 +  const slug = tail.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '')
 +  return slug.slice(0, 32) || 'mcp-server'
++}
++
++// Custom sources live on this device, like the sidebar's grouping: they are how this
++// person reads the catalogue, not part of the team.
++const SOURCES_KEY = 'ds-bot.mcp-sources'
++
++const readSources = () => {
++  try {
++    const raw = JSON.parse(localStorage.getItem(SOURCES_KEY) ?? '[]')
++    return Array.isArray(raw) ? raw.filter(item => item && typeof item.id === 'string' && typeof item.url === 'string') : []
++  } catch { return [] }
++}
++
++const writeSources = (next) => {
++  try { localStorage.setItem(SOURCES_KEY, JSON.stringify(next)) } catch { /* storage unavailable */ }
 +}
 +
 +const shortCount = (value) => {
@@ -2375,7 +2404,7 @@ index 0000000..6c6e21b
 +
 +const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
 +
-+function Row({ server, added, busy, onInstall, onOpen }) {
++function Row({ server, added, busy, onInstall, onOpen, onHome }) {
 +  return h('li', { className: 'bt-mm-card', 'data-mcp-entry': server.id },
 +    h('span', { className: 'bt-mm-icon', 'aria-hidden': true },
 +      server.logo
@@ -2391,15 +2420,19 @@ index 0000000..6c6e21b
 +        server.installs ? h('span', null, `↓ ${shortCount(server.installs)}`) : null,
 +        server.publisher ? h('span', null, server.publisher) : null)),
 +    h('div', { className: 'bt-mm-cardEnd' },
-+      // The button installs here, like the shell's own market: already installed is a
-+      // state, not a control, so it is disabled rather than a click that does nothing.
-+      h('button', {
-+        type: 'button',
-+        className: 'bt-mm-btn',
-+        'data-added': added ? '' : undefined,
-+        disabled: added || busy,
-+        onClick: onInstall,
-+      }, busy ? t('Adding…') : added ? t('Installed') : t('Install'))))
++      // A catalogue entry with no connection of its own can only be opened, never
++      // installed; a fake install button would promise something it cannot do.
++      server.install === null || server.install === undefined
++        ? (server.homepage
++          ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-btn-ghost', onClick: onHome }, t('Open page'))
++          : null)
++        : h('button', {
++          type: 'button',
++          className: 'bt-mm-btn',
++          'data-added': added ? '' : undefined,
++          disabled: added || busy,
++          onClick: onInstall,
++        }, busy ? t('Adding…') : added ? t('Installed') : t('Install'))))
 +}
 +
 +// One server: what it is, and how this profile would connect to it — a hosted endpoint
@@ -2564,9 +2597,19 @@ index 0000000..6c6e21b
 +  const [categories, setCategories] = useState([])
 +  const [category, setCategory] = useState('')
 +  const [sort, setSort] = useState('default')
++  const [source, setSource] = useState('modelscope')
++  const [sources, setSources] = useState(() => readSources())
++  const [sourceMenu, setSourceMenu] = useState(false)
++  const [adding, setAdding] = useState(null)
 +  const timer = useRef(null)
 +
 +  const report = (failure) => setError(String(failure?.message ?? failure))
++
++  const sourceName = () => ({
++    modelscope: t('ModelScope MCP'),
++    reference: t('MCP reference servers'),
++    awesome: t('awesome-mcp-servers'),
++  }[source] ?? (sources.find(item => item.id === source)?.name ?? source))
 +
 +  const applyRows = (next) => {
 +    setRows(next?.servers ?? [])
@@ -2595,7 +2638,8 @@ index 0000000..6c6e21b
 +    let live = true
 +    setLoading(true)
 +    setError('')
-+    Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page, category }))
++    const custom = sources.find(item => item.id === source) ?? null
++    Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page, category, source, custom }))
 +      .then((next) => {
 +        if (!live) return
 +        setLoading(false)
@@ -2604,15 +2648,15 @@ index 0000000..6c6e21b
 +          : { total: next?.total ?? now.total, servers: [...now.servers, ...(next?.servers ?? [])] })
 +      }, (failure) => { if (live) { setLoading(false); report(failure) } })
 +    return () => { live = false }
-+  }, [actions, sent, page, category, view])
++  }, [actions, sent, page, category, view, source, sources])
 +
 +  useEffect(() => {
-+    if (view !== 'discover' || categories.length > 0) return undefined
++    if (view !== 'discover' || categories.length > 0 || source !== 'modelscope') return undefined
 +    let live = true
 +    Promise.resolve(actions.mcpMarket?.({ kind: 'categories' }))
 +      .then((next) => { if (live && Array.isArray(next)) setCategories(next) }, () => {})
 +    return () => { live = false }
-+  }, [actions, view, categories.length])
++  }, [actions, view, categories.length, source])
 +
 +  const toggle = (server) => {
 +    setBusyRow(server.entryId ?? server.serverName)
@@ -2644,16 +2688,22 @@ index 0000000..6c6e21b
 +      setOpen(server)
 +      setNotice(String(reason?.message ?? reason ?? ''))
 +    }
-+    Promise.resolve(actions.mcpMarket?.({ kind: 'detail', id: server.id }))
++    const carried = server.install !== null && server.install !== undefined ? server.install : null
++    const readDetail = carried === null
++      ? Promise.resolve(actions.mcpMarket?.({ kind: 'detail', id: server.id }))
++      : Promise.resolve(null)
++    readDetail
 +      .then((detail) => {
 +        const name = nameOf(server.id)
 +        const url = detail?.urls?.[0]?.url ?? ''
 +        const stdio = detail?.stdio ?? null
-+        const config = url
-+          ? { transport: 'streamable-http', serverName: name, url }
-+          : stdio?.command
-+            ? { transport: 'stdio', serverName: name, command: stdio.command, args: stdio.args }
-+            : null
++        const config = carried !== null
++          ? { ...carried, serverName: name }
++          : url
++            ? { transport: 'streamable-http', serverName: name, url }
++            : stdio?.command
++              ? { transport: 'stdio', serverName: name, command: stdio.command, args: stdio.args }
++              : null
 +        if (config === null) {
 +          giveUp(t('This server has no connection this profile can use on its own.'))
 +          return undefined
@@ -2706,12 +2756,42 @@ index 0000000..6c6e21b
 +              busy: installing === server.id,
 +              onInstall: () => install(server),
 +              onOpen: () => setOpen(server),
++              onHome: () => { try { window.open(server.homepage, '_blank', 'noopener') } catch { /* no window */ } },
 +            }))),
 +          more
 +            ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
 +              loading ? t('Reading…') : t('Show more'))
 +            : null,
 +          !loading && shown.length === 0 && error === '' ? h('p', { className: 'bt-mm-muted', key: 'empty' }, t('No MCP server matches that search.')) : null,
++          adding === null
++            ? null
++            : h('div', { className: 'bt-mm-addsource bt-mm-box', key: 'addsource' },
++              h('div', { className: 'bt-mm-addsource-head' },
++                h('span', null, t('Add a custom source')),
++                h('button', { type: 'button', className: 'bt-mm-close', 'aria-label': t('Close'), title: t('Close'), onClick: () => setAdding(null) }, h(CloseIcon))),
++              h('label', { className: 'bt-mm-field' }, h('span', null, t('Name')),
++                h('input', { value: adding.name, placeholder: 'My MCP list', spellCheck: false, onChange: (event) => setAdding({ ...adding, name: event.target.value }) })),
++              h('label', { className: 'bt-mm-field' }, h('span', null, 'URL'),
++                h('input', { value: adding.url, placeholder: 'https://raw.githubusercontent.com/…/README.md', spellCheck: false, onChange: (event) => setAdding({ ...adding, url: event.target.value }) })),
++              h('div', { className: 'bt-mm-switchbar' },
++                h('button', { type: 'button', 'data-on': adding.kind === 'readme' ? '' : undefined, onClick: () => setAdding({ ...adding, kind: 'readme' }) }, t('README')),
++                h('button', { type: 'button', 'data-on': adding.kind === 'json' ? '' : undefined, onClick: () => setAdding({ ...adding, kind: 'json' }) }, 'JSON')),
++              h('div', { className: 'bt-mm-actions' },
++                h('button', {
++                  type: 'button',
++                  className: 'bt-mm-btn',
++                  disabled: adding.name.trim() === '' || !/^https?:\/\//i.test(adding.url.trim()),
++                  onClick: () => {
++                    const entry = { id: `custom:${Date.now()}`, name: adding.name.trim(), url: adding.url.trim(), kind: adding.kind }
++                    const next = [...sources, entry]
++                    setSources(next)
++                    writeSources(next)
++                    setAdding(null)
++                    setSource(entry.id)
++                    setPage(1)
++                    setList({ total: 0, servers: [] })
++                  },
++                }, t('Add source')))),
 +        ]
 +        : h(Detail, {
 +          key: open.id,
@@ -2741,6 +2821,32 @@ index 0000000..6c6e21b
 +    view === 'discover'
 +      ? [
 +        h('div', { className: 'bt-mm-toolbar', key: 'toolbar' },
++          h('div', { className: 'bt-mm-sourcewrap' },
++            h('button', {
++              type: 'button',
++              className: 'bt-mm-source bt-mm-btn',
++              'aria-haspopup': 'menu',
++              'aria-expanded': sourceMenu ? 'true' : 'false',
++              onClick: () => setSourceMenu(!sourceMenu),
++            },
++            h('span', { className: 'bt-mm-source-name' }, sourceName()),
++            h('span', { 'aria-hidden': true }, '▾')),
++            sourceMenu
++              ? h('div', { className: 'bt-mm-menu bt-mm-box', role: 'menu' },
++                [
++                  { id: 'modelscope', name: t('ModelScope MCP') },
++                  { id: 'reference', name: t('MCP reference servers') },
++                  { id: 'awesome', name: t('awesome-mcp-servers') },
++                  ...sources.map(item => ({ id: item.id, name: item.name, custom: true })),
++                ].map(item => h('button', {
++                  key: item.id,
++                  type: 'button',
++                  role: 'menuitem',
++                  className: 'bt-mm-menuitem' + (item.id === source ? ' is-on' : ''),
++                  onClick: () => { setSource(item.id); setSourceMenu(false); setPage(1); setList({ total: 0, servers: [] }); setCategories([]); setCategory('') },
++                }, item.name, item.custom ? h('span', { className: 'bt-mm-menuitem-x', role: 'button', 'aria-label': t('Remove'), title: t('Remove'), onClick: (event) => { event.stopPropagation(); const next = sources.filter(one => one.id !== item.id); setSources(next); writeSources(next); if (source === item.id) setSource('modelscope') } }, '×') : null)),
++                h('button', { type: 'button', role: 'menuitem', className: 'bt-mm-menuitem bt-mm-menuitem-add', onClick: () => { setSourceMenu(false); setAdding({ name: '', url: '', kind: 'readme' }) } }, t('Add a source…')))
++              : null),
 +          h('label', { className: 'bt-mm-search bt-mm-box' },
 +            h(SearchIcon),
 +            h('input', {
@@ -3001,7 +3107,7 @@ index 0000000..ae11666
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index b8f0a61..7f880c6 100644
+index b8f0a61..f7a61d1 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -3,16 +3,19 @@ import { createPortal } from 'react-dom'
@@ -3091,7 +3197,7 @@ index b8f0a61..7f880c6 100644
    return h('button', {
      type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
 -    'data-room-id': id, title: wide ? undefined : room.name, onMouseEnter: wide ? nameIfCut : undefined, onClick: () => actions.openSession(id),
-+    'data-room-id': id, onClick: () => actions.openSession(id),
++    'data-room-id': id, title: wide ? undefined : room.name, onClick: () => actions.openSession(id),
      onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'room', id, x: event.clientX, y: event.clientY }) },
 +    draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', id); event.dataTransfer.effectAllowed = 'move' },
    },
@@ -9969,7 +10075,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..4f0b097 100644
+index eac6ea5..d7fad76 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10010,7 +10116,7 @@ index eac6ea5..4f0b097 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,49 +141,361 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,49 +141,376 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -10176,7 +10282,22 @@ index eac6ea5..4f0b097 100644
 +   Only the class prefix changed, dq5LxG_ -> bt-mm-, and the market dropdown is named for
 +   what it picks here: bt-mm-source / bt-mm-source-name. Numbers, order and states are the
 +   ones it ships, so this panel measures the same as the shell's own page. */
-+.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex}.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500}.bt-mm-source-name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.bt-mm-search{flex:1;min-width:120px}.bt-mm-categories{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.bt-mm-muted,.bt-mm-meta{color:var(--dsw-alias-label-tertiary);margin:0;font-size:13px;line-height:20px}.bt-mm-meta{overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-strong{overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:20px}.bt-mm-error{color:var(--dsw-alias-state-error-primary);align-items:center;gap:6px;margin:0;font-size:13px;line-height:20px;display:inline-flex}.bt-mm-failure{align-items:center;gap:10px;display:flex}.bt-mm-notice{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);align-items:flex-start;gap:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px;display:flex}.bt-mm-notice>svg{color:var(--dsw-alias-state-warn-primary);flex:none;margin-top:2px}.bt-mm-cards{flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;display:flex}.bt-mm-card{border-radius:var(--dsw-radius-xl);align-items:center;gap:14px;margin:0 -8px;padding:8px;display:flex;position:relative}.bt-mm-card:hover{background:var(--dsw-alias-interactive-bg-hover)}.bt-mm-icon{border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);width:48px;height:48px;color:var(--dsw-alias-label-secondary);flex:none;justify-content:center;align-items:center;display:inline-flex}.bt-mm-image{object-fit:contain}.bt-mm-main{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.bt-mm-titleRow{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.bt-mm-cardOpen{max-width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;font-size:14px;font-weight:500;line-height:20px;overflow:hidden}.bt-mm-cardOpen:after{content:"";border-radius:var(--dsw-radius-xl);position:absolute;inset:0}.bt-mm-cardOpen:focus-visible{outline:none}.bt-mm-cardOpen:focus-visible:after{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-description{color:var(--dsw-alias-label-tertiary);-webkit-line-clamp:1;-webkit-box-orient:vertical;font-size:13px;line-height:18px;display:-webkit-box;overflow:hidden}.bt-mm-cardEnd{z-index:1;flex:none;align-items:center;gap:8px;display:inline-flex;position:relative}.bt-mm-blocked{opacity:.5;cursor:not-allowed}.bt-mm-more{align-self:center}.bt-mm-empty{text-align:center;flex-direction:column;align-items:center;gap:8px;padding:64px 0;display:flex}.bt-mm-emptyTitle{margin:8px 0 0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-empty>button{margin-top:8px}.bt-mm-detail{flex-direction:column;gap:16px;display:flex}.bt-mm-crumb{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:0;align-self:flex-start;align-items:center;gap:6px;padding:0;font-size:12.5px;display:inline-flex}.bt-mm-crumb:hover{color:var(--dsw-alias-label-primary)}.bt-mm-crumb:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-crumbIcon{transform:rotate(90deg)}.bt-mm-detailHead{align-items:center;gap:14px;display:flex}.bt-mm-detailTitle{margin:0;font-size:20px;font-weight:500;line-height:28px}.bt-mm-detailDescription{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.bt-mm-detailSection{flex-direction:column;gap:12px;margin-top:16px;display:flex}.bt-mm-sectionTitle{margin:0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-facts{margin:0}.bt-mm-facts div{border-bottom:.5px solid var(--dsw-alias-border-l2);justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:8px 2px;display:flex}.bt-mm-facts dt{color:var(--dsw-alias-label-secondary);flex:none;font-size:13px;line-height:20px}.bt-mm-facts dd{text-align:end;overflow-wrap:anywhere;min-width:0;margin:0;font-size:13px;line-height:20px}.bt-mm-facts code{background:var(--dsw-alias-bg-module-platform);box-decoration-break:clone;font-family:var(--ds-font-family-code);border-radius:4px;padding:2px 6px;font-size:12px}.bt-mm-tags{flex-wrap:wrap;justify-content:flex-end;gap:6px;display:flex}.bt-mm-dialog{width:min(480px,100vw - 32px)}.bt-mm-dialogBody{flex-direction:column;gap:12px;display:flex}.bt-mm-sourceList,.bt-mm-versions{flex-direction:column;margin:0;padding:0;list-style:none;display:flex}.bt-mm-sourceRow,.bt-mm-versionRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:8px 0;display:flex}.bt-mm-sourceError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-sourceForm{align-items:center;gap:8px;display:flex}.bt-mm-grow{flex:1;min-width:0}.bt-mm-confirmHead{align-items:center;gap:14px;display:flex}.bt-mm-skeletonFill{background:var(--dsw-alias-bg-skeleton);animation:2s cubic-bezier(.36,0,.64,1) infinite bt-mm-dsh-market-skeleton}.bt-mm-icon.bt-mm-skeletonFill{border-color:#0000}.bt-mm-skeletonBar{border-radius:var(--dsw-radius-xs);height:12px;margin:4px 0;display:block}.bt-mm-skeletonTitle{width:min(144px,60%)}.bt-mm-skeletonDescription{width:min(280px,85%)}@keyframes bt-mm-dsh-market-skeleton{0%{opacity:1}40%{opacity:.6}80%,to{opacity:1}}@media (prefers-reduced-motion:reduce){.bt-mm-skeletonFill{animation:none}}.bt-mm-link{color:var(--dsw-alias-link);overflow-wrap:anywhere;text-decoration:none}.bt-mm-link:hover{text-decoration:underline} /* vendored */
++.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex}
++/* ds-bot chrome around the vendored card list: the source picker, its menu and the
++   add-source form. It follows the shell's menu look, not the vendored sheet's. */
++.bt-mm-sourcewrap{position:relative;flex:none}
++.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500}
++.bt-mm-source-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
++.bt-mm-menu{position:absolute;z-index:20;top:calc(100% + 6px);left:-8px;min-width:220px;display:flex;flex-direction:column;padding:6px;border-radius:12px;background:var(--bt-main);box-shadow:var(--bt-float-ring,0 0 0 .5px rgba(0,0,0,.12)),var(--bt-float-shadow,0 12px 32px rgba(0,0,0,.16))}
++.bt-mm-menuitem{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:0;border-radius:8px;background:none;color:var(--bt-ink);font:inherit;font-size:13px;text-align:left;cursor:pointer}
++.bt-mm-menuitem:hover{background:var(--bt-hover)}
++.bt-mm-menuitem.is-on{font-weight:600}
++.bt-mm-menuitem-x{margin-left:auto;width:20px;height:20px;line-height:18px;text-align:center;border-radius:6px;color:var(--bt-ink-3)}
++.bt-mm-menuitem-x:hover{background:var(--bt-hover);color:var(--bt-ink)}
++.bt-mm-menuitem-add{border-top:.5px solid var(--bt-line-2);border-radius:0 0 8px 8px;margin-top:4px;padding-top:10px}
++.bt-mm-addsource{position:fixed;z-index:40;right:32px;top:96px;width:min(360px,90vw);display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:14px;background:var(--bt-main)}
++.bt-mm-addsource-head{display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px}
++.bt-mm-btn-ghost{background:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2);color:var(--bt-ink-2)}.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500}.bt-mm-source-name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.bt-mm-search{flex:1;min-width:120px}.bt-mm-categories{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.bt-mm-muted,.bt-mm-meta{color:var(--dsw-alias-label-tertiary);margin:0;font-size:13px;line-height:20px}.bt-mm-meta{overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-strong{overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:20px}.bt-mm-error{color:var(--dsw-alias-state-error-primary);align-items:center;gap:6px;margin:0;font-size:13px;line-height:20px;display:inline-flex}.bt-mm-failure{align-items:center;gap:10px;display:flex}.bt-mm-notice{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);align-items:flex-start;gap:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px;display:flex}.bt-mm-notice>svg{color:var(--dsw-alias-state-warn-primary);flex:none;margin-top:2px}.bt-mm-cards{flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;display:flex}.bt-mm-card{border-radius:var(--dsw-radius-xl);align-items:center;gap:14px;margin:0 -8px;padding:8px;display:flex;position:relative}.bt-mm-card:hover{background:var(--dsw-alias-interactive-bg-hover)}.bt-mm-icon{border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);width:48px;height:48px;color:var(--dsw-alias-label-secondary);flex:none;justify-content:center;align-items:center;display:inline-flex}.bt-mm-image{object-fit:contain}.bt-mm-main{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.bt-mm-titleRow{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.bt-mm-cardOpen{max-width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;font-size:14px;font-weight:500;line-height:20px;overflow:hidden}.bt-mm-cardOpen:after{content:"";border-radius:var(--dsw-radius-xl);position:absolute;inset:0}.bt-mm-cardOpen:focus-visible{outline:none}.bt-mm-cardOpen:focus-visible:after{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-description{color:var(--dsw-alias-label-tertiary);-webkit-line-clamp:1;-webkit-box-orient:vertical;font-size:13px;line-height:18px;display:-webkit-box;overflow:hidden}.bt-mm-cardEnd{z-index:1;flex:none;align-items:center;gap:8px;display:inline-flex;position:relative}.bt-mm-blocked{opacity:.5;cursor:not-allowed}.bt-mm-more{align-self:center}.bt-mm-empty{text-align:center;flex-direction:column;align-items:center;gap:8px;padding:64px 0;display:flex}.bt-mm-emptyTitle{margin:8px 0 0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-empty>button{margin-top:8px}.bt-mm-detail{flex-direction:column;gap:16px;display:flex}.bt-mm-crumb{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:0;align-self:flex-start;align-items:center;gap:6px;padding:0;font-size:12.5px;display:inline-flex}.bt-mm-crumb:hover{color:var(--dsw-alias-label-primary)}.bt-mm-crumb:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-crumbIcon{transform:rotate(90deg)}.bt-mm-detailHead{align-items:center;gap:14px;display:flex}.bt-mm-detailTitle{margin:0;font-size:20px;font-weight:500;line-height:28px}.bt-mm-detailDescription{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.bt-mm-detailSection{flex-direction:column;gap:12px;margin-top:16px;display:flex}.bt-mm-sectionTitle{margin:0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-facts{margin:0}.bt-mm-facts div{border-bottom:.5px solid var(--dsw-alias-border-l2);justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:8px 2px;display:flex}.bt-mm-facts dt{color:var(--dsw-alias-label-secondary);flex:none;font-size:13px;line-height:20px}.bt-mm-facts dd{text-align:end;overflow-wrap:anywhere;min-width:0;margin:0;font-size:13px;line-height:20px}.bt-mm-facts code{background:var(--dsw-alias-bg-module-platform);box-decoration-break:clone;font-family:var(--ds-font-family-code);border-radius:4px;padding:2px 6px;font-size:12px}.bt-mm-tags{flex-wrap:wrap;justify-content:flex-end;gap:6px;display:flex}.bt-mm-dialog{width:min(480px,100vw - 32px)}.bt-mm-dialogBody{flex-direction:column;gap:12px;display:flex}.bt-mm-sourceList,.bt-mm-versions{flex-direction:column;margin:0;padding:0;list-style:none;display:flex}.bt-mm-sourceRow,.bt-mm-versionRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:8px 0;display:flex}.bt-mm-sourceError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-sourceForm{align-items:center;gap:8px;display:flex}.bt-mm-grow{flex:1;min-width:0}.bt-mm-confirmHead{align-items:center;gap:14px;display:flex}.bt-mm-skeletonFill{background:var(--dsw-alias-bg-skeleton);animation:2s cubic-bezier(.36,0,.64,1) infinite bt-mm-dsh-market-skeleton}.bt-mm-icon.bt-mm-skeletonFill{border-color:#0000}.bt-mm-skeletonBar{border-radius:var(--dsw-radius-xs);height:12px;margin:4px 0;display:block}.bt-mm-skeletonTitle{width:min(144px,60%)}.bt-mm-skeletonDescription{width:min(280px,85%)}@keyframes bt-mm-dsh-market-skeleton{0%{opacity:1}40%{opacity:.6}80%,to{opacity:1}}@media (prefers-reduced-motion:reduce){.bt-mm-skeletonFill{animation:none}}.bt-mm-link{color:var(--dsw-alias-link);overflow-wrap:anywhere;text-decoration:none}.bt-mm-link:hover{text-decoration:underline} /* vendored */
 +/* The three controls the shell draws with its own primitives (Input, Pill, Button): the
 +   geometry is the section's, this is only the chrome those primitives carry. */
 +.bt-mm-box{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
@@ -10402,7 +10523,7 @@ index eac6ea5..4f0b097 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -344,6 +662,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -344,6 +677,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -10429,7 +10550,7 @@ index eac6ea5..4f0b097 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -571,7 +909,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -571,7 +924,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -10440,17 +10561,16 @@ index eac6ea5..4f0b097 100644
  /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
     collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -587,6 +927,9 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+@@ -587,6 +942,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
  /* Elsewhere the switch shows only while the column is hidden, where the column's
     own top row had it. */
  html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
-+html:not([data-platform=darwin]):not([data-windows-titlebar]) .bt-side-collapse{display:none}
 +/* ds-bot folds the side from its own row now, so the shell's copy in the caption band goes. */
 +html[data-platform=darwin] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-platform=darwin] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right){display:none!important}
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -626,7 +969,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -626,7 +983,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -10460,7 +10580,7 @@ index eac6ea5..4f0b097 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1265,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1279,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -10581,7 +10701,7 @@ index eac6ea5..4f0b097 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1478,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1492,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -10690,7 +10810,7 @@ index eac6ea5..4f0b097 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1112,17 +1606,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1620,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -10717,7 +10837,7 @@ index eac6ea5..4f0b097 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1626,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1640,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -10726,7 +10846,7 @@ index eac6ea5..4f0b097 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1667,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1681,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -10903,10 +11023,10 @@ index 3fc5c7c..ae5f4c3 100644
          case 'connector-retry':
 diff --git a/ds-bot/src/host/mcp.js b/ds-bot/src/host/mcp.js
 new file mode 100644
-index 0000000..21d4ea5
+index 0000000..b7ef566
 --- /dev/null
 +++ b/ds-bot/src/host/mcp.js
-@@ -0,0 +1,468 @@
+@@ -0,0 +1,599 @@
 +// MCP servers: the DSH MCP client instances this profile runs, read and changed through
 +// the profile's own two services — `configEditor` for an entry's config and
 +// `pluginManager` for its switch. Both are shipped with DSH (`dsh-base` mounts them), so
@@ -11047,10 +11167,83 @@ index 0000000..21d4ea5
 +  return rows
 +}
 +
++// The plaza is one source among several. The other built-in ones are GitHub catalogues
++// whose README is a list of `- **[Name](url)** - description` lines under `##` headings;
++// a custom source is either such a README or a JSON array of entries.
++const README_SOURCES = {
++  reference: {
++    name: 'MCP reference servers',
++    url: 'https://raw.githubusercontent.com/modelcontextprotocol/servers/main/README.md',
++    base: 'https://github.com/modelcontextprotocol/servers/',
++    // These are the packages the repository ships, so a reference entry can be installed
++    // from its name without the README having to spell the command out.
++    packageOf: name => `@modelcontextprotocol/server-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`,
++  },
++  awesome: {
++    name: 'awesome-mcp-servers',
++    url: 'https://raw.githubusercontent.com/wong2/awesome-mcp-servers/main/README.md',
++    base: 'https://github.com/wong2/awesome-mcp-servers/',
++    packageOf: null,
++  },
++}
++
++const readmeCache = new Map()
++
++// One README parse: the current `##` heading names the group an entry sits in, and a
++// bullet with a bold or plain link followed by a dash is one entry.
++export function parseReadme(text, base) {
++  const rows = []
++  let section = ''
++  for (const line of String(text ?? '').split('\n')) {
++    const heading = /^#{2,3}\s+(.+?)\s*$/.exec(line)
++    if (heading !== null) {
++      section = heading[1].replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim()
++      continue
++    }
++    const item = /^\s*[-*]\s+\*\*\[([^\]]+)\]\(([^)\s]+)\)\*\*\s*[-\u2013\u2014]\s*(.+?)\s*$/.exec(line)
++      ?? /^\s*[-*]\s+\[([^\]]+)\]\(([^)\s]+)\)\s*[-\u2013\u2014]\s*(.+?)\s*$/.exec(line)
++    if (item === null) continue
++    let url = item[2]
++    try { url = new URL(url, base).toString() } catch { /* keep as written */ }
++    rows.push({ name: item[1].trim(), url, description: item[3].replace(/\s+/g, ' ').trim(), section })
++  }
++  return rows
++}
++
++async function readmeRows(source) {
++  const now = Date.now()
++  const hit = readmeCache.get(source.url)
++  if (hit !== undefined && now - hit.at < MARKET_CATEGORIES_TTL_MS) return hit.rows
++  const text = await httpsText(source.url)
++  const rows = parseReadme(text, source.base)
++  if (rows.length > 0) readmeCache.set(source.url, { at: now, rows })
++  return rows
++}
++
 +// The plaza answers JSON over https. `fetch` is not used here: inside the running app it
 +// left the request hanging past any reasonable timeout, while a plain https request from
 +// the same runtime answers in a few hundred milliseconds.
 +const MARKET_TIMEOUT_MS = 12000
++
++// A README is text, not JSON; the same request path serves both.
++function httpsText(url, timeoutMs = MARKET_TIMEOUT_MS) {
++  return new Promise((resolve, reject) => {
++    const target = new URL(url)
++    const request = httpsRequest({ method: 'GET', hostname: target.hostname, path: `${target.pathname}${target.search}`, headers: { accept: 'text/plain', 'user-agent': 'ds-bot' }, timeout: timeoutMs }, (response) => {
++      if (response.statusCode !== undefined && response.statusCode >= 400) {
++        response.resume()
++        reject(Object.assign(new Error(`Fetch answered ${response.statusCode}`), { code: 'bot/upstream' }))
++        return
++      }
++      const chunks = []
++      response.on('data', chunk => chunks.push(chunk))
++      response.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
++    })
++    request.on('timeout', () => request.destroy(Object.assign(new Error('The source did not answer in time'), { code: 'bot/upstream' })))
++    request.on('error', reject)
++    request.end()
++  })
++}
 +const categoryCache = { at: 0, value: [] }
 +function httpsJson(url, { method = 'GET', body = null } = {}) {
 +  return new Promise((resolve, reject) => {
@@ -11255,6 +11448,64 @@ index 0000000..21d4ea5
 +    },
 +    async 'mcp-market'(body) {
 +      const base = 'https://modelscope.cn/openapi/v1/mcp/servers'
++      const source = String(body.source ?? 'modelscope')
++      const custom = body.custom !== null && typeof body.custom === 'object' ? body.custom : null
++      if (body.kind === 'sources') {
++        return {
++          builtin: [
++            { id: 'modelscope', name: 'ModelScope MCP' },
++            { id: 'reference', name: 'MCP reference servers' },
++            { id: 'awesome', name: 'awesome-mcp-servers' },
++          ],
++        }
++      }
++      if (source === 'reference' || source === 'awesome' || custom !== null) {
++        const query = String(body.query ?? '').trim().toLowerCase()
++        const page = Math.max(1, Math.min(50, Number(body.page ?? 1) || 1))
++        const size = MARKET_PAGE_SIZE
++        if (custom !== null && custom.kind === 'json') {
++          const url = String(custom.url ?? '')
++          if (!/^https?:\/\//i.test(url)) throw fail('A custom source needs an http(s) URL')
++          const data = await httpsJson(url).catch(() => null)
++          const all = Array.isArray(data) ? data : Array.isArray(data?.servers) ? data.servers : []
++          const rows = all.map(entry => ({
++            id: String(entry.id ?? entry.name ?? ''),
++            name: String(entry.name ?? entry.id ?? ''),
++            publisher: String(custom.name ?? ''),
++            description: String(entry.description ?? ''),
++            logo: String(entry.logo ?? ''),
++            hosted: false,
++            installs: 0,
++            categories: [],
++            homepage: String(entry.homepage ?? ''),
++            install: entry.install !== null && typeof entry.install === 'object' ? entry.install : null,
++          })).filter(entry => entry.id !== '' && (!query || `${entry.name} ${entry.description}`.toLowerCase().includes(query)))
++          return { total: rows.length, servers: rows.slice((page - 1) * size, page * size) }
++        }
++        const definition = custom !== null
++          ? { name: String(custom.name ?? 'Custom source'), url: String(custom.url ?? ''), base: String(custom.url ?? ''), packageOf: null }
++          : README_SOURCES[source]
++        if (definition === undefined || !/^https?:\/\//i.test(definition.url)) throw fail('That source has no readable URL')
++        const all = await readmeRows(definition)
++        const rows = all
++          .filter(entry => !query || `${entry.name} ${entry.description} ${entry.section}`.toLowerCase().includes(query))
++          .map((entry, index) => {
++            const pkg = definition.packageOf === null || definition.packageOf === undefined ? null : definition.packageOf(entry.name)
++            return {
++              id: `${source}:${index}:${entry.name}`,
++              name: entry.name,
++              publisher: entry.section,
++              description: entry.description,
++              logo: '',
++              hosted: false,
++              installs: 0,
++              categories: [],
++              homepage: entry.url,
++              install: pkg === null ? null : { transport: 'stdio', command: 'npx', args: ['-y', pkg] },
++            }
++          })
++        return { total: rows.length, servers: rows.slice((page - 1) * size, page * size) }
++      }
 +      if (body.kind === 'detail') {
 +        const id = String(body.id ?? '')
 +        if (!/^@?[\w.-]+\/[\w.-]+$/.test(id)) throw fail('Unknown MCP server id')
@@ -15430,7 +15681,7 @@ index 0000000..65ba6fb
 +  assert.equal(bar.parentNode, side)
 +})
 diff --git a/ds-bot/test/sidebar-switch.test.js b/ds-bot/test/sidebar-switch.test.js
-index 59109a9..7ef595e 100644
+index 59109a9..429e92e 100644
 --- a/ds-bot/test/sidebar-switch.test.js
 +++ b/ds-bot/test/sidebar-switch.test.js
 @@ -28,10 +28,13 @@ let layoutEffects
@@ -15448,11 +15699,123 @@ index 59109a9..7ef595e 100644
    useMemo: make => make(), useRef: current => renderRefs ? renderRefs[refIndex++] ??= { current } : { current }, useId: () => 'id',
  }
  const module = { exports: {} }
+@@ -89,21 +92,27 @@ for (const width of [390, 1023, 1024, 1280]) {
+       assert.equal(initial.rows.length, 3)
+       for (const [index, row] of initial.rows.entries()) {
+         const names = row.type.name === 'AgentRow' ? ['openAgent', 'openAgentSession', 'newAgentSession'] : ['openSession']
++        // Picking an entry inside the drawer folds it again: `navigate` toggles the sidebar
++        // when the content is wide on a narrow window, and only then.
++        const closesDrawer = wide && width < 1024
+         for (const name of names) {
+           const { rows, calls } = navigationSidebar(wide)
+           assert.equal(rows[index].props.actions[name]('selected'), 'selected')
+-          assert.deepEqual(calls, [[name, 'selected']])
++          assert.deepEqual(calls, closesDrawer ? [[name, 'selected'], ['toggleSidebar']] : [[name, 'selected']])
+         }
+       }
+     })
+   }
+ }
+ 
+-test('a row picked from the floating drawer closes it', () => {
++test('a row picked from the drawer closes it, once', () => {
+   viewport.innerWidth = 390
+-  const side = navigationSidebar(false, { leftDrawer: true })
+-  side.rows[0].props.actions.openSession('picked')
+-  assert.deepEqual(side.calls, [['openSession', 'picked'], ['setLeftDrawer', false]])
++  const side = navigationSidebar(true)
++  const pick = side.rows[0].props.actions.openSession
++  pick('picked')
++  // The latch holds for the rest of this commit: a second entry does not fold again.
++  pick('again')
++  assert.deepEqual(side.calls, [['openSession', 'picked'], ['toggleSidebar'], ['openSession', 'again']])
+ })
+ 
+ test('a row picked outside the drawer leaves it alone', () => {
+@@ -281,7 +290,7 @@ const showing = rules.filter(rule => /display:inline-flex/.test(rule.body))
+ function shell({ platform, collapsed }) {
+   const darwin = platform === 'mac'
+   const toggle = '<button class="x_iconButton x_toggle" aria-label="Toggle sidebar"></button>'
+-  const html = `<!doctype html><html${platform === 'windows' ? ' data-windows-titlebar' : ''}${darwin ? ' data-platform="darwin"' : ''}><body>
++  const html = `<!doctype html><html class="bt-bot"${platform === 'windows' ? ' data-windows-titlebar' : ''}${darwin ? ' data-platform="darwin"' : ''}><body>
+     <div${collapsed ? ' data-sidebar-collapsed="true"' : ''}>
+       <div class="x_root${collapsed ? ' x_collapsed' : ''}">
+         ${darwin ? `<div class="x_topStrip">${toggle}</div>` : ''}
+@@ -333,45 +342,37 @@ test('what the team view replaces in the shell sidebar stays out of sight', () =
+   }
+ })
+ 
+-// The shell's collapsed sidebar keeps no track in the Bot view, so a hidden
+-// column leaves nothing behind; the shell's right column keeps its own geometry.
+-test('the shell\'s collapsed sidebar keeps no track while its right column is closed', () => {
+-  const frame = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].find(rule => rule.selector.includes('[data-sidebar-collapsed][data-rightbar-collapsed]'))
+-  assert.match(frame?.body ?? '', /grid-template-columns:0px/)
++// The sidebar is drawn inside the shell's own column now, so the sheets keep out of the
++// frame's column geometry: an override there left a zero-width track behind.
++test('the sheets keep out of the shell frame\'s column geometry', () => {
++  const own = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].filter(rule => /data-sidebar-collapsed|data-rightbar-collapsed/.test(rule.selector))
++  assert.deepEqual(own.filter(rule => /grid-template-columns/.test(rule.body)), [])
+ })
+ 
+-test('the column\'s top row hides it, on the rail too, and its edge is a drag grip', () => {
++// The rail's own way back: the folded sidebar draws one button that unfolds it, and the
++// drawn column carries none, since folding that one is the caption band's action.
++test('the rail draws one way back and the drawn column none', () => {
+   viewport.innerWidth = 1280
+   const calls = []
+   const roster = { bots: [], rooms: [], agents: [], byId: {}, ready: true }
+-  const props = pref => ({
+-    wide: false,
++  const props = wide => ({
++    wide,
+     useRoster: pick => pick(roster), useUi: pick => pick({ unread: {} }), useRegistry: pick => pick({}),
+     useSessions: pick => pick({ ids: [], byId: {} }), useUpdate: () => ({}),
+-    useSidebarPref: pick => pick(pref),
+-    actions: { toggleLeftHidden: () => calls.push('toggle'), toggleSidebar: () => {} },
++    actions: { toggleSidebar: () => calls.push('toggle') },
+   })
+   const find = (node, match) => {
+     if (Array.isArray(node)) return node.map(child => find(child, match)).find(Boolean)
+     if (!node || typeof node !== 'object') return undefined
+     return match(node) ? node : find(node.props?.children, match)
+   }
+-  const collapse = node => node.type === 'button' && node.props['aria-label'] === 'Collapse sidebar'
+-  for (const pref of ['open', 'rail']) {
+-    const tree = TeamSidebar(props(pref))
+-    const button = find(tree, collapse)
+-    assert.ok(button?.props.className.split(' ').includes('bt-side-collapse'), pref)
+-    button.props.onClick()
+-    const column = find(tree, node => node.type?.name === 'LeftColumn')
+-    assert.equal(column.props.mode, pref)
+-    assert.equal(typeof column.props.onGrip, 'function')
+-  }
+-  assert.deepEqual(calls, ['toggle', 'toggle'])
+-  // Hidden, there is no column at all; the floating switch brings it back.
+-  const hidden = TeamSidebar(props('hidden'))
+-  assert.equal(find(hidden, node => node.type?.name === 'LeftColumn'), undefined)
+-  const toggle = find(hidden, node => node.type?.name === 'TitleToggle')
+-  assert.equal(toggle.props.hidden, true)
++  const expand = node => node.type === 'button' && node.props['aria-label'] === 'Expand sidebar'
++  const rail = TeamSidebar(props(false))
++  const button = find(rail, expand)
++  assert.ok(button?.props.className.split(' ').includes('bt-side-expand'))
++  button.props.onClick()
++  assert.deepEqual(calls, ['toggle'])
++  assert.equal(find(TeamSidebar(props(true)), expand), undefined)
+ })
+ 
+ test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
 diff --git a/ds-bot/test/style-debt.json b/ds-bot/test/style-debt.json
-index 4985bf1..15f1421 100644
+index 4985bf1..e3b7a60 100644
 --- a/ds-bot/test/style-debt.json
 +++ b/ds-bot/test/style-debt.json
-@@ -58,7 +58,7 @@
+@@ -53,12 +53,12 @@
+       "#ff3e51": 4,
+       "#ff5eb1": 1,
+       "#ffaf38": 1,
+-      "#fff": 9,
++      "#fff": 12,
+       "rgba(20,20,20,.035)": 1,
        "rgba(20,20,20,.04)": 1,
        "rgba(20,20,20,.05)": 1,
        "rgba(20,20,20,.5)": 1,
@@ -15461,6 +15824,67 @@ index 4985bf1..15f1421 100644
        "rgba(255,255,255,.08)": 1,
        "rgba(255,255,255,.12)": 1,
        "rgba(255,255,255,.16)": 1,
+@@ -67,6 +67,34 @@
+     },
+     "usage-page.js": {
+       "#fff": 2
++    },
++    "index.js": {
++      "#141414": 2,
++      "#4d6bfe": 1,
++      "#ffffff": 1,
++      "rgba(119,119,119,.08)": 1,
++      "rgba(20,20,20,.07)": 1,
++      "rgba(20,20,20,.1)": 1,
++      "rgba(20,20,20,.44)": 1,
++      "rgba(20,20,20,.72)": 1
++    },
++    "market.js": {
++      "#05909d": 1,
++      "#324de2": 1,
++      "#45e7a4": 1,
++      "#69b9ff": 1
++    },
++    "provider-marks.js": {
++      "#0467df": 1,
++      "#1783ff": 1,
++      "#325ab4": 1,
++      "#5786fe": 1,
++      "#6336e7": 1,
++      "#8e75b2": 1,
++      "#d97757": 1,
++      "#e73562": 1,
++      "#fa520f": 1,
++      "#ff6900": 1
+     }
+   },
+   "radii": {
+@@ -88,7 +116,13 @@
+     },
+     "styles.js": {
+       "1px": 1,
+-      "9999px": 2
++      "9999px": 2,
++      "14px": 3,
++      "24px": 1,
++      "26px": 1,
++      "3px": 1,
++      "7px": 4,
++      "9px": 2
+     },
+     "usage-page.js": {
+       "14px": 5,
+@@ -96,6 +130,10 @@
+       "3px": 1,
+       "5px": 1,
+       "9px": 1
++    },
++    "index.js": {
++      "11px": 1,
++      "7px": 1
+     }
+   },
+   "springs": {
 diff --git a/ds-bot/test/user-bubble.test.js b/ds-bot/test/user-bubble.test.js
 index bdc9eb8..35fd4e5 100644
 --- a/ds-bot/test/user-bubble.test.js
