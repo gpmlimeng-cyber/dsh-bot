@@ -652,7 +652,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index 31f6605..7f49d95 100644
+index 31f6605..3e32e9d 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -878,7 +878,7 @@ index 31f6605..7f49d95 100644
        if (!declared) {
          // The slot itself is not declared yet; keep watching for a while.
          if (verifyAttempts < 20) {
-@@ -1031,8 +1185,219 @@ export function apply(ctx) {
+@@ -1031,8 +1185,236 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -1059,6 +1059,23 @@ index 31f6605..7f49d95 100644
 +          const box = modeBar.getBoundingClientRect()
 +          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
 +        })
++        // A layer over the caption band can take the press before the row sees it. The window
++        // sees it first, so a press that lands on the row's own box but belongs to another
++        // element is handled here instead: the row then works wherever it is painted.
++        window.addEventListener('pointerdown', (event) => {
++          if (!modeBar.isConnected || event.defaultPrevented) return
++          const target = event.target
++          if (target instanceof Element && (target.closest('.bt-modebar') || target.closest('.bt-modebar-menu'))) return
++          const rect = modeBar.getBoundingClientRect()
++          if (rect.width === 0) return
++          if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) return
++          event.preventDefault()
++          event.stopPropagation()
++          if (modeOpen) { closeModeMenu(); return }
++          paintModeBar()
++          const box = modeBar.getBoundingClientRect()
++          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
++        }, true)
 +        window.addEventListener('resize', () => paintModeBar())
 +      }
 +      modeBar.style.cssText = inDrawer()
@@ -1098,7 +1115,7 @@ index 31f6605..7f49d95 100644
        clearTimeout(verifyTimer)
        verifyAttempts = 0
        verifyTimer = setTimeout(verifySidebar, 250)
-@@ -1043,6 +1408,13 @@ export function apply(ctx) {
+@@ -1043,6 +1425,13 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)

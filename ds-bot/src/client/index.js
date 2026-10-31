@@ -1337,7 +1337,12 @@ export function apply(ctx) {
       const left = mac ? 84 : 15
       // A few pixels lower than the band's own centre, so the control sits on the traffic
       // lights' horizontal line instead of above it.
-      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9
+      // The shell's own view can put a native layer over the caption band, and a layer like
+      // that takes the press before the page does — no z-index or capture listener reaches
+      // it. The row stays in the band on the Bot surface, and drops just under it in the
+      // shell's, where the page still owns the pixels.
+      const bandTop = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9
+      const top = mode === 'agent' ? Math.round(chrome + 8) : bandTop
       if (!modeBar) {
         // A surface effect that re-runs gets a fresh closure; clear anything an earlier
         // closure left on the page so the row never stacks up.

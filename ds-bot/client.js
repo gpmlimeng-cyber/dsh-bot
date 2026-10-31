@@ -28776,7 +28776,8 @@ function apply(ctx) {
       const mode = surface.getSnapshot().mode;
       document.documentElement.classList.toggle("bt-agent", mode === "agent");
       const left = mac ? 84 : 15;
-      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9;
+      const bandTop = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9;
+      const top = mode === "agent" ? Math.round(chrome + 8) : bandTop;
       if (!modeBar) {
         for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row")) stale.remove();
         modeRow = null;
