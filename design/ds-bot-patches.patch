@@ -58,6 +58,21 @@ index b146590..00f838a 100644
  }
  
  export function createRuntime(ctx, config = {}) {
+diff --git a/ds-bot/scripts/style-debt.mjs b/ds-bot/scripts/style-debt.mjs
+index 2d3f9d6..30023f5 100644
+--- a/ds-bot/scripts/style-debt.mjs
++++ b/ds-bot/scripts/style-debt.mjs
+@@ -110,7 +110,10 @@ const code = text => text.split(/\r?\n/)
+ export function findStyles(dir = CLIENT) {
+   const found = Object.fromEntries(Object.keys(checks).map(kind => [kind, {}]))
+   for (const file of readdirSync(dir, { recursive: true }).filter(name => name.endsWith('.js')).map(name => name.replaceAll('\\', '/'))) {
++    // A line ending in `/* vendored */` is third-party CSS taken as it ships (MIT, see
++    // NOTICE); its literals belong to that project, not to our token rules.
+     const text = code(readFileSync(join(dir, file), 'utf8'))
++      .split('\n').filter(line => !line.includes('/* vendored */')).join('\n')
+     for (const [kind, check] of Object.entries(checks)) {
+       for (const value of check(file, text)) {
+         const counts = (found[kind][file] ??= {})
 diff --git a/ds-bot/src/client/about.js b/ds-bot/src/client/about.js
 index 6dc05e2..a1bf478 100644
 --- a/ds-bot/src/client/about.js
@@ -2297,10 +2312,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..ca36e7d
+index 0000000..6c6e21b
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,448 @@
+@@ -0,0 +1,458 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2361,26 +2376,26 @@ index 0000000..ca36e7d
 +const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
 +
 +function Row({ server, added, busy, onInstall, onOpen }) {
-+  return h('div', { className: 'bt-mm-plug' + (added ? ' is-added' : '') },
-+    h('button', { type: 'button', className: 'bt-mm-plugopen', 'aria-label': server.name, onClick: onOpen }),
-+    server.logo
-+      ? h('img', { className: 'bt-mm-logo', src: server.logo, alt: '', loading: 'lazy' })
-+      : h('span', { className: 'bt-mm-logo bt-mm-logo-empty', 'aria-hidden': true }, server.name.slice(0, 1)),
++  return h('li', { className: 'bt-mm-card', 'data-mcp-entry': server.id },
++    h('span', { className: 'bt-mm-icon', 'aria-hidden': true },
++      server.logo
++        ? h('img', { className: 'bt-mm-image', src: server.logo, width: 36, height: 36, alt: '', loading: 'lazy', referrerPolicy: 'no-referrer' })
++        : h('span', null, server.name.slice(0, 1))),
 +    h('div', { className: 'bt-mm-main' },
-+      h('div', { className: 'bt-mm-title' },
-+        h('span', { className: 'bt-mm-name' }, server.name),
++      h('div', { className: 'bt-mm-titleRow' },
++        h('button', { type: 'button', className: 'bt-mm-cardOpen', 'aria-label': server.name, onClick: onOpen }, server.name),
 +        server.hosted ? h('span', { className: 'bt-mm-tag' }, t('Hosted')) : null,
 +        added ? h('span', { className: 'bt-mm-tag bt-mm-tag-on' }, t('Added')) : null),
-+      h('div', { className: 'bt-mm-meta' },
-+        server.installs ? h('span', { className: 'bt-mm-count' }, `↓ ${shortCount(server.installs)}`) : null,
-+        server.publisher ? h('span', { className: 'bt-mm-pub' }, server.publisher) : null),
-+      h('p', { className: 'bt-mm-desc' }, server.description)),
-+    h('div', { className: 'bt-mm-end' },
++      server.description ? h('span', { className: 'bt-mm-description' }, server.description) : null,
++      h('span', { className: 'bt-mm-meta' },
++        server.installs ? h('span', null, `↓ ${shortCount(server.installs)}`) : null,
++        server.publisher ? h('span', null, server.publisher) : null)),
++    h('div', { className: 'bt-mm-cardEnd' },
 +      // The button installs here, like the shell's own market: already installed is a
 +      // state, not a control, so it is disabled rather than a click that does nothing.
 +      h('button', {
 +        type: 'button',
-+        className: 'bt-mm-install',
++        className: 'bt-mm-btn',
 +        'data-added': added ? '' : undefined,
 +        disabled: added || busy,
 +        onClick: onInstall,
@@ -2420,9 +2435,9 @@ index 0000000..ca36e7d
 +      .then((next) => { setBusy(false); onAdded(next, name) }, (failure) => { setBusy(false); report(failure) })
 +  }
 +
-+  return h('div', { className: 'bt-mm-detail' },
++  return h('div', { className: 'bt-mm-drawer' },
 +    h('div', { className: 'bt-mm-detail-head' },
-+      server.logo ? h('img', { className: 'bt-mm-logo bt-mm-logo-lg', src: server.logo, alt: '', loading: 'lazy' }) : null,
++      server.logo ? h('img', { className: 'bt-mm-icon bt-mm-image', src: server.logo, width: 48, height: 48, alt: '', loading: 'lazy', referrerPolicy: 'no-referrer' }) : null,
 +      h('div', { className: 'bt-mm-detail-title' },
 +        h('h3', null, server.name),
 +        h('p', null, server.publisher || server.id)),
@@ -2431,8 +2446,8 @@ index 0000000..ca36e7d
 +    error ? h('p', { className: 'bt-mm-error' }, error) : null,
 +    detail === null && error === '' ? h('p', { className: 'bt-mm-note' }, t('Reading the server…')) : null,
 +    config !== null
-+      ? h('div', { className: 'bt-mm-card' },
-+        h('span', { className: 'bt-mm-card-label' }, url ? t('Hosted endpoint') : t('Launch line')),
++      ? h('div', { className: 'bt-mm-config' },
++        h('span', { className: 'bt-mm-config-label' }, url ? t('Hosted endpoint') : t('Launch line')),
 +        h('code', { className: 'bt-mm-code' }, url || `${stdio.command} ${stdio.args.join(' ')}`.trim()),
 +        stdio?.env?.length ? h('span', { className: 'bt-mm-note' }, t('Needs {names} set in the profile', { names: stdio.env.join(', ') })) : null,
 +        h('label', { className: 'bt-mm-field' },
@@ -2678,19 +2693,25 @@ index 0000000..ca36e7d
 +      })
 +      : open === null
 +        ? [
-+          h('div', { className: 'bt-mm-list', key: 'list' }, shown.map(server => h(Row, {
-+            key: server.id,
-+            server,
-+            added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
-+            busy: installing === server.id,
-+            onInstall: () => install(server),
-+            onOpen: () => setOpen(server),
-+          }))),
++          loading && list.servers.length === 0
++            ? h('ul', { className: 'bt-mm-cards', key: 'skeleton', 'aria-busy': true }, [0, 1, 2].map(index => h('li', { key: index, className: 'bt-mm-card' },
++              h('span', { className: 'bt-mm-icon bt-mm-skeletonFill', 'aria-hidden': true }),
++              h('div', { className: 'bt-mm-main' },
++                h('span', { className: 'bt-mm-skeletonBar bt-mm-skeletonTitle' }),
++                h('span', { className: 'bt-mm-skeletonBar bt-mm-skeletonDescription' })))))
++            : h('ul', { className: 'bt-mm-cards', key: 'list' }, shown.map(server => h(Row, {
++              key: server.id,
++              server,
++              added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
++              busy: installing === server.id,
++              onInstall: () => install(server),
++              onOpen: () => setOpen(server),
++            }))),
 +          more
-+            ? h('button', { type: 'button', className: 'bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
++            ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
 +              loading ? t('Reading…') : t('Show more'))
 +            : null,
-+          !loading && list.servers.length === 0 && error === '' ? h('p', { className: 'bt-mm-note', key: 'empty' }, t('No MCP server matches that search.')) : null,
++          !loading && shown.length === 0 && error === '' ? h('p', { className: 'bt-mm-muted', key: 'empty' }, t('No MCP server matches that search.')) : null,
 +        ]
 +        : h(Detail, {
 +          key: open.id,
@@ -2719,8 +2740,8 @@ index 0000000..ca36e7d
 +    notice ? h('p', { className: 'bt-mm-done' }, notice) : null,
 +    view === 'discover'
 +      ? [
-+        h('div', { className: 'bt-mm-head', key: 'head' },
-+          h('label', { className: 'bt-mm-search' },
++        h('div', { className: 'bt-mm-toolbar', key: 'toolbar' },
++          h('label', { className: 'bt-mm-search bt-mm-box' },
 +            h(SearchIcon),
 +            h('input', {
 +              value: query,
@@ -2734,16 +2755,20 @@ index 0000000..ca36e7d
 +              h('option', { value: 'default' }, t('Default order')),
 +              h('option', { value: 'installs' }, t('Downloads')))),
 +          h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() }))),
-+        h('div', { className: 'bt-mm-filters', key: 'filters' },
-+          h('span', { className: 'bt-mm-filter-label' }, t('Labels')),
-+          h('div', { className: 'bt-mm-chips' },
-+            h('button', { type: 'button', className: 'bt-mm-chip' + (category === '' ? ' is-on' : ''), onClick: () => pick('') }, t('All')),
-+            categories.map(item => h('button', {
-+              key: item.id,
-+              type: 'button',
-+              className: 'bt-mm-chip' + (category === item.id ? ' is-on' : ''),
-+              onClick: () => pick(item.id),
-+            }, categoryName(item.id))))),
++        categories.length === 0 ? null : h('div', { className: 'bt-mm-categories', key: 'categories', role: 'group', 'aria-label': t('Labels') },
++          h('button', {
++            type: 'button',
++            className: 'bt-mm-pill' + (category === '' ? ' is-on' : ''),
++            'aria-pressed': category === '',
++            onClick: () => pick(''),
++          }, t('All')),
++          categories.map(item => h('button', {
++            key: item.id,
++            type: 'button',
++            className: 'bt-mm-pill' + (category === item.id ? ' is-on' : ''),
++            'aria-pressed': category === item.id,
++            onClick: () => pick(item.id),
++          }, categoryName(item.id)))),
 +      ]
 +      : null,
 +    error ? h('p', { className: 'bt-mm-error' }, error) : null,
@@ -9944,7 +9969,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..fac5408 100644
+index eac6ea5..4f0b097 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -9985,7 +10010,7 @@ index eac6ea5..fac5408 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,49 +141,370 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,49 +141,361 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -10146,14 +10171,41 @@ index eac6ea5..fac5408 100644
 +[data-bt-skills] .sm-inspector:not(.open){box-shadow:none}
 +/* The MCP tab: the ModelScope plaza as plain rows at the page's own measure, with one
 +   server's connection details behind a row. */
++/* The MCP tab: the shell's own plugin-market Discover section, taken as it ships
++   (MIT, @deepseek-ai/dsh-client-ui-plugin-market, DiscoverSection.module.css; see NOTICE).
++   Only the class prefix changed, dq5LxG_ -> bt-mm-, and the market dropdown is named for
++   what it picks here: bt-mm-source / bt-mm-source-name. Numbers, order and states are the
++   ones it ships, so this panel measures the same as the shell's own page. */
++.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex}.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500}.bt-mm-source-name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.bt-mm-search{flex:1;min-width:120px}.bt-mm-categories{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.bt-mm-muted,.bt-mm-meta{color:var(--dsw-alias-label-tertiary);margin:0;font-size:13px;line-height:20px}.bt-mm-meta{overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-strong{overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:20px}.bt-mm-error{color:var(--dsw-alias-state-error-primary);align-items:center;gap:6px;margin:0;font-size:13px;line-height:20px;display:inline-flex}.bt-mm-failure{align-items:center;gap:10px;display:flex}.bt-mm-notice{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);align-items:flex-start;gap:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px;display:flex}.bt-mm-notice>svg{color:var(--dsw-alias-state-warn-primary);flex:none;margin-top:2px}.bt-mm-cards{flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;display:flex}.bt-mm-card{border-radius:var(--dsw-radius-xl);align-items:center;gap:14px;margin:0 -8px;padding:8px;display:flex;position:relative}.bt-mm-card:hover{background:var(--dsw-alias-interactive-bg-hover)}.bt-mm-icon{border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);width:48px;height:48px;color:var(--dsw-alias-label-secondary);flex:none;justify-content:center;align-items:center;display:inline-flex}.bt-mm-image{object-fit:contain}.bt-mm-main{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.bt-mm-titleRow{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.bt-mm-cardOpen{max-width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;font-size:14px;font-weight:500;line-height:20px;overflow:hidden}.bt-mm-cardOpen:after{content:"";border-radius:var(--dsw-radius-xl);position:absolute;inset:0}.bt-mm-cardOpen:focus-visible{outline:none}.bt-mm-cardOpen:focus-visible:after{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-description{color:var(--dsw-alias-label-tertiary);-webkit-line-clamp:1;-webkit-box-orient:vertical;font-size:13px;line-height:18px;display:-webkit-box;overflow:hidden}.bt-mm-cardEnd{z-index:1;flex:none;align-items:center;gap:8px;display:inline-flex;position:relative}.bt-mm-blocked{opacity:.5;cursor:not-allowed}.bt-mm-more{align-self:center}.bt-mm-empty{text-align:center;flex-direction:column;align-items:center;gap:8px;padding:64px 0;display:flex}.bt-mm-emptyTitle{margin:8px 0 0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-empty>button{margin-top:8px}.bt-mm-detail{flex-direction:column;gap:16px;display:flex}.bt-mm-crumb{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:0;align-self:flex-start;align-items:center;gap:6px;padding:0;font-size:12.5px;display:inline-flex}.bt-mm-crumb:hover{color:var(--dsw-alias-label-primary)}.bt-mm-crumb:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-crumbIcon{transform:rotate(90deg)}.bt-mm-detailHead{align-items:center;gap:14px;display:flex}.bt-mm-detailTitle{margin:0;font-size:20px;font-weight:500;line-height:28px}.bt-mm-detailDescription{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.bt-mm-detailSection{flex-direction:column;gap:12px;margin-top:16px;display:flex}.bt-mm-sectionTitle{margin:0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-facts{margin:0}.bt-mm-facts div{border-bottom:.5px solid var(--dsw-alias-border-l2);justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:8px 2px;display:flex}.bt-mm-facts dt{color:var(--dsw-alias-label-secondary);flex:none;font-size:13px;line-height:20px}.bt-mm-facts dd{text-align:end;overflow-wrap:anywhere;min-width:0;margin:0;font-size:13px;line-height:20px}.bt-mm-facts code{background:var(--dsw-alias-bg-module-platform);box-decoration-break:clone;font-family:var(--ds-font-family-code);border-radius:4px;padding:2px 6px;font-size:12px}.bt-mm-tags{flex-wrap:wrap;justify-content:flex-end;gap:6px;display:flex}.bt-mm-dialog{width:min(480px,100vw - 32px)}.bt-mm-dialogBody{flex-direction:column;gap:12px;display:flex}.bt-mm-sourceList,.bt-mm-versions{flex-direction:column;margin:0;padding:0;list-style:none;display:flex}.bt-mm-sourceRow,.bt-mm-versionRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:8px 0;display:flex}.bt-mm-sourceError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-sourceForm{align-items:center;gap:8px;display:flex}.bt-mm-grow{flex:1;min-width:0}.bt-mm-confirmHead{align-items:center;gap:14px;display:flex}.bt-mm-skeletonFill{background:var(--dsw-alias-bg-skeleton);animation:2s cubic-bezier(.36,0,.64,1) infinite bt-mm-dsh-market-skeleton}.bt-mm-icon.bt-mm-skeletonFill{border-color:#0000}.bt-mm-skeletonBar{border-radius:var(--dsw-radius-xs);height:12px;margin:4px 0;display:block}.bt-mm-skeletonTitle{width:min(144px,60%)}.bt-mm-skeletonDescription{width:min(280px,85%)}@keyframes bt-mm-dsh-market-skeleton{0%{opacity:1}40%{opacity:.6}80%,to{opacity:1}}@media (prefers-reduced-motion:reduce){.bt-mm-skeletonFill{animation:none}}.bt-mm-link{color:var(--dsw-alias-link);overflow-wrap:anywhere;text-decoration:none}.bt-mm-link:hover{text-decoration:underline} /* vendored */
++/* The three controls the shell draws with its own primitives (Input, Pill, Button): the
++   geometry is the section's, this is only the chrome those primitives carry. */
++.bt-mm-box{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
++.bt-mm-box input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
++.bt-mm-pill{flex:none;height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
++.bt-mm-pill:hover{color:var(--bt-ink);background:var(--bt-hover)}
++.bt-mm-pill.is-on{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink);box-shadow:none;font-weight:500}
++.bt-mm-btn{height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink);box-shadow:inset 0 0 0 .5px var(--bt-line-2);font:inherit;font-size:12.5px;font-weight:500;cursor:pointer}
++.bt-mm-btn:hover{background:var(--bt-hover)}
++.bt-mm-btn[data-added]{box-shadow:none;color:var(--bt-ink-3);cursor:default}
++/* The parts the Discover section does not draw: the tab row, the source dropdown's own
++   menu, the detail drawer, the installed list and the custom form. */
 +.bt-mm{display:flex;flex-direction:column;gap:10px;max-width:960px;padding:0 0 32px 10px;margin-top:-20px}
-+.bt-mm-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-+/* The tabs copy the skills page: words on a rule, the active one underlined. */
 +.bt-mm-tabs{display:flex;align-items:center;gap:0;align-self:stretch;box-shadow:inset 0 -1px var(--bt-line-2)}
 +.bt-mm-tab{display:inline-flex;align-items:center;gap:7px;padding:6px 4px;margin:0 18px -1px 0;border:0;border-bottom:2px solid transparent;background:none;color:var(--bt-ink-3);font:inherit;font-size:13.5px;font-weight:500;white-space:nowrap;cursor:pointer;transition:color .13s ease,border-color .13s ease}
 +.bt-mm-tab:hover{color:var(--bt-ink)}
 +.bt-mm-tab.is-on{color:var(--bt-ink);border-bottom-color:var(--bt-ink)}
 +.bt-mm-tabcount{font-size:11px;font-weight:400;color:var(--bt-ink-3)}
++.bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
++.bt-mm-sort{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--bt-ink-3);flex:none}
++.bt-mm-sort select{height:28px;padding:0 8px;border:0;border-radius:8px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12.5px;cursor:pointer}
++.bt-mm-source-wrap{position:relative;flex:none}
++.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 6px);left:-8px;min-width:220px;padding:4px;border-radius:10px;background:var(--bt-main);box-shadow:var(--bt-float-shadow,0 4px 14px -6px rgba(0,0,0,.16)),inset 0 0 0 .5px var(--bt-line-2)}
++.bt-mm-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:0;border-radius:8px;background:none;color:var(--bt-ink);font:inherit;font-size:13px;text-align:left;cursor:pointer}
++.bt-mm-menu button:hover{background:var(--bt-hover)}
++.bt-mm-menu button[data-on]{font-weight:500}
++.bt-mm-menu hr{margin:4px 0;border:0;border-top:1px solid var(--bt-line-2)}
++.bt-mm-note{margin:0;font-size:12.5px;color:var(--bt-ink-3)}
++.bt-mm-done{margin:0;font-size:12.5px;color:var(--bt-accent)}
 +.bt-mm-custom{display:flex;flex-direction:column;gap:12px;max-width:560px}
 +.bt-mm-custom .bt-mm-field{align-items:flex-start}
 +.bt-mm-custom .bt-mm-field>span{flex:0 0 88px;padding-top:8px;font-size:12.5px;color:var(--bt-ink-3)}
@@ -10161,27 +10213,6 @@ index eac6ea5..fac5408 100644
 +.bt-mm-switchbar{display:inline-flex;gap:2px;padding:2px;border-radius:9px;background:var(--bt-hover);align-self:flex-start}
 +.bt-mm-switchbar button{height:26px;padding:0 12px;border:0;border-radius:7px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer}
 +.bt-mm-switchbar button[data-on]{background:var(--bt-main,#fff);color:var(--bt-ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
-+.bt-mm-search{display:flex;align-items:center;gap:8px;flex:1 1 auto;max-width:420px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
-+.bt-mm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
-+.bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
-+.bt-mm-sort{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--bt-ink-3);flex:none}
-+.bt-mm-sort select{height:28px;padding:0 8px;border:0;border-radius:8px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12.5px;cursor:pointer}
-+.bt-mm-filters{display:flex;align-items:center;gap:10px;min-width:0}
-+.bt-mm-filter-label{flex:none;font-size:12.5px;color:var(--bt-ink-3)}
-+.bt-mm-chips{display:flex;align-items:center;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-+.bt-mm-chips::-webkit-scrollbar{display:none}
-+.bt-mm-chip{flex:none;height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
-+.bt-mm-chip:hover{color:var(--bt-ink);background:var(--bt-hover)}
-+.bt-mm-chip.is-on{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink);box-shadow:none;font-weight:500}
-+.bt-mm-list{display:flex;flex-direction:column;gap:8px}
-+/* Catalogue cards, the shape the shell's plugin market uses: a bordered card whose whole
-+   face opens the entry, with the install control at the right end. */
-+.bt-mm-plug{position:relative;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;box-shadow:inset 0 0 0 .5px var(--bt-line-2);background:var(--bt-main,transparent);transition:box-shadow .14s ease}
-+.bt-mm-plug:hover{box-shadow:inset 0 0 0 .5px var(--bt-line-2),0 4px 14px -6px rgba(0,0,0,.16)}
-+.bt-mm-plugopen{position:absolute;inset:0;border:0;background:none;cursor:pointer;border-radius:14px}
-+.bt-mm-plugopen:focus-visible{outline:2px solid var(--bt-accent);outline-offset:2px}
-+.bt-mm-section{display:flex;flex-direction:column;gap:6px}
-+.bt-mm-h{margin:0;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--bt-ink-3);text-transform:none}
 +.bt-mm-installed{display:flex;flex-direction:column;box-shadow:inset 0 0 0 .5px var(--bt-line-2);border-radius:12px;padding:4px}
 +.bt-mm-inst-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:9px}
 +.bt-mm-inst-row:hover{background:var(--bt-hover)}
@@ -10193,25 +10224,10 @@ index eac6ea5..fac5408 100644
 +.bt-mm-switch[data-on]{color:var(--bt-accent)}
 +.bt-mm-switch svg,.bt-mm-remove svg{width:16px;height:16px}
 +.bt-mm-switch:disabled,.bt-mm-remove:disabled{opacity:.5;cursor:default}
-+.bt-mm-logo{position:relative;width:48px;height:48px;border-radius:12px;object-fit:cover;flex:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
-+.bt-mm-logo-lg{width:56px;height:56px;border-radius:14px}
-+.bt-mm-logo-empty{display:inline-flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;background:var(--bt-hover);color:var(--bt-ink-2)}
-+.bt-mm-main{position:relative;display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 auto;pointer-events:none}
-+.bt-mm-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 +.bt-mm-name{font-size:14px;font-weight:600}
 +.bt-mm-tag{font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3)}
 +.bt-mm-tag-on{color:var(--bt-accent)}
-+.bt-mm-meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--bt-ink-3)}
-+.bt-mm-desc{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:2px 0 0;font-size:13px;line-height:19px;color:var(--bt-ink-2)}
-+.bt-mm-end{position:relative;display:flex;align-items:center;gap:8px;flex:none}
-+.bt-mm-install{height:30px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
-+.bt-mm-install:hover{background:color-mix(in srgb,var(--bt-ink) 12%,transparent)}
-+.bt-mm-install[data-added]{background:none;color:var(--bt-ink-3);font-weight:500;cursor:default;padding:0 6px}
-+.bt-mm-more{align-self:center;height:32px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
-+.bt-mm-note{margin:0;font-size:12.5px;color:var(--bt-ink-3)}
-+.bt-mm-error{margin:0;font-size:13px;color:#c0392b}
-+.bt-mm-done{margin:0;font-size:12.5px;color:var(--bt-accent)}
-+.bt-mm-detail{display:flex;flex-direction:column;gap:14px;max-width:820px}
++.bt-mm-drawer{display:flex;flex-direction:column;gap:14px;max-width:820px}
 +.bt-mm-detail-head{display:flex;align-items:center;gap:12px}
 +.bt-mm-detail-title{flex:1 1 auto;min-width:0}
 +.bt-mm-detail-title h3{margin:0;font-size:17px;font-weight:600}
@@ -10219,8 +10235,8 @@ index eac6ea5..fac5408 100644
 +.bt-mm-close{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
 +.bt-mm-close:hover{background:var(--bt-hover)}
 +.bt-mm-detail-desc{margin:0;font-size:13.5px;line-height:21px;color:var(--bt-ink-2)}
-+.bt-mm-card{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
-+.bt-mm-card-label{font-size:12px;color:var(--bt-ink-3)}
++.bt-mm-config{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
++.bt-mm-config-label{font-size:12px;color:var(--bt-ink-3)}
 +.bt-mm-code{font-family:var(--bt-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:12.5px;line-height:18px;color:var(--bt-ink);word-break:break-all}
 +.bt-mm-field{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--bt-ink-2)}
 +.bt-mm-field input{flex:1 1 auto;min-width:0;height:32px;padding:0 10px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:13px;color:var(--bt-ink);outline:none}
@@ -10386,7 +10402,7 @@ index eac6ea5..fac5408 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -344,6 +671,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -344,6 +662,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -10413,7 +10429,7 @@ index eac6ea5..fac5408 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -571,7 +918,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -571,7 +909,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -10424,7 +10440,7 @@ index eac6ea5..fac5408 100644
  /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
     collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -587,6 +936,9 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+@@ -587,6 +927,9 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
  /* Elsewhere the switch shows only while the column is hidden, where the column's
     own top row had it. */
  html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
@@ -10434,7 +10450,7 @@ index eac6ea5..fac5408 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -626,7 +978,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -626,7 +969,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -10444,7 +10460,7 @@ index eac6ea5..fac5408 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1274,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1265,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -10565,7 +10581,7 @@ index eac6ea5..fac5408 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1487,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1478,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -10674,7 +10690,7 @@ index eac6ea5..fac5408 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1112,17 +1615,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1606,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -10701,7 +10717,7 @@ index eac6ea5..fac5408 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1635,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1626,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -10710,7 +10726,7 @@ index eac6ea5..fac5408 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1676,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1667,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -15414,10 +15430,10 @@ index 0000000..65ba6fb
 +  assert.equal(bar.parentNode, side)
 +})
 diff --git a/ds-bot/test/sidebar-switch.test.js b/ds-bot/test/sidebar-switch.test.js
-index 59109a9..16a1350 100644
+index 59109a9..7ef595e 100644
 --- a/ds-bot/test/sidebar-switch.test.js
 +++ b/ds-bot/test/sidebar-switch.test.js
-@@ -28,6 +28,9 @@ let layoutEffects
+@@ -28,10 +28,13 @@ let layoutEffects
  const react = {
    createContext: (initial) => { const ctx = { value: initial }; ctx.Provider = ({ value, children }) => { ctx.value = value; return children }; return ctx },
    useContext: ctx => ctx.value,
@@ -15427,6 +15443,11 @@ index 59109a9..16a1350 100644
    useCallback: fn => fn,
    useSyncExternalStore: (subscribe, getSnapshot) => getSnapshot(),
    createElement: (type, props, ...children) => ({ type, props: { ...props, children } }), Fragment: Symbol('Fragment'),
+-  useEffect() {}, useLayoutEffect: effect => layoutEffects?.push(effect), useState: initial => [initial, () => {}],
++  useEffect() {}, useLayoutEffect: effect => layoutEffects?.push(effect), useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}],
+   useMemo: make => make(), useRef: current => renderRefs ? renderRefs[refIndex++] ??= { current } : { current }, useId: () => 'id',
+ }
+ const module = { exports: {} }
 diff --git a/ds-bot/test/style-debt.json b/ds-bot/test/style-debt.json
 index 4985bf1..15f1421 100644
 --- a/ds-bot/test/style-debt.json
@@ -15440,3 +15461,30 @@ index 4985bf1..15f1421 100644
        "rgba(255,255,255,.08)": 1,
        "rgba(255,255,255,.12)": 1,
        "rgba(255,255,255,.16)": 1,
+diff --git a/ds-bot/test/user-bubble.test.js b/ds-bot/test/user-bubble.test.js
+index bdc9eb8..35fd4e5 100644
+--- a/ds-bot/test/user-bubble.test.js
++++ b/ds-bot/test/user-bubble.test.js
+@@ -28,8 +28,13 @@ const ruleFor = selector => {
+   return rule
+ }
+ 
++// The vendored skill-market sheet is in the same bundle and the crude rule walk above
++// cannot always tell where one of its rules starts; those rules follow the vendor's own
++// tokens, so only ds-bot's own selectors are judged here.
++const ours = selector => /^(\.bt-|\[data-bt|html|body|:root|\[data-slot)/.test(selector)
++
+ test('every rule that writes in the user ink paints the user surface under it', () => {
+-  const rules = rulesWith(/(?<=[{;])color:var\(--bt-user-ink\)/g)
++  const rules = rulesWith(/(?<=[{;])color:var\(--bt-user-ink\)/g).filter(rule => ours(rule.selector))
+   assert.ok(rules.length >= 3)
+   for (const { selector, body } of rules) {
+     assert.match(surface(body) ?? '', /^var\(--bt-user\)(!important)?$/, selector)
+@@ -131,6 +136,7 @@ test('every danger color reads --bt-danger, which the base sheet sets once', ()
+     || before.endsWith('var(--bt-danger,') // feedback.js: its toast shows without the base sheet too
+     || before.endsWith('.bt-voice-end:hover{background:') // recording reds: not decided yet
+     || /FF3E51['"],\s*['"]$/i.test(before) // the red Bot color, not a danger color
++    || before.endsWith('var(--sm-danger, ') // the vendored skill-market sheet's own token
+   const loose = [...bundle.matchAll(/#e02135|#c21d2e/gi)]
+     .map(match => bundle.slice(Math.max(0, match.index - 40), match.index))
+     .filter(before => !allowed(before))
