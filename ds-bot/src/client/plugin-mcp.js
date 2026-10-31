@@ -656,7 +656,6 @@ export function McpMarketTab({ actions = {} }) {
               'aria-label': t('Search MCP servers'),
               onChange: (event) => setQuery(event.target.value),
             })),
-          h('span', { className: 'bt-mm-filterlabel' }, t('Labels')),
           h('label', { className: 'bt-mm-sort' },
             h('span', null, t('Sort')),
             h('select', { value: sort, 'aria-label': t('Sort'), onChange: (event) => setSort(event.target.value) },

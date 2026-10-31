@@ -275,7 +275,7 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    what it picks here: bt-mm-source / bt-mm-source-name. Numbers, order and states are the
    ones it ships, so this panel measures the same as the shell's own page. */
 .bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex;flex-wrap:nowrap}
-.bt-mm-filterlabel{flex:none}
+
 .bt-mm-categories{flex-wrap:nowrap;align-items:center;gap:6px;display:flex;overflow:visible;flex:none}
 .bt-mm-tagrow{position:relative;min-width:0}.bt-mm-tagmeasure{position:absolute;left:-9999px;top:0;display:flex;gap:6px;white-space:nowrap;visibility:hidden;pointer-events:none;flex:none}.bt-mm-morewrap{position:relative;margin-left:auto;flex:none}
 .bt-mm-morepill{white-space:nowrap;gap:4px}
@@ -292,7 +292,7 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-toolbar .bt-mm-search input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:13px;line-height:20px;color:var(--dsw-alias-label-primary);outline:none}
 .bt-mm-toolbar .bt-mm-sort{border:0;background:none;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:13px;line-height:20px}
 .bt-mm-toolbar .bt-mm-sort select{border:0;background:none;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;outline:none;cursor:pointer}
-.bt-mm-filterlabel{flex:none;color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:20px;margin:0}
+
 .bt-mm-toolbar .bt-mm-sort{margin-left:auto}
 .bt-mm-toolbar .bt-mm-sort{margin-left:auto}
 /* ds-bot chrome around the vendored card list: the source picker, its menu and the
