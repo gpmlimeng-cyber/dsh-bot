@@ -2327,10 +2327,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..5050ccf
+index 0000000..0c67778
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,551 @@
+@@ -0,0 +1,549 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2414,12 +2414,10 @@ index 0000000..5050ccf
 +    h('div', { className: 'bt-mm-main' },
 +      h('div', { className: 'bt-mm-titleRow' },
 +        h('button', { type: 'button', className: 'bt-mm-cardOpen', 'aria-label': server.name, onClick: onOpen }, server.name),
++        server.installs ? h('span', { className: 'bt-mm-tag' }, `↓ ${shortCount(server.installs)}`) : null,
 +        server.hosted ? h('span', { className: 'bt-mm-tag' }, t('Hosted')) : null,
 +        added ? h('span', { className: 'bt-mm-tag bt-mm-tag-on' }, t('Added')) : null),
-+      server.description ? h('span', { className: 'bt-mm-description' }, server.description) : null,
-+      h('span', { className: 'bt-mm-meta' },
-+        server.installs ? h('span', null, `↓ ${shortCount(server.installs)}`) : null,
-+        server.publisher ? h('span', null, server.publisher) : null)),
++      server.description ? h('span', { className: 'bt-mm-description' }, server.description) : null),
 +    h('div', { className: 'bt-mm-cardEnd' },
 +      // A catalogue entry with no connection of its own can only be opened, never
 +      // installed; a fake install button would promise something it cannot do.
@@ -10077,7 +10075,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..9bb4dc9 100644
+index eac6ea5..a28c77d 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10354,7 +10352,7 @@ index eac6ea5..9bb4dc9 100644
 +.bt-mm-switch svg,.bt-mm-remove svg{width:16px;height:16px}
 +.bt-mm-switch:disabled,.bt-mm-remove:disabled{opacity:.5;cursor:default}
 +.bt-mm-name{font-size:14px;font-weight:600}
-+.bt-mm-tag{font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3)}
++.bt-mm-tag{font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3);font-weight:400}
 +.bt-mm-tag-on{color:var(--bt-accent)}
 +.bt-mm-drawer{display:flex;flex-direction:column;gap:14px;max-width:820px}
 +.bt-mm-detail-head{display:flex;align-items:center;gap:12px}

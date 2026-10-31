@@ -59,7 +59,7 @@
 | 57 | `ds-bot/src/client/new-chat.js` | 188–196 | 5 |
 | 58 | `ds-bot/src/client/new-chat.js` | 205–208 | 4 |
 | 59 | `ds-bot/src/client/new-chat.js` | 258 | 1 |
-| 60 | `ds-bot/src/client/plugin-mcp.js` | 1–551 | 551 |
+| 60 | `ds-bot/src/client/plugin-mcp.js` | 1–549 | 549 |
 | 61 | `ds-bot/src/client/plugin-skills.js` | 1–10 | 10 |
 | 62 | `ds-bot/src/client/provider-marks.js` | 1–131 | 131 |
 | 63 | `ds-bot/src/client/settings.js` | 4 | 1 |
