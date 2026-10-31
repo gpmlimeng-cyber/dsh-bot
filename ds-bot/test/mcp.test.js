@@ -11,19 +11,20 @@ const CLIENT = '@deepseek-ai/dsh-mcp-client'
 const stdio = { transport: 'stdio', serverName: 'files', command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem'], env: { ROOT: '/tmp/a b' } }
 const http = { transport: 'streamable-http', serverName: 'remote', url: 'https://mcp.test/sse', headers: { Authorization: 'Bearer x' } }
 
-test('a stdio row is the profile patch shape, values quoted', () => {
+test('a stdio row is an insert verb in the profile patch shape, values quoted', () => {
   assert.equal(rowText('mcp-files', stdio), [
-    '- id: "mcp-files"',
-    '  name: "@deepseek-ai/dsh-mcp-client"',
-    '  config:',
-    '    transport: "stdio"',
-    '    serverName: "files"',
-    '    command: "npx"',
-    '    args:',
-    '      - "-y"',
-    '      - "@modelcontextprotocol/server-filesystem"',
-    '    env:',
-    '      "ROOT": "/tmp/a b"',
+    '- insert:',
+    '    - id: "mcp-files"',
+    '      name: "@deepseek-ai/dsh-mcp-client"',
+    '      config:',
+    '        transport: "stdio"',
+    '        serverName: "files"',
+    '        command: "npx"',
+    '        args:',
+    '          - "-y"',
+    '          - "@modelcontextprotocol/server-filesystem"',
+    '        env:',
+    '          "ROOT": "/tmp/a b"',
     '',
   ].join('\n'))
 })
@@ -39,14 +40,19 @@ test('an http row carries url and headers only, and a bad shape is refused', () 
   assert.throws(() => rowText('mcp-x', { ...http, url: 'ftp://x' }), /http\(s\) URL/)
 })
 
-test('cutRow finds only a row this page wrote', () => {
+test('cutRow takes the whole insert verb and leaves nothing behind', () => {
   const text = `- id: "other"\n  name: "x"\n${rowText('mcp-files', stdio)}- id: "tail"\n  name: "y"\n`
   const cut = cutRow(text, 'mcp-files')
   assert.ok(cut !== null)
-  assert.equal(cut.block[0], '- id: "mcp-files"')
-  assert.equal(cut.block.at(-1), '      "ROOT": "/tmp/a b"')
+  assert.equal(cut.block[0], '- insert:')
+  assert.equal(cut.block[1], '    - id: "mcp-files"')
+  assert.equal(cut.block.at(-1), '          "ROOT": "/tmp/a b"')
+  const left = [...cut.lines.slice(0, cut.start), ...cut.lines.slice(cut.end)].join('\n')
+  assert.doesNotMatch(left, /mcp-files/)
+  assert.match(left, /id: "other"/)
+  assert.match(left, /id: "tail"/)
   // A block with our id but someone else's plugin is left alone.
-  const foreign = '- id: "mcp-files"\n  name: "another-plugin"\n'
+  const foreign = '- insert:\n    - id: "mcp-files"\n      name: "another-plugin"\n'
   assert.equal(cutRow(foreign, 'mcp-files'), null)
   assert.equal(cutRow(text, 'mcp-missing'), null)
 })
@@ -178,7 +184,7 @@ test('mcp-add replaces an empty patch document instead of appending to it', asyn
     await env.rt.mcpEndpoint('mcp-add', { config: stdio })
     const written = readFileSync(env.file, 'utf8')
     assert.doesNotMatch(written, /\[\]/, written)
-    assert.match(written, /^- id: "mcp-files"/)
+    assert.match(written, /^- insert:\n    - id: "mcp-files"/)
   } finally { env.done() }
 })
 

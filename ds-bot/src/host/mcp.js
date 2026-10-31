@@ -13,53 +13,74 @@
 // ponytail: our write is not under the profile's file lock (that is an internal), so a
 // bundle install running at the same instant can win; the reload self-check notices and
 // puts the file back. Serialising with the editor's lock would need its internals.
-import { readFile, writeFile, rename, unlink } from 'node:fs/promises'
-import { replaceFile } from './files.js'
+import { readFile, writeFile, rename } from 'node:fs/promises'
+import { request as httpsRequest } from 'node:https'
 
 const MCP_CLIENT = '@deepseek-ai/dsh-mcp-client'
 const SERVER_NAME = /^[A-Za-z0-9_-]{1,32}$/
 // A row written here is ours only when its id carries this prefix; anything else in the
 // file belongs to the user or another plugin and is never rewritten or removed.
 const ID_PREFIX = 'mcp-'
-const RECHECK_MS = 1200
+// A written row shows up once the loader has reloaded the profile. A large profile takes
+// longer than a small one, so the row is given a few seconds before the write is undone.
+const RECHECK_MS = 1500
+const RECHECK_TRIES = 6
 const SCHEMA_TEXT_MAX = 4000
 // The ModelScope plaza answers one page of twenty rows; the panel asks for a page at a time.
 const MARKET_PAGE_SIZE = 20
 const MARKET_README_MAX = 4000
-const MARKET_TIMEOUT_MS = 15000
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 
 // YAML double-quoted scalars accept JSON string escapes as they are.
 const quote = value => JSON.stringify(String(value))
 
-// The eight config keys an MCP client row can carry, written in the schema's own order.
-// Values come from the panel's form, so a mis-shaped one is refused here rather than
-// written into the profile.
+// The profile patch is a list of verbs; a new row goes in through an `insert` list, the
+// only verb that adds an entry. Values are JSON-quoted: a JSON string is a valid YAML
+// double-quoted scalar. The row keeps the shape the loader shows in its patch docs.
+const MCP_NAME_LINE = `      name: ${quote(MCP_CLIENT)}`
+
 export function rowText(id, config) {
   const transport = config?.transport === 'streamable-http' ? 'streamable-http' : 'stdio'
   const serverName = String(config?.serverName ?? '')
   if (!SERVER_NAME.test(serverName)) throw new Error('A server name is 1–32 letters, digits, "_" or "-"')
-  const lines = [`- id: ${quote(id)}`, `  name: ${quote(MCP_CLIENT)}`, '  config:', `    transport: ${quote(transport)}`, `    serverName: ${quote(serverName)}`]
+  const lines = ['- insert:', `    - id: ${quote(id)}`, `      name: ${quote(MCP_CLIENT)}`, '      config:', `        transport: ${quote(transport)}`, `        serverName: ${quote(serverName)}`]
   if (transport === 'stdio') {
     const command = String(config?.command ?? '').trim()
     if (command === '') throw new Error('A stdio server needs a command')
-    lines.push(`    command: ${quote(command)}`)
+    lines.push(`        command: ${quote(command)}`)
     const args = Array.isArray(config?.args) ? config.args.filter(argument => typeof argument === 'string' && argument !== '') : []
-    if (args.length === 0) lines.push('    args: []')
-    else lines.push('    args:', ...args.map(argument => `      - ${quote(argument)}`))
+    if (args.length === 0) lines.push('        args: []')
+    else lines.push('        args:', ...args.map(argument => `          - ${quote(argument)}`))
     const env = pairs(config?.env)
-    if (env.length === 0) lines.push('    env: {}')
-    else lines.push('    env:', ...env.map(([key, value]) => `      ${quote(key)}: ${quote(value)}`))
+    if (env.length === 0) lines.push('        env: {}')
+    else lines.push('        env:', ...env.map(([key, value]) => `          ${quote(key)}: ${quote(value)}`))
   } else {
     const url = String(config?.url ?? '').trim()
     if (!/^https?:\/\/\S+$/i.test(url)) throw new Error('An http server needs an http(s) URL')
-    lines.push(`    url: ${quote(url)}`)
+    lines.push(`        url: ${quote(url)}`)
     const headers = pairs(config?.headers)
-    if (headers.length === 0) lines.push('    headers: {}')
-    else lines.push('    headers:', ...headers.map(([key, value]) => `      ${quote(key)}: ${quote(value)}`))
+    if (headers.length === 0) lines.push('        headers: {}')
+    else lines.push('        headers:', ...headers.map(([key, value]) => `          ${quote(key)}: ${quote(value)}`))
   }
   return `${lines.join('\n')}\n`
+}
+
+// The block written by `rowText` for this id: the whole `- insert:` block that carries it,
+// so taking a row away leaves no empty verb behind.
+export function cutRow(text, id) {
+  const lines = String(text ?? '').split('\n')
+  const row = lines.findIndex(line => line.trimEnd() === `    - id: ${quote(id)}`)
+  if (row < 0) return null
+  if (!lines.slice(row + 1, row + 3).includes(MCP_NAME_LINE)) return null
+  let start = row
+  while (start > 0 && !lines[start].startsWith('- ')) start -= 1
+  if (!lines[start].startsWith('- ')) return null
+  let end = row + 1
+  while (end < lines.length && !lines[end].startsWith('- ')) end += 1
+  const block = lines.slice(start, end).filter(line => line !== '')
+  return { lines, start, end, block }
 }
 
 // `env`/`headers` arrive from a form as `{ key: value }`; blank keys are dropped.
@@ -70,16 +91,40 @@ function pairs(value) {
     .map(([key, item]) => [key.trim(), item])
 }
 
-// The block written by `rowText`: from its `- id:` line to the next row at column zero.
-export function cutRow(text, id) {
-  const lines = String(text ?? '').split('\n')
-  const start = lines.findIndex(line => line.trimEnd() === `- id: ${quote(id)}`)
-  if (start < 0) return null
-  let end = start + 1
-  while (end < lines.length && !lines[end].startsWith('- ')) end += 1
-  const block = lines.slice(start, end)
-  if (!block.some(line => line.trimEnd() === `  name: ${quote(MCP_CLIENT)}`)) return null
-  return { start, end, block, lines }
+// The plaza answers JSON over https. `fetch` is not used here: inside the running app it
+// left the request hanging past any reasonable timeout, while a plain https request from
+// the same runtime answers in a few hundred milliseconds.
+const MARKET_TIMEOUT_MS = 12000
+function httpsJson(url, { method = 'GET', body = null } = {}) {
+  return new Promise((resolve, reject) => {
+    const target = new URL(url)
+    const payload = body === null ? null : Buffer.from(JSON.stringify(body), 'utf8')
+    const headers = { accept: 'application/json', 'user-agent': 'ds-bot' }
+    if (payload !== null) {
+      headers['content-type'] = 'application/json'
+      headers['content-length'] = String(payload.length)
+    }
+    const request = httpsRequest({ method, hostname: target.hostname, path: `${target.pathname}${target.search}`, headers, timeout: MARKET_TIMEOUT_MS }, (response) => {
+      const chunks = []
+      response.on('data', chunk => chunks.push(chunk))
+      response.on('end', () => {
+        const text = Buffer.concat(chunks).toString('utf8')
+        if (response.statusCode !== undefined && response.statusCode >= 400) {
+          reject(Object.assign(new Error(`ModelScope answered ${response.statusCode}`), { code: 'bot/upstream' }))
+          return
+        }
+        try {
+          resolve(JSON.parse(text))
+        } catch {
+          reject(Object.assign(new Error('ModelScope answered with something other than JSON'), { code: 'bot/upstream' }))
+        }
+      })
+    })
+    request.on('timeout', () => request.destroy(Object.assign(new Error('ModelScope did not answer in time'), { code: 'bot/upstream' })))
+    request.on('error', (error) => reject(Object.assign(error, { code: error.code === 'ENOTFOUND' ? 'bot/upstream' : error.code ?? 'bot/upstream' })))
+    if (payload !== null) request.write(payload)
+    request.end()
+  })
 }
 
 export function install(rt) {
@@ -157,20 +202,17 @@ export function install(rt) {
   // the change did not land.
   async function writePatch(path, text, check) {
     const before = await readFile(path, 'utf8').catch(() => '[]\n')
-    const temp = `${path}.ds-bot-${process.pid}.tmp`
-    // The profile patch is the user's own file and holds provider keys and `!!js`
-    // expressions; it stays readable by its owner only, so the replacement does too.
-    await writeFile(temp, text, { encoding: 'utf8', mode: 0o600 })
-    try {
-      await replaceFile(temp, path)
-    } catch (error) {
-      await unlink(temp).catch(() => {})
-      throw error
+    // The file is written in place, not swapped in: the profile's loader watches the
+    // document it opened, and an atomic rename replaces that file, so the loaded profile
+    // never sees the new row. The previous text is kept in memory for the restore below.
+    // The patch holds provider keys and `!!js` expressions, so it stays owner-readable.
+    await writeFile(path, text, { encoding: 'utf8', mode: 0o600 })
+    for (let attempt = 0; attempt < RECHECK_TRIES; attempt += 1) {
+      try {
+        await sleep(RECHECK_MS)
+        if (await check()) return
+      } catch { /* checked below */ }
     }
-    try {
-      await sleep(RECHECK_MS)
-      if (await check()) return
-    } catch { /* checked below */ }
     const back = `${path}.ds-bot-restore-${process.pid}.tmp`
     await writeFile(back, before, { encoding: 'utf8', mode: 0o600 })
     await rename(back, path).catch(() => {})
@@ -219,13 +261,14 @@ export function install(rt) {
       if (!SERVER_NAME.test(serverName)) throw fail('A server name is 1–32 letters, digits, "_" or "-"')
       const { path, text } = await readPatch()
       if (cutRow(text, id) !== null) throw fail(`A server called ${serverName} is already in the profile`)
-      if (editor()?.entries().some(entry => entry.options.id === id)) throw fail(`A row with the id ${id} is already there`)
-      const block = rowText(id, body.config)
+      const row = rowText(id, body.config)
       // An empty patch document is `[]`; rows cannot follow that, so they replace it.
       const base = text.trimEnd()
-      const next = base === '' || base === '[]' ? block : `${base}\n${block}`
-      await writePatch(path, next, async () => (await servers()).servers.some(item => item.serverName === serverName))
-      return servers()
+      const next = base === '' || base === '[]' ? row : `${base}\n${row}`
+      // A row added here is read when DSH next starts, so the write is checked against the
+      // document itself; `pending` tells the page the server is not running yet.
+      await writePatch(path, next, async () => (await readFile(path, 'utf8')).includes(`- id: ${quote(id)}`))
+      return { ...(await servers()), pending: serverName }
     },
     async 'mcp-remove'(body) {
       const serverName = String(body.serverName ?? '')
@@ -234,28 +277,19 @@ export function install(rt) {
       const cut = cutRow(text, id)
       if (cut === null) {
         // A row the user wrote by hand has no `mcp-` id; removing it would mean editing
-        // their own text, which this panel does not do.
-        const ed = editor()
-        if (ed?.entries().some(entry => entry.options.id === id)) throw fail('That row was not added from here, so it stays')
+        // their own text, which this page does not do.
         throw fail('That server is not in the profile', 'bot/stale')
       }
       const lines = [...cut.lines.slice(0, cut.start), ...cut.lines.slice(cut.end)]
-      await writePatch(path, lines.join('\n'), async () => !(await servers()).servers.some(item => item.serverName === serverName))
+      await writePatch(path, lines.join('\n'), async () => !(await readFile(path, 'utf8')).includes(`- id: ${quote(id)}`))
       return servers()
     },
-    // The ModelScope MCP plaza, read through its own open API. Search lists the catalogue
-    // (PUT on the collection, the only verb it answers), and one server's detail carries
-    // what a client needs to connect: either a hosted endpoint under the user's account
-    // or a stdio launch line to run locally.
     async 'mcp-market'(body) {
       const base = 'https://modelscope.cn/openapi/v1/mcp/servers'
-      const timeout = AbortSignal.timeout(MARKET_TIMEOUT_MS)
       if (body.kind === 'detail') {
         const id = String(body.id ?? '')
         if (!/^@?[\w.-]+\/[\w.-]+$/.test(id)) throw fail('Unknown MCP server id')
-        const answer = await fetch(`${base}/${id.split('/').map(encodeURIComponent).join('/')}`, { headers: { accept: 'application/json' }, signal: timeout })
-        if (!answer.ok) throw fail(`ModelScope answered ${answer.status}`, 'bot/upstream')
-        const data = (await answer.json())?.data ?? {}
+        const data = (await httpsJson(`${base}/${id.split('/').map(encodeURIComponent).join('/')}`))?.data ?? {}
         const readme = String(data.readme ?? '')
         const hosted = (Array.isArray(data.operational_urls) ? data.operational_urls : [])
           .map(entry => ({ type: String(entry?.url ?? '').split('/').pop() ?? '', url: String(entry?.url ?? '') }))
@@ -278,14 +312,10 @@ export function install(rt) {
         }
       }
       const page = Math.max(1, Math.min(10, Number(body.page ?? 1) || 1))
-      const answer = await fetch(base, {
+      const data = (await httpsJson(base, {
         method: 'PUT',
-        headers: { accept: 'application/json', 'content-type': 'application/json' },
-        body: JSON.stringify({ page_number: page, page_size: MARKET_PAGE_SIZE, search: String(body.query ?? '') }),
-        signal: timeout,
-      })
-      if (!answer.ok) throw fail(`ModelScope answered ${answer.status}`, 'bot/upstream')
-      const data = (await answer.json())?.data ?? {}
+        body: { page_number: page, page_size: MARKET_PAGE_SIZE, search: String(body.query ?? '') },
+      }))?.data ?? {}
       const rows = Array.isArray(data.mcp_server_list) ? data.mcp_server_list : []
       return {
         total: Number(data.total_count ?? rows.length),

@@ -8,7 +8,7 @@
 // tools on the MCP page.
 import { createElement as h, useEffect, useMemo, useRef, useState } from 'react'
 import { t } from './i18n.js'
-import { CloseIcon, PlusIcon, SearchIcon } from './icons.js'
+import { CloseIcon, PlusIcon, SearchIcon, SwitchIcon, TrashIcon } from './icons.js'
 
 // A server name has to fit the profile's own rule; the plaza's ids are `@owner/name`.
 const nameOf = (id) => {
@@ -104,6 +104,34 @@ function Detail({ actions, server, state, report, onClose, onAdded }) {
       }, busy ? t('Adding…') : h('span', null, h(PlusIcon), t('Add to DSH')))))
 }
 
+// The servers this profile already runs, above the plaza: the same rows the MCP settings
+// page draws, so adding one from the plaza leaves it somewhere the person can switch off
+// or take away without leaving the tab.
+function Installed({ servers, busy, onToggle, onRemove }) {
+  if (servers.length === 0) return h('p', { className: 'bt-mm-note' }, t('No MCP server is running in this profile yet.'))
+  return h('div', { className: 'bt-mm-installed' }, servers.map(server => h('div', {
+    key: server.entryId ?? server.serverName,
+    className: 'bt-mm-inst-row',
+    'data-off': server.enabled ? undefined : '',
+  },
+  h('span', { className: 'bt-mm-inst-main' },
+    h('span', { className: 'bt-mm-name' }, server.serverName),
+    h('span', { className: 'bt-mm-note' },
+      server.transport === 'streamable-http' ? t('Hosted endpoint') : t('Local process'),
+      server.enabled ? '' : ` · ${t('Off')}`,
+      server.toolCount ? ` · ${t('{count} tools', { count: server.toolCount })}` : '')),
+  h('span', { className: 'bt-mm-inst-end' },
+    h('button', {
+      type: 'button', className: 'bt-mm-switch', 'aria-pressed': server.enabled, 'data-on': server.enabled ? '' : undefined,
+      'aria-label': server.enabled ? t('Turn off') : t('Turn on'), title: server.enabled ? t('Turn off') : t('Turn on'),
+      disabled: busy !== '', onClick: () => onToggle(server),
+    }, h(SwitchIcon)),
+    h('button', {
+      type: 'button', className: 'bt-mm-remove', 'aria-label': t('Remove'), title: t('Remove'),
+      disabled: busy !== '', onClick: () => onRemove(server),
+    }, h(TrashIcon))))))
+}
+
 export function McpMarketTab({ actions = {} }) {
   const [query, setQuery] = useState('')
   const [sent, setSent] = useState('')
@@ -114,6 +142,9 @@ export function McpMarketTab({ actions = {} }) {
   const [open, setOpen] = useState(null)
   const [added, setAdded] = useState({})
   const [installed, setInstalled] = useState([])
+  const [rows, setRows] = useState([])
+  const [busyRow, setBusyRow] = useState('')
+  const [notice, setNotice] = useState('')
   const timer = useRef(null)
 
   const report = (failure) => setError(String(failure?.message ?? failure))
@@ -122,6 +153,7 @@ export function McpMarketTab({ actions = {} }) {
     let live = true
     Promise.resolve(actions.mcpList?.()).then((next) => {
       if (!live) return
+      setRows(next?.servers ?? [])
       setInstalled((next?.servers ?? []).map(server => server.serverName))
     }, () => {})
     return () => { live = false }
@@ -149,10 +181,29 @@ export function McpMarketTab({ actions = {} }) {
     return () => { live = false }
   }, [actions, sent, page])
 
+  const applyRows = (next) => {
+    setRows(next?.servers ?? [])
+    setInstalled((next?.servers ?? []).map(server => server.serverName))
+  }
+  const toggle = (server) => {
+    setBusyRow(server.entryId ?? server.serverName)
+    Promise.resolve(actions.mcpToggle?.({ entryId: server.entryId, enabled: !server.enabled }))
+      .then((next) => { setBusyRow(''); applyRows(next) }, (failure) => { setBusyRow(''); report(failure) })
+  }
+  const remove = (server) => {
+    setBusyRow(server.entryId ?? server.serverName)
+    Promise.resolve(actions.mcpRemove?.({ serverName: server.serverName }))
+      .then((next) => { setBusyRow(''); applyRows(next) }, (failure) => { setBusyRow(''); report(failure) })
+  }
+
   const names = useMemo(() => new Set(installed), [installed])
   const more = list.servers.length < list.total
 
   return h('div', { className: 'bt-mm' },
+    notice ? h('p', { className: 'bt-mm-done' }, notice) : null,
+    h('section', { className: 'bt-mm-section' },
+      h('h4', { className: 'bt-mm-h' }, t('In this profile')),
+      h(Installed, { servers: rows, busy: busyRow, onToggle: toggle, onRemove: remove })),
     h('div', { className: 'bt-mm-head' },
       h('label', { className: 'bt-mm-search' },
         h(SearchIcon),
@@ -188,6 +239,7 @@ export function McpMarketTab({ actions = {} }) {
         onAdded: (next, serverName) => {
           setAdded((now) => ({ ...now, [open.id]: serverName }))
           setInstalled((next?.servers ?? []).map(server => server.serverName))
+          setNotice(next?.pending ? t('Added {name}. Restart DSH to run it.', { name: serverName }) : '')
           setOpen(null)
         },
       }))

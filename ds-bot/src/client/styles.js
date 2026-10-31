@@ -277,6 +277,19 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-list{display:flex;flex-direction:column}
 .bt-mm-row{display:flex;align-items:flex-start;gap:12px;width:100%;padding:12px 8px;border:0;border-radius:12px;background:none;text-align:left;color:var(--bt-ink);font:inherit;cursor:pointer}
 .bt-mm-row:hover{background:var(--bt-hover)}
+.bt-mm-section{display:flex;flex-direction:column;gap:6px}
+.bt-mm-h{margin:0;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--bt-ink-3);text-transform:none}
+.bt-mm-installed{display:flex;flex-direction:column;box-shadow:inset 0 0 0 .5px var(--bt-line-2);border-radius:12px;padding:4px}
+.bt-mm-inst-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:9px}
+.bt-mm-inst-row:hover{background:var(--bt-hover)}
+.bt-mm-inst-row[data-off] .bt-mm-name{color:var(--bt-ink-3)}
+.bt-mm-inst-main{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}
+.bt-mm-inst-end{display:flex;align-items:center;gap:4px;flex:none}
+.bt-mm-switch,.bt-mm-remove{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--bt-ink-3);cursor:pointer}
+.bt-mm-switch:hover,.bt-mm-remove:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mm-switch[data-on]{color:var(--bt-accent)}
+.bt-mm-switch svg,.bt-mm-remove svg{width:16px;height:16px}
+.bt-mm-switch:disabled,.bt-mm-remove:disabled{opacity:.5;cursor:default}
 .bt-mm-logo{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
 .bt-mm-logo-lg{width:48px;height:48px;border-radius:12px}
 .bt-mm-logo-empty{display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;background:var(--bt-hover);color:var(--bt-ink-2)}
@@ -290,6 +303,7 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-more{align-self:center;height:32px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
 .bt-mm-note{margin:0;font-size:12.5px;color:var(--bt-ink-3)}
 .bt-mm-error{margin:0;font-size:13px;color:#c0392b}
+.bt-mm-done{margin:0;font-size:12.5px;color:var(--bt-accent)}
 .bt-mm-detail{display:flex;flex-direction:column;gap:14px;max-width:820px}
 .bt-mm-detail-head{display:flex;align-items:center;gap:12px}
 .bt-mm-detail-title{flex:1 1 auto;min-width:0}

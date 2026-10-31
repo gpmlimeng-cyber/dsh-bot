@@ -88,6 +88,13 @@ var ZH = {
   "Skills": "技能",
   "MCP": "MCP",
   "Hosted": "已托管",
+  "In this profile": "本档案里",
+  "No MCP server is running in this profile yet.": "本档案还没有运行中的 MCP 服务器。",
+  "Local process": "本地进程",
+  "Off": "已停用",
+  "{count} tools": "{count} 个工具",
+  "Turn on": "启用",
+  "Turn off": "停用",
   "Added as {name}": "已添加为 {name}",
   "Add to DSH": "添加到 DSH",
   "Adding…": "添加中…",
@@ -101,6 +108,7 @@ var ZH = {
   "Needs {names} set in the profile": "需要在档案里设置 {names}",
   "This server has no connection this profile can use on its own.": "这个服务器没有本档案可以直接使用的连接方式。",
   "Server name": "服务器名",
+  "Added {name}. Restart DSH to run it.": "已添加 {name}，重启 DSH 后生效。",
   "Add server": "新增服务器",
   "New MCP server": "新建 MCP 服务器",
   "Edit MCP server": "编辑 MCP 服务器",
@@ -114,7 +122,6 @@ var ZH = {
   "Search tools": "搜索工具",
   "Reading tools…": "正在读取工具…",
   "This server has registered no tools. It may be unreachable, or it may offer none.": "这个服务器目前没有注册任何工具。可能连不上，也可能它本身没有工具。",
-  "{count} tools": "{count} 个工具",
   "{count} tools registered": "已注册 {count} 个工具",
   "This server is off, so it registers no tools.": "这个服务器已停用，因此不会注册工具。",
   "Delete {name} and the row that starts it? Its tools go with it.": "删除 {name} 以及启动它的那一行？它的工具会一起消失。",
@@ -2854,6 +2861,19 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-list{display:flex;flex-direction:column}
 .bt-mm-row{display:flex;align-items:flex-start;gap:12px;width:100%;padding:12px 8px;border:0;border-radius:12px;background:none;text-align:left;color:var(--bt-ink);font:inherit;cursor:pointer}
 .bt-mm-row:hover{background:var(--bt-hover)}
+.bt-mm-section{display:flex;flex-direction:column;gap:6px}
+.bt-mm-h{margin:0;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--bt-ink-3);text-transform:none}
+.bt-mm-installed{display:flex;flex-direction:column;box-shadow:inset 0 0 0 .5px var(--bt-line-2);border-radius:12px;padding:4px}
+.bt-mm-inst-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:9px}
+.bt-mm-inst-row:hover{background:var(--bt-hover)}
+.bt-mm-inst-row[data-off] .bt-mm-name{color:var(--bt-ink-3)}
+.bt-mm-inst-main{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}
+.bt-mm-inst-end{display:flex;align-items:center;gap:4px;flex:none}
+.bt-mm-switch,.bt-mm-remove{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--bt-ink-3);cursor:pointer}
+.bt-mm-switch:hover,.bt-mm-remove:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mm-switch[data-on]{color:var(--bt-accent)}
+.bt-mm-switch svg,.bt-mm-remove svg{width:16px;height:16px}
+.bt-mm-switch:disabled,.bt-mm-remove:disabled{opacity:.5;cursor:default}
 .bt-mm-logo{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
 .bt-mm-logo-lg{width:48px;height:48px;border-radius:12px}
 .bt-mm-logo-empty{display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;background:var(--bt-hover);color:var(--bt-ink-2)}
@@ -2867,6 +2887,7 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-more{align-self:center;height:32px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
 .bt-mm-note{margin:0;font-size:12.5px;color:var(--bt-ink-3)}
 .bt-mm-error{margin:0;font-size:13px;color:#c0392b}
+.bt-mm-done{margin:0;font-size:12.5px;color:var(--bt-accent)}
 .bt-mm-detail{display:flex;flex-direction:column;gap:14px;max-width:820px}
 .bt-mm-detail-head{display:flex;align-items:center;gap:12px}
 .bt-mm-detail-title{flex:1 1 auto;min-width:0}
@@ -27278,6 +27299,51 @@ function Detail({ actions, server, state, report, onClose, onAdded }) {
     )
   );
 }
+function Installed({ servers, busy, onToggle, onRemove }) {
+  if (servers.length === 0) return (0, import_react55.createElement)("p", { className: "bt-mm-note" }, t("No MCP server is running in this profile yet."));
+  return (0, import_react55.createElement)("div", { className: "bt-mm-installed" }, servers.map((server) => (0, import_react55.createElement)(
+    "div",
+    {
+      key: server.entryId ?? server.serverName,
+      className: "bt-mm-inst-row",
+      "data-off": server.enabled ? void 0 : ""
+    },
+    (0, import_react55.createElement)(
+      "span",
+      { className: "bt-mm-inst-main" },
+      (0, import_react55.createElement)("span", { className: "bt-mm-name" }, server.serverName),
+      (0, import_react55.createElement)(
+        "span",
+        { className: "bt-mm-note" },
+        server.transport === "streamable-http" ? t("Hosted endpoint") : t("Local process"),
+        server.enabled ? "" : ` · ${t("Off")}`,
+        server.toolCount ? ` · ${t("{count} tools", { count: server.toolCount })}` : ""
+      )
+    ),
+    (0, import_react55.createElement)(
+      "span",
+      { className: "bt-mm-inst-end" },
+      (0, import_react55.createElement)("button", {
+        type: "button",
+        className: "bt-mm-switch",
+        "aria-pressed": server.enabled,
+        "data-on": server.enabled ? "" : void 0,
+        "aria-label": server.enabled ? t("Turn off") : t("Turn on"),
+        title: server.enabled ? t("Turn off") : t("Turn on"),
+        disabled: busy !== "",
+        onClick: () => onToggle(server)
+      }, (0, import_react55.createElement)(SwitchIcon)),
+      (0, import_react55.createElement)("button", {
+        type: "button",
+        className: "bt-mm-remove",
+        "aria-label": t("Remove"),
+        title: t("Remove"),
+        disabled: busy !== "",
+        onClick: () => onRemove(server)
+      }, (0, import_react55.createElement)(TrashIcon))
+    )
+  )));
+}
 function McpMarketTab({ actions = {} }) {
   const [query, setQuery] = (0, import_react55.useState)("");
   const [sent, setSent] = (0, import_react55.useState)("");
@@ -27288,12 +27354,16 @@ function McpMarketTab({ actions = {} }) {
   const [open, setOpen] = (0, import_react55.useState)(null);
   const [added, setAdded] = (0, import_react55.useState)({});
   const [installed, setInstalled] = (0, import_react55.useState)([]);
+  const [rows2, setRows] = (0, import_react55.useState)([]);
+  const [busyRow, setBusyRow] = (0, import_react55.useState)("");
+  const [notice, setNotice] = (0, import_react55.useState)("");
   const timer = (0, import_react55.useRef)(null);
   const report = (failure) => setError(String(failure?.message ?? failure));
   (0, import_react55.useEffect)(() => {
     let live = true;
     Promise.resolve(actions.mcpList?.()).then((next) => {
       if (!live) return;
+      setRows(next?.servers ?? []);
       setInstalled((next?.servers ?? []).map((server) => server.serverName));
     }, () => {
     });
@@ -27329,11 +27399,42 @@ function McpMarketTab({ actions = {} }) {
       live = false;
     };
   }, [actions, sent, page]);
+  const applyRows = (next) => {
+    setRows(next?.servers ?? []);
+    setInstalled((next?.servers ?? []).map((server) => server.serverName));
+  };
+  const toggle = (server) => {
+    setBusyRow(server.entryId ?? server.serverName);
+    Promise.resolve(actions.mcpToggle?.({ entryId: server.entryId, enabled: !server.enabled })).then((next) => {
+      setBusyRow("");
+      applyRows(next);
+    }, (failure) => {
+      setBusyRow("");
+      report(failure);
+    });
+  };
+  const remove = (server) => {
+    setBusyRow(server.entryId ?? server.serverName);
+    Promise.resolve(actions.mcpRemove?.({ serverName: server.serverName })).then((next) => {
+      setBusyRow("");
+      applyRows(next);
+    }, (failure) => {
+      setBusyRow("");
+      report(failure);
+    });
+  };
   const names = (0, import_react55.useMemo)(() => new Set(installed), [installed]);
   const more = list.servers.length < list.total;
   return (0, import_react55.createElement)(
     "div",
     { className: "bt-mm" },
+    notice ? (0, import_react55.createElement)("p", { className: "bt-mm-done" }, notice) : null,
+    (0, import_react55.createElement)(
+      "section",
+      { className: "bt-mm-section" },
+      (0, import_react55.createElement)("h4", { className: "bt-mm-h" }, t("In this profile")),
+      (0, import_react55.createElement)(Installed, { servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove })
+    ),
     (0, import_react55.createElement)(
       "div",
       { className: "bt-mm-head" },
@@ -27374,6 +27475,7 @@ function McpMarketTab({ actions = {} }) {
       onAdded: (next, serverName) => {
         setAdded((now) => ({ ...now, [open.id]: serverName }));
         setInstalled((next?.servers ?? []).map((server) => server.serverName));
+        setNotice(next?.pending ? t("Added {name}. Restart DSH to run it.", { name: serverName }) : "");
         setOpen(null);
       }
     })
