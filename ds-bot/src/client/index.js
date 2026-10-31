@@ -1239,7 +1239,12 @@ export function apply(ctx) {
     if (!document.getElementById('bt-modebar-rules')) {
       const rules = document.createElement('style')
       rules.id = 'bt-modebar-rules'
-      rules.textContent = 'button[aria-label="打开侧边栏"],button[aria-label="收起侧边栏"]:not(.bt-band-action),button[aria-label="展开侧边栏"]:not(.bt-side-expand),button[aria-label="Open sidebar"],button[aria-label="Close sidebar"]{display:none!important}'
+      // The shell's own sidebar toggles go, so only one control per role is on screen. The
+      // exclusions are ours: the header's own button is labelled "Expand sidebar" too, and
+      // without the exemption this rule hid it along with the shell's.
+      const hostToggle = label => `button[aria-label="${label}"]:not(.bt-head-btn):not(.bt-side-expand):not(.bt-band-action)`
+      rules.textContent = ['打开侧边栏', '收起侧边栏', '展开侧边栏', 'Open sidebar', 'Close sidebar'].map(hostToggle).join(',')
+        + '{display:none!important}'
         + 'html.bt-agent [class*="_logoRow"]{display:none!important}'
         + '.bt-modebar-row:empty{display:none}'
       document.head.appendChild(rules)
