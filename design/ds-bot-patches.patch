@@ -2328,10 +2328,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..94360d9
+index 0000000..49287d6
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,728 @@
+@@ -0,0 +1,737 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2633,17 +2633,21 @@ index 0000000..94360d9
 +  const [adding, setAdding] = useState(null)
 +  const timer = useRef(null)
 +
-+  // A menu hangs off its own trigger, so a press anywhere else simply closes it.
++  // A menu hangs off its own trigger, so a press anywhere else — or Escape — closes it.
 +  useEffect(() => {
 +    if (!sourceMenu) return undefined
 +    const close = (event) => {
 +      if (sourceWrap.current !== null && sourceWrap.current.contains(event.target)) return
 +      setSourceMenu(false)
 +    }
++    const escape = (event) => { if (event.key === 'Escape') setSourceMenu(false) }
 +    document.addEventListener('pointerdown', close, true)
-+    return () => document.removeEventListener('pointerdown', close, true)
++    document.addEventListener('keydown', escape)
++    return () => {
++      document.removeEventListener('pointerdown', close, true)
++      document.removeEventListener('keydown', escape)
++    }
 +  }, [sourceMenu])
-+
 +
 +  useEffect(() => {
 +    if (!moreLabels) return undefined
@@ -2651,8 +2655,13 @@ index 0000000..94360d9
 +      if (labelRow.current !== null && labelRow.current.contains(event.target)) return
 +      setMoreLabels(false)
 +    }
++    const escape = (event) => { if (event.key === 'Escape') setMoreLabels(false) }
 +    document.addEventListener('pointerdown', close, true)
-+    return () => document.removeEventListener('pointerdown', close, true)
++    document.addEventListener('keydown', escape)
++    return () => {
++      document.removeEventListener('pointerdown', close, true)
++      document.removeEventListener('keydown', escape)
++    }
 +  }, [moreLabels])
 +
 +  const report = (failure) => setError(String(failure?.message ?? failure))
