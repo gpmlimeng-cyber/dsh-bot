@@ -94,12 +94,12 @@
 | 92 | `ds-bot/src/client/styles.js` | 982–984 | 3 |
 | 93 | `ds-bot/src/client/styles.js` | 1000–1001 | 2 |
 | 94 | `ds-bot/src/client/styles.js` | 1041–1042 | 2 |
-| 95 | `ds-bot/src/client/styles.js` | 1337–1495 | 159 |
-| 96 | `ds-bot/src/client/styles.js` | 1595–1690 | 76 |
-| 97 | `ds-bot/src/client/styles.js` | 1709 | 1 |
-| 98 | `ds-bot/src/client/styles.js` | 1740–1751 | 9 |
-| 99 | `ds-bot/src/client/styles.js` | 1760 | 1 |
-| 100 | `ds-bot/src/client/styles.js` | 1801–1806 | 6 |
+| 95 | `ds-bot/src/client/styles.js` | 1337–1501 | 165 |
+| 96 | `ds-bot/src/client/styles.js` | 1601–1696 | 76 |
+| 97 | `ds-bot/src/client/styles.js` | 1715 | 1 |
+| 98 | `ds-bot/src/client/styles.js` | 1746–1757 | 9 |
+| 99 | `ds-bot/src/client/styles.js` | 1766 | 1 |
+| 100 | `ds-bot/src/client/styles.js` | 1807–1812 | 6 |
 | 101 | `ds-bot/src/client/team-actions.js` | 3 | 1 |
 | 102 | `ds-bot/src/client/team-actions.js` | 22–23 | 2 |
 | 103 | `ds-bot/src/client/team-actions.js` | 55–59 | 2 |
@@ -124,7 +124,7 @@
 | 122 | `ds-bot/test/sidebar-switch.test.js` | 95–115 | 11 |
 | 123 | `ds-bot/test/sidebar-switch.test.js` | 293 | 1 |
 | 124 | `ds-bot/test/sidebar-switch.test.js` | 345–375 | 18 |
-| 125 | `ds-bot/test/skin.test.js` | 1–173 | 173 |
+| 125 | `ds-bot/test/skin.test.js` | 1–191 | 191 |
 | 126 | `ds-bot/test/style-debt.json` | 22–57 | 28 |
 | 127 | `ds-bot/test/style-debt.json` | 84–89 | 2 |
 | 128 | `ds-bot/test/style-debt.json` | 108–111 | 4 |

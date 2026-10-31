@@ -10452,7 +10452,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..798e5e21 100644
+index eac6ea54..5669ab3b 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -11021,7 +11021,7 @@ index eac6ea54..798e5e21 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1334,165 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1334,171 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -11164,7 +11164,7 @@ index eac6ea54..798e5e21 100644
 +  --bt-app-text-sub:13px;    --bt-app-leading-sub:18px;
 +  --bt-app-text-meta:12px;   --bt-app-leading-meta:16px;
 +  --bt-app-gap:8px;
-+  --bt-app-pad:12px 16px;
++  --bt-app-pad:8px 10px;
 +  --bt-app-row:48px;
 +  --bt-app-shadow-float:var(--bt-float-shadow);
 +}
@@ -11184,10 +11184,16 @@ index eac6ea54..798e5e21 100644
 +   draws. Radius and padding only: a width here would resolve against the width the host has
 +   already shrunk, which squeezes the bubble instead of matching the Bot's side. */
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important}
++/* On the phone the bubble this plugin draws for the user's own messages drops its time; the
++   desktop keeps it. The shell's user row carries no time of its own to hide. */
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-utime{display:none}
++/* A group's own bubble is drawn here, so the skin's padding and radius reach it through the
++   same tokens as the rest. */
++html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-ububble{padding:var(--bt-app-pad);border-radius:var(--bt-app-radius-bubble)}
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1592,102 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1598,102 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -11313,7 +11319,7 @@ index eac6ea54..798e5e21 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1081,7 +1706,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1081,7 +1712,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
  body[data-bt-room] .bt-voice{display:none!important}
@@ -11322,7 +11328,7 @@ index eac6ea54..798e5e21 100644
  .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
  [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
  .bt-q{order:1}
-@@ -1112,17 +1737,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1743,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -11349,7 +11355,7 @@ index eac6ea54..798e5e21 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1757,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1763,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -11358,7 +11364,7 @@ index eac6ea54..798e5e21 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1798,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1804,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -16534,10 +16540,10 @@ index 59109a99..429e92e8 100644
  test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
 diff --git a/ds-bot/test/skin.test.js b/ds-bot/test/skin.test.js
 new file mode 100644
-index 00000000..7842fd00
+index 00000000..7b86e087
 --- /dev/null
 +++ b/ds-bot/test/skin.test.js
-@@ -0,0 +1,173 @@
+@@ -0,0 +1,191 @@
 +import assert from 'node:assert/strict'
 +import { readFileSync } from 'node:fs'
 +import { test } from 'node:test'
@@ -16590,7 +16596,25 @@ index 00000000..7842fd00
 +  const user = /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{([^}]*)\}/.exec(bundle)
 +  assert.ok(user !== null, 'no rule for the host’s user bubbles')
 +  assert.ok(!user[1].includes('max-width'), 'the skin still caps the host’s user bubble width')
-+  // The host draws the user's bubble with one shorthand and no per-corner rule, so the same
++  // The bubble this plugin draws for the user's own messages drops its time on the phone; the
++// desktop keeps it, and the shell's user row has no time of its own to touch.
++test('the phone leaves the time out of the user’s own bubble', () => {
++  const ours = /:not\(\[data-bt-skin=ours\]\) \.bt-utime\{display:none\}/.exec(bundle)
++  assert.ok(ours !== null, 'the plugin’s own bubble time still shows on the phone')
++  const line = bundle.slice(bundle.lastIndexOf('\n', ours.index) + 1, bundle.indexOf('}', ours.index))
++  assert.ok(line.includes('[data-mobile-nav="frame"]'), `a time is hidden off the phone: ${line.slice(0, 120)}`)
++  assert.ok(!bundle.includes('_userRow"] [class*="_time"]'), 'the empty shell-row time selector came back')
++})
++
++// The group's own bubble is drawn by this plugin, so it has to read the same tokens.
++test('the plugin’s own user bubble follows the skin’s padding and radius', () => {
++  const rule = /:not\(\[data-bt-skin=ours\]\) \.bt-ububble\{([^}]*)\}/.exec(bundle)
++  assert.ok(rule !== null, 'the plugin’s own user bubble ignores the skin')
++  assert.match(rule[1], /padding:var\(--bt-app-pad\)/)
++  assert.match(rule[1], /border-radius:var\(--bt-app-radius-bubble\)/)
++})
++
++// The host draws the user's bubble with one shorthand and no per-corner rule, so the same
 +  // shorthand here covers all four corners; a longhand would only add a way to miss one.
 +  assert.match(user[1], /border-radius:var\(--bt-app-radius-bubble\)!important/)
 +  assert.ok(!/border-(?:start|end)-(?:start|end)-radius/.test(user[1]), 'the user bubble grew a per-corner radius')
@@ -16606,7 +16630,7 @@ index 00000000..7842fd00
 +  assert.match(body, /padding:var\(--bt-app-pad\)/)
 +  assert.match(body, /line-height:1\.625/)
 +  assert.match(bundle, /--bt-app-radius-bubble:5px/)
-+  assert.match(bundle, /--bt-app-pad:12px 16px/)
++  assert.match(bundle, /--bt-app-pad:8px 10px/)
 +  // Neighbouring bubbles use the radius minus the padding step, not a hand-written 9px.
 +  assert.match(bundle, /border-start-start-radius:var\(--bt-app-radius-bubble-inset\)/)
 +  assert.match(bundle, /--bt-app-radius-bubble-inset:max\(2px, calc\(var\(--bt-app-radius-bubble\) - 12px - 1px\)\)/)
