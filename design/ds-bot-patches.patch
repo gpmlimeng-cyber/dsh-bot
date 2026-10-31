@@ -436,7 +436,7 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 0696236..77e47b3 100644
+index 0696236..59b8a05 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
 @@ -18,6 +18,140 @@ const ZH = {
@@ -588,15 +588,16 @@ index 0696236..77e47b3 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -226,6 +359,7 @@ const ZH = {
+@@ -226,6 +359,8 @@ const ZH = {
    About: '简介',
    'Show less': '收起',
    'Show more': '展开',
-+  'Show all': '查看全部',
++  'View {names}, and {count} more': '查看{names}，另有 {count} 项',
++  'View {names}': '查看{names}',
    'Admin leads': '管理员主持',
    'Plain messages go to the admin, who calls others with @Name.': '普通消息先给管理员，由管理员用 @名字 点名其他成员。',
    Everyone: '所有人',
-@@ -430,6 +564,23 @@ const ZH = {
+@@ -430,6 +565,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -620,7 +621,7 @@ index 0696236..77e47b3 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -545,6 +696,19 @@ const ZH = {
+@@ -545,6 +697,19 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -640,7 +641,7 @@ index 0696236..77e47b3 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +846,6 @@ const ZH = {
+@@ -682,7 +847,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -648,7 +649,7 @@ index 0696236..77e47b3 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1094,10 @@ const ZH = {
+@@ -931,6 +1095,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -659,7 +660,7 @@ index 0696236..77e47b3 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1140,7 @@ const ZH = {
+@@ -973,6 +1141,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -667,7 +668,7 @@ index 0696236..77e47b3 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1236,10 @@ const ZH = {
+@@ -1068,6 +1237,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -2336,10 +2337,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..1eb1251
+index 0000000..b3460f1
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,771 @@
+@@ -0,0 +1,783 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2350,7 +2351,7 @@ index 0000000..1eb1251
 +// tools on the MCP page.
 +import { createElement as h, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 +import { t } from './i18n.js'
-+import { ChevronRightIcon, CloseIcon, PlusIcon, SearchIcon, TrashIcon } from './icons.js'
++import { CloseIcon, PlusIcon, SearchIcon, TrashIcon } from './icons.js'
 +
 +// A server name has to fit the profile's own rule; the plaza's ids are `@owner/name`.
 +const nameOf = (id) => {
@@ -2877,6 +2878,16 @@ index 0000000..1eb1251
 +      .map(([id, servers]) => ({ id, name: category !== '' ? categoryName(category) : (id === '' ? t('All') : categoryName(id)), servers }))
 +      .sort((left, right) => rank(left.id) - rank(right.id) || right.servers.length - left.servers.length)
 +  }, [shown, category, categories, t])
++  // A section shows six cards, and names what it leaves out the way the shell's own skill
++  // list does: the first missing names, then how many more there are.
++  const sectionMore = (group) => {
++    const rest = group.servers.slice(6)
++    if (rest.length === 0) return null
++    const names = rest.slice(0, 2).map(server => server.name).join(', ')
++    return rest.length > 2
++      ? t('View {names}, and {count} more', { names, count: rest.length - 2 })
++      : t('View {names}', { names })
++  }
 +  const more = list.servers.length < list.total
 +
 +  const body = view === 'installed'
@@ -2901,18 +2912,19 @@ index 0000000..1eb1251
 +              h('div', { className: 'bt-mm-main' },
 +                h('span', { className: 'bt-mm-skeletonBar bt-mm-skeletonTitle' }),
 +                h('span', { className: 'bt-mm-skeletonBar bt-mm-skeletonDescription' })))))
-+            : groups.map(group => h('section', { className: 'bt-mm-group', key: group.id || 'all' },
++            : groups.map((group) => {
++              const more = category === '' && group.id !== '' ? sectionMore(group) : null
++              return h('section', { className: 'bt-mm-group', key: group.id || 'all' },
 +              h('div', { className: 'bt-mm-grouphead' },
 +                h('h3', { className: 'bt-mm-grouptitle' }, group.name),
-+                category === '' && group.id !== ''
-+                  ? h('button', {
++                more === null
++                  ? null
++                  : h('button', {
 +                    type: 'button',
 +                    className: 'bt-mm-groupmore',
-+                    'aria-label': t('Show all'),
-+                    title: t('Show all'),
++                    title: group.name,
 +                    onClick: () => { pick(group.id); setPage(1) },
-+                  }, h(ChevronRightIcon))
-+                  : null),
++                  }, more)),
 +              h('ul', { className: 'bt-mm-cards' }, group.servers.slice(0, category === '' ? 6 : group.servers.length).map(server => h(Row, {
 +                key: server.id,
 +                server,
@@ -2927,7 +2939,8 @@ index 0000000..1eb1251
 +                onInstall: () => install(server),
 +                onOpen: () => setOpen(server),
 +                onHome: () => { try { window.open(server.homepage, '_blank', 'noopener') } catch { /* no window */ } },
-+              }))))),
++              }))))}
++            ),
 +          more
 +            ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
 +              loading ? t('Reading…') : t('Show more'))
@@ -10306,7 +10319,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..26e269f 100644
+index eac6ea5..9ae5c47 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10564,7 +10577,7 @@ index eac6ea5..26e269f 100644
 +.bt-mm-group{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
 +.bt-mm-grouphead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 8px;border-bottom:.5px solid var(--bt-line)}
 +.bt-mm-grouptitle{margin:0;font-size:14px;font-weight:600;line-height:22px;color:var(--dsw-alias-label-primary)}
-+.bt-mm-groupmore{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin:-4px -6px -4px 0;border:0;border-radius:6px;background:none;color:var(--dsw-alias-label-tertiary,var(--bt-ink-3));cursor:pointer}.bt-mm-groupmore:hover{background:var(--dsw-alias-interactive-bg-hover,var(--bt-hover));color:var(--dsw-alias-label-primary,var(--bt-ink))}
++.bt-mm-groupmore{min-width:0;max-width:62%;margin-left:auto;padding:0;border:0;background:none;color:var(--dsw-alias-label-tertiary,var(--bt-ink-3));font:inherit;font-size:12.5px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}.bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary,var(--bt-ink))}
 +.bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary)}
 +/* The installed card's switch is the shell's own switch, copied from its stylesheet:
 +   36x20, layer-3 track, brand fill when on, 16px thumb that slides 16px. */
