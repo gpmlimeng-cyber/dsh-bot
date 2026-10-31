@@ -28738,7 +28738,19 @@ function apply(ctx) {
         return;
       }
       modeRow?.remove();
-      placeModeRow(document, [modeBar, bandActions], bandOwner());
+      const owner = bandOwner();
+      placeModeRow(document, [modeBar, bandActions], owner);
+      const host = modeBar.parentNode;
+      if (host !== null && host !== document.body && typeof host.getBoundingClientRect === "function") {
+        const hosted = host.getBoundingClientRect();
+        for (const node of [modeBar, bandActions]) {
+          if (node === null || node.parentNode !== host) continue;
+          const box = node.getBoundingClientRect();
+          node.style.position = "absolute";
+          node.style.left = `${Math.round(box.left - hosted.left)}px`;
+          node.style.top = `${Math.round(box.top - hosted.top)}px`;
+        }
+      }
     };
     const bandOwner = () => {
       if (modeBar === null || modeBar.parentNode === null) return void 0;

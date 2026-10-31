@@ -1282,7 +1282,22 @@ export function apply(ctx) {
       // band, whatever paints above it. A child of that header can take the press back with
       // app-region: no-drag, so the row is mounted inside whatever element the band really
       // is, and only falls back to the body when the band belongs to nothing.
-      placeModeRow(document, [modeBar, bandActions], bandOwner())
+      const owner = bandOwner()
+      placeModeRow(document, [modeBar, bandActions], owner)
+      // Inside the band's element the row is positioned against that element instead of the
+      // window, so it is measured where it paints now and pinned to the same spot in the
+      // element's own coordinates. Both surfaces then draw it at the same place.
+      const host = modeBar.parentNode
+      if (host !== null && host !== document.body && typeof host.getBoundingClientRect === 'function') {
+        const hosted = host.getBoundingClientRect()
+        for (const node of [modeBar, bandActions]) {
+          if (node === null || node.parentNode !== host) continue
+          const box = node.getBoundingClientRect()
+          node.style.position = 'absolute'
+          node.style.left = `${Math.round(box.left - hosted.left)}px`
+          node.style.top = `${Math.round(box.top - hosted.top)}px`
+        }
+      }
     }
 
     // The element the caption band actually is in this build: probed under the row itself,
