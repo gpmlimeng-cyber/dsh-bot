@@ -127,3 +127,17 @@ test('picking a skin keeps it on the row and never sends it to the host', () => 
   assert.equal(skin.pick('ours').props.value, 'ours')
   assert.deepEqual(skin.calls, [['skin', 'ours']])
 })
+
+// The token itself is defined unscoped so its consumers can stay readable; the phone marker
+// has to be on every consumer, or a rule that reaches the desktop would repaint it.
+test('every rule that uses the skin bubble token is scoped to the phone', () => {
+  const consumers = []
+  for (let at = bundle.indexOf('var(--bt-skin-bubble'); at >= 0; at = bundle.indexOf('var(--bt-skin-bubble', at + 1)) {
+    const start = Math.max(bundle.lastIndexOf('}', at), bundle.lastIndexOf('\n', at), bundle.lastIndexOf('`', at))
+    consumers.push(bundle.slice(start + 1, bundle.indexOf('{', start + 1)).trim())
+  }
+  assert.ok(consumers.length >= 3, `expected the token's consumers, found ${consumers.length}`)
+  for (const selector of consumers) {
+    assert.ok(selector.includes('[data-mobile-nav="frame"]'), `the token is used outside the phone: ${selector}`)
+  }
+})
