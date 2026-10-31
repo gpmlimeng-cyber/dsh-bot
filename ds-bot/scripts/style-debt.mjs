@@ -110,7 +110,10 @@ const code = text => text.split(/\r?\n/)
 export function findStyles(dir = CLIENT) {
   const found = Object.fromEntries(Object.keys(checks).map(kind => [kind, {}]))
   for (const file of readdirSync(dir, { recursive: true }).filter(name => name.endsWith('.js')).map(name => name.replaceAll('\\', '/'))) {
+    // A line ending in `/* vendored */` is third-party CSS taken as it ships (MIT, see
+    // NOTICE); its literals belong to that project, not to our token rules.
     const text = code(readFileSync(join(dir, file), 'utf8'))
+      .split('\n').filter(line => !line.includes('/* vendored */')).join('\n')
     for (const [kind, check] of Object.entries(checks)) {
       for (const value of check(file, text)) {
         const counts = (found[kind][file] ??= {})

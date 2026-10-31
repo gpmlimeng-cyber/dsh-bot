@@ -148,3 +148,9 @@ their ideas; it does not contain their code.
     the two faces the Font setting offers, embedded in
     ds-bot/src/client/fonts.js from @fontsource-variable/inter and
     @fontsource-variable/geist (latin subsets, variable weight axis).
+  - @deepseek-ai/dsh-client-ui-plugin-market (MIT, Copyright (c) 2026 DeepSeek):
+    the MCP plaza's Discover section reuses its stylesheet and card
+    structure as they ship — DiscoverSection.module.css rules with the
+    class prefix dq5LxG_ renamed to bt-mm-, and the card hierarchy
+    (icon / main / titleRow / description / meta / cardEnd). In
+    ds-bot/src/client/styles.js and ds-bot/src/client/plugin-mcp.js.

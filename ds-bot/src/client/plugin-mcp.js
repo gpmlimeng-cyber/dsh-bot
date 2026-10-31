@@ -58,26 +58,26 @@ const CATEGORY_NAMES = {
 const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
 
 function Row({ server, added, busy, onInstall, onOpen }) {
-  return h('div', { className: 'bt-mm-plug' + (added ? ' is-added' : '') },
-    h('button', { type: 'button', className: 'bt-mm-plugopen', 'aria-label': server.name, onClick: onOpen }),
-    server.logo
-      ? h('img', { className: 'bt-mm-logo', src: server.logo, alt: '', loading: 'lazy' })
-      : h('span', { className: 'bt-mm-logo bt-mm-logo-empty', 'aria-hidden': true }, server.name.slice(0, 1)),
+  return h('li', { className: 'bt-mm-card', 'data-mcp-entry': server.id },
+    h('span', { className: 'bt-mm-icon', 'aria-hidden': true },
+      server.logo
+        ? h('img', { className: 'bt-mm-image', src: server.logo, width: 36, height: 36, alt: '', loading: 'lazy', referrerPolicy: 'no-referrer' })
+        : h('span', null, server.name.slice(0, 1))),
     h('div', { className: 'bt-mm-main' },
-      h('div', { className: 'bt-mm-title' },
-        h('span', { className: 'bt-mm-name' }, server.name),
+      h('div', { className: 'bt-mm-titleRow' },
+        h('button', { type: 'button', className: 'bt-mm-cardOpen', 'aria-label': server.name, onClick: onOpen }, server.name),
         server.hosted ? h('span', { className: 'bt-mm-tag' }, t('Hosted')) : null,
         added ? h('span', { className: 'bt-mm-tag bt-mm-tag-on' }, t('Added')) : null),
-      h('div', { className: 'bt-mm-meta' },
-        server.installs ? h('span', { className: 'bt-mm-count' }, `↓ ${shortCount(server.installs)}`) : null,
-        server.publisher ? h('span', { className: 'bt-mm-pub' }, server.publisher) : null),
-      h('p', { className: 'bt-mm-desc' }, server.description)),
-    h('div', { className: 'bt-mm-end' },
+      server.description ? h('span', { className: 'bt-mm-description' }, server.description) : null,
+      h('span', { className: 'bt-mm-meta' },
+        server.installs ? h('span', null, `↓ ${shortCount(server.installs)}`) : null,
+        server.publisher ? h('span', null, server.publisher) : null)),
+    h('div', { className: 'bt-mm-cardEnd' },
       // The button installs here, like the shell's own market: already installed is a
       // state, not a control, so it is disabled rather than a click that does nothing.
       h('button', {
         type: 'button',
-        className: 'bt-mm-install',
+        className: 'bt-mm-btn',
         'data-added': added ? '' : undefined,
         disabled: added || busy,
         onClick: onInstall,
@@ -117,9 +117,9 @@ function Detail({ actions, server, state, report, onClose, onAdded }) {
       .then((next) => { setBusy(false); onAdded(next, name) }, (failure) => { setBusy(false); report(failure) })
   }
 
-  return h('div', { className: 'bt-mm-detail' },
+  return h('div', { className: 'bt-mm-drawer' },
     h('div', { className: 'bt-mm-detail-head' },
-      server.logo ? h('img', { className: 'bt-mm-logo bt-mm-logo-lg', src: server.logo, alt: '', loading: 'lazy' }) : null,
+      server.logo ? h('img', { className: 'bt-mm-icon bt-mm-image', src: server.logo, width: 48, height: 48, alt: '', loading: 'lazy', referrerPolicy: 'no-referrer' }) : null,
       h('div', { className: 'bt-mm-detail-title' },
         h('h3', null, server.name),
         h('p', null, server.publisher || server.id)),
@@ -128,8 +128,8 @@ function Detail({ actions, server, state, report, onClose, onAdded }) {
     error ? h('p', { className: 'bt-mm-error' }, error) : null,
     detail === null && error === '' ? h('p', { className: 'bt-mm-note' }, t('Reading the server…')) : null,
     config !== null
-      ? h('div', { className: 'bt-mm-card' },
-        h('span', { className: 'bt-mm-card-label' }, url ? t('Hosted endpoint') : t('Launch line')),
+      ? h('div', { className: 'bt-mm-config' },
+        h('span', { className: 'bt-mm-config-label' }, url ? t('Hosted endpoint') : t('Launch line')),
         h('code', { className: 'bt-mm-code' }, url || `${stdio.command} ${stdio.args.join(' ')}`.trim()),
         stdio?.env?.length ? h('span', { className: 'bt-mm-note' }, t('Needs {names} set in the profile', { names: stdio.env.join(', ') })) : null,
         h('label', { className: 'bt-mm-field' },
@@ -375,19 +375,25 @@ export function McpMarketTab({ actions = {} }) {
       })
       : open === null
         ? [
-          h('div', { className: 'bt-mm-list', key: 'list' }, shown.map(server => h(Row, {
-            key: server.id,
-            server,
-            added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
-            busy: installing === server.id,
-            onInstall: () => install(server),
-            onOpen: () => setOpen(server),
-          }))),
+          loading && list.servers.length === 0
+            ? h('ul', { className: 'bt-mm-cards', key: 'skeleton', 'aria-busy': true }, [0, 1, 2].map(index => h('li', { key: index, className: 'bt-mm-card' },
+              h('span', { className: 'bt-mm-icon bt-mm-skeletonFill', 'aria-hidden': true }),
+              h('div', { className: 'bt-mm-main' },
+                h('span', { className: 'bt-mm-skeletonBar bt-mm-skeletonTitle' }),
+                h('span', { className: 'bt-mm-skeletonBar bt-mm-skeletonDescription' })))))
+            : h('ul', { className: 'bt-mm-cards', key: 'list' }, shown.map(server => h(Row, {
+              key: server.id,
+              server,
+              added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
+              busy: installing === server.id,
+              onInstall: () => install(server),
+              onOpen: () => setOpen(server),
+            }))),
           more
-            ? h('button', { type: 'button', className: 'bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
+            ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
               loading ? t('Reading…') : t('Show more'))
             : null,
-          !loading && list.servers.length === 0 && error === '' ? h('p', { className: 'bt-mm-note', key: 'empty' }, t('No MCP server matches that search.')) : null,
+          !loading && shown.length === 0 && error === '' ? h('p', { className: 'bt-mm-muted', key: 'empty' }, t('No MCP server matches that search.')) : null,
         ]
         : h(Detail, {
           key: open.id,
@@ -416,8 +422,8 @@ export function McpMarketTab({ actions = {} }) {
     notice ? h('p', { className: 'bt-mm-done' }, notice) : null,
     view === 'discover'
       ? [
-        h('div', { className: 'bt-mm-head', key: 'head' },
-          h('label', { className: 'bt-mm-search' },
+        h('div', { className: 'bt-mm-toolbar', key: 'toolbar' },
+          h('label', { className: 'bt-mm-search bt-mm-box' },
             h(SearchIcon),
             h('input', {
               value: query,
@@ -431,16 +437,20 @@ export function McpMarketTab({ actions = {} }) {
               h('option', { value: 'default' }, t('Default order')),
               h('option', { value: 'installs' }, t('Downloads')))),
           h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() }))),
-        h('div', { className: 'bt-mm-filters', key: 'filters' },
-          h('span', { className: 'bt-mm-filter-label' }, t('Labels')),
-          h('div', { className: 'bt-mm-chips' },
-            h('button', { type: 'button', className: 'bt-mm-chip' + (category === '' ? ' is-on' : ''), onClick: () => pick('') }, t('All')),
-            categories.map(item => h('button', {
-              key: item.id,
-              type: 'button',
-              className: 'bt-mm-chip' + (category === item.id ? ' is-on' : ''),
-              onClick: () => pick(item.id),
-            }, categoryName(item.id))))),
+        categories.length === 0 ? null : h('div', { className: 'bt-mm-categories', key: 'categories', role: 'group', 'aria-label': t('Labels') },
+          h('button', {
+            type: 'button',
+            className: 'bt-mm-pill' + (category === '' ? ' is-on' : ''),
+            'aria-pressed': category === '',
+            onClick: () => pick(''),
+          }, t('All')),
+          categories.map(item => h('button', {
+            key: item.id,
+            type: 'button',
+            className: 'bt-mm-pill' + (category === item.id ? ' is-on' : ''),
+            'aria-pressed': category === item.id,
+            onClick: () => pick(item.id),
+          }, categoryName(item.id)))),
       ]
       : null,
     error ? h('p', { className: 'bt-mm-error' }, error) : null,
