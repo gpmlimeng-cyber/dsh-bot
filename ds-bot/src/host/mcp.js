@@ -31,7 +31,9 @@ const MARKET_PAGE_SIZE = 20
 const MARKET_README_MAX = 4000
 // The plaza has no categories endpoint, so the chips come from one scan of its first pages,
 // kept for a while: the set changes slowly and the page should not re-scan on every open.
-const MARKET_SCAN_PAGES = 2
+// The plaza caps `page_number x page_size` at 100 and answers 403 past it, so the scan
+// uses one page of 100 and one of 50 rather than two of 100.
+const MARKET_SCAN = [{ page: 1, size: 100 }, { page: 2, size: 50 }]
 const MARKET_CATEGORIES_TTL_MS = 10 * 60 * 1000
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -373,8 +375,11 @@ export function install(rt) {
         const now = Date.now()
         if (categoryCache.at !== 0 && now - categoryCache.at < MARKET_CATEGORIES_TTL_MS) return categoryCache.value
         const counts = new Map()
-        for (let scan = 1; scan <= MARKET_SCAN_PAGES; scan += 1) {
-          const page = (await httpsJson(base, { method: 'PUT', body: { page_number: scan, page_size: 100, search: '' } }))?.data ?? {}
+        for (const step of MARKET_SCAN) {
+          // One refused page leaves the rest of the scan alone: a thin chip row still
+          // beats the empty one a thrown page would leave.
+          const page = await httpsJson(base, { method: 'PUT', body: { page_number: step.page, page_size: step.size, search: '' } })
+            .then(answer => answer?.data ?? {}, () => ({}))
           for (const row of Array.isArray(page.mcp_server_list) ? page.mcp_server_list : []) {
             for (const raw of Array.isArray(row.categories) ? row.categories : []) {
               const id = String(raw).toLowerCase()
