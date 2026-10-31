@@ -2327,7 +2327,7 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..0c67778
+index 0000000..921c49a
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
 @@ -0,0 +1,549 @@
@@ -2855,13 +2855,8 @@ index 0000000..0c67778
 +              'aria-label': t('Search MCP servers'),
 +              onChange: (event) => setQuery(event.target.value),
 +            })),
-+          h('label', { className: 'bt-mm-sort' },
-+            h('span', null, t('Sort')),
-+            h('select', { value: sort, 'aria-label': t('Sort'), onChange: (event) => setSort(event.target.value) },
-+              h('option', { value: 'default' }, t('Default order')),
-+              h('option', { value: 'installs' }, t('Downloads')))),
-+          loading && list.servers.length === 0 ? h('span', { className: 'bt-mm-total' }, t('Reading…')) : null),
-+        categories.length === 0 ? null : h('div', { className: 'bt-mm-categories', key: 'categories', role: 'group', 'aria-label': t('Labels') },
++          h('span', { className: 'bt-mm-muted bt-mm-filterlabel' }, t('Labels')),
++          categories.length === 0 ? null : h('div', { className: 'bt-mm-categories', key: 'categories', role: 'group', 'aria-label': t('Labels') },
 +          h('button', {
 +            type: 'button',
 +            className: 'bt-mm-pill' + (category === '' ? ' is-on' : ''),
@@ -2875,6 +2870,11 @@ index 0000000..0c67778
 +            'aria-pressed': category === item.id,
 +            onClick: () => pick(item.id),
 +          }, categoryName(item.id)))),
++          h('label', { className: 'bt-mm-sort' },
++            h('span', null, t('Sort')),
++            h('select', { value: sort, 'aria-label': t('Sort'), onChange: (event) => setSort(event.target.value) },
++              h('option', { value: 'default' }, t('Default order')),
++              h('option', { value: 'installs' }, t('Downloads'))))),
 +      ]
 +      : null,
 +    error ? h('p', { className: 'bt-mm-error' }, error) : null,
@@ -10075,7 +10075,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..37642c1 100644
+index eac6ea5..84ed7e9 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10116,7 +10116,7 @@ index eac6ea5..37642c1 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,49 +141,387 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,49 +141,390 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -10282,7 +10282,10 @@ index eac6ea5..37642c1 100644
 +   Only the class prefix changed, dq5LxG_ -> bt-mm-, and the market dropdown is named for
 +   what it picks here: bt-mm-source / bt-mm-source-name. Numbers, order and states are the
 +   ones it ships, so this panel measures the same as the shell's own page. */
-+.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex}
++.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex;flex-wrap:wrap}
++.bt-mm-filterlabel{flex:none}
++.bt-mm-toolbar .bt-mm-categories{flex:1 1 320px;min-width:0}
++.bt-mm-toolbar .bt-mm-sort{margin-left:auto}
 +/* ds-bot chrome around the vendored card list: the source picker, its menu and the
 +   add-source form. It follows the shell's menu look, not the vendored sheet's. */
 +.bt-mm-sourcewrap{position:relative;flex:none}
@@ -10534,7 +10537,7 @@ index eac6ea5..37642c1 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -344,6 +688,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -344,6 +691,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -10561,7 +10564,7 @@ index eac6ea5..37642c1 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -571,7 +935,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -571,7 +938,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -10572,7 +10575,7 @@ index eac6ea5..37642c1 100644
  /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
     collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -587,6 +953,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+@@ -587,6 +956,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
  /* Elsewhere the switch shows only while the column is hidden, where the column's
     own top row had it. */
  html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
@@ -10581,7 +10584,7 @@ index eac6ea5..37642c1 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -626,7 +994,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -626,7 +997,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -10591,7 +10594,7 @@ index eac6ea5..37642c1 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1290,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1293,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -10712,7 +10715,7 @@ index eac6ea5..37642c1 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1503,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1506,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -10821,7 +10824,7 @@ index eac6ea5..37642c1 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1112,17 +1631,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1634,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -10848,7 +10851,7 @@ index eac6ea5..37642c1 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1651,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1654,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -10857,7 +10860,7 @@ index eac6ea5..37642c1 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1692,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1695,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
