@@ -132,7 +132,61 @@ function Installed({ servers, busy, onToggle, onRemove }) {
     }, h(TrashIcon))))))
 }
 
+// The custom view: a server the person names and configures themselves. It is the same
+// two shapes DSH runs — a local process, or a hosted endpoint.
+function Custom({ actions, report, onAdded }) {
+  const [form, setForm] = useState({ serverName: '', transport: 'stdio', command: '', args: '', env: '', url: '', headers: '' })
+  const [busy, setBusy] = useState(false)
+  const set = (key, value) => setForm((now) => ({ ...now, [key]: value }))
+  const http = form.transport === 'streamable-http'
+  const lines = text => String(text).split('\n').map(line => line.trim()).filter(line => line !== '')
+  const pairs = text => Object.fromEntries(lines(text).map((line) => {
+    const at = line.indexOf('=')
+    return at < 0 ? [line, ''] : [line.slice(0, at).trim(), line.slice(at + 1).trim()]
+  }))
+  const canSave = form.serverName.trim() !== '' && (http ? /^https?:\/\//i.test(form.url.trim()) : form.command.trim() !== '')
+
+  const add = () => {
+    if (!canSave || busy) return
+    setBusy(true)
+    const config = http
+      ? { transport: 'streamable-http', serverName: form.serverName.trim(), url: form.url.trim(), headers: pairs(form.headers) }
+      : { transport: 'stdio', serverName: form.serverName.trim(), command: form.command.trim(), args: lines(form.args), env: pairs(form.env) }
+    Promise.resolve(actions.mcpAdd?.({ config }))
+      .then((next) => { setBusy(false); onAdded(next, config.serverName) },
+        (failure) => { setBusy(false); report(failure) })
+  }
+
+  return h('div', { className: 'bt-mm-custom' },
+    h('p', { className: 'bt-mm-note' }, t('DSH starts each server as its own plugin; its tools become mcp__name__tool.')),
+    h('label', { className: 'bt-mm-field' },
+      h('span', null, t('Name')),
+      h('input', { value: form.serverName, placeholder: 'my-server', spellCheck: false, onChange: (event) => set('serverName', event.target.value) })),
+    h('div', { className: 'bt-mm-switchbar' },
+      h('button', { type: 'button', 'aria-pressed': !http, 'data-on': !http ? '' : undefined, onClick: () => set('transport', 'stdio') }, t('stdio')),
+      h('button', { type: 'button', 'aria-pressed': http, 'data-on': http ? '' : undefined, onClick: () => set('transport', 'streamable-http') }, t('streamable-http'))),
+    http
+      ? [
+        h('label', { className: 'bt-mm-field', key: 'url' }, h('span', null, t('URL')), h('input', { value: form.url, placeholder: 'https://host/mcp', spellCheck: false, onChange: (event) => set('url', event.target.value) })),
+        h('label', { className: 'bt-mm-field', key: 'headers' }, h('span', null, t('Headers')), h('textarea', { rows: 3, value: form.headers, placeholder: 'Authorization=Bearer …', onChange: (event) => set('headers', event.target.value) })),
+      ]
+      : [
+        h('label', { className: 'bt-mm-field', key: 'command' }, h('span', null, t('Command')), h('input', { value: form.command, placeholder: 'npx', spellCheck: false, onChange: (event) => set('command', event.target.value) })),
+        h('label', { className: 'bt-mm-field', key: 'args' }, h('span', null, t('Arguments')), h('textarea', { rows: 3, value: form.args, placeholder: '-y\n@modelcontextprotocol/server-filesystem\n/tmp', onChange: (event) => set('args', event.target.value) })),
+        h('label', { className: 'bt-mm-field', key: 'env' }, h('span', null, t('Environment')), h('textarea', { rows: 3, value: form.env, placeholder: 'KEY=value', onChange: (event) => set('env', event.target.value) })),
+      ],
+    h('div', { className: 'bt-mm-actions' },
+      h('button', { type: 'button', className: 'bt-mm-add', disabled: !canSave || busy, onClick: add }, busy ? t('Adding…') : t('Add server'))))
+}
+
+const VIEWS = () => [
+  { id: 'discover', name: t('Discover') },
+  { id: 'installed', name: t('Installed') },
+  { id: 'custom', name: t('Custom') },
+]
+
 export function McpMarketTab({ actions = {} }) {
+  const [view, setView] = useState('discover')
   const [query, setQuery] = useState('')
   const [sent, setSent] = useState('')
   const [page, setPage] = useState(1)
@@ -149,13 +203,16 @@ export function McpMarketTab({ actions = {} }) {
 
   const report = (failure) => setError(String(failure?.message ?? failure))
 
+  const applyRows = (next) => {
+    setRows(next?.servers ?? [])
+    setInstalled((next?.servers ?? []).map(server => server.serverName))
+  }
+
+  const loadRows = () => Promise.resolve(actions.mcpList?.()).then(applyRows, () => {})
+
   useEffect(() => {
     let live = true
-    Promise.resolve(actions.mcpList?.()).then((next) => {
-      if (!live) return
-      setRows(next?.servers ?? [])
-      setInstalled((next?.servers ?? []).map(server => server.serverName))
-    }, () => {})
+    Promise.resolve(actions.mcpList?.()).then((next) => { if (live) applyRows(next) }, () => {})
     return () => { live = false }
   }, [actions])
 
@@ -167,6 +224,7 @@ export function McpMarketTab({ actions = {} }) {
   }, [query])
 
   useEffect(() => {
+    if (view !== 'discover') return undefined
     let live = true
     setLoading(true)
     setError('')
@@ -179,12 +237,8 @@ export function McpMarketTab({ actions = {} }) {
           : { total: next?.total ?? now.total, servers: [...now.servers, ...(next?.servers ?? [])] })
       }, (failure) => { if (live) { setLoading(false); report(failure) } })
     return () => { live = false }
-  }, [actions, sent, page])
+  }, [actions, sent, page, view])
 
-  const applyRows = (next) => {
-    setRows(next?.servers ?? [])
-    setInstalled((next?.servers ?? []).map(server => server.serverName))
-  }
   const toggle = (server) => {
     setBusyRow(server.entryId ?? server.serverName)
     Promise.resolve(actions.mcpToggle?.({ entryId: server.entryId, enabled: !server.enabled }))
@@ -199,48 +253,71 @@ export function McpMarketTab({ actions = {} }) {
   const names = useMemo(() => new Set(installed), [installed])
   const more = list.servers.length < list.total
 
-  return h('div', { className: 'bt-mm' },
-    notice ? h('p', { className: 'bt-mm-done' }, notice) : null,
-    h('section', { className: 'bt-mm-section' },
-      h('h4', { className: 'bt-mm-h' }, t('In this profile')),
-      h(Installed, { servers: rows, busy: busyRow, onToggle: toggle, onRemove: remove })),
-    h('div', { className: 'bt-mm-head' },
-      h('label', { className: 'bt-mm-search' },
-        h(SearchIcon),
-        h('input', {
-          value: query,
-          placeholder: t('Search MCP servers'),
-          'aria-label': t('Search MCP servers'),
-          onChange: (event) => setQuery(event.target.value),
-        })),
-      h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() }))),
-    error ? h('p', { className: 'bt-mm-error' }, error) : null,
-    open === null
-      ? [
-        h('div', { className: 'bt-mm-list', key: 'list' }, list.servers.map(server => h(Row, {
-          key: server.id,
-          server,
-          added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
-          onOpen: () => setOpen(server),
-        }))),
-        more
-          ? h('button', { type: 'button', className: 'bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
-            loading ? t('Reading…') : t('Show more'))
-          : null,
-        !loading && list.servers.length === 0 && error === '' ? h('p', { className: 'bt-mm-note', key: 'empty' }, t('No MCP server matches that search.')) : null,
-      ]
-      : h(Detail, {
-        key: open.id,
+  const body = view === 'installed'
+    ? h(Installed, { key: 'installed', servers: rows, busy: busyRow, onToggle: toggle, onRemove: remove })
+    : view === 'custom'
+      ? h(Custom, {
+        key: 'custom',
         actions,
-        server: open,
-        state: added[open.id] ?? null,
         report,
-        onClose: () => setOpen(null),
         onAdded: (next, serverName) => {
-          setAdded((now) => ({ ...now, [open.id]: serverName }))
-          setInstalled((next?.servers ?? []).map(server => server.serverName))
-          setNotice(next?.pending ? t('Added {name}. Restart DSH to run it.', { name: serverName }) : '')
-          setOpen(null)
+          applyRows(next)
+          setNotice(t('Added {name}. Restart DSH to run it.', { name: serverName }))
+          setView('installed')
+          loadRows()
         },
-      }))
+      })
+      : open === null
+        ? [
+          h('div', { className: 'bt-mm-list', key: 'list' }, list.servers.map(server => h(Row, {
+            key: server.id,
+            server,
+            added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
+            onOpen: () => setOpen(server),
+          }))),
+          more
+            ? h('button', { type: 'button', className: 'bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
+              loading ? t('Reading…') : t('Show more'))
+            : null,
+          !loading && list.servers.length === 0 && error === '' ? h('p', { className: 'bt-mm-note', key: 'empty' }, t('No MCP server matches that search.')) : null,
+        ]
+        : h(Detail, {
+          key: open.id,
+          actions,
+          server: open,
+          state: added[open.id] ?? null,
+          report,
+          onClose: () => setOpen(null),
+          onAdded: (next, serverName) => {
+            setAdded((now) => ({ ...now, [open.id]: serverName }))
+            applyRows(next)
+            setNotice(next?.pending ? t('Added {name}. Restart DSH to run it.', { name: serverName }) : '')
+            setOpen(null)
+          },
+        })
+
+  return h('div', { className: 'bt-mm' },
+    h('div', { className: 'bt-mm-tabs', role: 'tablist', 'aria-label': t('MCP') }, VIEWS().map(item => h('button', {
+      key: item.id,
+      type: 'button',
+      role: 'tab',
+      'aria-selected': view === item.id,
+      className: 'bt-mm-tab' + (view === item.id ? ' is-on' : ''),
+      onClick: () => { setView(item.id); setOpen(null); setError('') },
+    }, item.name, item.id === 'installed' && rows.length > 0 ? h('span', { className: 'bt-mm-tabcount' }, String(rows.length)) : null))),
+    notice ? h('p', { className: 'bt-mm-done' }, notice) : null,
+    view === 'discover'
+      ? h('div', { className: 'bt-mm-head' },
+        h('label', { className: 'bt-mm-search' },
+          h(SearchIcon),
+          h('input', {
+            value: query,
+            placeholder: t('Search MCP servers'),
+            'aria-label': t('Search MCP servers'),
+            onChange: (event) => setQuery(event.target.value),
+          })),
+        h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() })))
+      : null,
+    error ? h('p', { className: 'bt-mm-error' }, error) : null,
+    body)
 }

@@ -89,6 +89,7 @@ var ZH = {
   "MCP": "MCP",
   "Hosted": "已托管",
   "In this profile": "本档案里",
+  "Discover": "发现",
   "No MCP server is running in this profile yet.": "本档案还没有运行中的 MCP 服务器。",
   "Local process": "本地进程",
   "Off": "已停用",
@@ -2855,6 +2856,18 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    server's connection details behind a row. */
 .bt-mm{display:flex;flex-direction:column;gap:12px;max-width:960px;padding-bottom:32px}
 .bt-mm-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bt-mm-tabs{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:10px;background:var(--bt-hover);align-self:flex-start}
+.bt-mm-tab{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
+.bt-mm-tab:hover{color:var(--bt-ink)}
+.bt-mm-tab.is-on{background:var(--bt-main,#fff);color:var(--bt-ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.bt-mm-tabcount{font-size:11px;color:var(--bt-ink-3)}
+.bt-mm-custom{display:flex;flex-direction:column;gap:12px;max-width:560px}
+.bt-mm-custom .bt-mm-field{align-items:flex-start}
+.bt-mm-custom .bt-mm-field>span{flex:0 0 88px;padding-top:8px;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-custom textarea{flex:1 1 auto;min-width:0;min-height:64px;padding:8px 10px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:13px;color:var(--bt-ink);outline:none;resize:vertical}
+.bt-mm-switchbar{display:inline-flex;gap:2px;padding:2px;border-radius:9px;background:var(--bt-hover);align-self:flex-start}
+.bt-mm-switchbar button{height:26px;padding:0 12px;border:0;border-radius:7px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer}
+.bt-mm-switchbar button[data-on]{background:var(--bt-main,#fff);color:var(--bt-ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .bt-mm-search{display:flex;align-items:center;gap:8px;flex:1 1 auto;max-width:420px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
 .bt-mm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
 .bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
@@ -27344,7 +27357,70 @@ function Installed({ servers, busy, onToggle, onRemove }) {
     )
   )));
 }
+function Custom({ actions, report, onAdded }) {
+  const [form, setForm] = (0, import_react55.useState)({ serverName: "", transport: "stdio", command: "", args: "", env: "", url: "", headers: "" });
+  const [busy, setBusy] = (0, import_react55.useState)(false);
+  const set = (key, value) => setForm((now) => ({ ...now, [key]: value }));
+  const http = form.transport === "streamable-http";
+  const lines = (text) => String(text).split("\n").map((line) => line.trim()).filter((line) => line !== "");
+  const pairs = (text) => Object.fromEntries(lines(text).map((line) => {
+    const at = line.indexOf("=");
+    return at < 0 ? [line, ""] : [line.slice(0, at).trim(), line.slice(at + 1).trim()];
+  }));
+  const canSave = form.serverName.trim() !== "" && (http ? /^https?:\/\//i.test(form.url.trim()) : form.command.trim() !== "");
+  const add = () => {
+    if (!canSave || busy) return;
+    setBusy(true);
+    const config = http ? { transport: "streamable-http", serverName: form.serverName.trim(), url: form.url.trim(), headers: pairs(form.headers) } : { transport: "stdio", serverName: form.serverName.trim(), command: form.command.trim(), args: lines(form.args), env: pairs(form.env) };
+    Promise.resolve(actions.mcpAdd?.({ config })).then(
+      (next) => {
+        setBusy(false);
+        onAdded(next, config.serverName);
+      },
+      (failure) => {
+        setBusy(false);
+        report(failure);
+      }
+    );
+  };
+  return (0, import_react55.createElement)(
+    "div",
+    { className: "bt-mm-custom" },
+    (0, import_react55.createElement)("p", { className: "bt-mm-note" }, t("DSH starts each server as its own plugin; its tools become mcp__name__tool.")),
+    (0, import_react55.createElement)(
+      "label",
+      { className: "bt-mm-field" },
+      (0, import_react55.createElement)("span", null, t("Name")),
+      (0, import_react55.createElement)("input", { value: form.serverName, placeholder: "my-server", spellCheck: false, onChange: (event) => set("serverName", event.target.value) })
+    ),
+    (0, import_react55.createElement)(
+      "div",
+      { className: "bt-mm-switchbar" },
+      (0, import_react55.createElement)("button", { type: "button", "aria-pressed": !http, "data-on": !http ? "" : void 0, onClick: () => set("transport", "stdio") }, t("stdio")),
+      (0, import_react55.createElement)("button", { type: "button", "aria-pressed": http, "data-on": http ? "" : void 0, onClick: () => set("transport", "streamable-http") }, t("streamable-http"))
+    ),
+    http ? [
+      (0, import_react55.createElement)("label", { className: "bt-mm-field", key: "url" }, (0, import_react55.createElement)("span", null, t("URL")), (0, import_react55.createElement)("input", { value: form.url, placeholder: "https://host/mcp", spellCheck: false, onChange: (event) => set("url", event.target.value) })),
+      (0, import_react55.createElement)("label", { className: "bt-mm-field", key: "headers" }, (0, import_react55.createElement)("span", null, t("Headers")), (0, import_react55.createElement)("textarea", { rows: 3, value: form.headers, placeholder: "Authorization=Bearer …", onChange: (event) => set("headers", event.target.value) }))
+    ] : [
+      (0, import_react55.createElement)("label", { className: "bt-mm-field", key: "command" }, (0, import_react55.createElement)("span", null, t("Command")), (0, import_react55.createElement)("input", { value: form.command, placeholder: "npx", spellCheck: false, onChange: (event) => set("command", event.target.value) })),
+      (0, import_react55.createElement)("label", { className: "bt-mm-field", key: "args" }, (0, import_react55.createElement)("span", null, t("Arguments")), (0, import_react55.createElement)("textarea", { rows: 3, value: form.args, placeholder: "-y\n@modelcontextprotocol/server-filesystem\n/tmp", onChange: (event) => set("args", event.target.value) })),
+      (0, import_react55.createElement)("label", { className: "bt-mm-field", key: "env" }, (0, import_react55.createElement)("span", null, t("Environment")), (0, import_react55.createElement)("textarea", { rows: 3, value: form.env, placeholder: "KEY=value", onChange: (event) => set("env", event.target.value) }))
+    ],
+    (0, import_react55.createElement)(
+      "div",
+      { className: "bt-mm-actions" },
+      (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-add", disabled: !canSave || busy, onClick: add }, busy ? t("Adding…") : t("Add server"))
+    )
+  );
+}
+var VIEWS = () => [
+  { id: "discover", name: t("Discover") },
+  { id: "installed", name: t("Installed") },
+  { id: "custom", name: t("Custom") }
+];
 function McpMarketTab({ actions = {} }) {
+  const [view, setView] = (0, import_react55.useState)("discover");
   const [query, setQuery] = (0, import_react55.useState)("");
   const [sent, setSent] = (0, import_react55.useState)("");
   const [page, setPage] = (0, import_react55.useState)(1);
@@ -27359,12 +27435,16 @@ function McpMarketTab({ actions = {} }) {
   const [notice, setNotice] = (0, import_react55.useState)("");
   const timer = (0, import_react55.useRef)(null);
   const report = (failure) => setError(String(failure?.message ?? failure));
+  const applyRows = (next) => {
+    setRows(next?.servers ?? []);
+    setInstalled((next?.servers ?? []).map((server) => server.serverName));
+  };
+  const loadRows = () => Promise.resolve(actions.mcpList?.()).then(applyRows, () => {
+  });
   (0, import_react55.useEffect)(() => {
     let live = true;
     Promise.resolve(actions.mcpList?.()).then((next) => {
-      if (!live) return;
-      setRows(next?.servers ?? []);
-      setInstalled((next?.servers ?? []).map((server) => server.serverName));
+      if (live) applyRows(next);
     }, () => {
     });
     return () => {
@@ -27382,6 +27462,7 @@ function McpMarketTab({ actions = {} }) {
     };
   }, [query]);
   (0, import_react55.useEffect)(() => {
+    if (view !== "discover") return void 0;
     let live = true;
     setLoading(true);
     setError("");
@@ -27398,11 +27479,7 @@ function McpMarketTab({ actions = {} }) {
     return () => {
       live = false;
     };
-  }, [actions, sent, page]);
-  const applyRows = (next) => {
-    setRows(next?.servers ?? []);
-    setInstalled((next?.servers ?? []).map((server) => server.serverName));
-  };
+  }, [actions, sent, page, view]);
   const toggle = (server) => {
     setBusyRow(server.entryId ?? server.serverName);
     Promise.resolve(actions.mcpToggle?.({ entryId: server.entryId, enabled: !server.enabled })).then((next) => {
@@ -27425,17 +27502,60 @@ function McpMarketTab({ actions = {} }) {
   };
   const names = (0, import_react55.useMemo)(() => new Set(installed), [installed]);
   const more = list.servers.length < list.total;
+  const body = view === "installed" ? (0, import_react55.createElement)(Installed, { key: "installed", servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove }) : view === "custom" ? (0, import_react55.createElement)(Custom, {
+    key: "custom",
+    actions,
+    report,
+    onAdded: (next, serverName) => {
+      applyRows(next);
+      setNotice(t("Added {name}. Restart DSH to run it.", { name: serverName }));
+      setView("installed");
+      loadRows();
+    }
+  }) : open === null ? [
+    (0, import_react55.createElement)("div", { className: "bt-mm-list", key: "list" }, list.servers.map((server) => (0, import_react55.createElement)(Row3, {
+      key: server.id,
+      server,
+      added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
+      onOpen: () => setOpen(server)
+    }))),
+    more ? (0, import_react55.createElement)(
+      "button",
+      { type: "button", className: "bt-mm-more", key: "more", disabled: loading, onClick: () => setPage(page + 1) },
+      loading ? t("Reading…") : t("Show more")
+    ) : null,
+    !loading && list.servers.length === 0 && error === "" ? (0, import_react55.createElement)("p", { className: "bt-mm-note", key: "empty" }, t("No MCP server matches that search.")) : null
+  ] : (0, import_react55.createElement)(Detail, {
+    key: open.id,
+    actions,
+    server: open,
+    state: added[open.id] ?? null,
+    report,
+    onClose: () => setOpen(null),
+    onAdded: (next, serverName) => {
+      setAdded((now) => ({ ...now, [open.id]: serverName }));
+      applyRows(next);
+      setNotice(next?.pending ? t("Added {name}. Restart DSH to run it.", { name: serverName }) : "");
+      setOpen(null);
+    }
+  });
   return (0, import_react55.createElement)(
     "div",
     { className: "bt-mm" },
+    (0, import_react55.createElement)("div", { className: "bt-mm-tabs", role: "tablist", "aria-label": t("MCP") }, VIEWS().map((item) => (0, import_react55.createElement)("button", {
+      key: item.id,
+      type: "button",
+      role: "tab",
+      "aria-selected": view === item.id,
+      className: "bt-mm-tab" + (view === item.id ? " is-on" : ""),
+      onClick: () => {
+        setView(item.id);
+        setOpen(null);
+        setError("");
+      }
+    }, item.name, item.id === "installed" && rows2.length > 0 ? (0, import_react55.createElement)("span", { className: "bt-mm-tabcount" }, String(rows2.length)) : null))),
     notice ? (0, import_react55.createElement)("p", { className: "bt-mm-done" }, notice) : null,
-    (0, import_react55.createElement)(
-      "section",
-      { className: "bt-mm-section" },
-      (0, import_react55.createElement)("h4", { className: "bt-mm-h" }, t("In this profile")),
-      (0, import_react55.createElement)(Installed, { servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove })
-    ),
-    (0, import_react55.createElement)(
+    view === "discover" ? (0, import_react55.createElement)(
       "div",
       { className: "bt-mm-head" },
       (0, import_react55.createElement)(
@@ -27450,35 +27570,9 @@ function McpMarketTab({ actions = {} }) {
         })
       ),
       (0, import_react55.createElement)("span", { className: "bt-mm-total" }, loading && list.servers.length === 0 ? t("Reading…") : t("{count} servers", { count: list.total.toLocaleString() }))
-    ),
+    ) : null,
     error ? (0, import_react55.createElement)("p", { className: "bt-mm-error" }, error) : null,
-    open === null ? [
-      (0, import_react55.createElement)("div", { className: "bt-mm-list", key: "list" }, list.servers.map((server) => (0, import_react55.createElement)(Row3, {
-        key: server.id,
-        server,
-        added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
-        onOpen: () => setOpen(server)
-      }))),
-      more ? (0, import_react55.createElement)(
-        "button",
-        { type: "button", className: "bt-mm-more", key: "more", disabled: loading, onClick: () => setPage(page + 1) },
-        loading ? t("Reading…") : t("Show more")
-      ) : null,
-      !loading && list.servers.length === 0 && error === "" ? (0, import_react55.createElement)("p", { className: "bt-mm-note", key: "empty" }, t("No MCP server matches that search.")) : null
-    ] : (0, import_react55.createElement)(Detail, {
-      key: open.id,
-      actions,
-      server: open,
-      state: added[open.id] ?? null,
-      report,
-      onClose: () => setOpen(null),
-      onAdded: (next, serverName) => {
-        setAdded((now) => ({ ...now, [open.id]: serverName }));
-        setInstalled((next?.servers ?? []).map((server) => server.serverName));
-        setNotice(next?.pending ? t("Added {name}. Restart DSH to run it.", { name: serverName }) : "");
-        setOpen(null);
-      }
-    })
+    body
   );
 }
 

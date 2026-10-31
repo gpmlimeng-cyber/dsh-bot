@@ -271,6 +271,18 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
    server's connection details behind a row. */
 .bt-mm{display:flex;flex-direction:column;gap:12px;max-width:960px;padding-bottom:32px}
 .bt-mm-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bt-mm-tabs{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:10px;background:var(--bt-hover);align-self:flex-start}
+.bt-mm-tab{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
+.bt-mm-tab:hover{color:var(--bt-ink)}
+.bt-mm-tab.is-on{background:var(--bt-main,#fff);color:var(--bt-ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.bt-mm-tabcount{font-size:11px;color:var(--bt-ink-3)}
+.bt-mm-custom{display:flex;flex-direction:column;gap:12px;max-width:560px}
+.bt-mm-custom .bt-mm-field{align-items:flex-start}
+.bt-mm-custom .bt-mm-field>span{flex:0 0 88px;padding-top:8px;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-custom textarea{flex:1 1 auto;min-width:0;min-height:64px;padding:8px 10px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:13px;color:var(--bt-ink);outline:none;resize:vertical}
+.bt-mm-switchbar{display:inline-flex;gap:2px;padding:2px;border-radius:9px;background:var(--bt-hover);align-self:flex-start}
+.bt-mm-switchbar button{height:26px;padding:0 12px;border:0;border-radius:7px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer}
+.bt-mm-switchbar button[data-on]{background:var(--bt-main,#fff);color:var(--bt-ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .bt-mm-search{display:flex;align-items:center;gap:8px;flex:1 1 auto;max-width:420px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
 .bt-mm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
 .bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
