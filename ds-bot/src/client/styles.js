@@ -303,9 +303,9 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The dropdown card is the shell's own, copied verbatim from its primitives
    (_float_ / _menuItem_ in dsh-web-frontend, MIT): same layer, panel radius and
    elevation, so a ds-bot menu reads as one of the shell's. */
-.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 6px);left:-8px;min-width:168px;display:flex;flex-direction:column;padding:4px;overflow:hidden;background-color:color-mix(in srgb,var(--bt-card) 82%,transparent);background-image:none;backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-radius:8px;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);box-shadow:var(--dsw-elevation-prominent)} /* vendored */
-.bt-mm-menuitem{display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;color:var(--dsw-alias-label-primary);font-size:13px;line-height:18px;text-align:left;background:transparent;border:none;border-radius:var(--dsw-radius-md,6px);cursor:pointer;white-space:nowrap} /* vendored */
-.bt-mm-menuitem:hover{background:var(--bt-hover)} /* vendored */
+.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 6px);left:-8px;min-width:96px;max-width:320px;display:flex;flex-direction:column;padding:4px;overflow:hidden;background:var(--dsw-alias-bg-layer-3,var(--bt-card));background-image:none;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:.5px solid var(--dsw-alias-border-l2,var(--bt-line-2));border-radius:6px} /* vendored */
+.bt-mm-menuitem{display:flex;align-items:center;gap:6px;padding:5px 8px;color:var(--dsw-alias-label-primary,var(--bt-ink));font-size:var(--dsh-content-font-size-secondary,13px);line-height:18px;text-align:left;background:transparent;border:none;border-radius:4px;cursor:pointer;white-space:nowrap} /* vendored */
+.bt-mm-menuitem:hover{background:var(--dsw-alias-interactive-bg-hover,var(--bt-hover))} /* vendored */
 
 .bt-mm-menuitem-check{margin-left:auto;flex:none;width:14px;text-align:center;color:var(--bt-accent);visibility:hidden}
 .bt-mm-menuitem.is-on .bt-mm-menuitem-check{visibility:visible}
