@@ -2922,11 +2922,11 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 /* The dropdown card is the shell's own, copied verbatim from its primitives
    (_float_ / _menuItem_ in dsh-web-frontend, MIT): same layer, panel radius and
    elevation, so a ds-bot menu reads as one of the shell's. */
-.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 4px);left:0;box-sizing:border-box;display:flex;flex-direction:column;gap:0;padding:2px;overflow:hidden;min-width:164px;max-width:360px;background:var(--dsw-specific-menu,var(--bt-card));background-image:none;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:0;border-radius:7px;box-shadow:var(--dsw-elevation-prominent,0 0 0 .5px rgba(0,0,0,.08),0 6px 16px rgba(0,0,0,.10))} /* vendored */
-.bt-mm-menuitem{display:flex;align-items:center;gap:6px;width:100%;min-height:26px;padding:3px 7px;color:var(--dsw-alias-label-primary,var(--bt-ink));font-size:12px;line-height:18px;text-align:left;background:transparent;border:none;border-radius:5px;cursor:pointer;white-space:nowrap} /* vendored */
+.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 4px);left:0;box-sizing:border-box;display:flex;flex-direction:column;gap:0;padding:4px;overflow:hidden;min-width:164px;max-width:360px;background:var(--dsw-specific-menu,var(--bt-card));background-image:none;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:.5px solid var(--dsw-alias-border-l1,var(--bt-line));border-radius:8px;box-shadow:var(--dsw-elevation-prominent,0 6px 16px rgba(0,0,0,.08),0 3px 6px -4px rgba(0,0,0,.12),0 9px 28px 8px rgba(0,0,0,.05))} /* vendored */
+.bt-mm-menuitem{display:flex;align-items:center;gap:6px;width:100%;min-height:32px;padding:5px 10px;color:var(--dsw-alias-label-primary,var(--bt-ink));font-size:13px;line-height:20px;text-align:left;background:transparent;border:none;border-radius:6px;cursor:pointer;white-space:nowrap} /* vendored */
 .bt-mm-menuitem:hover{background:var(--dsw-alias-interactive-bg-hover,var(--bt-hover))} /* vendored */
 
-.bt-mm-menuitem-check{margin-left:auto;flex:none;width:14px;text-align:center;color:var(--dsw-alias-label-primary,var(--bt-ink));visibility:hidden}
+.bt-mm-menuitem-check{margin-left:auto;flex:none;width:16px;text-align:center;color:var(--bt-accent);visibility:hidden}
 .bt-mm-menuitem.is-on .bt-mm-menuitem-check{visibility:visible}
 .bt-mm-menuitem-gear{margin-left:auto;color:var(--dsw-alias-label-tertiary)}
 .bt-mm-menuitem-x{margin-left:auto;width:20px;height:20px;line-height:18px;text-align:center;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary)}
