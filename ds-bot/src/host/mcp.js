@@ -29,6 +29,10 @@ const SCHEMA_TEXT_MAX = 4000
 // The ModelScope plaza answers one page of twenty rows; the panel asks for a page at a time.
 const MARKET_PAGE_SIZE = 20
 const MARKET_README_MAX = 4000
+// The plaza has no categories endpoint, so the chips come from one scan of its first pages,
+// kept for a while: the set changes slowly and the page should not re-scan on every open.
+const MARKET_SCAN_PAGES = 2
+const MARKET_CATEGORIES_TTL_MS = 10 * 60 * 1000
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -136,6 +140,7 @@ export function pendingRows(text) {
 // left the request hanging past any reasonable timeout, while a plain https request from
 // the same runtime answers in a few hundred milliseconds.
 const MARKET_TIMEOUT_MS = 12000
+const categoryCache = { at: 0, value: [] }
 function httpsJson(url, { method = 'GET', body = null } = {}) {
   return new Promise((resolve, reject) => {
     const target = new URL(url)
@@ -360,6 +365,24 @@ export function install(rt) {
           stdio,
         }
       }
+      if (body.kind === 'categories') {
+        const now = Date.now()
+        if (categoryCache.at !== 0 && now - categoryCache.at < MARKET_CATEGORIES_TTL_MS) return categoryCache.value
+        const counts = new Map()
+        for (let scan = 1; scan <= MARKET_SCAN_PAGES; scan += 1) {
+          const page = (await httpsJson(base, { method: 'PUT', body: { page_number: scan, page_size: 100, search: '' } }))?.data ?? {}
+          for (const row of Array.isArray(page.mcp_server_list) ? page.mcp_server_list : []) {
+            for (const raw of Array.isArray(row.categories) ? row.categories : []) {
+              const id = String(raw).toLowerCase()
+              counts.set(id, (counts.get(id) ?? 0) + 1)
+            }
+          }
+        }
+        const value = [...counts.entries()].map(([id, count]) => ({ id, count })).sort((left, right) => right.count - left.count || left.id.localeCompare(right.id))
+        categoryCache.at = now
+        categoryCache.value = value
+        return value
+      }
       const page = Math.max(1, Math.min(10, Number(body.page ?? 1) || 1))
       const data = (await httpsJson(base, {
         method: 'PUT',
@@ -376,6 +399,7 @@ export function install(rt) {
           logo: String(row.logo_url ?? ''),
           hosted: row.is_hosted === true,
           installs: Number(row.view_count ?? 0),
+          categories: (Array.isArray(row.categories) ? row.categories : []).map(item => String(item).toLowerCase()),
         })).filter(row => row.id !== ''),
       }
     },

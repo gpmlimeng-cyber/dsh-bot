@@ -287,6 +287,15 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-search{display:flex;align-items:center;gap:8px;flex:1 1 auto;max-width:420px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
 .bt-mm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
 .bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
+.bt-mm-sort{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--bt-ink-3);flex:none}
+.bt-mm-sort select{height:28px;padding:0 8px;border:0;border-radius:8px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12.5px;cursor:pointer}
+.bt-mm-filters{display:flex;align-items:center;gap:10px;min-width:0}
+.bt-mm-filter-label{flex:none;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-chips{display:flex;align-items:center;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.bt-mm-chips::-webkit-scrollbar{display:none}
+.bt-mm-chip{flex:none;height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
+.bt-mm-chip:hover{color:var(--bt-ink);background:var(--bt-hover)}
+.bt-mm-chip.is-on{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink);box-shadow:none;font-weight:500}
 .bt-mm-list{display:flex;flex-direction:column;gap:8px}
 /* Catalogue cards, the shape the shell's plugin market uses: a bordered card whose whole
    face opens the entry, with the install control at the right end. */

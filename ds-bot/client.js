@@ -89,6 +89,27 @@ var ZH = {
   "MCP": "MCP",
   "Hosted": "已托管",
   "In this profile": "本档案里",
+  "Developer tools": "开发工具",
+  "Browser automation": "浏览器自动化",
+  "Knowledge and memory": "知识与记忆",
+  "File systems": "文件系统",
+  "Finance": "金融",
+  "Entertainment and media": "影音娱乐",
+  "Research and data": "研究与数据",
+  "Location services": "位置服务",
+  "Art and culture": "艺术文化",
+  "Databases": "数据库",
+  "Communication": "通讯",
+  "Calendar": "日历",
+  "Version control": "版本控制",
+  "Generative AI": "生成式 AI",
+  "Image and video": "图像视频",
+  "Note taking": "笔记",
+  "Travel and transport": "出行",
+  "OS automation": "系统自动化",
+  "Cloud platforms": "云平台",
+  "Monitoring": "监控",
+  "Social media": "社交媒体",
   "Starts with the next DSH": "重启 DSH 后启动",
   "Discover": "发现",
   "No MCP server is running in this profile yet.": "本档案还没有运行中的 MCP 服务器。",
@@ -2873,6 +2894,15 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-search{display:flex;align-items:center;gap:8px;flex:1 1 auto;max-width:420px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
 .bt-mm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
 .bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
+.bt-mm-sort{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--bt-ink-3);flex:none}
+.bt-mm-sort select{height:28px;padding:0 8px;border:0;border-radius:8px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12.5px;cursor:pointer}
+.bt-mm-filters{display:flex;align-items:center;gap:10px;min-width:0}
+.bt-mm-filter-label{flex:none;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-chips{display:flex;align-items:center;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.bt-mm-chips::-webkit-scrollbar{display:none}
+.bt-mm-chip{flex:none;height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
+.bt-mm-chip:hover{color:var(--bt-ink);background:var(--bt-hover)}
+.bt-mm-chip.is-on{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink);box-shadow:none;font-weight:500}
 .bt-mm-list{display:flex;flex-direction:column;gap:8px}
 /* Catalogue cards, the shape the shell's plugin market uses: a bordered card whose whole
    face opens the entry, with the install control at the right end. */
@@ -11580,7 +11610,7 @@ function normalizeSkill(raw, categories) {
   const handle = String(namespace.handle ?? raw?.ownerName ?? "");
   const canonical = String(namespace.canonicalName ?? (handle && slug ? `@${handle}/${slug}` : slug));
   const categoryKey = String(raw?.category ?? "");
-  const categoryName = translatedCategory(categoryKey, categories.find((c) => c.key === categoryKey)?.name ?? categoryKey ?? t2("overview.unknownCategory"));
+  const categoryName2 = translatedCategory(categoryKey, categories.find((c) => c.key === categoryKey)?.name ?? categoryKey ?? t2("overview.unknownCategory"));
   const tags = Array.isArray(raw?.subCategories) ? raw.subCategories.map((entry) => String(entry?.name ?? "")).filter(Boolean).slice(0, 3) : [];
   return {
     id: canonical || slug || String(raw?.name ?? ""),
@@ -11602,9 +11632,9 @@ function normalizeSkill(raw, categories) {
     iconUrl: typeof raw?.iconUrl === "string" ? raw.iconUrl : "",
     homepage: publicSkillUrl(raw?.homepage, handle, slug),
     category: categoryKey,
-    categoryName,
+    categoryName: categoryName2,
     source: String(raw?.source ?? "community"),
-    tags: tags.length > 0 ? tags : [categoryName],
+    tags: tags.length > 0 ? tags : [categoryName2],
     requiresApiKey: String(raw?.labels?.requires_api_key ?? "") === "true",
     serviceized: raw?.isServiceized === true
   };
@@ -27219,6 +27249,32 @@ var shortCount = (value) => {
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
   return String(n);
 };
+var CATEGORY_NAMES = {
+  "developer-tools": "Developer tools",
+  "search": "Search",
+  "browser-automation": "Browser automation",
+  "knowledge-and-memory": "Knowledge and memory",
+  "file-systems": "File systems",
+  "other": "Other",
+  "finance": "Finance",
+  "entertainment-and-media": "Entertainment and media",
+  "research-and-data": "Research and data",
+  "location-services": "Location services",
+  "art-and-culture": "Art and culture",
+  "databases": "Databases",
+  "communication": "Communication",
+  "calendar-management": "Calendar",
+  "version-control": "Version control",
+  "aigc": "Generative AI",
+  "image-and-video-processing": "Image and video",
+  "note-taking": "Note taking",
+  "travel-and-transportation": "Travel and transport",
+  "os-automation": "OS automation",
+  "cloud-platforms": "Cloud platforms",
+  "monitoring": "Monitoring",
+  "social-media": "Social media"
+};
+var categoryName = (id) => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, " "));
 function Row3({ server, added, onOpen }) {
   return (0, import_react55.createElement)(
     "div",
@@ -27454,6 +27510,9 @@ function McpMarketTab({ actions = {} }) {
   const [rows2, setRows] = (0, import_react55.useState)([]);
   const [busyRow, setBusyRow] = (0, import_react55.useState)("");
   const [notice, setNotice] = (0, import_react55.useState)("");
+  const [categories, setCategories] = (0, import_react55.useState)([]);
+  const [category, setCategory] = (0, import_react55.useState)("");
+  const [sort, setSort] = (0, import_react55.useState)("default");
   const timer = (0, import_react55.useRef)(null);
   const report = (failure) => setError(String(failure?.message ?? failure));
   const applyRows = (next) => {
@@ -27501,6 +27560,17 @@ function McpMarketTab({ actions = {} }) {
       live = false;
     };
   }, [actions, sent, page, view]);
+  (0, import_react55.useEffect)(() => {
+    if (view !== "discover" || categories.length > 0) return void 0;
+    let live = true;
+    Promise.resolve(actions.mcpMarket?.({ kind: "categories" })).then((next) => {
+      if (live && Array.isArray(next)) setCategories(next);
+    }, () => {
+    });
+    return () => {
+      live = false;
+    };
+  }, [actions, view, categories.length]);
   const toggle = (server) => {
     setBusyRow(server.entryId ?? server.serverName);
     Promise.resolve(actions.mcpToggle?.({ entryId: server.entryId, enabled: !server.enabled })).then((next) => {
@@ -27522,6 +27592,10 @@ function McpMarketTab({ actions = {} }) {
     });
   };
   const names = (0, import_react55.useMemo)(() => new Set(installed), [installed]);
+  const shown = (0, import_react55.useMemo)(() => {
+    const rows3 = category === "" ? list.servers : list.servers.filter((server) => (server.categories ?? []).includes(category));
+    return sort === "installs" ? rows3.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : rows3;
+  }, [list.servers, category, sort]);
   const more = list.servers.length < list.total;
   const body = view === "installed" ? (0, import_react55.createElement)(Installed, { key: "installed", servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove }) : view === "custom" ? (0, import_react55.createElement)(Custom, {
     key: "custom",
@@ -27534,7 +27608,7 @@ function McpMarketTab({ actions = {} }) {
       loadRows();
     }
   }) : open === null ? [
-    (0, import_react55.createElement)("div", { className: "bt-mm-list", key: "list" }, list.servers.map((server) => (0, import_react55.createElement)(Row3, {
+    (0, import_react55.createElement)("div", { className: "bt-mm-list", key: "list" }, shown.map((server) => (0, import_react55.createElement)(Row3, {
       key: server.id,
       server,
       added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
@@ -27576,22 +27650,51 @@ function McpMarketTab({ actions = {} }) {
       }
     }, item.name, item.id === "installed" && rows2.length > 0 ? (0, import_react55.createElement)("span", { className: "bt-mm-tabcount" }, String(rows2.length)) : null))),
     notice ? (0, import_react55.createElement)("p", { className: "bt-mm-done" }, notice) : null,
-    view === "discover" ? (0, import_react55.createElement)(
-      "div",
-      { className: "bt-mm-head" },
+    view === "discover" ? [
       (0, import_react55.createElement)(
-        "label",
-        { className: "bt-mm-search" },
-        (0, import_react55.createElement)(SearchIcon),
-        (0, import_react55.createElement)("input", {
-          value: query,
-          placeholder: t("Search MCP servers"),
-          "aria-label": t("Search MCP servers"),
-          onChange: (event) => setQuery(event.target.value)
-        })
+        "div",
+        { className: "bt-mm-head", key: "head" },
+        (0, import_react55.createElement)(
+          "label",
+          { className: "bt-mm-search" },
+          (0, import_react55.createElement)(SearchIcon),
+          (0, import_react55.createElement)("input", {
+            value: query,
+            placeholder: t("Search MCP servers"),
+            "aria-label": t("Search MCP servers"),
+            onChange: (event) => setQuery(event.target.value)
+          })
+        ),
+        (0, import_react55.createElement)(
+          "label",
+          { className: "bt-mm-sort" },
+          (0, import_react55.createElement)("span", null, t("Sort")),
+          (0, import_react55.createElement)(
+            "select",
+            { value: sort, "aria-label": t("Sort"), onChange: (event) => setSort(event.target.value) },
+            (0, import_react55.createElement)("option", { value: "default" }, t("Default order")),
+            (0, import_react55.createElement)("option", { value: "installs" }, t("Downloads"))
+          )
+        ),
+        (0, import_react55.createElement)("span", { className: "bt-mm-total" }, loading && list.servers.length === 0 ? t("Reading…") : t("{count} servers", { count: list.total.toLocaleString() }))
       ),
-      (0, import_react55.createElement)("span", { className: "bt-mm-total" }, loading && list.servers.length === 0 ? t("Reading…") : t("{count} servers", { count: list.total.toLocaleString() }))
-    ) : null,
+      (0, import_react55.createElement)(
+        "div",
+        { className: "bt-mm-filters", key: "filters" },
+        (0, import_react55.createElement)("span", { className: "bt-mm-filter-label" }, t("Labels")),
+        (0, import_react55.createElement)(
+          "div",
+          { className: "bt-mm-chips" },
+          (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-chip" + (category === "" ? " is-on" : ""), onClick: () => setCategory("") }, t("All")),
+          categories.map((item) => (0, import_react55.createElement)("button", {
+            key: item.id,
+            type: "button",
+            className: "bt-mm-chip" + (category === item.id ? " is-on" : ""),
+            onClick: () => setCategory(item.id)
+          }, categoryName(item.id)))
+        )
+      )
+    ] : null,
     error ? (0, import_react55.createElement)("p", { className: "bt-mm-error" }, error) : null,
     body
   );

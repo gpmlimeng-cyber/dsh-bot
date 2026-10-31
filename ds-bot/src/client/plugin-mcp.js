@@ -27,6 +27,36 @@ const shortCount = (value) => {
 
 // A catalogue card, drawn the way the shell's own plugin market draws one: the logo, then
 // the name with its badges, what it does, and the facts beside an install control.
+// The plaza's categories are slugs; these are the reading names of the ones it uses most.
+// Anything else falls back to the slug with its hyphens opened up.
+const CATEGORY_NAMES = {
+  'developer-tools': 'Developer tools',
+  'search': 'Search',
+  'browser-automation': 'Browser automation',
+  'knowledge-and-memory': 'Knowledge and memory',
+  'file-systems': 'File systems',
+  'other': 'Other',
+  'finance': 'Finance',
+  'entertainment-and-media': 'Entertainment and media',
+  'research-and-data': 'Research and data',
+  'location-services': 'Location services',
+  'art-and-culture': 'Art and culture',
+  'databases': 'Databases',
+  'communication': 'Communication',
+  'calendar-management': 'Calendar',
+  'version-control': 'Version control',
+  'aigc': 'Generative AI',
+  'image-and-video-processing': 'Image and video',
+  'note-taking': 'Note taking',
+  'travel-and-transportation': 'Travel and transport',
+  'os-automation': 'OS automation',
+  'cloud-platforms': 'Cloud platforms',
+  'monitoring': 'Monitoring',
+  'social-media': 'Social media',
+}
+
+const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
+
 function Row({ server, added, onOpen }) {
   return h('div', { className: 'bt-mm-plug' + (added ? ' is-added' : '') },
     h('button', { type: 'button', className: 'bt-mm-plugopen', 'aria-label': server.name, onClick: onOpen }),
@@ -209,6 +239,9 @@ export function McpMarketTab({ actions = {} }) {
   const [rows, setRows] = useState([])
   const [busyRow, setBusyRow] = useState('')
   const [notice, setNotice] = useState('')
+  const [categories, setCategories] = useState([])
+  const [category, setCategory] = useState('')
+  const [sort, setSort] = useState('default')
   const timer = useRef(null)
 
   const report = (failure) => setError(String(failure?.message ?? failure))
@@ -249,6 +282,14 @@ export function McpMarketTab({ actions = {} }) {
     return () => { live = false }
   }, [actions, sent, page, view])
 
+  useEffect(() => {
+    if (view !== 'discover' || categories.length > 0) return undefined
+    let live = true
+    Promise.resolve(actions.mcpMarket?.({ kind: 'categories' }))
+      .then((next) => { if (live && Array.isArray(next)) setCategories(next) }, () => {})
+    return () => { live = false }
+  }, [actions, view, categories.length])
+
   const toggle = (server) => {
     setBusyRow(server.entryId ?? server.serverName)
     Promise.resolve(actions.mcpToggle?.({ entryId: server.entryId, enabled: !server.enabled }))
@@ -261,6 +302,10 @@ export function McpMarketTab({ actions = {} }) {
   }
 
   const names = useMemo(() => new Set(installed), [installed])
+  const shown = useMemo(() => {
+    const rows = category === '' ? list.servers : list.servers.filter(server => (server.categories ?? []).includes(category))
+    return sort === 'installs' ? rows.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : rows
+  }, [list.servers, category, sort])
   const more = list.servers.length < list.total
 
   const body = view === 'installed'
@@ -279,7 +324,7 @@ export function McpMarketTab({ actions = {} }) {
       })
       : open === null
         ? [
-          h('div', { className: 'bt-mm-list', key: 'list' }, list.servers.map(server => h(Row, {
+          h('div', { className: 'bt-mm-list', key: 'list' }, shown.map(server => h(Row, {
             key: server.id,
             server,
             added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
@@ -317,16 +362,33 @@ export function McpMarketTab({ actions = {} }) {
     }, item.name, item.id === 'installed' && rows.length > 0 ? h('span', { className: 'bt-mm-tabcount' }, String(rows.length)) : null))),
     notice ? h('p', { className: 'bt-mm-done' }, notice) : null,
     view === 'discover'
-      ? h('div', { className: 'bt-mm-head' },
-        h('label', { className: 'bt-mm-search' },
-          h(SearchIcon),
-          h('input', {
-            value: query,
-            placeholder: t('Search MCP servers'),
-            'aria-label': t('Search MCP servers'),
-            onChange: (event) => setQuery(event.target.value),
-          })),
-        h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() })))
+      ? [
+        h('div', { className: 'bt-mm-head', key: 'head' },
+          h('label', { className: 'bt-mm-search' },
+            h(SearchIcon),
+            h('input', {
+              value: query,
+              placeholder: t('Search MCP servers'),
+              'aria-label': t('Search MCP servers'),
+              onChange: (event) => setQuery(event.target.value),
+            })),
+          h('label', { className: 'bt-mm-sort' },
+            h('span', null, t('Sort')),
+            h('select', { value: sort, 'aria-label': t('Sort'), onChange: (event) => setSort(event.target.value) },
+              h('option', { value: 'default' }, t('Default order')),
+              h('option', { value: 'installs' }, t('Downloads')))),
+          h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() }))),
+        h('div', { className: 'bt-mm-filters', key: 'filters' },
+          h('span', { className: 'bt-mm-filter-label' }, t('Labels')),
+          h('div', { className: 'bt-mm-chips' },
+            h('button', { type: 'button', className: 'bt-mm-chip' + (category === '' ? ' is-on' : ''), onClick: () => setCategory('') }, t('All')),
+            categories.map(item => h('button', {
+              key: item.id,
+              type: 'button',
+              className: 'bt-mm-chip' + (category === item.id ? ' is-on' : ''),
+              onClick: () => setCategory(item.id),
+            }, categoryName(item.id))))),
+      ]
       : null,
     error ? h('p', { className: 'bt-mm-error' }, error) : null,
     body)
