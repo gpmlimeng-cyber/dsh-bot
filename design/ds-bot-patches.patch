@@ -2328,10 +2328,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..bf32c50
+index 0000000..d4febd6
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,646 @@
+@@ -0,0 +1,644 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2406,7 +2406,7 @@ index 0000000..bf32c50
 +
 +const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
 +
-+function Row({ server, added, busy, onInstall, onOpen, onHome, onMenu, menuOpen }) {
++function Row({ server, added, busy, onInstall, onOpen, onHome, onMenu }) {
 +  return h('li', { className: 'bt-mm-card', 'data-mcp-entry': server.id },
 +    h('span', { className: 'bt-mm-icon', 'aria-hidden': true },
 +      server.logo
@@ -2610,7 +2610,6 @@ index 0000000..bf32c50
 +  const [source, setSource] = useState('modelscope')
 +  const [sources, setSources] = useState(() => readSources())
 +  const [sourceMenu, setSourceMenu] = useState(false)
-+  const [rowMenu, setRowMenu] = useState('')
 +  const [moreLabels, setMoreLabels] = useState(false)
 +  const [reload, setReload] = useState(0)
 +  const [adding, setAdding] = useState(null)
@@ -2794,7 +2793,6 @@ index 0000000..bf32c50
 +                server,
 +                added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
 +                busy: installing === server.id,
-+                menuOpen: rowMenu === server.id,
 +                enabled: (rows.find(item => item.serverName === (added[server.id] ?? nameOf(server.id))) ?? {}).enabled !== false,
 +                onMenu: () => {
 +                  const name = added[server.id] ?? nameOf(server.id)
