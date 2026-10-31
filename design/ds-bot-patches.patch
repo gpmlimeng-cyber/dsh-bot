@@ -2328,10 +2328,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..f93a996
+index 0000000..ea91f78
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,739 @@
+@@ -0,0 +1,738 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2990,7 +2990,6 @@ index 0000000..f93a996
 +              'aria-label': t('Search MCP servers'),
 +              onChange: (event) => setQuery(event.target.value),
 +            })),
-+          h('span', { className: 'bt-mm-filterlabel' }, t('Labels')),
 +          h('label', { className: 'bt-mm-sort' },
 +            h('span', null, t('Sort')),
 +            h('select', { value: sort, 'aria-label': t('Sort'), onChange: (event) => setSort(event.target.value) },
@@ -10266,7 +10265,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..cb38a1d 100644
+index eac6ea5..a39a22d 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10474,7 +10473,7 @@ index eac6ea5..cb38a1d 100644
 +   what it picks here: bt-mm-source / bt-mm-source-name. Numbers, order and states are the
 +   ones it ships, so this panel measures the same as the shell's own page. */
 +.bt-mm-section{flex-direction:column;gap:16px;display:flex}.bt-mm-toolbar{align-items:center;gap:8px;display:flex;flex-wrap:nowrap}
-+.bt-mm-filterlabel{flex:none}
++
 +.bt-mm-categories{flex-wrap:nowrap;align-items:center;gap:6px;display:flex;overflow:visible;flex:none}
 +.bt-mm-tagrow{position:relative;min-width:0}.bt-mm-tagmeasure{position:absolute;left:-9999px;top:0;display:flex;gap:6px;white-space:nowrap;visibility:hidden;pointer-events:none;flex:none}.bt-mm-morewrap{position:relative;margin-left:auto;flex:none}
 +.bt-mm-morepill{white-space:nowrap;gap:4px}
@@ -10491,7 +10490,7 @@ index eac6ea5..cb38a1d 100644
 +.bt-mm-toolbar .bt-mm-search input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:13px;line-height:20px;color:var(--dsw-alias-label-primary);outline:none}
 +.bt-mm-toolbar .bt-mm-sort{border:0;background:none;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:13px;line-height:20px}
 +.bt-mm-toolbar .bt-mm-sort select{border:0;background:none;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;outline:none;cursor:pointer}
-+.bt-mm-filterlabel{flex:none;color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:20px;margin:0}
++
 +.bt-mm-toolbar .bt-mm-sort{margin-left:auto}
 +.bt-mm-toolbar .bt-mm-sort{margin-left:auto}
 +/* ds-bot chrome around the vendored card list: the source picker, its menu and the
