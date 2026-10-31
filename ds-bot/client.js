@@ -391,6 +391,7 @@ var ZH = {
   About: "简介",
   "Show less": "收起",
   "Show more": "展开",
+  "Show all": "查看全部",
   "Admin leads": "管理员主持",
   "Plain messages go to the admin, who calls others with @Name.": "普通消息先给管理员，由管理员用 @名字 点名其他成员。",
   Everyone: "所有人",
@@ -2944,7 +2945,7 @@ ul.bt-mm-cards>.bt-mm-card{margin:0}
 .bt-mm-group{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
 .bt-mm-grouphead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 8px;border-bottom:.5px solid var(--bt-line)}
 .bt-mm-grouptitle{margin:0;font-size:14px;font-weight:600;line-height:22px;color:var(--dsw-alias-label-primary)}
-.bt-mm-groupmore{border:0;background:none;padding:0;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:12.5px;cursor:pointer}
+.bt-mm-groupmore{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin:-4px -6px -4px 0;border:0;border-radius:6px;background:none;color:var(--dsw-alias-label-tertiary,var(--bt-ink-3));cursor:pointer}.bt-mm-groupmore:hover{background:var(--dsw-alias-interactive-bg-hover,var(--bt-hover));color:var(--dsw-alias-label-primary,var(--bt-ink))}
 .bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary)}
 /* The installed card's switch is the shell's own switch, copied from its stylesheet:
    36x20, layer-3 track, brand fill when on, 16px thumb that slides 16px. */
@@ -27874,10 +27875,16 @@ function McpMarketTab({ actions = {} }) {
         "div",
         { className: "bt-mm-grouphead" },
         (0, import_react55.createElement)("h3", { className: "bt-mm-grouptitle" }, group.name),
-        category === "" && group.id !== "" ? (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-groupmore", onClick: () => {
-          pick2(group.id);
-          setPage(1);
-        } }, t("Show more")) : null
+        category === "" && group.id !== "" ? (0, import_react55.createElement)("button", {
+          type: "button",
+          className: "bt-mm-groupmore",
+          "aria-label": t("Show all"),
+          title: t("Show all"),
+          onClick: () => {
+            pick2(group.id);
+            setPage(1);
+          }
+        }, (0, import_react55.createElement)(ChevronRightIcon)) : null
       ),
       (0, import_react55.createElement)("ul", { className: "bt-mm-cards" }, group.servers.slice(0, category === "" ? 6 : group.servers.length).map((server) => (0, import_react55.createElement)(Row3, {
         key: server.id,

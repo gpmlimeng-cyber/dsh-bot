@@ -359,6 +359,7 @@ const ZH = {
   About: '简介',
   'Show less': '收起',
   'Show more': '展开',
+  'Show all': '查看全部',
   'Admin leads': '管理员主持',
   'Plain messages go to the admin, who calls others with @Name.': '普通消息先给管理员，由管理员用 @名字 点名其他成员。',
   Everyone: '所有人',

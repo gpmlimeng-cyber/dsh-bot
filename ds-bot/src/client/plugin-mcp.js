@@ -8,7 +8,7 @@
 // tools on the MCP page.
 import { createElement as h, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { t } from './i18n.js'
-import { CloseIcon, PlusIcon, SearchIcon, TrashIcon } from './icons.js'
+import { ChevronRightIcon, CloseIcon, PlusIcon, SearchIcon, TrashIcon } from './icons.js'
 
 // A server name has to fit the profile's own rule; the plaza's ids are `@owner/name`.
 const nameOf = (id) => {
@@ -563,7 +563,13 @@ export function McpMarketTab({ actions = {} }) {
               h('div', { className: 'bt-mm-grouphead' },
                 h('h3', { className: 'bt-mm-grouptitle' }, group.name),
                 category === '' && group.id !== ''
-                  ? h('button', { type: 'button', className: 'bt-mm-groupmore', onClick: () => { pick(group.id); setPage(1) } }, t('Show more'))
+                  ? h('button', {
+                    type: 'button',
+                    className: 'bt-mm-groupmore',
+                    'aria-label': t('Show all'),
+                    title: t('Show all'),
+                    onClick: () => { pick(group.id); setPage(1) },
+                  }, h(ChevronRightIcon))
                   : null),
               h('ul', { className: 'bt-mm-cards' }, group.servers.slice(0, category === '' ? 6 : group.servers.length).map(server => h(Row, {
                 key: server.id,
