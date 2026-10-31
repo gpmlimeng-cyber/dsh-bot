@@ -2854,11 +2854,11 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 [data-bt-skills] .sm-inspector:not(.open){box-shadow:none}
 /* The MCP tab: the ModelScope plaza as plain rows at the page's own measure, with one
    server's connection details behind a row. */
-.bt-mm{display:flex;flex-direction:column;gap:12px;max-width:960px;padding-bottom:32px}
+.bt-mm{display:flex;flex-direction:column;gap:10px;max-width:960px;padding-bottom:32px;margin-top:-20px}
 .bt-mm-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 /* The tabs copy the skills page: words on a rule, the active one underlined. */
 .bt-mm-tabs{display:flex;align-items:center;gap:0;align-self:stretch;box-shadow:inset 0 -1px var(--bt-line-2)}
-.bt-mm-tab{display:inline-flex;align-items:center;gap:7px;padding:12px 4px;margin:0 18px -1px 0;border:0;border-bottom:2px solid transparent;background:none;color:var(--bt-ink-3);font:inherit;font-size:13.5px;font-weight:500;white-space:nowrap;cursor:pointer;transition:color .13s ease,border-color .13s ease}
+.bt-mm-tab{display:inline-flex;align-items:center;gap:7px;padding:6px 4px;margin:0 18px -1px 0;border:0;border-bottom:2px solid transparent;background:none;color:var(--bt-ink-3);font:inherit;font-size:13.5px;font-weight:500;white-space:nowrap;cursor:pointer;transition:color .13s ease,border-color .13s ease}
 .bt-mm-tab:hover{color:var(--bt-ink)}
 .bt-mm-tab.is-on{color:var(--bt-ink);border-bottom-color:var(--bt-ink)}
 .bt-mm-tabcount{font-size:11px;font-weight:400;color:var(--bt-ink-3)}
