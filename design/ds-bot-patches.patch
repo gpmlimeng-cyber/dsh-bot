@@ -1,5 +1,5 @@
 diff --git a/ds-bot/.oxlintrc.json b/ds-bot/.oxlintrc.json
-index 190fbf3..0df0cbc 100644
+index 190fbf30..0df0cbc5 100644
 --- a/ds-bot/.oxlintrc.json
 +++ b/ds-bot/.oxlintrc.json
 @@ -1,5 +1,6 @@
@@ -10,7 +10,7 @@ index 190fbf3..0df0cbc 100644
      "no-undef": "error",
      "no-unused-vars": ["error", { "ignoreRestSiblings": true }]
 diff --git a/ds-bot/index.js b/ds-bot/index.js
-index b146590..00f838a 100644
+index b1465905..00f838a9 100644
 --- a/ds-bot/index.js
 +++ b/ds-bot/index.js
 @@ -30,6 +30,7 @@ import * as browser from './src/host/browser.js'
@@ -59,7 +59,7 @@ index b146590..00f838a 100644
  
  export function createRuntime(ctx, config = {}) {
 diff --git a/ds-bot/scripts/style-debt.mjs b/ds-bot/scripts/style-debt.mjs
-index 2d3f9d6..b4d9b53 100644
+index 2d3f9d66..b4d9b53d 100644
 --- a/ds-bot/scripts/style-debt.mjs
 +++ b/ds-bot/scripts/style-debt.mjs
 @@ -109,8 +109,14 @@ const code = text => text.split(/\r?\n/)
@@ -79,7 +79,7 @@ index 2d3f9d6..b4d9b53 100644
        for (const value of check(file, text)) {
          const counts = (found[kind][file] ??= {})
 diff --git a/ds-bot/src/client/about.js b/ds-bot/src/client/about.js
-index 6dc05e2..a1bf478 100644
+index 6dc05e26..a1bf478a 100644
 --- a/ds-bot/src/client/about.js
 +++ b/ds-bot/src/client/about.js
 @@ -107,6 +107,21 @@ export function AboutPage({ useUpdate, actions, run, Section, Row }) {
@@ -115,7 +115,7 @@ index 6dc05e2..a1bf478 100644
        repo ? h(Row, { label: t('Source code'), hint: repo.replace(/^https:\/\//, '') }, h('a', linkProps(repo), h(GitHubMark), t('Open'))) : null,
        update.notesUrl ? h(Row, { label: t('Release notes') }, h('a', linkProps(update.notesUrl), t('Open'))) : null,
 diff --git a/ds-bot/src/client/bot-settings.js b/ds-bot/src/client/bot-settings.js
-index c8de9f8..47a59df 100644
+index c8de9f87..47a59df6 100644
 --- a/ds-bot/src/client/bot-settings.js
 +++ b/ds-bot/src/client/bot-settings.js
 @@ -4,6 +4,7 @@ import { CHARACTERS, PICKER_SHAPES, PICKER_COLUMNS, CHARACTER_COLORS, SHAPES, ha
@@ -162,7 +162,7 @@ index c8de9f8..47a59df 100644
        className: 'bt-dropzone', 'data-over': over || undefined,
        onDragOver: (event) => { event.preventDefault(); setOver(true) },
 diff --git a/ds-bot/src/client/browser-pane.js b/ds-bot/src/client/browser-pane.js
-index 23ef100..864f7d9 100644
+index 23ef1007..864f7d9b 100644
 --- a/ds-bot/src/client/browser-pane.js
 +++ b/ds-bot/src/client/browser-pane.js
 @@ -83,7 +83,7 @@ const tabLabel = page => page.title || shortAddress(page.url) || t('New tab')
@@ -184,7 +184,7 @@ index 23ef100..864f7d9 100644
        items.map((item, index) => (item.sep
          ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
 diff --git a/ds-bot/src/client/composer.js b/ds-bot/src/client/composer.js
-index 08d3b66..24096b6 100644
+index 08d3b669..24096b6b 100644
 --- a/ds-bot/src/client/composer.js
 +++ b/ds-bot/src/client/composer.js
 @@ -1,6 +1,6 @@
@@ -236,7 +236,7 @@ index 08d3b66..24096b6 100644
      h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
  }
 diff --git a/ds-bot/src/client/context-menu.js b/ds-bot/src/client/context-menu.js
-index dc5fd1b..e59ba77 100644
+index dc5fd1b8..e59ba771 100644
 --- a/ds-bot/src/client/context-menu.js
 +++ b/ds-bot/src/client/context-menu.js
 @@ -5,6 +5,7 @@ import { GearIcon, PinIcon, UnreadIcon, PencilIcon, StarLineIcon, CopyIcon, Hide
@@ -280,7 +280,7 @@ index dc5fd1b..e59ba77 100644
      [
        isMainBot ? null : [t('Hide from sidebar'), HideIcon, () => actions.setFlags(menu.id, { hidden: true })],
 diff --git a/ds-bot/src/client/create-bot.js b/ds-bot/src/client/create-bot.js
-index 3956f8f..40a05f4 100644
+index 3956f8ff..40a05f4a 100644
 --- a/ds-bot/src/client/create-bot.js
 +++ b/ds-bot/src/client/create-bot.js
 @@ -1,6 +1,6 @@
@@ -302,7 +302,7 @@ index 3956f8f..40a05f4 100644
      library ? h(AvatarLibraryPanel, { actions, onPick: entry => { setImage(entry.image); setLibrary(false) } }) : null,
      h('label', { className: 'bt-field' },
 diff --git a/ds-bot/src/client/details-drawer.js b/ds-bot/src/client/details-drawer.js
-index 76c8c04..e3ffb93 100644
+index 76c8c048..e3ffb93d 100644
 --- a/ds-bot/src/client/details-drawer.js
 +++ b/ds-bot/src/client/details-drawer.js
 @@ -1,7 +1,7 @@
@@ -325,7 +325,7 @@ index 76c8c04..e3ffb93 100644
    if (!bot && !room) {
 diff --git a/ds-bot/src/client/drawer-dismiss.js b/ds-bot/src/client/drawer-dismiss.js
 new file mode 100644
-index 0000000..8fca0d0
+index 00000000..8fca0d0f
 --- /dev/null
 +++ b/ds-bot/src/client/drawer-dismiss.js
 @@ -0,0 +1,15 @@
@@ -346,7 +346,7 @@ index 0000000..8fca0d0
 +}
 diff --git a/ds-bot/src/client/fonts.js b/ds-bot/src/client/fonts.js
 new file mode 100644
-index 0000000..72438ba
+index 00000000..72438ba7
 --- /dev/null
 +++ b/ds-bot/src/client/fonts.js
 @@ -0,0 +1,12 @@
@@ -363,7 +363,7 @@ index 0000000..72438ba
 +export const FONT_FACES = `@font-face{font-family:"Inter Variable";font-style:normal;font-display:swap;font-weight:100 900;src:url(${INTER}) format("woff2")}
 +@font-face{font-family:"Geist Variable";font-style:normal;font-display:swap;font-weight:100 900;src:url(${GEIST}) format("woff2")}`
 diff --git a/ds-bot/src/client/header.js b/ds-bot/src/client/header.js
-index c7b1488..98b1e26 100644
+index c7b14888..98b1e26d 100644
 --- a/ds-bot/src/client/header.js
 +++ b/ds-bot/src/client/header.js
 @@ -1,12 +1,14 @@
@@ -436,7 +436,7 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 0696236..93f83ed 100644
+index 06962367..5070ebd0 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
 @@ -18,6 +18,140 @@ const ZH = {
@@ -622,7 +622,7 @@ index 0696236..93f83ed 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -545,6 +698,19 @@ const ZH = {
+@@ -545,6 +698,23 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -634,6 +634,10 @@ index 0696236..93f83ed 100644
 +  'Large': '大',
 +  'Largest': '特大',
 +  'Density': '密度',
++  'Mobile skin': '手机皮肤',
++  'Ours': '我们自己的',
++  'App': '那个 App',
++  "How chat looks on a phone. The desktop keeps this plugin's own shape.": '手机上聊天页的形态。桌面端仍然保持本插件自己的样子。',
 +  'How much room rows and lists take.': '侧栏和列表的行占多少空间。',
 +  'Compact': '紧凑',
 +  'Roomier': '宽松',
@@ -642,7 +646,7 @@ index 0696236..93f83ed 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +848,6 @@ const ZH = {
+@@ -682,7 +852,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -650,7 +654,7 @@ index 0696236..93f83ed 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1096,10 @@ const ZH = {
+@@ -931,6 +1100,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -661,7 +665,7 @@ index 0696236..93f83ed 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1142,7 @@ const ZH = {
+@@ -973,6 +1146,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -669,7 +673,7 @@ index 0696236..93f83ed 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1238,10 @@ const ZH = {
+@@ -1068,6 +1242,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -681,7 +685,7 @@ index 0696236..93f83ed 100644
  
  // Host errors stay English, since Bots read them too; they are translated where the
 diff --git a/ds-bot/src/client/icons.js b/ds-bot/src/client/icons.js
-index eee5675..df5ba78 100644
+index eee56758..df5ba78f 100644
 --- a/ds-bot/src/client/icons.js
 +++ b/ds-bot/src/client/icons.js
 @@ -18,15 +18,16 @@ export function PeopleIcon() {
@@ -738,7 +742,7 @@ index eee5675..df5ba78 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index 31f6605..fa4c147 100644
+index 31f66057..ba814661 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
@@ -747,7 +751,7 @@ index 31f6605..fa4c147 100644
  import { teamActions } from './team-actions.js'
 -import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
 +import { dismissDrawerIfOpen } from './drawer-dismiss.js'
-+import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, SIZE_CHOICES } from './themes.js'
++import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, skinOf, SIZE_CHOICES } from './themes.js'
  import { MENTION_ORIGIN, currentPart } from './text.js'
  import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
  import { lookOf } from './mark.js'
@@ -771,16 +775,20 @@ index 31f6605..fa4c147 100644
    const writeUnread = (id, value) => {
      const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
      ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
-@@ -326,23 +332,36 @@ export function apply(ctx) {
+@@ -326,23 +332,40 @@ export function apply(ctx) {
        const layout = layoutOf(prefs)
        const width = widthOf(prefs)
        const flatWidth = flatWidthOf(prefs)
 +      const font = fontOf(prefs.font ? prefs : savedPrefs)
 +      const size = sizeOf(prefs.size ? prefs : savedPrefs)
 +      const density = densityOf(prefs.density ? prefs : savedPrefs)
++      // The skin is this device's own pick, so it never comes from the host's prefs.
++      const skin = skinOf(savedPrefs)
        document.body.dataset.btMotion = motion
 +      document.body.dataset.btFont = font
 +      document.body.dataset.btDensity = density
++      if (skin === 'ours') delete document.documentElement.dataset.btSkin
++      else document.documentElement.dataset.btSkin = skin
 +      if (size === 'm') delete document.body.dataset.btSize
 +      else document.body.dataset.btSize = size
 +      // The shell writes this one inline, so it has to be answered inline as well; the rest
@@ -792,7 +800,7 @@ index 31f6605..fa4c147 100644
        document.body.style.setProperty('--bt-msg-w', String(width / 100))
        document.body.style.setProperty('--bt-flat-w', String(flatWidth / 100))
 -      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${registry.getSnapshot()}`
-+      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${registry.getSnapshot()}`
++      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${skin}|${registry.getSnapshot()}`
        if (next === key) return
        key = next
 -      style.textContent = themeCss(themes[id], accent)
@@ -802,7 +810,7 @@ index 31f6605..fa4c147 100644
        if (typeof release === 'function') release()
        if (snapshot.ready) {
 -        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking })) } catch { /* storage unavailable */ }
-+        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font, size: prefs.size ?? savedPrefs.size, density: prefs.density ?? savedPrefs.density })) } catch { /* storage unavailable */ }
++        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font, size: prefs.size ?? savedPrefs.size, density: prefs.density ?? savedPrefs.density, skin: savedPrefs.skin })) } catch { /* storage unavailable */ }
        }
      }
      render()
@@ -811,7 +819,15 @@ index 31f6605..fa4c147 100644
      const offRegistry = registry.subscribe(render)
      return () => {
        offRoster()
-@@ -497,8 +516,145 @@ export function apply(ctx) {
+@@ -352,6 +375,7 @@ export function apply(ctx) {
+       } finally {
+         delete document.body.dataset.btMotion
+         delete document.body.dataset.btLayout
++        delete document.documentElement.dataset.btSkin
+         document.body.style.removeProperty('--bt-msg-w')
+         document.body.style.removeProperty('--bt-flat-w')
+         style.remove()
+@@ -497,8 +521,147 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
@@ -927,6 +943,8 @@ index 31f6605..fa4c147 100644
 +      savedPrefs = { ...savedPrefs, [key]: value === 'normal' || value === 'm' || value === 'system' ? undefined : value }
 +      try { localStorage.setItem(PREFS_KEY, JSON.stringify(savedPrefs)) } catch { /* storage unavailable */ }
 +      reapplyPrefs()
++      // The skin is a phone look of this device only; there is nothing for the host to keep.
++      if (key === 'skin') return undefined
 +      return actions.setPrefs({ [key]: value })
 +    },
 +    // The font picker shows what this device already uses, not what the host last answered.
@@ -958,7 +976,7 @@ index 31f6605..fa4c147 100644
      // The left column's own preference: 'open', 'rail' or 'hidden'. The switch
      // remembers the shown one it hid; a drag sets the open column's width.
      setSidebarPref: (pref) => {
-@@ -884,6 +1040,10 @@ export function apply(ctx) {
+@@ -884,6 +1047,10 @@ export function apply(ctx) {
      () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
      () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
      () => shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
@@ -969,7 +987,7 @@ index 31f6605..fa4c147 100644
    ]
    const installConversation = () => [
      () => installCompiledStyles(CONVERSATION_CSS, 'conversation'),
-@@ -1016,7 +1176,7 @@ export function apply(ctx) {
+@@ -1016,7 +1183,7 @@ export function apply(ctx) {
        } catch {
          declared = false
        }
@@ -978,7 +996,7 @@ index 31f6605..fa4c147 100644
        if (!declared) {
          // The slot itself is not declared yet; keep watching for a while.
          if (verifyAttempts < 20) {
-@@ -1031,8 +1191,297 @@ export function apply(ctx) {
+@@ -1031,8 +1198,297 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -1276,7 +1294,7 @@ index 31f6605..fa4c147 100644
        clearTimeout(verifyTimer)
        verifyAttempts = 0
        verifyTimer = setTimeout(verifySidebar, 250)
-@@ -1043,6 +1492,13 @@ export function apply(ctx) {
+@@ -1043,6 +1499,13 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
@@ -1292,7 +1310,7 @@ index 31f6605..fa4c147 100644
    }, 'ds-bot: surface')
 diff --git a/ds-bot/src/client/market.js b/ds-bot/src/client/market.js
 new file mode 100644
-index 0000000..308b545
+index 00000000..308b545c
 --- /dev/null
 +++ b/ds-bot/src/client/market.js
 @@ -0,0 +1,532 @@
@@ -1830,7 +1848,7 @@ index 0000000..308b545
 +}
 diff --git a/ds-bot/src/client/mcp-panel.js b/ds-bot/src/client/mcp-panel.js
 new file mode 100644
-index 0000000..d0ebce7
+index 00000000..d0ebce78
 --- /dev/null
 +++ b/ds-bot/src/client/mcp-panel.js
 @@ -0,0 +1,264 @@
@@ -2099,7 +2117,7 @@ index 0000000..d0ebce7
 +      error ? h('p', { className: 'bt-mcp-error', role: 'alert' }, error) : null))
 +}
 diff --git a/ds-bot/src/client/member-status.js b/ds-bot/src/client/member-status.js
-index 018478e..fd94ddf 100644
+index 018478e2..fd94ddfd 100644
 --- a/ds-bot/src/client/member-status.js
 +++ b/ds-bot/src/client/member-status.js
 @@ -200,8 +200,8 @@ export function useMemberWork(room, useWork) {
@@ -2115,7 +2133,7 @@ index 018478e..fd94ddf 100644
  .bt-mw-pill-in{display:inline-flex;align-items:center;gap:8px;flex:none;padding:0 13px 0 6px;white-space:nowrap}
 diff --git a/ds-bot/src/client/mode-row.js b/ds-bot/src/client/mode-row.js
 new file mode 100644
-index 0000000..b01891a
+index 00000000..b01891a8
 --- /dev/null
 +++ b/ds-bot/src/client/mode-row.js
 @@ -0,0 +1,53 @@
@@ -2173,7 +2191,7 @@ index 0000000..b01891a
 +  return slot
 +}
 diff --git a/ds-bot/src/client/model-menu.js b/ds-bot/src/client/model-menu.js
-index 731f093..40f3e32 100644
+index 731f0931..40f3e328 100644
 --- a/ds-bot/src/client/model-menu.js
 +++ b/ds-bot/src/client/model-menu.js
 @@ -6,6 +6,7 @@ import { BotMark } from './mark.js'
@@ -2209,7 +2227,7 @@ index 731f093..40f3e32 100644
  .bt-model-name{font-size:13px;line-height:18px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-model-provider{font-size:11px;line-height:14px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 diff --git a/ds-bot/src/client/new-chat.js b/ds-bot/src/client/new-chat.js
-index fd53a99..69c8de0 100644
+index fd53a99e..69c8de0b 100644
 --- a/ds-bot/src/client/new-chat.js
 +++ b/ds-bot/src/client/new-chat.js
 @@ -1,4 +1,4 @@
@@ -2338,7 +2356,7 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..1d7b6c5
+index 00000000..1d7b6c54
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
 @@ -0,0 +1,861 @@
@@ -3205,7 +3223,7 @@ index 0000000..1d7b6c5
 +}
 diff --git a/ds-bot/src/client/plugin-skills.js b/ds-bot/src/client/plugin-skills.js
 new file mode 100644
-index 0000000..1cfe89d
+index 00000000..1cfe89d1
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-skills.js
 @@ -0,0 +1,10 @@
@@ -3221,7 +3239,7 @@ index 0000000..1cfe89d
 +}
 diff --git a/ds-bot/src/client/provider-marks.js b/ds-bot/src/client/provider-marks.js
 new file mode 100644
-index 0000000..0328db2
+index 00000000..0328db2f
 --- /dev/null
 +++ b/ds-bot/src/client/provider-marks.js
 @@ -0,0 +1,131 @@
@@ -3357,7 +3375,7 @@ index 0000000..0328db2
 +  }, mark.paths.map((d, index) => h('path', { key: index, d })))
 +}
 diff --git a/ds-bot/src/client/settings.js b/ds-bot/src/client/settings.js
-index 4428659..ce4df8a 100644
+index 4428659d..ac8482c3 100644
 --- a/ds-bot/src/client/settings.js
 +++ b/ds-bot/src/client/settings.js
 @@ -1,7 +1,7 @@
@@ -3365,7 +3383,7 @@ index 4428659..ce4df8a 100644
  import { ACCENT_INKS, INKS } from './inks.js'
  import { isMainOf } from './sources.js'
 -import { MESSAGE_WIDTH, allThemes, flatWidthOf, layoutOf, thinkingShown, widthOf } from './themes.js'
-+import { DENSITY_CHOICES, FONT_CHOICES, MESSAGE_WIDTH, SIZE_CHOICES, allThemes, densityOf, flatWidthOf, fontOf, layoutOf, sizeOf, thinkingShown, widthOf } from './themes.js'
++import { DENSITY_CHOICES, FONT_CHOICES, MESSAGE_WIDTH, SIZE_CHOICES, SKIN_CHOICES, allThemes, densityOf, flatWidthOf, fontOf, layoutOf, sizeOf, skinOf, thinkingShown, widthOf } from './themes.js'
  import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, InfoIcon, PlugIcon, PlusIcon, SlidersIcon, SETTINGS_ICONS } from './icons.js'
  import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
  import { useEscape } from './overlay-hooks.js'
@@ -3378,7 +3396,7 @@ index 4428659..ce4df8a 100644
    const timer = useRef(0)
    useEffect(() => () => clearTimeout(timer.current), [])
    const pickCustom = (value) => {
-@@ -92,6 +94,16 @@ function GeneralPage({ roster, actions, run }) {
+@@ -92,6 +94,18 @@ function GeneralPage({ roster, actions, run }) {
        h(SetRow, { label: t('Theme'), hint: t('Colors for the whole team, on every device.') },
          h('select', { className: 'bt-select', 'aria-label': t('Theme'), value: current, onChange: event => run(actions.setPrefs({ theme: event.target.value })) },
            Object.entries(themes).map(([id, theme]) => h('option', { key: id, value: id }, t(theme.label))))),
@@ -3392,12 +3410,14 @@ index 4428659..ce4df8a 100644
 +        h(Choice, { label: t('Text size'), value: sizeOf(prefs), options: Object.entries(SIZE_CHOICES).map(([id, face]) => [id, face.label]), pick: id => run(actions.localPref('size', id)) })),
 +      h(SetRow, { label: t('Density'), hint: t('How much room rows and lists take.') },
 +        h(Choice, { label: t('Density'), value: densityOf(prefs), options: Object.entries(DENSITY_CHOICES).map(([id, face]) => [id, face.label]), pick: id => run(actions.localPref('density', id)) })),
++      h(SetRow, { label: t('Mobile skin'), hint: t('How chat looks on a phone. The desktop keeps this plugin\'s own shape.') },
++        h(Choice, { label: t('Mobile skin'), value: skinOf(prefs), options: Object.entries(SKIN_CHOICES).map(([id, face]) => [id, t(face.label)]), pick: id => run(actions.localPref('skin', id)) })),
        h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },
          h('div', { className: 'bt-swatches' },
            h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
 diff --git a/ds-bot/src/client/sidebar-groups.js b/ds-bot/src/client/sidebar-groups.js
 new file mode 100644
-index 0000000..ae11666
+index 00000000..ae116668
 --- /dev/null
 +++ b/ds-bot/src/client/sidebar-groups.js
 @@ -0,0 +1,28 @@
@@ -3430,7 +3450,7 @@ index 0000000..ae11666
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index b8f0a61..f7a61d1 100644
+index b8f0a61e..f7a61d18 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -3,16 +3,19 @@ import { createPortal } from 'react-dom'
@@ -4067,7 +4087,7 @@ index b8f0a61..f7a61d1 100644
  [class*="_footArea"]>[class*="_footerActions"]>div>.bt-foot-account{grid-column:1;order:1;display:inline-flex}
 diff --git a/ds-bot/src/client/skill-market/panel.js b/ds-bot/src/client/skill-market/panel.js
 new file mode 100644
-index 0000000..86fd51d
+index 00000000..86fd51d1
 --- /dev/null
 +++ b/ds-bot/src/client/skill-market/panel.js
 @@ -0,0 +1,6313 @@
@@ -10385,7 +10405,7 @@ index 0000000..86fd51d
 +
 +export { SkillMarketPanel }
 diff --git a/ds-bot/src/client/storage.js b/ds-bot/src/client/storage.js
-index 5614f9d..b68b45b 100644
+index 5614f9d4..b68b45b1 100644
 --- a/ds-bot/src/client/storage.js
 +++ b/ds-bot/src/client/storage.js
 @@ -6,6 +6,8 @@ export const STORAGE = {
@@ -10398,7 +10418,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..9ae5c47 100644
+index eac6ea54..430ef938 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10958,7 +10978,7 @@ index eac6ea5..9ae5c47 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1334,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1334,132 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -11076,10 +11096,22 @@ index eac6ea5..9ae5c47 100644
 +.bt-mcp-formfoot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
 +@media (max-width:720px){.bt-mcp-head{flex-direction:column;align-items:stretch}.bt-mcp-actions{justify-content:space-between}.bt-mcp-search{width:auto;max-width:none;flex:1 1 auto}.bt-mcp-body{padding:0 16px 20px}.bt-mcp-confirm,.bt-mcp-note{margin-left:16px;margin-right:16px}}
 +
++/* The phone skin: the mobile app's chat shape, on this device, chosen in Settings and off by
++   default. A variable carries its 26px bubble radius, so the sheet's radius steps still hold;
++   the flat layout keeps its own bubble-less look. */
++html[data-bt-skin=app]{--bt-skin-bubble:26px}
++html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-astack{gap:10px}
++html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg,
++html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-astack[data-lead]>.bt-msg{max-width:90%}
++html[data-bt-skin=app]:has([data-mobile-nav="frame"]) body:not([data-bt-layout=flat]) .bt-bubble{border-radius:var(--bt-skin-bubble);padding:13px 18px;font-size:calc(var(--dsh-content-font-size,14px) + 4px);line-height:calc(var(--dsh-content-font-size,14px) + 13px)}
++html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:var(--bt-skin-bubble)}
++html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:var(--bt-skin-bubble)}
++html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-row{min-height:48px}
++html[data-bt-skin=app]:has([data-mobile-nav="frame"]) .bt-bubble .bt-tools{border-radius:999px}
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1547,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1559,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -11188,7 +11220,7 @@ index eac6ea5..9ae5c47 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1112,17 +1675,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1687,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -11215,7 +11247,7 @@ index eac6ea5..9ae5c47 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1695,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1707,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -11224,7 +11256,7 @@ index eac6ea5..9ae5c47 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1736,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1748,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -11238,7 +11270,7 @@ index eac6ea5..9ae5c47 100644
  
  // -------------------------------------------------------------------------
 diff --git a/ds-bot/src/client/team-actions.js b/ds-bot/src/client/team-actions.js
-index 47d791d..1695a5b 100644
+index 47d791d4..1695a5b8 100644
 --- a/ds-bot/src/client/team-actions.js
 +++ b/ds-bot/src/client/team-actions.js
 @@ -1,5 +1,6 @@
@@ -11290,7 +11322,7 @@ index 47d791d..1695a5b 100644
      connectorDisconnect: id => after(call('connector-disconnect', { id })),
      connectorRetry: id => after(call('connector-retry', { id })),
 diff --git a/ds-bot/src/client/themes.js b/ds-bot/src/client/themes.js
-index 82c3b3b..de970c2 100644
+index 82c3b3b9..34c4f978 100644
 --- a/ds-bot/src/client/themes.js
 +++ b/ds-bot/src/client/themes.js
 @@ -23,6 +23,16 @@ const THEMES = {
@@ -11310,7 +11342,7 @@ index 82c3b3b..de970c2 100644
    moonlight: {
      label: 'Moonlight',
      light: { bg: '#f7f9fc', sidebar: '#eef2f8', bubble: '#e5ebf5', card: '#ffffff', text: '#121826', user: '#1e3a8a', userText: '#ffffff', accent: '#1e86ff' },
-@@ -122,6 +132,34 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
+@@ -122,6 +132,38 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
  // flat one.
  export const MESSAGE_WIDTH = { min: 50, max: 100, step: 5 }
  const percent = (value, initial) => (Number.isInteger(value) && value >= MESSAGE_WIDTH.min && value <= MESSAGE_WIDTH.max ? value : initial)
@@ -11342,11 +11374,15 @@ index 82c3b3b..de970c2 100644
 +// one attribute write rather than a new stylesheet.
 +export const DENSITY_CHOICES = { tight: { label: 'Compact' }, normal: { label: 'Standard' }, roomy: { label: 'Roomier' } }
 +export const densityOf = prefs => (DENSITY_CHOICES[prefs?.density] ? prefs.density : 'normal')
++// A phone look, not a colour: `ours` keeps this plugin's own rows and bubbles, `app` follows
++// the mobile app's chat shape. Kept on this device only, like the size and density.
++export const SKIN_CHOICES = { ours: { label: 'Ours' }, app: { label: 'App' } }
++export const skinOf = prefs => (SKIN_CHOICES[prefs?.skin] ? prefs.skin : 'ours')
  export const layoutOf = prefs => (prefs?.layout === 'flat' ? 'flat' : 'bubble')
  export const thinkingShown = prefs => prefs?.thinking === true
  export const widthOf = prefs => percent(prefs?.width, 80)
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
-index 3fc5c7c..ae5f4c3 100644
+index 3fc5c7c6..ae5f4c3e 100644
 --- a/ds-bot/src/host/channel.js
 +++ b/ds-bot/src/host/channel.js
 @@ -99,7 +99,7 @@ export function install(rt) {
@@ -11401,7 +11437,7 @@ index 3fc5c7c..ae5f4c3 100644
          case 'connector-retry':
 diff --git a/ds-bot/src/host/mcp.js b/ds-bot/src/host/mcp.js
 new file mode 100644
-index 0000000..b3d867e
+index 00000000..b3d867e4
 --- /dev/null
 +++ b/ds-bot/src/host/mcp.js
 @@ -0,0 +1,608 @@
@@ -12015,7 +12051,7 @@ index 0000000..b3d867e
 +}
 diff --git a/ds-bot/src/host/skill-market/index.js b/ds-bot/src/host/skill-market/index.js
 new file mode 100644
-index 0000000..eaffda0
+index 00000000..eaffda06
 --- /dev/null
 +++ b/ds-bot/src/host/skill-market/index.js
 @@ -0,0 +1,2813 @@
@@ -14834,7 +14870,7 @@ index 0000000..eaffda0
 +}
 diff --git a/ds-bot/src/host/skill-market/locale.js b/ds-bot/src/host/skill-market/locale.js
 new file mode 100644
-index 0000000..6cef597
+index 00000000..6cef597f
 --- /dev/null
 +++ b/ds-bot/src/host/skill-market/locale.js
 @@ -0,0 +1,787 @@
@@ -15626,7 +15662,7 @@ index 0000000..6cef597
 +  return translated === dictionaryKey ? fallback : translated
 +}
 diff --git a/ds-bot/test/client-bundle.test.js b/ds-bot/test/client-bundle.test.js
-index a7405c1..307aafd 100644
+index a7405c12..307aafd9 100644
 --- a/ds-bot/test/client-bundle.test.js
 +++ b/ds-bot/test/client-bundle.test.js
 @@ -22,7 +22,25 @@ test('client.js registers a factory that exports apply and inject', () => {
@@ -15658,7 +15694,7 @@ index a7405c1..307aafd 100644
    }
 diff --git a/ds-bot/test/mcp-panel.test.js b/ds-bot/test/mcp-panel.test.js
 new file mode 100644
-index 0000000..31469fd
+index 00000000..31469fd7
 --- /dev/null
 +++ b/ds-bot/test/mcp-panel.test.js
 @@ -0,0 +1,93 @@
@@ -15757,7 +15793,7 @@ index 0000000..31469fd
 +})
 diff --git a/ds-bot/test/mcp.test.js b/ds-bot/test/mcp.test.js
 new file mode 100644
-index 0000000..37b1fbd
+index 00000000..37b1fbde
 --- /dev/null
 +++ b/ds-bot/test/mcp.test.js
 @@ -0,0 +1,237 @@
@@ -16000,7 +16036,7 @@ index 0000000..37b1fbd
 +})
 diff --git a/ds-bot/test/mode-row.test.js b/ds-bot/test/mode-row.test.js
 new file mode 100644
-index 0000000..65ba6fb
+index 00000000..65ba6fba
 --- /dev/null
 +++ b/ds-bot/test/mode-row.test.js
 @@ -0,0 +1,63 @@
@@ -16068,7 +16104,7 @@ index 0000000..65ba6fb
 +  assert.equal(bar.parentNode, side)
 +})
 diff --git a/ds-bot/test/sidebar-switch.test.js b/ds-bot/test/sidebar-switch.test.js
-index 59109a9..429e92e 100644
+index 59109a99..429e92e8 100644
 --- a/ds-bot/test/sidebar-switch.test.js
 +++ b/ds-bot/test/sidebar-switch.test.js
 @@ -28,10 +28,13 @@ let layoutEffects
@@ -16192,8 +16228,56 @@ index 59109a9..429e92e 100644
  })
  
  test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
+diff --git a/ds-bot/test/skin.test.js b/ds-bot/test/skin.test.js
+new file mode 100644
+index 00000000..923854cd
+--- /dev/null
++++ b/ds-bot/test/skin.test.js
+@@ -0,0 +1,42 @@
++import assert from 'node:assert/strict'
++import { readFileSync } from 'node:fs'
++import { test } from 'node:test'
++import { SKIN_CHOICES, skinOf } from '../src/client/themes.js'
++
++const bundle = readFileSync(new URL('../client.js', import.meta.url), 'utf8')
++
++test('a skin the plugin does not know is this plugin’s own', () => {
++  assert.equal(skinOf(undefined), 'ours')
++  assert.equal(skinOf({}), 'ours')
++  assert.equal(skinOf({ skin: 'neon' }), 'ours')
++  assert.equal(skinOf({ skin: 'app' }), 'app')
++  assert.deepEqual(Object.keys(SKIN_CHOICES), ['ours', 'app'])
++})
++
++// The skin is a phone look: a rule that could reach the desktop would restyle a window the
++// user never asked about, so every rule but the token carries the drawer marker.
++test('every skin rule is scoped to the phone', () => {
++  const selectors = []
++  for (let at = bundle.indexOf('[data-bt-skin=app]'); at >= 0; at = bundle.indexOf('[data-bt-skin=app]', at + 1)) {
++    const open = bundle.indexOf('{', at)
++    const start = Math.max(bundle.lastIndexOf('}', at), bundle.lastIndexOf('\n', at), bundle.lastIndexOf('`', at))
++    selectors.push(bundle.slice(start + 1, open).trim())
++  }
++  assert.ok(selectors.length >= 3, `expected the skin rules, found ${selectors.length}`)
++  for (const selector of selectors) {
++    assert.ok(
++      selector.includes('[data-mobile-nav="frame"]') || selector === 'html[data-bt-skin=app]',
++      `the skin rule is not scoped to the phone: ${selector}`,
++    )
++  }
++})
++
++test('the phone skin carries the app’s own bubble metrics', () => {
++  const rule = /\[data-bt-skin=app\]:has\(\[data-mobile-nav="frame"\]\) body:not\(\[data-bt-layout=flat\]\) \.bt-bubble\{([^}]*)\}/.exec(bundle)
++  assert.ok(rule !== null, 'no bubble rule for the skin')
++  const body = rule[1]
++  assert.match(body, /border-radius:var\(--bt-skin-bubble\)/)
++  assert.match(body, /padding:13px 18px/)
++  assert.match(bundle, /html\[data-bt-skin=app\]\{--bt-skin-bubble:26px\}/)
++  assert.match(bundle, /\[data-bt-skin=app\]:has\(\[data-mobile-nav="frame"\]\) \.bt-msg,[^{]*\{max-width:90%\}/)
++})
 diff --git a/ds-bot/test/style-debt.json b/ds-bot/test/style-debt.json
-index 4985bf1..5abf15c 100644
+index 4985bf19..5abf15ce 100644
 --- a/ds-bot/test/style-debt.json
 +++ b/ds-bot/test/style-debt.json
 @@ -19,14 +19,42 @@
@@ -16282,7 +16366,7 @@ index 4985bf1..5abf15c 100644
      "usage-page.js": {
        "14px": 5,
 diff --git a/ds-bot/test/user-bubble.test.js b/ds-bot/test/user-bubble.test.js
-index bdc9eb8..35fd4e5 100644
+index bdc9eb87..35fd4e50 100644
 --- a/ds-bot/test/user-bubble.test.js
 +++ b/ds-bot/test/user-bubble.test.js
 @@ -28,8 +28,13 @@ const ruleFor = selector => {
