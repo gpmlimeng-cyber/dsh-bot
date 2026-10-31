@@ -162,7 +162,7 @@ export const DENSITY_CHOICES = { tight: { label: 'Compact' }, normal: { label: '
 export const densityOf = prefs => (DENSITY_CHOICES[prefs?.density] ? prefs.density : 'normal')
 // A phone look, not a colour: `ours` keeps this plugin's own rows and bubbles, `app` follows
 // the mobile app's chat shape. Kept on this device only, like the size and density.
-export const SKIN_CHOICES = { ours: { label: 'Ours' }, app: { label: 'App' } }
+export const SKIN_CHOICES = { ours: { label: 'Classic' }, app: { label: 'App style' } }
 // No pick yet means the phone wears the app's own shape and the desktop keeps ours; an
 // explicit pick always wins, whichever way the device goes.
 export const skinOf = (prefs, { phone = false } = {}) => (SKIN_CHOICES[prefs?.skin] ? prefs.skin : phone ? 'app' : 'ours')

@@ -1611,7 +1611,12 @@ html:has([data-mobile-nav="frame"]) [data-composer-card]>*{align-self:center!imp
 /* In DS Bot mode the composer's own "+" menu carries both file and image upload, so the
    paperclip dsh-web-mobile injects beside it is a duplicate way to the same picker. Agent
    mode draws no "+", so the paperclip stays there. */
-html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus) [data-mobile-nav="file-upload"]{display:none!important}
+/* The paperclip is the shell's own mobile adaptation, and our plus reuses its file input;
+   where both can upload, one entry is enough. */
+html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus):has(input[type=file]) [data-mobile-nav="file-upload"]{display:none!important}
+/* Where the plus is missing, the shell's button keeps its file input and wears the same plus
+   glyph through a mask, so the phone's left side always reads the same way. */
+html:has([data-mobile-nav="frame"]) [data-composer-card]:not(:has(.bt-plus)) [data-mobile-nav="file-upload"]{background-color:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M10 3.5v13M3.5 10h13'/%3E%3C/svg%3E") center/20px 20px no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M10 3.5v13M3.5 10h13'/%3E%3C/svg%3E") center/20px 20px no-repeat}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
 [class*="_root"]:has(> [data-composer-card]){padding:0 11px 13px 16px!important}
 [class*="_root"]:has(> [data-composer-card])>[data-composer-card]{max-width:min(992px,100%)!important}
@@ -1661,7 +1666,7 @@ html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_tools"]{gap:0
 html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_trailing"]{gap:8px!important}
 /* No display here: DSH hides these controls with [hidden] while the Bot works. */
 html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_standardControls"]{align-items:center!important;gap:8px!important}
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink,#fff)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
 html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:hover:not(:disabled){opacity:.9}
 html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:active:not(:disabled){scale:.9}
 @keyframes bt-icon-swap{from{opacity:0;transform:scale(.5) rotate(-30deg)}}
@@ -1690,7 +1695,7 @@ html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary
 }
 [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
 body[data-bt-room] .bt-voice{display:none!important}
-body[data-bt-room] [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-mic:not([aria-pressed=true]){background:var(--bt-accent);color:var(--bt-accent-ink,#fff)}
+body[data-bt-room] [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-mic:not([aria-pressed=true]){background:var(--bt-accent);color:var(--bt-accent-ink)}
 .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
 [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
 .bt-q{order:1}

@@ -121,12 +121,15 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     window.addEventListener('keydown', onKey, true)
     return () => { window.removeEventListener('mousedown', onDown, true); window.removeEventListener('keydown', onKey, true) }
   }, [open])
+  // The plus stands in every chat, including a plain session with no Bot or group behind it;
+  // only the rows that need a target are left out there. Files go through the shell's own
+  // mobile file input, which its paperclip button is injected with.
   const target = roster.byId?.[sessionId]?.id ?? roster.roomsById?.[sessionId]?.id
-  if (sessionId === undefined || target === undefined) return null
+  if (sessionId === undefined) return null
+  // A composer without a file input has nothing to hand the picker.
   const fileInput = () => button.current?.closest('[data-composer-card]')?.querySelector('input[type=file]')
   const toggle = () => {
     if (open) { setOpen(null); return }
-    // Files go through the composer's own file input; a composer without one takes none.
     setOpen({ files: Boolean(fileInput()) })
   }
   const attach = () => {
@@ -159,7 +162,7 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     setOpen(null)
     actions.referenceChat(sessionId, inputActions?.captureInsertion?.())
   }
-  const canReference = typeof inputActions?.captureInsertion === 'function' && actions.canReferenceChat()
+  const canReference = target !== undefined && typeof inputActions?.captureInsertion === 'function' && actions.canReferenceChat()
   // Anchored to the "+" each render: the visible viewport can move (on-screen
   // keyboard) while the menu is open.
   const place = useMemo(() => {
@@ -179,5 +182,5 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attach }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
     shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attachImage }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
     canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
-    h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
+    target !== undefined ? h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task'))) : null), document.body) : null)
 }
