@@ -91,7 +91,7 @@ function Row({ server, added, enabled, busy, onInstall, onOpen, onHome, onMenu }
   return h('li', { className: 'bt-mm-card', 'data-mcp-entry': server.id },
     h('span', { className: 'bt-mm-icon', 'aria-hidden': true },
       server.logo
-        ? h('img', { className: 'bt-mm-image', src: server.logo, width: 36, height: 36, alt: '', loading: 'lazy', referrerPolicy: 'no-referrer' })
+        ? h('img', { className: 'bt-mm-image', src: server.logo, alt: '', loading: 'lazy', referrerPolicy: 'no-referrer' })
         : h('span', null, server.name.slice(0, 1))),
     h('div', { className: 'bt-mm-main' },
       h('div', { className: 'bt-mm-titleRow' },
