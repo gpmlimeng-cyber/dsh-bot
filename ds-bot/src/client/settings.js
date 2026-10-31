@@ -82,6 +82,8 @@ function GeneralPage({ roster, actions, run }) {
   const [custom, setCustom] = useState(prefs.accent ?? '#4d6bfe')
   // The font applies on this device before the host answers, so the picker keeps its own copy.
   const [font, setFont] = useState(() => (actions.fontPref ? actions.fontPref() : fontOf(prefs)))
+  // The skin is this device's own pick and never reaches the host, so the row reads it locally too.
+  const [skin, setSkin] = useState(() => (actions.skinPref ? actions.skinPref() : skinOf(prefs)))
   const timer = useRef(0)
   useEffect(() => () => clearTimeout(timer.current), [])
   const pickCustom = (value) => {
@@ -105,7 +107,7 @@ function GeneralPage({ roster, actions, run }) {
       h(SetRow, { label: t('Density'), hint: t('How much room rows and lists take.') },
         h(Choice, { label: t('Density'), value: densityOf(prefs), options: Object.entries(DENSITY_CHOICES).map(([id, face]) => [id, face.label]), pick: id => run(actions.localPref('density', id)) })),
       h(SetRow, { label: t('Mobile skin'), hint: t('How chat looks on a phone. The desktop keeps this plugin\'s own shape.') },
-        h(Choice, { label: t('Mobile skin'), value: skinOf(prefs), options: Object.entries(SKIN_CHOICES).map(([id, face]) => [id, t(face.label)]), pick: id => run(actions.localPref('skin', id)) })),
+        h(Choice, { label: t('Mobile skin'), value: skin, options: Object.entries(SKIN_CHOICES).map(([id, face]) => [id, t(face.label)]), pick: (id) => { setSkin(id); run(actions.localPref('skin', id)) } })),
       h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },
         h('div', { className: 'bt-swatches' },
           h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),

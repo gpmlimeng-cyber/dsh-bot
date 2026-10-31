@@ -25493,6 +25493,7 @@ function GeneralPage({ roster, actions, run: run2 }) {
   const current = themes[prefs.theme] ? prefs.theme : "deepseek";
   const [custom, setCustom] = (0, import_react50.useState)(prefs.accent ?? "#4d6bfe");
   const [font, setFont] = (0, import_react50.useState)(() => actions.fontPref ? actions.fontPref() : fontOf(prefs));
+  const [skin, setSkin] = (0, import_react50.useState)(() => actions.skinPref ? actions.skinPref() : skinOf(prefs));
   const timer = (0, import_react50.useRef)(0);
   (0, import_react50.useEffect)(() => () => clearTimeout(timer.current), []);
   const pickCustom = (value) => {
@@ -25543,7 +25544,10 @@ function GeneralPage({ roster, actions, run: run2 }) {
       (0, import_react50.createElement)(
         SetRow,
         { label: t("Mobile skin"), hint: t("How chat looks on a phone. The desktop keeps this plugin's own shape.") },
-        (0, import_react50.createElement)(Choice, { label: t("Mobile skin"), value: skinOf(prefs), options: Object.entries(SKIN_CHOICES).map(([id, face]) => [id, t(face.label)]), pick: (id) => run2(actions.localPref("skin", id)) })
+        (0, import_react50.createElement)(Choice, { label: t("Mobile skin"), value: skin, options: Object.entries(SKIN_CHOICES).map(([id, face]) => [id, t(face.label)]), pick: (id) => {
+          setSkin(id);
+          run2(actions.localPref("skin", id));
+        } })
       ),
       (0, import_react50.createElement)(
         SetRow,
@@ -29157,6 +29161,8 @@ function apply(ctx) {
     },
     // The font picker shows what this device already uses, not what the host last answered.
     fontPref: () => fontOf(savedPrefs),
+    // Same for the skin, which the host never hears about: the row must show this device's pick.
+    skinPref: () => skinOf(savedPrefs),
     // A bundle is the unit the enabled list shows, so its switch is the bundle switch the
     // shell's own Plugins page offers; the identity is the package name.
     setBundleEnabled: async (name, enabled) => {

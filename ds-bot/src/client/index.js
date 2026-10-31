@@ -638,6 +638,8 @@ export function apply(ctx) {
     },
     // The font picker shows what this device already uses, not what the host last answered.
     fontPref: () => fontOf(savedPrefs),
+    // Same for the skin, which the host never hears about: the row must show this device's pick.
+    skinPref: () => skinOf(savedPrefs),
     // A bundle is the unit the enabled list shows, so its switch is the bundle switch the
     // shell's own Plugins page offers; the identity is the package name.
     setBundleEnabled: async (name, enabled) => {
