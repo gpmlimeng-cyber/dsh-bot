@@ -538,6 +538,28 @@ export function McpMarketTab({ actions = {} }) {
     return () => { live = false }
   }, [actions, view, category, sent, source, categories])
 
+  // The servers this profile runs are drawn with the same card as the plaza's own: what
+  // the plaza says about a server it also lists is carried over, and a server the plaza does
+  // not list still gets its name and how it is reached.
+  const installedCards = useMemo(() => {
+    const known = new Map()
+    for (const group of [sections.length > 0 ? { servers: sections.flatMap(entry => entry.servers) } : null].filter(Boolean)) {
+      for (const server of group.servers) known.set(nameOf(server.id), server)
+    }
+    return rows.map((row) => {
+      const server = known.get(row.serverName)
+      return {
+        id: server?.id ?? `installed:${row.serverName}`,
+        name: server?.name ?? row.serverName,
+        description: server?.description ?? (row.transport === 'streamable-http' ? t('Hosted endpoint') : t('Local process')),
+        logo: server?.logo ?? '',
+        installs: server?.installs ?? 0,
+        hosted: false,
+        installable: false,
+      }
+    })
+  }, [rows, sections, t])
+
   const names = useMemo(() => new Set(installed), [installed])
   const shown = useMemo(
     () => (sort === 'installs'
@@ -604,7 +626,20 @@ export function McpMarketTab({ actions = {} }) {
             ? h('section', { className: 'bt-mm-group', key: 'installed' },
               h('div', { className: 'bt-mm-grouphead' },
                 h('h3', { className: 'bt-mm-grouptitle' }, t('Installed'))),
-              h(Installed, { servers: rows, busy: busyRow, onToggle: toggle, onRemove: remove }))
+              h('ul', { className: 'bt-mm-cards' }, installedCards.map(server => h(Row, {
+                key: server.id,
+                server,
+                added: true,
+                busy: busyRow !== '',
+                enabled: (rows.find(item => item.serverName === (server.name)) ?? rows.find(item => nameOf(item.serverName) === nameOf(server.id)) ?? {}).enabled !== false,
+                onInstall: () => {},
+                onOpen: () => { if (!String(server.id).startsWith('installed:')) setOpen(server) },
+                onHome: () => {},
+                onMenu: () => {
+                  const entry = rows.find(item => item.serverName === server.name || nameOf(item.serverName) === nameOf(server.id))
+                  if (entry !== undefined) toggle(entry)
+                },
+              }))))
             : null,
           loading && list.servers.length === 0
             ? h('ul', { className: 'bt-mm-cards', key: 'skeleton', 'aria-busy': true }, [0, 1, 2].map(index => h('li', { key: index, className: 'bt-mm-card' },

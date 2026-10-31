@@ -27856,6 +27856,24 @@ function McpMarketTab({ actions = {} }) {
       live = false;
     };
   }, [actions, view, category, sent, source, categories]);
+  const installedCards = (0, import_react55.useMemo)(() => {
+    const known = /* @__PURE__ */ new Map();
+    for (const group of [sections.length > 0 ? { servers: sections.flatMap((entry) => entry.servers) } : null].filter(Boolean)) {
+      for (const server of group.servers) known.set(nameOf(server.id), server);
+    }
+    return rows2.map((row) => {
+      const server = known.get(row.serverName);
+      return {
+        id: server?.id ?? `installed:${row.serverName}`,
+        name: server?.name ?? row.serverName,
+        description: server?.description ?? (row.transport === "streamable-http" ? t("Hosted endpoint") : t("Local process")),
+        logo: server?.logo ?? "",
+        installs: server?.installs ?? 0,
+        hosted: false,
+        installable: false
+      };
+    });
+  }, [rows2, sections, t]);
   const names = (0, import_react55.useMemo)(() => new Set(installed), [installed]);
   const shown = (0, import_react55.useMemo)(
     () => sort === "installs" ? list.servers.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : list.servers,
@@ -27905,7 +27923,24 @@ function McpMarketTab({ actions = {} }) {
         { className: "bt-mm-grouphead" },
         (0, import_react55.createElement)("h3", { className: "bt-mm-grouptitle" }, t("Installed"))
       ),
-      (0, import_react55.createElement)(Installed, { servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove })
+      (0, import_react55.createElement)("ul", { className: "bt-mm-cards" }, installedCards.map((server) => (0, import_react55.createElement)(Row3, {
+        key: server.id,
+        server,
+        added: true,
+        busy: busyRow !== "",
+        enabled: (rows2.find((item) => item.serverName === server.name) ?? rows2.find((item) => nameOf(item.serverName) === nameOf(server.id)) ?? {}).enabled !== false,
+        onInstall: () => {
+        },
+        onOpen: () => {
+          if (!String(server.id).startsWith("installed:")) setOpen(server);
+        },
+        onHome: () => {
+        },
+        onMenu: () => {
+          const entry = rows2.find((item) => item.serverName === server.name || nameOf(item.serverName) === nameOf(server.id));
+          if (entry !== void 0) toggle(entry);
+        }
+      })))
     ) : null,
     loading && list.servers.length === 0 ? (0, import_react55.createElement)("ul", { className: "bt-mm-cards", key: "skeleton", "aria-busy": true }, [0, 1, 2].map((index) => (0, import_react55.createElement)(
       "li",
