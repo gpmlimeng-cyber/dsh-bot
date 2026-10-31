@@ -416,10 +416,10 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 0696236..cc42d6f 100644
+index 0696236..814eb3d 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,106 @@ const ZH = {
+@@ -18,6 +18,107 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
@@ -458,6 +458,7 @@ index 0696236..cc42d6f 100644
 +  'MCP': 'MCP',
 +  'Hosted': '已托管',
 +  'In this profile': '本档案里',
++  'Starts with the next DSH': '重启 DSH 后启动',
 +  'Discover': '发现',
 +  'No MCP server is running in this profile yet.': '本档案还没有运行中的 MCP 服务器。',
 +  'Local process': '本地进程',
@@ -526,7 +527,7 @@ index 0696236..cc42d6f 100644
    'Resize sidebar': '调整侧边栏宽度',
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
-@@ -170,7 +270,6 @@ const ZH = {
+@@ -170,7 +271,6 @@ const ZH = {
    'A provider id is lowercase letters, digits and dashes, starting with a letter': '服务商 ID 只能用小写字母、数字和短横线，并以字母开头',
    'Add at least one model': '至少添加一个模型',
    'Two models have the same id': '有两个模型的 ID 相同',
@@ -534,7 +535,7 @@ index 0696236..cc42d6f 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -430,6 +529,23 @@ const ZH = {
+@@ -430,6 +530,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -558,7 +559,7 @@ index 0696236..cc42d6f 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -545,6 +661,19 @@ const ZH = {
+@@ -545,6 +662,19 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -578,7 +579,7 @@ index 0696236..cc42d6f 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +811,6 @@ const ZH = {
+@@ -682,7 +812,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -586,7 +587,7 @@ index 0696236..cc42d6f 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1059,10 @@ const ZH = {
+@@ -931,6 +1060,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -597,7 +598,7 @@ index 0696236..cc42d6f 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1105,7 @@ const ZH = {
+@@ -973,6 +1106,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -605,7 +606,7 @@ index 0696236..cc42d6f 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1201,10 @@ const ZH = {
+@@ -1068,6 +1202,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -2274,7 +2275,7 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..99955fa
+index 0000000..acc7cff
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
 @@ -0,0 +1,323 @@
@@ -2398,13 +2399,13 @@ index 0000000..99955fa
 +    h('span', { className: 'bt-mm-name' }, server.serverName),
 +    h('span', { className: 'bt-mm-note' },
 +      server.transport === 'streamable-http' ? t('Hosted endpoint') : t('Local process'),
-+      server.enabled ? '' : ` · ${t('Off')}`,
++      server.pending ? ` · ${t('Starts with the next DSH')}` : server.enabled ? '' : ` · ${t('Off')}`,
 +      server.toolCount ? ` · ${t('{count} tools', { count: server.toolCount })}` : '')),
 +  h('span', { className: 'bt-mm-inst-end' },
 +    h('button', {
 +      type: 'button', className: 'bt-mm-switch', 'aria-pressed': server.enabled, 'data-on': server.enabled ? '' : undefined,
 +      'aria-label': server.enabled ? t('Turn off') : t('Turn on'), title: server.enabled ? t('Turn off') : t('Turn on'),
-+      disabled: busy !== '', onClick: () => onToggle(server),
++      disabled: busy !== '' || server.pending === true, onClick: () => onToggle(server),
 +    }, h(SwitchIcon)),
 +    h('button', {
 +      type: 'button', className: 'bt-mm-remove', 'aria-label': t('Remove'), title: t('Remove'),
@@ -10722,10 +10723,10 @@ index 3fc5c7c..ae5f4c3 100644
          case 'connector-retry':
 diff --git a/ds-bot/src/host/mcp.js b/ds-bot/src/host/mcp.js
 new file mode 100644
-index 0000000..7351069
+index 0000000..6445257
 --- /dev/null
 +++ b/ds-bot/src/host/mcp.js
-@@ -0,0 +1,374 @@
+@@ -0,0 +1,423 @@
 +// MCP servers: the DSH MCP client instances this profile runs, read and changed through
 +// the profile's own two services — `configEditor` for an entry's config and
 +// `pluginManager` for its switch. Both are shipped with DSH (`dsh-base` mounts them), so
@@ -10819,6 +10820,47 @@ index 0000000..7351069
 +    .map(([key, item]) => [key.trim(), item])
 +}
 +
++// Rows this page wrote into the patch document that the running profile has not loaded
++// yet: a row is only started when DSH next starts, and the panel shows it as waiting.
++export function pendingRows(text) {
++  const lines = String(text ?? '').split('\n')
++  const rows = []
++  for (let index = 0; index < lines.length; index += 1) {
++    const head = /^    - id: "([^"]+)"$/.exec(lines[index])
++    if (head === null || !head[1].startsWith(ID_PREFIX)) continue
++    const block = []
++    let cursor = index + 1
++    while (cursor < lines.length && !lines[cursor].startsWith('- ') && !/^    - /.test(lines[cursor])) {
++      block.push(lines[cursor])
++      cursor += 1
++    }
++    if (!block.includes(`      name: ${quote(MCP_CLIENT)}`)) continue
++    const read = (key) => {
++      const line = block.find(item => item.trimStart().startsWith(`${key}: `))
++      if (line === undefined) return undefined
++      const raw = line.trimStart().slice(key.length + 2)
++      try { return JSON.parse(raw) } catch { return undefined }
++    }
++    const serverName = read('serverName')
++    if (typeof serverName !== 'string' || serverName === '') continue
++    rows.push({
++      serverName,
++      transport: read('transport') === 'streamable-http' ? 'streamable-http' : 'stdio',
++      entryId: '',
++      enabled: false,
++      pending: true,
++      readOnly: null,
++      toolCount: 0,
++      command: read('command') ?? null,
++      args: [],
++      env: [],
++      url: read('url') ?? null,
++      headers: [],
++    })
++  }
++  return rows
++}
++
 +// The plaza answers JSON over https. `fetch` is not used here: inside the running app it
 +// left the request hanging past any reasonable timeout, while a plain https request from
 +// the same runtime answers in a few hundred milliseconds.
@@ -10906,10 +10948,18 @@ index 0000000..7351069
 +        headers: transport === 'streamable-http' ? pairs(config.headers) : [],
 +      })
 +    }
++    // A row written but not loaded yet is still in the document: the page lists it so a
++    // fresh install shows up at once, marked as waiting for the next start.
++    const text = await readFile(patchPathSafe(), 'utf8').catch(() => '')
++    const known = new Set(list.map(server => server.serverName))
++    for (const row of pendingRows(text)) if (!known.has(row.serverName)) list.push(row)
 +    list.sort((left, right) => left.serverName.localeCompare(right.serverName))
 +    return { servers: list, available: true }
 +  }
 +
++  const patchPathSafe = () => {
++    try { return patchPath() } catch { return '' }
++  }
 +  const patchPath = () => {
 +    const path = editor()?.documentPath
 +    if (typeof path !== 'string' || path === '') throw fail('This DSH does not expose its profile configuration')
