@@ -265,6 +265,10 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 [class*="_page"]:has([data-bt-skills]){height:100%!important;overflow:hidden!important;padding-bottom:0!important}
 [class*="_page"]:has([data-bt-skills])>[role="tabpanel"]{flex:1 1 auto!important;min-height:0!important;width:100%!important;max-width:min(1760px,100%)!important;gap:0!important}
 [data-bt-skills]{flex:1 1 auto;height:auto;min-height:0;width:100%}
+/* The market parks its skill drawer just past the panel's right edge and slides it in. The
+   panel's clipping stops the drawer but not its shadow, which painted a grey band down the
+   inside of that edge; the drawer only paints a shadow while it is open. */
+[data-bt-skills] .sm-inspector:not(.open){box-shadow:none}
 .bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 .bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
 .bt-market-heading{min-width:0}
