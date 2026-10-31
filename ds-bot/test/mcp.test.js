@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { cutRow, install, rowText, schemaSummary } from '../src/host/mcp.js'
+import { cutRow, install, pendingRows, rowText, schemaSummary } from '../src/host/mcp.js'
 import { fakeContext } from './fake-ctx.js'
 
 const CLIENT = '@deepseek-ai/dsh-mcp-client'
@@ -195,4 +195,43 @@ test('mcp-remove leaves a row this page did not write', async () => {
     await assert.rejects(env.rt.mcpEndpoint('mcp-remove', { serverName: 'files' }), /not in the profile/)
     assert.match(readFileSync(env.file, 'utf8'), /another-plugin/)
   } finally { env.done() }
+})
+
+test('mcp-remove refuses a name that cannot be a server name', async () => {
+  const env = setup()
+  try {
+    await assert.rejects(env.rt.mcpEndpoint('mcp-remove', { serverName: 'a/b' }), /Unknown server/)
+    await assert.rejects(env.rt.mcpEndpoint('mcp-remove', { serverName: '' }), /Unknown server/)
+  } finally { env.done() }
+})
+
+// The page shows the rows it wrote that the profile has not started yet; everything else
+// in the document is the user's or another client's and is never taken for one of ours.
+test('pendingRows reads our waiting rows, both shapes', () => {
+  const [stdioRow] = pendingRows(rowText('mcp-files', stdio))
+  assert.deepEqual(
+    {
+      serverName: stdioRow.serverName,
+      transport: stdioRow.transport,
+      entryId: stdioRow.entryId,
+      enabled: stdioRow.enabled,
+      pending: stdioRow.pending,
+    },
+    { serverName: 'files', transport: 'stdio', entryId: '', enabled: false, pending: true },
+  )
+  const [httpRow] = pendingRows(rowText('mcp-remote', http))
+  assert.deepEqual([httpRow.serverName, httpRow.transport, httpRow.url], ['remote', 'streamable-http', 'https://mcp.test/sse'])
+})
+
+test('pendingRows leaves another client\'s insert and a row with no server name', () => {
+  const other = rowText('mcp-files', stdio).replace(`name: "${CLIENT}"`, 'name: "@deepseek-ai/dsh-other"')
+  assert.deepEqual(pendingRows(other), [])
+  const nameless = rowText('mcp-files', stdio).split('\n').filter(line => !line.includes('serverName:')).join('\n')
+  assert.deepEqual(pendingRows(nameless), [])
+})
+
+test('pendingRows leaves a row whose block was cut off', () => {
+  const lines = rowText('mcp-files', stdio).split('\n')
+  assert.deepEqual(pendingRows(lines.slice(0, 3).join('\n')), [])
+  assert.deepEqual(pendingRows(lines.filter(line => !line.startsWith('    - id:')).join('\n')), [])
 })

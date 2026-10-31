@@ -80,6 +80,7 @@ var ZH = {
   "{count} plugins": "{count} 个插件",
   "Browse the plugin markets this Harness lists": "浏览宿主已配置的插件市场",
   "Default order": "默认顺序",
+  "Downloads": "下载量",
   "Smart picks": "✨ 智能推荐",
   "GitHub stars": "GitHub 星标数",
   "Random": "随机资源",
@@ -27275,7 +27276,7 @@ var CATEGORY_NAMES = {
   "social-media": "Social media"
 };
 var categoryName = (id) => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, " "));
-function Row3({ server, added, onOpen }) {
+function Row3({ server, added, busy, onInstall, onOpen }) {
   return (0, import_react55.createElement)(
     "div",
     { className: "bt-mm-plug" + (added ? " is-added" : "") },
@@ -27302,12 +27303,15 @@ function Row3({ server, added, onOpen }) {
     (0, import_react55.createElement)(
       "div",
       { className: "bt-mm-end" },
+      // The button installs here, like the shell's own market: already installed is a
+      // state, not a control, so it is disabled rather than a click that does nothing.
       (0, import_react55.createElement)("button", {
         type: "button",
         className: "bt-mm-install",
         "data-added": added ? "" : void 0,
-        onClick: onOpen
-      }, added ? t("Installed") : t("Install"))
+        disabled: added || busy,
+        onClick: onInstall
+      }, busy ? t("Adding…") : added ? t("Installed") : t("Install"))
     )
   );
 }
@@ -27509,6 +27513,7 @@ function McpMarketTab({ actions = {} }) {
   const [installed, setInstalled] = (0, import_react55.useState)([]);
   const [rows2, setRows] = (0, import_react55.useState)([]);
   const [busyRow, setBusyRow] = (0, import_react55.useState)("");
+  const [installing, setInstalling] = (0, import_react55.useState)("");
   const [notice, setNotice] = (0, import_react55.useState)("");
   const [categories, setCategories] = (0, import_react55.useState)([]);
   const [category, setCategory] = (0, import_react55.useState)("");
@@ -27546,7 +27551,7 @@ function McpMarketTab({ actions = {} }) {
     let live = true;
     setLoading(true);
     setError("");
-    Promise.resolve(actions.mcpMarket?.({ kind: "search", query: sent, page })).then((next) => {
+    Promise.resolve(actions.mcpMarket?.({ kind: "search", query: sent, page, category })).then((next) => {
       if (!live) return;
       setLoading(false);
       setList((now) => page === 1 ? { total: next?.total ?? 0, servers: next?.servers ?? [] } : { total: next?.total ?? now.total, servers: [...now.servers, ...next?.servers ?? []] });
@@ -27559,7 +27564,7 @@ function McpMarketTab({ actions = {} }) {
     return () => {
       live = false;
     };
-  }, [actions, sent, page, view]);
+  }, [actions, sent, page, category, view]);
   (0, import_react55.useEffect)(() => {
     if (view !== "discover" || categories.length > 0) return void 0;
     let live = true;
@@ -27591,11 +27596,41 @@ function McpMarketTab({ actions = {} }) {
       report(failure);
     });
   };
+  const pick2 = (value) => {
+    setCategory(value);
+    setPage(1);
+    setList({ total: 0, servers: [] });
+  };
+  const install = (server) => {
+    if (installing !== "") return;
+    setInstalling(server.id);
+    const giveUp = (reason) => {
+      setInstalling("");
+      setOpen(server);
+      setNotice(String(reason?.message ?? reason ?? ""));
+    };
+    Promise.resolve(actions.mcpMarket?.({ kind: "detail", id: server.id })).then((detail) => {
+      const name = nameOf(server.id);
+      const url = detail?.urls?.[0]?.url ?? "";
+      const stdio = detail?.stdio ?? null;
+      const config = url ? { transport: "streamable-http", serverName: name, url } : stdio?.command ? { transport: "stdio", serverName: name, command: stdio.command, args: stdio.args } : null;
+      if (config === null) {
+        giveUp(t("This server has no connection this profile can use on its own."));
+        return void 0;
+      }
+      return Promise.resolve(actions.mcpAdd?.({ config })).then((next) => {
+        setInstalling("");
+        setAdded((now) => ({ ...now, [server.id]: name }));
+        applyRows(next);
+        setNotice(next?.pending ? t("Added {name}. Restart DSH to run it.", { name }) : "");
+      });
+    }).catch(giveUp);
+  };
   const names = (0, import_react55.useMemo)(() => new Set(installed), [installed]);
-  const shown = (0, import_react55.useMemo)(() => {
-    const rows3 = category === "" ? list.servers : list.servers.filter((server) => (server.categories ?? []).includes(category));
-    return sort === "installs" ? rows3.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : rows3;
-  }, [list.servers, category, sort]);
+  const shown = (0, import_react55.useMemo)(
+    () => sort === "installs" ? list.servers.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : list.servers,
+    [list.servers, sort]
+  );
   const more = list.servers.length < list.total;
   const body = view === "installed" ? (0, import_react55.createElement)(Installed, { key: "installed", servers: rows2, busy: busyRow, onToggle: toggle, onRemove: remove }) : view === "custom" ? (0, import_react55.createElement)(Custom, {
     key: "custom",
@@ -27612,6 +27647,8 @@ function McpMarketTab({ actions = {} }) {
       key: server.id,
       server,
       added: names.has(nameOf(server.id)) || added[server.id] !== void 0,
+      busy: installing === server.id,
+      onInstall: () => install(server),
       onOpen: () => setOpen(server)
     }))),
     more ? (0, import_react55.createElement)(
@@ -27685,12 +27722,12 @@ function McpMarketTab({ actions = {} }) {
         (0, import_react55.createElement)(
           "div",
           { className: "bt-mm-chips" },
-          (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-chip" + (category === "" ? " is-on" : ""), onClick: () => setCategory("") }, t("All")),
+          (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-chip" + (category === "" ? " is-on" : ""), onClick: () => pick2("") }, t("All")),
           categories.map((item) => (0, import_react55.createElement)("button", {
             key: item.id,
             type: "button",
             className: "bt-mm-chip" + (category === item.id ? " is-on" : ""),
-            onClick: () => setCategory(item.id)
+            onClick: () => pick2(item.id)
           }, categoryName(item.id)))
         )
       )

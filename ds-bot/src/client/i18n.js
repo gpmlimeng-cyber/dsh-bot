@@ -43,6 +43,7 @@ const ZH = {
   '{count} plugins': '{count} 个插件',
   'Browse the plugin markets this Harness lists': '浏览宿主已配置的插件市场',
   'Default order': '默认顺序',
+  'Downloads': '下载量',
   'Smart picks': '✨ 智能推荐',
   'GitHub stars': 'GitHub 星标数',
   'Random': '随机资源',

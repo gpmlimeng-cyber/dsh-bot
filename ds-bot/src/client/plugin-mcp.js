@@ -57,7 +57,7 @@ const CATEGORY_NAMES = {
 
 const categoryName = id => t(CATEGORY_NAMES[id] ?? id.replace(/[-_]+/g, ' '))
 
-function Row({ server, added, onOpen }) {
+function Row({ server, added, busy, onInstall, onOpen }) {
   return h('div', { className: 'bt-mm-plug' + (added ? ' is-added' : '') },
     h('button', { type: 'button', className: 'bt-mm-plugopen', 'aria-label': server.name, onClick: onOpen }),
     server.logo
@@ -73,12 +73,15 @@ function Row({ server, added, onOpen }) {
         server.publisher ? h('span', { className: 'bt-mm-pub' }, server.publisher) : null),
       h('p', { className: 'bt-mm-desc' }, server.description)),
     h('div', { className: 'bt-mm-end' },
+      // The button installs here, like the shell's own market: already installed is a
+      // state, not a control, so it is disabled rather than a click that does nothing.
       h('button', {
         type: 'button',
         className: 'bt-mm-install',
         'data-added': added ? '' : undefined,
-        onClick: onOpen,
-      }, added ? t('Installed') : t('Install'))))
+        disabled: added || busy,
+        onClick: onInstall,
+      }, busy ? t('Adding…') : added ? t('Installed') : t('Install'))))
 }
 
 // One server: what it is, and how this profile would connect to it — a hosted endpoint
@@ -238,6 +241,7 @@ export function McpMarketTab({ actions = {} }) {
   const [installed, setInstalled] = useState([])
   const [rows, setRows] = useState([])
   const [busyRow, setBusyRow] = useState('')
+  const [installing, setInstalling] = useState('')
   const [notice, setNotice] = useState('')
   const [categories, setCategories] = useState([])
   const [category, setCategory] = useState('')
@@ -266,12 +270,14 @@ export function McpMarketTab({ actions = {} }) {
     return () => { if (timer.current !== null) clearTimeout(timer.current) }
   }, [query])
 
+  // The category goes to the plaza with the search: the list is that category's own page
+  // from the first one, not twenty rows cut down after they arrive.
   useEffect(() => {
     if (view !== 'discover') return undefined
     let live = true
     setLoading(true)
     setError('')
-    Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page }))
+    Promise.resolve(actions.mcpMarket?.({ kind: 'search', query: sent, page, category }))
       .then((next) => {
         if (!live) return
         setLoading(false)
@@ -280,7 +286,7 @@ export function McpMarketTab({ actions = {} }) {
           : { total: next?.total ?? now.total, servers: [...now.servers, ...(next?.servers ?? [])] })
       }, (failure) => { if (live) { setLoading(false); report(failure) } })
     return () => { live = false }
-  }, [actions, sent, page, view])
+  }, [actions, sent, page, category, view])
 
   useEffect(() => {
     if (view !== 'discover' || categories.length > 0) return undefined
@@ -301,11 +307,56 @@ export function McpMarketTab({ actions = {} }) {
       .then((next) => { setBusyRow(''); applyRows(next) }, (failure) => { setBusyRow(''); report(failure) })
   }
 
+  // The chip is part of the search, so a new one starts the list again from the plaza's
+  // first page of that category instead of cutting down what is already on screen.
+  const pick = (value) => {
+    setCategory(value)
+    setPage(1)
+    setList({ total: 0, servers: [] })
+  }
+
+  // The card installs the way the shell's own market installs: read the server, then add
+  // it. Anything that cannot be added from that much — no hosted endpoint and no launch
+  // line, or a write that fails — opens the detail page with the reason.
+  const install = (server) => {
+    if (installing !== '') return
+    setInstalling(server.id)
+    const giveUp = (reason) => {
+      setInstalling('')
+      setOpen(server)
+      setNotice(String(reason?.message ?? reason ?? ''))
+    }
+    Promise.resolve(actions.mcpMarket?.({ kind: 'detail', id: server.id }))
+      .then((detail) => {
+        const name = nameOf(server.id)
+        const url = detail?.urls?.[0]?.url ?? ''
+        const stdio = detail?.stdio ?? null
+        const config = url
+          ? { transport: 'streamable-http', serverName: name, url }
+          : stdio?.command
+            ? { transport: 'stdio', serverName: name, command: stdio.command, args: stdio.args }
+            : null
+        if (config === null) {
+          giveUp(t('This server has no connection this profile can use on its own.'))
+          return undefined
+        }
+        return Promise.resolve(actions.mcpAdd?.({ config })).then((next) => {
+          setInstalling('')
+          setAdded((now) => ({ ...now, [server.id]: name }))
+          applyRows(next)
+          setNotice(next?.pending ? t('Added {name}. Restart DSH to run it.', { name }) : '')
+        })
+      })
+      .catch(giveUp)
+  }
+
   const names = useMemo(() => new Set(installed), [installed])
-  const shown = useMemo(() => {
-    const rows = category === '' ? list.servers : list.servers.filter(server => (server.categories ?? []).includes(category))
-    return sort === 'installs' ? rows.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0)) : rows
-  }, [list.servers, category, sort])
+  const shown = useMemo(
+    () => (sort === 'installs'
+      ? list.servers.slice().sort((left, right) => (right.installs ?? 0) - (left.installs ?? 0))
+      : list.servers),
+    [list.servers, sort],
+  )
   const more = list.servers.length < list.total
 
   const body = view === 'installed'
@@ -328,6 +379,8 @@ export function McpMarketTab({ actions = {} }) {
             key: server.id,
             server,
             added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
+            busy: installing === server.id,
+            onInstall: () => install(server),
             onOpen: () => setOpen(server),
           }))),
           more
@@ -381,12 +434,12 @@ export function McpMarketTab({ actions = {} }) {
         h('div', { className: 'bt-mm-filters', key: 'filters' },
           h('span', { className: 'bt-mm-filter-label' }, t('Labels')),
           h('div', { className: 'bt-mm-chips' },
-            h('button', { type: 'button', className: 'bt-mm-chip' + (category === '' ? ' is-on' : ''), onClick: () => setCategory('') }, t('All')),
+            h('button', { type: 'button', className: 'bt-mm-chip' + (category === '' ? ' is-on' : ''), onClick: () => pick('') }, t('All')),
             categories.map(item => h('button', {
               key: item.id,
               type: 'button',
               className: 'bt-mm-chip' + (category === item.id ? ' is-on' : ''),
-              onClick: () => setCategory(item.id),
+              onClick: () => pick(item.id),
             }, categoryName(item.id))))),
       ]
       : null,

@@ -321,11 +321,15 @@ export function install(rt) {
       const next = base === '' || base === '[]' ? row : `${base}\n${row}`
       // A row added here is read when DSH next starts, so the write is checked against the
       // document itself; `pending` tells the page the server is not running yet.
+      // Known gap, not a race this write closes: `next` was read before it, so an entry
+      // that lands in this window is put back over and silently dropped — the self-check
+      // passes because our own row does appear. Two adds at once can lose one.
       await writePatch(path, next, async () => (await readFile(path, 'utf8')).includes(`- id: ${quote(id)}`))
       return { ...(await servers()), pending: serverName }
     },
     async 'mcp-remove'(body) {
       const serverName = String(body.serverName ?? '')
+      if (!SERVER_NAME.test(serverName)) throw fail('Unknown server')
       const id = `${ID_PREFIX}${serverName}`
       const { path, text } = await readPatch()
       const cut = cutRow(text, id)
@@ -379,14 +383,26 @@ export function install(rt) {
           }
         }
         const value = [...counts.entries()].map(([id, count]) => ({ id, count })).sort((left, right) => right.count - left.count || left.id.localeCompare(right.id))
-        categoryCache.at = now
-        categoryCache.value = value
+        // An empty scan is an upstream hiccup, not a market with no categories: caching it
+        // would hide the labels for ten minutes, so only a real set is kept.
+        if (value.length > 0) {
+          categoryCache.at = now
+          categoryCache.value = value
+        }
         return value
       }
       const page = Math.max(1, Math.min(10, Number(body.page ?? 1) || 1))
+      // The chip the person picked narrows the search on the plaza's own side, so the list
+      // it pages through holds only that category and the count above it agrees.
+      const category = /^[\w-]{1,64}$/.test(String(body.category ?? '')) ? String(body.category).toLowerCase() : ''
       const data = (await httpsJson(base, {
         method: 'PUT',
-        body: { page_number: page, page_size: MARKET_PAGE_SIZE, search: String(body.query ?? '') },
+        body: {
+          page_number: page,
+          page_size: MARKET_PAGE_SIZE,
+          search: String(body.query ?? ''),
+          ...(category === '' ? {} : { filter: { category } }),
+        },
       }))?.data ?? {}
       const rows = Array.isArray(data.mcp_server_list) ? data.mcp_server_list : []
       return {
