@@ -416,10 +416,10 @@ index c7b1488..98b1e26 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 0696236..acde4e2 100644
+index 0696236..cc42d6f 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,105 @@ const ZH = {
+@@ -18,6 +18,106 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
@@ -458,6 +458,7 @@ index 0696236..acde4e2 100644
 +  'MCP': 'MCP',
 +  'Hosted': '已托管',
 +  'In this profile': '本档案里',
++  'Discover': '发现',
 +  'No MCP server is running in this profile yet.': '本档案还没有运行中的 MCP 服务器。',
 +  'Local process': '本地进程',
 +  'Off': '已停用',
@@ -525,7 +526,7 @@ index 0696236..acde4e2 100644
    'Resize sidebar': '调整侧边栏宽度',
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
-@@ -170,7 +269,6 @@ const ZH = {
+@@ -170,7 +270,6 @@ const ZH = {
    'A provider id is lowercase letters, digits and dashes, starting with a letter': '服务商 ID 只能用小写字母、数字和短横线，并以字母开头',
    'Add at least one model': '至少添加一个模型',
    'Two models have the same id': '有两个模型的 ID 相同',
@@ -533,7 +534,7 @@ index 0696236..acde4e2 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -430,6 +528,23 @@ const ZH = {
+@@ -430,6 +529,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -557,7 +558,7 @@ index 0696236..acde4e2 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -545,6 +660,19 @@ const ZH = {
+@@ -545,6 +661,19 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -577,7 +578,7 @@ index 0696236..acde4e2 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +810,6 @@ const ZH = {
+@@ -682,7 +811,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -585,7 +586,7 @@ index 0696236..acde4e2 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1058,10 @@ const ZH = {
+@@ -931,6 +1059,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -596,7 +597,7 @@ index 0696236..acde4e2 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1104,7 @@ const ZH = {
+@@ -973,6 +1105,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -604,7 +605,7 @@ index 0696236..acde4e2 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1200,10 @@ const ZH = {
+@@ -1068,6 +1201,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -2273,10 +2274,10 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..1e8b5f1
+index 0000000..99955fa
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
-@@ -0,0 +1,246 @@
+@@ -0,0 +1,323 @@
 +// The MCP tab of the shell's Plugins page: the ModelScope MCP plaza, one row per server,
 +// with the connection details behind a row and one press to add the server to this
 +// profile. It reads through our host (`mcp-market`), which owns the plaza's open API —
@@ -2411,7 +2412,61 @@ index 0000000..1e8b5f1
 +    }, h(TrashIcon))))))
 +}
 +
++// The custom view: a server the person names and configures themselves. It is the same
++// two shapes DSH runs — a local process, or a hosted endpoint.
++function Custom({ actions, report, onAdded }) {
++  const [form, setForm] = useState({ serverName: '', transport: 'stdio', command: '', args: '', env: '', url: '', headers: '' })
++  const [busy, setBusy] = useState(false)
++  const set = (key, value) => setForm((now) => ({ ...now, [key]: value }))
++  const http = form.transport === 'streamable-http'
++  const lines = text => String(text).split('\n').map(line => line.trim()).filter(line => line !== '')
++  const pairs = text => Object.fromEntries(lines(text).map((line) => {
++    const at = line.indexOf('=')
++    return at < 0 ? [line, ''] : [line.slice(0, at).trim(), line.slice(at + 1).trim()]
++  }))
++  const canSave = form.serverName.trim() !== '' && (http ? /^https?:\/\//i.test(form.url.trim()) : form.command.trim() !== '')
++
++  const add = () => {
++    if (!canSave || busy) return
++    setBusy(true)
++    const config = http
++      ? { transport: 'streamable-http', serverName: form.serverName.trim(), url: form.url.trim(), headers: pairs(form.headers) }
++      : { transport: 'stdio', serverName: form.serverName.trim(), command: form.command.trim(), args: lines(form.args), env: pairs(form.env) }
++    Promise.resolve(actions.mcpAdd?.({ config }))
++      .then((next) => { setBusy(false); onAdded(next, config.serverName) },
++        (failure) => { setBusy(false); report(failure) })
++  }
++
++  return h('div', { className: 'bt-mm-custom' },
++    h('p', { className: 'bt-mm-note' }, t('DSH starts each server as its own plugin; its tools become mcp__name__tool.')),
++    h('label', { className: 'bt-mm-field' },
++      h('span', null, t('Name')),
++      h('input', { value: form.serverName, placeholder: 'my-server', spellCheck: false, onChange: (event) => set('serverName', event.target.value) })),
++    h('div', { className: 'bt-mm-switchbar' },
++      h('button', { type: 'button', 'aria-pressed': !http, 'data-on': !http ? '' : undefined, onClick: () => set('transport', 'stdio') }, t('stdio')),
++      h('button', { type: 'button', 'aria-pressed': http, 'data-on': http ? '' : undefined, onClick: () => set('transport', 'streamable-http') }, t('streamable-http'))),
++    http
++      ? [
++        h('label', { className: 'bt-mm-field', key: 'url' }, h('span', null, t('URL')), h('input', { value: form.url, placeholder: 'https://host/mcp', spellCheck: false, onChange: (event) => set('url', event.target.value) })),
++        h('label', { className: 'bt-mm-field', key: 'headers' }, h('span', null, t('Headers')), h('textarea', { rows: 3, value: form.headers, placeholder: 'Authorization=Bearer …', onChange: (event) => set('headers', event.target.value) })),
++      ]
++      : [
++        h('label', { className: 'bt-mm-field', key: 'command' }, h('span', null, t('Command')), h('input', { value: form.command, placeholder: 'npx', spellCheck: false, onChange: (event) => set('command', event.target.value) })),
++        h('label', { className: 'bt-mm-field', key: 'args' }, h('span', null, t('Arguments')), h('textarea', { rows: 3, value: form.args, placeholder: '-y\n@modelcontextprotocol/server-filesystem\n/tmp', onChange: (event) => set('args', event.target.value) })),
++        h('label', { className: 'bt-mm-field', key: 'env' }, h('span', null, t('Environment')), h('textarea', { rows: 3, value: form.env, placeholder: 'KEY=value', onChange: (event) => set('env', event.target.value) })),
++      ],
++    h('div', { className: 'bt-mm-actions' },
++      h('button', { type: 'button', className: 'bt-mm-add', disabled: !canSave || busy, onClick: add }, busy ? t('Adding…') : t('Add server'))))
++}
++
++const VIEWS = () => [
++  { id: 'discover', name: t('Discover') },
++  { id: 'installed', name: t('Installed') },
++  { id: 'custom', name: t('Custom') },
++]
++
 +export function McpMarketTab({ actions = {} }) {
++  const [view, setView] = useState('discover')
 +  const [query, setQuery] = useState('')
 +  const [sent, setSent] = useState('')
 +  const [page, setPage] = useState(1)
@@ -2428,13 +2483,16 @@ index 0000000..1e8b5f1
 +
 +  const report = (failure) => setError(String(failure?.message ?? failure))
 +
++  const applyRows = (next) => {
++    setRows(next?.servers ?? [])
++    setInstalled((next?.servers ?? []).map(server => server.serverName))
++  }
++
++  const loadRows = () => Promise.resolve(actions.mcpList?.()).then(applyRows, () => {})
++
 +  useEffect(() => {
 +    let live = true
-+    Promise.resolve(actions.mcpList?.()).then((next) => {
-+      if (!live) return
-+      setRows(next?.servers ?? [])
-+      setInstalled((next?.servers ?? []).map(server => server.serverName))
-+    }, () => {})
++    Promise.resolve(actions.mcpList?.()).then((next) => { if (live) applyRows(next) }, () => {})
 +    return () => { live = false }
 +  }, [actions])
 +
@@ -2446,6 +2504,7 @@ index 0000000..1e8b5f1
 +  }, [query])
 +
 +  useEffect(() => {
++    if (view !== 'discover') return undefined
 +    let live = true
 +    setLoading(true)
 +    setError('')
@@ -2458,12 +2517,8 @@ index 0000000..1e8b5f1
 +          : { total: next?.total ?? now.total, servers: [...now.servers, ...(next?.servers ?? [])] })
 +      }, (failure) => { if (live) { setLoading(false); report(failure) } })
 +    return () => { live = false }
-+  }, [actions, sent, page])
++  }, [actions, sent, page, view])
 +
-+  const applyRows = (next) => {
-+    setRows(next?.servers ?? [])
-+    setInstalled((next?.servers ?? []).map(server => server.serverName))
-+  }
 +  const toggle = (server) => {
 +    setBusyRow(server.entryId ?? server.serverName)
 +    Promise.resolve(actions.mcpToggle?.({ entryId: server.entryId, enabled: !server.enabled }))
@@ -2478,50 +2533,73 @@ index 0000000..1e8b5f1
 +  const names = useMemo(() => new Set(installed), [installed])
 +  const more = list.servers.length < list.total
 +
-+  return h('div', { className: 'bt-mm' },
-+    notice ? h('p', { className: 'bt-mm-done' }, notice) : null,
-+    h('section', { className: 'bt-mm-section' },
-+      h('h4', { className: 'bt-mm-h' }, t('In this profile')),
-+      h(Installed, { servers: rows, busy: busyRow, onToggle: toggle, onRemove: remove })),
-+    h('div', { className: 'bt-mm-head' },
-+      h('label', { className: 'bt-mm-search' },
-+        h(SearchIcon),
-+        h('input', {
-+          value: query,
-+          placeholder: t('Search MCP servers'),
-+          'aria-label': t('Search MCP servers'),
-+          onChange: (event) => setQuery(event.target.value),
-+        })),
-+      h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() }))),
-+    error ? h('p', { className: 'bt-mm-error' }, error) : null,
-+    open === null
-+      ? [
-+        h('div', { className: 'bt-mm-list', key: 'list' }, list.servers.map(server => h(Row, {
-+          key: server.id,
-+          server,
-+          added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
-+          onOpen: () => setOpen(server),
-+        }))),
-+        more
-+          ? h('button', { type: 'button', className: 'bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
-+            loading ? t('Reading…') : t('Show more'))
-+          : null,
-+        !loading && list.servers.length === 0 && error === '' ? h('p', { className: 'bt-mm-note', key: 'empty' }, t('No MCP server matches that search.')) : null,
-+      ]
-+      : h(Detail, {
-+        key: open.id,
++  const body = view === 'installed'
++    ? h(Installed, { key: 'installed', servers: rows, busy: busyRow, onToggle: toggle, onRemove: remove })
++    : view === 'custom'
++      ? h(Custom, {
++        key: 'custom',
 +        actions,
-+        server: open,
-+        state: added[open.id] ?? null,
 +        report,
-+        onClose: () => setOpen(null),
 +        onAdded: (next, serverName) => {
-+          setAdded((now) => ({ ...now, [open.id]: serverName }))
-+          setInstalled((next?.servers ?? []).map(server => server.serverName))
-+          setNotice(next?.pending ? t('Added {name}. Restart DSH to run it.', { name: serverName }) : '')
-+          setOpen(null)
++          applyRows(next)
++          setNotice(t('Added {name}. Restart DSH to run it.', { name: serverName }))
++          setView('installed')
++          loadRows()
 +        },
-+      }))
++      })
++      : open === null
++        ? [
++          h('div', { className: 'bt-mm-list', key: 'list' }, list.servers.map(server => h(Row, {
++            key: server.id,
++            server,
++            added: names.has(nameOf(server.id)) || added[server.id] !== undefined,
++            onOpen: () => setOpen(server),
++          }))),
++          more
++            ? h('button', { type: 'button', className: 'bt-mm-more', key: 'more', disabled: loading, onClick: () => setPage(page + 1) },
++              loading ? t('Reading…') : t('Show more'))
++            : null,
++          !loading && list.servers.length === 0 && error === '' ? h('p', { className: 'bt-mm-note', key: 'empty' }, t('No MCP server matches that search.')) : null,
++        ]
++        : h(Detail, {
++          key: open.id,
++          actions,
++          server: open,
++          state: added[open.id] ?? null,
++          report,
++          onClose: () => setOpen(null),
++          onAdded: (next, serverName) => {
++            setAdded((now) => ({ ...now, [open.id]: serverName }))
++            applyRows(next)
++            setNotice(next?.pending ? t('Added {name}. Restart DSH to run it.', { name: serverName }) : '')
++            setOpen(null)
++          },
++        })
++
++  return h('div', { className: 'bt-mm' },
++    h('div', { className: 'bt-mm-tabs', role: 'tablist', 'aria-label': t('MCP') }, VIEWS().map(item => h('button', {
++      key: item.id,
++      type: 'button',
++      role: 'tab',
++      'aria-selected': view === item.id,
++      className: 'bt-mm-tab' + (view === item.id ? ' is-on' : ''),
++      onClick: () => { setView(item.id); setOpen(null); setError('') },
++    }, item.name, item.id === 'installed' && rows.length > 0 ? h('span', { className: 'bt-mm-tabcount' }, String(rows.length)) : null))),
++    notice ? h('p', { className: 'bt-mm-done' }, notice) : null,
++    view === 'discover'
++      ? h('div', { className: 'bt-mm-head' },
++        h('label', { className: 'bt-mm-search' },
++          h(SearchIcon),
++          h('input', {
++            value: query,
++            placeholder: t('Search MCP servers'),
++            'aria-label': t('Search MCP servers'),
++            onChange: (event) => setQuery(event.target.value),
++          })),
++        h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() })))
++      : null,
++    error ? h('p', { className: 'bt-mm-error' }, error) : null,
++    body)
 +}
 diff --git a/ds-bot/src/client/plugin-skills.js b/ds-bot/src/client/plugin-skills.js
 new file mode 100644
@@ -9718,7 +9796,7 @@ index 5614f9d..b68b45b 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea5..c38b940 100644
+index eac6ea5..016c90d 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -9759,7 +9837,7 @@ index eac6ea5..c38b940 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,49 +141,340 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,49 +141,352 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -9922,6 +10000,18 @@ index eac6ea5..c38b940 100644
 +   server's connection details behind a row. */
 +.bt-mm{display:flex;flex-direction:column;gap:12px;max-width:960px;padding-bottom:32px}
 +.bt-mm-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
++.bt-mm-tabs{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:10px;background:var(--bt-hover);align-self:flex-start}
++.bt-mm-tab{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
++.bt-mm-tab:hover{color:var(--bt-ink)}
++.bt-mm-tab.is-on{background:var(--bt-main,#fff);color:var(--bt-ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
++.bt-mm-tabcount{font-size:11px;color:var(--bt-ink-3)}
++.bt-mm-custom{display:flex;flex-direction:column;gap:12px;max-width:560px}
++.bt-mm-custom .bt-mm-field{align-items:flex-start}
++.bt-mm-custom .bt-mm-field>span{flex:0 0 88px;padding-top:8px;font-size:12.5px;color:var(--bt-ink-3)}
++.bt-mm-custom textarea{flex:1 1 auto;min-width:0;min-height:64px;padding:8px 10px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:13px;color:var(--bt-ink);outline:none;resize:vertical}
++.bt-mm-switchbar{display:inline-flex;gap:2px;padding:2px;border-radius:9px;background:var(--bt-hover);align-self:flex-start}
++.bt-mm-switchbar button{height:26px;padding:0 12px;border:0;border-radius:7px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer}
++.bt-mm-switchbar button[data-on]{background:var(--bt-main,#fff);color:var(--bt-ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
 +.bt-mm-search{display:flex;align-items:center;gap:8px;flex:1 1 auto;max-width:420px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
 +.bt-mm-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
 +.bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
@@ -10130,7 +10220,7 @@ index eac6ea5..c38b940 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -344,6 +641,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -344,6 +653,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -10157,7 +10247,7 @@ index eac6ea5..c38b940 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -571,7 +888,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -571,7 +900,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -10168,7 +10258,7 @@ index eac6ea5..c38b940 100644
  /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
     collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -587,6 +906,9 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+@@ -587,6 +918,9 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
  /* Elsewhere the switch shows only while the column is hidden, where the column's
     own top row had it. */
  html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
@@ -10178,7 +10268,7 @@ index eac6ea5..c38b940 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -626,7 +948,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -626,7 +960,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -10188,7 +10278,7 @@ index eac6ea5..c38b940 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1244,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1256,120 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -10309,7 +10399,7 @@ index eac6ea5..c38b940 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1457,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1469,85 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -10418,7 +10508,7 @@ index eac6ea5..c38b940 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1112,17 +1585,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1597,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -10445,7 +10535,7 @@ index eac6ea5..c38b940 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1605,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1617,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -10454,7 +10544,7 @@ index eac6ea5..c38b940 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1646,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1658,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
