@@ -27614,7 +27614,7 @@ function apply(ctx) {
     if (!document.getElementById("bt-modebar-rules")) {
       const rules = document.createElement("style");
       rules.id = "bt-modebar-rules";
-      rules.textContent = 'button[aria-label="打开侧边栏"],button[aria-label="收起侧边栏"]:not(.bt-band-action),button[aria-label="展开侧边栏"]:not(.bt-side-expand),button[aria-label="Open sidebar"],button[aria-label="Close sidebar"]{display:none!important}html.bt-agent [class*="_logoRow"]{display:none!important}';
+      rules.textContent = 'button[aria-label="打开侧边栏"],button[aria-label="收起侧边栏"]:not(.bt-band-action),button[aria-label="展开侧边栏"]:not(.bt-side-expand),button[aria-label="Open sidebar"],button[aria-label="Close sidebar"]{display:none!important}html.bt-agent [class*="_logoRow"]{display:none!important}.bt-modebar-row:empty{display:none}';
       document.head.appendChild(rules);
     }
     const paintModeBar = () => {
@@ -27625,7 +27625,8 @@ function apply(ctx) {
       const left = mac ? 84 : 15;
       const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9;
       if (!modeBar) {
-        for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu,.bt-band-actions")) stale.remove();
+        for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row")) stale.remove();
+        modeRow = null;
         modeBar = document.createElement("button");
         modeBar.type = "button";
         modeBar.className = "bt-modebar";

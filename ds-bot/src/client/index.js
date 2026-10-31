@@ -1241,6 +1241,7 @@ export function apply(ctx) {
       rules.id = 'bt-modebar-rules'
       rules.textContent = 'button[aria-label="打开侧边栏"],button[aria-label="收起侧边栏"]:not(.bt-band-action),button[aria-label="展开侧边栏"]:not(.bt-side-expand),button[aria-label="Open sidebar"],button[aria-label="Close sidebar"]{display:none!important}'
         + 'html.bt-agent [class*="_logoRow"]{display:none!important}'
+        + '.bt-modebar-row:empty{display:none}'
       document.head.appendChild(rules)
     }
     const paintModeBar = () => {
@@ -1262,7 +1263,10 @@ export function apply(ctx) {
       if (!modeBar) {
         // A surface effect that re-runs gets a fresh closure; clear anything an earlier
         // closure left on the page so the row never stacks up.
-        for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions')) stale.remove()
+        for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row')) stale.remove()
+        // The row the stale wrapper lived in is gone too; a kept handle would place the new
+        // row into a detached div and leave the drawer showing an empty line.
+        modeRow = null
         modeBar = document.createElement('button')
         modeBar.type = 'button'
         modeBar.className = 'bt-modebar'
