@@ -28739,6 +28739,21 @@ function apply(ctx) {
         return;
       }
       modeRow?.remove();
+      const column = document.querySelector(".bt-leftcol");
+      if (column !== null) {
+        modeBar.style.cssText = "position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)";
+        if (bandActions !== null) bandActions.style.cssText = "position:static;display:flex;align-items:center;gap:2px;margin-left:auto";
+        const headed = column.firstElementChild;
+        if (headed !== null && headed.classList.contains("bt-mode-row") && headed.contains(modeBar)) return;
+        const row = document.createElement("div");
+        row.className = "bt-mode-row";
+        row.style.cssText = "display:flex;align-items:center;gap:4px;padding:2px 2px 4px;flex:none";
+        row.appendChild(modeBar);
+        if (bandActions !== null) row.appendChild(bandActions);
+        column.insertBefore(row, column.firstElementChild);
+        bandPatch?.remove();
+        return;
+      }
       placeModeRow(document, [modeBar, bandActions], document.body);
       const owner = bandOwner();
       const patch = dragPatch();

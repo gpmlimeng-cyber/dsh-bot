@@ -1279,9 +1279,26 @@ export function apply(ctx) {
         return
       }
       modeRow?.remove()
-      // The row stays where the window puts it — a body child, so a re-render of the shell
-      // never takes it with it. The band's draggable region is cancelled under it instead,
-      // by a transparent patch inside that region that opts out of dragging.
+      // A window with its own title bar gives the page no caption band to sit in, and the
+      // shell's band is a draggable region when there is one. Both cases are solved by the
+      // same place: the first row of our own left column, which is the top of the window's
+      // content and belongs to this plugin. Without that column (the shell's own view) the
+      // row falls back to the top of the page, just under the title bar.
+      const column = document.querySelector('.bt-leftcol')
+      if (column !== null) {
+        modeBar.style.cssText = 'position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)'
+        if (bandActions !== null) bandActions.style.cssText = 'position:static;display:flex;align-items:center;gap:2px;margin-left:auto'
+        const headed = column.firstElementChild
+        if (headed !== null && headed.classList.contains('bt-mode-row') && headed.contains(modeBar)) return
+        const row = document.createElement('div')
+        row.className = 'bt-mode-row'
+        row.style.cssText = 'display:flex;align-items:center;gap:4px;padding:2px 2px 4px;flex:none'
+        row.appendChild(modeBar)
+        if (bandActions !== null) row.appendChild(bandActions)
+        column.insertBefore(row, column.firstElementChild)
+        bandPatch?.remove()
+        return
+      }
       placeModeRow(document, [modeBar, bandActions], document.body)
       const owner = bandOwner()
       const patch = dragPatch()
