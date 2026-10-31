@@ -2327,7 +2327,7 @@ index fd53a99..69c8de0 100644
  }
 diff --git a/ds-bot/src/client/plugin-mcp.js b/ds-bot/src/client/plugin-mcp.js
 new file mode 100644
-index 0000000..477278d
+index 0000000..5050ccf
 --- /dev/null
 +++ b/ds-bot/src/client/plugin-mcp.js
 @@ -0,0 +1,551 @@
@@ -2423,7 +2423,7 @@ index 0000000..477278d
 +    h('div', { className: 'bt-mm-cardEnd' },
 +      // A catalogue entry with no connection of its own can only be opened, never
 +      // installed; a fake install button would promise something it cannot do.
-+      server.install === null || server.install === undefined
++      server.installable === false
 +        ? (server.homepage
 +          ? h('button', { type: 'button', className: 'bt-mm-btn bt-mm-btn-ghost', onClick: onHome }, t('Open page'))
 +          : null)
@@ -2862,7 +2862,7 @@ index 0000000..477278d
 +            h('select', { value: sort, 'aria-label': t('Sort'), onChange: (event) => setSort(event.target.value) },
 +              h('option', { value: 'default' }, t('Default order')),
 +              h('option', { value: 'installs' }, t('Downloads')))),
-+          h('span', { className: 'bt-mm-total' }, loading && list.servers.length === 0 ? t('Reading…') : t('{count} servers', { count: list.total.toLocaleString() }))),
++          loading && list.servers.length === 0 ? h('span', { className: 'bt-mm-total' }, t('Reading…')) : null),
 +        categories.length === 0 ? null : h('div', { className: 'bt-mm-categories', key: 'categories', role: 'group', 'aria-label': t('Labels') },
 +          h('button', {
 +            type: 'button',
@@ -11031,10 +11031,10 @@ index 3fc5c7c..ae5f4c3 100644
          case 'connector-retry':
 diff --git a/ds-bot/src/host/mcp.js b/ds-bot/src/host/mcp.js
 new file mode 100644
-index 0000000..b7ef566
+index 0000000..8d06233
 --- /dev/null
 +++ b/ds-bot/src/host/mcp.js
-@@ -0,0 +1,599 @@
+@@ -0,0 +1,602 @@
 +// MCP servers: the DSH MCP client instances this profile runs, read and changed through
 +// the profile's own two services — `configEditor` for an entry's config and
 +// `pluginManager` for its switch. Both are shipped with DSH (`dsh-base` mounts them), so
@@ -11486,6 +11486,7 @@ index 0000000..b7ef566
 +            installs: 0,
 +            categories: [],
 +            homepage: String(entry.homepage ?? ''),
++            installable: entry.install !== null && typeof entry.install === 'object',
 +            install: entry.install !== null && typeof entry.install === 'object' ? entry.install : null,
 +          })).filter(entry => entry.id !== '' && (!query || `${entry.name} ${entry.description}`.toLowerCase().includes(query)))
 +          return { total: rows.length, servers: rows.slice((page - 1) * size, page * size) }
@@ -11509,6 +11510,7 @@ index 0000000..b7ef566
 +              installs: 0,
 +              categories: [],
 +              homepage: entry.url,
++              installable: pkg !== null,
 +              install: pkg === null ? null : { transport: 'stdio', command: 'npx', args: ['-y', pkg] },
 +            }
 +          })
@@ -11588,6 +11590,7 @@ index 0000000..b7ef566
 +          logo: String(row.logo_url ?? ''),
 +          hosted: row.is_hosted === true,
 +          installs: Number(row.view_count ?? 0),
++          installable: true,
 +          categories: (Array.isArray(row.categories) ? row.categories : []).map(item => String(item).toLowerCase()),
 +        })).filter(row => row.id !== ''),
 +      }

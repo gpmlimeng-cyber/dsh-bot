@@ -104,7 +104,7 @@
 | 102 | `ds-bot/src/host/channel.js` | 102 | 1 |
 | 103 | `ds-bot/src/host/channel.js` | 119–133 | 15 |
 | 104 | `ds-bot/src/host/channel.js` | 370–381 | 12 |
-| 105 | `ds-bot/src/host/mcp.js` | 1–599 | 599 |
+| 105 | `ds-bot/src/host/mcp.js` | 1–602 | 602 |
 | 106 | `ds-bot/src/host/skill-market/index.js` | 1–2813 | 2813 |
 | 107 | `ds-bot/src/host/skill-market/locale.js` | 1–787 | 787 |
 | 108 | `ds-bot/test/client-bundle.test.js` | 25–43 | 19 |
