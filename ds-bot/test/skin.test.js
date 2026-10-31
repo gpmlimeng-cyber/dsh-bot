@@ -39,14 +39,17 @@ test('every skin rule is scoped to the phone', () => {
   }
 })
 
-// The width setting has to keep working on the phone: the same percentage of the column,
-// on both the Bot's bubbles and the user's own, which the host draws.
-test('the phone skin reads the width setting on both sides', () => {
+// The width setting drives the Bot's bubbles. The user's own bubbles are the host's: their
+// percentage would resolve against the width the host already shrank, so the skin leaves
+// them alone and only restyles their shape.
+test('the skin reads the width setting on the Bot’s side and leaves the host’s alone', () => {
   // The setting's own default is 90% of the column; a pick is honoured as it is.
   assert.equal(widthOf({}), 90)
   assert.equal(widthOf({ width: 50 }), 50)
   assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \.bt-msg,[^{]*\{max-width:calc\(var\(--bt-msg-w\) \* 100%\)\}/)
-  assert.match(bundle, /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{[^}]*max-width:calc\(var\(--bt-msg-w\) \* 100%\)!important\}/)
+  const user = /:not\(\[data-bt-skin=ours\]\) \[class\*="_userRow"\] \[class\*="_bubble"\]\{([^}]*)\}/.exec(bundle)
+  assert.ok(user !== null, 'no rule for the host’s user bubbles')
+  assert.ok(!user[1].includes('max-width'), 'the skin still caps the host’s user bubble width')
   // Nothing pins the skin back to a full-width bubble.
   assert.ok(!bundle.includes('--bt-app-msg-max'), 'the skin still carries its own width token')
 })

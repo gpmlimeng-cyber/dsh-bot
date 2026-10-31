@@ -4115,9 +4115,9 @@ html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-row{min-height:
 html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-bubble .bt-tools{border-radius:999px}
 html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-empty{font-size:var(--bt-app-text-sub);line-height:var(--bt-app-leading-sub)}
 /* The user's own bubbles are the host's, so the skin reaches them through the row marker it
-   draws. The width has to come along: the host keeps its own limit, which would leave only
-   the Bot's side narrower once a width is picked. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important;max-width:calc(var(--bt-msg-w) * 100%)!important}
+   draws. Radius and padding only: a width here would resolve against the width the host has
+   already shrunk, which squeezes the bubble instead of matching the Bot's side. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important}
 `;
 var CONVERSATION_CSS = `
 .bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:calc(var(--bt-msg-w) * 100%)}
