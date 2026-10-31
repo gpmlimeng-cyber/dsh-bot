@@ -2962,7 +2962,7 @@ html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy
 .bt-mm-switch svg,.bt-mm-remove svg{width:16px;height:16px}
 .bt-mm-switch:disabled,.bt-mm-remove:disabled{opacity:.5;cursor:default}
 .bt-mm-name{font-size:14px;font-weight:600}
-.bt-mm-tag{font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3)}
+.bt-mm-tag{font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3);font-weight:400}
 .bt-mm-tag-on{color:var(--bt-accent)}
 .bt-mm-drawer{display:flex;flex-direction:column;gap:14px;max-width:820px}
 .bt-mm-detail-head{display:flex;align-items:center;gap:12px}
@@ -27329,16 +27329,11 @@ function Row3({ server, added, busy, onInstall, onOpen, onHome }) {
         "div",
         { className: "bt-mm-titleRow" },
         (0, import_react55.createElement)("button", { type: "button", className: "bt-mm-cardOpen", "aria-label": server.name, onClick: onOpen }, server.name),
+        server.installs ? (0, import_react55.createElement)("span", { className: "bt-mm-tag" }, `↓ ${shortCount(server.installs)}`) : null,
         server.hosted ? (0, import_react55.createElement)("span", { className: "bt-mm-tag" }, t("Hosted")) : null,
         added ? (0, import_react55.createElement)("span", { className: "bt-mm-tag bt-mm-tag-on" }, t("Added")) : null
       ),
-      server.description ? (0, import_react55.createElement)("span", { className: "bt-mm-description" }, server.description) : null,
-      (0, import_react55.createElement)(
-        "span",
-        { className: "bt-mm-meta" },
-        server.installs ? (0, import_react55.createElement)("span", null, `↓ ${shortCount(server.installs)}`) : null,
-        server.publisher ? (0, import_react55.createElement)("span", null, server.publisher) : null
-      )
+      server.description ? (0, import_react55.createElement)("span", { className: "bt-mm-description" }, server.description) : null
     ),
     (0, import_react55.createElement)(
       "div",

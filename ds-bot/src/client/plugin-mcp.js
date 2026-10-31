@@ -81,12 +81,10 @@ function Row({ server, added, busy, onInstall, onOpen, onHome }) {
     h('div', { className: 'bt-mm-main' },
       h('div', { className: 'bt-mm-titleRow' },
         h('button', { type: 'button', className: 'bt-mm-cardOpen', 'aria-label': server.name, onClick: onOpen }, server.name),
+        server.installs ? h('span', { className: 'bt-mm-tag' }, `↓ ${shortCount(server.installs)}`) : null,
         server.hosted ? h('span', { className: 'bt-mm-tag' }, t('Hosted')) : null,
         added ? h('span', { className: 'bt-mm-tag bt-mm-tag-on' }, t('Added')) : null),
-      server.description ? h('span', { className: 'bt-mm-description' }, server.description) : null,
-      h('span', { className: 'bt-mm-meta' },
-        server.installs ? h('span', null, `↓ ${shortCount(server.installs)}`) : null,
-        server.publisher ? h('span', null, server.publisher) : null)),
+      server.description ? h('span', { className: 'bt-mm-description' }, server.description) : null),
     h('div', { className: 'bt-mm-cardEnd' },
       // A catalogue entry with no connection of its own can only be opened, never
       // installed; a fake install button would promise something it cannot do.
