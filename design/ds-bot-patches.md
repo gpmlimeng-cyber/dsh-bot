@@ -5,11 +5,11 @@
 
 - 基线：**本仓标签 `v0.2.4`**（`f823773`）。生成口径（唯一来源，别凭记忆）：
   `git diff v0.2.4 HEAD -- ds-bot ':!ds-bot/client.js' ':!ds-bot/src/client/gaze.js' > design/ds-bot-patches.patch`
-- 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，**60** 个文件，含宿主侧 `src/host/channel.js`、`src/host/mcp.js` 与 `ds-bot/index.js` 的模块注册；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
-- hunk 数：**181**（`grep -c '^@@' design/ds-bot-patches.patch`）
+- 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，**65** 个文件，含宿主侧 `src/host/channel.js`、`src/host/mcp.js` 与 `ds-bot/index.js` 的模块注册；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
+- hunk 数：**187**（`grep -c '^@@' design/ds-bot-patches.patch`）
 - **行号**：见 `design/ds-bot-patches.hunks.md`，由 `node tools/patch-ledger.mjs` 生成，勿手改。
   这里**不写行号**：手写行号已经错了三次，机械表是唯一来源。
-- minus 行共 **442**，分布在 30 个文件：`sidebar.js` 236、`styles.js` 71、`test/sidebar-switch.test.js` 33、`cells.js` 18、`fold.js` 13、`src/host/groups.js` 7、`index.js` 6、`icons.js` 6、`composer.js` 6、`new-chat.js` 5、`bot-settings.js` 5、`team-actions.js` 4、`settings.js` 4、`test/style-debt.json` 3、`test/message-layout.test.js` 3、`test/tool-cells.test.js` 2、`test/fold.test.js` 2、`member-status.js` 2、`i18n.js` 2、`details-drawer.js` 2、`create-bot.js` 2、`browser-pane.js` 2、`test/user-bubble.test.js` 1、`test/client-bundle.test.js` 1、`src/host/prompt.js` 1、`src/host/channel.js` 1、`themes.js` 1、`header.js` 1、`scripts/style-debt.mjs` 1、`ds-bot/index.js` 1；其余为纯 `+`
+- minus 行共 **443**，分布在 31 个文件：`sidebar.js` 236、`styles.js` 71、`test/sidebar-switch.test.js` 33、`cells.js` 18、`fold.js` 13、`src/host/groups.js` 7、`index.js` 6、`icons.js` 6、`composer.js` 6、`new-chat.js` 5、`bot-settings.js` 5、`team-actions.js` 4、`settings.js` 4、`test/style-debt.json` 3、`test/message-layout.test.js` 3、`test/tool-cells.test.js` 2、`test/fold.test.js` 2、`member-status.js` 2、`i18n.js` 2、`details-drawer.js` 2、`create-bot.js` 2、`browser-pane.js` 2、`test/user-bubble.test.js` 1、`test/client-bundle.test.js` 1、`src/host/prompt.js` 1、`src/host/channel.js` 1、`src/host/approvals.js` 1、`themes.js` 1、`header.js` 1、`scripts/style-debt.mjs` 1、`ds-bot/index.js` 1；其余为纯 `+`
 - 冲突自检：`tools/patch-conflict-check.sh <ref>`（升级前先跑，输出 `clean` 才合并）
 
 ## 1. 手改的文件（进补丁，共 31 个）
@@ -116,6 +116,26 @@ B 档：**只记录不拦截**。两个能起一轮的入口各包一层，写 `
 
 **已知接缝（不接，见 `design/superagent-p1.md`）**：`groups.js:845/876/925/954` 直接调本地 `postToRoom`，
 不经 `rt.postToRoom`；判定为「已准入那一轮的延续」，B 档不算漏。C 档若要拦这几条得改上游行，需单独批准。
+
+## 1e. C 档工具策略（observe 上线，auto 只在数据层）
+
+追加优先，全部为新增文件或文件内新增行，唯一改到上游行的是 `src/host/approvals.js` 的
+审批 Promise（加超时并回报结果），减 1 行。
+
+| 文件 | 改动 | 为什么 |
+|---|---|---|
+| `src/shared/tool-policy.js` | 新增：`TOOL_POLICY_MODES`、`TOOL_POLICY_DEFAULT = 'observe'`、`OPEN_TOOLS`、`STALLED_AFTER`、`toolDecision()`、`DENIAL()` | 判定表只此一份，host 与设置页共用；`auto` 存在但页面不给出 |
+| `src/host/tool-policy.js` | 新增：`tools/pre-execute`（prepend）一个监听；`rt.settleTool`；`authorization-tools.jsonl` | 拒绝点只有这一处；`observe` 只写 `would_deny` 一行，然后照常放行 |
+| `src/host/authorization.js` | 新增：`admission` 内存 Map 与 `rt.admissionOf` | 判断「显式 / 推断」的来源；不受 B 档开关影响，关记录不等于丢记忆 |
+| `src/host/approvals.js` | 新增：`APPROVAL_TIMEOUT = 5min`、超时与结果回报 `rt.settleTool` | 用户不答不能挂死一轮；拒绝与超时都计入连续拒绝数 |
+| `src/shared/superagent-prefs.js` | 新增：`saToolPolicy` 三值写入与拒绝 | 与其余 SuperAgent 偏好同一条写入口 |
+| `src/client/superagent-settings.js` | 新增：`Relayed work` 一行，只给 `off` / `observe` | `auto` 等 ask 路径 bench 验完再放 |
+| `src/client/i18n.js` | 新增：四条中文 | 页面文案 |
+| `ds-bot/index.js` | 新增：模块注册 `toolPolicy` | 装配 |
+| `test/tool-policy.test.js`、`test/install.test.js` | 新增：判定表 / 写入三分支 / 监听注册顺序 | 把表钉住；安装顺序按既有约定追加一行 |
+
+判定顺序与日志字段见 `design/superagent-c-decisions.md`；行号见 `design/ds-bot-patches.hunks.md`。
+日志独立成 `authorization-tools.jsonl`，不混进 `authorization.jsonl`（后者按行数算指标）。
 
 ## 2. 生成物（不进补丁）
 

@@ -10,18 +10,19 @@ index 190fbf30..0df0cbc5 100644
      "no-undef": "error",
      "no-unused-vars": ["error", { "ignoreRestSiblings": true }]
 diff --git a/ds-bot/index.js b/ds-bot/index.js
-index b1465905..50815120 100644
+index b1465905..f4583c42 100644
 --- a/ds-bot/index.js
 +++ b/ds-bot/index.js
-@@ -2,6 +2,7 @@
+@@ -2,6 +2,8 @@
  // Every Bot is one root Session; the roster, rooms, and the bot-to-bot exchange log live
  // in one JSON file under DSH_HOME so they survive restarts without new Session event types.
  import { join } from 'node:path'
 +import * as authorization from './src/host/authorization.js'
++import * as toolPolicy from './src/host/tool-policy.js'
  import * as diagnostics from './src/host/diagnostics.js'
  import * as store from './src/host/store.js'
  import * as models from './src/host/models.js'
-@@ -30,6 +31,7 @@ import * as browser from './src/host/browser.js'
+@@ -30,6 +32,7 @@ import * as browser from './src/host/browser.js'
  import * as browserPlugins from './src/host/browser-plugins.js'
  import * as secrets from './src/host/secrets.js'
  import * as connectors from './src/host/connectors.js'
@@ -29,7 +30,7 @@ index b1465905..50815120 100644
  import * as capabilities from './src/host/capabilities.js'
  import * as learning from './src/host/learning.js'
  import * as schedules from './src/host/schedules.js'
-@@ -38,6 +40,7 @@ import * as update from './src/host/update.js'
+@@ -38,6 +41,7 @@ import * as update from './src/host/update.js'
  import * as dshUpdate from './src/host/dsh-update.js'
  import * as thinking from './src/host/thinking.js'
  import * as channel from './src/host/channel.js'
@@ -37,12 +38,12 @@ index b1465905..50815120 100644
  import * as feed from './src/host/feed.js'
  import * as officeSkills from './src/host/office-skills.js'
  
-@@ -51,10 +54,27 @@ export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'ses
+@@ -51,10 +55,27 @@ export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'ses
  // install. Listeners run and tools are listed in registration order, so this order holds:
  // usage meters model requests after every listener that rewrites them. privacy checks a
  // call before the hooks of tools do, so a closed call never reaches a card they show.
 -const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, officeSkills]
-+const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, mcp, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, officeSkills, authorization]
++const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, mcp, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, officeSkills, authorization, toolPolicy]
  
  export function apply(ctx, config = {}) {
    createRuntime(ctx, config)
@@ -846,10 +847,10 @@ index c7b14888..98b1e26d 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 06962367..01feb9b5 100644
+index 06962367..7a6efc2c 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,140 @@ const ZH = {
+@@ -18,6 +18,145 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
@@ -926,6 +927,11 @@ index 06962367..01feb9b5 100644
 +  'No MCP server is running in this profile yet.': '本档案还没有运行中的 MCP 服务器。',
 +  'Local process': '本地进程',
 +  'Off': '已停用',
++  'Relayed work': '转述的工作',
++  'A Bot that runs a task another Bot handed it, without you asking for it, is recorded. Off records nothing.': '别的 Bot 转给它的活、而你没有要求过时，记一行。选「不记录」就什么都不写。',
++  'Do not record': '不记录',
++  'Record only': '只记录',
++
 +  '{count} tools': '{count} 个工具',
 +  'Turn on': '启用',
 +  'Turn off': '停用',
@@ -990,7 +996,7 @@ index 06962367..01feb9b5 100644
    'Resize sidebar': '调整侧边栏宽度',
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
-@@ -55,6 +189,7 @@ const ZH = {
+@@ -55,6 +194,7 @@ const ZH = {
    'Create group chat': '新建群聊',
    'Delete group': '删除群聊',
    "Open {name}'s chat": '打开 {name} 的对话',
@@ -998,7 +1004,7 @@ index 06962367..01feb9b5 100644
    'New Bot': '新 Bot',
  
    // Sidebar and account menu
-@@ -170,7 +305,6 @@ const ZH = {
+@@ -170,7 +310,6 @@ const ZH = {
    'A provider id is lowercase letters, digits and dashes, starting with a letter': '服务商 ID 只能用小写字母、数字和短横线，并以字母开头',
    'Add at least one model': '至少添加一个模型',
    'Two models have the same id': '有两个模型的 ID 相同',
@@ -1006,7 +1012,7 @@ index 06962367..01feb9b5 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -226,6 +360,9 @@ const ZH = {
+@@ -226,6 +365,9 @@ const ZH = {
    About: '简介',
    'Show less': '收起',
    'Show more': '展开',
@@ -1016,7 +1022,7 @@ index 06962367..01feb9b5 100644
    'Admin leads': '管理员主持',
    'Plain messages go to the admin, who calls others with @Name.': '普通消息先给管理员，由管理员用 @名字 点名其他成员。',
    Everyone: '所有人',
-@@ -430,6 +567,23 @@ const ZH = {
+@@ -430,6 +572,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -1040,7 +1046,7 @@ index 06962367..01feb9b5 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -445,6 +599,27 @@ const ZH = {
+@@ -445,6 +604,27 @@ const ZH = {
    'Bubble width': '气泡宽度',
    'Text width': '正文宽度',
    'Show thinking': '显示思考过程',
@@ -1068,7 +1074,7 @@ index 06962367..01feb9b5 100644
    'Bots · {count}': 'Bot · {count}',
    'First in the sidebar. Pick another Bot to hand it the role; {name} then stops being a Main Bot.': '排在侧栏最上面。选另一个 Bot 就会把主 Bot 交给它，{name} 随之不再是主 Bot。',
    'Choose a Bot…': '选择一个 Bot…',
-@@ -523,6 +698,8 @@ const ZH = {
+@@ -523,6 +703,8 @@ const ZH = {
    'No messages yet': '还没有消息',
    'Close Chat': '关闭',
    'Show all · {count} characters': '显示全部 · {count} 字',
@@ -1077,7 +1083,7 @@ index 06962367..01feb9b5 100644
    'Showing the first {count} characters': '只显示前 {count} 字',
    'Only the start of this message is kept here': '这里只保留了这条消息的开头',
  
-@@ -545,6 +722,23 @@ const ZH = {
+@@ -545,6 +727,23 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -1101,7 +1107,7 @@ index 06962367..01feb9b5 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +876,6 @@ const ZH = {
+@@ -682,7 +881,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -1109,7 +1115,7 @@ index 06962367..01feb9b5 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1124,10 @@ const ZH = {
+@@ -931,6 +1129,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -1120,7 +1126,7 @@ index 06962367..01feb9b5 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1170,7 @@ const ZH = {
+@@ -973,6 +1175,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -1128,7 +1134,7 @@ index 06962367..01feb9b5 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1266,10 @@ const ZH = {
+@@ -1068,6 +1271,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -11861,10 +11867,10 @@ index eac6ea54..f9122d0b 100644
  // -------------------------------------------------------------------------
 diff --git a/ds-bot/src/client/superagent-settings.js b/ds-bot/src/client/superagent-settings.js
 new file mode 100644
-index 00000000..d94b177f
+index 00000000..910b15c8
 --- /dev/null
 +++ b/ds-bot/src/client/superagent-settings.js
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,70 @@
 +// Settings → SuperAgent: the behaviour switches we added around the Bot team, on one
 +// page. Every switch is on unless someone wrote `false`, and the threshold is the only
 +// number here: it decides where a group line folds, never whether the reply is kept.
@@ -11872,6 +11878,7 @@ index 00000000..d94b177f
 +import { t } from './i18n.js'
 +import { Switch } from './bot-settings.js'
 +import { foldAtOf } from './themes.js'
++import { toolPolicyOf } from '../shared/tool-policy.js'
 +
 +const SWITCHES = [
 +  ['superagent', 'Hand-offs', 'Records a Bot handing work to another Bot, and asks before one is delivered.'],
@@ -11906,12 +11913,30 @@ index 00000000..d94b177f
 +    field(t('Lines'), lines, setLines, 8, 500))
 +}
 +
++// The tool policy is stored as one of three modes; the page offers the two that change
++// nothing until the ask path is verified, so `auto` stays reachable only by hand.
++const TOOL_POLICY_CHOICES = [['off', 'Do not record'], ['observe', 'Record only']]
++
++function ToolPolicy({ Row, prefs, run, actions }) {
++  const mode = toolPolicyOf(prefs)
++  return h(Row, {
++    label: t('Relayed work'),
++    hint: t('A Bot that runs a task another Bot handed it, without you asking for it, is recorded. Off records nothing.'),
++  }, h('select', {
++    className: 'bt-input',
++    'aria-label': t('Relayed work'),
++    value: mode === 'off' ? 'off' : 'observe',
++    onChange: event => run(actions.setPrefs({ saToolPolicy: event.target.value })),
++  }, TOOL_POLICY_CHOICES.map(([value, label]) => h('option', { key: value, value }, t(label)))))
++}
++
 +export function SuperAgentPage({ roster, actions, run, Section, Row }) {
 +  const prefs = roster.prefs ?? {}
 +  return h(Fragment, null,
 +    h(Section, { title: t('How Bots work') },
 +      SWITCHES.map(([key, label, hint]) => h(Row, { key, label: t(label), hint: t(hint) },
-+        h(Switch, { label: t(label), on: prefs[key] !== false, onChange: on => run(actions.setPrefs({ [key]: on })) })))),
++        h(Switch, { label: t(label), on: prefs[key] !== false, onChange: on => run(actions.setPrefs({ [key]: on })) }))),
++      h(ToolPolicy, { Row, prefs, run, actions })),
 +    h(Section, { title: t('Group chat') },
 +      h(Threshold, { Row, prefs, run, actions }),
 +      h('p', { className: 'bt-set-hint' }, t('A reply that marks where its detail starts folds there, keeping the whole point above it, and only when the detail is long enough. A reply over 20,000 characters goes as a file instead.'))))
@@ -12048,12 +12073,51 @@ index 82c3b3b9..5806d08a 100644
 +export const foldAtOf = (prefs) => (isFoldAt(prefs?.saFoldAt) ? { chars: prefs.saFoldAt.chars, lines: prefs.saFoldAt.lines } : SA_FOLD_AT)
 +
  export const flatWidthOf = prefs => percent(prefs?.flatWidth, 100)
+diff --git a/ds-bot/src/host/approvals.js b/ds-bot/src/host/approvals.js
+index 9e7fa71a..b3f4320d 100644
+--- a/ds-bot/src/host/approvals.js
++++ b/ds-bot/src/host/approvals.js
+@@ -5,6 +5,9 @@
+ import { randomUUID } from 'node:crypto'
+ 
+ const OUTCOMES = { allow: 'allowed-once', reject: 'rejected' }
++// A card nobody answers would hold the turn open forever. Five minutes is long enough for a
++// phone to be picked up and short enough that a missing user is noticed the same hour.
++const APPROVAL_TIMEOUT = 5 * 60 * 1000
+ 
+ export function install(rt) {
+   const { ctx } = rt
+@@ -34,14 +37,23 @@ export function install(rt) {
+       pending.delete(id)
+       rt.noteApproval?.(sessionId, undefined)
+     }
+-    if (owner === undefined) return Promise.resolve(next()).finally(settled)
++    if (owner === undefined) return Promise.resolve(next()).then(outcome => { rt.settleTool?.(sessionId, entry.tool, outcome); return outcome }).finally(settled)
+     rt.yieldRoomTurn?.(sessionId)
+     return new Promise((resolve) => {
++      let timer
+       entry.answer = (outcome) => {
+         if (!pending.has(id)) return
++        clearTimeout(timer)
+         settled()
++        // A timeout is a refusal the tool policy counts like a card the user rejected.
++        rt.settleTool?.(sessionId, entry.tool, outcome === 'cancelled' ? 'cancelled' : outcome)
+         resolve(outcome)
+       }
++      timer = setTimeout(() => {
++        if (!pending.has(id)) return
++        rt.settleTool?.(sessionId, entry.tool, 'timeout')
++        entry.answer('cancelled')
++      }, APPROVAL_TIMEOUT)
+       if (request.signal?.aborted) entry.answer('cancelled')
+       request.signal?.addEventListener('abort', () => entry.answer('cancelled'), { once: true })
+     })
 diff --git a/ds-bot/src/host/authorization.js b/ds-bot/src/host/authorization.js
 new file mode 100644
-index 00000000..59a5418a
+index 00000000..dbefdb0f
 --- /dev/null
 +++ b/ds-bot/src/host/authorization.js
-@@ -0,0 +1,88 @@
+@@ -0,0 +1,96 @@
 +// SuperAgent authorization: records the deliveries a Bot makes on its own account — a
 +// hand-off, inferred from something it was told — and leaves the ones the user asked for
 +// out of the log. B tier records and never blocks.
@@ -12126,7 +12190,13 @@ index 00000000..59a5418a
 +  }
 +
 +  const deliver = rt.deliver
++  // What a Session's turn was started by, for the tool policy: a message a Bot sent is
++  // inferred, the user's own is explicit. Kept in memory and independent of the switch,
++  // because turning recording off must not turn the policy's memory into "unknown".
++  const admission = new Map()
++  const admissionOf = (sessionId) => (sessionId === undefined ? undefined : admission.get(sessionId))
 +  rt.deliver = async (args) => {
++    if (args?.sessionId !== undefined) admission.set(args.sessionId, args.fromId === undefined ? 'explicit' : 'inferred')
 +    if (!on()) return deliver(args)
 +    // `fromId` is set when a Bot starts the message itself (`message_bot`, tools.js:242) and
 +    // absent when the user's own request drives the turn (a group round relays with
@@ -12141,6 +12211,8 @@ index 00000000..59a5418a
 +    // Every group post comes from a Bot: this is the path a relayed instruction takes.
 +    return measured({ fromId: sender?.id, roomId: room?.id }, () => postToRoom(room, sender, text, extra, files), () => 'post_to_room')
 +  }
++
++  rt.admissionOf = admissionOf
 +}
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
 index 3fc5c7c6..79245a16 100644
@@ -16568,6 +16640,96 @@ index 00000000..6cef597f
 +  const translated = t(dictionaryKey)
 +  return translated === dictionaryKey ? fallback : translated
 +}
+diff --git a/ds-bot/src/host/tool-policy.js b/ds-bot/src/host/tool-policy.js
+new file mode 100644
+index 00000000..f6ba4ef6
+--- /dev/null
++++ b/ds-bot/src/host/tool-policy.js
+@@ -0,0 +1,84 @@
++// C tier: decide, at the moment a tool is about to run, whether the work behind it was
++// the user's own request. `observe` writes down what `auto` would have asked and changes
++// nothing; `auto` asks the user through the existing approval bridge. The refusal point is
++// this hook alone.
++import { appendFileSync, mkdirSync } from 'node:fs'
++import { join } from 'node:path'
++import { DENIAL, toolDecision, toolPolicyOf } from '../shared/tool-policy.js'
++import { policyOf } from './authorization.js'
++
++export function install(rt) {
++  // Consecutive refusals per Session and tool: `pre-execute` decides, but only the
++  // approval bridge learns the answer, so both sides read and write this map.
++  const refusals = new Map()
++  // One approval covers the rest of the turn, keyed by Session and invalidated when the
++  // team's shape changes.
++  const grants = new Map()
++  const keyOf = (sessionId, tool) => `${sessionId}\n${tool}`
++  const countOf = (sessionId, tool) => refusals.get(keyOf(sessionId, tool)) ?? 0
++
++  const granted = (sessionId) => {
++    const grant = grants.get(sessionId)
++    if (grant === undefined) return false
++    if (grant.policy === policyOf(rt.state)) return true
++    grants.delete(sessionId)
++    return false
++  }
++
++  function note(line) {
++    try {
++      mkdirSync(rt.home, { recursive: true })
++      appendFileSync(join(rt.home, 'authorization-tools.jsonl'), `${JSON.stringify({ ts: Date.now(), policy: policyOf(rt.state), ...line })}\n`)
++    } catch (error) {
++      // A record that cannot be written is not worth a stopped tool.
++      rt.warn('ds-bot: tool policy record failed: %s', error?.message ?? String(error))
++    }
++  }
++
++  // The approval bridge reports back here: an allowed call clears the count, a refusal or
++  // a timeout adds to it, so a user who never answers still reaches the stall brake.
++  function settleTool(sessionId, tool, outcome) {
++    if (sessionId === undefined) return
++    if (outcome === 'allowed-once') {
++      refusals.delete(keyOf(sessionId, tool))
++      grants.set(sessionId, { at: Date.now(), policy: policyOf(rt.state) })
++      return
++    }
++    if (outcome === 'rejected' || outcome === 'timeout') {
++      refusals.set(keyOf(sessionId, tool), countOf(sessionId, tool) + 1)
++      note({ admitted: 'inferred', rule: outcome === 'timeout' ? 'tool_timeout' : 'tool_refused', tool, decision: 'refused', mode: toolPolicyOf(rt.state?.prefs), agentId: sessionId, refuse_count: countOf(sessionId, tool) })
++    }
++  }
++
++  Object.assign(rt, { settleTool })
++
++  rt.ctx.on('tools/pre-execute', async (exec, next) => {
++    const sessionId = exec.agent?.session?.id ?? exec.agent?.id
++    if (sessionId === undefined) return next()
++    const mode = toolPolicyOf(rt.state?.prefs)
++    const verdict = toolDecision({
++      mode,
++      name: exec.name,
++      nested: exec.parent !== undefined,
++      admission: rt.admissionOf?.(sessionId),
++      granted: granted(sessionId),
++      refusals: countOf(sessionId, exec.name),
++    })
++    if (verdict.decision === 'allow') {
++      if (verdict.rule === 'explicit' || verdict.rule === 'granted') refusals.delete(keyOf(sessionId, exec.name))
++      return next()
++    }
++    note({
++      admitted: rt.admissionOf?.(sessionId) ?? null,
++      rule: verdict.rule,
++      tool: exec.name,
++      decision: verdict.decision,
++      mode,
++      agentId: sessionId,
++      refuse_count: countOf(sessionId, exec.name),
++    })
++    if (verdict.decision === 'would_deny') return next()
++    if (verdict.decision === 'deny') return { kind: 'deny', reason: DENIAL(exec.name), info: { name: exec.name, code: 'bot/tool-policy', reason: verdict.rule } }
++    return { kind: 'ask', reason: `This work was relayed by another Bot and the user has not approved ${exec.name}.` }
++  }, { prepend: true })
++}
 diff --git a/ds-bot/src/shared/fold-at.js b/ds-bot/src/shared/fold-at.js
 new file mode 100644
 index 00000000..8cc991b7
@@ -16588,14 +16750,15 @@ index 00000000..8cc991b7
 +}
 diff --git a/ds-bot/src/shared/superagent-prefs.js b/ds-bot/src/shared/superagent-prefs.js
 new file mode 100644
-index 00000000..5540e52e
+index 00000000..99e865ef
 --- /dev/null
 +++ b/ds-bot/src/shared/superagent-prefs.js
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,30 @@
 +// The SuperAgent page's preferences, applied the same way wherever they come from. A switch
 +// is on unless it was written `false`, so deleting a key turns it back on; the one threshold
 +// is refused outside its bounds rather than clamped, and `null` resets either to its default.
 +import { FOLD_AT_BOUNDS, isFoldAt } from './fold-at.js'
++import { TOOL_POLICY_MODES } from './tool-policy.js'
 +
 +export const SWITCH_KEYS = ['saFold', 'saConclude', 'saLookup', 'saBackground', 'saPrepare']
 +
@@ -16604,6 +16767,12 @@ index 00000000..5540e52e
 +    if (body[key] === true) prefs[key] = true
 +    else if (body[key] === false) prefs[key] = false
 +    else if (body[key] === null) delete prefs[key]
++  }
++  if (body.saToolPolicy !== undefined) {
++    const mode = body.saToolPolicy
++    if (mode === null) delete prefs.saToolPolicy
++    else if (TOOL_POLICY_MODES.includes(mode)) prefs.saToolPolicy = mode
++    else throw Object.assign(new Error(`Tool policy must be ${TOOL_POLICY_MODES.join(', ')}`), { code: 'bot/invalid' })
 +  }
 +  if (body.saFoldAt === undefined) return prefs
 +  const at = body.saFoldAt
@@ -16615,6 +16784,47 @@ index 00000000..5540e52e
 +  }
 +  return prefs
 +}
+diff --git a/ds-bot/src/shared/tool-policy.js b/ds-bot/src/shared/tool-policy.js
+new file mode 100644
+index 00000000..2930d60d
+--- /dev/null
++++ b/ds-bot/src/shared/tool-policy.js
+@@ -0,0 +1,35 @@
++// C tier: what a Bot may run on work that reached it from another Bot, without the user
++// having asked for it. The mode and the table live here so the host's guard and the
++// settings page cannot drift; `auto` is in the data layer only until the ask path is
++// verified, so the page offers `off` and `observe`.
++
++export const TOOL_POLICY_MODES = ['off', 'observe', 'auto']
++export const TOOL_POLICY_DEFAULT = 'observe'
++// Read-only tools an inferred turn keeps: asking the user, and showing a card. Without
++// these a refusal leaves the model no way to ask, and it retries.
++export const OPEN_TOOLS = ['ask_user', 'show_view']
++// Consecutive refusals after which asking turns into a plain denial, so a missing user
++// cannot leave the turn waiting for an answer that never comes.
++export const STALLED_AFTER = 3
++
++export const toolPolicyOf = prefs => (TOOL_POLICY_MODES.includes(prefs?.saToolPolicy) ? prefs.saToolPolicy : TOOL_POLICY_DEFAULT)
++
++// `admission` is what the delivery that started this turn was recorded as:
++// 'explicit' (the user's own request), 'inferred' (relayed by a Bot), or undefined when
++// nothing was recorded — a private chat is explicit even without a record, as B tier
++// records only what a Bot started.
++export function toolDecision({ mode, name, nested = false, admission, granted = false, refusals = 0 }) {
++  const effective = mode === 'auto' || mode === 'observe' ? mode : 'off'
++  if (effective === 'off') return { decision: 'allow', rule: 'off' }
++  if (OPEN_TOOLS.includes(name)) return { decision: 'allow', rule: 'open' }
++  // A program's own transport call carries the work its inner calls do; those are judged.
++  if (name === 'run_code' && !nested) return { decision: 'allow', rule: 'transport' }
++  if (admission === undefined) return { decision: 'allow', rule: 'unknown' }
++  if (admission === 'explicit') return { decision: 'allow', rule: 'explicit' }
++  if (granted) return { decision: 'allow', rule: 'granted' }
++  if (effective === 'observe') return { decision: 'would_deny', rule: 'relay-not-authorization' }
++  if (refusals >= STALLED_AFTER) return { decision: 'deny', rule: 'stalled' }
++  return { decision: 'ask', rule: 'relay-not-authorization' }
++}
++
++export const DENIAL = name => `Denied by policy: this work was relayed by another Bot and the user has not approved ${name}. Stop retrying it; call ask_user to ask, or wait for the user's own request.`
 diff --git a/ds-bot/test/authorization.test.js b/ds-bot/test/authorization.test.js
 new file mode 100644
 index 00000000..c179abc5
@@ -16974,6 +17184,18 @@ index 331d986a..e490db53 100644
 +  const short = `结论。\n\n${'d'.repeat(450)}`
 +  assert.equal(foldPreview(short, { chars: 1000, lines: 20 }, true, { chars: 120, lines: 4 }, false, true), null)
 +})
+diff --git a/ds-bot/test/install.test.js b/ds-bot/test/install.test.js
+index 172aa4c1..aa83c217 100644
+--- a/ds-bot/test/install.test.js
++++ b/ds-bot/test/install.test.js
+@@ -120,6 +120,7 @@ test('apply registers listeners, tools, and effects in a fixed order', (t) => {
+     'effect ds-bot: api route',
+     'route POST /api/bot',
+     'effect ds-bot: load state',
++    'on tools/pre-execute (prepend)',
+   ])
+ })
+ 
 diff --git a/ds-bot/test/mcp-panel.test.js b/ds-bot/test/mcp-panel.test.js
 new file mode 100644
 index 00000000..31469fd7
@@ -18066,6 +18288,59 @@ index 18780147..eb6ab5d3 100644
 +  const out = show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: 'Draft is up.', time: 1 }] } }), { sessionId: 'room' })
 +  const row = findAll(out, node => node.props?.className === 'bt-group-msg')[0]
 +  assert.match(row.props.style['--bt-bubble-tint'], /^color-mix\(in srgb, var\(--bt-ink-\w+\) 3%, var\(--bt-bubble\)\)$/)
++})
+diff --git a/ds-bot/test/tool-policy.test.js b/ds-bot/test/tool-policy.test.js
+new file mode 100644
+index 00000000..99a5944b
+--- /dev/null
++++ b/ds-bot/test/tool-policy.test.js
+@@ -0,0 +1,47 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { OPEN_TOOLS, STALLED_AFTER, TOOL_POLICY_DEFAULT, toolDecision, toolPolicyOf } from '../src/shared/tool-policy.js'
++import { applySuperAgentPrefs } from '../src/shared/superagent-prefs.js'
++
++// Off by neither: the mode a team that never touched the page has is observe, which only
++// writes a line. An unknown stored value falls back to it rather than to auto.
++test('the tool policy reads observe unless a known mode was saved', () => {
++  assert.equal(TOOL_POLICY_DEFAULT, 'observe')
++  assert.deepEqual([toolPolicyOf({}), toolPolicyOf(undefined), toolPolicyOf({ saToolPolicy: 'auto' }), toolPolicyOf({ saToolPolicy: 'off' }), toolPolicyOf({ saToolPolicy: 'nope' })], ['observe', 'observe', 'auto', 'off', 'observe'])
++})
++
++test('a mode writes all three values, null resets it, and anything else is refused', () => {
++  assert.deepEqual(applySuperAgentPrefs({}, { saToolPolicy: 'auto' }), { saToolPolicy: 'auto' })
++  assert.deepEqual(applySuperAgentPrefs({ saToolPolicy: 'auto' }, { saToolPolicy: null }), {})
++  for (const mode of ['on', 'OFF', true, 1, 'would_deny']) {
++    assert.throws(() => applySuperAgentPrefs({}, { saToolPolicy: mode }), error => error.code === 'bot/invalid', `refused: ${String(mode)}`)
++  }
++})
++
++const decide = (extra) => toolDecision({ mode: 'auto', name: 'write', admission: 'inferred', ...extra })
++
++// The table's order matters: the whitelist first, then a turn nothing was recorded for,
++// then the user's own request, and only then the relayed case.
++test('a relayed call is asked about, and every pass-through case is allowed first', () => {
++  assert.deepEqual(decide({}), { decision: 'ask', rule: 'relay-not-authorization' })
++  assert.deepEqual(decide({ admission: 'explicit' }), { decision: 'allow', rule: 'explicit' })
++  assert.deepEqual(decide({ admission: undefined }), { decision: 'allow', rule: 'unknown' })
++  assert.deepEqual(decide({ granted: true }), { decision: 'allow', rule: 'granted' })
++  for (const name of OPEN_TOOLS) assert.deepEqual(decide({ name }), { decision: 'allow', rule: 'open' }, name)
++  // A program's own transport call is allowed; the calls it makes inside are judged.
++  assert.deepEqual(decide({ name: 'run_code' }), { decision: 'allow', rule: 'transport' })
++  assert.deepEqual(decide({ name: 'run_code', nested: true }), { decision: 'ask', rule: 'relay-not-authorization' })
++})
++
++test('observe only writes down what auto would have asked', () => {
++  assert.deepEqual(decide({ mode: 'observe' }), { decision: 'would_deny', rule: 'relay-not-authorization' })
++  // Even a stalled tool is only recorded: observe never changes what runs.
++  assert.deepEqual(decide({ mode: 'observe', refusals: STALLED_AFTER }), { decision: 'would_deny', rule: 'relay-not-authorization' })
++  assert.deepEqual(decide({ mode: 'off' }), { decision: 'allow', rule: 'off' })
++})
++
++test('after three refusals auto stops asking and says so', () => {
++  assert.equal(STALLED_AFTER, 3)
++  assert.deepEqual(decide({ refusals: 2 }), { decision: 'ask', rule: 'relay-not-authorization' })
++  assert.deepEqual(decide({ refusals: 3 }), { decision: 'deny', rule: 'stalled' })
 +})
 diff --git a/ds-bot/test/user-bubble.test.js b/ds-bot/test/user-bubble.test.js
 index bdc9eb87..35fd4e50 100644
