@@ -192,10 +192,19 @@ index 23ef1007..864f7d9b 100644
        items.map((item, index) => (item.sep
          ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
 diff --git a/ds-bot/src/client/cells.js b/ds-bot/src/client/cells.js
-index 3555f0cf..8a40a687 100644
+index 3555f0cf..0617052e 100644
 --- a/ds-bot/src/client/cells.js
 +++ b/ds-bot/src/client/cells.js
-@@ -18,20 +18,54 @@ import { noHover, useViewport, viewBottom } from './motion.js'
+@@ -1,7 +1,7 @@
+ import { createElement as h, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+ import { createPortal } from 'react-dom'
+ import { MarkdownText } from './dsh-primitives.js'
+-import { inkText } from './inks.js'
++import { inkFill, inkText } from './inks.js'
+ import { linkMentions, mentionTarget, dayLabel, contentText, stripHeader, isHiddenTurn, isRelayContext, relaysBefore, relayPart, commRunOf, toolName, toolArgs, reminderPrompts, elapsedLabel, clockLabel, messageClock } from './text.js'
+ import { SmileIcon, ReplyIcon, DotsIcon, CheckIcon, DownloadIcon, CopyIcon, MemoryIcon } from './icons.js'
+ import { colorOf, toolState, BotMark, RoomAvatar } from './mark.js'
+@@ -18,20 +18,59 @@ import { noHover, useViewport, viewBottom } from './motion.js'
  import { heldCardKey } from './sources.js'
  import { BtwCardView } from './btw.js'
  import { partIndexOf, withBtwRows } from './btw-model.js'
@@ -215,10 +224,15 @@ index 3555f0cf..8a40a687 100644
 +// point above it. Only a reply with no mark falls back to these, itself exceeded rather
 +// than reached: a 1000-character or 20-line one still reads whole.
 +export const GROUP_FOLD = { preview: { chars: 120, lines: 4 }, mark: true }
++// How much of a member's ink a group bubble carries: a hint of hue that says who spoke, far
++// below the name above it, so the bubble never competes with what it says. Mixed in srgb,
++// like every other color-mix here: oklab would raise the browser floor for one tint.
++export const GROUP_TINT = 8
 +const NEVER = { chars: Infinity, lines: Infinity }
 +
-+// The SuperAgent page sets the threshold or turns the group fold off; the preview and the
-+// mark rule stay as they are, so off means a group line reads whole again.
++// The SuperAgent page sets the threshold, or turns the threshold and the mark rule off. A
++// reply the host kept only in part still folds: its whole text is a file, and "Show all" is
++// the only way back to it, so that fold is not the page's to switch off.
 +export const groupFoldOf = prefs => (saOn(prefs, 'saFold')
 +  ? { ...GROUP_FOLD, at: foldAtOf(prefs) }
 +  : { ...GROUP_FOLD, at: NEVER, mark: false })
@@ -252,7 +266,7 @@ index 3555f0cf..8a40a687 100644
    const onClick = (event) => {
      const target = mentionTarget(event)
      if (target === null) return
-@@ -44,7 +78,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
+@@ -44,7 +83,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
      texts.map((text, index) => {
        const last = index === texts.length - 1
        return h(Bubble, {
@@ -261,7 +275,7 @@ index 3555f0cf..8a40a687 100644
          picked: msgKey ? reactions?.[index] ?? [] : [],
          live: streaming && last,
          lead: lead && last ? lead : null,
-@@ -53,10 +87,13 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
+@@ -53,10 +92,13 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
      }))
  }
  
@@ -278,7 +292,7 @@ index 3555f0cf..8a40a687 100644
    const row = useRef(null)
    // Touch has no hover: a tap on the bubble opens its tools, a tap elsewhere
    // closes them. Interactive targets keep their own meaning.
-@@ -295,7 +332,8 @@ function SpeakerHead({ bot, time }) {
+@@ -295,17 +337,21 @@ function SpeakerHead({ bot, time }) {
  // One Bot message inside a group chat: avatar, name (with its group role), when it ran
  // and how long it took, bubble. The flat layout moves the avatar from beside the last
  // bubble to the head of the name row, so the text below runs the whole width.
@@ -288,7 +302,13 @@ index 3555f0cf..8a40a687 100644
    const lead = h('button', { type: 'button', className: 'bt-lead', 'aria-label': t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
      h(BotMark, { bot, size: 22 }))
    const flat = layoutOf(roster.prefs) === 'flat'
-@@ -305,7 +343,7 @@ function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey
+   const took = Number.isFinite(duration) ? elapsedLabel(duration) : undefined
+-  return h('div', { className: 'bt-group-msg' },
++  // The bubble reads as this member's, well under the strength of the name above it; the
++  // tint is its own variable because --bt-bubble cannot reference itself.
++  const tint = `color-mix(in srgb, ${inkFill(colorOf(bot))} ${GROUP_TINT}%, var(--bt-bubble))`
++  return h('div', { className: 'bt-group-msg', style: { '--bt-bubble-tint': tint } },
+     h('span', { className: 'bt-group-name', style: flat ? undefined : { color: inkText(colorOf(bot)) } }, flat ? lead : null, bot.name,
        room?.admin === bot.id ? h('span', { className: 'bt-group-role' }, t('Admin')) : null,
        Number.isFinite(time) ? h('span', { className: 'bt-group-time', title: clockLabel(time) }, messageClock(time)) : null,
        took ? h('span', { className: 'bt-group-took', title: t('Ran for {duration}', { duration: took }) }, took) : null),
@@ -297,7 +317,7 @@ index 3555f0cf..8a40a687 100644
  }
  
  // A member's messages in a row, as one block under its name: what it says while it
-@@ -545,7 +583,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
+@@ -545,7 +591,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
    }
  }
  
@@ -306,7 +326,7 @@ index 3555f0cf..8a40a687 100644
    const roster = useRoster(value => value)
    const data = node.data
    const source = data.source !== null && typeof data.source === 'object' ? data.source : {}
-@@ -607,7 +645,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
+@@ -607,7 +653,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
          const text = stripHeader(contentText(data.content))
          // A trigger's data carries no turn; its event seq is the one durable name of this post.
          return h(GroupMessage, {
@@ -315,7 +335,7 @@ index 3555f0cf..8a40a687 100644
            whole: file ? { length: source.length, load: () => actions.fileText(file) } : undefined,
          })
        }
-@@ -869,7 +907,7 @@ function scanReplies(text, start, replies) {
+@@ -869,7 +915,7 @@ function scanReplies(text, start, replies) {
    }
  }
  
@@ -324,7 +344,7 @@ index 3555f0cf..8a40a687 100644
    const [live, setLive] = useState({ replies: [], speaking: null })
    useEffect(() => {
      if (done) return undefined
-@@ -949,7 +987,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
+@@ -949,7 +995,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
        if (reply.kind === 'done') {
          return h('div', { key: `${reply.botId}-${index}`, className: 'bt-event' }, t('{name} finished its work', { name: bot.name }))
        }
@@ -343,7 +363,7 @@ index 3555f0cf..8a40a687 100644
      }),
      pending.map((id) => {
        const bot = roster.byId[id]
-@@ -993,7 +1041,7 @@ function useShownCards(actions, sessionId, callIds) {
+@@ -993,7 +1049,7 @@ function useShownCards(actions, sessionId, callIds) {
    }, [sessionId, key])
  }
  
@@ -352,7 +372,7 @@ index 3555f0cf..8a40a687 100644
    const tool = toolName(call)
    const done = call.kind === 'tool-result'
    const { text: arg, value: argValue } = toolArgs(call)
-@@ -1019,7 +1067,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1019,7 +1075,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
        return done && target ? h(EventLine, { prefix: t('Updated'), bots: [target], onOpen: bot => actions.openSession(bot.id) }) : null
      }
      case 'group_relay':
@@ -361,7 +381,7 @@ index 3555f0cf..8a40a687 100644
      case 'create_group':
      case 'update_group':
      case 'delete_group':
-@@ -1074,7 +1122,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1074,7 +1130,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
    }
  }
  
@@ -370,7 +390,7 @@ index 3555f0cf..8a40a687 100644
    const roster = useRoster(value => value)
    const heldCards = useHeldCards?.(state => state[sessionId])
    const root = node.data.root
-@@ -1090,6 +1138,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
+@@ -1090,6 +1146,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
    useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note)
    useShownCards(actions, sessionId, drawn.filter(call => CARDS.has(toolName(call)) && call.callId).map(call => call.callId))
    if (drawn.length === 0) return null
@@ -10889,7 +10909,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..f5542388 100644
+index eac6ea54..f9122d0b 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -11466,7 +11486,7 @@ index eac6ea54..f5542388 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1333,183 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1333,188 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -11647,10 +11667,15 @@ index eac6ea54..f5542388 100644
 +/* A group's own bubble is drawn here, so the skin's padding and radius reach it through the
 +   same tokens as the rest. */
 +html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-ububble{padding:var(--bt-app-pad);border-radius:var(--bt-app-radius-bubble)}
++/* A group line shows whose it is: its bubble carries that member's ink, mixed low enough to
++   stay paler than the name above it. The user's own bubbles and one-to-one chats keep theirs,
++   which is what makes a tinted bubble read as "someone in the group said this". A tint needs a
++   variable of its own: redefining --bt-bubble on the same node would reference itself. */
++.bt-group-msg .bt-bubble{background:var(--bt-bubble);background:var(--bt-bubble-tint,var(--bt-bubble))}
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1609,102 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1614,102 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -11776,7 +11801,7 @@ index eac6ea54..f5542388 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1081,7 +1723,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1081,7 +1728,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
  body[data-bt-room] .bt-voice{display:none!important}
@@ -11785,7 +11810,7 @@ index eac6ea54..f5542388 100644
  .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
  [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
  .bt-q{order:1}
-@@ -1112,17 +1754,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1759,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -11812,7 +11837,7 @@ index eac6ea54..f5542388 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1774,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1779,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -11821,7 +11846,7 @@ index eac6ea54..f5542388 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1815,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1820,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -11944,10 +11969,18 @@ index 47d791d4..1695a5b8 100644
      connectorDisconnect: id => after(call('connector-disconnect', { id })),
      connectorRetry: id => after(call('connector-retry', { id })),
 diff --git a/ds-bot/src/client/themes.js b/ds-bot/src/client/themes.js
-index 82c3b3b9..e2794490 100644
+index 82c3b3b9..5806d08a 100644
 --- a/ds-bot/src/client/themes.js
 +++ b/ds-bot/src/client/themes.js
-@@ -23,6 +23,16 @@ const THEMES = {
+@@ -1,6 +1,7 @@
+ import { ACCENT_INKS, INKS, isHex, luminance } from './inks.js'
+ import { SHAPES, markupCache, maskCache } from './characters.js'
+ import { createSource } from './sources.js'
++import { SA_FOLD_AT, isFoldAt } from '../shared/fold-at.js'
+ 
+ // -------------------------------------------------------------------------
+ // Themes. A theme names eight colors per mode; every `--bt-*` variable and the shell
+@@ -23,6 +24,16 @@ const THEMES = {
      light: { bg: '#faf9f5', sidebar: '#f3f0e8', bubble: '#ebe7dc', card: '#ffffff', text: '#1f1e1b', user: '#2b2a26', userText: '#faf9f5', accent: '#d97757' },
      dark: { bg: '#1f1e1b', sidebar: '#262521', bubble: '#34322d', card: '#2a2925', text: '#f3f0e8', user: '#f3f0e8', userText: '#1f1e1b', accent: '#e08a6d' },
    },
@@ -11964,7 +11997,7 @@ index 82c3b3b9..e2794490 100644
    moonlight: {
      label: 'Moonlight',
      light: { bg: '#f7f9fc', sidebar: '#eef2f8', bubble: '#e5ebf5', card: '#ffffff', text: '#121826', user: '#1e3a8a', userText: '#ffffff', accent: '#1e86ff' },
-@@ -122,7 +132,53 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
+@@ -122,7 +133,49 @@ export const allThemes = () => ({ ...THEMES, ...customThemes })
  // flat one.
  export const MESSAGE_WIDTH = { min: 50, max: 100, step: 5 }
  const percent = (value, initial) => (Number.isInteger(value) && value >= MESSAGE_WIDTH.min && value <= MESSAGE_WIDTH.max ? value : initial)
@@ -12009,14 +12042,10 @@ index 82c3b3b9..e2794490 100644
 +// SuperAgent switches are on unless someone wrote `false`: a missing key, an older state
 +// or a deleted one all read as on, which is the default the settings page shows.
 +export const saOn = (prefs, key) => prefs?.[key] !== false
-+// A group line folds past this, unless the page set another threshold in range.
-+export const SA_FOLD_AT = { chars: 1000, lines: 20 }
-+export const foldAtOf = (prefs) => {
-+  const at = prefs?.saFoldAt
-+  const fine = Number.isInteger(at?.chars) && at.chars >= 300 && at.chars <= 20_000
-+    && Number.isInteger(at?.lines) && at.lines >= 8 && at.lines <= 500
-+  return fine ? { chars: at.chars, lines: at.lines } : SA_FOLD_AT
-+}
++// A group line folds past this, unless the page set another threshold in range. The bounds
++// and the default live in shared/fold-at.js, which the host's own check reads too.
++export { FOLD_AT_BOUNDS, SA_FOLD_AT, isFoldAt } from '../shared/fold-at.js'
++export const foldAtOf = (prefs) => (isFoldAt(prefs?.saFoldAt) ? { chars: prefs.saFoldAt.chars, lines: prefs.saFoldAt.lines } : SA_FOLD_AT)
 +
  export const flatWidthOf = prefs => percent(prefs?.flatWidth, 100)
 diff --git a/ds-bot/src/host/authorization.js b/ds-bot/src/host/authorization.js
@@ -12114,10 +12143,18 @@ index 00000000..59a5418a
 +  }
 +}
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
-index 3fc5c7c6..3ca79178 100644
+index 3fc5c7c6..79245a16 100644
 --- a/ds-bot/src/host/channel.js
 +++ b/ds-bot/src/host/channel.js
-@@ -99,7 +99,7 @@ export function install(rt) {
+@@ -6,6 +6,7 @@ import { install as installSide } from './side.js'
+ import { handoffReply, questionReply, viewReply } from './parts.js'
+ import { defaultRelayLimit } from './groups.js'
+ import { validateViewAnswer } from 'deep-view/core'
++import { applySuperAgentPrefs } from '../shared/superagent-prefs.js'
+ import { COLORS, EXTRA_COLORS, ROUTE } from './constants.js'
+ 
+ const LANGUAGES = { zh: 'Chinese (简体中文)', en: 'English' }
+@@ -99,7 +100,7 @@ export function install(rt) {
    })
    // What a host that only reads the team may still answer.
    // Updates change the dsh profile, not the team, so a reading host may run them too.
@@ -12126,7 +12163,7 @@ index 3fc5c7c6..3ca79178 100644
  
    function setPrefs(body) {
      if (body.theme !== undefined) {
-@@ -116,6 +116,21 @@ export function install(rt) {
+@@ -116,6 +117,21 @@ export function install(rt) {
        else if (body.motion === 'quiet' || body.motion === 'lively') state.prefs.motion = body.motion
        else throw invalid('Motion must be quiet, normal or lively')
      }
@@ -12148,7 +12185,7 @@ index 3fc5c7c6..3ca79178 100644
      if (body.layout !== undefined) {
        if (body.layout === null || body.layout === 'bubble') delete state.prefs.layout
        else if (body.layout === 'flat') state.prefs.layout = body.layout
-@@ -137,6 +152,30 @@ export function install(rt) {
+@@ -137,6 +153,17 @@ export function install(rt) {
        if (body.thinking === true) state.prefs.thinking = true
        else if (body.thinking === false || body.thinking === null) delete state.prefs.thinking
      }
@@ -12160,26 +12197,13 @@ index 3fc5c7c6..3ca79178 100644
 +      else if (body.superagent === false) state.prefs.superagent = false
 +      else if (body.superagent === null) delete state.prefs.superagent
 +    }
-+    // The SuperAgent page's behaviour switches are on unless someone wrote `false`, so a
-+    // deleted key means on again; `null` resets a key to that default.
-+    for (const key of ['saFold', 'saConclude', 'saLookup', 'saBackground', 'saPrepare']) {
-+      if (body[key] === true) state.prefs[key] = true
-+      else if (body[key] === false) state.prefs[key] = false
-+      else if (body[key] === null) delete state.prefs[key]
-+    }
-+    // The one number on that page: a threshold out of range is refused, never stored.
-+    if (body.saFoldAt !== undefined) {
-+      const at = body.saFoldAt
-+      if (at === null) delete state.prefs.saFoldAt
-+      else if (Number.isInteger(at?.chars) && at.chars >= 300 && at.chars <= 20_000
-+        && Number.isInteger(at?.lines) && at.lines >= 8 && at.lines <= 500) {
-+        state.prefs.saFoldAt = { chars: at.chars, lines: at.lines }
-+      } else throw invalid('Fold threshold must be 300–20000 characters and 8–500 lines')
-+    }
++    // The SuperAgent page's switches and its one threshold; a value out of range is refused,
++    // never stored. See shared/superagent-prefs.js for what each branch means.
++    applySuperAgentPrefs(state.prefs, body)
      return rt.save()
    }
  
-@@ -352,6 +391,18 @@ export function install(rt) {
+@@ -352,6 +379,18 @@ export function install(rt) {
          case 'secret-delete':
            await rt.load()
            return ok(await rt.secretEndpoint(endpoint, body))
@@ -16544,6 +16568,53 @@ index 00000000..6cef597f
 +  const translated = t(dictionaryKey)
 +  return translated === dictionaryKey ? fallback : translated
 +}
+diff --git a/ds-bot/src/shared/fold-at.js b/ds-bot/src/shared/fold-at.js
+new file mode 100644
+index 00000000..8cc991b7
+--- /dev/null
++++ b/ds-bot/src/shared/fold-at.js
+@@ -0,0 +1,12 @@
++// Where a group line folds, and what the settings page may set it to. Host and client both
++// read this file, so a value the host refuses and a value the client falls back on can never
++// drift apart.
++export const SA_FOLD_AT = { chars: 1000, lines: 20 }
++export const FOLD_AT_BOUNDS = { chars: [300, 20_000], lines: [8, 500] }
++
++export function isFoldAt(at) {
++  const [minChars, maxChars] = FOLD_AT_BOUNDS.chars
++  const [minLines, maxLines] = FOLD_AT_BOUNDS.lines
++  return Number.isInteger(at?.chars) && at.chars >= minChars && at.chars <= maxChars
++    && Number.isInteger(at?.lines) && at.lines >= minLines && at.lines <= maxLines
++}
+diff --git a/ds-bot/src/shared/superagent-prefs.js b/ds-bot/src/shared/superagent-prefs.js
+new file mode 100644
+index 00000000..5540e52e
+--- /dev/null
++++ b/ds-bot/src/shared/superagent-prefs.js
+@@ -0,0 +1,23 @@
++// The SuperAgent page's preferences, applied the same way wherever they come from. A switch
++// is on unless it was written `false`, so deleting a key turns it back on; the one threshold
++// is refused outside its bounds rather than clamped, and `null` resets either to its default.
++import { FOLD_AT_BOUNDS, isFoldAt } from './fold-at.js'
++
++export const SWITCH_KEYS = ['saFold', 'saConclude', 'saLookup', 'saBackground', 'saPrepare']
++
++export function applySuperAgentPrefs(prefs, body) {
++  for (const key of SWITCH_KEYS) {
++    if (body[key] === true) prefs[key] = true
++    else if (body[key] === false) prefs[key] = false
++    else if (body[key] === null) delete prefs[key]
++  }
++  if (body.saFoldAt === undefined) return prefs
++  const at = body.saFoldAt
++  if (at === null) delete prefs.saFoldAt
++  else if (isFoldAt(at)) prefs.saFoldAt = { chars: at.chars, lines: at.lines }
++  else {
++    const message = `Fold threshold must be ${FOLD_AT_BOUNDS.chars.join('–')} characters and ${FOLD_AT_BOUNDS.lines.join('–')} lines`
++    throw Object.assign(new Error(message), { code: 'bot/invalid' })
++  }
++  return prefs
++}
 diff --git a/ds-bot/test/authorization.test.js b/ds-bot/test/authorization.test.js
 new file mode 100644
 index 00000000..c179abc5
@@ -17823,14 +17894,16 @@ index 4985bf19..5abf15ce 100644
        "14px": 5,
 diff --git a/ds-bot/test/superagent-settings.test.js b/ds-bot/test/superagent-settings.test.js
 new file mode 100644
-index 00000000..6c2242e3
+index 00000000..17f6e7c6
 --- /dev/null
 +++ b/ds-bot/test/superagent-settings.test.js
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,59 @@
 +import assert from 'node:assert/strict'
++import { createHash } from 'node:crypto'
 +import { test } from 'node:test'
 +import { teamRules } from '../src/host/prompt.js'
 +import { SA_FOLD_AT, foldAtOf, saOn } from '../src/client/themes.js'
++import { applySuperAgentPrefs } from '../src/shared/superagent-prefs.js'
 +
 +// The SuperAgent page's switches are on unless someone wrote `false`; a missing key, an
 +// older state and a deleted key all read as on, which is what the page shows.
@@ -17855,6 +17928,10 @@ index 00000000..6c2242e3
 +test('the team rules keep their four optional lines, and change nothing while the switches do not', () => {
 +  const all = teamRules({})
 +  const lines = (text) => text.split('\n')
++  // The value the tree produced before the settings page existed: 8623 UTF-8 bytes (8596
++  // UTF-16 code units), this digest. It is fixed here so a changed rule fails the test.
++  assert.equal(Buffer.byteLength(all, 'utf8'), 8623)
++  assert.equal(createHash('sha256').update(all).digest('hex'), 'ce96a0bae40e96f61468340316fad2a7a4b367bfc89bb4add0b487f08f1da06f')
 +  assert.equal(all, teamRules({}), 'the same switches give the same bytes')
 +  assert.deepEqual(lines(all).slice(-4).map(line => line.slice(0, 11)), ['- In a grou', '- When what', '- A command', '- You may p'])
 +  const off = teamRules({ saConclude: false, saLookup: false, saBackground: false, saPrepare: false })
@@ -17866,8 +17943,22 @@ index 00000000..6c2242e3
 +  assert.ok(!half.includes('- When what you say depends on something said earlier'))
 +  assert.ok(half.includes('- A command that may take more than a few seconds'))
 +})
++
++// The page's writes: a switch is on unless written false, `null` resets it to that default,
++// and a threshold outside its bounds is refused instead of stored.
++test('a SuperAgent pref writes each branch the same way the page reads it', () => {
++  assert.deepEqual(applySuperAgentPrefs({}, { saFold: false, saLookup: true }), { saFold: false, saLookup: true })
++  assert.deepEqual(applySuperAgentPrefs({ saFold: false, saConclude: false }, { saFold: null, saConclude: false }), { saConclude: false }, 'null drops the key, which reads as on')
++  assert.deepEqual(applySuperAgentPrefs({}, { saFoldAt: { chars: 500, lines: 8 } }), { saFoldAt: { chars: 500, lines: 8 } })
++  assert.deepEqual(applySuperAgentPrefs({ saFoldAt: { chars: 500, lines: 8 } }, { saFoldAt: null }), {}, 'null resets the threshold to the default')
++  const bad = [{ chars: 299, lines: 20 }, { chars: 20_001, lines: 20 }, { chars: 1000, lines: 7 }, { chars: 1000, lines: 501 }, { chars: 1000.5, lines: 20 }]
++  for (const saFoldAt of bad) {
++    assert.throws(() => applySuperAgentPrefs({}, { saFoldAt }), (error) => error.code === 'bot/invalid', `refused: ${JSON.stringify(saFoldAt)}`)
++  }
++  assert.deepEqual(applySuperAgentPrefs({ saFold: false }, { saFold: true }), { saFold: true }, 'a switch writes both ways')
++})
 diff --git a/ds-bot/test/tool-cells.test.js b/ds-bot/test/tool-cells.test.js
-index 18780147..bf7b477c 100644
+index 18780147..5cbff4dc 100644
 --- a/ds-bot/test/tool-cells.test.js
 +++ b/ds-bot/test/tool-cells.test.js
 @@ -9,7 +9,8 @@ import { build } from 'esbuild'
@@ -17889,7 +17980,7 @@ index 18780147..bf7b477c 100644
  
  // Runs the effects collected since the last render; returns the cleanups.
  const mount = () => {
-@@ -853,3 +854,73 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
+@@ -853,3 +854,86 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
    assert.ok(frame.props.srcDoc.indexOf('Content-Security-Policy') < frame.props.srcDoc.indexOf('<b>hi</b>'), 'the policy comes before the markup')
    assert.equal(frame.props.title, 'A greeting')
  })
@@ -17962,6 +18053,19 @@ index 18780147..bf7b477c 100644
 +  assert.equal(folded('z'.repeat(1100), {}), 1)
 +  assert.deepEqual([400, 600].map(chars => folded('z'.repeat(chars), { saFoldAt: { chars: 500, lines: 20 } })), [0, 1], 'a saved threshold decides')
 +  assert.equal(folded('z'.repeat(1100), { saFoldAt: { chars: 200, lines: 20 } }), 1, 'an out-of-range threshold falls back to the default')
++  // A reply the host kept only in part folds whatever the page says: its text lives in a
++  // file, and "Show all" is the only way back to it.
++  const cut = [{ botId: 'writer', text: 'head…', time: 1, length: 20_001, files: [{ name: 'Reply from Writer.txt', bytes: 20_001 }] }]
++  const more = findAll(show(call('group_relay', 'direct', { content: { replies: cut } }), { sessionId: 'room', roster: team({ prefs: { saFold: false } }), actions: { fileText: async () => ({ text: 'x', whole: true }) } }), node => node.props?.className === 'bt-more')
++  assert.equal(more.length, 1, 'a cut reply still folds with the page off')
++})
++
++// A group line carries its member's ink, mixed low: the tint makes it clear who spoke, and
++// stays a tint, so it does not compete with the name above it.
++test('a group bubble is tinted with its member ink', () => {
++  const out = show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: 'Draft is up.', time: 1 }] } }), { sessionId: 'room' })
++  const row = findAll(out, node => node.props?.className === 'bt-group-msg')[0]
++  assert.match(row.props.style['--bt-bubble-tint'], /^color-mix\(in srgb, var\(--bt-ink-\w+\) 8%, var\(--bt-bubble\)\)$/)
 +})
 diff --git a/ds-bot/test/user-bubble.test.js b/ds-bot/test/user-bubble.test.js
 index bdc9eb87..35fd4e50 100644
