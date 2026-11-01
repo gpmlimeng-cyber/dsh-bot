@@ -192,10 +192,10 @@ index 23ef1007..864f7d9b 100644
        items.map((item, index) => (item.sep
          ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
 diff --git a/ds-bot/src/client/cells.js b/ds-bot/src/client/cells.js
-index 3555f0cf..067eee0a 100644
+index 3555f0cf..3ba64a97 100644
 --- a/ds-bot/src/client/cells.js
 +++ b/ds-bot/src/client/cells.js
-@@ -25,13 +25,37 @@ export { clockLabel }
+@@ -25,13 +25,39 @@ export { clockLabel }
  // -------------------------------------------------------------------------
  // Chat cells
  
@@ -203,7 +203,9 @@ index 3555f0cf..067eee0a 100644
 +// sentence the group needs and the detail waits behind "Show all". Folding only hides
 +// what a preview keeps, so a reply barely past the limit stays whole. Private chats keep
 +// the wider FOLD_AT: there the whole reply is what the user came for.
-+export const GROUP_FOLD = { at: { chars: 300, lines: 8 }, preview: { chars: 120, lines: 4 } }
++// The limits are exceeded, not reached: `chars: 299` folds a 300-character paragraph,
++// `lines: 15` leaves fifteen lines whole and folds the sixteenth.
++export const GROUP_FOLD = { at: { chars: 299, lines: 15 }, preview: { chars: 120, lines: 4 } }
 +
  const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied') }, footnotes: t('Footnotes') })
  
@@ -234,7 +236,7 @@ index 3555f0cf..067eee0a 100644
    const onClick = (event) => {
      const target = mentionTarget(event)
      if (target === null) return
-@@ -44,7 +68,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
+@@ -44,7 +70,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
      texts.map((text, index) => {
        const last = index === texts.length - 1
        return h(Bubble, {
@@ -243,7 +245,7 @@ index 3555f0cf..067eee0a 100644
          picked: msgKey ? reactions?.[index] ?? [] : [],
          live: streaming && last,
          lead: lead && last ? lead : null,
-@@ -53,10 +77,13 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
+@@ -53,10 +79,13 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
      }))
  }
  
@@ -260,7 +262,7 @@ index 3555f0cf..067eee0a 100644
    const row = useRef(null)
    // Touch has no hover: a tap on the bubble opens its tools, a tap elsewhere
    // closes them. Interactive targets keep their own meaning.
-@@ -295,7 +322,7 @@ function SpeakerHead({ bot, time }) {
+@@ -295,7 +324,7 @@ function SpeakerHead({ bot, time }) {
  // One Bot message inside a group chat: avatar, name (with its group role), when it ran
  // and how long it took, bubble. The flat layout moves the avatar from beside the last
  // bubble to the head of the name row, so the text below runs the whole width.
@@ -269,7 +271,7 @@ index 3555f0cf..067eee0a 100644
    const lead = h('button', { type: 'button', className: 'bt-lead', 'aria-label': t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
      h(BotMark, { bot, size: 22 }))
    const flat = layoutOf(roster.prefs) === 'flat'
-@@ -305,7 +332,7 @@ function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey
+@@ -305,7 +334,7 @@ function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey
        room?.admin === bot.id ? h('span', { className: 'bt-group-role' }, t('Admin')) : null,
        Number.isFinite(time) ? h('span', { className: 'bt-group-time', title: clockLabel(time) }, messageClock(time)) : null,
        took ? h('span', { className: 'bt-group-took', title: t('Ran for {duration}', { duration: took }) }, took) : null),
@@ -278,7 +280,7 @@ index 3555f0cf..067eee0a 100644
  }
  
  // A member's messages in a row, as one block under its name: what it says while it
-@@ -545,7 +572,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
+@@ -545,7 +574,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
    }
  }
  
@@ -287,7 +289,7 @@ index 3555f0cf..067eee0a 100644
    const roster = useRoster(value => value)
    const data = node.data
    const source = data.source !== null && typeof data.source === 'object' ? data.source : {}
-@@ -607,7 +634,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
+@@ -607,7 +636,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
          const text = stripHeader(contentText(data.content))
          // A trigger's data carries no turn; its event seq is the one durable name of this post.
          return h(GroupMessage, {
@@ -296,7 +298,7 @@ index 3555f0cf..067eee0a 100644
            whole: file ? { length: source.length, load: () => actions.fileText(file) } : undefined,
          })
        }
-@@ -869,7 +896,7 @@ function scanReplies(text, start, replies) {
+@@ -869,7 +898,7 @@ function scanReplies(text, start, replies) {
    }
  }
  
@@ -305,7 +307,7 @@ index 3555f0cf..067eee0a 100644
    const [live, setLive] = useState({ replies: [], speaking: null })
    useEffect(() => {
      if (done) return undefined
-@@ -949,7 +976,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
+@@ -949,7 +978,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
        if (reply.kind === 'done') {
          return h('div', { key: `${reply.botId}-${index}`, className: 'bt-event' }, t('{name} finished its work', { name: bot.name }))
        }
@@ -324,7 +326,7 @@ index 3555f0cf..067eee0a 100644
      }),
      pending.map((id) => {
        const bot = roster.byId[id]
-@@ -993,7 +1030,7 @@ function useShownCards(actions, sessionId, callIds) {
+@@ -993,7 +1032,7 @@ function useShownCards(actions, sessionId, callIds) {
    }, [sessionId, key])
  }
  
@@ -333,7 +335,7 @@ index 3555f0cf..067eee0a 100644
    const tool = toolName(call)
    const done = call.kind === 'tool-result'
    const { text: arg, value: argValue } = toolArgs(call)
-@@ -1019,7 +1056,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1019,7 +1058,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
        return done && target ? h(EventLine, { prefix: t('Updated'), bots: [target], onOpen: bot => actions.openSession(bot.id) }) : null
      }
      case 'group_relay':
@@ -342,7 +344,7 @@ index 3555f0cf..067eee0a 100644
      case 'create_group':
      case 'update_group':
      case 'delete_group':
-@@ -1074,7 +1111,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1074,7 +1113,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
    }
  }
  
@@ -351,7 +353,7 @@ index 3555f0cf..067eee0a 100644
    const roster = useRoster(value => value)
    const heldCards = useHeldCards?.(state => state[sessionId])
    const root = node.data.root
-@@ -1090,6 +1127,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
+@@ -1090,6 +1129,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
    useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note)
    useShownCards(actions, sessionId, drawn.filter(call => CARDS.has(toolName(call)) && call.callId).map(call => call.callId))
    if (drawn.length === 0) return null
@@ -17522,7 +17524,7 @@ index 4985bf19..5abf15ce 100644
      "usage-page.js": {
        "14px": 5,
 diff --git a/ds-bot/test/tool-cells.test.js b/ds-bot/test/tool-cells.test.js
-index 18780147..01bf01e9 100644
+index 18780147..f3dda3b1 100644
 --- a/ds-bot/test/tool-cells.test.js
 +++ b/ds-bot/test/tool-cells.test.js
 @@ -9,7 +9,8 @@ import { build } from 'esbuild'
@@ -17544,7 +17546,7 @@ index 18780147..01bf01e9 100644
  
  // Runs the effects collected since the last render; returns the cleanups.
  const mount = () => {
-@@ -853,3 +854,54 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
+@@ -853,3 +854,56 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
    assert.ok(frame.props.srcDoc.indexOf('Content-Security-Policy') < frame.props.srcDoc.indexOf('<b>hi</b>'), 'the policy comes before the markup')
    assert.equal(frame.props.title, 'A greeting')
  })
@@ -17590,8 +17592,10 @@ index 18780147..01bf01e9 100644
 +  const folded = words => findAll(show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: words, time: 1 }] } }), { sessionId: 'room' }), node => node.props?.className === 'bt-more')
 +  const lines = count => Array.from({ length: count }, (_, index) => `line ${index}`).join('\n')
 +  assert.deepEqual([200, 301, 800].map(count => folded('z'.repeat(count)).length), [0, 1, 1], '200 stays whole; 301 and 800 fold')
-+  assert.deepEqual([8, 9].map(count => folded(lines(count)).length), [0, 1], '8 lines stay whole; 9 fold')
-+  assert.match(text(folded(lines(9))[0]), /Show all · 9 lines/, 'a line-triggered fold counts lines')
++  assert.deepEqual([14, 15, 16].map(count => folded(lines(count)).length), [0, 0, 1], '15 lines stay whole; 16 fold')
++  assert.match(text(folded(lines(16))[0]), /Show all · 16 lines/, 'a line-triggered fold counts lines')
++  // A paragraph with no break is folded by its characters instead.
++  assert.deepEqual([299, 300, 301].map(count => folded('z'.repeat(count)).length), [0, 1, 1], 'a 300-character paragraph folds')
 +  assert.match(text(folded('z'.repeat(301))[0]), /Show all · 301 characters/)
 +  // A folded reply keeps 120 characters, so 301 that fold hide 181 of them.
 +  const at = { chars: 300, lines: 8 }
