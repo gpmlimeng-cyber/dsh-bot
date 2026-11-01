@@ -1,5 +1,5 @@
 // Client channel: the team view the browser renders, and the POST /api/bot endpoints.
-import { randomUUID } from 'node:crypto'
+import { randomUUID, createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
@@ -11,6 +11,7 @@ import { validateViewAnswer } from 'deep-view/core'
 import { applySuperAgentPrefs } from '../shared/superagent-prefs.js'
 import { COLORS, EXTRA_COLORS, ROUTE, API_MIN, API_MAX } from './constants.js'
 import { BOOT_ID, publishedSeq } from './boot.js'
+import { noticesView, roomChatPage } from './mobile.js'
 
 const LANGUAGES = { zh: 'Chinese (简体中文)', en: 'English' }
 const RUN_STATS = ['sessionStats', 'tokenUsage', 'contextPressure']
@@ -30,7 +31,7 @@ export function errorCode(error) {
 // so a new endpoint is listed here or the test fails.
 export const CAPABILITIES = [
   'add-agent', 'agent-adopt', 'agent-archive', 'agent-rename', 'agent-session',
-  'answer-question', 'approval-answer', 'avatar-delete', 'avatar-import', 'avatar-library',
+  'answer-question', 'approval-answer', 'avatar', 'avatar-delete', 'avatar-import', 'avatar-library',
   'bot-capability', 'browser-give-back', 'browser-result', 'browser-stop', 'browser-takeover',
   'browser-wait', 'btw-delete', 'capability-approve', 'capability-delete', 'capability-save',
   'chat', 'connector-connect', 'connector-disconnect', 'connector-retry', 'create-bot',
@@ -39,8 +40,8 @@ export const CAPABILITIES = [
   'earlier', 'efforts', 'exchange', 'exchange-text', 'file-text', 'folder-list', 'folder-pick',
   'folders', 'hello', 'learning-answer', 'mcp-add', 'mcp-list', 'mcp-market', 'mcp-remove',
   'mcp-save', 'mcp-toggle', 'mcp-tools', 'memory-ask', 'memory-forget', 'memory-view',
-  'models', 'private-release', 'provider-add', 'provider-key', 'provider-models',
-  'provider-remove', 'providers', 'remove-agent', 'repo-stars', 'room-continue',
+  'models', 'notices', 'private-release', 'provider-add', 'provider-key', 'provider-models',
+  'provider-remove', 'providers', 'remove-agent', 'repo-stars', 'room-chat', 'room-continue',
   'room-progress', 'run-stats', 'schedule-create', 'schedule-delete', 'schedules',
   'secret-allow', 'secret-cancel', 'secret-delete', 'secret-set', 'secret-update', 'send',
   'set-flags', 'set-main', 'set-prefs', 'side-ask', 'side-cancel', 'side-close', 'side-new',
@@ -66,7 +67,15 @@ export function install(rt) {
   // Models come from DSH, not state.json, so a provider added in Harness settings
   // changes the view without a new revision.
   const modelsKey = () => `${rt.cachedCatalog().map(entry => `${entry.ref}${entry.needsKey ? '!' : ''}${entry.reasoning ? `:${JSON.stringify(entry.reasoning)}` : ''}`).join(',')}|${rt.cachedDefault() ?? ''}`
-  const view = () => ({
+  // A photo's reference: the same bytes always name the same ref, so a client can cache
+  // by it and ask `avatar` only when the ref changes.
+  const imageRef = image => `avatar:${createHash('sha1').update(String(image)).digest('hex').slice(0, 16)}`
+  const refAvatar = avatar => {
+    if (typeof avatar?.image !== 'string') return avatar
+    const { image, ...rest } = avatar
+    return { ...rest, imageRef: imageRef(image) }
+  }
+  const view = (options = {}) => ({
     revision: state.revision,
     workspaceId: state.workspaceId ?? null,
     // `mainBotId` is the first Main Bot, which the sidebar shows as its tile.
@@ -75,7 +84,11 @@ export function install(rt) {
     // `sessionId` is the Bot's current own-chat part; `parts` its earlier ones.
     // `waiting`: the Bot holds its greeting until the user picks its model.
     bots: Object.values(state.bots).map(({ segments, kickoff, ...bot }) => ({
-      ...bot, sessionId: rt.chatOf(bot.id), parts: (segments ?? []).map(segment => segment.sessionId), ...(kickoff ? { waiting: true } : {}),
+      ...bot,
+      // A phone list draws small marks: with `avatars: 'ref'` the photo stays on the
+      // host and only its reference travels, so a list costs no image bytes.
+      ...(options.avatars === 'ref' ? { avatar: refAvatar(bot.avatar) } : {}),
+      sessionId: rt.chatOf(bot.id), parts: (segments ?? []).map(segment => segment.sessionId), ...(kickoff ? { waiting: true } : {}),
     })),
     // `parts`: the members' hidden group Sessions and their earlier segments, for usage.
     rooms: Object.values(state.rooms).map(({ log, seen, lateRounds, relays, sessions, segments, ...room }) => {
@@ -130,7 +143,7 @@ export function install(rt) {
   })
   // What a host that only reads the team may still answer.
   // Updates change the dsh profile, not the team, so a reading host may run them too.
-  const READS = new Set(['hello', 'state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market'])
+  const READS = new Set(['hello', 'avatar', 'state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'room-chat', 'notices', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market'])
 
   function setPrefs(body) {
     if (body.theme !== undefined) {
@@ -210,7 +223,7 @@ export function install(rt) {
           await rt.catalog()
           await rt.loadSecrets()
           if (body.since === state.revision && (body.models === undefined || body.models === modelsKey())) return ok({ revision: state.revision, unchanged: true, ...live() })
-          return ok({ ...view(), ...live() })
+          return ok({ ...view({ avatars: body.avatars }), ...live() })
         case 'models':
           await rt.catalog({ fresh: true })
           return ok({ modelsKey: modelsKey() })
@@ -269,6 +282,17 @@ export function install(rt) {
         case 'chat':
           await rt.load()
           return ok(await rt.chatPage(String(body.botId ?? ''), body.cursor ?? undefined))
+        // A page of a group chat, for a window that draws the room itself. A missing
+        // `roomId` is refused; an unknown one is answered as gone.
+        case 'room-chat': {
+          if (typeof body.roomId !== 'string' || body.roomId === '') return fail('No group chat named', 'bot/invalid')
+          await rt.load()
+          return ok(roomChatPage(rt, body.roomId, body.cursor ?? undefined))
+        }
+        // What a client that was away should hear about. `boot` and `since` are the last
+        // handshake and revision it read; a different host start answers `reset: true`.
+        case 'notices':
+          return ok(noticesView(rt, body))
         // DSH's own whole-log figures for the current part of a Bot's chat, the ones its
         // status bar shows; a window without that bar shows them in the Bot's details.
         case 'run-stats': {
@@ -293,6 +317,15 @@ export function install(rt) {
         case 'update-bot':
           await rt.load()
           return ok(await rt.updateBot(body.id, body))
+        // One Bot's photo, by reference: the list sends `imageRef`, and a client asks
+        // here only when it holds no image for that ref.
+        case 'avatar': {
+          await rt.load()
+          const bot = state.bots[String(body.botId ?? '')]
+          if (bot === undefined) return fail('Unknown Bot', 'bot/not-found')
+          const image = typeof bot.avatar?.image === 'string' ? bot.avatar.image : null
+          return ok({ ref: image === null ? null : imageRef(image), image })
+        }
         // The avatar library: photos the user imported once, kept beside the team.
         case 'avatar-library':
           await rt.load()
