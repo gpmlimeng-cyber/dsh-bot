@@ -22267,6 +22267,32 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     }
     setOpen({ files: Boolean(fileInput()) });
   };
+  const pickFile = (kind) => {
+    const input = fileInput();
+    setOpen(null);
+    if (input === null) {
+      ;
+      (kind === "image" ? imagePick : filePick).current?.click();
+      return;
+    }
+    const accept = kind === "image" ? "image/*" : null;
+    const prior = { accept: input.getAttribute("accept"), hidden: input.hasAttribute("hidden"), style: input.getAttribute("style") };
+    if (accept !== null) input.setAttribute("accept", accept);
+    if (prior.hidden) {
+      input.removeAttribute("hidden");
+      input.setAttribute("style", "position:fixed;left:0;top:0;width:1px;height:1px;opacity:0");
+    }
+    input.click();
+    if (prior.hidden) {
+      input.setAttribute("hidden", "");
+      if (prior.style === null) input.removeAttribute("style");
+      else input.setAttribute("style", prior.style);
+    }
+    if (accept !== null) {
+      if (prior.accept === null) input.removeAttribute("accept");
+      else input.setAttribute("accept", prior.accept);
+    }
+  };
   const filePick = (0, import_react37.useRef)(null);
   const imagePick = (0, import_react37.useRef)(null);
   const handFiles = (event) => {
@@ -22322,8 +22348,8 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
         style: place ?? {},
         "data-leaving": leaving || void 0
       },
-      shown.files ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: () => filePick.current?.click() }, (0, import_react37.createElement)(PaperclipIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Add files"))) : null,
-      shown.files ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: () => imagePick.current?.click() }, (0, import_react37.createElement)(ImageIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Add image"))) : null,
+      shown.files ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: () => pickFile("file") }, (0, import_react37.createElement)(PaperclipIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Add files"))) : null,
+      shown.files ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: () => pickFile("image") }, (0, import_react37.createElement)(ImageIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Add image"))) : null,
       shown.files ? (0, import_react37.createElement)("input", { ref: imagePick, type: "file", accept: "image/*", multiple: true, className: "bt-menu-input", onChange: handFiles }) : null,
       shown.files ? (0, import_react37.createElement)("input", { ref: filePick, type: "file", multiple: true, className: "bt-menu-input", onChange: handFiles }) : null,
       canReference ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onMouseDown: keepComposerFocus, onClick: reference }, (0, import_react37.createElement)(ChatsIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Reference a chat"))) : null,

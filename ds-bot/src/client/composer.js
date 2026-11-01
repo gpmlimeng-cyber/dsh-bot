@@ -143,6 +143,35 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
   // The two upload rows are plain buttons that click their own input: a click on a
   // label or on the input itself loses its default action in this page's capture
   // handlers, while a button's handler still runs (the rows beside them work so).
+  // The shell's own field is marked `hidden`, and a WebView opens no picker for a click
+  // on a hidden control: it is shown off-screen for that click and put back at once. The
+  // files then reach the shell through its own change handler, as its paperclip would.
+  const pickFile = (kind) => {
+    const input = fileInput()
+    setOpen(null)
+    if (input === null) {
+      // No shell field at all: our own input collects the files and hands them over.
+      ;(kind === 'image' ? imagePick : filePick).current?.click()
+      return
+    }
+    const accept = kind === 'image' ? 'image/*' : null
+    const prior = { accept: input.getAttribute('accept'), hidden: input.hasAttribute('hidden'), style: input.getAttribute('style') }
+    if (accept !== null) input.setAttribute('accept', accept)
+    if (prior.hidden) {
+      input.removeAttribute('hidden')
+      input.setAttribute('style', 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0')
+    }
+    input.click()
+    if (prior.hidden) {
+      input.setAttribute('hidden', '')
+      if (prior.style === null) input.removeAttribute('style')
+      else input.setAttribute('style', prior.style)
+    }
+    if (accept !== null) {
+      if (prior.accept === null) input.removeAttribute('accept')
+      else input.setAttribute('accept', prior.accept)
+    }
+  }
   const filePick = useRef(null)
   const imagePick = useRef(null)
   const handFiles = (event) => {
@@ -188,8 +217,8 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       ref: menu, className: 'bt-menu bt-menu-up bt-plus-menu', role: 'menu', 'aria-label': t('Add'),
       style: place ?? {}, 'data-leaving': leaving || undefined,
     },
-    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => filePick.current?.click() }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
-    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => imagePick.current?.click() }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
+    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => pickFile('file') }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
+    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => pickFile('image') }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
     shown.files ? h('input', { ref: imagePick, type: 'file', accept: 'image/*', multiple: true, className: 'bt-menu-input', onChange: handFiles }) : null,
     shown.files ? h('input', { ref: filePick, type: 'file', multiple: true, className: 'bt-menu-input', onChange: handFiles }) : null,
     canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
