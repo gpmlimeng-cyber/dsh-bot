@@ -1276,7 +1276,7 @@ index eee56758..df5ba78f 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index 31f66057..08253384 100644
+index 31f66057..69999fff 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -1,9 +1,11 @@
@@ -1303,7 +1303,22 @@ index 31f66057..08253384 100644
  import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
  import { installLocale, language, t } from './i18n.js'
  import { noteClientError, quietly } from './diagnostics.js'
-@@ -144,6 +149,8 @@ export function apply(ctx) {
+@@ -45,12 +50,14 @@ import { ABOUT_CSS } from './about.js'
+ import { MEMBER_CSS, MemberDock } from './member-status.js'
+ import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-message.js'
+ import { noticeApprovals } from './approval-notices.js'
++import { installSafeTop } from './safe-top.js'
+ import { listedOpener } from './open-listed.js'
+ 
+ export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
+ 
+ export function apply(ctx) {
+   ctx.effect(() => installLocale(ctx.get('locale')), 'ds-bot: interface copy')
++  ctx.effect(() => installSafeTop(), 'ds-bot: system bar height')
+   const roster = createSource(EMPTY_ROSTER)
+   migrateStorage()
+   const unreadStore = sharedMap(STORAGE.unread)
+@@ -144,6 +151,8 @@ export function apply(ctx) {
    const PREFS_KEY = STORAGE.prefs
    let savedPrefs = {}
    try { savedPrefs = JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') ?? {} } catch { savedPrefs = {} }
@@ -1312,7 +1327,7 @@ index 31f66057..08253384 100644
    const writeUnread = (id, value) => {
      const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
      ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
-@@ -326,23 +333,42 @@ export function apply(ctx) {
+@@ -326,23 +335,42 @@ export function apply(ctx) {
        const layout = layoutOf(prefs)
        const width = widthOf(prefs)
        const flatWidth = flatWidthOf(prefs)
@@ -1358,7 +1373,7 @@ index 31f66057..08253384 100644
      const offRegistry = registry.subscribe(render)
      return () => {
        offRoster()
-@@ -352,6 +378,7 @@ export function apply(ctx) {
+@@ -352,6 +380,7 @@ export function apply(ctx) {
        } finally {
          delete document.body.dataset.btMotion
          delete document.body.dataset.btLayout
@@ -1366,7 +1381,7 @@ index 31f66057..08253384 100644
          document.body.style.removeProperty('--bt-msg-w')
          document.body.style.removeProperty('--bt-flat-w')
          style.remove()
-@@ -359,6 +386,12 @@ export function apply(ctx) {
+@@ -359,6 +388,12 @@ export function apply(ctx) {
      }
    }
  
@@ -1379,7 +1394,7 @@ index 31f66057..08253384 100644
    ctx.effect(() => {
      const hub = { registerShape, registerTheme, themes: () => Object.keys(allThemes()), shapes: () => Object.keys(SHAPES) }
      const queued = Array.isArray(window.dshBotQueue) ? window.dshBotQueue : []
-@@ -497,8 +530,150 @@ export function apply(ctx) {
+@@ -497,8 +532,150 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
@@ -1531,7 +1546,7 @@ index 31f66057..08253384 100644
      // The left column's own preference: 'open', 'rail' or 'hidden'. The switch
      // remembers the shown one it hid; a drag sets the open column's width.
      setSidebarPref: (pref) => {
-@@ -884,6 +1059,10 @@ export function apply(ctx) {
+@@ -884,6 +1061,10 @@ export function apply(ctx) {
      () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
      () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
      () => shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
@@ -1542,7 +1557,7 @@ index 31f66057..08253384 100644
    ]
    const installConversation = () => [
      () => installCompiledStyles(CONVERSATION_CSS, 'conversation'),
-@@ -1016,7 +1195,7 @@ export function apply(ctx) {
+@@ -1016,7 +1197,7 @@ export function apply(ctx) {
        } catch {
          declared = false
        }
@@ -1551,7 +1566,7 @@ index 31f66057..08253384 100644
        if (!declared) {
          // The slot itself is not declared yet; keep watching for a while.
          if (verifyAttempts < 20) {
-@@ -1031,8 +1210,297 @@ export function apply(ctx) {
+@@ -1031,8 +1212,297 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -1849,7 +1864,7 @@ index 31f66057..08253384 100644
        clearTimeout(verifyTimer)
        verifyAttempts = 0
        verifyTimer = setTimeout(verifySidebar, 250)
-@@ -1043,6 +1511,13 @@ export function apply(ctx) {
+@@ -1043,6 +1513,13 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
@@ -3928,6 +3943,43 @@ index 00000000..0328db2f
 +    className: 'bt-provider-mark', width: size, height: size, viewBox: mark.viewBox,
 +    fill: mark.fill, 'aria-hidden': true, 'data-provider': mark.id,
 +  }, mark.paths.map((d, index) => h('path', { key: index, d })))
++}
+diff --git a/ds-bot/src/client/safe-top.js b/ds-bot/src/client/safe-top.js
+new file mode 100644
+index 00000000..e87b754e
+--- /dev/null
++++ b/ds-bot/src/client/safe-top.js
+@@ -0,0 +1,31 @@
++// How tall the system bar is over the page.
++//
++// The page is edge to edge (the layout sets viewport-fit=cover), but this WebView
++// reports `env(safe-area-inset-top)` as 0, so a fixed layer that starts at the viewport
++// top lands inside the status bar. The one element that is already placed below it is the
++// host's own conversation header, so its top edge is measured and published as
++// `--bt-safe-top`; layers that must clear the bar read that variable.
++const VARIABLE = '--bt-safe-top'
++
++function measure() {
++  const root = document.documentElement
++  const header = document.querySelector('[data-phase] header') ?? document.querySelector('header[data-window-drag]')
++  const top = header?.getBoundingClientRect?.().top
++  if (typeof top === 'number' && top > 0) root.style.setProperty(VARIABLE, `${Math.round(top)}px`)
++  else root.style.removeProperty(VARIABLE)
++}
++
++export function installSafeTop() {
++  if (typeof document === 'undefined') return undefined
++  measure()
++  const observer = new MutationObserver(() => measure())
++  observer.observe(document.body, { childList: true, subtree: true })
++  window.addEventListener('resize', measure)
++  window.addEventListener('orientationchange', measure)
++  return () => {
++    observer.disconnect()
++    window.removeEventListener('resize', measure)
++    window.removeEventListener('orientationchange', measure)
++    document.documentElement.style.removeProperty(VARIABLE)
++  }
 +}
 diff --git a/ds-bot/src/client/settings.js b/ds-bot/src/client/settings.js
 index 4428659d..19588586 100644
@@ -11004,7 +11056,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..293b113d 100644
+index eac6ea54..cfb72db2 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -11045,7 +11097,7 @@ index eac6ea54..293b113d 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,49 +141,441 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,49 +141,448 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -11508,16 +11560,23 @@ index eac6ea54..293b113d 100644
 +/* The phone layout gives the session header's own cell no width, so its content used to
 +   overflow into a second row under the chrome. Fixed to the frame's top it shares the
 +   chrome's row instead: title in the middle, buttons at the edges. */
-+/* The page is edge to edge (viewport-fit=cover), so the frame's top is inside the status
-+   bar: the row starts below the safe area, on the same line the phone layout's own toggle
-+   is drawn on (safe inset + 12px). */
-+html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 12px);height:44px;margin:0;z-index:20}
++/* The row takes the phone layout's measured header band and centers in it, which is the
++   line its own drawer toggle is drawn on; pill and menu button match that toggle's 28px. */
++html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 11px);height:36px;margin:0;z-index:20;align-items:center}
++/* The layout's own header button floats: a solid surface, a hairline ring and the soft
++   drop shadow. The pill and the session menu borrow that surface. */
++html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03),var(--bt-float-shadow);color:var(--bt-ink)}
++html:has([data-mobile-nav="frame"]) .bt-pill:hover,html:has([data-mobile-nav="frame"]) .bt-pill:active{background:var(--bt-float-hover)}
++html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{border:0;background:var(--bt-float-surface);box-shadow:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03),var(--bt-float-shadow)}
++html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn:hover{background:var(--bt-float-hover)}
++html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{top:0;bottom:0;right:10px;align-items:center}
++html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:28px;height:28px;align-self:center}
 +html:has([data-mobile-nav="frame"]):has([data-mobile-nav="toggle"]) .bt-head-btn{display:none}
 +.bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:36px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 72%,transparent);border:0;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -201,7 +599,7 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
+@@ -201,7 +606,7 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
  @media (prefers-reduced-motion:reduce){.bt-pill,.bt-pill-go,.bt-pill-go svg{transition:none!important}.bt-pill-go{filter:none}.bt-pill:active{transform:none}}
  
  /* The width settings: the share of the column a bubble may take, and the flat text. */
@@ -11526,7 +11585,7 @@ index eac6ea54..293b113d 100644
  .bt-astack{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0}
  .bt-bubble{max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px));background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 10px);box-sizing:border-box;overflow-wrap:anywhere;text-wrap:pretty;text-autospace:normal}
  .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:6px}
-@@ -344,6 +742,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -344,6 +749,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -11553,7 +11612,20 @@ index eac6ea54..293b113d 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -368,7 +786,6 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
+@@ -354,6 +779,12 @@ button.bt-q-opt:active{background:var(--bt-active)}
+    window. Where the chrome top already clears the title bar the band is 0. */
+ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel){--bt-caption-band:calc(var(--dsh-windows-titlebar-height,0px) - var(--dsh-frame-chrome-top,0px));padding-top:var(--bt-caption-band)}
+ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::before{content:"";position:absolute;top:0;left:0;right:0;height:var(--bt-caption-band);-webkit-app-region:drag}
++/* A phone pane hangs from the line the conversation header ends on: the phone layout
++   measures that band as --mobile-nav-header-h, which already sits below the system bars
++   (env(safe-area-inset-top) reads 0 in this WebView, so it cannot be used alone). */
++html:has([data-mobile-nav="frame"]) .bt-panel{top:var(--bt-safe-top, 0px)}
++html:has([data-mobile-nav="frame"]) .bt-drawer-top .bt-round{width:28px;height:28px}
++html:has([data-mobile-nav="frame"]) .bt-drawer-top .bt-round svg{width:16px;height:16px}
+ .bt-pane{position:fixed;top:var(--dsh-frame-chrome-top,0px);right:0;bottom:0;z-index:45;pointer-events:auto;background:var(--bt-main);color:var(--bt-ink);display:flex;font-family:var(--bt-font)}
+ .bt-dialog{flex:1;display:flex;flex-direction:column;min-width:0}
+ .bt-dialog .bt-head{height:62px}
+@@ -368,7 +799,6 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
  .bt-exchange .bt-tools{display:none}
  .bt-fold{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin-top:4px;white-space:normal}
  .bt-fold-note{font-size:12px;line-height:16px;color:var(--bt-ink-3)}
@@ -11561,7 +11633,7 @@ index eac6ea54..293b113d 100644
  .bt-ubody .bt-fold .bt-more,.bt-ububble .bt-fold .bt-more,.bt-ubody .bt-fold-note,.bt-ububble .bt-fold-note{color:inherit;opacity:.7}
  .bt-ubody .bt-fold .bt-more:hover,.bt-ububble .bt-fold .bt-more:hover{opacity:1}
  .bt-exchange .bt-dialog-foot{position:absolute;left:0;right:0;bottom:0;height:76px;box-sizing:border-box;align-items:flex-end;padding:0 0 28px;background:var(--bt-main);z-index:3;animation:bt-foot-in .3s cubic-bezier(.22,1,.36,1) .3s both}
-@@ -571,7 +988,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -571,7 +1001,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -11572,7 +11644,7 @@ index eac6ea54..293b113d 100644
  /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
     collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -587,6 +1006,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+@@ -587,6 +1019,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
  /* Elsewhere the switch shows only while the column is hidden, where the column's
     own top row had it. */
  html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
@@ -11581,7 +11653,7 @@ index eac6ea54..293b113d 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -626,7 +1047,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -626,7 +1060,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -11591,7 +11663,7 @@ index eac6ea54..293b113d 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -676,6 +1098,16 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
+@@ -676,6 +1111,16 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
  .bt-menu button:hover{background:var(--bt-hover)}
  .bt-menu button svg{flex:none;width:16px;height:16px;margin:0 1px}
  .bt-menu .bt-danger{color:var(--bt-danger)}
@@ -11608,7 +11680,7 @@ index eac6ea54..293b113d 100644
  .bt-menu-sep{height:.5px;flex:none;background:var(--bt-line-2);margin:4px 8px}
  .bt-menu-up{--bt-origin:bottom left;animation-name:bt-pop-lift,bt-veil-in}
  .bt-menu[data-leaving]{pointer-events:none;animation:bt-pop-out .12s cubic-bezier(.4,0,1,1) forwards}
-@@ -921,6 +1353,190 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -921,6 +1366,192 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -11644,8 +11716,10 @@ index eac6ea54..293b113d 100644
 +   beside it keeps its space. */
 +.bt-head-btn::after{content:'';position:absolute;inset:-4px 0 -4px -4px}
 +/* The phone layout mounts its own drawer toggle in the frame's leading cell, so the
-+   self-drawn one would be a second hamburger beside it. */
-+html:has([data-mobile-nav="frame"]) .bt-head-btn{display:none}
++   self-drawn one would be a second hamburger beside it. Only that direct button is
++   dropped: the session menu inside .bt-pmenu shares the class and must stay. */
++html:has([data-mobile-nav="frame"]) .bt-head-btn{display:flex}
++html:has([data-mobile-nav="frame"]) .bt-head>.bt-head-btn{display:none}
 +/* The session menu sits at the mirror position. The popover is the panel menu's own, which
 +   already opens right-aligned below its button. */
 +.bt-head>.bt-pmenu{position:absolute;right:0;top:2px;display:none}
@@ -11799,7 +11873,7 @@ index eac6ea54..293b113d 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1636,104 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1651,104 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -11928,7 +12002,7 @@ index eac6ea54..293b113d 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1081,7 +1752,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1081,7 +1767,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
  body[data-bt-room] .bt-voice{display:none!important}
@@ -11937,7 +12011,7 @@ index eac6ea54..293b113d 100644
  .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
  [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
  .bt-q{order:1}
-@@ -1112,17 +1783,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1798,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -11964,7 +12038,7 @@ index eac6ea54..293b113d 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1803,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1818,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -11973,7 +12047,7 @@ index eac6ea54..293b113d 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1844,19 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1859,19 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
