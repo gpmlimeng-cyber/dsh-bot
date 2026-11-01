@@ -3476,7 +3476,7 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
 /* A phone pane hangs from the line the conversation header ends on: the phone layout
    measures that band as --mobile-nav-header-h, which already sits below the system bars
    (env(safe-area-inset-top) reads 0 in this WebView, so it cannot be used alone). */
-html:has([data-mobile-nav="frame"]) .bt-pane{top:var(--mobile-nav-header-h, 67px);border-radius:16px 16px 0 0}
+html:has([data-mobile-nav="frame"]) .bt-panel{top:var(--bt-safe-top, 0px)}
 html:has([data-mobile-nav="frame"]) .bt-drawer-top .bt-round{width:28px;height:28px}
 html:has([data-mobile-nav="frame"]) .bt-drawer-top .bt-round svg{width:16px;height:16px}
 .bt-pane{position:fixed;top:var(--dsh-frame-chrome-top,0px);right:0;bottom:0;z-index:45;pointer-events:auto;background:var(--bt-main);color:var(--bt-ink);display:flex;font-family:var(--bt-font)}
@@ -6531,12 +6531,12 @@ function useWidth(box, initial) {
   (0, import_react8.useLayoutEffect)(() => {
     const node = box.current;
     if (!node || typeof ResizeObserver !== "function") return void 0;
-    const measure = () => {
+    const measure2 = () => {
       const next = Math.round(node.clientWidth);
       if (next > 0) setWidth(next);
     };
-    measure();
-    const observer = new ResizeObserver(measure);
+    measure2();
+    const observer = new ResizeObserver(measure2);
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
@@ -8969,7 +8969,7 @@ function ThinkingRow({ text, live, at, ms, viewKey }) {
   const remember = (patch) => {
     if (viewKey !== void 0) rowViews.set(viewKey, { ...rowViews.get(viewKey), ...patch });
   };
-  const measure = () => {
+  const measure2 = () => {
     const el = box.current;
     atEnd.current = el.scrollHeight - el.scrollTop - el.clientHeight < 2;
     remember({ atEnd: atEnd.current, top: el.scrollTop });
@@ -8989,7 +8989,7 @@ function ThinkingRow({ text, live, at, ms, viewKey }) {
     view.current = void 0;
     if (atEnd.current) el.scrollTop = el.scrollHeight;
     else if (restore?.top !== void 0) el.scrollTop = restore.top;
-    measure();
+    measure2();
   }, [text, open]);
   const title = live ? t("Thinking") : t("Thought it through");
   return (0, import_react16.createElement)(
@@ -9002,7 +9002,7 @@ function ThinkingRow({ text, live, at, ms, viewKey }) {
       live && at !== void 0 ? (0, import_react16.createElement)(Elapsed, { at, className: "bt-think-time" }) : null,
       !live && ms !== void 0 ? (0, import_react16.createElement)("span", { className: "bt-think-time" }, `· ${elapsedLabel(Math.max(1e3, ms))}`) : null
     ),
-    (0, import_react16.createElement)("div", { ref: box, className: "bt-think-text", role: "region", "aria-label": title, tabIndex: 0, "data-fade": fade, onScroll: measure }, text)
+    (0, import_react16.createElement)("div", { ref: box, className: "bt-think-text", role: "region", "aria-label": title, tabIndex: 0, "data-fade": fade, onScroll: measure2 }, text)
   );
 }
 function useFileMentions({ node, openFile, fileMentions, useTurnData }) {
@@ -15596,7 +15596,7 @@ function Discover({ actions }) {
     const line = row.current;
     const full2 = mirror.current;
     if (!line || !full2) return void 0;
-    const measure = () => {
+    const measure2 = () => {
       const widths = [...full2.querySelectorAll(".bt-mk-pill")].map((node) => node.getBoundingClientRect().width);
       const room2 = line.clientWidth - 78;
       let used = 0;
@@ -15610,8 +15610,8 @@ function Discover({ actions }) {
       }
       setFits(Math.max(1, count));
     };
-    measure();
-    const observer = new ResizeObserver(measure);
+    measure2();
+    const observer = new ResizeObserver(measure2);
     observer.observe(line);
     return () => observer.disconnect();
   }, [pills]);
@@ -17348,7 +17348,7 @@ function installFrameWatch(frame) {
       return state.viewport === next.viewport && state.collapsedWidth === next.collapsedWidth && state.collapsed === next.collapsed ? state : next;
     });
   };
-  const measure = () => {
+  const measure2 = () => {
     for (const selector of ['[class*="_sidebarCol"]', '[class*="_centerCol"]']) {
       for (const column of document.querySelectorAll(selector)) {
         if (!watched.has(column)) {
@@ -17362,10 +17362,10 @@ function installFrameWatch(frame) {
   const schedule = () => {
     if (raf === 0) raf = requestAnimationFrame(() => {
       raf = 0;
-      measure();
+      measure2();
     });
   };
-  measure();
+  measure2();
   const mutations = new MutationObserver(schedule);
   mutations.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-sidebar-collapsed", "data-animating"] });
   window.addEventListener("resize", schedule);
@@ -21221,17 +21221,17 @@ function BrowserView({ bot, tabId, leaving, landed, actions, useBrowserPages, ho
       return void 0;
     }
     let raf = 0;
-    const measure = () => {
+    const measure2 = () => {
       cancelAnimationFrame(raf);
       raf = 0;
       const box = element.getBoundingClientRect();
       void actions.browserShow(tabId, showGuest ? { left: box.left, top: box.top, width: box.width, height: box.height } : null);
     };
     const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(measure);
+      if (!raf) raf = requestAnimationFrame(measure2);
     };
-    measure();
-    const observer = new ResizeObserver(measure);
+    measure2();
+    const observer = new ResizeObserver(measure2);
     observer.observe(element);
     window.addEventListener("resize", schedule);
     return () => {
@@ -22022,7 +22022,7 @@ function useTranscriptView() {
     let frame = 0;
     let watched = null;
     const observer = new MutationObserver(() => schedule());
-    const measure = () => {
+    const measure2 = () => {
       frame = 0;
       const scroller = document.querySelector("[data-conversation-scroll]");
       if (scroller !== watched) {
@@ -22053,7 +22053,7 @@ function useTranscriptView() {
       setView((prev) => prev && Object.keys(next).every((key) => prev[key] === next[key]) ? prev : next);
     };
     const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(measure);
+      if (!frame) frame = requestAnimationFrame(measure2);
     };
     document.addEventListener("scroll", schedule, true);
     window.addEventListener("resize", schedule);
@@ -28940,6 +28940,30 @@ function noticeApprovals({ work, roster, shownSession, openSession, since = Date
   return work.subscribe(notify);
 }
 
+// src/client/safe-top.js
+var VARIABLE = "--bt-safe-top";
+function measure() {
+  const root = document.documentElement;
+  const header = document.querySelector("[data-phase] header") ?? document.querySelector("header[data-window-drag]");
+  const top = header?.getBoundingClientRect?.().top;
+  if (typeof top === "number" && top > 0) root.style.setProperty(VARIABLE, `${Math.round(top)}px`);
+  else root.style.removeProperty(VARIABLE);
+}
+function installSafeTop() {
+  if (typeof document === "undefined") return void 0;
+  measure();
+  const observer = new MutationObserver(() => measure());
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.addEventListener("resize", measure);
+  window.addEventListener("orientationchange", measure);
+  return () => {
+    observer.disconnect();
+    window.removeEventListener("resize", measure);
+    window.removeEventListener("orientationchange", measure);
+    document.documentElement.style.removeProperty(VARIABLE);
+  };
+}
+
 // src/client/open-listed.js
 function listedOpener({ list, open, refresh, current }) {
   let drop = () => {
@@ -28976,6 +29000,7 @@ function listedOpener({ list, open, refresh, current }) {
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
   ctx.effect(() => installLocale(ctx.get("locale")), "ds-bot: interface copy");
+  ctx.effect(() => installSafeTop(), "ds-bot: system bar height");
   const roster = createSource(EMPTY_ROSTER);
   migrateStorage();
   const unreadStore = sharedMap(STORAGE.unread);

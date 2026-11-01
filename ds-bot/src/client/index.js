@@ -50,12 +50,14 @@ import { ABOUT_CSS } from './about.js'
 import { MEMBER_CSS, MemberDock } from './member-status.js'
 import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-message.js'
 import { noticeApprovals } from './approval-notices.js'
+import { installSafeTop } from './safe-top.js'
 import { listedOpener } from './open-listed.js'
 
 export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
 
 export function apply(ctx) {
   ctx.effect(() => installLocale(ctx.get('locale')), 'ds-bot: interface copy')
+  ctx.effect(() => installSafeTop(), 'ds-bot: system bar height')
   const roster = createSource(EMPTY_ROSTER)
   migrateStorage()
   const unreadStore = sharedMap(STORAGE.unread)
