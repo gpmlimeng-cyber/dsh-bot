@@ -22246,7 +22246,7 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
   }, [open]);
   const target = roster.byId?.[sessionId]?.id ?? roster.roomsById?.[sessionId]?.id;
   if (sessionId === void 0) return null;
-  const fileInput = () => button.current?.closest("[data-composer-card]")?.querySelector("input[type=file]");
+  const fileInput = () => button.current?.closest?.("[data-composer-card]")?.querySelector("input[type=file]") ?? document.querySelector?.("[data-composer-card] input[type=file]") ?? null;
   const toggle = () => {
     if (open) {
       setOpen(null);
@@ -22255,13 +22255,16 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     setOpen({ files: Boolean(fileInput()) });
   };
   const attach = () => {
+    const input = fileInput();
+    input?.click();
     setOpen(null);
-    fileInput()?.click();
   };
   const attachImage = () => {
-    setOpen(null);
     const input = fileInput();
-    if (!input) return;
+    if (!input) {
+      setOpen(null);
+      return;
+    }
     const previous = input.getAttribute("accept");
     input.setAttribute("accept", "image/*");
     const restore = () => {
@@ -22271,6 +22274,7 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     input.addEventListener("change", restore, { once: true });
     window.addEventListener("focus", () => setTimeout(restore, 500), { once: true });
     input.click();
+    setOpen(null);
   };
   const schedule = () => {
     setOpen(null);
