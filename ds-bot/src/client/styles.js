@@ -1095,7 +1095,9 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
 .bt-menu label.bt-menu-file svg{flex:none;width:16px;height:16px;margin:0 1px}
 /* The input itself covers the row, so the tap lands on the control the platform asks
    for a picker; no forwarding through the label and no programmatic click. */
-.bt-menu-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+/* Kept out of the way of the rows; the row's button clicks it, and the platform opens
+   the picker for that click. */
+.bt-menu-input{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
 .bt-menu-sep{height:.5px;flex:none;background:var(--bt-line-2);margin:4px 8px}
 .bt-menu-up{--bt-origin:bottom left;animation-name:bt-pop-lift,bt-veil-in}
 .bt-menu[data-leaving]{pointer-events:none;animation:bt-pop-out .12s cubic-bezier(.4,0,1,1) forwards}

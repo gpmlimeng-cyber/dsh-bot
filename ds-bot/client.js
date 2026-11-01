@@ -3789,7 +3789,9 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
 .bt-menu label.bt-menu-file svg{flex:none;width:16px;height:16px;margin:0 1px}
 /* The input itself covers the row, so the tap lands on the control the platform asks
    for a picker; no forwarding through the label and no programmatic click. */
-.bt-menu-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+/* Kept out of the way of the rows; the row's button clicks it, and the platform opens
+   the picker for that click. */
+.bt-menu-input{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
 .bt-menu-sep{height:.5px;flex:none;background:var(--bt-line-2);margin:4px 8px}
 .bt-menu-up{--bt-origin:bottom left;animation-name:bt-pop-lift,bt-veil-in}
 .bt-menu[data-leaving]{pointer-events:none;animation:bt-pop-out .12s cubic-bezier(.4,0,1,1) forwards}
@@ -22264,6 +22266,8 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     }
     setOpen({ files: Boolean(fileInput()) });
   };
+  const filePick = (0, import_react37.useRef)(null);
+  const imagePick = (0, import_react37.useRef)(null);
   const handFiles = (event) => {
     const picked = event.target.files;
     const input = fileInput();
@@ -22279,51 +22283,6 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       input.click();
     }
   };
-  const appPick = () => {
-    const bridge = typeof window === "undefined" ? void 0 : window.DSHA;
-    return typeof bridge?.pickFile === "function" ? bridge.pickFile.bind(bridge) : void 0;
-  };
-  const pickWithBridge = async (kind, accept, event) => {
-    const pick2 = appPick();
-    if (pick2 === void 0) return;
-    event.preventDefault();
-    const target2 = fileInput();
-    setOpen(null);
-    let picked;
-    try {
-      picked = await pick2({ accept, multiple: true, title: t(kind === "image" ? "Add image" : "Add files") });
-    } catch {
-      picked = null;
-    }
-    const files = Array.isArray(picked) ? picked.filter((item) => typeof File !== "undefined" && item instanceof File) : [];
-    if (target2 === null || files.length === 0) return;
-    try {
-      const transfer = new DataTransfer();
-      for (const file of files) transfer.items.add(file);
-      target2.files = transfer.files;
-      target2.dispatchEvent(new Event("change", { bubbles: true }));
-    } catch {
-      target2.click();
-    }
-  };
-  const uploadRow = (kind, icon2, label) => (0, import_react37.createElement)(
-    "label",
-    {
-      className: "bt-menu-file",
-      role: "menuitem",
-      onClick: (event) => pickWithBridge(kind, kind === "image" ? ["image/*"] : [], event)
-    },
-    (0, import_react37.createElement)("input", {
-      type: "file",
-      multiple: true,
-      tabIndex: -1,
-      className: "bt-menu-input",
-      onChange: handFiles,
-      ...kind === "image" ? { accept: "image/*" } : {}
-    }),
-    icon2,
-    (0, import_react37.createElement)("span", { className: "bt-menu-label" }, label)
-  );
   const schedule = () => {
     setOpen(null);
     actions.openSettings("schedules", target);
@@ -22362,8 +22321,10 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
         style: place ?? {},
         "data-leaving": leaving || void 0
       },
-      shown.files ? uploadRow("file", (0, import_react37.createElement)(PaperclipIcon), t("Add files")) : null,
-      shown.files ? uploadRow("image", (0, import_react37.createElement)(ImageIcon), t("Add image")) : null,
+      shown.files ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: () => filePick.current?.click() }, (0, import_react37.createElement)(PaperclipIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Add files"))) : null,
+      shown.files ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: () => imagePick.current?.click() }, (0, import_react37.createElement)(ImageIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Add image"))) : null,
+      shown.files ? (0, import_react37.createElement)("input", { ref: filePick, type: "file", multiple: true, tabIndex: -1, className: "bt-menu-input", onChange: handFiles }) : null,
+      shown.files ? (0, import_react37.createElement)("input", { ref: imagePick, type: "file", accept: "image/*", multiple: true, tabIndex: -1, className: "bt-menu-input", onChange: handFiles }) : null,
       canReference ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onMouseDown: keepComposerFocus, onClick: reference }, (0, import_react37.createElement)(ChatsIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Reference a chat"))) : null,
       target !== void 0 ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: schedule }, (0, import_react37.createElement)(ClockIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Scheduled task"))) : null
     ), document.body) : null

@@ -137,9 +137,11 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     if (open) { setOpen(null); return }
     setOpen({ files: Boolean(fileInput()) })
   }
-  // Both upload rows are labels over their own input. A WebView ignores a programmatic
-  // click on the shell's hidden input, but it opens the picker for a labelled one; the
-  // files still go into the shell's input, so validation, limits and drafts stay its own.
+  // The two upload rows are plain buttons that click their own input: a click on a
+  // label or on the input itself loses its default action in this page's capture
+  // handlers, while a button's handler still runs (the rows beside them work so).
+  const filePick = useRef(null)
+  const imagePick = useRef(null)
   const handFiles = (event) => {
     const picked = event.target.files
     const input = fileInput()
@@ -156,38 +158,6 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       input.click()
     }
   }
-  // The App's own picker bridge comes first: inside its WebView a file input opens no
-  // picker at all. Without the bridge the row's own input is the browser's path.
-  const appPick = () => {
-    const bridge = typeof window === 'undefined' ? undefined : window.DSHA
-    return typeof bridge?.pickFile === 'function' ? bridge.pickFile.bind(bridge) : undefined
-  }
-  const pickWithBridge = async (kind, accept, event) => {
-    const pick = appPick()
-    if (pick === undefined) return
-    event.preventDefault()
-    const target = fileInput()
-    setOpen(null)
-    let picked
-    try { picked = await pick({ accept, multiple: true, title: t(kind === 'image' ? 'Add image' : 'Add files') }) } catch { picked = null }
-    const files = Array.isArray(picked) ? picked.filter(item => typeof File !== 'undefined' && item instanceof File) : []
-    if (target === null || files.length === 0) return
-    try {
-      const transfer = new DataTransfer()
-      for (const file of files) transfer.items.add(file)
-      target.files = transfer.files
-      target.dispatchEvent(new Event('change', { bubbles: true }))
-    } catch { target.click() }
-  }
-  const uploadRow = (kind, icon, label) => h('label', {
-    className: 'bt-menu-file', role: 'menuitem',
-    onClick: event => pickWithBridge(kind, kind === 'image' ? ['image/*'] : [], event),
-  },
-    h('input', {
-      type: 'file', multiple: true, tabIndex: -1, className: 'bt-menu-input', onChange: handFiles,
-      ...(kind === 'image' ? { accept: 'image/*' } : {}),
-    }),
-    icon, h('span', { className: 'bt-menu-label' }, label))
   const schedule = () => {
     setOpen(null)
     actions.openSettings('schedules', target)
@@ -215,8 +185,10 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       ref: menu, className: 'bt-menu bt-menu-up bt-plus-menu', role: 'menu', 'aria-label': t('Add'),
       style: place ?? {}, 'data-leaving': leaving || undefined,
     },
-    shown.files ? uploadRow('file', h(PaperclipIcon), t('Add files')) : null,
-    shown.files ? uploadRow('image', h(ImageIcon), t('Add image')) : null,
+    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => filePick.current?.click() }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
+    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => imagePick.current?.click() }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
+    shown.files ? h('input', { ref: filePick, type: 'file', multiple: true, tabIndex: -1, className: 'bt-menu-input', onChange: handFiles }) : null,
+    shown.files ? h('input', { ref: imagePick, type: 'file', accept: 'image/*', multiple: true, tabIndex: -1, className: 'bt-menu-input', onChange: handFiles }) : null,
     canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
     target !== undefined ? h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task'))) : null), document.body) : null)
 }
