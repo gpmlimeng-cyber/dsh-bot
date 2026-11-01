@@ -22,10 +22,20 @@ const TEAM_RULES = [
   '- web_search results say which search backend answered. If web_search fails, never guess URLs or present pages you remember as search results: use a browser tool if you have one, otherwise tell the user that search is unavailable and the reason it gave.',
   '- Your conversations are long-lived. When one grows long, either its older messages are condensed in place into a summary you wrote (a "[Checkpoint N]" message), or it moves on to a fresh part that opens with a handoff note you wrote and your latest messages (a "[Handoff · part N]" message). What leaves your working context stays saved. When you need the exact earlier wording or a detail the summary or note does not show in full (a full path, a figure, every item of a complete list or a final summary), call read_own_chat with words to look for, or with part N to read the note that closed an earlier part; never fill such a detail in from memory. Each line it returns starts with an anchor such as [part 2 #1234 · 10-08 14:22]; pass the anchor as around to read what was said around it.',
   '- Reply in the user\'s language.',
-  '- In a group chat the first thing you write is under about 100 characters: the conclusion, or the question that needs a decision, in plain words a colleague would say out loud. No file paths, line numbers, commit hashes or option names in that line. Put a blank line after it, then the detail, which folds away under the conclusion; a long detail may also go into an attached file.',
-  '- When what you say depends on something said earlier — a decision, a path, a number — look it up (read_own_chat, read_group_chat, file-text) rather than filling it in from memory, and say plainly when you could not find it.',
-  '- A command that may take more than a few seconds goes to the background (bash with run_in_background: true): the harness wakes you with a completion notice when it settles, so keep working or keep talking meanwhile and read the result with job_output instead of sitting on a long foreground call.',
-  '- You may prepare ahead and you may not change ahead: read, list, inspect and look something up on your own guess — it costs one extra read — but an edit, a write, a message, a round or a background job waits until someone asks for it, because once made none of those can be dropped.',
+].join('\n')
+
+// The SuperAgent page switches these four rules off. A rule left out changes the prompt's
+// prefix, so its cache misses once; with the switches unchanged the text is byte-stable.
+const OPTIONAL_RULES = [
+  ['saConclude', '- In a group chat the first thing you write is under about 100 characters: the conclusion, or the question that needs a decision, in plain words a colleague would say out loud. No file paths, line numbers, commit hashes or option names in that line. Put a blank line after it, then the detail, which folds away under the conclusion; a long detail may also go into an attached file.',],
+  ['saLookup', '- When what you say depends on something said earlier — a decision, a path, a number — look it up (read_own_chat, read_group_chat, file-text) rather than filling it in from memory, and say plainly when you could not find it.',],
+  ['saBackground', '- A command that may take more than a few seconds goes to the background (bash with run_in_background: true): the harness wakes you with a completion notice when it settles, so keep working or keep talking meanwhile and read the result with job_output instead of sitting on a long foreground call.',],
+  ['saPrepare', '- You may prepare ahead and you may not change ahead: read, list, inspect and look something up on your own guess — it costs one extra read — but an edit, a write, a message, a round or a background job waits until someone asks for it, because once made none of those can be dropped.',],
+]
+
+export const teamRules = (prefs) => [
+  TEAM_RULES,
+  ...OPTIONAL_RULES.filter(([key]) => prefs?.[key] !== false).map(([, line]) => line),
 ].join('\n')
 
 const MAIN_RULES = [
@@ -46,6 +56,7 @@ export function install(rt) {
 
   // A group Session renders exactly its Bot's text, so both share one cached prefix.
   const promptFor = (id) => {
+    const rules = teamRules(rt.state?.prefs)
     const self = rt.selfOf(id)
     const bot = rt.botOf(self)
     if (bot !== undefined) {
@@ -54,7 +65,7 @@ export function install(rt) {
         `You are ${bot.name}, a Bot on the user's team in DS Bot.${bot.role ? ` Your role: ${bot.role}.` : ''}`,
         bot.instructions ? `\n${bot.instructions}` : '',
         '',
-        rt.isMain(self) ? `${MAIN_RULES}\n\n${TEAM_RULES}` : TEAM_RULES,
+        rt.isMain(self) ? `${MAIN_RULES}\n\n${rules}` : rules,
       ].join('\n')
     }
     const room = rt.roomOf(id)

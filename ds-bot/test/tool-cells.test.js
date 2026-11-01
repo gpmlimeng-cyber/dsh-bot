@@ -909,3 +909,18 @@ test('a group reply folds at its own mark, or past a long enough line', () => {
   assert.equal(foldPreview('z'.repeat(900), at, true, preview), null, '900 characters stay whole')
   assert.equal(foldPreview('结论。\n\n很短', at, true, preview, false, true), null, 'a mark with one short line after it does not fold')
 })
+
+// The SuperAgent page decides the group fold: off reads the whole reply, and a threshold
+// out of range reads as the default rather than folding a chat shut.
+test('the SuperAgent page decides whether and where a group reply folds', () => {
+  const folded = (text, prefs) => findAll(
+    show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text, time: 1 }] } }), { sessionId: 'room', roster: team({ prefs }) }),
+    node => node.props?.className === 'bt-more',
+  ).length
+  assert.equal(folded('z'.repeat(800), { saFold: false }), 0, 'off reads the whole reply')
+  assert.equal(folded(`结论。\n\n${'d'.repeat(800)}`, { saFold: false }), 0, 'off also stops the fold at a mark')
+  assert.equal(folded('z'.repeat(800), {}), 0, 'the default threshold is 1000 characters')
+  assert.equal(folded('z'.repeat(1100), {}), 1)
+  assert.deepEqual([400, 600].map(chars => folded('z'.repeat(chars), { saFoldAt: { chars: 500, lines: 20 } })), [0, 1], 'a saved threshold decides')
+  assert.equal(folded('z'.repeat(1100), { saFoldAt: { chars: 200, lines: 20 } }), 1, 'an out-of-range threshold falls back to the default')
+})

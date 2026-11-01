@@ -169,4 +169,16 @@ export const skinOf = (prefs, { phone = false } = {}) => (SKIN_CHOICES[prefs?.sk
 export const layoutOf = prefs => (prefs?.layout === 'flat' ? 'flat' : 'bubble')
 export const thinkingShown = prefs => prefs?.thinking === true
 export const widthOf = prefs => percent(prefs?.width, 90)
+// SuperAgent switches are on unless someone wrote `false`: a missing key, an older state
+// or a deleted one all read as on, which is the default the settings page shows.
+export const saOn = (prefs, key) => prefs?.[key] !== false
+// A group line folds past this, unless the page set another threshold in range.
+export const SA_FOLD_AT = { chars: 1000, lines: 20 }
+export const foldAtOf = (prefs) => {
+  const at = prefs?.saFoldAt
+  const fine = Number.isInteger(at?.chars) && at.chars >= 300 && at.chars <= 20_000
+    && Number.isInteger(at?.lines) && at.lines >= 8 && at.lines <= 500
+  return fine ? { chars: at.chars, lines: at.lines } : SA_FOLD_AT
+}
+
 export const flatWidthOf = prefs => percent(prefs?.flatWidth, 100)

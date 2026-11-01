@@ -160,6 +160,22 @@ export function install(rt) {
       else if (body.superagent === false) state.prefs.superagent = false
       else if (body.superagent === null) delete state.prefs.superagent
     }
+    // The SuperAgent page's behaviour switches are on unless someone wrote `false`, so a
+    // deleted key means on again; `null` resets a key to that default.
+    for (const key of ['saFold', 'saConclude', 'saLookup', 'saBackground', 'saPrepare']) {
+      if (body[key] === true) state.prefs[key] = true
+      else if (body[key] === false) state.prefs[key] = false
+      else if (body[key] === null) delete state.prefs[key]
+    }
+    // The one number on that page: a threshold out of range is refused, never stored.
+    if (body.saFoldAt !== undefined) {
+      const at = body.saFoldAt
+      if (at === null) delete state.prefs.saFoldAt
+      else if (Number.isInteger(at?.chars) && at.chars >= 300 && at.chars <= 20_000
+        && Number.isInteger(at?.lines) && at.lines >= 8 && at.lines <= 500) {
+        state.prefs.saFoldAt = { chars: at.chars, lines: at.lines }
+      } else throw invalid('Fold threshold must be 300–20000 characters and 8–500 lines')
+    }
     return rt.save()
   }
 

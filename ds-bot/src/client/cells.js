@@ -18,7 +18,7 @@ import { noHover, useViewport, viewBottom } from './motion.js'
 import { heldCardKey } from './sources.js'
 import { BtwCardView } from './btw.js'
 import { partIndexOf, withBtwRows } from './btw-model.js'
-import { layoutOf, thinkingShown } from './themes.js'
+import { foldAtOf, layoutOf, saOn, thinkingShown } from './themes.js'
 
 export { clockLabel }
 
@@ -32,7 +32,14 @@ export { clockLabel }
 // A group reply folds at the line it marks (an empty line, or a rule) and keeps the whole
 // point above it. Only a reply with no mark falls back to these, itself exceeded rather
 // than reached: a 1000-character or 20-line one still reads whole.
-export const GROUP_FOLD = { at: { chars: 1000, lines: 20 }, preview: { chars: 120, lines: 4 }, mark: true }
+export const GROUP_FOLD = { preview: { chars: 120, lines: 4 }, mark: true }
+const NEVER = { chars: Infinity, lines: Infinity }
+
+// The SuperAgent page sets the threshold or turns the group fold off; the preview and the
+// mark rule stay as they are, so off means a group line reads whole again.
+export const groupFoldOf = prefs => (saOn(prefs, 'saFold')
+  ? { ...GROUP_FOLD, at: foldAtOf(prefs) }
+  : { ...GROUP_FOLD, at: NEVER, mark: false })
 
 const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied') }, footnotes: t('Footnotes') })
 
@@ -325,7 +332,8 @@ function SpeakerHead({ bot, time }) {
 // One Bot message inside a group chat: avatar, name (with its group role), when it ran
 // and how long it took, bubble. The flat layout moves the avatar from beside the last
 // bubble to the head of the name row, so the text below runs the whole width.
-function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey, useUi, whole, time, duration, openFile, fold = GROUP_FOLD }) {
+function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey, useUi, whole, time, duration, openFile }) {
+  const fold = groupFoldOf(roster.prefs)
   const lead = h('button', { type: 'button', className: 'bt-lead', 'aria-label': t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
     h(BotMark, { bot, size: 22 }))
   const flat = layoutOf(roster.prefs) === 'flat'
