@@ -12,6 +12,7 @@
     "./package.json": "./package.json"
   },
   "files": [
+    "ds-bot/package.json",
     "ds-bot/index.js",
     "ds-bot/cordis.patch.yml",
     "ds-bot/client.js",
