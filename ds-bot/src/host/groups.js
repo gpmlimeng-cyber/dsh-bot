@@ -189,6 +189,7 @@ export function install(rt) {
     const log = [...room.log, keepGroupLine(room.id, { ...line, seq: room.seq }, line.text ?? '')]
     for (const gone of log.slice(0, -ROOM_LOG_MAX)) dropGroupLine(room.id, gone)
     room.log = log.slice(-ROOM_LOG_MAX)
+    rt.roomChanged?.(room.id)
   }
   Object.assign(rt, { keepGroupLine, dropGroupLines })
 
@@ -672,12 +673,14 @@ export function install(rt) {
       if (posts.some(post => post.resumed || post.stopped || post.done)) await rt.save()
       if (releases) resumePaused(room, round)
       rt.roomProgress.set(exec.callId, round)
+      rt.roomChanged?.(room.id)
       try {
         await runRound(room, round, exec.signal, exec.agent)
       } catch (error) {
         rt.warn('ds-bot: group round in %s stopped: %s', room.name, error)
       } finally {
         rt.roomProgress.delete(exec.callId)
+        rt.roomChanged?.(room.id)
       }
       if (exec.signal?.aborted) {
         for (const turn of round.started) void rt.stopRoomTurn?.(room.sessions?.[turn.botId] ?? turn.sessionId, turn.exchangeId)

@@ -16,6 +16,9 @@ const LIVE_DELAY_MS = 150
 // reconnects and catches up from `hello`.
 const MAX_QUEUED = 512
 
+// A group writes a round's lines in a burst; one event per room per burst is enough.
+const ROUND_EVENT_LAG = 150
+
 export function install(rt) {
   const { ctx, state } = rt
   const encoder = new TextEncoder()
@@ -48,6 +51,19 @@ export function install(rt) {
       listener('hello', { revision: state.revision, api: API_MAX, boot: BOOT_ID, seq: publishedSeq() })
     } catch { /* the reader is already gone */ }
     return () => feedListeners.delete(listener)
+  }
+
+  // A room's log or round changed. One `room` event per room per ROUND_EVENT_LAG, so a
+  // round that writes several lines wakes the phone once, not once per line.
+  const roomTimers = new Map()
+  rt.roomChanged = (roomId) => {
+    if (!readers() || roomTimers.has(roomId)) return
+    const timer = setTimeout(() => {
+      roomTimers.delete(roomId)
+      publish('room', { roomId })
+    }, ROUND_EVENT_LAG)
+    timer.unref?.()
+    roomTimers.set(roomId, timer)
   }
 
   rt.stateSaved = () => {
@@ -129,6 +145,8 @@ export function install(rt) {
     return () => {
       clearInterval(keepalive)
       clearTimeout(liveTimer)
+      for (const timer of roomTimers.values()) clearTimeout(timer)
+      roomTimers.clear()
       for (const controller of clients) leave(controller)
     }
   }, 'ds-bot: live feed')
