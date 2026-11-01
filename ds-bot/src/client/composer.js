@@ -156,7 +156,33 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       input.click()
     }
   }
-  const uploadRow = (kind, icon, label) => h('label', { className: 'bt-menu-file', role: 'menuitem' },
+  // The App's own picker bridge comes first: inside its WebView a file input opens no
+  // picker at all. Without the bridge the row's own input is the browser's path.
+  const appPick = () => {
+    const bridge = typeof window === 'undefined' ? undefined : window.DSHA
+    return typeof bridge?.pickFile === 'function' ? bridge.pickFile.bind(bridge) : undefined
+  }
+  const pickWithBridge = async (kind, accept, event) => {
+    const pick = appPick()
+    if (pick === undefined) return
+    event.preventDefault()
+    const target = fileInput()
+    setOpen(null)
+    let picked
+    try { picked = await pick({ accept, multiple: true, title: t(kind === 'image' ? 'Add image' : 'Add files') }) } catch { picked = null }
+    const files = Array.isArray(picked) ? picked.filter(item => typeof File !== 'undefined' && item instanceof File) : []
+    if (target === null || files.length === 0) return
+    try {
+      const transfer = new DataTransfer()
+      for (const file of files) transfer.items.add(file)
+      target.files = transfer.files
+      target.dispatchEvent(new Event('change', { bubbles: true }))
+    } catch { target.click() }
+  }
+  const uploadRow = (kind, icon, label) => h('label', {
+    className: 'bt-menu-file', role: 'menuitem',
+    onClick: event => pickWithBridge(kind, kind === 'image' ? ['image/*'] : [], event),
+  },
     h('input', {
       type: 'file', multiple: true, tabIndex: -1, className: 'bt-menu-input', onChange: handFiles,
       ...(kind === 'image' ? { accept: 'image/*' } : {}),

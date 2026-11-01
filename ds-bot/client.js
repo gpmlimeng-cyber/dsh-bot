@@ -4393,7 +4393,9 @@ html:not(:has([data-mobile-nav="frame"])) [data-composer-card] :is(.bt-plus,.bt-
 .bt-plus:active{scale:.9}
 .bt-plus svg{width:18px;height:18px;transition:${spring(SPRING_POP, "rotate")}}
 .bt-plus[aria-expanded=true] svg{rotate:45deg}
-.bt-plus-menu{min-width:180px}
+/* Above the phone layout's own layers (its drawer sits at 1300): a layer under them
+   can be seen but not tapped. */
+.bt-plus-menu{min-width:180px;z-index:1500}
 html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_tools"]{gap:0!important}
 [data-composer-card] [class*="_modes"]:empty{display:none!important}
 [data-composer-card] [class*="_activity"]:not(:has([data-slot] > *)){display:none!important}
@@ -22277,9 +22279,40 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       input.click();
     }
   };
+  const appPick = () => {
+    const bridge = typeof window === "undefined" ? void 0 : window.DSHA;
+    return typeof bridge?.pickFile === "function" ? bridge.pickFile.bind(bridge) : void 0;
+  };
+  const pickWithBridge = async (kind, accept, event) => {
+    const pick2 = appPick();
+    if (pick2 === void 0) return;
+    event.preventDefault();
+    const target2 = fileInput();
+    setOpen(null);
+    let picked;
+    try {
+      picked = await pick2({ accept, multiple: true, title: t(kind === "image" ? "Add image" : "Add files") });
+    } catch {
+      picked = null;
+    }
+    const files = Array.isArray(picked) ? picked.filter((item) => typeof File !== "undefined" && item instanceof File) : [];
+    if (target2 === null || files.length === 0) return;
+    try {
+      const transfer = new DataTransfer();
+      for (const file of files) transfer.items.add(file);
+      target2.files = transfer.files;
+      target2.dispatchEvent(new Event("change", { bubbles: true }));
+    } catch {
+      target2.click();
+    }
+  };
   const uploadRow = (kind, icon2, label) => (0, import_react37.createElement)(
     "label",
-    { className: "bt-menu-file", role: "menuitem" },
+    {
+      className: "bt-menu-file",
+      role: "menuitem",
+      onClick: (event) => pickWithBridge(kind, kind === "image" ? ["image/*"] : [], event)
+    },
     (0, import_react37.createElement)("input", {
       type: "file",
       multiple: true,

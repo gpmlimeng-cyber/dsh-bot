@@ -1700,7 +1700,9 @@ html:not(:has([data-mobile-nav="frame"])) [data-composer-card] :is(.bt-plus,.bt-
 .bt-plus:active{scale:.9}
 .bt-plus svg{width:18px;height:18px;transition:${spring(SPRING_POP, 'rotate')}}
 .bt-plus[aria-expanded=true] svg{rotate:45deg}
-.bt-plus-menu{min-width:180px}
+/* Above the phone layout's own layers (its drawer sits at 1300): a layer under them
+   can be seen but not tapped. */
+.bt-plus-menu{min-width:180px;z-index:1500}
 html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_tools"]{gap:0!important}
 [data-composer-card] [class*="_modes"]:empty{display:none!important}
 [data-composer-card] [class*="_activity"]:not(:has([data-slot] > *)){display:none!important}
