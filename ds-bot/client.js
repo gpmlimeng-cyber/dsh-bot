@@ -8693,7 +8693,7 @@ function BtwTurnTail({ turn, sessionId, useRoster, actions }) {
 var import_react16 = require("react");
 var import_react_dom = require("react-dom");
 var GROUP_FOLD = { preview: { chars: 120, lines: 4 }, mark: true };
-var GROUP_TINT = 8;
+var GROUP_TINT = 5;
 var NEVER = { chars: Infinity, lines: Infinity };
 var groupFoldOf = (prefs) => saOn(prefs, "saFold") ? { ...GROUP_FOLD, at: foldAtOf(prefs) } : { ...GROUP_FOLD, at: NEVER, mark: false };
 var mdLabels3 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });

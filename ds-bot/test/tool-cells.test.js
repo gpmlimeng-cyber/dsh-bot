@@ -935,5 +935,5 @@ test('the SuperAgent page decides whether and where a group reply folds', () => 
 test('a group bubble is tinted with its member ink', () => {
   const out = show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: 'Draft is up.', time: 1 }] } }), { sessionId: 'room' })
   const row = findAll(out, node => node.props?.className === 'bt-group-msg')[0]
-  assert.match(row.props.style['--bt-bubble-tint'], /^color-mix\(in srgb, var\(--bt-ink-\w+\) 8%, var\(--bt-bubble\)\)$/)
+  assert.match(row.props.style['--bt-bubble-tint'], /^color-mix\(in srgb, var\(--bt-ink-\w+\) 5%, var\(--bt-bubble\)\)$/)
 })

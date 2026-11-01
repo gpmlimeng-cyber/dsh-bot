@@ -36,7 +36,7 @@ export const GROUP_FOLD = { preview: { chars: 120, lines: 4 }, mark: true }
 // How much of a member's ink a group bubble carries: a hint of hue that says who spoke, far
 // below the name above it, so the bubble never competes with what it says. Mixed in srgb,
 // like every other color-mix here: oklab would raise the browser floor for one tint.
-export const GROUP_TINT = 8
+export const GROUP_TINT = 5
 const NEVER = { chars: Infinity, lines: Infinity }
 
 // The SuperAgent page sets the threshold, or turns the threshold and the mark rule off. A
