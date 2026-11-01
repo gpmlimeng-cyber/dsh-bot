@@ -3473,6 +3473,9 @@ html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-drop{positio
    window. Where the chrome top already clears the title bar the band is 0. */
 html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel){--bt-caption-band:calc(var(--dsh-windows-titlebar-height,0px) - var(--dsh-frame-chrome-top,0px));padding-top:var(--bt-caption-band)}
 html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::before{content:"";position:absolute;top:0;left:0;right:0;height:var(--bt-caption-band);-webkit-app-region:drag}
+/* A phone pane is a sheet hung from the same line the conversation header sits on, so its
+   top edge clears the system bars exactly like the chat page does. */
+html:has([data-mobile-nav="frame"]) .bt-pane{top:calc(env(safe-area-inset-top, 0px) + 11px);border-radius:16px 16px 0 0}
 .bt-pane{position:fixed;top:var(--dsh-frame-chrome-top,0px);right:0;bottom:0;z-index:45;pointer-events:auto;background:var(--bt-main);color:var(--bt-ink);display:flex;font-family:var(--bt-font)}
 .bt-dialog{flex:1;display:flex;flex-direction:column;min-width:0}
 .bt-dialog .bt-head{height:62px}
