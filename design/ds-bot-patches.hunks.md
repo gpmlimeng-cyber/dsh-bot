@@ -141,7 +141,7 @@
 | 139 | `ds-bot/src/host/groups.js` | 827–832 | 6 |
 | 140 | `ds-bot/src/host/groups.js` | 860–870 | 11 |
 | 141 | `ds-bot/src/host/mcp.js` | 1–608 | 608 |
-| 142 | `ds-bot/src/host/prompt.js` | 25–27 | 3 |
+| 142 | `ds-bot/src/host/prompt.js` | 25–28 | 4 |
 | 143 | `ds-bot/src/host/skill-market/index.js` | 1–2813 | 2813 |
 | 144 | `ds-bot/src/host/skill-market/locale.js` | 1–787 | 787 |
 | 145 | `ds-bot/test/authorization.test.js` | 1–134 | 134 |
