@@ -192,7 +192,7 @@ index 23ef1007..864f7d9b 100644
        items.map((item, index) => (item.sep
          ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
 diff --git a/ds-bot/src/client/cells.js b/ds-bot/src/client/cells.js
-index 3555f0cf..73287933 100644
+index 3555f0cf..af71bfcb 100644
 --- a/ds-bot/src/client/cells.js
 +++ b/ds-bot/src/client/cells.js
 @@ -27,11 +27,29 @@ export { clockLabel }
@@ -295,16 +295,26 @@ index 3555f0cf..73287933 100644
    const [live, setLive] = useState({ replies: [], speaking: null })
    useEffect(() => {
      if (done) return undefined
-@@ -949,7 +969,7 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
+@@ -949,7 +969,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
        if (reply.kind === 'done') {
          return h('div', { key: `${reply.botId}-${index}`, className: 'bt-event' }, t('{name} finished its work', { name: bot.name }))
        }
 -      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration })
-+      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration, openFile })
++      // A reply past what a group line holds came as a file: the bubble keeps its
++      // start, drops the host's note for the model, and "Show all" reads the rest.
++      // A member's messages in a row stack, and only the last of them takes `whole`.
++      const last = replies[index + texts.length - 1] ?? reply
++      const whole = last.length !== undefined && last.files?.[0] !== undefined
++        ? { length: last.length, load: () => actions.fileText(last.files[0]) }
++        : undefined
++      return h(GroupMessage, {
++        key: `${reply.botId}-${index}`, bot, texts: whole ? texts.map(stripLongNote) : texts, whole,
++        room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration, openFile,
++      })
      }),
      pending.map((id) => {
        const bot = roster.byId[id]
-@@ -993,7 +1013,7 @@ function useShownCards(actions, sessionId, callIds) {
+@@ -993,7 +1023,7 @@ function useShownCards(actions, sessionId, callIds) {
    }, [sessionId, key])
  }
  
@@ -313,7 +323,7 @@ index 3555f0cf..73287933 100644
    const tool = toolName(call)
    const done = call.kind === 'tool-result'
    const { text: arg, value: argValue } = toolArgs(call)
-@@ -1019,7 +1039,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1019,7 +1049,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
        return done && target ? h(EventLine, { prefix: t('Updated'), bots: [target], onOpen: bot => actions.openSession(bot.id) }) : null
      }
      case 'group_relay':
@@ -322,7 +332,7 @@ index 3555f0cf..73287933 100644
      case 'create_group':
      case 'update_group':
      case 'delete_group':
-@@ -1074,7 +1094,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1074,7 +1104,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
    }
  }
  
@@ -331,7 +341,7 @@ index 3555f0cf..73287933 100644
    const roster = useRoster(value => value)
    const heldCards = useHeldCards?.(state => state[sessionId])
    const root = node.data.root
-@@ -1090,6 +1110,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
+@@ -1090,6 +1120,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
    useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note)
    useShownCards(actions, sessionId, drawn.filter(call => CARDS.has(toolName(call)) && call.callId).map(call => call.callId))
    if (drawn.length === 0) return null
@@ -11848,10 +11858,65 @@ index 3fc5c7c6..b3cbbdc7 100644
          case 'connector-disconnect':
          case 'connector-retry':
 diff --git a/ds-bot/src/host/groups.js b/ds-bot/src/host/groups.js
-index c3372da2..0f61d68c 100644
+index c3372da2..74acd249 100644
 --- a/ds-bot/src/host/groups.js
 +++ b/ds-bot/src/host/groups.js
-@@ -842,7 +842,17 @@ export function install(rt) {
+@@ -22,7 +22,7 @@ import { readFile, rm } from 'node:fs/promises'
+ import { join } from 'node:path'
+ import { createUserMessage } from '@deepseek-ai/dsh-llm'
+ import { defineTool } from '@deepseek-ai/dsh-tools'
+-import { GROUP_LINE_READ, ROOM_REPLY_TIMEOUT_MS, ROOM_STEP_GAP_MS, ROOM_WORK_GRACE_MS, SOURCE_KIND, TEAM_TOOLS, TEXT_KEPT } from './constants.js'
++import { GROUP_LINE_READ, MESSAGE_INLINE_MAX, ROOM_REPLY_TIMEOUT_MS, ROOM_STEP_GAP_MS, ROOM_WORK_GRACE_MS, SOURCE_KIND, TEAM_TOOLS, TEXT_KEPT } from './constants.js'
+ import { escapeRegExp, headOf, splitRef, textOf } from './text.js'
+ import { mentionSpans, speakerOf } from '../shared/mentions.js'
+ import { GROUP_REF, output } from './tools.js'
+@@ -282,9 +282,14 @@ export function install(rt) {
+ 
+   // A member's message in the round: in the log, for the members after it, and in the
+   // round's replies, for the user.
+-  const postInRound = (room, round, member, text, duration) => {
+-    appendRoom(room, { who: member.name, botId: member.id, text })
+-    round.replies.push({ botId: member.id, name: member.name, color: member.color, text, time: Date.now(), ...(duration === undefined ? {} : { duration }) })
++  const postInRound = (room, round, member, text, duration, long) => {
++    const files = long?.files ?? []
++    appendRoom(room, { who: member.name, botId: member.id, text, ...(files.length > 0 ? { files } : {}) })
++    round.replies.push({
++      botId: member.id, name: member.name, color: member.color, text, time: Date.now(),
++      ...(duration === undefined ? {} : { duration }),
++      ...(files.length > 0 ? { files } : {}), ...(long?.length ? { length: long.length } : {}),
++    })
+     void rt.save().catch(() => {})
+   }
+ 
+@@ -530,7 +535,12 @@ export function install(rt) {
+         round.replies.push({ kind: 'working', botId: member.id, name: member.name, color: member.color, time: Date.now() })
+       } else if (final !== undefined || (typeof reply === 'string' && said.length > 0)) {
+         slot.status = 'posted'
+-        if (final !== undefined) postInRound(room, round, member, final, Date.now() - startedAt)
++        // A long answer rides as a file here too, as a late reply does: the group line
++        // keeps its start, and the chat reads the rest from the attachment.
++        const long = final !== undefined && final.length > MESSAGE_INLINE_MAX
++          ? await rt.attachLong(final, `Reply from ${member.name}.txt`)
++          : undefined
++        if (final !== undefined) postInRound(room, round, member, long?.text ?? final, Date.now() - startedAt, long)
+       } else {
+         slot.status = typeof reply === 'string' ? 'passed' : 'missed'
+         round.passed.push(member.name)
+@@ -814,7 +824,12 @@ export function install(rt) {
+       } else {
+         const line = [text, ...files.map(fileLine)].filter(Boolean).join('\n')
+         appendRoom(room, { who: sender.name, botId: sender.id, text: line, ...(files.length > 0 ? { files } : {}) })
+-        running.replies.push({ botId: sender.id, name: sender.name, color: sender.color, text: line, time: Date.now() })
++        // A reply that went as a file keeps the file with it: the chat shows "Show all"
++        // against the whole length and reads the rest from the attachment.
++        running.replies.push({
++          botId: sender.id, name: sender.name, color: sender.color, text: line, time: Date.now(),
++          ...(files.length > 0 ? { files } : {}), ...(extra.length ? { length: extra.length } : {}),
++        })
+         logged = room.seq
+       }
+       await rt.save()
+@@ -842,7 +857,17 @@ export function install(rt) {
      const text = stripOwnName(member.name, reply)
      const done = isPass(text) && shown && info.askedBy !== undefined
      if (isPass(text) && !done) return
@@ -17326,7 +17391,7 @@ index 4985bf19..5abf15ce 100644
      "usage-page.js": {
        "14px": 5,
 diff --git a/ds-bot/test/tool-cells.test.js b/ds-bot/test/tool-cells.test.js
-index 18780147..bd67d493 100644
+index 18780147..6eccc3bf 100644
 --- a/ds-bot/test/tool-cells.test.js
 +++ b/ds-bot/test/tool-cells.test.js
 @@ -9,7 +9,7 @@ import { build } from 'esbuild'
@@ -17347,7 +17412,7 @@ index 18780147..bd67d493 100644
  
  // Runs the effects collected since the last render; returns the cleanups.
  const mount = () => {
-@@ -853,3 +853,16 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
+@@ -853,3 +853,36 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
    assert.ok(frame.props.srcDoc.indexOf('Content-Security-Policy') < frame.props.srcDoc.indexOf('<b>hi</b>'), 'the policy comes before the markup')
    assert.equal(frame.props.title, 'A greeting')
  })
@@ -17363,6 +17428,26 @@ index 18780147..bd67d493 100644
 +  assert.deepEqual(opened, ['./src/client/cells.js'])
 +  assert.deepEqual(['console.log', 'npm test', 'cells.js:611', 'MESSAGE_INLINE_MAX', 'obj.prop'].map(value => at(value)), [undefined, undefined, undefined, undefined, undefined])
 +  assert.equal(pathMentions(undefined), undefined)
++})
++
++// A group reply past what a line holds arrived as a file: the bubble shows its start with
++// "Show all" against the whole length, reads the rest from the attachment, and never shows
++// the note the host wrote for the model.
++test('a group reply that came as a file shows Show all with its whole length, and loads it', async () => {
++  const file = { name: 'Reply from Writer.txt', bytes: 20_001 }
++  const asked = []
++  const actions = { fileText: async (given) => { asked.push(given); return { text: 'All of it.', whole: true } } }
++  const note = '[A long message: 20001 characters. Its start is below; all of it is in the attached file. Read the file before you act on it.]'
++  const replies = [{ botId: 'writer', text: `${note}\nThe start of a very long reply…`, length: 20_001, files: [file] }]
++  const out = show(call('group_relay', 'direct', { content: { replies } }), { sessionId: 'room', actions })
++  const more = findAll(out, node => node.props?.className === 'bt-more')
++  assert.equal(more.length, 1)
++  assert.match(text(more[0]), /20,001/)
++  assert.ok(!text(out).includes('[A long message'), 'the note the host wrote for the model stays out of the bubble')
++  more[0].props.onClick()
++  await Promise.resolve()
++  await Promise.resolve()
++  assert.deepEqual(JSON.parse(JSON.stringify(asked)), [file])
 +})
 diff --git a/ds-bot/test/user-bubble.test.js b/ds-bot/test/user-bubble.test.js
 index bdc9eb87..35fd4e50 100644
