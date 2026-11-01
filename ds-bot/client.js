@@ -3269,9 +3269,9 @@ html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side
 html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 11px);height:36px;margin:0;z-index:20;align-items:center}
 /* The layout's own header button floats: a solid surface, a hairline ring and the soft
    drop shadow. The pill and the session menu borrow that surface. */
-html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 4px rgba(28,28,28,.12),var(--bt-float-shadow);color:var(--bt-ink)}
+html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:var(--bt-float-shadow);color:var(--bt-ink)}
 html:has([data-mobile-nav="frame"]) .bt-pill:hover,html:has([data-mobile-nav="frame"]) .bt-pill:active{background:var(--bt-float-hover)}
-html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{border:0;background:var(--bt-float-surface);box-shadow:0 0 4px rgba(28,28,28,.12),var(--bt-float-shadow)}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{border:0;background:var(--bt-float-surface);box-shadow:var(--bt-float-shadow)}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn:hover{background:var(--bt-float-hover)}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:28px;height:28px}
 html:has([data-mobile-nav="frame"]):has([data-mobile-nav="toggle"]) .bt-head-btn{display:none}
