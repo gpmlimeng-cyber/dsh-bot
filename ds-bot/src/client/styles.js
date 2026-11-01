@@ -572,7 +572,7 @@ html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side
    chrome's row instead: title in the middle, buttons at the edges. */
 /* The row takes the phone layout's measured header band and centers in it, which is the
    line its own drawer toggle is drawn on; pill and menu button match that toggle's 28px. */
-html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:0;height:var(--mobile-nav-header-h, 67px);margin:0;z-index:20;align-items:center}
+html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 6px);height:36px;margin:0;z-index:20;align-items:center}
 html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px;font-size:12.5px;line-height:18px;gap:6px;max-width:66vw}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:28px;height:28px}
 html:has([data-mobile-nav="frame"]):has([data-mobile-nav="toggle"]) .bt-head-btn{display:none}
