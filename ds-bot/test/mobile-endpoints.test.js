@@ -19,8 +19,10 @@ function runtime({ revision = 12 } = {}) {
     provide: () => {},
     tool: () => {},
     sessions: { flush: async () => {} },
+    sessionController: { prompt: async request => { prompts.push(request) } },
     connection: { fetch: { register: route => { routes.push(route); return () => {} } } },
   }
+  const prompts = []
   const bots = { writer: { id: 'writer', name: 'Writer', color: 'blue', sessionId: 's-writer' } }
   const rooms = {
     [ROOM_ID]: {
@@ -50,10 +52,12 @@ function runtime({ revision = 12 } = {}) {
     selfOf: () => undefined,
     roomOf: id => (id === undefined ? undefined : rooms[id]),
     botOf: id => (id === undefined ? undefined : bots[id]),
+    pastOwners: new Map(),
+    ensureCapabilities: async () => {},
     roomProgress: new Map(),
   }
   installChannel(rt)
-  return { routes, rt, rooms, bots }
+  return { routes, rt, rooms, bots, prompts }
 }
 
 async function ask(routes, endpoint, payload) {
@@ -165,4 +169,56 @@ test('the advertised capabilities cover the two new reads, and an unknown endpoi
   const unknown = await ask(routes, 'room-chat-history', { roomId: ROOM_ID })
   assert.equal(unknown.ok, false)
   assert.equal(unknown.error.code, 'bot/not-found')
+});
+
+test('a file with no text still reaches the session', async () => {
+  const { routes, prompts } = runtime()
+  const answer = await ask(routes, 'send', { sessionId: 's-writer', text: '', fileReceiptIds: ['r1', 'r2'] })
+  assert.equal(answer.ok, true, answer.error?.message)
+  assert.deepEqual(prompts[0].content, [{ type: 'file', receiptId: 'r1' }, { type: 'file', receiptId: 'r2' }])
+});
+
+test('a message with no text and no attachments is nothing to send', async () => {
+  const { routes, prompts } = runtime()
+  const answer = await ask(routes, 'send', { sessionId: 's-writer', text: '  ', images: [], fileReceiptIds: [] })
+  assert.deepEqual(answer, { ok: false, error: { code: 'bot/invalid', message: 'Nothing to send', details: {} } })
+  assert.equal(prompts.length, 0)
+});
+
+test('an image without data or a media type is dropped, not sent as a broken block', async () => {
+  const { routes, prompts } = runtime()
+  const answer = await ask(routes, 'send', {
+    sessionId: 's-writer',
+    text: 'look',
+    images: [
+      { mediaType: 'image/png' },
+      { data: 'AAAA' },
+      { mediaType: 'image/png', data: '' },
+      null,
+      { mediaType: 'image/png', data: 'AAAA', name: 'shot.png' },
+    ],
+  })
+  assert.equal(answer.ok, true, answer.error?.message)
+  assert.deepEqual(prompts[0].content, [
+    { type: 'text', text: 'look' },
+    { type: 'image', mediaType: 'image/png', data: 'AAAA', name: 'shot.png' },
+  ])
+});
+
+test('more inline images than one message carries is refused', async () => {
+  const { routes, prompts } = runtime()
+  const images = Array.from({ length: 21 }, () => ({ mediaType: 'image/png', data: 'AAAA' }))
+  const answer = await ask(routes, 'send', { sessionId: 's-writer', text: 'all of these', images })
+  assert.equal(answer.ok, false)
+  assert.equal(answer.error.message, 'Too many images')
+  assert.equal(prompts.length, 0)
+});
+
+test('a group line lists the files it carries, not only how many', async () => {
+  const { routes, rooms } = runtime()
+  rooms[ROOM_ID].log.push({ seq: 4, who: 'User', text: '', files: [{ attachmentId: 'att-1', name: 'notes.pdf', bytes: 12 }] })
+  rooms[ROOM_ID].seq = 4
+  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
+  assert.deepEqual(page.items.at(-1).files, [{ id: 'att-1', name: 'notes.pdf' }])
+  assert.equal(page.items.at(-1).images, 1)
 });

@@ -30,7 +30,7 @@ function roomItem(rt, line) {
     ...(line.kind === 'notice' ? (line.reason === undefined ? {} : { event: line.reason }) : line.kind === undefined ? {} : { event: line.kind }),
     ...(line.files === undefined ? {} : { images: line.files.length }),
     // The phone draws the files themselves; `images` stays as the count older clients read.
-    ...(line.files === undefined ? {} : { files: line.files.map(file => ({ id: file.attachmentId, mediaType: file.mediaType, ...(file.name === undefined ? {} : { name: file.name }) })) }),
+    ...(line.files === undefined ? {} : { files: line.files.map(file => ({ id: file.attachmentId, name: file.name, mediaType: file.mediaType })) }),
     ...(wholeOf(line) === undefined ? {} : { whole: wholeOf(line) }),
   }
   return item

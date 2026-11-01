@@ -25,6 +25,9 @@ export const ROUTE = '/api/bot'
 export const API_MIN = 1
 // 2: `send` also accepts inline images and staged file receipts.
 export const API_MAX = 2
+// One message's inline images, matching the limit DSH applies to a prompt: a phone
+// is not the only client that may call `send`, and the request carries the bytes.
+export const MAX_INLINE_IMAGES = 20
 export const MAX_EXCHANGES = 600
 // state.json is written whole on every save, so a long message between Bots or a long
 // group line keeps only its start there. The rest stays where it already is (a message
