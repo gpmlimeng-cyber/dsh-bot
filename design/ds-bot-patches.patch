@@ -10931,7 +10931,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..6d119ae5 100644
+index eac6ea54..dc8182e3 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -11882,9 +11882,9 @@ index eac6ea54..6d119ae5 100644
 +/* Window tiers (tier.js): compact under 600 wide or under 480 tall, medium to 840,
 +   expanded above. The host's own mobile frame already gives the phone its shape; these
 +   rules give a short landscape window the same one when that frame is absent. */
-+html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-settings{--bt-set-w:100vw;--bt-set-h:100dvh;width:100vw;height:100dvh;border-radius:0;border-width:0;flex-direction:column}
-+html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-market-frame{padding:0;align-items:stretch}
-+html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-market-pane{width:100vw;max-width:100vw;height:100dvh;border-radius:0;flex-direction:column}
++html[data-bt-tier=compact] .bt-settings{--bt-set-w:100vw;--bt-set-h:100dvh;width:100vw;height:100dvh;border-radius:0;border-width:0;flex-direction:column}
++html[data-bt-tier=compact] .bt-market-frame{padding:0;align-items:stretch}
++html[data-bt-tier=compact] .bt-market-pane{width:100vw;max-width:100vw;height:100dvh;border-radius:0;flex-direction:column}
  `
  
  // -------------------------------------------------------------------------
@@ -12129,7 +12129,7 @@ index 00000000..bc3b25d5
 +  }
 +}
 diff --git a/ds-bot/src/host/approvals.js b/ds-bot/src/host/approvals.js
-index 9e7fa71a..b3f4320d 100644
+index 9e7fa71a..b26d58ae 100644
 --- a/ds-bot/src/host/approvals.js
 +++ b/ds-bot/src/host/approvals.js
 @@ -5,6 +5,9 @@
@@ -12142,7 +12142,7 @@ index 9e7fa71a..b3f4320d 100644
  
  export function install(rt) {
    const { ctx } = rt
-@@ -34,14 +37,23 @@ export function install(rt) {
+@@ -34,14 +37,26 @@ export function install(rt) {
        pending.delete(id)
        rt.noteApproval?.(sessionId, undefined)
      }
@@ -12164,6 +12164,9 @@ index 9e7fa71a..b3f4320d 100644
 +        rt.settleTool?.(sessionId, entry.tool, 'timeout')
 +        entry.answer('cancelled')
 +      }, APPROVAL_TIMEOUT)
++      // Nobody's answer should not keep a process alive; the timer only has to fire while a
++      // turn is waiting.
++      timer.unref?.()
        if (request.signal?.aborted) entry.answer('cancelled')
        request.signal?.addEventListener('abort', () => entry.answer('cancelled'), { once: true })
      })
