@@ -191,6 +191,154 @@ index 23ef1007..864f7d9b 100644
      open ? h('div', { className: 'bt-pmenu-pop', role: 'menu' },
        items.map((item, index) => (item.sep
          ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
+diff --git a/ds-bot/src/client/cells.js b/ds-bot/src/client/cells.js
+index 3555f0cf..73287933 100644
+--- a/ds-bot/src/client/cells.js
++++ b/ds-bot/src/client/cells.js
+@@ -27,11 +27,29 @@ export { clockLabel }
+ 
+ const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied') }, footnotes: t('Footnotes') })
+ 
++// A path a bubble names in inline code opens in the file view, as DSH's own chat links
++// the files a turn delivered. The host resolves those from the turn; a group reply is a
++// relay result with no turn, so the path itself is the only handle it has.
++const FILE_PATH = /^(?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.-]+)*$/
++// Only names that end like a file: `console.log` is as path-shaped as `state.json`.
++const FILE_EXT = /\.(?:md|txt|jsonl?|mjs|cjs|jsx?|tsx?|py|sh|ya?ml|toml|csv|html|css|png|jpe?g|webp|gif|pdf|patch|diff)$/i
++
++export function pathMentions(openFile) {
++  if (typeof openFile !== 'function') return undefined
++  return {
++    resolve: (value) => {
++      const path = String(value).trim()
++      if (!FILE_PATH.test(path) || !FILE_EXT.test(path)) return undefined
++      return { title: path, label: t('Open {path}', { path }), open: () => openFile(path) }
++    },
++  }
++}
++
+ // `lead` (a sender avatar in group chats) sits beside the last bubble, in the same
+ // row, so it lines up with the bubble whether or not reactions hang below it.
+ // `fold`: past what a bubble folds (fold.js); `whole`: the last text is only the start
+ // of its message (see useFold).
+-export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions, fold = FOLD_AT, whole }) {
++export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions, openFile, fold = FOLD_AT, whole }) {
+   const onClick = (event) => {
+     const target = mentionTarget(event)
+     if (target === null) return
+@@ -44,7 +62,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
+     texts.map((text, index) => {
+       const last = index === texts.length - 1
+       return h(Bubble, {
+-        key: index, text, index, roster, selfId, actions, sessionId, msgKey, mentions, fold,
++        key: index, text, index, roster, selfId, actions, sessionId, msgKey, mentions, openFile, fold,
+         picked: msgKey ? reactions?.[index] ?? [] : [],
+         live: streaming && last,
+         lead: lead && last ? lead : null,
+@@ -53,10 +71,12 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
+     }))
+ }
+ 
+-function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, fold, picked, live, lead, whole }) {
++function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, openFile, fold, picked, live, lead, whole }) {
+   const { shown, folded, control } = useFold(text, { limit: fold, whole, live })
+   const key = msgKey ? `${msgKey}:${index}` : undefined
+-  const body = h(MarkdownText, { text: linkMentions(shown, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact', fileMentions: mentions })
++  // A bubble whose sender resolved its own mentions keeps them; a group reply links paths.
++  const links = useMemo(() => mentions ?? pathMentions(openFile), [mentions, openFile])
++  const body = h(MarkdownText, { text: linkMentions(shown, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact', fileMentions: links })
+   const row = useRef(null)
+   // Touch has no hover: a tap on the bubble opens its tools, a tap elsewhere
+   // closes them. Interactive targets keep their own meaning.
+@@ -295,7 +315,7 @@ function SpeakerHead({ bot, time }) {
+ // One Bot message inside a group chat: avatar, name (with its group role), when it ran
+ // and how long it took, bubble. The flat layout moves the avatar from beside the last
+ // bubble to the head of the name row, so the text below runs the whole width.
+-function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey, useUi, whole, time, duration }) {
++function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey, useUi, whole, time, duration, openFile }) {
+   const lead = h('button', { type: 'button', className: 'bt-lead', 'aria-label': t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
+     h(BotMark, { bot, size: 22 }))
+   const flat = layoutOf(roster.prefs) === 'flat'
+@@ -305,7 +325,7 @@ function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey
+       room?.admin === bot.id ? h('span', { className: 'bt-group-role' }, t('Admin')) : null,
+       Number.isFinite(time) ? h('span', { className: 'bt-group-time', title: clockLabel(time) }, messageClock(time)) : null,
+       took ? h('span', { className: 'bt-group-took', title: t('Ran for {duration}', { duration: took }) }, took) : null),
+-    h(Bubbles, { texts, roster, selfId: bot.id, actions, sessionId: room?.id, msgKey, useUi, lead: flat ? null : lead, whole }))
++    h(Bubbles, { texts, roster, selfId: bot.id, actions, sessionId: room?.id, msgKey, useUi, lead: flat ? null : lead, whole, openFile }))
+ }
+ 
+ // A member's messages in a row, as one block under its name: what it says while it
+@@ -545,7 +565,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
+   }
+ }
+ 
+-export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnClock, useUi, actions }) {
++export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnClock, useUi, actions, openFile }) {
+   const roster = useRoster(value => value)
+   const data = node.data
+   const source = data.source !== null && typeof data.source === 'object' ? data.source : {}
+@@ -607,7 +627,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
+         const text = stripHeader(contentText(data.content))
+         // A trigger's data carries no turn; its event seq is the one durable name of this post.
+         return h(GroupMessage, {
+-          bot: poster, text: file ? stripLongNote(text) : text, room, roster, actions, msgKey: `${sessionId}:post:${data.seq ?? node.key}`, useUi, time: data.time,
++          bot: poster, text: file ? stripLongNote(text) : text, room, roster, actions, msgKey: `${sessionId}:post:${data.seq ?? node.key}`, useUi, time: data.time, openFile,
+           whole: file ? { length: source.length, load: () => actions.fileText(file) } : undefined,
+         })
+       }
+@@ -869,7 +889,7 @@ function scanReplies(text, start, replies) {
+   }
+ }
+ 
+-function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork }) {
++function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork, openFile }) {
+   const [live, setLive] = useState({ replies: [], speaking: null })
+   useEffect(() => {
+     if (done) return undefined
+@@ -949,7 +969,7 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
+       if (reply.kind === 'done') {
+         return h('div', { key: `${reply.botId}-${index}`, className: 'bt-event' }, t('{name} finished its work', { name: bot.name }))
+       }
+-      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration })
++      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration, openFile })
+     }),
+     pending.map((id) => {
+       const bot = roster.byId[id]
+@@ -993,7 +1013,7 @@ function useShownCards(actions, sessionId, callIds) {
+   }, [sessionId, key])
+ }
+ 
+-function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot, heldCards, hooks }) {
++function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot, heldCards, openFile, hooks }) {
+   const tool = toolName(call)
+   const done = call.kind === 'tool-result'
+   const { text: arg, value: argValue } = toolArgs(call)
+@@ -1019,7 +1039,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+       return done && target ? h(EventLine, { prefix: t('Updated'), bots: [target], onOpen: bot => actions.openSession(bot.id) }) : null
+     }
+     case 'group_relay':
+-      return h(GroupReplies, { sessionId, callId: call.callId, done, content: call.content, roster, actions, useUi, useWork })
++      return h(GroupReplies, { sessionId, callId: call.callId, done, content: call.content, roster, actions, useUi, useWork, openFile })
+     case 'create_group':
+     case 'update_group':
+     case 'delete_group':
+@@ -1074,7 +1094,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+   }
+ }
+ 
+-export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCards, useBrowserHolds, useBrowserTabs, useBrowserPages, actions }) {
++export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCards, useBrowserHolds, useBrowserTabs, useBrowserPages, actions, openFile }) {
+   const roster = useRoster(value => value)
+   const heldCards = useHeldCards?.(state => state[sessionId])
+   const root = node.data.root
+@@ -1090,6 +1110,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
+   useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note)
+   useShownCards(actions, sessionId, drawn.filter(call => CARDS.has(toolName(call)) && call.callId).map(call => call.callId))
+   if (drawn.length === 0) return null
+-  const env = { sessionId, roster, actions, useUi, useWork, findBot, heldCards, hooks: { useBrowserHolds, useBrowserTabs, useBrowserPages } }
++  const env = { sessionId, roster, actions, useUi, useWork, findBot, heldCards, openFile, hooks: { useBrowserHolds, useBrowserTabs, useBrowserPages } }
+   return h(Fragment, null, drawn.map((call, index) => h(Fragment, { key: call.callId ?? index }, renderCall(call, env))))
+ }
 diff --git a/ds-bot/src/client/composer.js b/ds-bot/src/client/composer.js
 index 08d3b669..f6a8444b 100644
 --- a/ds-bot/src/client/composer.js
@@ -471,7 +619,7 @@ index c7b14888..98b1e26d 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 06962367..05058054 100644
+index 06962367..cc31b7f4 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
 @@ -18,6 +18,140 @@ const ZH = {
@@ -615,7 +763,15 @@ index 06962367..05058054 100644
    'Resize sidebar': '调整侧边栏宽度',
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
-@@ -170,7 +304,6 @@ const ZH = {
+@@ -55,6 +189,7 @@ const ZH = {
+   'Create group chat': '新建群聊',
+   'Delete group': '删除群聊',
+   "Open {name}'s chat": '打开 {name} 的对话',
++  'Open {path}': '打开 {path}',
+   'New Bot': '新 Bot',
+ 
+   // Sidebar and account menu
+@@ -170,7 +305,6 @@ const ZH = {
    'A provider id is lowercase letters, digits and dashes, starting with a letter': '服务商 ID 只能用小写字母、数字和短横线，并以字母开头',
    'Add at least one model': '至少添加一个模型',
    'Two models have the same id': '有两个模型的 ID 相同',
@@ -623,7 +779,7 @@ index 06962367..05058054 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -226,6 +359,9 @@ const ZH = {
+@@ -226,6 +360,9 @@ const ZH = {
    About: '简介',
    'Show less': '收起',
    'Show more': '展开',
@@ -633,7 +789,7 @@ index 06962367..05058054 100644
    'Admin leads': '管理员主持',
    'Plain messages go to the admin, who calls others with @Name.': '普通消息先给管理员，由管理员用 @名字 点名其他成员。',
    Everyone: '所有人',
-@@ -430,6 +566,23 @@ const ZH = {
+@@ -430,6 +567,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -657,7 +813,7 @@ index 06962367..05058054 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -445,6 +598,9 @@ const ZH = {
+@@ -445,6 +599,9 @@ const ZH = {
    'Bubble width': '气泡宽度',
    'Text width': '正文宽度',
    'Show thinking': '显示思考过程',
@@ -667,7 +823,7 @@ index 06962367..05058054 100644
    'Bots · {count}': 'Bot · {count}',
    'First in the sidebar. Pick another Bot to hand it the role; {name} then stops being a Main Bot.': '排在侧栏最上面。选另一个 Bot 就会把主 Bot 交给它，{name} 随之不再是主 Bot。',
    'Choose a Bot…': '选择一个 Bot…',
-@@ -545,6 +701,23 @@ const ZH = {
+@@ -545,6 +702,23 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -691,7 +847,7 @@ index 06962367..05058054 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +855,6 @@ const ZH = {
+@@ -682,7 +856,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -699,7 +855,7 @@ index 06962367..05058054 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1103,10 @@ const ZH = {
+@@ -931,6 +1104,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -710,7 +866,7 @@ index 06962367..05058054 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1149,7 @@ const ZH = {
+@@ -973,6 +1150,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -718,7 +874,7 @@ index 06962367..05058054 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1245,10 @@ const ZH = {
+@@ -1068,6 +1246,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -17169,6 +17325,45 @@ index 4985bf19..5abf15ce 100644
      },
      "usage-page.js": {
        "14px": 5,
+diff --git a/ds-bot/test/tool-cells.test.js b/ds-bot/test/tool-cells.test.js
+index 18780147..bd67d493 100644
+--- a/ds-bot/test/tool-cells.test.js
++++ b/ds-bot/test/tool-cells.test.js
+@@ -9,7 +9,7 @@ import { build } from 'esbuild'
+ const { outputFiles } = await build({
+   stdin: {
+     contents: [
+-      "export { ToolCell, TriggerCell, callTree, stackReplies } from './src/client/cells.js'",
++      "export { ToolCell, TriggerCell, callTree, stackReplies, pathMentions } from './src/client/cells.js'",
+       "export { QuestionDock } from './src/client/questions.js'",
+       "export { SecretDock } from './src/client/secret-card.js'",
+       "export { countCards } from './src/client/sources.js'",
+@@ -49,7 +49,7 @@ runInNewContext(outputFiles[0].text, {
+     throw new Error(`Unexpected platform module ${name}`)
+   },
+ })
+-const { ToolCell, TriggerCell, callTree, stackReplies, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
++const { ToolCell, TriggerCell, callTree, stackReplies, pathMentions, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
+ 
+ // Runs the effects collected since the last render; returns the cleanups.
+ const mount = () => {
+@@ -853,3 +853,16 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
+   assert.ok(frame.props.srcDoc.indexOf('Content-Security-Policy') < frame.props.srcDoc.indexOf('<b>hi</b>'), 'the policy comes before the markup')
+   assert.equal(frame.props.title, 'A greeting')
+ })
++
++// A path a bubble names in inline code opens the file view; code that only looks like a
++// path (`console.log`) and code with an offset (`cells.js:611`) stay plain text.
++test('a path in a bubble opens the file view, and code that is not a file stays plain', () => {
++  const opened = []
++  const mentions = pathMentions(path => opened.push(path))
++  const at = value => mentions.resolve(value)
++  assert.equal(at('design/ds-bot-patches.md').title, 'design/ds-bot-patches.md')
++  at('./src/client/cells.js').open()
++  assert.deepEqual(opened, ['./src/client/cells.js'])
++  assert.deepEqual(['console.log', 'npm test', 'cells.js:611', 'MESSAGE_INLINE_MAX', 'obj.prop'].map(value => at(value)), [undefined, undefined, undefined, undefined, undefined])
++  assert.equal(pathMentions(undefined), undefined)
++})
 diff --git a/ds-bot/test/user-bubble.test.js b/ds-bot/test/user-bubble.test.js
 index bdc9eb87..35fd4e50 100644
 --- a/ds-bot/test/user-bubble.test.js
