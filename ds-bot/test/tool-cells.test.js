@@ -923,4 +923,17 @@ test('the SuperAgent page decides whether and where a group reply folds', () => 
   assert.equal(folded('z'.repeat(1100), {}), 1)
   assert.deepEqual([400, 600].map(chars => folded('z'.repeat(chars), { saFoldAt: { chars: 500, lines: 20 } })), [0, 1], 'a saved threshold decides')
   assert.equal(folded('z'.repeat(1100), { saFoldAt: { chars: 200, lines: 20 } }), 1, 'an out-of-range threshold falls back to the default')
+  // A reply the host kept only in part folds whatever the page says: its text lives in a
+  // file, and "Show all" is the only way back to it.
+  const cut = [{ botId: 'writer', text: 'head…', time: 1, length: 20_001, files: [{ name: 'Reply from Writer.txt', bytes: 20_001 }] }]
+  const more = findAll(show(call('group_relay', 'direct', { content: { replies: cut } }), { sessionId: 'room', roster: team({ prefs: { saFold: false } }), actions: { fileText: async () => ({ text: 'x', whole: true }) } }), node => node.props?.className === 'bt-more')
+  assert.equal(more.length, 1, 'a cut reply still folds with the page off')
+})
+
+// A group line carries its member's ink, mixed low: the tint makes it clear who spoke, and
+// stays a tint, so it does not compete with the name above it.
+test('a group bubble is tinted with its member ink', () => {
+  const out = show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: 'Draft is up.', time: 1 }] } }), { sessionId: 'room' })
+  const row = findAll(out, node => node.props?.className === 'bt-group-msg')[0]
+  assert.match(row.props.style['--bt-bubble-tint'], /^color-mix\(in srgb, var\(--bt-ink-\w+\) 8%, var\(--bt-bubble\)\)$/)
 })

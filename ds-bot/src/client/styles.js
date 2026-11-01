@@ -1510,6 +1510,11 @@ html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg-line:has(>.
 /* A group's own bubble is drawn here, so the skin's padding and radius reach it through the
    same tokens as the rest. */
 html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-ububble{padding:var(--bt-app-pad);border-radius:var(--bt-app-radius-bubble)}
+/* A group line shows whose it is: its bubble carries that member's ink, mixed low enough to
+   stay paler than the name above it. The user's own bubbles and one-to-one chats keep theirs,
+   which is what makes a tinted bubble read as "someone in the group said this". A tint needs a
+   variable of its own: redefining --bt-bubble on the same node would reference itself. */
+.bt-group-msg .bt-bubble{background:var(--bt-bubble);background:var(--bt-bubble-tint,var(--bt-bubble))}
 `
 
 export const CONVERSATION_CSS = `

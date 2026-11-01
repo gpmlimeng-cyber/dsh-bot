@@ -2007,6 +2007,15 @@ function teamActions({ call: call2, after, partFor, roster, ui: ui2, live, cards
   };
 }
 
+// src/shared/fold-at.js
+var SA_FOLD_AT = { chars: 1e3, lines: 20 };
+var FOLD_AT_BOUNDS = { chars: [300, 2e4], lines: [8, 500] };
+function isFoldAt(at) {
+  const [minChars, maxChars] = FOLD_AT_BOUNDS.chars;
+  const [minLines, maxLines] = FOLD_AT_BOUNDS.lines;
+  return Number.isInteger(at?.chars) && at.chars >= minChars && at.chars <= maxChars && Number.isInteger(at?.lines) && at.lines >= minLines && at.lines <= maxLines;
+}
+
 // src/client/themes.js
 var THEME_KEYS = ["bg", "sidebar", "bubble", "card", "text", "user", "userText", "accent"];
 var THEMES = {
@@ -2155,12 +2164,7 @@ var layoutOf = (prefs) => prefs?.layout === "flat" ? "flat" : "bubble";
 var thinkingShown = (prefs) => prefs?.thinking === true;
 var widthOf = (prefs) => percent(prefs?.width, 90);
 var saOn = (prefs, key) => prefs?.[key] !== false;
-var SA_FOLD_AT = { chars: 1e3, lines: 20 };
-var foldAtOf = (prefs) => {
-  const at = prefs?.saFoldAt;
-  const fine = Number.isInteger(at?.chars) && at.chars >= 300 && at.chars <= 2e4 && Number.isInteger(at?.lines) && at.lines >= 8 && at.lines <= 500;
-  return fine ? { chars: at.chars, lines: at.lines } : SA_FOLD_AT;
-};
+var foldAtOf = (prefs) => isFoldAt(prefs?.saFoldAt) ? { chars: prefs.saFoldAt.chars, lines: prefs.saFoldAt.lines } : SA_FOLD_AT;
 var flatWidthOf = (prefs) => percent(prefs?.flatWidth, 100);
 
 // src/shared/mentions.js
@@ -4169,6 +4173,11 @@ html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg-line:has(>.
 /* A group's own bubble is drawn here, so the skin's padding and radius reach it through the
    same tokens as the rest. */
 html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-ububble{padding:var(--bt-app-pad);border-radius:var(--bt-app-radius-bubble)}
+/* A group line shows whose it is: its bubble carries that member's ink, mixed low enough to
+   stay paler than the name above it. The user's own bubbles and one-to-one chats keep theirs,
+   which is what makes a tinted bubble read as "someone in the group said this". A tint needs a
+   variable of its own: redefining --bt-bubble on the same node would reference itself. */
+.bt-group-msg .bt-bubble{background:var(--bt-bubble);background:var(--bt-bubble-tint,var(--bt-bubble))}
 `;
 var CONVERSATION_CSS = `
 .bt-think{font-size:13px;line-height:18px;color:var(--bt-ink-2);margin:2px 0 4px;max-width:calc(var(--bt-msg-w) * 100%)}
@@ -8684,6 +8693,7 @@ function BtwTurnTail({ turn, sessionId, useRoster, actions }) {
 var import_react16 = require("react");
 var import_react_dom = require("react-dom");
 var GROUP_FOLD = { preview: { chars: 120, lines: 4 }, mark: true };
+var GROUP_TINT = 8;
 var NEVER = { chars: Infinity, lines: Infinity };
 var groupFoldOf = (prefs) => saOn(prefs, "saFold") ? { ...GROUP_FOLD, at: foldAtOf(prefs) } : { ...GROUP_FOLD, at: NEVER, mark: false };
 var mdLabels3 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
@@ -9022,9 +9032,10 @@ function GroupMessage({ bot, text, texts: texts2 = [text], room: room2, roster, 
   );
   const flat = layoutOf(roster.prefs) === "flat";
   const took = Number.isFinite(duration) ? elapsedLabel(duration) : void 0;
+  const tint = `color-mix(in srgb, ${inkFill(colorOf(bot))} ${GROUP_TINT}%, var(--bt-bubble))`;
   return (0, import_react16.createElement)(
     "div",
-    { className: "bt-group-msg" },
+    { className: "bt-group-msg", style: { "--bt-bubble-tint": tint } },
     (0, import_react16.createElement)(
       "span",
       { className: "bt-group-name", style: flat ? void 0 : { color: inkText(colorOf(bot)) } },

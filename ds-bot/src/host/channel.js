@@ -6,6 +6,7 @@ import { install as installSide } from './side.js'
 import { handoffReply, questionReply, viewReply } from './parts.js'
 import { defaultRelayLimit } from './groups.js'
 import { validateViewAnswer } from 'deep-view/core'
+import { applySuperAgentPrefs } from '../shared/superagent-prefs.js'
 import { COLORS, EXTRA_COLORS, ROUTE } from './constants.js'
 
 const LANGUAGES = { zh: 'Chinese (简体中文)', en: 'English' }
@@ -160,22 +161,9 @@ export function install(rt) {
       else if (body.superagent === false) state.prefs.superagent = false
       else if (body.superagent === null) delete state.prefs.superagent
     }
-    // The SuperAgent page's behaviour switches are on unless someone wrote `false`, so a
-    // deleted key means on again; `null` resets a key to that default.
-    for (const key of ['saFold', 'saConclude', 'saLookup', 'saBackground', 'saPrepare']) {
-      if (body[key] === true) state.prefs[key] = true
-      else if (body[key] === false) state.prefs[key] = false
-      else if (body[key] === null) delete state.prefs[key]
-    }
-    // The one number on that page: a threshold out of range is refused, never stored.
-    if (body.saFoldAt !== undefined) {
-      const at = body.saFoldAt
-      if (at === null) delete state.prefs.saFoldAt
-      else if (Number.isInteger(at?.chars) && at.chars >= 300 && at.chars <= 20_000
-        && Number.isInteger(at?.lines) && at.lines >= 8 && at.lines <= 500) {
-        state.prefs.saFoldAt = { chars: at.chars, lines: at.lines }
-      } else throw invalid('Fold threshold must be 300–20000 characters and 8–500 lines')
-    }
+    // The SuperAgent page's switches and its one threshold; a value out of range is refused,
+    // never stored. See shared/superagent-prefs.js for what each branch means.
+    applySuperAgentPrefs(state.prefs, body)
     return rt.save()
   }
 

@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MarkdownText } from './dsh-primitives.js'
-import { inkText } from './inks.js'
+import { inkFill, inkText } from './inks.js'
 import { linkMentions, mentionTarget, dayLabel, contentText, stripHeader, isHiddenTurn, isRelayContext, relaysBefore, relayPart, commRunOf, toolName, toolArgs, reminderPrompts, elapsedLabel, clockLabel, messageClock } from './text.js'
 import { SmileIcon, ReplyIcon, DotsIcon, CheckIcon, DownloadIcon, CopyIcon, MemoryIcon } from './icons.js'
 import { colorOf, toolState, BotMark, RoomAvatar } from './mark.js'
@@ -33,10 +33,15 @@ export { clockLabel }
 // point above it. Only a reply with no mark falls back to these, itself exceeded rather
 // than reached: a 1000-character or 20-line one still reads whole.
 export const GROUP_FOLD = { preview: { chars: 120, lines: 4 }, mark: true }
+// How much of a member's ink a group bubble carries: a hint of hue that says who spoke, far
+// below the name above it, so the bubble never competes with what it says. Mixed in srgb,
+// like every other color-mix here: oklab would raise the browser floor for one tint.
+export const GROUP_TINT = 8
 const NEVER = { chars: Infinity, lines: Infinity }
 
-// The SuperAgent page sets the threshold or turns the group fold off; the preview and the
-// mark rule stay as they are, so off means a group line reads whole again.
+// The SuperAgent page sets the threshold, or turns the threshold and the mark rule off. A
+// reply the host kept only in part still folds: its whole text is a file, and "Show all" is
+// the only way back to it, so that fold is not the page's to switch off.
 export const groupFoldOf = prefs => (saOn(prefs, 'saFold')
   ? { ...GROUP_FOLD, at: foldAtOf(prefs) }
   : { ...GROUP_FOLD, at: NEVER, mark: false })
@@ -338,7 +343,10 @@ function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey
     h(BotMark, { bot, size: 22 }))
   const flat = layoutOf(roster.prefs) === 'flat'
   const took = Number.isFinite(duration) ? elapsedLabel(duration) : undefined
-  return h('div', { className: 'bt-group-msg' },
+  // The bubble reads as this member's, well under the strength of the name above it; the
+  // tint is its own variable because --bt-bubble cannot reference itself.
+  const tint = `color-mix(in srgb, ${inkFill(colorOf(bot))} ${GROUP_TINT}%, var(--bt-bubble))`
+  return h('div', { className: 'bt-group-msg', style: { '--bt-bubble-tint': tint } },
     h('span', { className: 'bt-group-name', style: flat ? undefined : { color: inkText(colorOf(bot)) } }, flat ? lead : null, bot.name,
       room?.admin === bot.id ? h('span', { className: 'bt-group-role' }, t('Admin')) : null,
       Number.isFinite(time) ? h('span', { className: 'bt-group-time', title: clockLabel(time) }, messageClock(time)) : null,
