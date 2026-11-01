@@ -3261,7 +3261,7 @@ html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side
 /* The phone layout now draws its own header row (the mark and a drawer button), so the
    team's bar moves up into that same row instead of starting a second one. Where that
    row's own toggle is mounted, the bar keeps only the title and the session menu. */
-html:has([data-mobile-nav="frame"]) .bt-head{margin-top:-44px}
+html:has([data-mobile-nav="frame"]) .bt-head{margin-top:0;height:36px}
 html:has([data-mobile-nav="frame"]):has([data-mobile-nav="toggle"]) .bt-head-btn{display:none}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:36px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 72%,transparent);border:0;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
