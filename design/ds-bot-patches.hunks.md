@@ -39,11 +39,11 @@
 | 37 | `ds-bot/src/client/details-drawer.js` | 235 | 1 |
 | 38 | `ds-bot/src/client/drawer-dismiss.js` | 1–15 | 15 |
 | 39 | `ds-bot/src/client/fold.js` | 12–15 | 4 |
-| 40 | `ds-bot/src/client/fold.js` | 25–48 | 24 |
-| 41 | `ds-bot/src/client/fold.js` | 60–83 | 18 |
-| 42 | `ds-bot/src/client/fold.js` | 98 | 1 |
-| 43 | `ds-bot/src/client/fold.js` | 125–133 | 5 |
-| 44 | `ds-bot/src/client/fold.js` | 142–147 | 6 |
+| 40 | `ds-bot/src/client/fold.js` | 25–62 | 38 |
+| 41 | `ds-bot/src/client/fold.js` | 74–99 | 20 |
+| 42 | `ds-bot/src/client/fold.js` | 114 | 1 |
+| 43 | `ds-bot/src/client/fold.js` | 141–149 | 5 |
+| 44 | `ds-bot/src/client/fold.js` | 158–163 | 6 |
 | 45 | `ds-bot/src/client/fonts.js` | 1–12 | 12 |
 | 46 | `ds-bot/src/client/header.js` | 4–11 | 3 |
 | 47 | `ds-bot/src/client/header.js` | 103–105 | 3 |
@@ -148,7 +148,7 @@
 | 146 | `ds-bot/test/composer-plus.test.js` | 1–122 | 122 |
 | 147 | `ds-bot/test/fold.test.js` | 107–108 | 2 |
 | 148 | `ds-bot/test/fold.test.js` | 126–127 | 2 |
-| 149 | `ds-bot/test/fold.test.js` | 155–170 | 16 |
+| 149 | `ds-bot/test/fold.test.js` | 155–173 | 19 |
 | 150 | `ds-bot/test/mcp-panel.test.js` | 1–93 | 93 |
 | 151 | `ds-bot/test/mcp.test.js` | 1–237 | 237 |
 | 152 | `ds-bot/test/message-layout.test.js` | 19–20 | 2 |

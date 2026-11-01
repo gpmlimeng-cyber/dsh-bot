@@ -550,7 +550,7 @@ index 00000000..8fca0d0f
 +  if (fromDrawer === true) collapse?.()
 +}
 diff --git a/ds-bot/src/client/fold.js b/ds-bot/src/client/fold.js
-index 2b49959d..f8211068 100644
+index 2b49959d..5290e595 100644
 --- a/ds-bot/src/client/fold.js
 +++ b/ds-bot/src/client/fold.js
 @@ -9,6 +9,10 @@ export const FOLD_HUGE = { chars: 20_000, lines: Infinity }
@@ -564,7 +564,7 @@ index 2b49959d..f8211068 100644
  const FENCE = /^ {0,3}(`{3,}|~{3,})/
  
  // Cuts `text` at `end` code units, backing up one when the last character is a
-@@ -18,6 +22,30 @@ function cutAt(text, end) {
+@@ -18,6 +22,44 @@ function cutAt(text, end) {
    return text.slice(0, code >= 0xd800 && code <= 0xdbff ? end - 1 : end)
  }
  
@@ -583,6 +583,20 @@ index 2b49959d..f8211068 100644
 +  return -1
 +}
 +
++// Where the last blank line before `to` ends, so a preview keeps the paragraph above it
++// and the empty line that separates it: a reply that leads with its point folds to that
++// point. -1 when the text has no paragraph break before the budget.
++function paragraphIn(text, to) {
++  const end = Math.min(to, text.length)
++  for (let at = end - 2; at >= 0; at -= 1) {
++    if (text[at] !== '\n') continue
++    let next = at + 1
++    while (next < end && (text[next] === ' ' || text[next] === '\t')) next += 1
++    if (next < end - 1 && text[next] === '\n') return next + 1
++  }
++  return -1
++}
++
 +// The first sentence end at or after `from`, before `to`; -1 when there is none.
 +function endAfter(text, from, to) {
 +  for (let at = from; at < Math.min(to, text.length); at += 1) {
@@ -595,7 +609,7 @@ index 2b49959d..f8211068 100644
  // More than `max` lines, counted only as far as needed.
  function moreLines(text, max) {
    let lines = 1
-@@ -29,19 +57,30 @@ function moreLines(text, max) {
+@@ -29,19 +71,32 @@ function moreLines(text, max) {
  
  // The start of a long text, cut at a line end (or inside a very long first line). In
  // Markdown a code fence left open is closed, so the preview does not run on as code.
@@ -617,10 +631,12 @@ index 2b49959d..f8211068 100644
 -    head = cutAt(head, cut > 0 ? cut : PREVIEW_CHARS)
 +  let head = body.split('\n', preview.lines).join('\n')
 +  if (head.length > preview.chars) {
-+    // End on a sentence where one ends near the budget; failing that widen to 130% for
-+    // the first end after it, and only then cut hard, backing off a word.
++    // A paragraph break wins: the reply leads with its point, and a fold shows that point.
++    // Then a sentence: one that ends near the budget, else the first past it up to 130%.
++    // Only a message with no break and no sentence at all is cut hard, at a word end.
 +    const budget = preview.chars
-+    const near = endIn(head, Math.floor(budget * 0.6), budget)
++    const paragraph = paragraphIn(head, budget)
++    const near = paragraph > 0 ? paragraph : endIn(head, Math.floor(budget * 0.6), budget)
 +    const wider = near > 0 ? near : endAfter(head, budget, Math.floor(budget * 1.3))
 +    if (wider > 0) head = cutAt(head, wider)
 +    else {
@@ -633,7 +649,7 @@ index 2b49959d..f8211068 100644
    if (!markdown) return head
    let open = null
    let openLine = -1
-@@ -56,7 +95,7 @@ export function foldPreview(text, limit = FOLD_AT, markdown = true) {
+@@ -56,7 +111,7 @@ export function foldPreview(text, limit = FOLD_AT, markdown = true) {
      // The cut kept only the fence marker (a card opening like ```dsh-ui on
      // its own line): an empty fence renders nothing, so pull the start of
      // the fenced text in as the preview instead.
@@ -642,7 +658,7 @@ index 2b49959d..f8211068 100644
      lines = head.split('\n')
      open = null
      openLine = -1
-@@ -83,13 +122,15 @@ export const stripLongNote = text => text.replace(/^\[A long message: \d+ charac
+@@ -83,13 +138,15 @@ export const stripLongNote = text => text.replace(/^\[A long message: \d+ charac
  // `whole`, when `text` is only the start of the message: its `length`, and `load()`,
  // which reads it whole ({ text, whole }). `live`: still streaming, never folded.
  // `markdown`: false for plain text.
@@ -661,7 +677,7 @@ index 2b49959d..f8211068 100644
    const count = (cut ? whole.length : text.length).toLocaleString()
    if (!open) {
      const show = async () => {
-@@ -98,7 +139,12 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
+@@ -98,7 +155,12 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
        setRead('loading')
        setRead(await whole.load() ?? { whole: false })
      }
@@ -12697,14 +12713,14 @@ index 00000000..b3d867e4
 +  return { required, fields }
 +}
 diff --git a/ds-bot/src/host/prompt.js b/ds-bot/src/host/prompt.js
-index 682b53d5..9263212f 100644
+index 682b53d5..faff6635 100644
 --- a/ds-bot/src/host/prompt.js
 +++ b/ds-bot/src/host/prompt.js
 @@ -22,6 +22,8 @@ const TEAM_RULES = [
    '- web_search results say which search backend answered. If web_search fails, never guess URLs or present pages you remember as search results: use a browser tool if you have one, otherwise tell the user that search is unavailable and the reason it gave.',
    '- Your conversations are long-lived. When one grows long, either its older messages are condensed in place into a summary you wrote (a "[Checkpoint N]" message), or it moves on to a fresh part that opens with a handoff note you wrote and your latest messages (a "[Handoff · part N]" message). What leaves your working context stays saved. When you need the exact earlier wording or a detail the summary or note does not show in full (a full path, a figure, every item of a complete list or a final summary), call read_own_chat with words to look for, or with part N to read the note that closed an earlier part; never fill such a detail in from memory. Each line it returns starts with an anchor such as [part 2 #1234 · 10-08 14:22]; pass the anchor as around to read what was said around it.',
    '- Reply in the user\'s language.',
-+  '- In a group chat the first thing you write is under about 100 characters: the conclusion, or the question that needs a decision, in plain words a colleague would say out loud. No file paths, line numbers, commit hashes or option names in that line. Everything else follows below it, where it folds away, or goes into an attached file.',
++  '- In a group chat the first thing you write is under about 100 characters: the conclusion, or the question that needs a decision, in plain words a colleague would say out loud. No file paths, line numbers, commit hashes or option names in that line. Put a blank line after it, then the detail, which folds away under the conclusion; a long detail may also go into an attached file.',
 +  '- A command that may take more than a few seconds goes to the background (bash with run_in_background: true): the harness wakes you with a completion notice when it settles, so keep working or keep talking meanwhile and read the result with job_output instead of sitting on a long foreground call.',
  ].join('\n')
  
@@ -16621,7 +16637,7 @@ index 00000000..d745c987
 +  assert.ok(mask !== null, 'the shell paperclip is not repainted as a plus where ours is missing')
 +})
 diff --git a/ds-bot/test/fold.test.js b/ds-bot/test/fold.test.js
-index 331d986a..a6f10b36 100644
+index 331d986a..f7426404 100644
 --- a/ds-bot/test/fold.test.js
 +++ b/ds-bot/test/fold.test.js
 @@ -104,7 +104,8 @@ test('a long text opens and closes in place; a short one has no control', async
@@ -16644,7 +16660,7 @@ index 331d986a..a6f10b36 100644
    await buttons(folded.control)[0].props.onClick()
    assert.equal(render(start, { whole }).shown.length, 30_000)
    assert.deepEqual(buttons(render(start, { whole }).control).map(words), ['Show less'])
-@@ -150,3 +152,19 @@ test('a streaming text never folds', () => {
+@@ -150,3 +152,22 @@ test('a streaming text never folds', () => {
    fresh()
    assert.equal(render(lines(40), { live: true }).control, null)
  })
@@ -16660,6 +16676,9 @@ index 331d986a..a6f10b36 100644
 +  assert.equal(cut(`${'a'.repeat(140)}。${'b'.repeat(160)}`), `${'a'.repeat(140)}。`, 'the first end past the budget wins, up to 130%')
 +  assert.equal(cut('c'.repeat(300)), 'c'.repeat(120), 'one long sentence cuts at the budget')
 +  assert.equal(cut(Array.from({ length: 62 }, () => 'word').join(' ')), Array.from({ length: 24 }, () => 'word').join(' '), 'a cut falls back to a word end')
++  // A paragraph break wins over a sentence: the preview keeps the point and the blank
++  // line under it, however early the point is.
++  assert.equal(cut(`结论。\n\n${'d'.repeat(800)}`), '结论。\n\n')
 +  // A decimal point is not a sentence end.
 +  const number = `a${'a'.repeat(89)}3.14${'b'.repeat(210)}`
 +  assert.equal(cut(number), number.slice(0, 120))
