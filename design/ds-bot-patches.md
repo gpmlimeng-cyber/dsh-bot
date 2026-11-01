@@ -169,10 +169,13 @@ B 档：**只记录不拦截**。两个能起一轮的入口各包一层，写 `
 | 能力清单 | `src/host/channel.js` | 新增 `export const CAPABILITIES` | 客户端据此隐藏画不了的部分；单测断言它等于 switch 的 case 全集，避免第二真源 |
 | feed 首帧 | `src/host/feed.js` | `event: hello` 的 data 增加 `api`/`boot`/`seq`，`publish` 递增 seq | 保留 `revision`；事件名与既有字段不变，网页客户端不受影响 |
 | 测试 | 新文件 `test/mobile-hello.test.js` | 5 条：版本匹配、版本不匹配、未带版本、能力清单与 switch 一致、feed 首帧字段 | 覆盖「版本不匹配 / 缺字段」两类；「未知事件」由客户端的跳过规则保证，host 侧无对应端点 |
+| 头像 | `src/host/channel.js` | 新增 `case 'avatar'`；`state` 认 `avatars: "ref"` | 手机列表只传引用不传图，一张列表不再带几十 KB；同一张图永远同一个 ref，客户端按 ref 缓存。不带该参数时行为完全不变 |
+| 头像测试 | 新文件 `test/mobile-avatar.test.js` | 5 条：带 ref 不回图、不带 ref 行为不变、两端 ref 一致、无图回双 null、未知 Bot 报 `bot/not-found` | 「缺字段」与「不认识的目标」两类 |
 
-**还没做**（下一块）：`avatar`、`room-chat`、`notices`、`memory-add`、`memory-edit`、
-`usage-summary` 六个端点；`src/host/remote.js`（`dsBot/call`、`dsBot/feed`）；
-`state` 的 `avatars: "ref"`。其余 22 个客户端要用的端点已经存在且形状对得上。
+**还没做**（下一块）：`room-chat`、`notices`、`memory-add`、`memory-edit`、
+`usage-summary` 五个端点（Dev 在做前两个）；`src/host/remote.js`（`dsBot/call`、`dsBot/feed`，
+注册写法 Archi 已验：`TypertRemoteService` 子类 + 手工套 `Remote` 装饰器，形参必须是
+`(endpoint, payload)` 两个标识符）。其余 22 个客户端要用的端点已经存在且形状对得上。
 
 ## 2. 生成物（不进补丁）
 

@@ -12303,12 +12303,13 @@ index 00000000..4a3a44c9
 +  return published
 +}
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
-index 3fc5c7c6..5dec00d4 100644
+index 3fc5c7c6..11e59318 100644
 --- a/ds-bot/src/host/channel.js
 +++ b/ds-bot/src/host/channel.js
-@@ -1,12 +1,16 @@
+@@ -1,12 +1,17 @@
  // Client channel: the team view the browser renders, and the POST /api/bot endpoints.
- import { randomUUID } from 'node:crypto'
+-import { randomUUID } from 'node:crypto'
++import { randomUUID, createHash } from 'node:crypto'
 +import { readFileSync } from 'node:fs'
 +import { fileURLToPath } from 'node:url'
  import { createUserMessage } from '@deepseek-ai/dsh-llm'
@@ -12321,10 +12322,11 @@ index 3fc5c7c6..5dec00d4 100644
 +import { applySuperAgentPrefs } from '../shared/superagent-prefs.js'
 +import { COLORS, EXTRA_COLORS, ROUTE, API_MIN, API_MAX } from './constants.js'
 +import { BOOT_ID, publishedSeq } from './boot.js'
++import { noticesView, roomChatPage } from './mobile.js'
  
  const LANGUAGES = { zh: 'Chinese (简体中文)', en: 'English' }
  const RUN_STATS = ['sessionStats', 'tokenUsage', 'contextPressure']
-@@ -21,6 +25,33 @@ export function errorCode(error) {
+@@ -21,6 +26,33 @@ export function errorCode(error) {
    return isInternal(error) ? 'bot/internal' : 'bot/refused'
  }
  
@@ -12333,7 +12335,7 @@ index 3fc5c7c6..5dec00d4 100644
 +// so a new endpoint is listed here or the test fails.
 +export const CAPABILITIES = [
 +  'add-agent', 'agent-adopt', 'agent-archive', 'agent-rename', 'agent-session',
-+  'answer-question', 'approval-answer', 'avatar-delete', 'avatar-import', 'avatar-library',
++  'answer-question', 'approval-answer', 'avatar', 'avatar-delete', 'avatar-import', 'avatar-library',
 +  'bot-capability', 'browser-give-back', 'browser-result', 'browser-stop', 'browser-takeover',
 +  'browser-wait', 'btw-delete', 'capability-approve', 'capability-delete', 'capability-save',
 +  'chat', 'connector-connect', 'connector-disconnect', 'connector-retry', 'create-bot',
@@ -12342,8 +12344,8 @@ index 3fc5c7c6..5dec00d4 100644
 +  'earlier', 'efforts', 'exchange', 'exchange-text', 'file-text', 'folder-list', 'folder-pick',
 +  'folders', 'hello', 'learning-answer', 'mcp-add', 'mcp-list', 'mcp-market', 'mcp-remove',
 +  'mcp-save', 'mcp-toggle', 'mcp-tools', 'memory-ask', 'memory-forget', 'memory-view',
-+  'models', 'private-release', 'provider-add', 'provider-key', 'provider-models',
-+  'provider-remove', 'providers', 'remove-agent', 'repo-stars', 'room-continue',
++  'models', 'notices', 'private-release', 'provider-add', 'provider-key', 'provider-models',
++  'provider-remove', 'providers', 'remove-agent', 'repo-stars', 'room-chat', 'room-continue',
 +  'room-progress', 'run-stats', 'schedule-create', 'schedule-delete', 'schedules',
 +  'secret-allow', 'secret-cancel', 'secret-delete', 'secret-set', 'secret-update', 'send',
 +  'set-flags', 'set-main', 'set-prefs', 'side-ask', 'side-cancel', 'side-close', 'side-new',
@@ -12358,16 +12360,46 @@ index 3fc5c7c6..5dec00d4 100644
  export function install(rt) {
    installBtw(rt)
    installSide(rt)
-@@ -99,7 +130,7 @@ export function install(rt) {
+@@ -35,7 +67,15 @@ export function install(rt) {
+   // Models come from DSH, not state.json, so a provider added in Harness settings
+   // changes the view without a new revision.
+   const modelsKey = () => `${rt.cachedCatalog().map(entry => `${entry.ref}${entry.needsKey ? '!' : ''}${entry.reasoning ? `:${JSON.stringify(entry.reasoning)}` : ''}`).join(',')}|${rt.cachedDefault() ?? ''}`
+-  const view = () => ({
++  // A photo's reference: the same bytes always name the same ref, so a client can cache
++  // by it and ask `avatar` only when the ref changes.
++  const imageRef = image => `avatar:${createHash('sha1').update(String(image)).digest('hex').slice(0, 16)}`
++  const refAvatar = avatar => {
++    if (typeof avatar?.image !== 'string') return avatar
++    const { image, ...rest } = avatar
++    return { ...rest, imageRef: imageRef(image) }
++  }
++  const view = (options = {}) => ({
+     revision: state.revision,
+     workspaceId: state.workspaceId ?? null,
+     // `mainBotId` is the first Main Bot, which the sidebar shows as its tile.
+@@ -44,7 +84,11 @@ export function install(rt) {
+     // `sessionId` is the Bot's current own-chat part; `parts` its earlier ones.
+     // `waiting`: the Bot holds its greeting until the user picks its model.
+     bots: Object.values(state.bots).map(({ segments, kickoff, ...bot }) => ({
+-      ...bot, sessionId: rt.chatOf(bot.id), parts: (segments ?? []).map(segment => segment.sessionId), ...(kickoff ? { waiting: true } : {}),
++      ...bot,
++      // A phone list draws small marks: with `avatars: 'ref'` the photo stays on the
++      // host and only its reference travels, so a list costs no image bytes.
++      ...(options.avatars === 'ref' ? { avatar: refAvatar(bot.avatar) } : {}),
++      sessionId: rt.chatOf(bot.id), parts: (segments ?? []).map(segment => segment.sessionId), ...(kickoff ? { waiting: true } : {}),
+     })),
+     // `parts`: the members' hidden group Sessions and their earlier segments, for usage.
+     rooms: Object.values(state.rooms).map(({ log, seen, lateRounds, relays, sessions, segments, ...room }) => {
+@@ -99,7 +143,7 @@ export function install(rt) {
    })
    // What a host that only reads the team may still answer.
    // Updates change the dsh profile, not the team, so a reading host may run them too.
 -  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library'])
-+  const READS = new Set(['hello', 'state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market'])
++  const READS = new Set(['hello', 'avatar', 'state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'room-chat', 'notices', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market'])
  
    function setPrefs(body) {
      if (body.theme !== undefined) {
-@@ -116,6 +147,21 @@ export function install(rt) {
+@@ -116,6 +160,21 @@ export function install(rt) {
        else if (body.motion === 'quiet' || body.motion === 'lively') state.prefs.motion = body.motion
        else throw invalid('Motion must be quiet, normal or lively')
      }
@@ -12389,7 +12421,7 @@ index 3fc5c7c6..5dec00d4 100644
      if (body.layout !== undefined) {
        if (body.layout === null || body.layout === 'bubble') delete state.prefs.layout
        else if (body.layout === 'flat') state.prefs.layout = body.layout
-@@ -137,6 +183,17 @@ export function install(rt) {
+@@ -137,6 +196,17 @@ export function install(rt) {
        if (body.thinking === true) state.prefs.thinking = true
        else if (body.thinking === false || body.thinking === null) delete state.prefs.thinking
      }
@@ -12407,7 +12439,50 @@ index 3fc5c7c6..5dec00d4 100644
      return rt.save()
    }
  
-@@ -352,6 +409,18 @@ export function install(rt) {
+@@ -153,7 +223,7 @@ export function install(rt) {
+           await rt.catalog()
+           await rt.loadSecrets()
+           if (body.since === state.revision && (body.models === undefined || body.models === modelsKey())) return ok({ revision: state.revision, unchanged: true, ...live() })
+-          return ok({ ...view(), ...live() })
++          return ok({ ...view({ avatars: body.avatars }), ...live() })
+         case 'models':
+           await rt.catalog({ fresh: true })
+           return ok({ modelsKey: modelsKey() })
+@@ -212,6 +282,17 @@ export function install(rt) {
+         case 'chat':
+           await rt.load()
+           return ok(await rt.chatPage(String(body.botId ?? ''), body.cursor ?? undefined))
++        // A page of a group chat, for a window that draws the room itself. A missing
++        // `roomId` is refused; an unknown one is answered as gone.
++        case 'room-chat': {
++          if (typeof body.roomId !== 'string' || body.roomId === '') return fail('No group chat named', 'bot/invalid')
++          await rt.load()
++          return ok(roomChatPage(rt, body.roomId, body.cursor ?? undefined))
++        }
++        // What a client that was away should hear about. `boot` and `since` are the last
++        // handshake and revision it read; a different host start answers `reset: true`.
++        case 'notices':
++          return ok(noticesView(rt, body))
+         // DSH's own whole-log figures for the current part of a Bot's chat, the ones its
+         // status bar shows; a window without that bar shows them in the Bot's details.
+         case 'run-stats': {
+@@ -236,6 +317,15 @@ export function install(rt) {
+         case 'update-bot':
+           await rt.load()
+           return ok(await rt.updateBot(body.id, body))
++        // One Bot's photo, by reference: the list sends `imageRef`, and a client asks
++        // here only when it holds no image for that ref.
++        case 'avatar': {
++          await rt.load()
++          const bot = state.bots[String(body.botId ?? '')]
++          if (bot === undefined) return fail('Unknown Bot', 'bot/not-found')
++          const image = typeof bot.avatar?.image === 'string' ? bot.avatar.image : null
++          return ok({ ref: image === null ? null : imageRef(image), image })
++        }
+         // The avatar library: photos the user imported once, kept beside the team.
+         case 'avatar-library':
+           await rt.load()
+@@ -352,6 +442,18 @@ export function install(rt) {
          case 'secret-delete':
            await rt.load()
            return ok(await rt.secretEndpoint(endpoint, body))
@@ -12426,7 +12501,7 @@ index 3fc5c7c6..5dec00d4 100644
          case 'connector-connect':
          case 'connector-disconnect':
          case 'connector-retry':
-@@ -554,6 +623,24 @@ export function install(rt) {
+@@ -554,6 +656,24 @@ export function install(rt) {
          case 'diagnostics-clear':
            await rt.diagnostics.clear()
            return ok(true)
@@ -17820,6 +17895,104 @@ index ebcae6d3..5ee242cb 100644
  })
  
  test('a Bot bubble keeps room for the toolbar beside it; flat Bot text takes the flat width', () => {
+diff --git a/ds-bot/test/mobile-avatar.test.js b/ds-bot/test/mobile-avatar.test.js
+new file mode 100644
+index 00000000..3e9c9428
+--- /dev/null
++++ b/ds-bot/test/mobile-avatar.test.js
+@@ -0,0 +1,92 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { install } from '../src/host/channel.js'
++
++const PHOTO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
++
++function runtime(bots) {
++  const routes = []
++  const ctx = {
++    on: () => () => {},
++    effect: fn => { const dispose = fn(); return typeof dispose === 'function' ? dispose : () => {} },
++    get: () => undefined,
++    provide: () => {},
++    tool: () => {},
++    sessions: { flush: async () => {} },
++    connection: { fetch: { register: route => { routes.push(route); return () => {} } } },
++  }
++  const empty = () => ({})
++  const rt = {
++    ctx,
++    state: { revision: 3, mainBotIds: [], prefs: {}, agents: {}, rooms: {}, bots },
++    refresh: async () => {},
++    readOnly: () => undefined,
++    memoryEnabled: true,
++    load: async () => {},
++    save: async () => {},
++    bootstrap: async () => {},
++    catalog: async () => {},
++    loadSecrets: async () => {},
++    chatOf: id => `${id}-chat`,
++    archivesView: empty,
++    workView: empty,
++    roomWorkView: empty,
++    approvalsView: () => [],
++    secretsView: empty,
++    capabilityLibraryView: () => [],
++    cachedCatalog: () => [],
++    cachedDefault: () => null,
++    browserEnabled: false,
++    noteFailure: () => {},
++  }
++  // A missing host helper answers empty: the test only reads the avatar projection.
++  install(new Proxy(rt, { get: (target, key) => (key in target ? target[key] : () => ({})) }))
++  return { routes }
++}
++
++async function ask(routes, endpoint, payload) {
++  const route = routes.find(entry => entry.path === '/api/bot')
++  const request = { json: async () => ({ endpoint, payload }), signal: new AbortController().signal }
++  return (await route.fetch(request)).json()
++}
++
++test('a list asked with avatars: "ref" sends the reference, not the photo', async () => {
++  const { routes } = runtime({ b1: { id: 'b1', name: 'Ada', avatar: { image: PHOTO, shape: 'circle' } } })
++  const answer = await ask(routes, 'state', { avatars: 'ref' })
++  assert.equal(answer.ok, true, answer.error?.message)
++  const avatar = answer.value.bots[0].avatar
++  assert.equal(avatar.image, undefined)
++  assert.match(avatar.imageRef, /^avatar:[0-9a-f]{16}$/)
++  assert.equal(avatar.shape, 'circle')
++})
++
++test('without the flag the photo travels as before', async () => {
++  const { routes } = runtime({ b1: { id: 'b1', name: 'Ada', avatar: { image: PHOTO } } })
++  const answer = await ask(routes, 'state', {})
++  assert.equal(answer.value.bots[0].avatar.image, PHOTO)
++  assert.equal(answer.value.bots[0].avatar.imageRef, undefined)
++})
++
++test('the avatar endpoint answers the same reference the list named', async () => {
++  const { routes } = runtime({ b1: { id: 'b1', name: 'Ada', avatar: { image: PHOTO } } })
++  const list = await ask(routes, 'state', { avatars: 'ref' })
++  const answer = await ask(routes, 'avatar', { botId: 'b1' })
++  assert.equal(answer.ok, true, answer.error?.message)
++  assert.equal(answer.value.image, PHOTO)
++  assert.equal(answer.value.ref, list.value.bots[0].avatar.imageRef)
++})
++
++test('a Bot without a photo answers two nulls, not an error', async () => {
++  const { routes } = runtime({ b1: { id: 'b1', name: 'Ada', avatar: { shape: 'whale' } } })
++  const answer = await ask(routes, 'avatar', { botId: 'b1' })
++  assert.equal(answer.ok, true)
++  assert.equal(answer.value.image, null)
++  assert.equal(answer.value.ref, null)
++})
++
++test('an unknown Bot is refused by name', async () => {
++  const { routes } = runtime({})
++  const answer = await ask(routes, 'avatar', { botId: 'nope' })
++  assert.equal(answer.ok, false)
++  assert.equal(answer.error.code, 'bot/not-found')
++})
 diff --git a/ds-bot/test/mobile-hello.test.js b/ds-bot/test/mobile-hello.test.js
 new file mode 100644
 index 00000000..d75941b3
