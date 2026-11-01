@@ -192,7 +192,7 @@ index 23ef1007..864f7d9b 100644
        items.map((item, index) => (item.sep
          ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
 diff --git a/ds-bot/src/client/cells.js b/ds-bot/src/client/cells.js
-index 3555f0cf..526a1753 100644
+index 3555f0cf..62049697 100644
 --- a/ds-bot/src/client/cells.js
 +++ b/ds-bot/src/client/cells.js
 @@ -1,7 +1,7 @@
@@ -227,7 +227,7 @@ index 3555f0cf..526a1753 100644
 +// How much of a member's ink a group bubble carries: a hint of hue that says who spoke, far
 +// below the name above it, so the bubble never competes with what it says. Mixed in srgb,
 +// like every other color-mix here: oklab would raise the browser floor for one tint.
-+export const GROUP_TINT = 5
++export const GROUP_TINT = 3
 +const NEVER = { chars: Infinity, lines: Infinity }
 +
 +// The SuperAgent page sets the threshold, or turns the threshold and the mark rule off. A
@@ -17958,7 +17958,7 @@ index 00000000..17f6e7c6
 +  assert.deepEqual(applySuperAgentPrefs({ saFold: false }, { saFold: true }), { saFold: true }, 'a switch writes both ways')
 +})
 diff --git a/ds-bot/test/tool-cells.test.js b/ds-bot/test/tool-cells.test.js
-index 18780147..d0f25c5a 100644
+index 18780147..eb6ab5d3 100644
 --- a/ds-bot/test/tool-cells.test.js
 +++ b/ds-bot/test/tool-cells.test.js
 @@ -9,7 +9,8 @@ import { build } from 'esbuild'
@@ -18065,7 +18065,7 @@ index 18780147..d0f25c5a 100644
 +test('a group bubble is tinted with its member ink', () => {
 +  const out = show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: 'Draft is up.', time: 1 }] } }), { sessionId: 'room' })
 +  const row = findAll(out, node => node.props?.className === 'bt-group-msg')[0]
-+  assert.match(row.props.style['--bt-bubble-tint'], /^color-mix\(in srgb, var\(--bt-ink-\w+\) 5%, var\(--bt-bubble\)\)$/)
++  assert.match(row.props.style['--bt-bubble-tint'], /^color-mix\(in srgb, var\(--bt-ink-\w+\) 3%, var\(--bt-bubble\)\)$/)
 +})
 diff --git a/ds-bot/test/user-bubble.test.js b/ds-bot/test/user-bubble.test.js
 index bdc9eb87..35fd4e50 100644
