@@ -3425,7 +3425,7 @@ index 00000000..0328db2f
 +  }, mark.paths.map((d, index) => h('path', { key: index, d })))
 +}
 diff --git a/ds-bot/src/client/settings.js b/ds-bot/src/client/settings.js
-index 4428659d..3f5b8442 100644
+index 4428659d..f8dbbf5f 100644
 --- a/ds-bot/src/client/settings.js
 +++ b/ds-bot/src/client/settings.js
 @@ -1,7 +1,7 @@
@@ -3448,7 +3448,7 @@ index 4428659d..3f5b8442 100644
    const timer = useRef(0)
    useEffect(() => () => clearTimeout(timer.current), [])
    const pickCustom = (value) => {
-@@ -92,6 +96,22 @@ function GeneralPage({ roster, actions, run }) {
+@@ -92,6 +96,23 @@ function GeneralPage({ roster, actions, run }) {
        h(SetRow, { label: t('Theme'), hint: t('Colors for the whole team, on every device.') },
          h('select', { className: 'bt-select', 'aria-label': t('Theme'), value: current, onChange: event => run(actions.setPrefs({ theme: event.target.value })) },
            Object.entries(themes).map(([id, theme]) => h('option', { key: id, value: id }, t(theme.label))))),
@@ -3465,9 +3465,10 @@ index 4428659d..3f5b8442 100644
 +      h(SetRow, { label: t('Mobile skin'), hint: t('How chat looks on a phone. The desktop keeps this plugin\'s own shape.') },
 +        h(Choice, { label: t('Mobile skin'), value: skin, options: Object.entries(SKIN_CHOICES).map(([id, face]) => [id, t(face.label)]), pick: (id) => { setSkin(id); run(actions.localPref('skin', id)) } })),
 +      // The gate is a host behaviour, so this value is the team's, not this device's: it
-+      // goes through `setPrefs`, and the row reads it back from the host's answer.
-+      h(SetRow, { label: t('SuperAgent'), hint: prefs.superagent === true ? t('On: records hand-offs between Bots.') : t('Off: nothing is recorded or blocked.') },
-+        h(Switch, { label: t('SuperAgent'), on: prefs.superagent === true, onChange: superagent => run(actions.setPrefs({ superagent })) })),
++      // goes through `setPrefs`, and the row reads it back from the host's answer. It is on
++      // until someone turns it off, so the switch only reads `false`.
++      h(SetRow, { label: t('SuperAgent'), hint: prefs.superagent === false ? t('Off: nothing is recorded or blocked.') : t('On: records hand-offs between Bots.') },
++        h(Switch, { label: t('SuperAgent'), on: prefs.superagent !== false, onChange: superagent => run(actions.setPrefs({ superagent })) })),
        h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },
          h('div', { className: 'bt-swatches' },
            h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
@@ -11529,10 +11530,10 @@ index 82c3b3b9..6ed9e1d0 100644
  export const flatWidthOf = prefs => percent(prefs?.flatWidth, 100)
 diff --git a/ds-bot/src/host/authorization.js b/ds-bot/src/host/authorization.js
 new file mode 100644
-index 00000000..f4f4ae05
+index 00000000..3cd3260d
 --- /dev/null
 +++ b/ds-bot/src/host/authorization.js
-@@ -0,0 +1,83 @@
+@@ -0,0 +1,86 @@
 +// SuperAgent authorization: records the deliveries a Bot makes on its own account — a
 +// hand-off, inferred from something it was told — and leaves the ones the user asked for
 +// out of the log. B tier records and never blocks.
@@ -11565,7 +11566,10 @@ index 00000000..f4f4ae05
 +}
 +
 +export function install(rt) {
-+  const on = () => rt.state?.prefs?.superagent === true
++  // On unless it was switched off: a team that never touched the switch records, as the
++  // user asked. Only an explicit `false` turns it off, and reading it here (not at install)
++  // is what lets a flip take effect on the next delivery.
++  const on = () => rt.state?.prefs?.superagent !== false
 +
 +  function note(rule, ids, startedAt, deliverUs) {
 +    try {
@@ -11617,7 +11621,7 @@ index 00000000..f4f4ae05
 +  }
 +}
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
-index 3fc5c7c6..e3a596c7 100644
+index 3fc5c7c6..b3cbbdc7 100644
 --- a/ds-bot/src/host/channel.js
 +++ b/ds-bot/src/host/channel.js
 @@ -99,7 +99,7 @@ export function install(rt) {
@@ -11651,20 +11655,22 @@ index 3fc5c7c6..e3a596c7 100644
      if (body.layout !== undefined) {
        if (body.layout === null || body.layout === 'bubble') delete state.prefs.layout
        else if (body.layout === 'flat') state.prefs.layout = body.layout
-@@ -137,6 +152,12 @@ export function install(rt) {
+@@ -137,6 +152,14 @@ export function install(rt) {
        if (body.thinking === true) state.prefs.thinking = true
        else if (body.thinking === false || body.thinking === null) delete state.prefs.thinking
      }
 +    // The authorization gate reads this on every delivery, so the switch takes effect at
-+    // once and needs no restart. Only `true` turns it on; anything else is off.
++    // once and needs no restart. Recording is the default, so off has to be written as
++    // `false`: deleting the key would fall back to the default and switch it back on.
 +    if (body.superagent !== undefined) {
 +      if (body.superagent === true) state.prefs.superagent = true
-+      else if (body.superagent === false || body.superagent === null) delete state.prefs.superagent
++      else if (body.superagent === false) state.prefs.superagent = false
++      else if (body.superagent === null) delete state.prefs.superagent
 +    }
      return rt.save()
    }
  
-@@ -352,6 +373,18 @@ export function install(rt) {
+@@ -352,6 +375,18 @@ export function install(rt) {
          case 'secret-delete':
            await rt.load()
            return ok(await rt.secretEndpoint(endpoint, body))
@@ -15911,10 +15917,10 @@ index 00000000..6cef597f
 +}
 diff --git a/ds-bot/test/authorization.test.js b/ds-bot/test/authorization.test.js
 new file mode 100644
-index 00000000..a1fab303
+index 00000000..c179abc5
 --- /dev/null
 +++ b/ds-bot/test/authorization.test.js
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,134 @@
 +import assert from 'node:assert/strict'
 +import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 +import { tmpdir } from 'node:os'
@@ -15954,36 +15960,12 @@ index 00000000..a1fab303
 +const handoff = { fromId: 'dev', toId: 'chief', role: 'reply', text: 'the data is ready' }
 +const fromUser = { toId: 'dev', roomId: 'room1', role: 'room', text: 'check the data' }
 +
-+test('off: nothing is recorded, no file appears, and the call passes through whole', async () => {
++test('the switch starts on: a team that never touched it records', async () => {
 +  const b = bench()
 +  try {
-+    assert.deepEqual(await b.rt.deliver(handoff), { ok: true })
-+    assert.equal(await b.rt.postToRoom({ id: 'room1' }, { id: 'dev' }, 'hello', { progress: true }, ['f']), 'posted')
-+    assert.deepEqual(b.calls, [
-+      ['deliver', handoff],
-+      ['postToRoom', [{ id: 'room1' }, { id: 'dev' }, 'hello', { progress: true }, ['f']]],
-+    ])
-+    assert.equal(existsSync(b.path), false, 'off still created the log')
-+    assert.deepEqual(b.lines(), [])
-+  } finally { b.done() }
-+})
-+
-+test('off: a failed delivery keeps its exception and its message', async () => {
-+  const b = bench({}, { fail: true })
-+  try {
-+    await assert.rejects(b.rt.deliver(handoff), /delivery failed/)
-+    assert.equal(existsSync(b.path), false)
-+  } finally { b.done() }
-+})
-+
-+test('on: a Bot’s own hand-off is recorded, the user’s own message is not', async () => {
-+  const b = bench({ superagent: true })
-+  try {
 +    await b.rt.deliver(handoff)
-+    await b.rt.deliver(fromUser)
-+    const lines = b.lines()
-+    assert.equal(lines.length, 1)
-+    const [line] = lines
++    const [line] = b.lines()
++    assert.ok(line, 'the default team recorded nothing')
 +    assert.equal(line.admitted, true)
 +    assert.equal(line.rule, 'message_bot')
 +    assert.equal(line.fromId, 'dev')
@@ -15998,8 +15980,17 @@ index 00000000..a1fab303
 +  } finally { b.done() }
 +})
 +
-+test('on: a group post is recorded as the relay it is', async () => {
-+  const b = bench({ superagent: true })
++test('the user’s own message is not recorded', async () => {
++  const b = bench()
++  try {
++    await b.rt.deliver(handoff)
++    await b.rt.deliver(fromUser)
++    assert.equal(b.lines().length, 1)
++  } finally { b.done() }
++})
++
++test('a group post is recorded as the relay it is', async () => {
++  const b = bench()
 +  try {
 +    await b.rt.postToRoom({ id: 'room1' }, { id: 'dev' }, 'relayed', { member: true })
 +    const [line] = b.lines()
@@ -16010,17 +16001,43 @@ index 00000000..a1fab303
 +  } finally { b.done() }
 +})
 +
++test('switched off: nothing is recorded, no file appears, and the call passes through whole', async () => {
++  const b = bench({ superagent: false })
++  try {
++    assert.deepEqual(await b.rt.deliver(handoff), { ok: true })
++    assert.equal(await b.rt.postToRoom({ id: 'room1' }, { id: 'dev' }, 'hello', { progress: true }, ['f']), 'posted')
++    assert.deepEqual(b.calls, [
++      ['deliver', handoff],
++      ['postToRoom', [{ id: 'room1' }, { id: 'dev' }, 'hello', { progress: true }, ['f']]],
++    ])
++    assert.equal(existsSync(b.path), false, 'off still created the log')
++    assert.deepEqual(b.lines(), [])
++  } finally { b.done() }
++})
++
++test('switched off: a failed delivery keeps its exception and its message', async () => {
++  const b = bench({ superagent: false }, { fail: true })
++  try {
++    await assert.rejects(b.rt.deliver(handoff), /delivery failed/)
++    assert.equal(existsSync(b.path), false)
++  } finally { b.done() }
++})
++
 +test('the switch flips without reinstalling the gate', async () => {
 +  const b = bench()
 +  try {
 +    await b.rt.deliver(handoff)
-+    assert.deepEqual(b.lines(), [])
++    assert.equal(b.lines().length, 1, 'the default did not record')
++    b.rt.state.prefs.superagent = false
++    await b.rt.deliver(handoff)
++    assert.equal(b.lines().length, 1, 'switching off still recorded')
 +    b.rt.state.prefs.superagent = true
 +    await b.rt.deliver(handoff)
-+    assert.equal(b.lines().length, 1)
++    assert.equal(b.lines().length, 2, 'switching back on did not record')
++    // Deleting the key returns to the default, which records too.
 +    delete b.rt.state.prefs.superagent
 +    await b.rt.deliver(handoff)
-+    assert.equal(b.lines().length, 1, 'turning the switch off still recorded')
++    assert.equal(b.lines().length, 3)
 +  } finally { b.done() }
 +})
 +

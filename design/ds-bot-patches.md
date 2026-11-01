@@ -96,6 +96,9 @@ hunk 3、5 是唯一的 minus 行（挂载点，各 1 处组件插入），其�
 B 档：**只记录不拦截**。两个能起一轮的入口各包一层，写 `$DSH_HOME/bot/authorization.jsonl`，只写
 「Bot 自己转述」那种（`deliver` 的 `fromId !== undefined`、以及全部 `postToRoom`）。
 
+**默认开**：`prefs.superagent` 缺省即记录，只有显式 `false` 才关。所以「关」必须写 `false` 而不是删键
+（删键 = 回到缺省 = 又开了）；`null` 才删键，表示恢复缺省。UI 的 `Switch` 因此只认 `!== false`。
+
 | # | 文件 | 改前 → 改后 | 为什么 |
 |---|---|---|---|
 | 1 | `src/host/authorization.js` | 新增，`policyOf(state)` + `install(rt)` | 唯一的新文件；`policyOf` 只哈希团队结构（bot id/main、房间 members/admin），**不含任何指令或公告文本** |
