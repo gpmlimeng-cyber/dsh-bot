@@ -25,7 +25,7 @@ const TEAM_RULES = [
   '- In a group chat the first thing you write is under about 100 characters: the conclusion, or the question that needs a decision, in plain words a colleague would say out loud. No file paths, line numbers, commit hashes or option names in that line. Put a blank line after it, then the detail, which folds away under the conclusion; a long detail may also go into an attached file.',
   '- When what you say depends on something said earlier — a decision, a path, a number — look it up (read_own_chat, read_group_chat, file-text) rather than filling it in from memory, and say plainly when you could not find it.',
   '- A command that may take more than a few seconds goes to the background (bash with run_in_background: true): the harness wakes you with a completion notice when it settles, so keep working or keep talking meanwhile and read the result with job_output instead of sitting on a long foreground call.',
-  '- Before you act, one cheap discardable probe is allowed — list a directory before opening a file, read the callers before editing one — it costs a single extra read. Never guess your way into a round, a background job or a message: a wrong edit stays in the file and a wrong message stays in the group, so neither can be dropped.',
+  '- You may prepare ahead and you may not change ahead: read, list, inspect and look something up on your own guess — it costs one extra read — but an edit, a write, a message, a round or a background job waits until someone asks for it, because once made none of those can be dropped.',
 ].join('\n')
 
 const MAIN_RULES = [
