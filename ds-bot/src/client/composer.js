@@ -126,31 +126,37 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
   // mobile file input, which its paperclip button is injected with.
   const target = roster.byId?.[sessionId]?.id ?? roster.roomsById?.[sessionId]?.id
   if (sessionId === undefined) return null
-  // A composer without a file input has nothing to hand the picker.
-  const fileInput = () => button.current?.closest('[data-composer-card]')?.querySelector('input[type=file]')
+  // A composer without a file input has nothing to hand the picker. The card is
+  // looked up through the button first; when the phone layout moves the plus out of
+  // the card, the card is still found on its own before giving up.
+  const fileInput = () => button.current?.closest?.('[data-composer-card]')?.querySelector('input[type=file]')
+    ?? document.querySelector?.('[data-composer-card] input[type=file]')
+    ?? document.querySelector?.('input[type=file]')
+    ?? null
   const toggle = () => {
     if (open) { setOpen(null); return }
     setOpen({ files: Boolean(fileInput()) })
   }
-  const attach = () => {
-    setOpen(null)
-    fileInput()?.click()
-  }
-  // Images take the same composer picker; only its accept filter changes for this one
-  // open, and it goes back whichever way the dialog ends (change, or a focus return).
-  const attachImage = () => {
-    setOpen(null)
+  // The two upload rows are plain buttons that click their own input: a click on a
+  // label or on the input itself loses its default action in this page's capture
+  // handlers, while a button's handler still runs (the rows beside them work so).
+  const filePick = useRef(null)
+  const imagePick = useRef(null)
+  const handFiles = (event) => {
+    const picked = event.target.files
     const input = fileInput()
-    if (!input) return
-    const previous = input.getAttribute('accept')
-    input.setAttribute('accept', 'image/*')
-    const restore = () => {
-      if (previous === null) input.removeAttribute('accept')
-      else input.setAttribute('accept', previous)
+    if (event.target.value !== undefined) event.target.value = ''
+    setOpen(null)
+    if (!input || !picked || picked.length === 0) return
+    try {
+      const transfer = new DataTransfer()
+      for (const file of picked) transfer.items.add(file)
+      input.files = transfer.files
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+    } catch {
+      // Without a transferable FileList the shell's own click path is the only one left.
+      input.click()
     }
-    input.addEventListener('change', restore, { once: true })
-    window.addEventListener('focus', () => setTimeout(restore, 500), { once: true })
-    input.click()
   }
   const schedule = () => {
     setOpen(null)
@@ -179,8 +185,10 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       ref: menu, className: 'bt-menu bt-menu-up bt-plus-menu', role: 'menu', 'aria-label': t('Add'),
       style: place ?? {}, 'data-leaving': leaving || undefined,
     },
-    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attach }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
-    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attachImage }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
+    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => filePick.current?.click() }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
+    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => imagePick.current?.click() }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
+    shown.files ? h('input', { ref: imagePick, type: 'file', accept: 'image/*', multiple: true, className: 'bt-menu-input', onChange: handFiles }) : null,
+    shown.files ? h('input', { ref: filePick, type: 'file', multiple: true, className: 'bt-menu-input', onChange: handFiles }) : null,
     canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
     target !== undefined ? h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task'))) : null), document.body) : null)
 }

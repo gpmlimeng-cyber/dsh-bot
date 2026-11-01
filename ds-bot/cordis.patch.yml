@@ -8,6 +8,14 @@
     - id: web-search-auto
       name: ds-bot/web-search
 
+    # The phone-side web layout (MIT, github.com/mexiaosqwq/dsh-web-mobile). The Bot
+    # interface's narrow-screen rules key off its `data-mobile-nav` marks, so the
+    # team ships it rather than leaving the phone to a second install. A profile
+    # that lists `dsh-web-mobile` in its own bundles too would load it twice: keep
+    # exactly one of the two.
+    - id: web-mobile
+      name: dsh-web-mobile
+
 # A config override replaces the whole entry config, so fetchProvider is
 # restated. A profile patch that names another searchProvider (exa, perplexity,
 # deepseek-official) wins over this one. Turning off web-search-auto alone

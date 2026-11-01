@@ -20,6 +20,10 @@ export const OCR_RETRY_MS = 120_000
 export const OCR_CACHE_MAX = 500
 export const MAX_AVATAR_IMAGE = 160_000
 export const ROUTE = '/api/bot'
+// The mobile API this host speaks. A client asks `hello` with the versions it knows and
+// draws the team only when the two ranges overlap; an older host answers with no `api`.
+export const API_MIN = 1
+export const API_MAX = 1
 export const MAX_EXCHANGES = 600
 // state.json is written whole on every save, so a long message between Bots or a long
 // group line keeps only its start there. The rest stays where it already is (a message
@@ -85,3 +89,5 @@ export const HISTORY_PAGES_MAX = 50
 export const HISTORY_TIMEOUT_MS = 20_000
 // Shown when an aside stops at the route's own output limit. The partial answer stays.
 export const ASIDE_LIMIT = 'Answer cut off at the output limit.'
+// The most notices one answer carries; the phone reads them as a list, not a log.
+export const NOTICE_MAX = 50
