@@ -12099,10 +12099,10 @@ index 82c3b3b9..5806d08a 100644
  export const flatWidthOf = prefs => percent(prefs?.flatWidth, 100)
 diff --git a/ds-bot/src/client/tier.js b/ds-bot/src/client/tier.js
 new file mode 100644
-index 00000000..14803f11
+index 00000000..e5d00ab3
 --- /dev/null
 +++ b/ds-bot/src/client/tier.js
-@@ -0,0 +1,35 @@
+@@ -0,0 +1,39 @@
 +// Window tiers, read by our own layout rules. Width decides — compact under 600, medium to
 +// 840, expanded above it — and a window shorter than 480 is compact whatever its width: a
 +// phone on its side has room across but only a few lines down, so splitting it into columns
@@ -12133,9 +12133,13 @@ index 00000000..14803f11
 +  update()
 +  window.addEventListener('resize', update)
 +  window.addEventListener('orientationchange', update)
++  // Hiding the keyboard does not always resize the window on Android; a focus leaving an
++  // editable puts the height back into the tier.
++  document.addEventListener('focusout', update)
 +  return () => {
 +    window.removeEventListener('resize', update)
 +    window.removeEventListener('orientationchange', update)
++    document.removeEventListener('focusout', update)
 +  }
 +}
 diff --git a/ds-bot/src/host/approvals.js b/ds-bot/src/host/approvals.js

@@ -136,7 +136,7 @@
 | 134 | `ds-bot/src/client/themes.js` | 4 | 1 |
 | 135 | `ds-bot/src/client/themes.js` | 27–36 | 10 |
 | 136 | `ds-bot/src/client/themes.js` | 136–180 | 43 |
-| 137 | `ds-bot/src/client/tier.js` | 1–35 | 35 |
+| 137 | `ds-bot/src/client/tier.js` | 1–39 | 39 |
 | 138 | `ds-bot/src/host/approvals.js` | 8–10 | 3 |
 | 139 | `ds-bot/src/host/approvals.js` | 40–59 | 13 |
 | 140 | `ds-bot/src/host/authorization.js` | 1–96 | 96 |
