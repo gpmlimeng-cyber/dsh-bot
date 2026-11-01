@@ -108,7 +108,7 @@
 | 106 | `ds-bot/src/client/team-actions.js` | 124–132 | 9 |
 | 107 | `ds-bot/src/client/themes.js` | 26–35 | 10 |
 | 108 | `ds-bot/src/client/themes.js` | 135–171 | 35 |
-| 109 | `ds-bot/src/host/authorization.js` | 1–86 | 86 |
+| 109 | `ds-bot/src/host/authorization.js` | 1–88 | 88 |
 | 110 | `ds-bot/src/host/channel.js` | 102 | 1 |
 | 111 | `ds-bot/src/host/channel.js` | 119–133 | 15 |
 | 112 | `ds-bot/src/host/channel.js` | 155–162 | 8 |

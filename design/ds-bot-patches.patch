@@ -11530,10 +11530,10 @@ index 82c3b3b9..6ed9e1d0 100644
  export const flatWidthOf = prefs => percent(prefs?.flatWidth, 100)
 diff --git a/ds-bot/src/host/authorization.js b/ds-bot/src/host/authorization.js
 new file mode 100644
-index 00000000..3cd3260d
+index 00000000..59a5418a
 --- /dev/null
 +++ b/ds-bot/src/host/authorization.js
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,88 @@
 +// SuperAgent authorization: records the deliveries a Bot makes on its own account — a
 +// hand-off, inferred from something it was told — and leaves the ones the user asked for
 +// out of the log. B tier records and never blocks.
@@ -11608,8 +11608,10 @@ index 00000000..3cd3260d
 +  const deliver = rt.deliver
 +  rt.deliver = async (args) => {
 +    if (!on()) return deliver(args)
-+    // `fromId` says who sent it: the user's own message carries one, a Bot's hand-off
-+    // of something it was told does not.
++    // `fromId` is set when a Bot starts the message itself (`message_bot`, tools.js:242) and
++    // absent when the user's own request drives the turn (a group round relays with
++    // `fromId: undefined`, groups.js:335). So the presence of a sender is what marks a
++    // hand-off; a user's message is the pass-through case.
 +    return measured(args ?? {}, () => deliver(args), () => (args?.fromId === undefined ? null : args.role === 'room' ? 'room_round' : 'message_bot'))
 +  }
 +
