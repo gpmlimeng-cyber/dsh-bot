@@ -9,8 +9,27 @@ index 190fbf30..0df0cbc5 100644
    "rules": {
      "no-undef": "error",
      "no-unused-vars": ["error", { "ignoreRestSiblings": true }]
+diff --git a/ds-bot/cordis.patch.yml b/ds-bot/cordis.patch.yml
+index ea56b8cb..0e4ea00a 100644
+--- a/ds-bot/cordis.patch.yml
++++ b/ds-bot/cordis.patch.yml
+@@ -8,6 +8,14 @@
+     - id: web-search-auto
+       name: ds-bot/web-search
+ 
++    # The phone-side web layout (MIT, github.com/mexiaosqwq/dsh-web-mobile). The Bot
++    # interface's narrow-screen rules key off its `data-mobile-nav` marks, so the
++    # team ships it rather than leaving the phone to a second install. A profile
++    # that lists `dsh-web-mobile` in its own bundles too would load it twice: keep
++    # exactly one of the two.
++    - id: web-mobile
++      name: dsh-web-mobile
++
+ # A config override replaces the whole entry config, so fetchProvider is
+ # restated. A profile patch that names another searchProvider (exa, perplexity,
+ # deepseek-official) wins over this one. Turning off web-search-auto alone
 diff --git a/ds-bot/index.js b/ds-bot/index.js
-index b1465905..f4583c42 100644
+index b1465905..88d6d77f 100644
 --- a/ds-bot/index.js
 +++ b/ds-bot/index.js
 @@ -2,6 +2,8 @@
@@ -30,20 +49,22 @@ index b1465905..f4583c42 100644
  import * as capabilities from './src/host/capabilities.js'
  import * as learning from './src/host/learning.js'
  import * as schedules from './src/host/schedules.js'
-@@ -38,6 +41,7 @@ import * as update from './src/host/update.js'
+@@ -38,7 +41,9 @@ import * as update from './src/host/update.js'
  import * as dshUpdate from './src/host/dsh-update.js'
  import * as thinking from './src/host/thinking.js'
  import * as channel from './src/host/channel.js'
 +import * as skillMarket from './src/host/skill-market/index.js'
  import * as feed from './src/host/feed.js'
++import * as remote from './src/host/remote.js'
  import * as officeSkills from './src/host/office-skills.js'
  
-@@ -51,10 +55,27 @@ export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'ses
+ export { COLORS } from './src/host/constants.js'
+@@ -51,10 +56,27 @@ export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'ses
  // install. Listeners run and tools are listed in registration order, so this order holds:
  // usage meters model requests after every listener that rewrites them. privacy checks a
  // call before the hooks of tools do, so a closed call never reaches a card they show.
 -const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, officeSkills]
-+const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, mcp, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, officeSkills, authorization, toolPolicy]
++const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, mcp, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, remote, officeSkills, authorization, toolPolicy]
  
  export function apply(ctx, config = {}) {
    createRuntime(ctx, config)
@@ -400,7 +421,7 @@ index 3555f0cf..62049697 100644
    return h(Fragment, null, drawn.map((call, index) => h(Fragment, { key: call.callId ?? index }, renderCall(call, env))))
  }
 diff --git a/ds-bot/src/client/composer.js b/ds-bot/src/client/composer.js
-index 08d3b669..f6a8444b 100644
+index 08d3b669..da1627ed 100644
 --- a/ds-bot/src/client/composer.js
 +++ b/ds-bot/src/client/composer.js
 @@ -1,6 +1,6 @@
@@ -420,7 +441,7 @@ index 08d3b669..f6a8444b 100644
      dictation.note ? h('span', { className: 'bt-mic-note', role: 'status' }, dictation.note) : null)
  }
  
-@@ -121,18 +121,37 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
+@@ -121,17 +121,81 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
      window.addEventListener('keydown', onKey, true)
      return () => { window.removeEventListener('mousedown', onDown, true); window.removeEventListener('keydown', onKey, true) }
    }, [open])
@@ -429,38 +450,85 @@ index 08d3b669..f6a8444b 100644
 +  // mobile file input, which its paperclip button is injected with.
    const target = roster.byId?.[sessionId]?.id ?? roster.roomsById?.[sessionId]?.id
 -  if (sessionId === undefined || target === undefined) return null
+-  const fileInput = () => button.current?.closest('[data-composer-card]')?.querySelector('input[type=file]')
 +  if (sessionId === undefined) return null
-+  // A composer without a file input has nothing to hand the picker.
-   const fileInput = () => button.current?.closest('[data-composer-card]')?.querySelector('input[type=file]')
++  // A composer without a file input has nothing to hand the picker. The card is
++  // looked up through the button first; when the phone layout moves the plus out of
++  // the card, the card is still found on its own before giving up.
++  // Our own picker inputs must never be the target: handing the files back to them
++  // would only re-enter this component and leave the shell's intake untouched.
++  const SHELL_INPUT = 'input[type=file]:not(.bt-menu-input)'
++  const fileInput = () => button.current?.closest?.('[data-composer-card]')?.querySelector(SHELL_INPUT)
++    ?? document.querySelector?.(`[data-composer-card] ${SHELL_INPUT}`)
++    ?? document.querySelector?.(SHELL_INPUT)
++    ?? null
    const toggle = () => {
      if (open) { setOpen(null); return }
 -    // Files go through the composer's own file input; a composer without one takes none.
      setOpen({ files: Boolean(fileInput()) })
    }
-   const attach = () => {
-     setOpen(null)
-     fileInput()?.click()
-   }
-+  // Images take the same composer picker; only its accept filter changes for this one
-+  // open, and it goes back whichever way the dialog ends (change, or a focus return).
-+  const attachImage = () => {
-+    setOpen(null)
+-  const attach = () => {
++  // The two upload rows are plain buttons that click their own input: a click on a
++  // label or on the input itself loses its default action in this page's capture
++  // handlers, while a button's handler still runs (the rows beside them work so).
++  // The shell's own field is marked `hidden`, and a WebView opens no picker for a click
++  // on a hidden control: it is shown off-screen for that click and put back at once. The
++  // files then reach the shell through its own change handler, as its paperclip would.
++  const pickFile = (kind) => {
 +    const input = fileInput()
-+    if (!input) return
-+    const previous = input.getAttribute('accept')
-+    input.setAttribute('accept', 'image/*')
+     setOpen(null)
+-    fileInput()?.click()
++    if (input === null) {
++      // No shell field at all: our own input collects the files and hands them over.
++      ;(kind === 'image' ? imagePick : filePick).current?.click()
++      return
++    }
++    const accept = kind === 'image' ? 'image/*' : null
++    const prior = { accept: input.getAttribute('accept'), hidden: input.hasAttribute('hidden'), style: input.getAttribute('style') }
++    if (accept !== null) input.setAttribute('accept', accept)
++    if (prior.hidden) {
++      input.removeAttribute('hidden')
++      input.setAttribute('style', 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0')
++    }
++    // Put back only after the chooser has taken the request (and never before the files
++    // arrive): restoring on the same tick could undo it in a WebView that reads the
++    // field later.
 +    const restore = () => {
-+      if (previous === null) input.removeAttribute('accept')
-+      else input.setAttribute('accept', previous)
++      if (prior.hidden) {
++        input.setAttribute('hidden', '')
++        if (prior.style === null) input.removeAttribute('style')
++        else input.setAttribute('style', prior.style)
++      }
++      if (accept !== null) {
++        if (prior.accept === null) input.removeAttribute('accept')
++        else input.setAttribute('accept', prior.accept)
++      }
 +    }
 +    input.addEventListener('change', restore, { once: true })
-+    window.addEventListener('focus', () => setTimeout(restore, 500), { once: true })
 +    input.click()
++    setTimeout(restore, 30_000)
 +  }
++  const filePick = useRef(null)
++  const imagePick = useRef(null)
++  const handFiles = (event) => {
++    const picked = event.target.files
++    const input = fileInput()
++    if (event.target.value !== undefined) event.target.value = ''
++    setOpen(null)
++    if (!input || !picked || picked.length === 0) return
++    try {
++      const transfer = new DataTransfer()
++      for (const file of picked) transfer.items.add(file)
++      input.files = transfer.files
++      input.dispatchEvent(new Event('change', { bubbles: true }))
++    } catch {
++      // Without a transferable FileList the shell's own click path is the only one left.
++      input.click()
++    }
+   }
    const schedule = () => {
      setOpen(null)
-     actions.openSettings('schedules', target)
-@@ -143,7 +162,7 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
+@@ -143,7 +207,7 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
      setOpen(null)
      actions.referenceChat(sessionId, inputActions?.captureInsertion?.())
    }
@@ -469,11 +537,15 @@ index 08d3b669..f6a8444b 100644
    // Anchored to the "+" each render: the visible viewport can move (on-screen
    // keyboard) while the menu is open.
    const place = useMemo(() => {
-@@ -161,6 +180,7 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
+@@ -160,7 +224,10 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
+       ref: menu, className: 'bt-menu bt-menu-up bt-plus-menu', role: 'menu', 'aria-label': t('Add'),
        style: place ?? {}, 'data-leaving': leaving || undefined,
      },
-     shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attach }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
-+    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attachImage }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
+-    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attach }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
++    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => pickFile('file') }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
++    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => pickFile('image') }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
++    shown.files ? h('input', { ref: imagePick, type: 'file', accept: 'image/*', multiple: true, className: 'bt-menu-input', onChange: handFiles }) : null,
++    shown.files ? h('input', { ref: filePick, type: 'file', multiple: true, className: 'bt-menu-input', onChange: handFiles }) : null,
      canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
 -    h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
 +    target !== undefined ? h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task'))) : null), document.body) : null)
@@ -10932,7 +11004,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..dc8182e3 100644
+index eac6ea54..7e6dc7d9 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10973,7 +11045,7 @@ index eac6ea54..dc8182e3 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,49 +141,431 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,49 +141,435 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -11430,12 +11502,16 @@ index eac6ea54..dc8182e3 100644
 +/* dsh-web-mobile zeroes the host header's 10px top padding on a phone, which leaves this
 +   row flush with the status bar. Give the row a little air back, but only where that
 +   plugin owns the header: on a desktop window the host padding is still there. */
-+html:has([data-mobile-nav="frame"]) .bt-head{margin-top:8px}
++/* The phone layout now draws its own header row (the mark and a drawer button), so the
++   team's bar moves up into that same row instead of starting a second one. Where that
++   row's own toggle is mounted, the bar keeps only the title and the session menu. */
++html:has([data-mobile-nav="frame"]) .bt-head{margin-top:-44px}
++html:has([data-mobile-nav="frame"]):has([data-mobile-nav="toggle"]) .bt-head-btn{display:none}
 +.bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:36px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 72%,transparent);border:0;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -201,7 +589,7 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
+@@ -201,7 +593,7 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
  @media (prefers-reduced-motion:reduce){.bt-pill,.bt-pill-go,.bt-pill-go svg{transition:none!important}.bt-pill-go{filter:none}.bt-pill:active{transform:none}}
  
  /* The width settings: the share of the column a bubble may take, and the flat text. */
@@ -11444,7 +11520,7 @@ index eac6ea54..dc8182e3 100644
  .bt-astack{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0}
  .bt-bubble{max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px));background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 10px);box-sizing:border-box;overflow-wrap:anywhere;text-wrap:pretty;text-autospace:normal}
  .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:6px}
-@@ -344,6 +732,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -344,6 +736,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -11471,7 +11547,7 @@ index eac6ea54..dc8182e3 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -368,7 +776,6 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
+@@ -368,7 +780,6 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
  .bt-exchange .bt-tools{display:none}
  .bt-fold{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin-top:4px;white-space:normal}
  .bt-fold-note{font-size:12px;line-height:16px;color:var(--bt-ink-3)}
@@ -11479,7 +11555,7 @@ index eac6ea54..dc8182e3 100644
  .bt-ubody .bt-fold .bt-more,.bt-ububble .bt-fold .bt-more,.bt-ubody .bt-fold-note,.bt-ububble .bt-fold-note{color:inherit;opacity:.7}
  .bt-ubody .bt-fold .bt-more:hover,.bt-ububble .bt-fold .bt-more:hover{opacity:1}
  .bt-exchange .bt-dialog-foot{position:absolute;left:0;right:0;bottom:0;height:76px;box-sizing:border-box;align-items:flex-end;padding:0 0 28px;background:var(--bt-main);z-index:3;animation:bt-foot-in .3s cubic-bezier(.22,1,.36,1) .3s both}
-@@ -571,7 +978,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -571,7 +982,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -11490,7 +11566,7 @@ index eac6ea54..dc8182e3 100644
  /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
     collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -587,6 +996,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+@@ -587,6 +1000,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
  /* Elsewhere the switch shows only while the column is hidden, where the column's
     own top row had it. */
  html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
@@ -11499,7 +11575,7 @@ index eac6ea54..dc8182e3 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -626,7 +1037,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -626,7 +1041,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -11509,7 +11585,24 @@ index eac6ea54..dc8182e3 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -921,6 +1333,188 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -676,6 +1092,16 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
+ .bt-menu button:hover{background:var(--bt-hover)}
+ .bt-menu button svg{flex:none;width:16px;height:16px;margin:0 1px}
+ .bt-menu .bt-danger{color:var(--bt-danger)}
++/* An upload row is a label over its own input, so the picker opens natively; the row is
++   the menu item and the input is invisible but still in the flow of the label. */
++.bt-menu label.bt-menu-file{position:relative;display:flex;align-items:center;gap:4px;width:100%;min-height:30px;text-align:left;border-radius:6px;padding:6px 8px;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink);cursor:pointer;box-sizing:border-box}
++.bt-menu label.bt-menu-file:hover{background:var(--bt-hover)}
++.bt-menu label.bt-menu-file svg{flex:none;width:16px;height:16px;margin:0 1px}
++/* The input itself covers the row, so the tap lands on the control the platform asks
++   for a picker; no forwarding through the label and no programmatic click. */
++/* Kept out of the way of the rows; the row's button clicks it, and the platform opens
++   the picker for that click. */
++.bt-menu-input{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
+ .bt-menu-sep{height:.5px;flex:none;background:var(--bt-line-2);margin:4px 8px}
+ .bt-menu-up{--bt-origin:bottom left;animation-name:bt-pop-lift,bt-veil-in}
+ .bt-menu[data-leaving]{pointer-events:none;animation:bt-pop-out .12s cubic-bezier(.4,0,1,1) forwards}
+@@ -921,6 +1347,188 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -11698,7 +11791,7 @@ index eac6ea54..dc8182e3 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1614,102 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1020,49 +1628,104 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -11792,8 +11885,11 @@ index eac6ea54..dc8182e3 100644
 -.bt-plus svg{width:14px;height:14px;transition:${spring(SPRING_POP, 'rotate')}}
 +.bt-plus svg{width:18px;height:18px;transition:${spring(SPRING_POP, 'rotate')}}
  .bt-plus[aria-expanded=true] svg{rotate:45deg}
- .bt-plus-menu{min-width:180px}
+-.bt-plus-menu{min-width:180px}
 -[data-composer-card] [class*="_tools"]{gap:0!important}
++/* Above the phone layout's own layers (its drawer sits at 1300): a layer under them
++   can be seen but not tapped. */
++.bt-plus-menu{min-width:180px;z-index:1500}
 +html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_tools"]{gap:0!important}
  [data-composer-card] [class*="_modes"]:empty{display:none!important}
  [data-composer-card] [class*="_activity"]:not(:has([data-slot] > *)){display:none!important}
@@ -11824,7 +11920,7 @@ index eac6ea54..dc8182e3 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1081,7 +1728,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1081,7 +1744,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
  }
  [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
  body[data-bt-room] .bt-voice{display:none!important}
@@ -11833,7 +11929,7 @@ index eac6ea54..dc8182e3 100644
  .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
  [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
  .bt-q{order:1}
-@@ -1112,17 +1759,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1112,17 +1775,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -11860,7 +11956,7 @@ index eac6ea54..dc8182e3 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1779,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1131,7 +1795,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -11869,7 +11965,7 @@ index eac6ea54..dc8182e3 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1820,19 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1836,19 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -12303,7 +12399,7 @@ index 00000000..4a3a44c9
 +  return published
 +}
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
-index 3fc5c7c6..11e59318 100644
+index 3fc5c7c6..0c3acfb9 100644
 --- a/ds-bot/src/host/channel.js
 +++ b/ds-bot/src/host/channel.js
 @@ -1,12 +1,17 @@
@@ -12367,7 +12463,7 @@ index 3fc5c7c6..11e59318 100644
 -  const view = () => ({
 +  // A photo's reference: the same bytes always name the same ref, so a client can cache
 +  // by it and ask `avatar` only when the ref changes.
-+  const imageRef = image => `avatar:${createHash('sha1').update(String(image)).digest('hex').slice(0, 16)}`
++  const imageRef = image => `avatar:${createHash('sha256').update(String(image)).digest('hex').slice(0, 16)}`
 +  const refAvatar = avatar => {
 +    if (typeof avatar?.image !== 'string') return avatar
 +    const { image, ...rest } = avatar
@@ -12501,7 +12597,7 @@ index 3fc5c7c6..11e59318 100644
          case 'connector-connect':
          case 'connector-disconnect':
          case 'connector-retry':
-@@ -554,6 +656,24 @@ export function install(rt) {
+@@ -554,6 +656,26 @@ export function install(rt) {
          case 'diagnostics-clear':
            await rt.diagnostics.clear()
            return ok(true)
@@ -12514,18 +12610,31 @@ index 3fc5c7c6..11e59318 100644
 +            api: shared.length === 0 ? null : Math.max(...shared),
 +            apiMin: API_MIN,
 +            apiMax: API_MAX,
-+            plugin: { version: version() },
++            plugin: { name: 'ds-bot', version: version() },
 +            capabilities: CAPABILITIES,
 +            boot: BOOT_ID,
 +            seq: publishedSeq(),
 +            revision: state.revision,
 +            readOnly: rt.readOnly() ?? null,
 +            memory: rt.memoryEnabled !== false,
++            feed: 'api/bot/feed',
++            rpc: { call: 'dsBot/call', feed: 'dsBot/feed' },
 +          })
 +        }
          default:
            return fail(`Unknown endpoint ${endpoint}`, 'bot/not-found')
        }
+@@ -565,6 +687,10 @@ export function install(rt) {
+     }
+   }
+ 
++  // The same call as a DSH Remote method, for a client that reaches this host only
++  // through a carrier that forwards Remote methods and not Fetch routes (remote.js).
++  rt.channelCall = handle
++
+   // An exact Fetch route on the shared /api channel; the browser authenticates with its session cookie.
+   ctx.effect(() => ctx.connection.fetch.register({
+     path: ROUTE,
 diff --git a/ds-bot/src/host/constants.js b/ds-bot/src/host/constants.js
 index 0df0d7d6..69a92625 100644
 --- a/ds-bot/src/host/constants.js
@@ -12548,7 +12657,7 @@ index 0df0d7d6..69a92625 100644
 +// The most notices one answer carries; the phone reads them as a list, not a log.
 +export const NOTICE_MAX = 50
 diff --git a/ds-bot/src/host/feed.js b/ds-bot/src/host/feed.js
-index 98719a3f..2b025973 100644
+index 98719a3f..a4130234 100644
 --- a/ds-bot/src/host/feed.js
 +++ b/ds-bot/src/host/feed.js
 @@ -4,7 +4,8 @@
@@ -12561,15 +12670,72 @@ index 98719a3f..2b025973 100644
  
  export const FEED_ROUTE = `${ROUTE}/feed`
  // A comment line now and then keeps an idle connection open.
-@@ -28,6 +29,7 @@ export function install(rt) {
+@@ -27,18 +28,35 @@ export function install(rt) {
+     }
      try { controller.enqueue(chunk) } catch { clients.delete(controller) }
    }
++  // Remote readers (remote.js) take the same events as objects, in the same order as
++  // the SSE windows; a window and a Remote reader can be connected at once.
++  const feedListeners = new Set()
++  const readers = () => clients.size > 0 || feedListeners.size > 0
    const publish = (event, data) => {
 +    nextSeq()
++    for (const listener of feedListeners) {
++      try { listener(event, data) } catch { /* the reader's own side drops it */ }
++    }
      const chunk = encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
      for (const controller of clients) send(controller, chunk)
    }
-@@ -92,7 +94,9 @@ export function install(rt) {
+ 
++  // The feed as a subscription for the `dsBot/feed` Remote stream; returns the unsubscribe.
++  rt.subscribeFeed = (listener) => {
++    feedListeners.add(listener)
++    try {
++      listener('hello', { revision: state.revision, api: API_MAX, boot: BOOT_ID, seq: publishedSeq() })
++    } catch { /* the reader is already gone */ }
++    return () => feedListeners.delete(listener)
++  }
++
+   rt.stateSaved = () => {
+-    if (clients.size > 0) publish('revision', { revision: state.revision })
++    if (readers()) publish('revision', { revision: state.revision })
+   }
+ 
+   let liveTimer
+   const live = () => {
+-    if (clients.size === 0 || liveTimer !== undefined) return
++    if (!readers() || liveTimer !== undefined) return
+     liveTimer = setTimeout(() => {
+       liveTimer = undefined
+       publish('live', {})
+@@ -49,7 +67,7 @@ export function install(rt) {
+   })
+ 
+   ctx.on('session/event', (session, event) => {
+-    if (clients.size === 0) return
++    if (!readers()) return
+     const botId = rt.chatOwners.get(session.id)
+     if (botId === undefined) return
+     for (const item of rt.displayItems(session.id, [event])) publish('message', { botId, sessionId: session.id, item })
+@@ -62,7 +80,7 @@ export function install(rt) {
+   ctx.on('agent/assistant-stream', ({ agent, frame }) => {
+     if (frame.type === 'start') {
+       const botId = rt.chatOwners.get(agent.id)
+-      if (clients.size === 0 || botId === undefined || (state.exchangeTurns[agent.id] ?? []).includes(frame.turn)) return
++      if (!readers() || botId === undefined || (state.exchangeTurns[agent.id] ?? []).includes(frame.turn)) return
+       writing.set(frame.attemptId, { botId, sessionId: agent.id })
+       publish('stream', { botId, sessionId: agent.id, attemptId: frame.attemptId, phase: 'start' })
+       return
+@@ -78,7 +96,7 @@ export function install(rt) {
+ 
+   const leave = (controller) => {
+     clients.delete(controller)
+-    if (clients.size === 0) writing.clear()
++    if (!readers()) writing.clear()
+     try { controller.close() } catch { /* already closed or errored */ }
+   }
+ 
+@@ -92,7 +110,9 @@ export function install(rt) {
          start(own) {
            controller = own
            clients.add(own)
@@ -13422,6 +13588,90 @@ index 682b53d5..6c3ef40a 100644
        ].join('\n')
      }
      const room = rt.roomOf(id)
+diff --git a/ds-bot/src/host/remote.js b/ds-bot/src/host/remote.js
+new file mode 100644
+index 00000000..33bad1d4
+--- /dev/null
++++ b/ds-bot/src/host/remote.js
+@@ -0,0 +1,78 @@
++// The client API as DSH Remote methods, for a client that reaches the host only through
++// a carrier that forwards Remote methods and not Fetch routes, such as a relay
++// (docs/plans/2026-10-24-mobile-api.md, "Remote methods").
++//
++//   dsBot/call {endpoint, payload}  one call of the api/bot channel; answers {ok, value | error}
++//   dsBot/feed {}                   stream: the live feed's events as {event, data}, hello first
++//
++// A plain-JS plugin has no Typert generator, so the Gateway serves these methods from
++// their `@Remote` markers (its source mode): simple parameter names, JSON values.
++import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
++
++export const RPC_NAMESPACE = 'dsBot'
++// A reader that falls this far behind is ended; it opens the stream again and catches up.
++const MAX_QUEUED = 512
++
++// `@Remote` applied by hand: the decorator records its marker when an instance is made.
++function decorate(Class, name, decorator) {
++  const initializers = []
++  decorator(Class.prototype[name], {
++    kind: 'method', name, static: false, private: false, metadata: {}, addInitializer: initializer => initializers.push(initializer),
++  })
++  return initializers
++}
++
++// A JSON copy: the Gateway accepts only JSON values, and an answer may hold `undefined`.
++const plain = value => (value === undefined ? null : JSON.parse(JSON.stringify(value)))
++
++// The feed as an async iterable that ends when `signal` aborts.
++export async function* feedEvents(subscribe, signal) {
++  const queue = []
++  let wake
++  let overflow = false
++  const unsubscribe = subscribe((event, data) => {
++    if (queue.length >= MAX_QUEUED) overflow = true
++    else queue.push({ event, data: plain(data) })
++    wake?.()
++  })
++  const aborted = () => wake?.()
++  signal?.addEventListener('abort', aborted, { once: true })
++  try {
++    while (signal?.aborted !== true && !overflow) {
++      if (queue.length === 0) await new Promise((resolve) => { wake = resolve })
++      wake = undefined
++      while (queue.length > 0 && signal?.aborted !== true) yield queue.shift()
++    }
++  } finally {
++    signal?.removeEventListener('abort', aborted)
++    unsubscribe()
++  }
++}
++
++export function createRemoteService(rt) {
++  class DsBotRemote extends TypertRemoteService {
++    constructor(ctx) {
++      super(ctx, RPC_NAMESPACE)
++      for (const initializer of initializers) initializer.call(this)
++    }
++
++    async call(endpoint, payload) {
++      return plain(await rt.channelCall(String(endpoint ?? ''), payload ?? {}))
++    }
++
++    feed(signal) {
++      return feedEvents(rt.subscribeFeed, signal)
++    }
++  }
++  const initializers = [...decorate(DsBotRemote, 'call', Remote), ...decorate(DsBotRemote, 'feed', Remote({ mode: 'stream' }))]
++  return DsBotRemote
++}
++
++// Mounted only where a Typert Gateway serves Remote methods (DSH Web and Desktop); a
++// test context has none.
++export function install(rt) {
++  const { ctx } = rt
++  if (typeof ctx.inject !== 'function') return
++  // The fork is not returned: Cordis would await a returned fiber before the Service it starts.
++  ctx.inject(['typertGateway'], (gatewayCtx) => { gatewayCtx.plugin(createRemoteService(rt)) })
++}
 diff --git a/ds-bot/src/host/skill-market/index.js b/ds-bot/src/host/skill-market/index.js
 new file mode 100644
 index 00000000..eaffda06
@@ -17445,7 +17695,7 @@ index a7405c12..307aafd9 100644
    }
 diff --git a/ds-bot/test/composer-plus.test.js b/ds-bot/test/composer-plus.test.js
 new file mode 100644
-index 00000000..d745c987
+index 00000000..cd84292b
 --- /dev/null
 +++ b/ds-bot/test/composer-plus.test.js
 @@ -0,0 +1,122 @@
@@ -17522,7 +17772,7 @@ index 00000000..d745c987
 +  created.length = 0
 +  const appended = []
 +  const card = {
-+    querySelector: selector => (hostInput && selector === 'input[type=file]' ? hostInput : null),
++    querySelector: selector => (hostInput && selector.startsWith('input[type=file]') ? hostInput : null),
 +    appendChild: (node) => { appended.push(node) },
 +  }
 +  const patch = (tree) => {
