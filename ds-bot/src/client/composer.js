@@ -131,6 +131,7 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
   // the card, the card is still found on its own before giving up.
   const fileInput = () => button.current?.closest?.('[data-composer-card]')?.querySelector('input[type=file]')
     ?? document.querySelector?.('[data-composer-card] input[type=file]')
+    ?? document.querySelector?.('input[type=file]')
     ?? null
   const toggle = () => {
     if (open) { setOpen(null); return }
