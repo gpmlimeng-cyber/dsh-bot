@@ -91,6 +91,29 @@ hunk 3、5 是唯一的 minus 行（挂载点，各 1 处组件插入），其�
 
 > **踩坑（已修，`a3c1860`）**：`d958a54` 合并上游 v0.2.4 时，`index.js` 的 `MODULES` 列表被解到了上游那一侧 —— 上游没有 `folders` 模块，于是 fork 的整个文件夹护栏**根本没装**：`rt.cleanWorkDir` / `defaultTeamFolder` / `workDirOf` 全部缺失，一次红 **167** 条（症状是 `rt.cleanWorkDir is not a function`、`mainBotId` undefined、`cleanWorkDir is not a function`），看起来像宿主包版本不匹配，其实与 `dev/harness` 的版本无关（rc.2 与 rc.4 复现完全一致）。**合并上游后必须逐项 diff `MODULES`**：它是 fork 与上游唯一的结构性差异点，丢了哪一项都不会报错，只会在用到时炸。
 
+## 1d. SuperAgent 授权记录（P2）
+
+B 档：**只记录不拦截**。两个能起一轮的入口各包一层，写 `$DSH_HOME/bot/authorization.jsonl`，只写
+「Bot 自己转述」那种（`deliver` 的 `fromId !== undefined`、以及全部 `postToRoom`）。
+
+| # | 文件 | 改前 → 改后 | 为什么 |
+|---|---|---|---|
+| 1 | `src/host/authorization.js` | 新增，`policyOf(state)` + `install(rt)` | 唯一的新文件；`policyOf` 只哈希团队结构（bot id/main、房间 members/admin），**不含任何指令或公告文本** |
+| 2 | `index.js` | 顶部 `+ import * as authorization`；`MODULES` 末尾 `+ authorization` | 必须排在 `groups` 之后（`groups.js:829` 才挂 `rt.postToRoom`）与 `resume` 之后（`:148` 自己包了一次 `rt.deliver`），处在最外层才能看全 |
+| 3 | `src/host/channel.js` | `setPrefs()` 追加 `superagent` 布尔分支（+6 行，照 `thinking`） | `setPrefs` 逐 key 写死、未知 key 静默丢弃：不加这段，开关能点、刷新回弹、host 永远读到 off |
+| 4 | `src/client/settings.js` | Appearance 区 `Mobile skin` 下方加 `SetRow` + `Switch` | 走 `actions.setPrefs({ superagent })`，**不走** `localPref`（后者只对 `skin` 留在本机） |
+| 5 | `src/client/i18n.js` | `ZH` 加 3 条（`SuperAgent` 与开/关两句 hint） | 英文原文即 key，没有第二张语言表 |
+
+三条**不变量**（改这里时别破）：
+
+- **装配期无条件安装包装**，开关只在包装内部第一行判断（off → 立刻 `return 原调用(...)`，
+  **不是裸 `return`**：裸 `return` 会改掉返回值与异常语义）；因此开关即时生效，不需要重启 DSH。
+- **off 零痕迹**：`authorization.jsonl` 惰性创建，off 时连空文件都不出现。
+- **写日志失败不影响投递**：整段 `try/catch`，出错只 `rt.warn` 一句。
+
+**已知接缝（不接，见 `design/superagent-p1.md`）**：`groups.js:845/876/925/954` 直接调本地 `postToRoom`，
+不经 `rt.postToRoom`；判定为「已准入那一轮的延续」，B 档不算漏。C 档若要拦这几条得改上游行，需单独批准。
+
 ## 2. 生成物（不进补丁）
 
 | 文件 | 类别 | 重生成方式 |
