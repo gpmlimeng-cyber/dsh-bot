@@ -133,7 +133,7 @@
 | 131 | `ds-bot/src/host/groups.js` | 827–832 | 6 |
 | 132 | `ds-bot/src/host/groups.js` | 860–870 | 11 |
 | 133 | `ds-bot/src/host/mcp.js` | 1–608 | 608 |
-| 134 | `ds-bot/src/host/prompt.js` | 25 | 1 |
+| 134 | `ds-bot/src/host/prompt.js` | 25–26 | 2 |
 | 135 | `ds-bot/src/host/skill-market/index.js` | 1–2813 | 2813 |
 | 136 | `ds-bot/src/host/skill-market/locale.js` | 1–787 | 787 |
 | 137 | `ds-bot/test/authorization.test.js` | 1–134 | 134 |
