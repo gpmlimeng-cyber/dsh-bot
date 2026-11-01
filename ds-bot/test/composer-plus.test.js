@@ -71,7 +71,7 @@ function open(hostInput) {
   created.length = 0
   const appended = []
   const card = {
-    querySelector: selector => (hostInput && selector === 'input[type=file]' ? hostInput : null),
+    querySelector: selector => (hostInput && selector.startsWith('input[type=file]') ? hostInput : null),
     appendChild: (node) => { appended.push(node) },
   }
   const patch = (tree) => {

@@ -22258,7 +22258,8 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
   }, [open]);
   const target = roster.byId?.[sessionId]?.id ?? roster.roomsById?.[sessionId]?.id;
   if (sessionId === void 0) return null;
-  const fileInput = () => button.current?.closest?.("[data-composer-card]")?.querySelector("input[type=file]") ?? document.querySelector?.("[data-composer-card] input[type=file]") ?? document.querySelector?.("input[type=file]") ?? null;
+  const SHELL_INPUT = "input[type=file]:not(.bt-menu-input)";
+  const fileInput = () => button.current?.closest?.("[data-composer-card]")?.querySelector(SHELL_INPUT) ?? document.querySelector?.(`[data-composer-card] ${SHELL_INPUT}`) ?? document.querySelector?.(SHELL_INPUT) ?? null;
   const toggle = () => {
     if (open) {
       setOpen(null);

@@ -129,9 +129,12 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
   // A composer without a file input has nothing to hand the picker. The card is
   // looked up through the button first; when the phone layout moves the plus out of
   // the card, the card is still found on its own before giving up.
-  const fileInput = () => button.current?.closest?.('[data-composer-card]')?.querySelector('input[type=file]')
-    ?? document.querySelector?.('[data-composer-card] input[type=file]')
-    ?? document.querySelector?.('input[type=file]')
+  // Our own picker inputs must never be the target: handing the files back to them
+  // would only re-enter this component and leave the shell's intake untouched.
+  const SHELL_INPUT = 'input[type=file]:not(.bt-menu-input)'
+  const fileInput = () => button.current?.closest?.('[data-composer-card]')?.querySelector(SHELL_INPUT)
+    ?? document.querySelector?.(`[data-composer-card] ${SHELL_INPUT}`)
+    ?? document.querySelector?.(SHELL_INPUT)
     ?? null
   const toggle = () => {
     if (open) { setOpen(null); return }
