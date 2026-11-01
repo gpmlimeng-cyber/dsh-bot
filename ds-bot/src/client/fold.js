@@ -22,6 +22,30 @@ function cutAt(text, end) {
   return text.slice(0, code >= 0xd800 && code <= 0xdbff ? end - 1 : end)
 }
 
+// A preview ends where a sentence does, so a fold does not stop mid-thought. A period
+// counts only before a space or a line end, which leaves 3.14 and a.b alone.
+const SENTENCE = new Set(['。', '！', '？', '!', '?'])
+const endsSentence = (text, at) => SENTENCE.has(text[at]) || (text[at] === '.' && (at + 1 === text.length || /\s/.test(text[at + 1])))
+
+// Where a sentence ends inside `text[from, to)`; a line break there ends the preview
+// without it, a punctuation mark belongs to it. -1 when nothing ends one.
+function endIn(text, from, to) {
+  for (let at = Math.min(to, text.length) - 1; at >= from; at -= 1) {
+    if (text[at] === '\n') return at
+    if (endsSentence(text, at)) return at + 1
+  }
+  return -1
+}
+
+// The first sentence end at or after `from`, before `to`; -1 when there is none.
+function endAfter(text, from, to) {
+  for (let at = from; at < Math.min(to, text.length); at += 1) {
+    if (text[at] === '\n') return at
+    if (endsSentence(text, at)) return at + 1
+  }
+  return -1
+}
+
 // More than `max` lines, counted only as far as needed.
 function moreLines(text, max) {
   let lines = 1
@@ -45,8 +69,16 @@ export function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PR
   if (body.trim() === '') return null
   let head = body.split('\n', preview.lines).join('\n')
   if (head.length > preview.chars) {
-    const cut = head.lastIndexOf('\n', preview.chars)
-    head = cutAt(head, cut > 0 ? cut : preview.chars)
+    // End on a sentence where one ends near the budget; failing that widen to 130% for
+    // the first end after it, and only then cut hard, backing off a word.
+    const budget = preview.chars
+    const near = endIn(head, Math.floor(budget * 0.6), budget)
+    const wider = near > 0 ? near : endAfter(head, budget, Math.floor(budget * 1.3))
+    if (wider > 0) head = cutAt(head, wider)
+    else {
+      const space = head.lastIndexOf(' ', budget)
+      head = cutAt(head, space > 0 ? space : budget)
+    }
   }
   if (head.trim() === '') head = cutAt(body, preview.chars)
   if (!markdown) return head

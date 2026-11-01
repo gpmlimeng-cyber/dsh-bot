@@ -152,3 +152,19 @@ test('a streaming text never folds', () => {
   fresh()
   assert.equal(render(lines(40), { live: true }).control, null)
 })
+
+// A folded preview ends where a sentence does, so it does not stop mid-thought; it only
+// widens to 130% when no sentence ends near the budget, and only splits a word when the
+// whole message is one sentence.
+test('a preview ends at a sentence, then at a word, and only then cuts hard', () => {
+  const limit = { chars: 299, lines: 15 }
+  const preview = { chars: 120, lines: 4 }
+  const cut = text => foldPreview(text, limit, true, preview)
+  assert.equal(cut(`${'a'.repeat(100)}。${'b'.repeat(200)}`), `${'a'.repeat(100)}。`)
+  assert.equal(cut(`${'a'.repeat(140)}。${'b'.repeat(160)}`), `${'a'.repeat(140)}。`, 'the first end past the budget wins, up to 130%')
+  assert.equal(cut('c'.repeat(300)), 'c'.repeat(120), 'one long sentence cuts at the budget')
+  assert.equal(cut(Array.from({ length: 62 }, () => 'word').join(' ')), Array.from({ length: 24 }, () => 'word').join(' '), 'a cut falls back to a word end')
+  // A decimal point is not a sentence end.
+  const number = `a${'a'.repeat(89)}3.14${'b'.repeat(210)}`
+  assert.equal(cut(number), number.slice(0, 120))
+})

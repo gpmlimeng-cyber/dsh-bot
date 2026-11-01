@@ -8215,6 +8215,22 @@ function cutAt(text, end) {
   const code = text.charCodeAt(end - 1);
   return text.slice(0, code >= 55296 && code <= 56319 ? end - 1 : end);
 }
+var SENTENCE = /* @__PURE__ */ new Set(["。", "！", "？", "!", "?"]);
+var endsSentence = (text, at) => SENTENCE.has(text[at]) || text[at] === "." && (at + 1 === text.length || /\s/.test(text[at + 1]));
+function endIn(text, from, to) {
+  for (let at = Math.min(to, text.length) - 1; at >= from; at -= 1) {
+    if (text[at] === "\n") return at;
+    if (endsSentence(text, at)) return at + 1;
+  }
+  return -1;
+}
+function endAfter(text, from, to) {
+  for (let at = from; at < Math.min(to, text.length); at += 1) {
+    if (text[at] === "\n") return at;
+    if (endsSentence(text, at)) return at + 1;
+  }
+  return -1;
+}
 function moreLines(text, max) {
   let lines = 1;
   for (let at = text.indexOf("\n"); at !== -1; at = text.indexOf("\n", at + 1)) {
@@ -8229,8 +8245,14 @@ function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, 
   if (body.trim() === "") return null;
   let head = body.split("\n", preview.lines).join("\n");
   if (head.length > preview.chars) {
-    const cut = head.lastIndexOf("\n", preview.chars);
-    head = cutAt(head, cut > 0 ? cut : preview.chars);
+    const budget = preview.chars;
+    const near = endIn(head, Math.floor(budget * 0.6), budget);
+    const wider = near > 0 ? near : endAfter(head, budget, Math.floor(budget * 1.3));
+    if (wider > 0) head = cutAt(head, wider);
+    else {
+      const space = head.lastIndexOf(" ", budget);
+      head = cutAt(head, space > 0 ? space : budget);
+    }
   }
   if (head.trim() === "") head = cutAt(body, preview.chars);
   if (!markdown) return head;
