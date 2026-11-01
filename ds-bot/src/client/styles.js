@@ -575,11 +575,11 @@ html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side
 html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 11px);height:36px;margin:0;z-index:20;align-items:center}
 /* The layout's own header button floats: a solid surface, a hairline ring and the soft
    drop shadow. The pill and the session menu borrow that surface. */
-html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink)}
+html:has([data-mobile-nav="frame"]) .bt-pill{height:36px;padding:0 14px 0 8px;font-size:14px;line-height:20px;gap:7px;max-width:66vw;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink)}
 html:has([data-mobile-nav="frame"]) .bt-pill:hover,html:has([data-mobile-nav="frame"]) .bt-pill:active{background:var(--bt-float-hover)}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow)}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn:hover{background:var(--bt-float-hover)}
-html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:28px;height:28px}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:36px;height:36px}
 html:has([data-mobile-nav="frame"]):has([data-mobile-nav="toggle"]) .bt-head-btn{display:none}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:36px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 72%,transparent);border:0;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
