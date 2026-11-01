@@ -1580,8 +1580,12 @@ function tierOf(width, height) {
   if (width < TIER_EXPANDED) return "medium";
   return "expanded";
 }
+var typing = () => {
+  const element = document.activeElement;
+  return element instanceof HTMLElement && (element.isContentEditable || /^(input|textarea|select)$/i.test(element.tagName));
+};
 function watchTier(onChange) {
-  const update = () => onChange(tierOf(window.innerWidth, window.innerHeight));
+  const update = () => onChange(tierOf(window.innerWidth, typing() ? Infinity : window.innerHeight));
   update();
   window.addEventListener("resize", update);
   window.addEventListener("orientationchange", update);
