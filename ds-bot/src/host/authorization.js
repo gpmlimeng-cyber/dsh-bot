@@ -70,7 +70,13 @@ export function install(rt) {
   }
 
   const deliver = rt.deliver
+  // What a Session's turn was started by, for the tool policy: a message a Bot sent is
+  // inferred, the user's own is explicit. Kept in memory and independent of the switch,
+  // because turning recording off must not turn the policy's memory into "unknown".
+  const admission = new Map()
+  const admissionOf = (sessionId) => (sessionId === undefined ? undefined : admission.get(sessionId))
   rt.deliver = async (args) => {
+    if (args?.sessionId !== undefined) admission.set(args.sessionId, args.fromId === undefined ? 'explicit' : 'inferred')
     if (!on()) return deliver(args)
     // `fromId` is set when a Bot starts the message itself (`message_bot`, tools.js:242) and
     // absent when the user's own request drives the turn (a group round relays with
@@ -85,4 +91,6 @@ export function install(rt) {
     // Every group post comes from a Bot: this is the path a relayed instruction takes.
     return measured({ fromId: sender?.id, roomId: room?.id }, () => postToRoom(room, sender, text, extra, files), () => 'post_to_room')
   }
+
+  rt.admissionOf = admissionOf
 }

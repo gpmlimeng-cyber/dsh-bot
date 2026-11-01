@@ -5,6 +5,7 @@ import { createElement as h, Fragment, useState } from 'react'
 import { t } from './i18n.js'
 import { Switch } from './bot-settings.js'
 import { foldAtOf } from './themes.js'
+import { toolPolicyOf } from '../shared/tool-policy.js'
 
 const SWITCHES = [
   ['superagent', 'Hand-offs', 'Records a Bot handing work to another Bot, and asks before one is delivered.'],
@@ -39,12 +40,30 @@ function Threshold({ Row, prefs, run, actions }) {
     field(t('Lines'), lines, setLines, 8, 500))
 }
 
+// The tool policy is stored as one of three modes; the page offers the two that change
+// nothing until the ask path is verified, so `auto` stays reachable only by hand.
+const TOOL_POLICY_CHOICES = [['off', 'Do not record'], ['observe', 'Record only']]
+
+function ToolPolicy({ Row, prefs, run, actions }) {
+  const mode = toolPolicyOf(prefs)
+  return h(Row, {
+    label: t('Relayed work'),
+    hint: t('A Bot that runs a task another Bot handed it, without you asking for it, is recorded. Off records nothing.'),
+  }, h('select', {
+    className: 'bt-input',
+    'aria-label': t('Relayed work'),
+    value: mode === 'off' ? 'off' : 'observe',
+    onChange: event => run(actions.setPrefs({ saToolPolicy: event.target.value })),
+  }, TOOL_POLICY_CHOICES.map(([value, label]) => h('option', { key: value, value }, t(label)))))
+}
+
 export function SuperAgentPage({ roster, actions, run, Section, Row }) {
   const prefs = roster.prefs ?? {}
   return h(Fragment, null,
     h(Section, { title: t('How Bots work') },
       SWITCHES.map(([key, label, hint]) => h(Row, { key, label: t(label), hint: t(hint) },
-        h(Switch, { label: t(label), on: prefs[key] !== false, onChange: on => run(actions.setPrefs({ [key]: on })) })))),
+        h(Switch, { label: t(label), on: prefs[key] !== false, onChange: on => run(actions.setPrefs({ [key]: on })) }))),
+      h(ToolPolicy, { Row, prefs, run, actions })),
     h(Section, { title: t('Group chat') },
       h(Threshold, { Row, prefs, run, actions }),
       h('p', { className: 'bt-set-hint' }, t('A reply that marks where its detail starts folds there, keeping the whole point above it, and only when the detail is long enough. A reply over 20,000 characters goes as a file instead.'))))

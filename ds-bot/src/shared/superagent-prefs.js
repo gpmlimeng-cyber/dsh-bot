@@ -2,6 +2,7 @@
 // is on unless it was written `false`, so deleting a key turns it back on; the one threshold
 // is refused outside its bounds rather than clamped, and `null` resets either to its default.
 import { FOLD_AT_BOUNDS, isFoldAt } from './fold-at.js'
+import { TOOL_POLICY_MODES } from './tool-policy.js'
 
 export const SWITCH_KEYS = ['saFold', 'saConclude', 'saLookup', 'saBackground', 'saPrepare']
 
@@ -10,6 +11,12 @@ export function applySuperAgentPrefs(prefs, body) {
     if (body[key] === true) prefs[key] = true
     else if (body[key] === false) prefs[key] = false
     else if (body[key] === null) delete prefs[key]
+  }
+  if (body.saToolPolicy !== undefined) {
+    const mode = body.saToolPolicy
+    if (mode === null) delete prefs.saToolPolicy
+    else if (TOOL_POLICY_MODES.includes(mode)) prefs.saToolPolicy = mode
+    else throw Object.assign(new Error(`Tool policy must be ${TOOL_POLICY_MODES.join(', ')}`), { code: 'bot/invalid' })
   }
   if (body.saFoldAt === undefined) return prefs
   const at = body.saFoldAt

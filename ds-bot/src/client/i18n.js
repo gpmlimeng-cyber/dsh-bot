@@ -91,6 +91,11 @@ const ZH = {
   'No MCP server is running in this profile yet.': '本档案还没有运行中的 MCP 服务器。',
   'Local process': '本地进程',
   'Off': '已停用',
+  'Relayed work': '转述的工作',
+  'A Bot that runs a task another Bot handed it, without you asking for it, is recorded. Off records nothing.': '别的 Bot 转给它的活、而你没有要求过时，记一行。选「不记录」就什么都不写。',
+  'Do not record': '不记录',
+  'Record only': '只记录',
+
   '{count} tools': '{count} 个工具',
   'Turn on': '启用',
   'Turn off': '停用',

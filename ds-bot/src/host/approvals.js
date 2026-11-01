@@ -5,6 +5,9 @@
 import { randomUUID } from 'node:crypto'
 
 const OUTCOMES = { allow: 'allowed-once', reject: 'rejected' }
+// A card nobody answers would hold the turn open forever. Five minutes is long enough for a
+// phone to be picked up and short enough that a missing user is noticed the same hour.
+const APPROVAL_TIMEOUT = 5 * 60 * 1000
 
 export function install(rt) {
   const { ctx } = rt
@@ -34,14 +37,23 @@ export function install(rt) {
       pending.delete(id)
       rt.noteApproval?.(sessionId, undefined)
     }
-    if (owner === undefined) return Promise.resolve(next()).finally(settled)
+    if (owner === undefined) return Promise.resolve(next()).then(outcome => { rt.settleTool?.(sessionId, entry.tool, outcome); return outcome }).finally(settled)
     rt.yieldRoomTurn?.(sessionId)
     return new Promise((resolve) => {
+      let timer
       entry.answer = (outcome) => {
         if (!pending.has(id)) return
+        clearTimeout(timer)
         settled()
+        // A timeout is a refusal the tool policy counts like a card the user rejected.
+        rt.settleTool?.(sessionId, entry.tool, outcome === 'cancelled' ? 'cancelled' : outcome)
         resolve(outcome)
       }
+      timer = setTimeout(() => {
+        if (!pending.has(id)) return
+        rt.settleTool?.(sessionId, entry.tool, 'timeout')
+        entry.answer('cancelled')
+      }, APPROVAL_TIMEOUT)
       if (request.signal?.aborted) entry.answer('cancelled')
       request.signal?.addEventListener('abort', () => entry.answer('cancelled'), { once: true })
     })
