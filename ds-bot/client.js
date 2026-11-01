@@ -225,6 +225,7 @@ var ZH = {
   "Create group chat": "新建群聊",
   "Delete group": "删除群聊",
   "Open {name}'s chat": "打开 {name} 的对话",
+  "Open {path}": "打开 {path}",
   "New Bot": "新 Bot",
   // Sidebar and account menu
   "Bot list": "Bot 列表",
@@ -8604,7 +8605,19 @@ function BtwTurnTail({ turn, sessionId, useRoster, actions }) {
 var import_react16 = require("react");
 var import_react_dom = require("react-dom");
 var mdLabels3 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
-function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions, fold = FOLD_AT, whole }) {
+var FILE_PATH = /^(?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.-]+)*$/;
+var FILE_EXT = /\.(?:md|txt|jsonl?|mjs|cjs|jsx?|tsx?|py|sh|ya?ml|toml|csv|html|css|png|jpe?g|webp|gif|pdf|patch|diff)$/i;
+function pathMentions(openFile) {
+  if (typeof openFile !== "function") return void 0;
+  return {
+    resolve: (value) => {
+      const path = String(value).trim();
+      if (!FILE_PATH.test(path) || !FILE_EXT.test(path)) return void 0;
+      return { title: path, label: t("Open {path}", { path }), open: () => openFile(path) };
+    }
+  };
+}
+function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions, openFile, fold = FOLD_AT, whole }) {
   const onClick = (event) => {
     const target = mentionTarget(event);
     if (target === null) return;
@@ -8628,6 +8641,7 @@ function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId,
         sessionId,
         msgKey,
         mentions,
+        openFile,
         fold,
         picked: msgKey ? reactions?.[index] ?? [] : [],
         live: streaming && last,
@@ -8637,10 +8651,11 @@ function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId,
     })
   );
 }
-function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, fold, picked, live, lead, whole }) {
+function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, openFile, fold, picked, live, lead, whole }) {
   const { shown, folded, control } = useFold(text, { limit: fold, whole, live });
   const key = msgKey ? `${msgKey}:${index}` : void 0;
-  const body = (0, import_react16.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: linkMentions(shown, roster.bots, selfId), streaming: live, labels: mdLabels3(), variant: "compact", fileMentions: mentions });
+  const links = (0, import_react16.useMemo)(() => mentions ?? pathMentions(openFile), [mentions, openFile]);
+  const body = (0, import_react16.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: linkMentions(shown, roster.bots, selfId), streaming: live, labels: mdLabels3(), variant: "compact", fileMentions: links });
   const row = (0, import_react16.useRef)(null);
   const [toolsOpen, setToolsOpen] = (0, import_react16.useState)(false);
   useDismiss(toolsOpen, () => setToolsOpen(false), [row]);
@@ -8916,7 +8931,7 @@ function SpeakerHead({ bot, time }) {
     Number.isFinite(time) ? (0, import_react16.createElement)("span", { className: "bt-group-time", title: clockLabel(time) }, messageClock(time)) : null
   );
 }
-function GroupMessage({ bot, text, texts: texts2 = [text], room: room2, roster, actions, msgKey, useUi, whole, time, duration }) {
+function GroupMessage({ bot, text, texts: texts2 = [text], room: room2, roster, actions, msgKey, useUi, whole, time, duration, openFile }) {
   const lead = (0, import_react16.createElement)(
     "button",
     { type: "button", className: "bt-lead", "aria-label": t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
@@ -8936,7 +8951,7 @@ function GroupMessage({ bot, text, texts: texts2 = [text], room: room2, roster, 
       Number.isFinite(time) ? (0, import_react16.createElement)("span", { className: "bt-group-time", title: clockLabel(time) }, messageClock(time)) : null,
       took ? (0, import_react16.createElement)("span", { className: "bt-group-took", title: t("Ran for {duration}", { duration: took }) }, took) : null
     ),
-    (0, import_react16.createElement)(Bubbles, { texts: texts2, roster, selfId: bot.id, actions, sessionId: room2?.id, msgKey, useUi, lead: flat ? null : lead, whole })
+    (0, import_react16.createElement)(Bubbles, { texts: texts2, roster, selfId: bot.id, actions, sessionId: room2?.id, msgKey, useUi, lead: flat ? null : lead, whole, openFile })
   );
 }
 function stackReplies(replies) {
@@ -9160,7 +9175,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
       return null;
   }
 }
-function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnClock, useUi, actions }) {
+function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnClock, useUi, actions, openFile }) {
   const roster = useRoster((value) => value);
   const data = node.data;
   const source = data.source !== null && typeof data.source === "object" ? data.source : {};
@@ -9210,6 +9225,7 @@ function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnClock, us
           msgKey: `${sessionId}:post:${data.seq ?? node.key}`,
           useUi,
           time: data.time,
+          openFile,
           whole: file ? { length: source.length, load: () => actions.fileText(file) } : void 0
         });
       }
@@ -9454,7 +9470,7 @@ function scanReplies(text, start, replies) {
     } else if (ch === "]" && depth === 0) break;
   }
 }
-function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork }) {
+function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork, openFile }) {
   const [live, setLive] = (0, import_react16.useState)({ replies: [], speaking: null });
   (0, import_react16.useEffect)(() => {
     if (done) return void 0;
@@ -9561,7 +9577,7 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
       if (reply.kind === "done") {
         return (0, import_react16.createElement)("div", { key: `${reply.botId}-${index}`, className: "bt-event" }, t("{name} finished its work", { name: bot.name }));
       }
-      return (0, import_react16.createElement)(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts: texts2, room: room2, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : void 0, useUi, time, duration });
+      return (0, import_react16.createElement)(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts: texts2, room: room2, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : void 0, useUi, time, duration, openFile });
     }),
     pending.map((id) => {
       const bot = roster.byId[id];
@@ -9599,7 +9615,7 @@ function useShownCards(actions, sessionId, callIds) {
     return () => actions.noteCards(sessionId, ids, -1);
   }, [sessionId, key]);
 }
-function renderCall(call2, { sessionId, roster, actions, useUi, useWork, findBot, heldCards, hooks }) {
+function renderCall(call2, { sessionId, roster, actions, useUi, useWork, findBot, heldCards, openFile, hooks }) {
   const tool = toolName(call2);
   const done = call2.kind === "tool-result";
   const { text: arg, value: argValue } = toolArgs(call2);
@@ -9625,7 +9641,7 @@ function renderCall(call2, { sessionId, roster, actions, useUi, useWork, findBot
       return done && target ? (0, import_react16.createElement)(EventLine, { prefix: t("Updated"), bots: [target], onOpen: (bot) => actions.openSession(bot.id) }) : null;
     }
     case "group_relay":
-      return (0, import_react16.createElement)(GroupReplies, { sessionId, callId: call2.callId, done, content: call2.content, roster, actions, useUi, useWork });
+      return (0, import_react16.createElement)(GroupReplies, { sessionId, callId: call2.callId, done, content: call2.content, roster, actions, useUi, useWork, openFile });
     case "create_group":
     case "update_group":
     case "delete_group":
@@ -9681,7 +9697,7 @@ function renderCall(call2, { sessionId, roster, actions, useUi, useWork, findBot
       return null;
   }
 }
-function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCards, useBrowserHolds, useBrowserTabs, useBrowserPages, actions }) {
+function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCards, useBrowserHolds, useBrowserTabs, useBrowserPages, actions, openFile }) {
   const roster = useRoster((value) => value);
   const heldCards = useHeldCards?.((state) => state[sessionId]);
   const root = node.data.root;
@@ -9695,7 +9711,7 @@ function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCards, us
   useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note);
   useShownCards(actions, sessionId, drawn.filter((call2) => CARDS.has(toolName(call2)) && call2.callId).map((call2) => call2.callId));
   if (drawn.length === 0) return null;
-  const env = { sessionId, roster, actions, useUi, useWork, findBot, heldCards, hooks: { useBrowserHolds, useBrowserTabs, useBrowserPages } };
+  const env = { sessionId, roster, actions, useUi, useWork, findBot, heldCards, openFile, hooks: { useBrowserHolds, useBrowserTabs, useBrowserPages } };
   return (0, import_react16.createElement)(import_react16.Fragment, null, drawn.map((call2, index) => (0, import_react16.createElement)(import_react16.Fragment, { key: call2.callId ?? index }, renderCall(call2, env))));
 }
 

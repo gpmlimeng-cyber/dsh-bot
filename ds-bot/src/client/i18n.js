@@ -189,6 +189,7 @@ const ZH = {
   'Create group chat': '新建群聊',
   'Delete group': '删除群聊',
   "Open {name}'s chat": '打开 {name} 的对话',
+  'Open {path}': '打开 {path}',
   'New Bot': '新 Bot',
 
   // Sidebar and account menu

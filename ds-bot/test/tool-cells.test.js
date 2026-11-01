@@ -9,7 +9,7 @@ import { build } from 'esbuild'
 const { outputFiles } = await build({
   stdin: {
     contents: [
-      "export { ToolCell, TriggerCell, callTree, stackReplies } from './src/client/cells.js'",
+      "export { ToolCell, TriggerCell, callTree, stackReplies, pathMentions } from './src/client/cells.js'",
       "export { QuestionDock } from './src/client/questions.js'",
       "export { SecretDock } from './src/client/secret-card.js'",
       "export { countCards } from './src/client/sources.js'",
@@ -49,7 +49,7 @@ runInNewContext(outputFiles[0].text, {
     throw new Error(`Unexpected platform module ${name}`)
   },
 })
-const { ToolCell, TriggerCell, callTree, stackReplies, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
+const { ToolCell, TriggerCell, callTree, stackReplies, pathMentions, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
 
 // Runs the effects collected since the last render; returns the cleanups.
 const mount = () => {
@@ -852,4 +852,17 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
   assert.match(frame.props.srcDoc, /Content-Security-Policy" content="default-src 'none'/)
   assert.ok(frame.props.srcDoc.indexOf('Content-Security-Policy') < frame.props.srcDoc.indexOf('<b>hi</b>'), 'the policy comes before the markup')
   assert.equal(frame.props.title, 'A greeting')
+})
+
+// A path a bubble names in inline code opens the file view; code that only looks like a
+// path (`console.log`) and code with an offset (`cells.js:611`) stay plain text.
+test('a path in a bubble opens the file view, and code that is not a file stays plain', () => {
+  const opened = []
+  const mentions = pathMentions(path => opened.push(path))
+  const at = value => mentions.resolve(value)
+  assert.equal(at('design/ds-bot-patches.md').title, 'design/ds-bot-patches.md')
+  at('./src/client/cells.js').open()
+  assert.deepEqual(opened, ['./src/client/cells.js'])
+  assert.deepEqual(['console.log', 'npm test', 'cells.js:611', 'MESSAGE_INLINE_MAX', 'obj.prop'].map(value => at(value)), [undefined, undefined, undefined, undefined, undefined])
+  assert.equal(pathMentions(undefined), undefined)
 })
