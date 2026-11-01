@@ -1,12 +1,10 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { fileURLToPath } from 'node:url'
 import { install as installChannel, CAPABILITIES } from '../src/host/channel.js'
 import { install as installFeed } from '../src/host/feed.js'
 import { API_MIN, API_MAX } from '../src/host/constants.js'
 
-const here = fileURLToPath(new URL('.', import.meta.url))
 const pluginVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
 
 // The two host modules register Fetch routes; this runtime starts them without a store,

@@ -89,3 +89,5 @@ export const HISTORY_PAGES_MAX = 50
 export const HISTORY_TIMEOUT_MS = 20_000
 // Shown when an aside stops at the route's own output limit. The partial answer stays.
 export const ASIDE_LIMIT = 'Answer cut off at the output limit.'
+// The most notices one answer carries; the phone reads them as a list, not a log.
+export const NOTICE_MAX = 50
