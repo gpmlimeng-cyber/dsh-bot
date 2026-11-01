@@ -3782,6 +3782,12 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
 .bt-menu button:hover{background:var(--bt-hover)}
 .bt-menu button svg{flex:none;width:16px;height:16px;margin:0 1px}
 .bt-menu .bt-danger{color:var(--bt-danger)}
+/* An upload row is a label over its own input, so the picker opens natively; the row is
+   the menu item and the input is invisible but still in the flow of the label. */
+.bt-menu label.bt-menu-file{position:relative;display:flex;align-items:center;gap:4px;width:100%;min-height:30px;text-align:left;border-radius:6px;padding:6px 8px;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink);cursor:pointer;box-sizing:border-box}
+.bt-menu label.bt-menu-file:hover{background:var(--bt-hover)}
+.bt-menu label.bt-menu-file svg{flex:none;width:16px;height:16px;margin:0 1px}
+.bt-menu-input{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
 .bt-menu-sep{height:.5px;flex:none;background:var(--bt-line-2);margin:4px 8px}
 .bt-menu-up{--bt-origin:bottom left;animation-name:bt-pop-lift,bt-veil-in}
 .bt-menu[data-leaving]{pointer-events:none;animation:bt-pop-out .12s cubic-bezier(.4,0,1,1) forwards}
@@ -22254,28 +22260,35 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     }
     setOpen({ files: Boolean(fileInput()) });
   };
-  const attach = () => {
+  const handFiles = (event) => {
+    const picked = event.target.files;
     const input = fileInput();
-    input?.click();
+    if (event.target.value !== void 0) event.target.value = "";
     setOpen(null);
-  };
-  const attachImage = () => {
-    const input = fileInput();
-    if (!input) {
-      setOpen(null);
-      return;
+    if (!input || !picked || picked.length === 0) return;
+    try {
+      const transfer = new DataTransfer();
+      for (const file of picked) transfer.items.add(file);
+      input.files = transfer.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    } catch {
+      input.click();
     }
-    const previous = input.getAttribute("accept");
-    input.setAttribute("accept", "image/*");
-    const restore = () => {
-      if (previous === null) input.removeAttribute("accept");
-      else input.setAttribute("accept", previous);
-    };
-    input.addEventListener("change", restore, { once: true });
-    window.addEventListener("focus", () => setTimeout(restore, 500), { once: true });
-    input.click();
-    setOpen(null);
   };
+  const uploadRow = (kind, icon2, label) => (0, import_react37.createElement)(
+    "label",
+    { className: "bt-menu-file", role: "menuitem" },
+    (0, import_react37.createElement)("input", {
+      type: "file",
+      multiple: true,
+      tabIndex: -1,
+      className: "bt-menu-input",
+      onChange: handFiles,
+      ...kind === "image" ? { accept: "image/*" } : {}
+    }),
+    icon2,
+    (0, import_react37.createElement)("span", { className: "bt-menu-label" }, label)
+  );
   const schedule = () => {
     setOpen(null);
     actions.openSettings("schedules", target);
@@ -22314,8 +22327,8 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
         style: place ?? {},
         "data-leaving": leaving || void 0
       },
-      shown.files ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: attach }, (0, import_react37.createElement)(PaperclipIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Add files"))) : null,
-      shown.files ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: attachImage }, (0, import_react37.createElement)(ImageIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Add image"))) : null,
+      shown.files ? uploadRow("file", (0, import_react37.createElement)(PaperclipIcon), t("Add files")) : null,
+      shown.files ? uploadRow("image", (0, import_react37.createElement)(ImageIcon), t("Add image")) : null,
       canReference ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onMouseDown: keepComposerFocus, onClick: reference }, (0, import_react37.createElement)(ChatsIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Reference a chat"))) : null,
       target !== void 0 ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: schedule }, (0, import_react37.createElement)(ClockIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Scheduled task"))) : null
     ), document.body) : null

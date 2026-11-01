@@ -136,31 +136,31 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     if (open) { setOpen(null); return }
     setOpen({ files: Boolean(fileInput()) })
   }
-  const attach = () => {
-    // Captured before the menu closes: closing re-renders this subtree and clears the
-    // button ref, so looking the input up afterwards finds nothing. The picker opens
-    // while the menu is still mounted — a WebView drops a file click whose target was
-    // taken out of the document first.
+  // Both upload rows are labels over their own input. A WebView ignores a programmatic
+  // click on the shell's hidden input, but it opens the picker for a labelled one; the
+  // files still go into the shell's input, so validation, limits and drafts stay its own.
+  const handFiles = (event) => {
+    const picked = event.target.files
     const input = fileInput()
-    input?.click()
+    if (event.target.value !== undefined) event.target.value = ''
     setOpen(null)
-  }
-  // Images take the same composer picker; only its accept filter changes for this one
-  // open, and it goes back whichever way the dialog ends (change, or a focus return).
-  const attachImage = () => {
-    const input = fileInput()
-    if (!input) { setOpen(null); return }
-    const previous = input.getAttribute('accept')
-    input.setAttribute('accept', 'image/*')
-    const restore = () => {
-      if (previous === null) input.removeAttribute('accept')
-      else input.setAttribute('accept', previous)
+    if (!input || !picked || picked.length === 0) return
+    try {
+      const transfer = new DataTransfer()
+      for (const file of picked) transfer.items.add(file)
+      input.files = transfer.files
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+    } catch {
+      // Without a transferable FileList the shell's own click path is the only one left.
+      input.click()
     }
-    input.addEventListener('change', restore, { once: true })
-    window.addEventListener('focus', () => setTimeout(restore, 500), { once: true })
-    input.click()
-    setOpen(null)
   }
+  const uploadRow = (kind, icon, label) => h('label', { className: 'bt-menu-file', role: 'menuitem' },
+    h('input', {
+      type: 'file', multiple: true, tabIndex: -1, className: 'bt-menu-input', onChange: handFiles,
+      ...(kind === 'image' ? { accept: 'image/*' } : {}),
+    }),
+    icon, h('span', { className: 'bt-menu-label' }, label))
   const schedule = () => {
     setOpen(null)
     actions.openSettings('schedules', target)
@@ -188,8 +188,8 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       ref: menu, className: 'bt-menu bt-menu-up bt-plus-menu', role: 'menu', 'aria-label': t('Add'),
       style: place ?? {}, 'data-leaving': leaving || undefined,
     },
-    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attach }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
-    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attachImage }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
+    shown.files ? uploadRow('file', h(PaperclipIcon), t('Add files')) : null,
+    shown.files ? uploadRow('image', h(ImageIcon), t('Add image')) : null,
     canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
     target !== undefined ? h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task'))) : null), document.body) : null)
 }
