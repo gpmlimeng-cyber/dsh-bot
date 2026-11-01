@@ -28,8 +28,12 @@ export function watchTier(onChange) {
   update()
   window.addEventListener('resize', update)
   window.addEventListener('orientationchange', update)
+  // Hiding the keyboard does not always resize the window on Android; a focus leaving an
+  // editable puts the height back into the tier.
+  document.addEventListener('focusout', update)
   return () => {
     window.removeEventListener('resize', update)
     window.removeEventListener('orientationchange', update)
+    document.removeEventListener('focusout', update)
   }
 }

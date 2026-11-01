@@ -1589,9 +1589,11 @@ function watchTier(onChange) {
   update();
   window.addEventListener("resize", update);
   window.addEventListener("orientationchange", update);
+  document.addEventListener("focusout", update);
   return () => {
     window.removeEventListener("resize", update);
     window.removeEventListener("orientationchange", update);
+    document.removeEventListener("focusout", update);
   };
 }
 
