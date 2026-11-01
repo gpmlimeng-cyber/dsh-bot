@@ -969,7 +969,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
       if (reply.kind === 'done') {
         return h('div', { key: `${reply.botId}-${index}`, className: 'bt-event' }, t('{name} finished its work', { name: bot.name }))
       }
-      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration, openFile })
+      // A reply past what a group line holds came as a file: the bubble keeps its
+      // start, drops the host's note for the model, and "Show all" reads the rest.
+      // A member's messages in a row stack, and only the last of them takes `whole`.
+      const last = replies[index + texts.length - 1] ?? reply
+      const whole = last.length !== undefined && last.files?.[0] !== undefined
+        ? { length: last.length, load: () => actions.fileText(last.files[0]) }
+        : undefined
+      return h(GroupMessage, {
+        key: `${reply.botId}-${index}`, bot, texts: whole ? texts.map(stripLongNote) : texts, whole,
+        room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration, openFile,
+      })
     }),
     pending.map((id) => {
       const bot = roster.byId[id]

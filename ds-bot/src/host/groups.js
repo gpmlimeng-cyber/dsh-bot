@@ -22,7 +22,7 @@ import { readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import { GROUP_LINE_READ, ROOM_REPLY_TIMEOUT_MS, ROOM_STEP_GAP_MS, ROOM_WORK_GRACE_MS, SOURCE_KIND, TEAM_TOOLS, TEXT_KEPT } from './constants.js'
+import { GROUP_LINE_READ, MESSAGE_INLINE_MAX, ROOM_REPLY_TIMEOUT_MS, ROOM_STEP_GAP_MS, ROOM_WORK_GRACE_MS, SOURCE_KIND, TEAM_TOOLS, TEXT_KEPT } from './constants.js'
 import { escapeRegExp, headOf, splitRef, textOf } from './text.js'
 import { mentionSpans, speakerOf } from '../shared/mentions.js'
 import { GROUP_REF, output } from './tools.js'
@@ -282,9 +282,14 @@ export function install(rt) {
 
   // A member's message in the round: in the log, for the members after it, and in the
   // round's replies, for the user.
-  const postInRound = (room, round, member, text, duration) => {
-    appendRoom(room, { who: member.name, botId: member.id, text })
-    round.replies.push({ botId: member.id, name: member.name, color: member.color, text, time: Date.now(), ...(duration === undefined ? {} : { duration }) })
+  const postInRound = (room, round, member, text, duration, long) => {
+    const files = long?.files ?? []
+    appendRoom(room, { who: member.name, botId: member.id, text, ...(files.length > 0 ? { files } : {}) })
+    round.replies.push({
+      botId: member.id, name: member.name, color: member.color, text, time: Date.now(),
+      ...(duration === undefined ? {} : { duration }),
+      ...(files.length > 0 ? { files } : {}), ...(long?.length ? { length: long.length } : {}),
+    })
     void rt.save().catch(() => {})
   }
 
@@ -530,7 +535,12 @@ export function install(rt) {
         round.replies.push({ kind: 'working', botId: member.id, name: member.name, color: member.color, time: Date.now() })
       } else if (final !== undefined || (typeof reply === 'string' && said.length > 0)) {
         slot.status = 'posted'
-        if (final !== undefined) postInRound(room, round, member, final, Date.now() - startedAt)
+        // A long answer rides as a file here too, as a late reply does: the group line
+        // keeps its start, and the chat reads the rest from the attachment.
+        const long = final !== undefined && final.length > MESSAGE_INLINE_MAX
+          ? await rt.attachLong(final, `Reply from ${member.name}.txt`)
+          : undefined
+        if (final !== undefined) postInRound(room, round, member, long?.text ?? final, Date.now() - startedAt, long)
       } else {
         slot.status = typeof reply === 'string' ? 'passed' : 'missed'
         round.passed.push(member.name)
@@ -814,7 +824,12 @@ export function install(rt) {
       } else {
         const line = [text, ...files.map(fileLine)].filter(Boolean).join('\n')
         appendRoom(room, { who: sender.name, botId: sender.id, text: line, ...(files.length > 0 ? { files } : {}) })
-        running.replies.push({ botId: sender.id, name: sender.name, color: sender.color, text: line, time: Date.now() })
+        // A reply that went as a file keeps the file with it: the chat shows "Show all"
+        // against the whole length and reads the rest from the attachment.
+        running.replies.push({
+          botId: sender.id, name: sender.name, color: sender.color, text: line, time: Date.now(),
+          ...(files.length > 0 ? { files } : {}), ...(extra.length ? { length: extra.length } : {}),
+        })
         logged = room.seq
       }
       await rt.save()

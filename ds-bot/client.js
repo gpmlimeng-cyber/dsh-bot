@@ -9577,7 +9577,22 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
       if (reply.kind === "done") {
         return (0, import_react16.createElement)("div", { key: `${reply.botId}-${index}`, className: "bt-event" }, t("{name} finished its work", { name: bot.name }));
       }
-      return (0, import_react16.createElement)(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts: texts2, room: room2, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : void 0, useUi, time, duration, openFile });
+      const last = replies[index + texts2.length - 1] ?? reply;
+      const whole = last.length !== void 0 && last.files?.[0] !== void 0 ? { length: last.length, load: () => actions.fileText(last.files[0]) } : void 0;
+      return (0, import_react16.createElement)(GroupMessage, {
+        key: `${reply.botId}-${index}`,
+        bot,
+        texts: whole ? texts2.map(stripLongNote) : texts2,
+        whole,
+        room: room2,
+        roster,
+        actions,
+        msgKey: callId ? `${sessionId}:${callId}:${index}` : void 0,
+        useUi,
+        time,
+        duration,
+        openFile
+      });
     }),
     pending.map((id) => {
       const bot = roster.byId[id];

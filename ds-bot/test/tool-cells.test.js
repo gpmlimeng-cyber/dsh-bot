@@ -866,3 +866,23 @@ test('a path in a bubble opens the file view, and code that is not a file stays 
   assert.deepEqual(['console.log', 'npm test', 'cells.js:611', 'MESSAGE_INLINE_MAX', 'obj.prop'].map(value => at(value)), [undefined, undefined, undefined, undefined, undefined])
   assert.equal(pathMentions(undefined), undefined)
 })
+
+// A group reply past what a line holds arrived as a file: the bubble shows its start with
+// "Show all" against the whole length, reads the rest from the attachment, and never shows
+// the note the host wrote for the model.
+test('a group reply that came as a file shows Show all with its whole length, and loads it', async () => {
+  const file = { name: 'Reply from Writer.txt', bytes: 20_001 }
+  const asked = []
+  const actions = { fileText: async (given) => { asked.push(given); return { text: 'All of it.', whole: true } } }
+  const note = '[A long message: 20001 characters. Its start is below; all of it is in the attached file. Read the file before you act on it.]'
+  const replies = [{ botId: 'writer', text: `${note}\nThe start of a very long reply…`, length: 20_001, files: [file] }]
+  const out = show(call('group_relay', 'direct', { content: { replies } }), { sessionId: 'room', actions })
+  const more = findAll(out, node => node.props?.className === 'bt-more')
+  assert.equal(more.length, 1)
+  assert.match(text(more[0]), /20,001/)
+  assert.ok(!text(out).includes('[A long message'), 'the note the host wrote for the model stays out of the bubble')
+  more[0].props.onClick()
+  await Promise.resolve()
+  await Promise.resolve()
+  assert.deepEqual(JSON.parse(JSON.stringify(asked)), [file])
+})
