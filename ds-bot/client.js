@@ -1570,6 +1570,27 @@ var call = async (endpoint, payload, signal) => {
   return result.value;
 };
 
+// src/client/tier.js
+var TIER_MEDIUM = 600;
+var TIER_EXPANDED = 840;
+var TIER_SHORT = 480;
+function tierOf(width, height) {
+  if (height < TIER_SHORT) return "compact";
+  if (width < TIER_MEDIUM) return "compact";
+  if (width < TIER_EXPANDED) return "medium";
+  return "expanded";
+}
+function watchTier(onChange) {
+  const update = () => onChange(tierOf(window.innerWidth, window.innerHeight));
+  update();
+  window.addEventListener("resize", update);
+  window.addEventListener("orientationchange", update);
+  return () => {
+    window.removeEventListener("resize", update);
+    window.removeEventListener("orientationchange", update);
+  };
+}
+
 // src/client/inks.js
 var INKS = {
   deepseek: ["#4D6BFE", "#6A84FF"],
@@ -4492,6 +4513,13 @@ html:has([data-mobile-nav="frame"]) @media (prefers-reduced-motion:reduce){.bt-n
   .bt-plus,.bt-mic,.bt-voice{width:32px;height:32px}
   [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important}
 }
+
+/* Window tiers (tier.js): compact under 600 wide or under 480 tall, medium to 840,
+   expanded above. The host's own mobile frame already gives the phone its shape; these
+   rules give a short landscape window the same one when that frame is absent. */
+html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-settings{--bt-set-w:100vw;--bt-set-h:100dvh;width:100vw;height:100dvh;border-radius:0;border-width:0;flex-direction:column}
+html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-market-frame{padding:0;align-items:stretch}
+html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-market-pane{width:100vw;max-width:100vw;height:100dvh;border-radius:0;flex-direction:column}
 `;
 var PLUGIN_ID = "ds-bot";
 function installStyles(text, tag) {
@@ -29198,6 +29226,15 @@ function apply(ctx) {
       }
     };
   };
+  ctx.effect(() => {
+    const stop = watchTier((tier) => {
+      document.documentElement.dataset.btTier = tier;
+    });
+    return () => {
+      stop();
+      delete document.documentElement.dataset.btTier;
+    };
+  });
   ctx.effect(() => {
     const hub = { registerShape, registerTheme, themes: () => Object.keys(allThemes()), shapes: () => Object.keys(SHAPES) };
     const queued = Array.isArray(window.dshBotQueue) ? window.dshBotQueue : [];

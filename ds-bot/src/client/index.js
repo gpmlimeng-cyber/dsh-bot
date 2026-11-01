@@ -1,4 +1,5 @@
 import { call } from './api.js'
+import { watchTier } from './tier.js'
 import { isHex, inkText, paintCss } from './inks.js'
 import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
 import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
@@ -384,6 +385,12 @@ export function apply(ctx) {
       }
     }
   }
+
+  // Our own layout rules read this tier; the host's mobile frame keeps its own phone shape.
+  ctx.effect(() => {
+    const stop = watchTier(tier => { document.documentElement.dataset.btTier = tier })
+    return () => { stop(); delete document.documentElement.dataset.btTier }
+  })
 
   ctx.effect(() => {
     const hub = { registerShape, registerTheme, themes: () => Object.keys(allThemes()), shapes: () => Object.keys(SHAPES) }
