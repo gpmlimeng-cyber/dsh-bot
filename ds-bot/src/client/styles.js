@@ -1384,7 +1384,9 @@ body{--bt-float-surface:var(--bt-main);--bt-float-ring:color-mix(in srgb,var(--b
 /* 32px is the circle; a finger still gets 44. Grow up, down and left only, so the pill
    beside it keeps its space. */
 .bt-head-btn::after{content:'';position:absolute;inset:-4px 0 -4px -4px}
-html:has([data-mobile-nav="frame"]) .bt-head-btn{display:flex}
+/* The phone layout mounts its own drawer toggle in the frame's leading cell, so the
+   self-drawn one would be a second hamburger beside it. */
+html:has([data-mobile-nav="frame"]) .bt-head-btn{display:none}
 /* The session menu sits at the mirror position. The popover is the panel menu's own, which
    already opens right-aligned below its button. */
 .bt-head>.bt-pmenu{position:absolute;right:0;top:2px;display:none}
