@@ -4,7 +4,8 @@
 //   live      work changed without a new revision: ask for `state` again
 //   message   a new entry of a Bot's own chat, as the `chat` endpoint returns it
 //   stream    the reply a Bot is writing: a start, its text as it comes, an end
-import { ROUTE } from './constants.js'
+import { ROUTE, API_MAX } from './constants.js'
+import { BOOT_ID, nextSeq, publishedSeq } from './boot.js'
 
 export const FEED_ROUTE = `${ROUTE}/feed`
 // A comment line now and then keeps an idle connection open.
@@ -28,6 +29,7 @@ export function install(rt) {
     try { controller.enqueue(chunk) } catch { clients.delete(controller) }
   }
   const publish = (event, data) => {
+    nextSeq()
     const chunk = encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
     for (const controller of clients) send(controller, chunk)
   }
@@ -92,7 +94,9 @@ export function install(rt) {
         start(own) {
           controller = own
           clients.add(own)
-          send(own, encoder.encode(`event: hello\ndata: ${JSON.stringify({ revision: state.revision })}\n\n`))
+          // A window that reconnects reads the same `hello` again: `boot` and `seq` tell it
+          // whether this is the host it knew and where the stream had got to.
+          send(own, encoder.encode(`event: hello\ndata: ${JSON.stringify({ revision: state.revision, api: API_MAX, boot: BOOT_ID, seq: publishedSeq() })}\n\n`))
         },
         cancel() { leave(controller) },
       })

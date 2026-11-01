@@ -1,5 +1,7 @@
 // Client channel: the team view the browser renders, and the POST /api/bot endpoints.
 import { randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { install as installBtw } from './btw.js'
 import { install as installSide } from './side.js'
@@ -7,7 +9,8 @@ import { handoffReply, questionReply, viewReply } from './parts.js'
 import { defaultRelayLimit } from './groups.js'
 import { validateViewAnswer } from 'deep-view/core'
 import { applySuperAgentPrefs } from '../shared/superagent-prefs.js'
-import { COLORS, EXTRA_COLORS, ROUTE } from './constants.js'
+import { COLORS, EXTRA_COLORS, ROUTE, API_MIN, API_MAX } from './constants.js'
+import { BOOT_ID, publishedSeq } from './boot.js'
 
 const LANGUAGES = { zh: 'Chinese (简体中文)', en: 'English' }
 const RUN_STATS = ['sessionStats', 'tokenUsage', 'contextPressure']
@@ -21,6 +24,33 @@ export function errorCode(error) {
   if (typeof error?.code === 'string' && error.code.startsWith('bot/')) return error.code
   return isInternal(error) ? 'bot/internal' : 'bot/refused'
 }
+
+// What the handshake advertises. A client reads it to decide which parts of the team
+// it can draw; the unit test `mobile-hello` keeps this list equal to the switch's cases,
+// so a new endpoint is listed here or the test fails.
+export const CAPABILITIES = [
+  'add-agent', 'agent-adopt', 'agent-archive', 'agent-rename', 'agent-session',
+  'answer-question', 'approval-answer', 'avatar-delete', 'avatar-import', 'avatar-library',
+  'bot-capability', 'browser-give-back', 'browser-result', 'browser-stop', 'browser-takeover',
+  'browser-wait', 'btw-delete', 'capability-approve', 'capability-delete', 'capability-save',
+  'chat', 'connector-connect', 'connector-disconnect', 'connector-retry', 'create-bot',
+  'create-room', 'delete-bot', 'delete-room', 'diagnostics', 'diagnostics-clear',
+  'diagnostics-log', 'dismiss-question', 'dismiss-view', 'dsh-update-install', 'duplicate-bot',
+  'earlier', 'efforts', 'exchange', 'exchange-text', 'file-text', 'folder-list', 'folder-pick',
+  'folders', 'hello', 'learning-answer', 'mcp-add', 'mcp-list', 'mcp-market', 'mcp-remove',
+  'mcp-save', 'mcp-toggle', 'mcp-tools', 'memory-ask', 'memory-forget', 'memory-view',
+  'models', 'private-release', 'provider-add', 'provider-key', 'provider-models',
+  'provider-remove', 'providers', 'remove-agent', 'repo-stars', 'room-continue',
+  'room-progress', 'run-stats', 'schedule-create', 'schedule-delete', 'schedules',
+  'secret-allow', 'secret-cancel', 'secret-delete', 'secret-set', 'secret-update', 'send',
+  'set-flags', 'set-main', 'set-prefs', 'side-ask', 'side-cancel', 'side-close', 'side-new',
+  'state', 'stop-member-work', 'stop-room-work', 'team-workspace', 'thinking', 'update-bot',
+  'update-check', 'update-install', 'update-room', 'usage', 'view-reply',
+]
+
+// The installed plugin's own version, for the handshake.
+let pluginVersion
+const version = () => (pluginVersion ??= JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8')).version)
 
 export function install(rt) {
   installBtw(rt)
@@ -100,7 +130,7 @@ export function install(rt) {
   })
   // What a host that only reads the team may still answer.
   // Updates change the dsh profile, not the team, so a reading host may run them too.
-  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market'])
+  const READS = new Set(['hello', 'state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market'])
 
   function setPrefs(body) {
     if (body.theme !== undefined) {
@@ -593,6 +623,24 @@ export function install(rt) {
         case 'diagnostics-clear':
           await rt.diagnostics.clear()
           return ok(true)
+        // The version handshake: what this host speaks, so a client can stop before
+        // drawing a team it cannot drive. `api` is null when the ranges do not overlap.
+        case 'hello': {
+          const known = Array.isArray(body.api) ? body.api.filter(value => Number.isInteger(value)) : []
+          const shared = known.filter(value => value >= API_MIN && value <= API_MAX)
+          return ok({
+            api: shared.length === 0 ? null : Math.max(...shared),
+            apiMin: API_MIN,
+            apiMax: API_MAX,
+            plugin: { version: version() },
+            capabilities: CAPABILITIES,
+            boot: BOOT_ID,
+            seq: publishedSeq(),
+            revision: state.revision,
+            readOnly: rt.readOnly() ?? null,
+            memory: rt.memoryEnabled !== false,
+          })
+        }
         default:
           return fail(`Unknown endpoint ${endpoint}`, 'bot/not-found')
       }

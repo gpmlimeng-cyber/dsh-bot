@@ -20,6 +20,10 @@ export const OCR_RETRY_MS = 120_000
 export const OCR_CACHE_MAX = 500
 export const MAX_AVATAR_IMAGE = 160_000
 export const ROUTE = '/api/bot'
+// The mobile API this host speaks. A client asks `hello` with the versions it knows and
+// draws the team only when the two ranges overlap; an older host answers with no `api`.
+export const API_MIN = 1
+export const API_MAX = 1
 export const MAX_EXCHANGES = 600
 // state.json is written whole on every save, so a long message between Bots or a long
 // group line keeps only its start there. The rest stays where it already is (a message
