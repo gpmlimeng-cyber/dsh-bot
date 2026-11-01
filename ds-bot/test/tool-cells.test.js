@@ -890,20 +890,22 @@ test('a group reply that came as a file shows Show all with its whole length, an
   assert.deepEqual(JSON.parse(JSON.stringify(asked)), [file])
 })
 
-// A group line folds only when folding hides something: past 300 characters, and keeping
-// 120 of them. A reply barely past the limit stays whole, and so does an 8-line one.
-test('a group reply folds only when folding hides something', () => {
+// A group reply folds at the line it marks, and keeps the whole point above it. With no
+// mark it folds past 1000 characters or 20 lines, and keeps 120 characters of four.
+test('a group reply folds at its own mark, or past a long enough line', () => {
   const folded = words => findAll(show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: words, time: 1 }] } }), { sessionId: 'room' }), node => node.props?.className === 'bt-more')
   const lines = count => Array.from({ length: count }, (_, index) => `line ${index}`).join('\n')
-  assert.deepEqual([200, 301, 800].map(count => folded('z'.repeat(count)).length), [0, 1, 1], '200 stays whole; 301 and 800 fold')
-  assert.deepEqual([14, 15, 16].map(count => folded(lines(count)).length), [0, 0, 1], '15 lines stay whole; 16 fold')
-  assert.match(text(folded(lines(16))[0]), /Show all · 16 lines/, 'a line-triggered fold counts lines')
-  // A paragraph with no break is folded by its characters instead.
-  assert.deepEqual([299, 300, 301].map(count => folded('z'.repeat(count)).length), [0, 1, 1], 'a 300-character paragraph folds')
-  assert.match(text(folded('z'.repeat(301))[0]), /Show all · 301 characters/)
-  // A folded reply keeps 120 characters, so 301 that fold hide 181 of them.
-  const at = { chars: 300, lines: 8 }
+  // The point reads whole, however short it is; the detail below it folds.
+  assert.equal(folded(`结论。\n\n${'d'.repeat(800)}`).length, 1)
+  assert.equal(folded(`结论。\n---\n${'d'.repeat(800)}`).length, 1)
+  // No mark: a 900-character line stays whole, a 1100-character one folds.
+  assert.deepEqual([900, 1100].map(count => folded('z'.repeat(count)).length), [0, 1])
+  assert.match(text(folded('z'.repeat(1100))[0]), /Show all · 1,100 characters/)
+  assert.deepEqual([20, 21].map(count => folded(lines(count)).length), [0, 1], '20 lines stay whole; 21 fold')
+  const at = { chars: 1000, lines: 20 }
   const preview = { chars: 120, lines: 4 }
-  assert.equal(foldPreview('z'.repeat(301), at, true, preview).length, 120)
-  assert.equal(foldPreview('z'.repeat(200), at, true, preview), null, '200 hides too little to fold')
+  assert.equal(foldPreview(`结论。\n\n${'d'.repeat(800)}`, at, true, preview), '结论。\n\n')
+  assert.equal(foldPreview('z'.repeat(1100), at, true, preview).length, 120)
+  assert.equal(foldPreview('z'.repeat(900), at, true, preview), null, '900 characters stay whole')
+  assert.equal(foldPreview('结论。\n\n很短', at, true, preview), null, 'a mark with one short line after it does not fold')
 })

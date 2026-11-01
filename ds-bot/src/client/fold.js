@@ -37,6 +37,20 @@ function endIn(text, from, to) {
   return -1
 }
 
+// A reply can mark where its point ends and its detail starts: an empty line, or a line
+// that is only a rule. A fold there keeps the whole point, so the point is never cut.
+// Returns the offset past the mark, or 0 when the reply has none.
+const RULE = /^[ \t]{0,3}(?:-{3,}|\*{3,}|_{3,})[ \t]*$/
+function coreEnd(text) {
+  let from = 0
+  for (const line of text.split('\n')) {
+    const end = Math.min(from + line.length + 1, text.length)
+    if (from > 0 && (line.trim() === '' || RULE.test(line))) return end
+    from = end
+  }
+  return 0
+}
+
 // Where the last blank line before `to` ends, so a preview keeps the paragraph above it
 // and the empty line that separates it: a reply that leads with its point folds to that
 // point. -1 when the text has no paragraph break before the budget.
@@ -74,13 +88,21 @@ function moreLines(text, max) {
 // Null when `text` is within `limit`, or when folding it would hide less than HIDDEN:
 // `preview` is what a folded bubble keeps, and `force` folds regardless (a message kept
 // only in part must fold however short its start).
+const DETAIL = 100
+
 export function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false) {
-  if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null
-  if (!force && text.length - preview.chars < HIDDEN.chars && !moreLines(text, preview.lines + HIDDEN.lines)) return null
   // Blank lines first: the preview starts at the first visible character. An
   // all-blank message has nothing to preview, so it does not fold at all.
   const body = text.replace(/^(\s*\n)+/, '')
   if (body.trim() === '') return null
+  // A marked point folds there, whole, as long as real detail follows it; a reply whose
+  // detail is a line long is not worth folding.
+  if (!force) {
+    const core = coreEnd(body)
+    if (core > 0 && body.length - core >= DETAIL) return body.slice(0, core)
+  }
+  if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null
+  if (!force && text.length - preview.chars < HIDDEN.chars && !moreLines(text, preview.lines + HIDDEN.lines)) return null
   let head = body.split('\n', preview.lines).join('\n')
   if (head.length > preview.chars) {
     // A paragraph break wins: the reply leads with its point, and a fold shows that point.

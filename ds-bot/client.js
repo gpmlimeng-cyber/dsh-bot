@@ -8224,6 +8224,16 @@ function endIn(text, from, to) {
   }
   return -1;
 }
+var RULE = /^[ \t]{0,3}(?:-{3,}|\*{3,}|_{3,})[ \t]*$/;
+function coreEnd(text) {
+  let from = 0;
+  for (const line of text.split("\n")) {
+    const end = Math.min(from + line.length + 1, text.length);
+    if (from > 0 && (line.trim() === "" || RULE.test(line))) return end;
+    from = end;
+  }
+  return 0;
+}
 function paragraphIn(text, to) {
   const end = Math.min(to, text.length);
   for (let at = end - 2; at >= 0; at -= 1) {
@@ -8248,11 +8258,16 @@ function moreLines(text, max) {
   }
   return false;
 }
+var DETAIL = 100;
 function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false) {
-  if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null;
-  if (!force && text.length - preview.chars < HIDDEN.chars && !moreLines(text, preview.lines + HIDDEN.lines)) return null;
   const body = text.replace(/^(\s*\n)+/, "");
   if (body.trim() === "") return null;
+  if (!force) {
+    const core = coreEnd(body);
+    if (core > 0 && body.length - core >= DETAIL) return body.slice(0, core);
+  }
+  if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null;
+  if (!force && text.length - preview.chars < HIDDEN.chars && !moreLines(text, preview.lines + HIDDEN.lines)) return null;
   let head = body.split("\n", preview.lines).join("\n");
   if (head.length > preview.chars) {
     const budget = preview.chars;
@@ -8644,7 +8659,7 @@ function BtwTurnTail({ turn, sessionId, useRoster, actions }) {
 // src/client/cells.js
 var import_react16 = require("react");
 var import_react_dom = require("react-dom");
-var GROUP_FOLD = { at: { chars: 299, lines: 15 }, preview: { chars: 120, lines: 4 } };
+var GROUP_FOLD = { at: { chars: 1e3, lines: 20 }, preview: { chars: 120, lines: 4 } };
 var mdLabels3 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
 var FILE_PATH = /^(?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.-]+)*$/;
 var FILE_EXT = /\.(?:md|txt|jsonl?|mjs|cjs|jsx?|tsx?|py|sh|ya?ml|toml|csv|html|css|png|jpe?g|webp|gif|pdf|patch|diff)$/i;

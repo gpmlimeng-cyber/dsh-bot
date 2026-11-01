@@ -164,9 +164,11 @@ test('a preview ends at a sentence, then at a word, and only then cuts hard', ()
   assert.equal(cut(`${'a'.repeat(140)}。${'b'.repeat(160)}`), `${'a'.repeat(140)}。`, 'the first end past the budget wins, up to 130%')
   assert.equal(cut('c'.repeat(300)), 'c'.repeat(120), 'one long sentence cuts at the budget')
   assert.equal(cut(Array.from({ length: 62 }, () => 'word').join(' ')), Array.from({ length: 24 }, () => 'word').join(' '), 'a cut falls back to a word end')
-  // A paragraph break wins over a sentence: the preview keeps the point and the blank
-  // line under it, however early the point is.
+  // A marked point folds there, whole, however early it is.
   assert.equal(cut(`结论。\n\n${'d'.repeat(800)}`), '结论。\n\n')
+  assert.equal(cut(`结论。\n---\n${'d'.repeat(800)}`), `结论。\n---\n`)
+  // A mark with only a line of detail after it does not fold.
+  assert.equal(cut(`结论。\n\n很短`), null, 'a mark with one short line after it does not fold')
   // A decimal point is not a sentence end.
   const number = `a${'a'.repeat(89)}3.14${'b'.repeat(210)}`
   assert.equal(cut(number), number.slice(0, 120))
