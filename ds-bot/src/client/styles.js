@@ -579,7 +579,8 @@ html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;fo
 html:has([data-mobile-nav="frame"]) .bt-pill:hover,html:has([data-mobile-nav="frame"]) .bt-pill:active{background:var(--bt-float-hover)}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{border:0;background:var(--bt-float-surface);box-shadow:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03),var(--bt-float-shadow)}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn:hover{background:var(--bt-float-hover)}
-html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:28px;height:28px}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{top:0;bottom:0;align-items:center}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:28px;height:28px;align-self:center}
 html:has([data-mobile-nav="frame"]):has([data-mobile-nav="toggle"]) .bt-head-btn{display:none}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:36px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 72%,transparent);border:0;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
