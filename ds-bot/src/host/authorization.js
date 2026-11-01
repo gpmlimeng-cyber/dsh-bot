@@ -72,8 +72,10 @@ export function install(rt) {
   const deliver = rt.deliver
   rt.deliver = async (args) => {
     if (!on()) return deliver(args)
-    // `fromId` says who sent it: the user's own message carries one, a Bot's hand-off
-    // of something it was told does not.
+    // `fromId` is set when a Bot starts the message itself (`message_bot`, tools.js:242) and
+    // absent when the user's own request drives the turn (a group round relays with
+    // `fromId: undefined`, groups.js:335). So the presence of a sender is what marks a
+    // hand-off; a user's message is the pass-through case.
     return measured(args ?? {}, () => deliver(args), () => (args?.fromId === undefined ? null : args.role === 'room' ? 'room_round' : 'message_bot'))
   }
 
