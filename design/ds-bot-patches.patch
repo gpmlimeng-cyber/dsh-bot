@@ -548,7 +548,7 @@ index 00000000..8fca0d0f
 +  if (fromDrawer === true) collapse?.()
 +}
 diff --git a/ds-bot/src/client/fold.js b/ds-bot/src/client/fold.js
-index 2b49959d..1cabc2f4 100644
+index 2b49959d..6842c3fe 100644
 --- a/ds-bot/src/client/fold.js
 +++ b/ds-bot/src/client/fold.js
 @@ -9,6 +9,10 @@ export const FOLD_HUGE = { chars: 20_000, lines: Infinity }
@@ -601,7 +601,7 @@ index 2b49959d..1cabc2f4 100644
      lines = head.split('\n')
      open = null
      openLine = -1
-@@ -83,13 +90,13 @@ export const stripLongNote = text => text.replace(/^\[A long message: \d+ charac
+@@ -83,13 +90,15 @@ export const stripLongNote = text => text.replace(/^\[A long message: \d+ charac
  // `whole`, when `text` is only the start of the message: its `length`, and `load()`,
  // which reads it whole ({ text, whole }). `live`: still streaming, never folded.
  // `markdown`: false for plain text.
@@ -615,17 +615,21 @@ index 2b49959d..1cabc2f4 100644
 -  if (preview === null) return { shown: text, control: null }
 +  const kept = useMemo(() => (live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown, preview, cut)), [text, live, limit, markdown, preview, cut])
 +  if (kept === null) return { shown: text, control: null }
++  // The count follows what made it fold: a message too long by lines says its lines.
++  const rows = cut || !moreLines(text, limit.lines) ? undefined : text.split('\n').length
    const count = (cut ? whole.length : text.length).toLocaleString()
    if (!open) {
      const show = async () => {
-@@ -98,7 +105,10 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
+@@ -98,7 +107,12 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
        setRead('loading')
        setRead(await whole.load() ?? { whole: false })
      }
 -    return { shown: preview, folded: true, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, t('Show all · {count} characters', { count }))) }
 +    // A message kept only as a file says so: its "Show all" reads the attachment, and
 +    // its count is the whole message, not the start the bubble holds.
-+    const label = cut ? t('Open the whole reply · {count} characters, from its file', { count }) : t('Show all · {count} characters', { count })
++    const label = cut
++      ? t('Open the whole reply · {count} characters, from its file', { count })
++      : rows === undefined ? t('Show all · {count} characters', { count }) : t('Show all · {count} lines', { count: rows.toLocaleString() })
 +    return { shown: kept, folded: true, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, label)) }
    }
    const loaded = typeof read?.text === 'string' ? read : undefined
@@ -722,7 +726,7 @@ index c7b14888..98b1e26d 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 06962367..64de50da 100644
+index 06962367..2d38e78f 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
 @@ -18,6 +18,140 @@ const ZH = {
@@ -926,15 +930,16 @@ index 06962367..64de50da 100644
    'Bots · {count}': 'Bot · {count}',
    'First in the sidebar. Pick another Bot to hand it the role; {name} then stops being a Main Bot.': '排在侧栏最上面。选另一个 Bot 就会把主 Bot 交给它，{name} 随之不再是主 Bot。',
    'Choose a Bot…': '选择一个 Bot…',
-@@ -523,6 +680,7 @@ const ZH = {
+@@ -523,6 +680,8 @@ const ZH = {
    'No messages yet': '还没有消息',
    'Close Chat': '关闭',
    'Show all · {count} characters': '显示全部 · {count} 字',
++  'Show all · {count} lines': '显示全部 · {count} 行',
 +  'Open the whole reply · {count} characters, from its file': '展开全文（文件）· {count} 字',
    'Showing the first {count} characters': '只显示前 {count} 字',
    'Only the start of this message is kept here': '这里只保留了这条消息的开头',
  
-@@ -545,6 +703,23 @@ const ZH = {
+@@ -545,6 +704,23 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -958,7 +963,7 @@ index 06962367..64de50da 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +857,6 @@ const ZH = {
+@@ -682,7 +858,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -966,7 +971,7 @@ index 06962367..64de50da 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1105,10 @@ const ZH = {
+@@ -931,6 +1106,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -977,7 +982,7 @@ index 06962367..64de50da 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1151,7 @@ const ZH = {
+@@ -973,6 +1152,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -985,7 +990,7 @@ index 06962367..64de50da 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1247,10 @@ const ZH = {
+@@ -1068,6 +1248,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -16575,10 +16580,20 @@ index 00000000..d745c987
 +  assert.ok(mask !== null, 'the shell paperclip is not repainted as a plus where ours is missing')
 +})
 diff --git a/ds-bot/test/fold.test.js b/ds-bot/test/fold.test.js
-index 331d986a..eda0edff 100644
+index 331d986a..516efe34 100644
 --- a/ds-bot/test/fold.test.js
 +++ b/ds-bot/test/fold.test.js
-@@ -122,7 +122,8 @@ test('a message kept only in part is read whole on request, and says when it is
+@@ -104,7 +104,8 @@ test('a long text opens and closes in place; a short one has no control', async
+   assert.equal(folded.folded, true)
+   assert.equal(folded.shown, lines(10))
+   const [show] = buttons(folded.control)
+-  assert.equal(words(show), `Show all · ${text.length} characters`)
++  // A message that folded because of its lines counts lines, not characters.
++  assert.equal(words(show), 'Show all · 40 lines')
+   await show.props.onClick()
+   const open = render(text)
+   assert.equal(open.shown, text)
+@@ -122,7 +123,8 @@ test('a message kept only in part is read whole on request, and says when it is
    const whole = { length: 30_000, load: async () => { reads += 1; return { text: 'x'.repeat(30_000), whole: true } } }
    const folded = render(start, { whole })
    assert.equal(folded.shown, 'x'.repeat(600), 'the start shows as any preview does')
@@ -17507,7 +17522,7 @@ index 4985bf19..5abf15ce 100644
      "usage-page.js": {
        "14px": 5,
 diff --git a/ds-bot/test/tool-cells.test.js b/ds-bot/test/tool-cells.test.js
-index 18780147..b1a3ebbc 100644
+index 18780147..01bf01e9 100644
 --- a/ds-bot/test/tool-cells.test.js
 +++ b/ds-bot/test/tool-cells.test.js
 @@ -9,7 +9,8 @@ import { build } from 'esbuild'
@@ -17529,7 +17544,7 @@ index 18780147..b1a3ebbc 100644
  
  // Runs the effects collected since the last render; returns the cleanups.
  const mount = () => {
-@@ -853,3 +854,53 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
+@@ -853,3 +854,54 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
    assert.ok(frame.props.srcDoc.indexOf('Content-Security-Policy') < frame.props.srcDoc.indexOf('<b>hi</b>'), 'the policy comes before the markup')
    assert.equal(frame.props.title, 'A greeting')
  })
@@ -17576,6 +17591,7 @@ index 18780147..b1a3ebbc 100644
 +  const lines = count => Array.from({ length: count }, (_, index) => `line ${index}`).join('\n')
 +  assert.deepEqual([200, 301, 800].map(count => folded('z'.repeat(count)).length), [0, 1, 1], '200 stays whole; 301 and 800 fold')
 +  assert.deepEqual([8, 9].map(count => folded(lines(count)).length), [0, 1], '8 lines stay whole; 9 fold')
++  assert.match(text(folded(lines(9))[0]), /Show all · 9 lines/, 'a line-triggered fold counts lines')
 +  assert.match(text(folded('z'.repeat(301))[0]), /Show all · 301 characters/)
 +  // A folded reply keeps 120 characters, so 301 that fold hide 181 of them.
 +  const at = { chars: 300, lines: 8 }
