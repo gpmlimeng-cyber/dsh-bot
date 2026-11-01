@@ -90,14 +90,15 @@ function moreLines(text, max) {
 // only in part must fold however short its start).
 const DETAIL = 100
 
-export function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false) {
+export function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false, mark = false) {
   // Blank lines first: the preview starts at the first visible character. An
   // all-blank message has nothing to preview, so it does not fold at all.
   const body = text.replace(/^(\s*\n)+/, '')
   if (body.trim() === '') return null
-  // A marked point folds there, whole, as long as real detail follows it; a reply whose
-  // detail is a line long is not worth folding.
-  if (!force) {
+  // Only a group line folds at a mark it carries (the option says so): a chat with the user
+  // shows the whole reply, and its own limit decides. A mark followed by one short line
+  // does not fold at all.
+  if (mark && !force) {
     const core = coreEnd(body)
     if (core > 0 && body.length - core >= DETAIL) return body.slice(0, core)
   }
@@ -160,12 +161,12 @@ export const stripLongNote = text => text.replace(/^\[A long message: \d+ charac
 // `whole`, when `text` is only the start of the message: its `length`, and `load()`,
 // which reads it whole ({ text, whole }). `live`: still streaming, never folded.
 // `markdown`: false for plain text.
-export function useFold(text, { limit = FOLD_AT, preview, whole, live = false, markdown = true } = {}) {
+export function useFold(text, { limit = FOLD_AT, preview, mark = false, whole, live = false, markdown = true } = {}) {
   const [open, setOpen] = useState(false)
   const [read, setRead] = useState()
   const cut = whole !== undefined && whole.length > text.length
   // A message kept only in part folds whatever the length of its start.
-  const kept = useMemo(() => (live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown, preview, cut)), [text, live, limit, markdown, preview, cut])
+  const kept = useMemo(() => (live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown, preview, cut, mark)), [text, live, limit, markdown, preview, cut, mark])
   if (kept === null) return { shown: text, control: null }
   // The count follows what made it fold: a message too long by lines says its lines.
   const rows = cut || !moreLines(text, limit.lines) ? undefined : text.split('\n').length

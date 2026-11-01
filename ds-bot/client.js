@@ -8259,10 +8259,10 @@ function moreLines(text, max) {
   return false;
 }
 var DETAIL = 100;
-function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false) {
+function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false, mark = false) {
   const body = text.replace(/^(\s*\n)+/, "");
   if (body.trim() === "") return null;
-  if (!force) {
+  if (mark && !force) {
     const core = coreEnd(body);
     if (core > 0 && body.length - core >= DETAIL) return body.slice(0, core);
   }
@@ -8313,11 +8313,11 @@ function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, 
 ${open}`;
 }
 var stripLongNote = (text) => text.replace(/^\[A long message: \d+ characters\.[^\]\n]*\]\n/, "");
-function useFold(text, { limit = FOLD_AT, preview, whole, live = false, markdown = true } = {}) {
+function useFold(text, { limit = FOLD_AT, preview, mark = false, whole, live = false, markdown = true } = {}) {
   const [open, setOpen] = (0, import_react14.useState)(false);
   const [read, setRead] = (0, import_react14.useState)();
   const cut = whole !== void 0 && whole.length > text.length;
-  const kept = (0, import_react14.useMemo)(() => live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown, preview, cut), [text, live, limit, markdown, preview, cut]);
+  const kept = (0, import_react14.useMemo)(() => live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown, preview, cut, mark), [text, live, limit, markdown, preview, cut, mark]);
   if (kept === null) return { shown: text, control: null };
   const rows2 = cut || !moreLines(text, limit.lines) ? void 0 : text.split("\n").length;
   const count = (cut ? whole.length : text.length).toLocaleString();
@@ -8659,7 +8659,7 @@ function BtwTurnTail({ turn, sessionId, useRoster, actions }) {
 // src/client/cells.js
 var import_react16 = require("react");
 var import_react_dom = require("react-dom");
-var GROUP_FOLD = { at: { chars: 1e3, lines: 20 }, preview: { chars: 120, lines: 4 } };
+var GROUP_FOLD = { at: { chars: 1e3, lines: 20 }, preview: { chars: 120, lines: 4 }, mark: true };
 var mdLabels3 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
 var FILE_PATH = /^(?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.-]+)*$/;
 var FILE_EXT = /\.(?:md|txt|jsonl?|mjs|cjs|jsx?|tsx?|py|sh|ya?ml|toml|csv|html|css|png|jpe?g|webp|gif|pdf|patch|diff)$/i;
@@ -8708,7 +8708,7 @@ function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId,
   );
 }
 function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, openFile, fold, picked, live, lead, whole }) {
-  const { shown, folded, control } = useFold(text, { limit: fold.at ?? fold, preview: fold.preview, whole, live });
+  const { shown, folded, control } = useFold(text, { limit: fold.at ?? fold, preview: fold.preview, mark: fold.mark === true, whole, live });
   const key = msgKey ? `${msgKey}:${index}` : void 0;
   const links = (0, import_react16.useMemo)(() => mentions ?? pathMentions(openFile), [mentions, openFile]);
   const body = (0, import_react16.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: linkMentions(shown, roster.bots, selfId), streaming: live, labels: mdLabels3(), variant: "compact", fileMentions: links });

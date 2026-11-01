@@ -159,17 +159,25 @@ test('a streaming text never folds', () => {
 test('a preview ends at a sentence, then at a word, and only then cuts hard', () => {
   const limit = { chars: 299, lines: 15 }
   const preview = { chars: 120, lines: 4 }
-  const cut = text => foldPreview(text, limit, true, preview)
+  const cut = (text, mark = false) => foldPreview(text, limit, true, preview, false, mark)
   assert.equal(cut(`${'a'.repeat(100)}。${'b'.repeat(200)}`), `${'a'.repeat(100)}。`)
   assert.equal(cut(`${'a'.repeat(140)}。${'b'.repeat(160)}`), `${'a'.repeat(140)}。`, 'the first end past the budget wins, up to 130%')
   assert.equal(cut('c'.repeat(300)), 'c'.repeat(120), 'one long sentence cuts at the budget')
   assert.equal(cut(Array.from({ length: 62 }, () => 'word').join(' ')), Array.from({ length: 24 }, () => 'word').join(' '), 'a cut falls back to a word end')
   // A marked point folds there, whole, however early it is.
-  assert.equal(cut(`结论。\n\n${'d'.repeat(800)}`), '结论。\n\n')
-  assert.equal(cut(`结论。\n---\n${'d'.repeat(800)}`), `结论。\n---\n`)
+  assert.equal(cut(`结论。\n\n${'d'.repeat(800)}`, true), '结论。\n\n')
+  assert.equal(cut(`结论。\n---\n${'d'.repeat(800)}`, true), `结论。\n---\n`)
   // A mark with only a line of detail after it does not fold.
-  assert.equal(cut(`结论。\n\n很短`), null, 'a mark with one short line after it does not fold')
+  assert.equal(cut(`结论。\n\n很短`, true), null, 'a mark with one short line after it does not fold')
   // A decimal point is not a sentence end.
   const number = `a${'a'.repeat(89)}3.14${'b'.repeat(210)}`
   assert.equal(cut(number), number.slice(0, 120))
+})
+
+// Folding at a mark is the group line's own rule: a chat with the user folds at its own
+// limit, so a short reply with a blank line in it still reads whole there.
+test('a mark folds only where the caller asks for it', () => {
+  const text = `结论。\n\n${'d'.repeat(300)}`
+  assert.equal(foldPreview(text, FOLD_AT, true, undefined, false, false), null, 'a chat folds only past 1,500 characters')
+  assert.equal(foldPreview(text, FOLD_AT, true, undefined, false, true), '结论。\n\n', 'a group line folds at the mark')
 })

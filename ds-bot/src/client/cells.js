@@ -32,7 +32,7 @@ export { clockLabel }
 // A group reply folds at the line it marks (an empty line, or a rule) and keeps the whole
 // point above it. Only a reply with no mark falls back to these, itself exceeded rather
 // than reached: a 1000-character or 20-line one still reads whole.
-export const GROUP_FOLD = { at: { chars: 1000, lines: 20 }, preview: { chars: 120, lines: 4 } }
+export const GROUP_FOLD = { at: { chars: 1000, lines: 20 }, preview: { chars: 120, lines: 4 }, mark: true }
 
 const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied') }, footnotes: t('Footnotes') })
 
@@ -82,7 +82,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, 
 
 function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, openFile, fold, picked, live, lead, whole }) {
   // `fold` is a limit, or a group's `{ at, preview }`: fold past `at`, keep `preview`.
-  const { shown, folded, control } = useFold(text, { limit: fold.at ?? fold, preview: fold.preview, whole, live })
+  const { shown, folded, control } = useFold(text, { limit: fold.at ?? fold, preview: fold.preview, mark: fold.mark === true, whole, live })
   const key = msgKey ? `${msgKey}:${index}` : undefined
   // A bubble whose sender resolved its own mentions keeps them; a group reply links paths.
   const links = useMemo(() => mentions ?? pathMentions(openFile), [mentions, openFile])

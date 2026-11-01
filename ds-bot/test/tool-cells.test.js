@@ -904,8 +904,8 @@ test('a group reply folds at its own mark, or past a long enough line', () => {
   assert.deepEqual([20, 21].map(count => folded(lines(count)).length), [0, 1], '20 lines stay whole; 21 fold')
   const at = { chars: 1000, lines: 20 }
   const preview = { chars: 120, lines: 4 }
-  assert.equal(foldPreview(`结论。\n\n${'d'.repeat(800)}`, at, true, preview), '结论。\n\n')
+  assert.equal(foldPreview(`结论。\n\n${'d'.repeat(800)}`, at, true, preview, false, true), '结论。\n\n')
   assert.equal(foldPreview('z'.repeat(1100), at, true, preview).length, 120)
   assert.equal(foldPreview('z'.repeat(900), at, true, preview), null, '900 characters stay whole')
-  assert.equal(foldPreview('结论。\n\n很短', at, true, preview), null, 'a mark with one short line after it does not fold')
+  assert.equal(foldPreview('结论。\n\n很短', at, true, preview, false, true), null, 'a mark with one short line after it does not fold')
 })
