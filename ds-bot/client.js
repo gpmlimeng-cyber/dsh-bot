@@ -3264,11 +3264,9 @@ html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side
 /* The phone layout gives the session header's own cell no width, so its content used to
    overflow into a second row under the chrome. Fixed to the frame's top it shares the
    chrome's row instead: title in the middle, buttons at the edges. */
-/* The bar rides inside the host's own header row (the one its mark and drawer button sit
-   on) instead of the viewport, which starts under the system bars: anchored to the
-   header, it shares that row's line whatever the insets are. */
-html:has([data-mobile-nav="frame"]) header:has([class*="_headerLeading"]){position:relative}
-html:has([data-mobile-nav="frame"]) .bt-head{position:absolute;left:76px;right:8px;top:0;bottom:0;height:auto;margin:0;z-index:20;align-items:center;justify-content:flex-start}
+/* The row takes the phone layout's measured header band and centers in it, which is the
+   line its own drawer toggle is drawn on; pill and menu button match that toggle's 28px. */
+html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 11px);height:36px;margin:0;z-index:20;align-items:center}
 /* The same surface the layout gives its own header button: transparent, no shadow, the
    secondary ink at rest, a six percent wash on touch. */
 html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;background:transparent;box-shadow:none;color:var(--dsw-alias-label-primary, var(--bt-ink))}
