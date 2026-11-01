@@ -5,11 +5,10 @@
 
 - 基线：**本仓标签 `v0.2.4`**（`f823773`）。生成口径（唯一来源，别凭记忆）：
   `git diff v0.2.4 HEAD -- ds-bot ':!ds-bot/client.js' ':!ds-bot/src/client/gaze.js' > design/ds-bot-patches.patch`
-- 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，**69** 个文件，含宿主侧 `src/host/channel.js`、`src/host/mcp.js` 与 `ds-bot/index.js` 的模块注册；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
-- hunk 数：**192**（`grep -c '^@@' design/ds-bot-patches.patch`）
-- **行号**：见 `design/ds-bot-patches.hunks.md`，由 `node tools/patch-ledger.mjs` 生成，勿手改。
-  这里**不写行号**：手写行号已经错了三次，机械表是唯一来源。
-- minus 行共 **443**，分布在 31 个文件：`sidebar.js` 236、`styles.js` 71、`test/sidebar-switch.test.js` 33、`cells.js` 18、`fold.js` 13、`src/host/groups.js` 7、`index.js` 6、`icons.js` 6、`composer.js` 6、`new-chat.js` 5、`bot-settings.js` 5、`team-actions.js` 4、`settings.js` 4、`test/style-debt.json` 3、`test/message-layout.test.js` 3、`test/tool-cells.test.js` 2、`test/fold.test.js` 2、`member-status.js` 2、`i18n.js` 2、`details-drawer.js` 2、`create-bot.js` 2、`browser-pane.js` 2、`test/user-bubble.test.js` 1、`test/client-bundle.test.js` 1、`src/host/prompt.js` 1、`src/host/channel.js` 1、`src/host/approvals.js` 1、`themes.js` 1、`header.js` 1、`scripts/style-debt.mjs` 1、`ds-bot/index.js` 1；其余为纯 `+`
+- 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，含宿主侧 `src/host/channel.js`、`src/host/mcp.js` 与 `ds-bot/index.js` 的模块注册；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
+- **统计**（文件数、hunks、±行数、删除行最多的文件）：见 `design/ds-bot-patches.hunks.md` 头部，由 `node tools/patch-ledger.mjs` 从 patch 生成，勿手改。
+  这里**不写数字**：手写的行号和手写的总数各错过一次，脚本输出是唯一来源。
+- **行号**：见同文件的「新增行号」表；手写行号已经错了三次，机械表是唯一来源。
 - 冲突自检：`tools/patch-conflict-check.sh <ref>`（升级前先跑，输出 `clean` 才合并）
 
 ## 1. 手改的文件（进补丁，共 31 个）
