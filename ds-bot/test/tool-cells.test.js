@@ -10,6 +10,7 @@ const { outputFiles } = await build({
   stdin: {
     contents: [
       "export { ToolCell, TriggerCell, callTree, stackReplies, pathMentions } from './src/client/cells.js'",
+      "export { foldPreview } from './src/client/fold.js'",
       "export { QuestionDock } from './src/client/questions.js'",
       "export { SecretDock } from './src/client/secret-card.js'",
       "export { countCards } from './src/client/sources.js'",
@@ -49,7 +50,7 @@ runInNewContext(outputFiles[0].text, {
     throw new Error(`Unexpected platform module ${name}`)
   },
 })
-const { ToolCell, TriggerCell, callTree, stackReplies, pathMentions, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
+const { ToolCell, TriggerCell, callTree, stackReplies, pathMentions, foldPreview, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
 
 // Runs the effects collected since the last render; returns the cleanups.
 const mount = () => {
@@ -889,10 +890,17 @@ test('a group reply that came as a file shows Show all with its whole length, an
   assert.deepEqual(JSON.parse(JSON.stringify(asked)), [file])
 })
 
-// A group line shows its point: past GROUP_FOLD (150 characters) the bubble folds, and
-// a line at the limit still reads whole.
-test('a group reply folds past 150 characters, and a shorter one does not', () => {
-  const more = chars => findAll(show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: 'z'.repeat(chars), time: 1 }] } }), { sessionId: 'room' }), node => node.props?.className === 'bt-more')
-  assert.deepEqual([150, 151].map(chars => more(chars).length), [0, 1])
-  assert.match(text(more(151)[0]), /Show all · 151 characters/)
+// A group line folds only when folding hides something: past 300 characters, and keeping
+// 120 of them. A reply barely past the limit stays whole, and so does an 8-line one.
+test('a group reply folds only when folding hides something', () => {
+  const folded = words => findAll(show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: words, time: 1 }] } }), { sessionId: 'room' }), node => node.props?.className === 'bt-more')
+  const lines = count => Array.from({ length: count }, (_, index) => `line ${index}`).join('\n')
+  assert.deepEqual([200, 301, 800].map(count => folded('z'.repeat(count)).length), [0, 1, 1], '200 stays whole; 301 and 800 fold')
+  assert.deepEqual([8, 9].map(count => folded(lines(count)).length), [0, 1], '8 lines stay whole; 9 fold')
+  assert.match(text(folded('z'.repeat(301))[0]), /Show all · 301 characters/)
+  // A folded reply keeps 120 characters, so 301 that fold hide 181 of them.
+  const at = { chars: 300, lines: 8 }
+  const preview = { chars: 120, lines: 4 }
+  assert.equal(foldPreview('z'.repeat(301), at, true, preview).length, 120)
+  assert.equal(foldPreview('z'.repeat(200), at, true, preview), null, '200 hides too little to fold')
 })

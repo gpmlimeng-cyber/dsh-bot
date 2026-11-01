@@ -9,6 +9,10 @@ export const FOLD_HUGE = { chars: 20_000, lines: Infinity }
 const ALWAYS = { chars: -1, lines: 0 }
 const PREVIEW_LINES = 10
 const PREVIEW_CHARS = 600
+const PREVIEW = { chars: PREVIEW_CHARS, lines: PREVIEW_LINES }
+// Folding is only worth it when it hides something: a bubble that keeps a line and hides
+// the one behind it reads as a no-op. Past the limit, this much has to be hidden.
+const HIDDEN = { chars: 120, lines: 3 }
 const FENCE = /^ {0,3}(`{3,}|~{3,})/
 
 // Cuts `text` at `end` code units, backing up one when the last character is a
@@ -29,19 +33,22 @@ function moreLines(text, max) {
 
 // The start of a long text, cut at a line end (or inside a very long first line). In
 // Markdown a code fence left open is closed, so the preview does not run on as code.
-// Null when `text` is within `limit`.
-export function foldPreview(text, limit = FOLD_AT, markdown = true) {
+// Null when `text` is within `limit`, or when folding it would hide less than HIDDEN:
+// `preview` is what a folded bubble keeps, and `force` folds regardless (a message kept
+// only in part must fold however short its start).
+export function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false) {
   if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null
+  if (!force && text.length - preview.chars < HIDDEN.chars && !moreLines(text, preview.lines + HIDDEN.lines)) return null
   // Blank lines first: the preview starts at the first visible character. An
   // all-blank message has nothing to preview, so it does not fold at all.
   const body = text.replace(/^(\s*\n)+/, '')
   if (body.trim() === '') return null
-  let head = body.split('\n', PREVIEW_LINES).join('\n')
-  if (head.length > PREVIEW_CHARS) {
-    const cut = head.lastIndexOf('\n', PREVIEW_CHARS)
-    head = cutAt(head, cut > 0 ? cut : PREVIEW_CHARS)
+  let head = body.split('\n', preview.lines).join('\n')
+  if (head.length > preview.chars) {
+    const cut = head.lastIndexOf('\n', preview.chars)
+    head = cutAt(head, cut > 0 ? cut : preview.chars)
   }
-  if (head.trim() === '') head = cutAt(body, PREVIEW_CHARS)
+  if (head.trim() === '') head = cutAt(body, preview.chars)
   if (!markdown) return head
   let open = null
   let openLine = -1
@@ -56,7 +63,7 @@ export function foldPreview(text, limit = FOLD_AT, markdown = true) {
     // The cut kept only the fence marker (a card opening like ```dsh-ui on
     // its own line): an empty fence renders nothing, so pull the start of
     // the fenced text in as the preview instead.
-    head = cutAt(body, PREVIEW_CHARS)
+    head = cutAt(body, preview.chars)
     lines = head.split('\n')
     open = null
     openLine = -1
@@ -83,13 +90,13 @@ export const stripLongNote = text => text.replace(/^\[A long message: \d+ charac
 // `whole`, when `text` is only the start of the message: its `length`, and `load()`,
 // which reads it whole ({ text, whole }). `live`: still streaming, never folded.
 // `markdown`: false for plain text.
-export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown = true } = {}) {
+export function useFold(text, { limit = FOLD_AT, preview, whole, live = false, markdown = true } = {}) {
   const [open, setOpen] = useState(false)
   const [read, setRead] = useState()
   const cut = whole !== undefined && whole.length > text.length
   // A message kept only in part folds whatever the length of its start.
-  const preview = useMemo(() => (live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown)), [text, live, limit, markdown, cut])
-  if (preview === null) return { shown: text, control: null }
+  const kept = useMemo(() => (live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown, preview, cut)), [text, live, limit, markdown, preview, cut])
+  if (kept === null) return { shown: text, control: null }
   const count = (cut ? whole.length : text.length).toLocaleString()
   if (!open) {
     const show = async () => {
@@ -101,7 +108,7 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
     // A message kept only as a file says so: its "Show all" reads the attachment, and
     // its count is the whole message, not the start the bubble holds.
     const label = cut ? t('Open the whole reply · {count} characters, from its file', { count }) : t('Show all · {count} characters', { count })
-    return { shown: preview, folded: true, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, label)) }
+    return { shown: kept, folded: true, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, label)) }
   }
   const loaded = typeof read?.text === 'string' ? read : undefined
   const note = !cut || read === undefined || read === 'loading' || loaded?.whole ? null

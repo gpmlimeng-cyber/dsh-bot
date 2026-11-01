@@ -26,9 +26,10 @@ export { clockLabel }
 // Chat cells
 
 // A group line shows its point: past this the bubble folds, so a reply reads as the
-// sentence the group needs and the detail waits behind "Show all". Private chats keep
+// sentence the group needs and the detail waits behind "Show all". Folding only hides
+// what a preview keeps, so a reply barely past the limit stays whole. Private chats keep
 // the wider FOLD_AT: there the whole reply is what the user came for.
-export const GROUP_FOLD = { chars: 150, lines: 6 }
+export const GROUP_FOLD = { at: { chars: 300, lines: 8 }, preview: { chars: 120, lines: 4 } }
 
 const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied') }, footnotes: t('Footnotes') })
 
@@ -77,7 +78,8 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, 
 }
 
 function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, openFile, fold, picked, live, lead, whole }) {
-  const { shown, folded, control } = useFold(text, { limit: fold, whole, live })
+  // `fold` is a limit, or a group's `{ at, preview }`: fold past `at`, keep `preview`.
+  const { shown, folded, control } = useFold(text, { limit: fold.at ?? fold, preview: fold.preview, whole, live })
   const key = msgKey ? `${msgKey}:${index}` : undefined
   // A bubble whose sender resolved its own mentions keeps them; a group reply links paths.
   const links = useMemo(() => mentions ?? pathMentions(openFile), [mentions, openFile])

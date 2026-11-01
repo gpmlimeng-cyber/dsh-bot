@@ -8207,6 +8207,8 @@ var FOLD_HUGE = { chars: 2e4, lines: Infinity };
 var ALWAYS = { chars: -1, lines: 0 };
 var PREVIEW_LINES = 10;
 var PREVIEW_CHARS = 600;
+var PREVIEW = { chars: PREVIEW_CHARS, lines: PREVIEW_LINES };
+var HIDDEN = { chars: 120, lines: 3 };
 var FENCE = /^ {0,3}(`{3,}|~{3,})/;
 function cutAt(text, end) {
   const code = text.charCodeAt(end - 1);
@@ -8219,16 +8221,17 @@ function moreLines(text, max) {
   }
   return false;
 }
-function foldPreview(text, limit = FOLD_AT, markdown = true) {
+function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false) {
   if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null;
+  if (!force && text.length - preview.chars < HIDDEN.chars && !moreLines(text, preview.lines + HIDDEN.lines)) return null;
   const body = text.replace(/^(\s*\n)+/, "");
   if (body.trim() === "") return null;
-  let head = body.split("\n", PREVIEW_LINES).join("\n");
-  if (head.length > PREVIEW_CHARS) {
-    const cut = head.lastIndexOf("\n", PREVIEW_CHARS);
-    head = cutAt(head, cut > 0 ? cut : PREVIEW_CHARS);
+  let head = body.split("\n", preview.lines).join("\n");
+  if (head.length > preview.chars) {
+    const cut = head.lastIndexOf("\n", preview.chars);
+    head = cutAt(head, cut > 0 ? cut : preview.chars);
   }
-  if (head.trim() === "") head = cutAt(body, PREVIEW_CHARS);
+  if (head.trim() === "") head = cutAt(body, preview.chars);
   if (!markdown) return head;
   let open = null;
   let openLine = -1;
@@ -8242,7 +8245,7 @@ function foldPreview(text, limit = FOLD_AT, markdown = true) {
     } else if (marker[0] === open[0] && marker.length >= open.length) open = null;
   }
   if (open !== null && lines.slice(openLine + 1).join("").trim() === "") {
-    head = cutAt(body, PREVIEW_CHARS);
+    head = cutAt(body, preview.chars);
     lines = head.split("\n");
     open = null;
     openLine = -1;
@@ -8261,12 +8264,12 @@ function foldPreview(text, limit = FOLD_AT, markdown = true) {
 ${open}`;
 }
 var stripLongNote = (text) => text.replace(/^\[A long message: \d+ characters\.[^\]\n]*\]\n/, "");
-function useFold(text, { limit = FOLD_AT, whole, live = false, markdown = true } = {}) {
+function useFold(text, { limit = FOLD_AT, preview, whole, live = false, markdown = true } = {}) {
   const [open, setOpen] = (0, import_react14.useState)(false);
   const [read, setRead] = (0, import_react14.useState)();
   const cut = whole !== void 0 && whole.length > text.length;
-  const preview = (0, import_react14.useMemo)(() => live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown), [text, live, limit, markdown, cut]);
-  if (preview === null) return { shown: text, control: null };
+  const kept = (0, import_react14.useMemo)(() => live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown, preview, cut), [text, live, limit, markdown, preview, cut]);
+  if (kept === null) return { shown: text, control: null };
   const count = (cut ? whole.length : text.length).toLocaleString();
   if (!open) {
     const show2 = async () => {
@@ -8276,7 +8279,7 @@ function useFold(text, { limit = FOLD_AT, whole, live = false, markdown = true }
       setRead(await whole.load() ?? { whole: false });
     };
     const label = cut ? t("Open the whole reply · {count} characters, from its file", { count }) : t("Show all · {count} characters", { count });
-    return { shown: preview, folded: true, control: (0, import_react14.createElement)("span", { className: "bt-fold" }, (0, import_react14.createElement)("button", { type: "button", className: "bt-more", onClick: show2 }, label)) };
+    return { shown: kept, folded: true, control: (0, import_react14.createElement)("span", { className: "bt-fold" }, (0, import_react14.createElement)("button", { type: "button", className: "bt-more", onClick: show2 }, label)) };
   }
   const loaded = typeof read?.text === "string" ? read : void 0;
   const note = !cut || read === void 0 || read === "loading" || loaded?.whole ? null : loaded !== void 0 && loaded.text.length > text.length ? t("Showing the first {count} characters", { count: loaded.text.length.toLocaleString() }) : t("Only the start of this message is kept here");
@@ -8606,7 +8609,7 @@ function BtwTurnTail({ turn, sessionId, useRoster, actions }) {
 // src/client/cells.js
 var import_react16 = require("react");
 var import_react_dom = require("react-dom");
-var GROUP_FOLD = { chars: 150, lines: 6 };
+var GROUP_FOLD = { at: { chars: 300, lines: 8 }, preview: { chars: 120, lines: 4 } };
 var mdLabels3 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
 var FILE_PATH = /^(?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.-]+)*$/;
 var FILE_EXT = /\.(?:md|txt|jsonl?|mjs|cjs|jsx?|tsx?|py|sh|ya?ml|toml|csv|html|css|png|jpe?g|webp|gif|pdf|patch|diff)$/i;
@@ -8655,7 +8658,7 @@ function Bubbles({ texts: texts2, roster, selfId, actions, streaming, sessionId,
   );
 }
 function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, openFile, fold, picked, live, lead, whole }) {
-  const { shown, folded, control } = useFold(text, { limit: fold, whole, live });
+  const { shown, folded, control } = useFold(text, { limit: fold.at ?? fold, preview: fold.preview, whole, live });
   const key = msgKey ? `${msgKey}:${index}` : void 0;
   const links = (0, import_react16.useMemo)(() => mentions ?? pathMentions(openFile), [mentions, openFile]);
   const body = (0, import_react16.createElement)(import_dsh_client_ui_primitives.MarkdownText, { text: linkMentions(shown, roster.bots, selfId), streaming: live, labels: mdLabels3(), variant: "compact", fileMentions: links });
