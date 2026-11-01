@@ -847,10 +847,10 @@ index c7b14888..98b1e26d 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 06962367..7a6efc2c 100644
+index 06962367..5e2b9175 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
-@@ -18,6 +18,145 @@ const ZH = {
+@@ -18,6 +18,146 @@ const ZH = {
    'New…': '新建',
    'Collapse sidebar': '收起侧边栏',
    'Expand sidebar': '展开侧边栏',
@@ -928,6 +928,7 @@ index 06962367..7a6efc2c 100644
 +  'Local process': '本地进程',
 +  'Off': '已停用',
 +  'Relayed work': '转述的工作',
++
 +  'A Bot that runs a task another Bot handed it, without you asking for it, is recorded. Off records nothing.': '别的 Bot 转给它的活、而你没有要求过时，记一行。选「不记录」就什么都不写。',
 +  'Do not record': '不记录',
 +  'Record only': '只记录',
@@ -996,7 +997,7 @@ index 06962367..7a6efc2c 100644
    'Resize sidebar': '调整侧边栏宽度',
    'Animation': '动画',
    'Bot animation': 'Bot 动画',
-@@ -55,6 +194,7 @@ const ZH = {
+@@ -55,6 +195,7 @@ const ZH = {
    'Create group chat': '新建群聊',
    'Delete group': '删除群聊',
    "Open {name}'s chat": '打开 {name} 的对话',
@@ -1004,7 +1005,7 @@ index 06962367..7a6efc2c 100644
    'New Bot': '新 Bot',
  
    // Sidebar and account menu
-@@ -170,7 +310,6 @@ const ZH = {
+@@ -170,7 +311,6 @@ const ZH = {
    'A provider id is lowercase letters, digits and dashes, starting with a letter': '服务商 ID 只能用小写字母、数字和短横线，并以字母开头',
    'Add at least one model': '至少添加一个模型',
    'Two models have the same id': '有两个模型的 ID 相同',
@@ -1012,7 +1013,7 @@ index 06962367..7a6efc2c 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -226,6 +365,9 @@ const ZH = {
+@@ -226,6 +366,9 @@ const ZH = {
    About: '简介',
    'Show less': '收起',
    'Show more': '展开',
@@ -1022,7 +1023,7 @@ index 06962367..7a6efc2c 100644
    'Admin leads': '管理员主持',
    'Plain messages go to the admin, who calls others with @Name.': '普通消息先给管理员，由管理员用 @名字 点名其他成员。',
    Everyone: '所有人',
-@@ -430,6 +572,23 @@ const ZH = {
+@@ -430,6 +573,23 @@ const ZH = {
    // Settings dialog
    General: '通用',
    Bots: 'Bot',
@@ -1046,7 +1047,7 @@ index 06962367..7a6efc2c 100644
    'Group chats': '群聊',
    Secrets: '密钥',
    Appearance: '外观',
-@@ -445,6 +604,27 @@ const ZH = {
+@@ -445,6 +605,27 @@ const ZH = {
    'Bubble width': '气泡宽度',
    'Text width': '正文宽度',
    'Show thinking': '显示思考过程',
@@ -1074,7 +1075,7 @@ index 06962367..7a6efc2c 100644
    'Bots · {count}': 'Bot · {count}',
    'First in the sidebar. Pick another Bot to hand it the role; {name} then stops being a Main Bot.': '排在侧栏最上面。选另一个 Bot 就会把主 Bot 交给它，{name} 随之不再是主 Bot。',
    'Choose a Bot…': '选择一个 Bot…',
-@@ -523,6 +703,8 @@ const ZH = {
+@@ -523,6 +704,8 @@ const ZH = {
    'No messages yet': '还没有消息',
    'Close Chat': '关闭',
    'Show all · {count} characters': '显示全部 · {count} 字',
@@ -1083,7 +1084,7 @@ index 06962367..7a6efc2c 100644
    'Showing the first {count} characters': '只显示前 {count} 字',
    'Only the start of this message is kept here': '这里只保留了这条消息的开头',
  
-@@ -545,6 +727,23 @@ const ZH = {
+@@ -545,6 +728,23 @@ const ZH = {
    Reply: '回复',
    'More message actions': '更多操作',
    More: '更多',
@@ -1107,7 +1108,7 @@ index 06962367..7a6efc2c 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +881,6 @@ const ZH = {
+@@ -682,7 +882,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -1115,7 +1116,7 @@ index 06962367..7a6efc2c 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1129,10 @@ const ZH = {
+@@ -931,6 +1130,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -1126,7 +1127,7 @@ index 06962367..7a6efc2c 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1175,7 @@ const ZH = {
+@@ -973,6 +1176,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -1134,7 +1135,7 @@ index 06962367..7a6efc2c 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1271,10 @@ const ZH = {
+@@ -1068,6 +1272,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -12098,14 +12099,16 @@ index 82c3b3b9..5806d08a 100644
  export const flatWidthOf = prefs => percent(prefs?.flatWidth, 100)
 diff --git a/ds-bot/src/client/tier.js b/ds-bot/src/client/tier.js
 new file mode 100644
-index 00000000..bc3b25d5
+index 00000000..14803f11
 --- /dev/null
 +++ b/ds-bot/src/client/tier.js
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,35 @@
 +// Window tiers, read by our own layout rules. Width decides — compact under 600, medium to
 +// 840, expanded above it — and a window shorter than 480 is compact whatever its width: a
 +// phone on its side has room across but only a few lines down, so splitting it into columns
 +// gives each one nothing.
++// Only `compact` has rules so far; `medium` and `expanded` are what the process grouping
++// and the queue work will read.
 +export const TIER_MEDIUM = 600
 +export const TIER_EXPANDED = 840
 +export const TIER_SHORT = 480
@@ -12117,9 +12120,16 @@ index 00000000..bc3b25d5
 +  return 'expanded'
 +}
 +
++// An on-screen keyboard shrinks the height on Android while the user types; that is a
++// focus change, not a layout wish, so the height only counts while nothing is editable.
++const typing = () => {
++  const element = document.activeElement
++  return element instanceof HTMLElement && (element.isContentEditable || /^(input|textarea|select)$/i.test(element.tagName))
++}
++
 +// Calls back with the tier now and on every resize, and returns the cleanup.
 +export function watchTier(onChange) {
-+  const update = () => onChange(tierOf(window.innerWidth, window.innerHeight))
++  const update = () => onChange(tierOf(window.innerWidth, typing() ? Infinity : window.innerHeight))
 +  update()
 +  window.addEventListener('resize', update)
 +  window.addEventListener('orientationchange', update)
@@ -16883,6 +16893,59 @@ index 00000000..2930d60d
 +}
 +
 +export const DENIAL = name => `Denied by policy: this work was relayed by another Bot and the user has not approved ${name}. Stop retrying it; call ask_user to ask, or wait for the user's own request.`
+diff --git a/ds-bot/src/shared/turn-summary.js b/ds-bot/src/shared/turn-summary.js
+new file mode 100644
+index 00000000..3588b823
+--- /dev/null
++++ b/ds-bot/src/shared/turn-summary.js
+@@ -0,0 +1,47 @@
++// How a finished turn's tool calls read as one line: a class and a count, and files counted
++// once by path, so reading the same file three times is "3 calls, 1 file".
++const CLASSES = [
++  ['read', ['read', 'read_own_chat', 'read_group_chat', 'list_files', 'glob', 'grep', 'search', 'list_bots', 'list_bot_models', 'list_capabilities', 'list_secrets', 'recall']],
++  ['write', ['write', 'edit', 'str_replace', 'apply_patch', 'remember', 'forget']],
++  ['run', ['bash', 'pwsh', 'run_code', 'browser']],
++  ['show', ['show_view', 'ask_user', 'request_secret', 'present']],
++]
++
++export function classOf(name) {
++  for (const [kind, names] of CLASSES) if (names.includes(name)) return kind
++  return 'other'
++}
++
++// The file a call names, by path only: a read already done is not a second file.
++export function fileOf(args) {
++  if (args === null || typeof args !== 'object') return undefined
++  const path = args.path ?? args.file ?? args.file_path
++  return typeof path === 'string' && path !== '' ? path : undefined
++}
++
++// `calls` are the turn's calls in order; returns counts per class and the unique paths.
++export function summarizeCalls(calls) {
++  const counts = { read: 0, write: 0, run: 0, show: 0, other: 0 }
++  const files = new Set()
++  for (const call of calls ?? []) {
++    const name = String(call?.name ?? '')
++    if (name === '') continue
++    counts[classOf(name)] += 1
++    const file = fileOf(call.arguments ?? call.args)
++    if (file !== undefined) files.add(file)
++  }
++  return { counts, files: [...files] }
++}
++
++// The one-line label, in the order the reader cares about: what was read or changed, then
++// what was run or shown. Empty when nothing happened.
++export function summaryLine({ counts, files }, t = (text, params) => text.replace(/\{(\w+)\}/g, (_, key) => String(params?.[key] ?? ''))) {
++  const parts = []
++  if (counts.read > 0) parts.push(t('{count} read', { count: counts.read }))
++  if (counts.write > 0) parts.push(t('{count} changed', { count: counts.write }))
++  if (counts.run > 0) parts.push(t('{count} run', { count: counts.run }))
++  if (counts.show > 0) parts.push(t('{count} shown', { count: counts.show }))
++  if (counts.other > 0) parts.push(t('{count} other', { count: counts.other }))
++  if (files.length > 0) parts.push(t('{count} files', { count: files.length }))
++  return parts.join(' · ')
++}
 diff --git a/ds-bot/test/authorization.test.js b/ds-bot/test/authorization.test.js
 new file mode 100644
 index 00000000..c179abc5
@@ -18421,6 +18484,33 @@ index 00000000..99a5944b
 +  assert.equal(STALLED_AFTER, 3)
 +  assert.deepEqual(decide({ refusals: 2 }), { decision: 'ask', rule: 'relay-not-authorization' })
 +  assert.deepEqual(decide({ refusals: 3 }), { decision: 'deny', rule: 'stalled' })
++})
+diff --git a/ds-bot/test/turn-summary.test.js b/ds-bot/test/turn-summary.test.js
+new file mode 100644
+index 00000000..d9b46bfd
+--- /dev/null
++++ b/ds-bot/test/turn-summary.test.js
+@@ -0,0 +1,21 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { summarizeCalls, summaryLine } from '../src/shared/turn-summary.js'
++
++const call = (name, args) => ({ name, arguments: args })
++
++test('a turn sums its calls by class and counts a file once by path', () => {
++  const { counts, files } = summarizeCalls([
++    call('read', { path: '/a.md' }), call('read', { path: '/a.md' }), call('edit', { path: '/b.md' }),
++    call('bash', { command: 'ls' }), call('show_view', {}), call('mystery_tool', {}),
++  ])
++  assert.deepEqual(counts, { read: 2, write: 1, run: 1, show: 1, other: 1 })
++  assert.deepEqual(files, ['/a.md', '/b.md'], 'the same path twice is one file')
++})
++
++test('the summary line names what happened, and nothing when nothing did', () => {
++  assert.equal(summaryLine(summarizeCalls([call('read', { path: 'a' }), call('read', { path: 'a' }), call('bash', {})])), '2 read · 1 run · 1 files')
++  assert.equal(summaryLine(summarizeCalls([])), '')
++  // A call with no readable name is not a call.
++  assert.deepEqual(summarizeCalls([{ arguments: {} }]).counts, { read: 0, write: 0, run: 0, show: 0, other: 0 })
 +})
 diff --git a/ds-bot/test/user-bubble.test.js b/ds-bot/test/user-bubble.test.js
 index bdc9eb87..35fd4e50 100644
