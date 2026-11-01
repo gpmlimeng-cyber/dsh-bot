@@ -88,7 +88,9 @@ function moreLines(text, max) {
 // Null when `text` is within `limit`, or when folding it would hide less than HIDDEN:
 // `preview` is what a folded bubble keeps, and `force` folds regardless (a message kept
 // only in part must fold however short its start).
-const DETAIL = 100
+// A mark only says where the point ends; it does not decide that the reply is long enough
+// to fold. Detail under this much reads whole, so a 500-character reply stays readable.
+const DETAIL = 600
 
 export function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false, mark = false) {
   // Blank lines first: the preview starts at the first visible character. An

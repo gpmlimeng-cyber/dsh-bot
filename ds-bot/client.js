@@ -8258,7 +8258,7 @@ function moreLines(text, max) {
   }
   return false;
 }
-var DETAIL = 100;
+var DETAIL = 600;
 function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false, mark = false) {
   const body = text.replace(/^(\s*\n)+/, "");
   if (body.trim() === "") return null;

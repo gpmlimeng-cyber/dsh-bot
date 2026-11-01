@@ -177,7 +177,10 @@ test('a preview ends at a sentence, then at a word, and only then cuts hard', ()
 // Folding at a mark is the group line's own rule: a chat with the user folds at its own
 // limit, so a short reply with a blank line in it still reads whole there.
 test('a mark folds only where the caller asks for it', () => {
-  const text = `结论。\n\n${'d'.repeat(300)}`
+  const text = `结论。\n\n${'d'.repeat(700)}`
   assert.equal(foldPreview(text, FOLD_AT, true, undefined, false, false), null, 'a chat folds only past 1,500 characters')
   assert.equal(foldPreview(text, FOLD_AT, true, undefined, false, true), '结论。\n\n', 'a group line folds at the mark')
+  // A mark does not fold a reply whose detail is short: the point alone is not a fold.
+  const short = `结论。\n\n${'d'.repeat(450)}`
+  assert.equal(foldPreview(short, { chars: 1000, lines: 20 }, true, { chars: 120, lines: 4 }, false, true), null)
 })
