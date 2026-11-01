@@ -18,7 +18,8 @@
     "ds-bot/client.js",
     "ds-bot/office.js",
     "ds-bot/web-search.js",
-    "ds-bot/src/"
+    "ds-bot/src/",
+    "plugins/"
   ],
   "dsh": {
     "client": {
@@ -30,6 +31,6 @@
   },
   "dependencies": {
     "deep-view": "0.1.0",
-    "dsh-web-mobile": "3.2.1"
+    "dsh-web-mobile": "file:plugins/web-mobile"
   }
 }
