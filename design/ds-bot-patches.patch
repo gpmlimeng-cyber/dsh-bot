@@ -12527,7 +12527,7 @@ index 3fc5c7c6..11e59318 100644
            return fail(`Unknown endpoint ${endpoint}`, 'bot/not-found')
        }
 diff --git a/ds-bot/src/host/constants.js b/ds-bot/src/host/constants.js
-index 0df0d7d6..a589f77a 100644
+index 0df0d7d6..69a92625 100644
 --- a/ds-bot/src/host/constants.js
 +++ b/ds-bot/src/host/constants.js
 @@ -20,6 +20,10 @@ export const OCR_RETRY_MS = 120_000
@@ -12541,6 +12541,12 @@ index 0df0d7d6..a589f77a 100644
  export const MAX_EXCHANGES = 600
  // state.json is written whole on every save, so a long message between Bots or a long
  // group line keeps only its start there. The rest stays where it already is (a message
+@@ -85,3 +89,5 @@ export const HISTORY_PAGES_MAX = 50
+ export const HISTORY_TIMEOUT_MS = 20_000
+ // Shown when an aside stops at the route's own output limit. The partial answer stays.
+ export const ASIDE_LIMIT = 'Answer cut off at the output limit.'
++// The most notices one answer carries; the phone reads them as a list, not a log.
++export const NOTICE_MAX = 50
 diff --git a/ds-bot/src/host/feed.js b/ds-bot/src/host/feed.js
 index 98719a3f..2b025973 100644
 --- a/ds-bot/src/host/feed.js
@@ -13265,6 +13271,114 @@ index 00000000..b3d867e4
 +    description: typeof value?.description === 'string' ? value.description.slice(0, 200) : '',
 +  }))
 +  return { required, fields }
++}
+diff --git a/ds-bot/src/host/mobile.js b/ds-bot/src/host/mobile.js
+new file mode 100644
+index 00000000..8d8b50c7
+--- /dev/null
++++ b/ds-bot/src/host/mobile.js
+@@ -0,0 +1,102 @@
++// The two mobile reads the web view never needed: one page of a group chat, and the
++// notices a client that is not looking should hear about.
++//
++// `notices` is a snapshot of the team as it stands, not an event log: every notice is
++// stamped with the state revision it was read at, and a client that already answered
++// for that revision gets nothing new. Kinds the host can only learn from live events
++// (a finished round, a message in a Bot's own chat, an approval) arrive over the feed
++// instead; adding them here needs a log of its own.
++import { BOOT_ID } from './boot.js'
++import { HISTORY_PAGE, NOTICE_MAX } from './constants.js'
++
++// The room log keeps a line's start; the rest waits in the line's own file. A page says
++// how long the whole line is so the client can offer to show all of it.
++const wholeOf = line => (line.length === undefined ? undefined : { length: line.length })
++
++function roomItem(rt, line) {
++  const bot = line.botId === undefined ? undefined : rt.botOf(line.botId)
++  const item = {
++    // A line a member wrote is a Bot entry, one the user wrote is theirs; anything else
++    // is the round's own event (a missed reply, a lookup, a stop).
++    kind: line.botId !== undefined ? 'bot' : line.who === 'User' ? 'user' : 'event',
++    id: String(line.seq),
++    text: line.text ?? '',
++    name: line.who,
++    ...(bot?.color !== undefined ? { color: bot.color } : {}),
++    ...(typeof line.time === 'number' ? { time: line.time } : {}),
++    ...(line.botId !== undefined ? { botId: line.botId } : {}),
++    // `kind: 'notice'` carries why it happened in `reason`; that is the event the client
++    // draws. Other kinds name themselves.
++    ...(line.kind === 'notice' ? (line.reason === undefined ? {} : { event: line.reason }) : line.kind === undefined ? {} : { event: line.kind }),
++    ...(line.files === undefined ? {} : { images: line.files.length }),
++    ...(wholeOf(line) === undefined ? {} : { whole: wholeOf(line) }),
++  }
++  return item
++}
++
++// A page of a group chat, newest page first, oldest first within it.
++export function roomChatPage(rt, roomId, cursor) {
++  const room = rt.roomOf(roomId)
++  if (room === undefined) throw Object.assign(new Error('Unknown group chat'), { code: 'bot/not-found' })
++  const log = room.log ?? []
++  const before = Number.isInteger(cursor?.beforeSeq) ? cursor.beforeSeq : undefined
++  const older = before === undefined ? log : log.filter(line => line.seq < before)
++  const page = older.slice(-HISTORY_PAGE)
++  const running = [...rt.roomProgress.values()].find(round => round.roomId === room.id)
++  return {
++    roomId: room.id,
++    items: page.map(line => roomItem(rt, line)),
++    cursor: older.length > page.length ? { beforeSeq: page[0].seq } : null,
++    running: running !== undefined,
++    ...(running?.speaking === undefined || running.speaking === null ? {} : { speaking: running.speaking }),
++  }
++}
++
++const botOfSession = (rt, sessionId) => {
++  const botId = rt.chatOwners.get(sessionId) ?? ''
++  return { botId, name: rt.botOf(botId)?.name ?? '' }
++}
++
++function snapshot(rt, seq) {
++  const { state } = rt
++  const notices = []
++  // A card waiting for the user is the one thing worth a notice with no event log: it
++  // stays until answered, so a snapshot of the pending cards is exactly right.
++  for (const [sessionId, pending] of Object.entries(state.questions ?? {})) {
++    if (pending === null || typeof pending !== 'object') continue
++    const text = [pending.question, pending.detail].filter(value => typeof value === 'string' && value !== '').join('\n')
++    notices.push({ seq, kind: 'question', ...botOfSession(rt, sessionId), sessionId, text, time: pending.askedAt })
++  }
++  for (const [sessionId, pending] of Object.entries(state.views ?? {})) {
++    if (pending === null || typeof pending !== 'object') continue
++    notices.push({ seq, kind: 'view', ...botOfSession(rt, sessionId), sessionId, text: '', ...(pending.title === undefined ? {} : { title: pending.title }), time: pending.askedAt })
++  }
++  // The newest line of each group, so a client opening after a round sees where it stood.
++  for (const room of Object.values(state.rooms ?? {})) {
++    const line = (room.log ?? []).at(-1)
++    if (line === undefined) continue
++    notices.push({
++      seq,
++      kind: 'group',
++      botId: line.botId ?? '',
++      name: line.who ?? '',
++      roomId: room.id,
++      title: room.name,
++      text: line.text ?? '',
++      ...(typeof line.time === 'number' ? { time: line.time } : {}),
++    })
++  }
++  return notices.slice(0, NOTICE_MAX)
++}
++
++// The notices a client that was away should hear about. `boot` names the host start it
++// last read, `since` the revision it has already seen.
++export function noticesView(rt, body) {
++  const seq = rt.state.revision ?? 0
++  const since = Number.isInteger(body?.since) ? body.since : undefined
++  // A different host start, or a revision this host has not reached, means the client's
++  // picture is from another run: nothing it holds can be trusted as up to date.
++  const reset = (typeof body?.boot === 'string' && body.boot !== BOOT_ID) || (since !== undefined && since > seq)
++  const fresh = reset || since === undefined || since < seq
++  return { boot: BOOT_ID, seq, reset, notices: fresh ? snapshot(rt, seq) : [] }
 +}
 diff --git a/ds-bot/src/host/prompt.js b/ds-bot/src/host/prompt.js
 index 682b53d5..6c3ef40a 100644
@@ -17993,21 +18107,193 @@ index 00000000..3e9c9428
 +  assert.equal(answer.ok, false)
 +  assert.equal(answer.error.code, 'bot/not-found')
 +})
+diff --git a/ds-bot/test/mobile-endpoints.test.js b/ds-bot/test/mobile-endpoints.test.js
+new file mode 100644
+index 00000000..c33e3a03
+--- /dev/null
++++ b/ds-bot/test/mobile-endpoints.test.js
+@@ -0,0 +1,168 @@
++// The two endpoints the phone app reads but the web view never needed: `room-chat` and
++// `notices`. Their fields come from dsh_client's `DsBotRoomPage` and `DsBotNotices`, so
++// these keep the answers to that shape and to the three cases every new endpoint owes:
++// a client from another run, a missing field, and input the host does not know.
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { install as installChannel, CAPABILITIES } from '../src/host/channel.js'
++import { BOOT_ID } from '../src/host/boot.js'
++import { HISTORY_PAGE } from '../src/host/constants.js'
++
++const ROOM_ID = 'room'
++
++function runtime({ revision = 12 } = {}) {
++  const routes = []
++  const ctx = {
++    on: () => () => {},
++    effect: fn => { const dispose = fn(); return typeof dispose === 'function' ? dispose : () => {} },
++    get: () => undefined,
++    provide: () => {},
++    tool: () => {},
++    sessions: { flush: async () => {} },
++    connection: { fetch: { register: route => { routes.push(route); return () => {} } } },
++  }
++  const bots = { writer: { id: 'writer', name: 'Writer', color: 'blue', sessionId: 's-writer' } }
++  const rooms = {
++    [ROOM_ID]: {
++      id: ROOM_ID,
++      name: 'Launch plan',
++      seq: 3,
++      members: ['writer'],
++      log: [
++        { seq: 1, who: 'User', text: 'Kick off the plan' },
++        { seq: 2, who: 'Writer', botId: 'writer', text: 'Here is a draft' },
++        { seq: 3, who: 'DS Bot', kind: 'notice', reason: 'missed', text: '' },
++      ],
++    },
++  }
++  const rt = {
++    ctx,
++    state: { revision, mainBotIds: [], prefs: {}, agents: {}, rooms, bots, questions: {}, views: {} },
++    refresh: async () => {},
++    readOnly: () => undefined,
++    memoryEnabled: true,
++    load: async () => {},
++    save: async () => {},
++    catalog: async () => {},
++    loadSecrets: async () => {},
++    chatOwners: new Map([['s-writer', 'writer']]),
++    chatOf: id => (bots[id]?.sessionId ?? id),
++    selfOf: () => undefined,
++    roomOf: id => (id === undefined ? undefined : rooms[id]),
++    botOf: id => (id === undefined ? undefined : bots[id]),
++    roomProgress: new Map(),
++  }
++  installChannel(rt)
++  return { routes, rt, rooms, bots }
++}
++
++async function ask(routes, endpoint, payload) {
++  const route = routes.find(entry => entry.path === '/api/bot')
++  const request = { json: async () => ({ endpoint, payload }), signal: new AbortController().signal }
++  return (await route.fetch(request)).json()
++}
++
++const value = async (routes, endpoint, payload) => {
++  const answer = await ask(routes, endpoint, payload)
++  assert.equal(answer.ok, true, answer.error?.message)
++  return answer.value
++}
++
++test('a page of a group chat says who spoke, and what the round did', async () => {
++  const { routes } = runtime()
++  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
++  assert.equal(page.roomId, ROOM_ID)
++  assert.deepEqual(page.items.map(item => item.kind), ['user', 'bot', 'event'])
++  assert.deepEqual(page.items.map(item => item.id), ['1', '2', '3'])
++  assert.equal(page.items[0].name, 'User')
++  assert.equal(page.items[1].botId, 'writer')
++  assert.equal(page.items[1].name, 'Writer')
++  assert.equal(page.items[1].color, 'blue')
++  // The notice carries why it happened, which is the event the phone draws.
++  assert.equal(page.items[2].event, 'missed')
++  assert.equal(page.cursor, null)
++  assert.equal(page.running, false)
++});
++
++test('an older page names the line before it, and the round it is in', async () => {
++  const { routes, rooms, rt } = runtime()
++  const log = []
++  for (let seq = 1; seq <= HISTORY_PAGE + 20; seq++) log.push({ seq, who: 'User', text: `line ${seq}` })
++  rooms[ROOM_ID].log = log
++  rooms[ROOM_ID].seq = log.length
++  rt.roomProgress.set('call-1', { roomId: ROOM_ID, replies: {}, speaking: 'Writer' })
++
++  const newest = await value(routes, 'room-chat', { roomId: ROOM_ID })
++  assert.equal(newest.items.length, HISTORY_PAGE)
++  assert.equal(newest.items.at(-1).id, String(log.length))
++  assert.deepEqual(newest.cursor, { beforeSeq: log.length - HISTORY_PAGE + 1 })
++  assert.equal(newest.running, true)
++  assert.equal(newest.speaking, 'Writer')
++
++  const older = await value(routes, 'room-chat', { roomId: ROOM_ID, cursor: newest.cursor })
++  assert.equal(older.items.length, 20)
++  assert.equal(older.items.at(-1).id, String(log.length - HISTORY_PAGE))
++  assert.equal(older.cursor, null)
++});
++
++test('a group chat the host has not got is an answer, not a crash', async () => {
++  const { routes } = runtime()
++  assert.deepEqual(await ask(routes, 'room-chat', {}), {
++    ok: false,
++    error: { code: 'bot/invalid', message: 'No group chat named', details: {} },
++  })
++  const gone = await ask(routes, 'room-chat', { roomId: 'nowhere' })
++  assert.equal(gone.ok, false)
++  assert.equal(gone.error.code, 'bot/not-found')
++});
++
++test('a field this host does not know is ignored, as on every other endpoint', async () => {
++  const { routes } = runtime()
++  const page = await value(routes, 'room-chat', { roomId: ROOM_ID, cursor: null, from: 'a later client' })
++  assert.equal(page.items.length, 3)
++});
++
++test('notices answer the host start and revision the client has already read', async () => {
++  const { routes, rt } = runtime({ revision: 12 })
++  rt.state.questions['s-writer'] = { id: 'q1', question: 'Which release?', askedAt: 1700000000000 }
++  rt.state.views['s-writer'] = { id: 'v1', title: 'Pick a plan' }
++
++  // Nothing new since the revision this client already saw.
++  assert.deepEqual(await value(routes, 'notices', { boot: BOOT_ID, since: 12 }), { boot: BOOT_ID, seq: 12, reset: false, notices: [] })
++
++  const fresh = await value(routes, 'notices', { boot: BOOT_ID, since: 11 })
++  assert.equal(fresh.boot, BOOT_ID)
++  assert.equal(fresh.seq, 12)
++  assert.equal(fresh.reset, false)
++  const kinds = fresh.notices.map(notice => notice.kind).sort()
++  assert.deepEqual(kinds, ['group', 'question', 'view'])
++  const question = fresh.notices.find(notice => notice.kind === 'question')
++  assert.equal(question.botId, 'writer')
++  assert.equal(question.name, 'Writer')
++  assert.equal(question.sessionId, 's-writer')
++  assert.equal(question.text, 'Which release?')
++  assert.equal(question.time, 1700000000000)
++  const group = fresh.notices.find(notice => notice.kind === 'group')
++  assert.equal(group.roomId, ROOM_ID)
++  assert.equal(group.title, 'Launch plan')
++});
++
++test('a client from another host start, or from the future, is told to read the team again', async () => {
++  const { routes } = runtime({ revision: 12 })
++  const otherStart = await value(routes, 'notices', { boot: 'another-run', since: 12 })
++  assert.equal(otherStart.reset, true)
++  assert.equal(otherStart.notices.length > 0, true)
++  // A revision this host never reached cannot be a picture of the team either.
++  const future = await value(routes, 'notices', { boot: BOOT_ID, since: 99 })
++  assert.equal(future.reset, true)
++  assert.equal(future.seq, 12)
++});
++
++test('the advertised capabilities cover the two new reads, and an unknown endpoint stays an answer', async () => {
++  assert.equal(CAPABILITIES.includes('room-chat'), true)
++  assert.equal(CAPABILITIES.includes('notices'), true)
++  const { routes } = runtime()
++  const unknown = await ask(routes, 'room-chat-history', { roomId: ROOM_ID })
++  assert.equal(unknown.ok, false)
++  assert.equal(unknown.error.code, 'bot/not-found')
++});
 diff --git a/ds-bot/test/mobile-hello.test.js b/ds-bot/test/mobile-hello.test.js
 new file mode 100644
-index 00000000..d75941b3
+index 00000000..dc751724
 --- /dev/null
 +++ b/ds-bot/test/mobile-hello.test.js
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,101 @@
 +import assert from 'node:assert/strict'
 +import { readFileSync } from 'node:fs'
 +import { test } from 'node:test'
-+import { fileURLToPath } from 'node:url'
 +import { install as installChannel, CAPABILITIES } from '../src/host/channel.js'
 +import { install as installFeed } from '../src/host/feed.js'
 +import { API_MIN, API_MAX } from '../src/host/constants.js'
 +
-+const here = fileURLToPath(new URL('.', import.meta.url))
 +const pluginVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
 +
 +// The two host modules register Fetch routes; this runtime starts them without a store,
