@@ -842,7 +842,17 @@ export function install(rt) {
     const text = stripOwnName(member.name, reply)
     const done = isPass(text) && shown && info.askedBy !== undefined
     if (isPass(text) && !done) return
-    await postToRoom(room, member, done ? '' : text, { late: true, ...(done ? { done: true } : {}), ...(info.askedBy ? { askedBy: info.askedBy } : {}) })
+    // A long reply rides as a file, as `message_bot` and `post_to_group` already do: the
+    // group line keeps its head, the whole text stays with it as an attachment. A short
+    // one comes back unchanged, with no files, so nothing below the limit moves.
+    const body = done ? '' : text
+    const long = body === '' ? undefined : await rt.attachLong(body, `Reply from ${member.name}.txt`)
+    await postToRoom(room, member, long?.text ?? body, {
+      late: true,
+      ...(done ? { done: true } : {}),
+      ...(long?.length ? { length: long.length } : {}),
+      ...(info.askedBy ? { askedBy: info.askedBy } : {}),
+    }, long?.files ?? [])
       .catch(error => rt.warn('ds-bot: late group reply from %s failed: %s', member.name, error))
   }
   rt.lateRoomReply = lateRoomReply
