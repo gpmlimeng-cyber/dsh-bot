@@ -1830,9 +1830,9 @@ html:has([data-mobile-nav="frame"]) @media (prefers-reduced-motion:reduce){.bt-n
 /* Window tiers (tier.js): compact under 600 wide or under 480 tall, medium to 840,
    expanded above. The host's own mobile frame already gives the phone its shape; these
    rules give a short landscape window the same one when that frame is absent. */
-html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-settings{--bt-set-w:100vw;--bt-set-h:100dvh;width:100vw;height:100dvh;border-radius:0;border-width:0;flex-direction:column}
-html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-market-frame{padding:0;align-items:stretch}
-html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-market-pane{width:100vw;max-width:100vw;height:100dvh;border-radius:0;flex-direction:column}
+html[data-bt-tier=compact] .bt-settings{--bt-set-w:100vw;--bt-set-h:100dvh;width:100vw;height:100dvh;border-radius:0;border-width:0;flex-direction:column}
+html[data-bt-tier=compact] .bt-market-frame{padding:0;align-items:stretch}
+html[data-bt-tier=compact] .bt-market-pane{width:100vw;max-width:100vw;height:100dvh;border-radius:0;flex-direction:column}
 `
 
 // -------------------------------------------------------------------------

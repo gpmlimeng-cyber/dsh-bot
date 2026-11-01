@@ -54,6 +54,9 @@ export function install(rt) {
         rt.settleTool?.(sessionId, entry.tool, 'timeout')
         entry.answer('cancelled')
       }, APPROVAL_TIMEOUT)
+      // Nobody's answer should not keep a process alive; the timer only has to fire while a
+      // turn is waiting.
+      timer.unref?.()
       if (request.signal?.aborted) entry.answer('cancelled')
       request.signal?.addEventListener('abort', () => entry.answer('cancelled'), { once: true })
     })
