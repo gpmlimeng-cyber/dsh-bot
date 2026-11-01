@@ -12286,28 +12286,88 @@ index 00000000..dbefdb0f
 +
 +  rt.admissionOf = admissionOf
 +}
+diff --git a/ds-bot/src/host/boot.js b/ds-bot/src/host/boot.js
+new file mode 100644
+index 00000000..4a3a44c9
+--- /dev/null
++++ b/ds-bot/src/host/boot.js
+@@ -0,0 +1,10 @@
++// What tells one host start from the next, and how many events this host has published:
++// a window that reconnects compares the two to tell "nothing missed" from "restart".
++export const BOOT_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
++
++let published = 0
++export const publishedSeq = () => published
++export const nextSeq = () => {
++  published += 1
++  return published
++}
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
-index 3fc5c7c6..79245a16 100644
+index 3fc5c7c6..5dec00d4 100644
 --- a/ds-bot/src/host/channel.js
 +++ b/ds-bot/src/host/channel.js
-@@ -6,6 +6,7 @@ import { install as installSide } from './side.js'
+@@ -1,12 +1,16 @@
+ // Client channel: the team view the browser renders, and the POST /api/bot endpoints.
+ import { randomUUID } from 'node:crypto'
++import { readFileSync } from 'node:fs'
++import { fileURLToPath } from 'node:url'
+ import { createUserMessage } from '@deepseek-ai/dsh-llm'
+ import { install as installBtw } from './btw.js'
+ import { install as installSide } from './side.js'
  import { handoffReply, questionReply, viewReply } from './parts.js'
  import { defaultRelayLimit } from './groups.js'
  import { validateViewAnswer } from 'deep-view/core'
+-import { COLORS, EXTRA_COLORS, ROUTE } from './constants.js'
 +import { applySuperAgentPrefs } from '../shared/superagent-prefs.js'
- import { COLORS, EXTRA_COLORS, ROUTE } from './constants.js'
++import { COLORS, EXTRA_COLORS, ROUTE, API_MIN, API_MAX } from './constants.js'
++import { BOOT_ID, publishedSeq } from './boot.js'
  
  const LANGUAGES = { zh: 'Chinese (简体中文)', en: 'English' }
-@@ -99,7 +100,7 @@ export function install(rt) {
+ const RUN_STATS = ['sessionStats', 'tokenUsage', 'contextPressure']
+@@ -21,6 +25,33 @@ export function errorCode(error) {
+   return isInternal(error) ? 'bot/internal' : 'bot/refused'
+ }
+ 
++// What the handshake advertises. A client reads it to decide which parts of the team
++// it can draw; the unit test `mobile-hello` keeps this list equal to the switch's cases,
++// so a new endpoint is listed here or the test fails.
++export const CAPABILITIES = [
++  'add-agent', 'agent-adopt', 'agent-archive', 'agent-rename', 'agent-session',
++  'answer-question', 'approval-answer', 'avatar-delete', 'avatar-import', 'avatar-library',
++  'bot-capability', 'browser-give-back', 'browser-result', 'browser-stop', 'browser-takeover',
++  'browser-wait', 'btw-delete', 'capability-approve', 'capability-delete', 'capability-save',
++  'chat', 'connector-connect', 'connector-disconnect', 'connector-retry', 'create-bot',
++  'create-room', 'delete-bot', 'delete-room', 'diagnostics', 'diagnostics-clear',
++  'diagnostics-log', 'dismiss-question', 'dismiss-view', 'dsh-update-install', 'duplicate-bot',
++  'earlier', 'efforts', 'exchange', 'exchange-text', 'file-text', 'folder-list', 'folder-pick',
++  'folders', 'hello', 'learning-answer', 'mcp-add', 'mcp-list', 'mcp-market', 'mcp-remove',
++  'mcp-save', 'mcp-toggle', 'mcp-tools', 'memory-ask', 'memory-forget', 'memory-view',
++  'models', 'private-release', 'provider-add', 'provider-key', 'provider-models',
++  'provider-remove', 'providers', 'remove-agent', 'repo-stars', 'room-continue',
++  'room-progress', 'run-stats', 'schedule-create', 'schedule-delete', 'schedules',
++  'secret-allow', 'secret-cancel', 'secret-delete', 'secret-set', 'secret-update', 'send',
++  'set-flags', 'set-main', 'set-prefs', 'side-ask', 'side-cancel', 'side-close', 'side-new',
++  'state', 'stop-member-work', 'stop-room-work', 'team-workspace', 'thinking', 'update-bot',
++  'update-check', 'update-install', 'update-room', 'usage', 'view-reply',
++]
++
++// The installed plugin's own version, for the handshake.
++let pluginVersion
++const version = () => (pluginVersion ??= JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8')).version)
++
+ export function install(rt) {
+   installBtw(rt)
+   installSide(rt)
+@@ -99,7 +130,7 @@ export function install(rt) {
    })
    // What a host that only reads the team may still answer.
    // Updates change the dsh profile, not the team, so a reading host may run them too.
 -  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library'])
-+  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market'])
++  const READS = new Set(['hello', 'state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market'])
  
    function setPrefs(body) {
      if (body.theme !== undefined) {
-@@ -116,6 +117,21 @@ export function install(rt) {
+@@ -116,6 +147,21 @@ export function install(rt) {
        else if (body.motion === 'quiet' || body.motion === 'lively') state.prefs.motion = body.motion
        else throw invalid('Motion must be quiet, normal or lively')
      }
@@ -12329,7 +12389,7 @@ index 3fc5c7c6..79245a16 100644
      if (body.layout !== undefined) {
        if (body.layout === null || body.layout === 'bubble') delete state.prefs.layout
        else if (body.layout === 'flat') state.prefs.layout = body.layout
-@@ -137,6 +153,17 @@ export function install(rt) {
+@@ -137,6 +183,17 @@ export function install(rt) {
        if (body.thinking === true) state.prefs.thinking = true
        else if (body.thinking === false || body.thinking === null) delete state.prefs.thinking
      }
@@ -12347,7 +12407,7 @@ index 3fc5c7c6..79245a16 100644
      return rt.save()
    }
  
-@@ -352,6 +379,18 @@ export function install(rt) {
+@@ -352,6 +409,18 @@ export function install(rt) {
          case 'secret-delete':
            await rt.load()
            return ok(await rt.secretEndpoint(endpoint, body))
@@ -12366,6 +12426,79 @@ index 3fc5c7c6..79245a16 100644
          case 'connector-connect':
          case 'connector-disconnect':
          case 'connector-retry':
+@@ -554,6 +623,24 @@ export function install(rt) {
+         case 'diagnostics-clear':
+           await rt.diagnostics.clear()
+           return ok(true)
++        // The version handshake: what this host speaks, so a client can stop before
++        // drawing a team it cannot drive. `api` is null when the ranges do not overlap.
++        case 'hello': {
++          const known = Array.isArray(body.api) ? body.api.filter(value => Number.isInteger(value)) : []
++          const shared = known.filter(value => value >= API_MIN && value <= API_MAX)
++          return ok({
++            api: shared.length === 0 ? null : Math.max(...shared),
++            apiMin: API_MIN,
++            apiMax: API_MAX,
++            plugin: { version: version() },
++            capabilities: CAPABILITIES,
++            boot: BOOT_ID,
++            seq: publishedSeq(),
++            revision: state.revision,
++            readOnly: rt.readOnly() ?? null,
++            memory: rt.memoryEnabled !== false,
++          })
++        }
+         default:
+           return fail(`Unknown endpoint ${endpoint}`, 'bot/not-found')
+       }
+diff --git a/ds-bot/src/host/constants.js b/ds-bot/src/host/constants.js
+index 0df0d7d6..a589f77a 100644
+--- a/ds-bot/src/host/constants.js
++++ b/ds-bot/src/host/constants.js
+@@ -20,6 +20,10 @@ export const OCR_RETRY_MS = 120_000
+ export const OCR_CACHE_MAX = 500
+ export const MAX_AVATAR_IMAGE = 160_000
+ export const ROUTE = '/api/bot'
++// The mobile API this host speaks. A client asks `hello` with the versions it knows and
++// draws the team only when the two ranges overlap; an older host answers with no `api`.
++export const API_MIN = 1
++export const API_MAX = 1
+ export const MAX_EXCHANGES = 600
+ // state.json is written whole on every save, so a long message between Bots or a long
+ // group line keeps only its start there. The rest stays where it already is (a message
+diff --git a/ds-bot/src/host/feed.js b/ds-bot/src/host/feed.js
+index 98719a3f..2b025973 100644
+--- a/ds-bot/src/host/feed.js
++++ b/ds-bot/src/host/feed.js
+@@ -4,7 +4,8 @@
+ //   live      work changed without a new revision: ask for `state` again
+ //   message   a new entry of a Bot's own chat, as the `chat` endpoint returns it
+ //   stream    the reply a Bot is writing: a start, its text as it comes, an end
+-import { ROUTE } from './constants.js'
++import { ROUTE, API_MAX } from './constants.js'
++import { BOOT_ID, nextSeq, publishedSeq } from './boot.js'
+ 
+ export const FEED_ROUTE = `${ROUTE}/feed`
+ // A comment line now and then keeps an idle connection open.
+@@ -28,6 +29,7 @@ export function install(rt) {
+     try { controller.enqueue(chunk) } catch { clients.delete(controller) }
+   }
+   const publish = (event, data) => {
++    nextSeq()
+     const chunk = encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+     for (const controller of clients) send(controller, chunk)
+   }
+@@ -92,7 +94,9 @@ export function install(rt) {
+         start(own) {
+           controller = own
+           clients.add(own)
+-          send(own, encoder.encode(`event: hello\ndata: ${JSON.stringify({ revision: state.revision })}\n\n`))
++          // A window that reconnects reads the same `hello` again: `boot` and `seq` tell it
++          // whether this is the host it knew and where the stream had got to.
++          send(own, encoder.encode(`event: hello\ndata: ${JSON.stringify({ revision: state.revision, api: API_MAX, boot: BOOT_ID, seq: publishedSeq() })}\n\n`))
+         },
+         cancel() { leave(controller) },
+       })
 diff --git a/ds-bot/src/host/groups.js b/ds-bot/src/host/groups.js
 index c3372da2..74acd249 100644
 --- a/ds-bot/src/host/groups.js
@@ -17687,6 +17820,115 @@ index ebcae6d3..5ee242cb 100644
  })
  
  test('a Bot bubble keeps room for the toolbar beside it; flat Bot text takes the flat width', () => {
+diff --git a/ds-bot/test/mobile-hello.test.js b/ds-bot/test/mobile-hello.test.js
+new file mode 100644
+index 00000000..d75941b3
+--- /dev/null
++++ b/ds-bot/test/mobile-hello.test.js
+@@ -0,0 +1,103 @@
++import assert from 'node:assert/strict'
++import { readFileSync } from 'node:fs'
++import { test } from 'node:test'
++import { fileURLToPath } from 'node:url'
++import { install as installChannel, CAPABILITIES } from '../src/host/channel.js'
++import { install as installFeed } from '../src/host/feed.js'
++import { API_MIN, API_MAX } from '../src/host/constants.js'
++
++const here = fileURLToPath(new URL('.', import.meta.url))
++const pluginVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
++
++// The two host modules register Fetch routes; this runtime starts them without a store,
++// so a test asks the route the way the phone app does.
++function runtime() {
++  const routes = []
++  const ctx = {
++    on: () => () => {},
++    effect: fn => { const dispose = fn(); return typeof dispose === 'function' ? dispose : () => {} },
++    get: () => undefined,
++    provide: () => {},
++    tool: () => {},
++    sessions: { flush: async () => {} },
++    connection: { fetch: { register: route => { routes.push(route); return () => {} } } },
++  }
++  const rt = {
++    ctx,
++    state: { revision: 7, mainBotIds: [], prefs: {}, agents: {}, rooms: {}, bots: [] },
++    refresh: async () => {},
++    readOnly: () => undefined,
++    memoryEnabled: true,
++    load: async () => {},
++    save: async () => {},
++    catalog: async () => {},
++    loadSecrets: async () => {},
++    chatOwners: new Map(),
++    selfOf: () => undefined,
++  }
++  installChannel(rt)
++  installFeed(rt)
++  return { routes, rt }
++}
++
++async function ask(routes, payload) {
++  const route = routes.find(entry => entry.path === '/api/bot')
++  const request = { json: async () => ({ endpoint: 'hello', payload }), signal: new AbortController().signal }
++  const answer = await (await route.fetch(request)).json()
++  assert.equal(answer.ok, true, answer.error?.message)
++  return answer.value
++}
++
++test('hello answers the version both sides speak', async () => {
++  const { routes } = runtime()
++  const answer = await ask(routes, { client: { name: 'dsh-go', version: '0.1.0', platform: 'android' }, api: [API_MAX] })
++  assert.equal(answer.api, API_MAX)
++  assert.equal(answer.apiMin, API_MIN)
++  assert.equal(answer.apiMax, API_MAX)
++  assert.equal(answer.plugin.version, pluginVersion)
++  assert.equal(answer.boot.length > 0, true)
++  assert.equal(Number.isInteger(answer.seq), true)
++  assert.equal(answer.revision, 7)
++  assert.equal(answer.readOnly, null)
++  assert.equal(answer.memory, true)
++  assert.equal(answer.capabilities.includes('chat'), true)
++})
++
++test('a version this host does not speak is answered with no api, not a guess', async () => {
++  const { routes } = runtime()
++  const answer = await ask(routes, { api: [API_MAX + 1] })
++  assert.equal(answer.api, null)
++  // The range is still told, so the client can say which side is old.
++  assert.equal(answer.apiMin, API_MIN)
++  assert.equal(answer.apiMax, API_MAX)
++})
++
++test('a client that sends no version still learns the range', async () => {
++  const { routes } = runtime()
++  const answer = await ask(routes, {})
++  assert.equal(answer.api, null)
++  assert.equal(answer.apiMin, API_MIN)
++})
++
++test('the advertised capabilities are exactly the switch cases', () => {
++  const source = readFileSync(new URL('../src/host/channel.js', import.meta.url), 'utf8')
++  const cases = new Set([...source.matchAll(/case '([a-z0-9-]+)':/g)].map(match => match[1]))
++  assert.deepEqual([...CAPABILITIES].sort(), [...cases].sort())
++})
++
++test('the feed opens with hello carrying api, boot and seq', async () => {
++  const { routes } = runtime()
++  const route = routes.find(entry => entry.path === '/api/bot/feed')
++  const response = await route.fetch({ signal: new AbortController().signal })
++  const reader = response.body.getReader()
++  const { value } = await reader.read()
++  await reader.cancel()
++  const text = new TextDecoder().decode(value)
++  const line = text.split('\n').find(part => part.startsWith('data: '))
++  const data = JSON.parse(line.slice('data: '.length))
++  assert.equal(data.api, API_MAX)
++  assert.equal(data.revision, 7)
++  assert.equal(typeof data.boot, 'string')
++  assert.equal(Number.isInteger(data.seq), true)
++  assert.equal(text.startsWith('event: hello'), true)
++})
 diff --git a/ds-bot/test/mode-row.test.js b/ds-bot/test/mode-row.test.js
 new file mode 100644
 index 00000000..65ba6fba
@@ -17755,6 +17997,217 @@ index 00000000..65ba6fba
 +  placeModeRow(document, [bar, actions])
 +  assert.equal(side.querySelectorAll('.bt-modebar').length, 1)
 +  assert.equal(bar.parentNode, side)
++})
+diff --git a/ds-bot/test/patch-client-bundle.test.js b/ds-bot/test/patch-client-bundle.test.js
+new file mode 100644
+index 00000000..3887d05a
+--- /dev/null
++++ b/ds-bot/test/patch-client-bundle.test.js
+@@ -0,0 +1,14 @@
++// client.js and office.js are committed builds. The unit tests elsewhere check client.js
++// in-process; this runs the exact CI command, which also covers office.js.
++import { test } from 'node:test'
++import assert from 'node:assert/strict'
++import { spawnSync } from 'node:child_process'
++import { dirname, join } from 'node:path'
++import { fileURLToPath } from 'node:url'
++
++const PLUGIN = dirname(dirname(fileURLToPath(import.meta.url)))
++
++test('the committed builds match src', () => {
++  const result = spawnSync(process.execPath, [join(PLUGIN, 'scripts/build-client.mjs'), '--check'], { cwd: PLUGIN, encoding: 'utf8' })
++  assert.equal(result.status, 0, `${result.stderr}${result.stdout}`)
++})
+diff --git a/ds-bot/test/patch-features.test.js b/ds-bot/test/patch-features.test.js
+new file mode 100644
+index 00000000..ee9b59fb
+--- /dev/null
++++ b/ds-bot/test/patch-features.test.js
+@@ -0,0 +1,52 @@
++// Minimal coverage for the local features that carry no test of their own. Each case pins
++// behaviour or wiring, not pixels: colour, sizes and spacing stay the reviewer's business.
++import { test } from 'node:test'
++import assert from 'node:assert/strict'
++import { readFileSync } from 'node:fs'
++import { GAZE } from '../src/client/gaze.js'
++import { dismissDrawerIfOpen, holdDrawerDismiss } from '../src/client/drawer-dismiss.js'
++
++const source = name => readFileSync(new URL(`../src/client/${name}`, import.meta.url), 'utf8')
++
++const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
++
++test('the Gaze picker ships four usable faces', () => {
++  assert.equal(GAZE.length, 4)
++  assert.equal(new Set(GAZE.map(face => face.id)).size, 4, 'two faces share an id')
++  for (const face of GAZE) {
++    const image = face.image
++    assert.ok(typeof face.id === 'string' && face.id !== '', 'a face has no id')
++    assert.match(image, /^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/, `${face.id}: not an inline PNG`)
++    const png = Buffer.from(image.slice('data:image/png;base64,'.length), 'base64')
++    assert.deepEqual(png.subarray(0, PNG_MAGIC.length), PNG_MAGIC, `${face.id}: not a PNG`)
++  }
++})
++
++test('drawer entries close the drawer, everything else leaves it alone', () => {
++  const collapsed = []
++  const release = holdDrawerDismiss(() => collapsed.push('collapsed'))
++  try {
++    // Only a caller that says it came from the drawer may collapse it: the shell reports no
++    // open flag, so guessing would toggle a closed drawer open.
++    dismissDrawerIfOpen(false)
++    dismissDrawerIfOpen(undefined)
++    assert.deepEqual(collapsed, [])
++    dismissDrawerIfOpen(true)
++    assert.deepEqual(collapsed, ['collapsed'])
++  } finally {
++    release()
++  }
++  // A missing holder is a no-op rather than a wrong toggle.
++  dismissDrawerIfOpen(true)
++  assert.deepEqual(collapsed, ['collapsed'])
++})
++
++test('the phone sheet is covered by a catcher that closes it', () => {
++  const css = source('styles.js')
++  // The desktop keeps the pane as it was, so both the sheet and its catcher exist only
++  // under the phone frame.
++  assert.match(css, /\.bt-sheet-catcher,\.bt-sheet-grip\{display:none\}/)
++  assert.match(css, /html:has\(\[data-mobile-nav="frame"\]\) \.bt-sheet-catcher\{[^}]*display:block/)
++  const catchers = source('new-chat.js').match(/className: 'bt-sheet-catcher', onClick: close/g) ?? []
++  assert.equal(catchers.length, 2, 'each new-chat sheet renders one catcher that closes it')
++})
+diff --git a/ds-bot/test/patch-i18n.test.js b/ds-bot/test/patch-i18n.test.js
+new file mode 100644
+index 00000000..d68432f2
+--- /dev/null
++++ b/ds-bot/test/patch-i18n.test.js
+@@ -0,0 +1,46 @@
++// The dictionary is keyed by the English copy itself, so a mistake is silent: a duplicated
++// key shadows the first entry, and copy the host renders that the table never learned comes
++// out in English. i18n.test.js covers the client → table direction; this covers the other
++// side (the host) and the duplicate.
++import { test } from 'node:test'
++import assert from 'node:assert/strict'
++import { readdirSync, readFileSync } from 'node:fs'
++import { DICTIONARY } from '../src/client/i18n.js'
++
++const SOURCE = new URL('../src/client/i18n.js', import.meta.url)
++// The host renders its own copy through the same table, so its literals count too.
++const DIRS = ['../src/client/', '../src/host/']
++
++const referenced = () => {
++  const keys = new Set()
++  for (const dir of DIRS) {
++    for (const name of readdirSync(new URL(dir, import.meta.url)).filter(file => file.endsWith('.js'))) {
++      const text = readFileSync(new URL(name, new URL(dir, import.meta.url)), 'utf8')
++      for (const match of text.matchAll(/\b(?:t|hostText)\(\s*(['"])((?:\\.|(?!\1).)*)\1/g)) {
++        keys.add(match[2].replace(/\\'/g, "'"))
++      }
++    }
++  }
++  return keys
++}
++
++test('no English copy is keyed twice', () => {
++  const text = readFileSync(SOURCE, 'utf8')
++  const start = text.indexOf('const ZH = {')
++  const end = text.indexOf('\n}\n', start)
++  assert.notEqual(start, -1, 'the Chinese table is gone')
++  assert.notEqual(end, -1, 'the Chinese table has no end')
++  const seen = new Map()
++  const duplicates = []
++  for (const match of text.slice(start, end).matchAll(/^\s{2}(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|([A-Za-z_$][\w$]*))\s*:/gm)) {
++    const key = match[1] ?? match[2] ?? match[3]
++    if (seen.has(key)) duplicates.push(key)
++    seen.set(key, true)
++  }
++  assert.deepEqual(duplicates, [], 'a duplicated key keeps only the last translation')
++})
++
++test('every literal the client or the host translates has a Chinese entry', () => {
++  const missing = [...referenced()].filter(key => !Object.hasOwn(DICTIONARY.zh, key)).sort()
++  assert.deepEqual(missing, [])
++})
+diff --git a/ds-bot/test/patch-ledger.test.js b/ds-bot/test/patch-ledger.test.js
+new file mode 100644
+index 00000000..9875a139
+--- /dev/null
++++ b/ds-bot/test/patch-ledger.test.js
+@@ -0,0 +1,75 @@
++// The patch is the replayable record of every local change. These tests keep it replayable
++// without restating any of its numbers by hand: the statistics below are recounted from the
++// patch, and the ledger's own table is only allowed to be the generator's output.
++import { test } from 'node:test'
++import assert from 'node:assert/strict'
++import { execFileSync, spawnSync } from 'node:child_process'
++import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
++import { tmpdir } from 'node:os'
++import { dirname, join } from 'node:path'
++import { fileURLToPath } from 'node:url'
++
++const PLUGIN = dirname(dirname(fileURLToPath(import.meta.url)))
++const ROOT = dirname(PLUGIN)
++const PATCH = join(ROOT, 'design/ds-bot-patches.patch')
++const HUNKS = join(ROOT, 'design/ds-bot-patches.hunks.md')
++// The ledger's baseline: the upstream release the local commits sit on top of.
++const BASE = 'v0.2.4'
++// client.js is generated from src/client, and gaze.js carries generated images, so neither
++// is part of the hand-maintained patch.
++const PATCHED = ['ds-bot', ':!ds-bot/client.js', ':!ds-bot/src/client/gaze.js']
++
++const git = (args, cwd) => spawnSync('git', args, { cwd, encoding: 'utf8' })
++
++test('the patch still reverses cleanly on HEAD', () => {
++  // HEAD already contains every hunk, so the forward direction cannot apply here; the
++  // direction that proves the patch still describes HEAD is the reverse one.
++  const result = git(['apply', '--reverse', '--check', PATCH], ROOT)
++  assert.equal(result.status, 0, result.stderr)
++})
++
++test('the patch still replays on the baseline, and is exactly the baseline diff', () => {
++  const base = git(['rev-parse', '--verify', '--quiet', `${BASE}^{commit}`], ROOT)
++  assert.equal(base.status, 0, `the ledger baseline ${BASE} is not a ref here: ${base.stderr}`)
++
++  // A work tree of the baseline is the only place the forward direction can run.
++  const dir = mkdtempSync(join(tmpdir(), 'ds-bot-baseline-'))
++  try {
++    const added = git(['worktree', 'add', '--detach', '--quiet', dir, BASE], ROOT)
++    assert.equal(added.status, 0, added.stderr)
++    const applied = git(['apply', '--check', PATCH], dir)
++    assert.equal(applied.status, 0, applied.stderr)
++  } finally {
++    git(['worktree', 'remove', '--force', dir], ROOT)
++    rmSync(dir, { recursive: true, force: true })
++  }
++
++  const diff = execFileSync('git', ['diff', BASE, 'HEAD', '--', ...PATCHED], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
++  assert.equal(readFileSync(PATCH, 'utf8'), diff, `regenerate it: git diff ${BASE} HEAD -- ${PATCHED.join(' ')} > design/ds-bot-patches.patch`)
++})
++
++test('the ledger table is the generator output', () => {
++  const generated = spawnSync(process.execPath, [join(ROOT, 'tools/patch-ledger.mjs')], { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 })
++  assert.equal(generated.status, 0, generated.stderr)
++  assert.equal(readFileSync(HUNKS, 'utf8'), generated.stdout, 'regenerate it: node tools/patch-ledger.mjs > design/ds-bot-patches.hunks.md')
++})
++
++test('the statistics in the ledger table are counted from the patch', () => {
++  let files = 0, hunks = 0, added = 0, removed = 0
++  for (const line of readFileSync(PATCH, 'utf8').split('\n')) {
++    if (line.startsWith('+++ b/')) files++
++    else if (line.startsWith('--- ')) continue
++    else if (line.startsWith('@@')) hunks++
++    else if (line.startsWith('+')) added++
++    else if (line.startsWith('-')) removed++
++  }
++
++  const stats = readFileSync(HUNKS, 'utf8')
++  const count = label => {
++    const found = new RegExp(`^\\| ${label} \\| (\\d+) \\|$`, 'm').exec(stats)
++    assert.notEqual(found, null, `the generated statistics have no ${label} row`)
++    return Number(found[1])
++  }
++  assert.deepEqual({ files: count('文件'), hunks: count('hunks'), added: count('新增行'), removed: count('删除行') },
++    { files, hunks, added, removed })
 +})
 diff --git a/ds-bot/test/phone-scope.test.js b/ds-bot/test/phone-scope.test.js
 new file mode 100644
