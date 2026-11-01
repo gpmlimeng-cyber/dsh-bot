@@ -98,7 +98,10 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
       setRead('loading')
       setRead(await whole.load() ?? { whole: false })
     }
-    return { shown: preview, folded: true, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, t('Show all · {count} characters', { count }))) }
+    // A message kept only as a file says so: its "Show all" reads the attachment, and
+    // its count is the whole message, not the start the bubble holds.
+    const label = cut ? t('Open the whole reply · {count} characters, from its file', { count }) : t('Show all · {count} characters', { count })
+    return { shown: preview, folded: true, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, label)) }
   }
   const loaded = typeof read?.text === 'string' ? read : undefined
   const note = !cut || read === undefined || read === 'loading' || loaded?.whole ? null

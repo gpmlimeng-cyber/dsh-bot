@@ -680,6 +680,7 @@ const ZH = {
   'No messages yet': '还没有消息',
   'Close Chat': '关闭',
   'Show all · {count} characters': '显示全部 · {count} 字',
+  'Open the whole reply · {count} characters, from its file': '展开全文（文件）· {count} 字',
   'Showing the first {count} characters': '只显示前 {count} 字',
   'Only the start of this message is kept here': '这里只保留了这条消息的开头',
 

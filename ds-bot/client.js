@@ -735,6 +735,7 @@ var ZH = {
   "No messages yet": "还没有消息",
   "Close Chat": "关闭",
   "Show all · {count} characters": "显示全部 · {count} 字",
+  "Open the whole reply · {count} characters, from its file": "展开全文（文件）· {count} 字",
   "Showing the first {count} characters": "只显示前 {count} 字",
   "Only the start of this message is kept here": "这里只保留了这条消息的开头",
   // Time and usage
@@ -8274,7 +8275,8 @@ function useFold(text, { limit = FOLD_AT, whole, live = false, markdown = true }
       setRead("loading");
       setRead(await whole.load() ?? { whole: false });
     };
-    return { shown: preview, folded: true, control: (0, import_react14.createElement)("span", { className: "bt-fold" }, (0, import_react14.createElement)("button", { type: "button", className: "bt-more", onClick: show2 }, t("Show all · {count} characters", { count }))) };
+    const label = cut ? t("Open the whole reply · {count} characters, from its file", { count }) : t("Show all · {count} characters", { count });
+    return { shown: preview, folded: true, control: (0, import_react14.createElement)("span", { className: "bt-fold" }, (0, import_react14.createElement)("button", { type: "button", className: "bt-more", onClick: show2 }, label)) };
   }
   const loaded = typeof read?.text === "string" ? read : void 0;
   const note = !cut || read === void 0 || read === "loading" || loaded?.whole ? null : loaded !== void 0 && loaded.text.length > text.length ? t("Showing the first {count} characters", { count: loaded.text.length.toLocaleString() }) : t("Only the start of this message is kept here");
@@ -8604,6 +8606,7 @@ function BtwTurnTail({ turn, sessionId, useRoster, actions }) {
 // src/client/cells.js
 var import_react16 = require("react");
 var import_react_dom = require("react-dom");
+var GROUP_FOLD = { chars: 150, lines: 6 };
 var mdLabels3 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
 var FILE_PATH = /^(?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.-]+)*$/;
 var FILE_EXT = /\.(?:md|txt|jsonl?|mjs|cjs|jsx?|tsx?|py|sh|ya?ml|toml|csv|html|css|png|jpe?g|webp|gif|pdf|patch|diff)$/i;
@@ -8931,7 +8934,7 @@ function SpeakerHead({ bot, time }) {
     Number.isFinite(time) ? (0, import_react16.createElement)("span", { className: "bt-group-time", title: clockLabel(time) }, messageClock(time)) : null
   );
 }
-function GroupMessage({ bot, text, texts: texts2 = [text], room: room2, roster, actions, msgKey, useUi, whole, time, duration, openFile }) {
+function GroupMessage({ bot, text, texts: texts2 = [text], room: room2, roster, actions, msgKey, useUi, whole, time, duration, openFile, fold = GROUP_FOLD }) {
   const lead = (0, import_react16.createElement)(
     "button",
     { type: "button", className: "bt-lead", "aria-label": t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
@@ -8951,7 +8954,7 @@ function GroupMessage({ bot, text, texts: texts2 = [text], room: room2, roster, 
       Number.isFinite(time) ? (0, import_react16.createElement)("span", { className: "bt-group-time", title: clockLabel(time) }, messageClock(time)) : null,
       took ? (0, import_react16.createElement)("span", { className: "bt-group-took", title: t("Ran for {duration}", { duration: took }) }, took) : null
     ),
-    (0, import_react16.createElement)(Bubbles, { texts: texts2, roster, selfId: bot.id, actions, sessionId: room2?.id, msgKey, useUi, lead: flat ? null : lead, whole, openFile })
+    (0, import_react16.createElement)(Bubbles, { texts: texts2, roster, selfId: bot.id, actions, sessionId: room2?.id, msgKey, useUi, lead: flat ? null : lead, whole, openFile, fold })
   );
 }
 function stackReplies(replies) {

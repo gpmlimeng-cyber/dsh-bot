@@ -122,7 +122,8 @@ test('a message kept only in part is read whole on request, and says when it is 
   const whole = { length: 30_000, load: async () => { reads += 1; return { text: 'x'.repeat(30_000), whole: true } } }
   const folded = render(start, { whole })
   assert.equal(folded.shown, 'x'.repeat(600), 'the start shows as any preview does')
-  assert.equal(words(buttons(folded.control)[0]), 'Show all · 30,000 characters')
+  // A message kept only as a file says where the rest comes from.
+  assert.equal(words(buttons(folded.control)[0]), 'Open the whole reply · 30,000 characters, from its file')
   await buttons(folded.control)[0].props.onClick()
   assert.equal(render(start, { whole }).shown.length, 30_000)
   assert.deepEqual(buttons(render(start, { whole }).control).map(words), ['Show less'])

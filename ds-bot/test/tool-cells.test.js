@@ -880,9 +880,19 @@ test('a group reply that came as a file shows Show all with its whole length, an
   const more = findAll(out, node => node.props?.className === 'bt-more')
   assert.equal(more.length, 1)
   assert.match(text(more[0]), /20,001/)
+  // The file-backed count is the whole reply, and the label says where it comes from.
+  assert.match(text(more[0]), /from its file/)
   assert.ok(!text(out).includes('[A long message'), 'the note the host wrote for the model stays out of the bubble')
   more[0].props.onClick()
   await Promise.resolve()
   await Promise.resolve()
   assert.deepEqual(JSON.parse(JSON.stringify(asked)), [file])
+})
+
+// A group line shows its point: past GROUP_FOLD (150 characters) the bubble folds, and
+// a line at the limit still reads whole.
+test('a group reply folds past 150 characters, and a shorter one does not', () => {
+  const more = chars => findAll(show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: 'z'.repeat(chars), time: 1 }] } }), { sessionId: 'room' }), node => node.props?.className === 'bt-more')
+  assert.deepEqual([150, 151].map(chars => more(chars).length), [0, 1])
+  assert.match(text(more(151)[0]), /Show all · 151 characters/)
 })
