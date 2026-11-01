@@ -657,6 +657,9 @@ var ZH = {
   "Bubble width": "气泡宽度",
   "Text width": "正文宽度",
   "Show thinking": "显示思考过程",
+  SuperAgent: "SuperAgent",
+  "On: records hand-offs between Bots.": "开：记录 Bot 之间的委托。",
+  "Off: nothing is recorded or blocked.": "关：未启用，不记录也不拦截。",
   "Bots · {count}": "Bot · {count}",
   "First in the sidebar. Pick another Bot to hand it the role; {name} then stops being a Main Bot.": "排在侧栏最上面。选另一个 Bot 就会把主 Bot 交给它，{name} 随之不再是主 Bot。",
   "Choose a Bot…": "选择一个 Bot…",
@@ -25616,6 +25619,13 @@ function GeneralPage({ roster, actions, run: run2 }) {
           setSkin(id);
           run2(actions.localPref("skin", id));
         } })
+      ),
+      // The gate is a host behaviour, so this value is the team's, not this device's: it
+      // goes through `setPrefs`, and the row reads it back from the host's answer.
+      (0, import_react50.createElement)(
+        SetRow,
+        { label: t("SuperAgent"), hint: prefs.superagent === true ? t("On: records hand-offs between Bots.") : t("Off: nothing is recorded or blocked.") },
+        (0, import_react50.createElement)(Switch3, { label: t("SuperAgent"), on: prefs.superagent === true, onChange: (superagent) => run2(actions.setPrefs({ superagent })) })
       ),
       (0, import_react50.createElement)(
         SetRow,

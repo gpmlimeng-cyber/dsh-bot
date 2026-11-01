@@ -108,6 +108,10 @@ function GeneralPage({ roster, actions, run }) {
         h(Choice, { label: t('Density'), value: densityOf(prefs), options: Object.entries(DENSITY_CHOICES).map(([id, face]) => [id, face.label]), pick: id => run(actions.localPref('density', id)) })),
       h(SetRow, { label: t('Mobile skin'), hint: t('How chat looks on a phone. The desktop keeps this plugin\'s own shape.') },
         h(Choice, { label: t('Mobile skin'), value: skin, options: Object.entries(SKIN_CHOICES).map(([id, face]) => [id, t(face.label)]), pick: (id) => { setSkin(id); run(actions.localPref('skin', id)) } })),
+      // The gate is a host behaviour, so this value is the team's, not this device's: it
+      // goes through `setPrefs`, and the row reads it back from the host's answer.
+      h(SetRow, { label: t('SuperAgent'), hint: prefs.superagent === true ? t('On: records hand-offs between Bots.') : t('Off: nothing is recorded or blocked.') },
+        h(Switch, { label: t('SuperAgent'), on: prefs.superagent === true, onChange: superagent => run(actions.setPrefs({ superagent })) })),
       h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },
         h('div', { className: 'bt-swatches' },
           h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
