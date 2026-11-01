@@ -104,7 +104,8 @@ test('a long text opens and closes in place; a short one has no control', async 
   assert.equal(folded.folded, true)
   assert.equal(folded.shown, lines(10))
   const [show] = buttons(folded.control)
-  assert.equal(words(show), `Show all · ${text.length} characters`)
+  // A message that folded because of its lines counts lines, not characters.
+  assert.equal(words(show), 'Show all · 40 lines')
   await show.props.onClick()
   const open = render(text)
   assert.equal(open.shown, text)

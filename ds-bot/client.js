@@ -735,6 +735,7 @@ var ZH = {
   "No messages yet": "还没有消息",
   "Close Chat": "关闭",
   "Show all · {count} characters": "显示全部 · {count} 字",
+  "Show all · {count} lines": "显示全部 · {count} 行",
   "Open the whole reply · {count} characters, from its file": "展开全文（文件）· {count} 字",
   "Showing the first {count} characters": "只显示前 {count} 字",
   "Only the start of this message is kept here": "这里只保留了这条消息的开头",
@@ -8270,6 +8271,7 @@ function useFold(text, { limit = FOLD_AT, preview, whole, live = false, markdown
   const cut = whole !== void 0 && whole.length > text.length;
   const kept = (0, import_react14.useMemo)(() => live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown, preview, cut), [text, live, limit, markdown, preview, cut]);
   if (kept === null) return { shown: text, control: null };
+  const rows2 = cut || !moreLines(text, limit.lines) ? void 0 : text.split("\n").length;
   const count = (cut ? whole.length : text.length).toLocaleString();
   if (!open) {
     const show2 = async () => {
@@ -8278,7 +8280,7 @@ function useFold(text, { limit = FOLD_AT, preview, whole, live = false, markdown
       setRead("loading");
       setRead(await whole.load() ?? { whole: false });
     };
-    const label = cut ? t("Open the whole reply · {count} characters, from its file", { count }) : t("Show all · {count} characters", { count });
+    const label = cut ? t("Open the whole reply · {count} characters, from its file", { count }) : rows2 === void 0 ? t("Show all · {count} characters", { count }) : t("Show all · {count} lines", { count: rows2.toLocaleString() });
     return { shown: kept, folded: true, control: (0, import_react14.createElement)("span", { className: "bt-fold" }, (0, import_react14.createElement)("button", { type: "button", className: "bt-more", onClick: show2 }, label)) };
   }
   const loaded = typeof read?.text === "string" ? read : void 0;

@@ -897,6 +897,7 @@ test('a group reply folds only when folding hides something', () => {
   const lines = count => Array.from({ length: count }, (_, index) => `line ${index}`).join('\n')
   assert.deepEqual([200, 301, 800].map(count => folded('z'.repeat(count)).length), [0, 1, 1], '200 stays whole; 301 and 800 fold')
   assert.deepEqual([8, 9].map(count => folded(lines(count)).length), [0, 1], '8 lines stay whole; 9 fold')
+  assert.match(text(folded(lines(9))[0]), /Show all · 9 lines/, 'a line-triggered fold counts lines')
   assert.match(text(folded('z'.repeat(301))[0]), /Show all · 301 characters/)
   // A folded reply keeps 120 characters, so 301 that fold hide 181 of them.
   const at = { chars: 300, lines: 8 }

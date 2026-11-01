@@ -97,6 +97,8 @@ export function useFold(text, { limit = FOLD_AT, preview, whole, live = false, m
   // A message kept only in part folds whatever the length of its start.
   const kept = useMemo(() => (live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown, preview, cut)), [text, live, limit, markdown, preview, cut])
   if (kept === null) return { shown: text, control: null }
+  // The count follows what made it fold: a message too long by lines says its lines.
+  const rows = cut || !moreLines(text, limit.lines) ? undefined : text.split('\n').length
   const count = (cut ? whole.length : text.length).toLocaleString()
   if (!open) {
     const show = async () => {
@@ -107,7 +109,9 @@ export function useFold(text, { limit = FOLD_AT, preview, whole, live = false, m
     }
     // A message kept only as a file says so: its "Show all" reads the attachment, and
     // its count is the whole message, not the start the bubble holds.
-    const label = cut ? t('Open the whole reply · {count} characters, from its file', { count }) : t('Show all · {count} characters', { count })
+    const label = cut
+      ? t('Open the whole reply · {count} characters, from its file', { count })
+      : rows === undefined ? t('Show all · {count} characters', { count }) : t('Show all · {count} lines', { count: rows.toLocaleString() })
     return { shown: kept, folded: true, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, label)) }
   }
   const loaded = typeof read?.text === 'string' ? read : undefined
