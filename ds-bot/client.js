@@ -22323,8 +22323,8 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       },
       shown.files ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: () => filePick.current?.click() }, (0, import_react37.createElement)(PaperclipIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Add files"))) : null,
       shown.files ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: () => imagePick.current?.click() }, (0, import_react37.createElement)(ImageIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Add image"))) : null,
-      shown.files ? (0, import_react37.createElement)("input", { ref: filePick, type: "file", multiple: true, tabIndex: -1, className: "bt-menu-input", onChange: handFiles }) : null,
-      shown.files ? (0, import_react37.createElement)("input", { ref: imagePick, type: "file", accept: "image/*", multiple: true, tabIndex: -1, className: "bt-menu-input", onChange: handFiles }) : null,
+      shown.files ? (0, import_react37.createElement)("input", { ref: imagePick, type: "file", accept: "image/*", multiple: true, className: "bt-menu-input", onChange: handFiles }) : null,
+      shown.files ? (0, import_react37.createElement)("input", { ref: filePick, type: "file", multiple: true, className: "bt-menu-input", onChange: handFiles }) : null,
       canReference ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onMouseDown: keepComposerFocus, onClick: reference }, (0, import_react37.createElement)(ChatsIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Reference a chat"))) : null,
       target !== void 0 ? (0, import_react37.createElement)("button", { type: "button", role: "menuitem", onClick: schedule }, (0, import_react37.createElement)(ClockIcon), (0, import_react37.createElement)("span", { className: "bt-menu-label" }, t("Scheduled task"))) : null
     ), document.body) : null

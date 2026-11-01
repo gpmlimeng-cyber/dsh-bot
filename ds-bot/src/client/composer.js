@@ -187,8 +187,8 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     },
     shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => filePick.current?.click() }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
     shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => imagePick.current?.click() }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
-    shown.files ? h('input', { ref: filePick, type: 'file', multiple: true, tabIndex: -1, className: 'bt-menu-input', onChange: handFiles }) : null,
-    shown.files ? h('input', { ref: imagePick, type: 'file', accept: 'image/*', multiple: true, tabIndex: -1, className: 'bt-menu-input', onChange: handFiles }) : null,
+    shown.files ? h('input', { ref: imagePick, type: 'file', accept: 'image/*', multiple: true, className: 'bt-menu-input', onChange: handFiles }) : null,
+    shown.files ? h('input', { ref: filePick, type: 'file', multiple: true, className: 'bt-menu-input', onChange: handFiles }) : null,
     canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
     target !== undefined ? h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task'))) : null), document.body) : null)
 }
