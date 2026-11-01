@@ -4085,8 +4085,10 @@ body{--bt-float-surface:var(--bt-main);--bt-float-ring:color-mix(in srgb,var(--b
    beside it keeps its space. */
 .bt-head-btn::after{content:'';position:absolute;inset:-4px 0 -4px -4px}
 /* The phone layout mounts its own drawer toggle in the frame's leading cell, so the
-   self-drawn one would be a second hamburger beside it. */
-html:has([data-mobile-nav="frame"]) .bt-head-btn{display:none}
+   self-drawn one would be a second hamburger beside it. Only that direct button is
+   dropped: the session menu inside .bt-pmenu shares the class and must stay. */
+html:has([data-mobile-nav="frame"]) .bt-head>{display:flex}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-head-btn{display:none}
 /* The session menu sits at the mirror position. The popover is the panel menu's own, which
    already opens right-aligned below its button. */
 .bt-head>.bt-pmenu{position:absolute;right:0;top:2px;display:none}
