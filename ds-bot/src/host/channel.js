@@ -153,10 +153,12 @@ export function install(rt) {
       else if (body.thinking === false || body.thinking === null) delete state.prefs.thinking
     }
     // The authorization gate reads this on every delivery, so the switch takes effect at
-    // once and needs no restart. Only `true` turns it on; anything else is off.
+    // once and needs no restart. Recording is the default, so off has to be written as
+    // `false`: deleting the key would fall back to the default and switch it back on.
     if (body.superagent !== undefined) {
       if (body.superagent === true) state.prefs.superagent = true
-      else if (body.superagent === false || body.superagent === null) delete state.prefs.superagent
+      else if (body.superagent === false) state.prefs.superagent = false
+      else if (body.superagent === null) delete state.prefs.superagent
     }
     return rt.save()
   }

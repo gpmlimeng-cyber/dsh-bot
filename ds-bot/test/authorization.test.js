@@ -37,36 +37,12 @@ function bench(prefs = {}, { fail = false } = {}) {
 const handoff = { fromId: 'dev', toId: 'chief', role: 'reply', text: 'the data is ready' }
 const fromUser = { toId: 'dev', roomId: 'room1', role: 'room', text: 'check the data' }
 
-test('off: nothing is recorded, no file appears, and the call passes through whole', async () => {
+test('the switch starts on: a team that never touched it records', async () => {
   const b = bench()
   try {
-    assert.deepEqual(await b.rt.deliver(handoff), { ok: true })
-    assert.equal(await b.rt.postToRoom({ id: 'room1' }, { id: 'dev' }, 'hello', { progress: true }, ['f']), 'posted')
-    assert.deepEqual(b.calls, [
-      ['deliver', handoff],
-      ['postToRoom', [{ id: 'room1' }, { id: 'dev' }, 'hello', { progress: true }, ['f']]],
-    ])
-    assert.equal(existsSync(b.path), false, 'off still created the log')
-    assert.deepEqual(b.lines(), [])
-  } finally { b.done() }
-})
-
-test('off: a failed delivery keeps its exception and its message', async () => {
-  const b = bench({}, { fail: true })
-  try {
-    await assert.rejects(b.rt.deliver(handoff), /delivery failed/)
-    assert.equal(existsSync(b.path), false)
-  } finally { b.done() }
-})
-
-test('on: a Bot’s own hand-off is recorded, the user’s own message is not', async () => {
-  const b = bench({ superagent: true })
-  try {
     await b.rt.deliver(handoff)
-    await b.rt.deliver(fromUser)
-    const lines = b.lines()
-    assert.equal(lines.length, 1)
-    const [line] = lines
+    const [line] = b.lines()
+    assert.ok(line, 'the default team recorded nothing')
     assert.equal(line.admitted, true)
     assert.equal(line.rule, 'message_bot')
     assert.equal(line.fromId, 'dev')
@@ -81,8 +57,17 @@ test('on: a Bot’s own hand-off is recorded, the user’s own message is not', 
   } finally { b.done() }
 })
 
-test('on: a group post is recorded as the relay it is', async () => {
-  const b = bench({ superagent: true })
+test('the user’s own message is not recorded', async () => {
+  const b = bench()
+  try {
+    await b.rt.deliver(handoff)
+    await b.rt.deliver(fromUser)
+    assert.equal(b.lines().length, 1)
+  } finally { b.done() }
+})
+
+test('a group post is recorded as the relay it is', async () => {
+  const b = bench()
   try {
     await b.rt.postToRoom({ id: 'room1' }, { id: 'dev' }, 'relayed', { member: true })
     const [line] = b.lines()
@@ -93,17 +78,43 @@ test('on: a group post is recorded as the relay it is', async () => {
   } finally { b.done() }
 })
 
+test('switched off: nothing is recorded, no file appears, and the call passes through whole', async () => {
+  const b = bench({ superagent: false })
+  try {
+    assert.deepEqual(await b.rt.deliver(handoff), { ok: true })
+    assert.equal(await b.rt.postToRoom({ id: 'room1' }, { id: 'dev' }, 'hello', { progress: true }, ['f']), 'posted')
+    assert.deepEqual(b.calls, [
+      ['deliver', handoff],
+      ['postToRoom', [{ id: 'room1' }, { id: 'dev' }, 'hello', { progress: true }, ['f']]],
+    ])
+    assert.equal(existsSync(b.path), false, 'off still created the log')
+    assert.deepEqual(b.lines(), [])
+  } finally { b.done() }
+})
+
+test('switched off: a failed delivery keeps its exception and its message', async () => {
+  const b = bench({ superagent: false }, { fail: true })
+  try {
+    await assert.rejects(b.rt.deliver(handoff), /delivery failed/)
+    assert.equal(existsSync(b.path), false)
+  } finally { b.done() }
+})
+
 test('the switch flips without reinstalling the gate', async () => {
   const b = bench()
   try {
     await b.rt.deliver(handoff)
-    assert.deepEqual(b.lines(), [])
+    assert.equal(b.lines().length, 1, 'the default did not record')
+    b.rt.state.prefs.superagent = false
+    await b.rt.deliver(handoff)
+    assert.equal(b.lines().length, 1, 'switching off still recorded')
     b.rt.state.prefs.superagent = true
     await b.rt.deliver(handoff)
-    assert.equal(b.lines().length, 1)
+    assert.equal(b.lines().length, 2, 'switching back on did not record')
+    // Deleting the key returns to the default, which records too.
     delete b.rt.state.prefs.superagent
     await b.rt.deliver(handoff)
-    assert.equal(b.lines().length, 1, 'turning the switch off still recorded')
+    assert.equal(b.lines().length, 3)
   } finally { b.done() }
 })
 

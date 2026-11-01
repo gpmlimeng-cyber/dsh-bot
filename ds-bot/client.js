@@ -25621,11 +25621,12 @@ function GeneralPage({ roster, actions, run: run2 }) {
         } })
       ),
       // The gate is a host behaviour, so this value is the team's, not this device's: it
-      // goes through `setPrefs`, and the row reads it back from the host's answer.
+      // goes through `setPrefs`, and the row reads it back from the host's answer. It is on
+      // until someone turns it off, so the switch only reads `false`.
       (0, import_react50.createElement)(
         SetRow,
-        { label: t("SuperAgent"), hint: prefs.superagent === true ? t("On: records hand-offs between Bots.") : t("Off: nothing is recorded or blocked.") },
-        (0, import_react50.createElement)(Switch3, { label: t("SuperAgent"), on: prefs.superagent === true, onChange: (superagent) => run2(actions.setPrefs({ superagent })) })
+        { label: t("SuperAgent"), hint: prefs.superagent === false ? t("Off: nothing is recorded or blocked.") : t("On: records hand-offs between Bots.") },
+        (0, import_react50.createElement)(Switch3, { label: t("SuperAgent"), on: prefs.superagent !== false, onChange: (superagent) => run2(actions.setPrefs({ superagent })) })
       ),
       (0, import_react50.createElement)(
         SetRow,

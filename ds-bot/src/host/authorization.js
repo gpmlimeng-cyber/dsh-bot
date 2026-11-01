@@ -30,7 +30,10 @@ export function policyOf(state) {
 }
 
 export function install(rt) {
-  const on = () => rt.state?.prefs?.superagent === true
+  // On unless it was switched off: a team that never touched the switch records, as the
+  // user asked. Only an explicit `false` turns it off, and reading it here (not at install)
+  // is what lets a flip take effect on the next delivery.
+  const on = () => rt.state?.prefs?.superagent !== false
 
   function note(rule, ids, startedAt, deliverUs) {
     try {
