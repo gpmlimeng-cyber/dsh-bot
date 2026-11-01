@@ -573,7 +573,11 @@ html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side
 /* The row takes the phone layout's measured header band and centers in it, which is the
    line its own drawer toggle is drawn on; pill and menu button match that toggle's 28px. */
 html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 11px);height:36px;margin:0;z-index:20;align-items:center}
-html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px;font-size:12.5px;line-height:18px;gap:6px;max-width:66vw}
+/* The same surface the layout gives its own header button: transparent, no shadow, the
+   secondary ink at rest, a six percent wash on touch. */
+html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;background:transparent;box-shadow:none;color:var(--dsw-alias-label-primary, var(--bt-ink))}
+html:has([data-mobile-nav="frame"]) .bt-pill:hover,html:has([data-mobile-nav="frame"]) .bt-pill:active{background:var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.06))}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{background:transparent;box-shadow:none}
 html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:28px;height:28px}
 html:has([data-mobile-nav="frame"]):has([data-mobile-nav="toggle"]) .bt-head-btn{display:none}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:36px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 72%,transparent);border:0;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
