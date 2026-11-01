@@ -161,16 +161,23 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
       input.removeAttribute('hidden')
       input.setAttribute('style', 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0')
     }
+    // Put back only after the chooser has taken the request (and never before the files
+    // arrive): restoring on the same tick could undo it in a WebView that reads the
+    // field later.
+    const restore = () => {
+      if (prior.hidden) {
+        input.setAttribute('hidden', '')
+        if (prior.style === null) input.removeAttribute('style')
+        else input.setAttribute('style', prior.style)
+      }
+      if (accept !== null) {
+        if (prior.accept === null) input.removeAttribute('accept')
+        else input.setAttribute('accept', prior.accept)
+      }
+    }
+    input.addEventListener('change', restore, { once: true })
     input.click()
-    if (prior.hidden) {
-      input.setAttribute('hidden', '')
-      if (prior.style === null) input.removeAttribute('style')
-      else input.setAttribute('style', prior.style)
-    }
-    if (accept !== null) {
-      if (prior.accept === null) input.removeAttribute('accept')
-      else input.setAttribute('accept', prior.accept)
-    }
+    setTimeout(restore, 30_000)
   }
   const filePick = useRef(null)
   const imagePick = useRef(null)
