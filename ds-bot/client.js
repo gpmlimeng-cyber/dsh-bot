@@ -3266,7 +3266,12 @@ html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side
    chrome's row instead: title in the middle, buttons at the edges. */
 /* The row takes the phone layout's measured header band and centers in it, which is the
    line its own drawer toggle is drawn on; pill and menu button match that toggle's 28px. */
-html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 11px);height:36px;margin:0;z-index:20;align-items:center}
+/* One offset for everything that must clear the system bar: the page is edge to edge and
+   this WebView reports no inset, so the bar's height is the same measured fallback the
+   header row uses; the details panel starts on that line too. */
+html:has([data-mobile-nav="frame"]){--bt-safe-top:calc(env(safe-area-inset-top, 0px) + 11px)}
+html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:var(--bt-safe-top);height:36px;margin:0;z-index:20;align-items:center}
+html:has([data-mobile-nav="frame"]) .bt-panel{top:var(--bt-safe-top)}
 /* The layout's own header button floats: a solid surface, a hairline ring and the soft
    drop shadow. The pill and the session menu borrow that surface. */
 html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03),var(--bt-float-shadow);color:var(--bt-ink)}
@@ -6530,12 +6535,12 @@ function useWidth(box, initial) {
   (0, import_react8.useLayoutEffect)(() => {
     const node = box.current;
     if (!node || typeof ResizeObserver !== "function") return void 0;
-    const measure2 = () => {
+    const measure = () => {
       const next = Math.round(node.clientWidth);
       if (next > 0) setWidth(next);
     };
-    measure2();
-    const observer = new ResizeObserver(measure2);
+    measure();
+    const observer = new ResizeObserver(measure);
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
@@ -8968,7 +8973,7 @@ function ThinkingRow({ text, live, at, ms, viewKey }) {
   const remember = (patch) => {
     if (viewKey !== void 0) rowViews.set(viewKey, { ...rowViews.get(viewKey), ...patch });
   };
-  const measure2 = () => {
+  const measure = () => {
     const el = box.current;
     atEnd.current = el.scrollHeight - el.scrollTop - el.clientHeight < 2;
     remember({ atEnd: atEnd.current, top: el.scrollTop });
@@ -8988,7 +8993,7 @@ function ThinkingRow({ text, live, at, ms, viewKey }) {
     view.current = void 0;
     if (atEnd.current) el.scrollTop = el.scrollHeight;
     else if (restore?.top !== void 0) el.scrollTop = restore.top;
-    measure2();
+    measure();
   }, [text, open]);
   const title = live ? t("Thinking") : t("Thought it through");
   return (0, import_react16.createElement)(
@@ -9001,7 +9006,7 @@ function ThinkingRow({ text, live, at, ms, viewKey }) {
       live && at !== void 0 ? (0, import_react16.createElement)(Elapsed, { at, className: "bt-think-time" }) : null,
       !live && ms !== void 0 ? (0, import_react16.createElement)("span", { className: "bt-think-time" }, `· ${elapsedLabel(Math.max(1e3, ms))}`) : null
     ),
-    (0, import_react16.createElement)("div", { ref: box, className: "bt-think-text", role: "region", "aria-label": title, tabIndex: 0, "data-fade": fade, onScroll: measure2 }, text)
+    (0, import_react16.createElement)("div", { ref: box, className: "bt-think-text", role: "region", "aria-label": title, tabIndex: 0, "data-fade": fade, onScroll: measure }, text)
   );
 }
 function useFileMentions({ node, openFile, fileMentions, useTurnData }) {
@@ -15595,7 +15600,7 @@ function Discover({ actions }) {
     const line = row.current;
     const full2 = mirror.current;
     if (!line || !full2) return void 0;
-    const measure2 = () => {
+    const measure = () => {
       const widths = [...full2.querySelectorAll(".bt-mk-pill")].map((node) => node.getBoundingClientRect().width);
       const room2 = line.clientWidth - 78;
       let used = 0;
@@ -15609,8 +15614,8 @@ function Discover({ actions }) {
       }
       setFits(Math.max(1, count));
     };
-    measure2();
-    const observer = new ResizeObserver(measure2);
+    measure();
+    const observer = new ResizeObserver(measure);
     observer.observe(line);
     return () => observer.disconnect();
   }, [pills]);
@@ -17347,7 +17352,7 @@ function installFrameWatch(frame) {
       return state.viewport === next.viewport && state.collapsedWidth === next.collapsedWidth && state.collapsed === next.collapsed ? state : next;
     });
   };
-  const measure2 = () => {
+  const measure = () => {
     for (const selector of ['[class*="_sidebarCol"]', '[class*="_centerCol"]']) {
       for (const column of document.querySelectorAll(selector)) {
         if (!watched.has(column)) {
@@ -17361,10 +17366,10 @@ function installFrameWatch(frame) {
   const schedule = () => {
     if (raf === 0) raf = requestAnimationFrame(() => {
       raf = 0;
-      measure2();
+      measure();
     });
   };
-  measure2();
+  measure();
   const mutations = new MutationObserver(schedule);
   mutations.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-sidebar-collapsed", "data-animating"] });
   window.addEventListener("resize", schedule);
@@ -21220,17 +21225,17 @@ function BrowserView({ bot, tabId, leaving, landed, actions, useBrowserPages, ho
       return void 0;
     }
     let raf = 0;
-    const measure2 = () => {
+    const measure = () => {
       cancelAnimationFrame(raf);
       raf = 0;
       const box = element.getBoundingClientRect();
       void actions.browserShow(tabId, showGuest ? { left: box.left, top: box.top, width: box.width, height: box.height } : null);
     };
     const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(measure2);
+      if (!raf) raf = requestAnimationFrame(measure);
     };
-    measure2();
-    const observer = new ResizeObserver(measure2);
+    measure();
+    const observer = new ResizeObserver(measure);
     observer.observe(element);
     window.addEventListener("resize", schedule);
     return () => {
@@ -22021,7 +22026,7 @@ function useTranscriptView() {
     let frame = 0;
     let watched = null;
     const observer = new MutationObserver(() => schedule());
-    const measure2 = () => {
+    const measure = () => {
       frame = 0;
       const scroller = document.querySelector("[data-conversation-scroll]");
       if (scroller !== watched) {
@@ -22052,7 +22057,7 @@ function useTranscriptView() {
       setView((prev) => prev && Object.keys(next).every((key) => prev[key] === next[key]) ? prev : next);
     };
     const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(measure2);
+      if (!frame) frame = requestAnimationFrame(measure);
     };
     document.addEventListener("scroll", schedule, true);
     window.addEventListener("resize", schedule);
@@ -28939,30 +28944,6 @@ function noticeApprovals({ work, roster, shownSession, openSession, since = Date
   return work.subscribe(notify);
 }
 
-// src/client/safe-top.js
-var VARIABLE = "--bt-safe-top";
-function measure() {
-  const root = document.documentElement;
-  const header = document.querySelector("[data-phase] header") ?? document.querySelector("header[data-window-drag]");
-  const top = header?.getBoundingClientRect?.().top;
-  if (typeof top === "number" && top > 0) root.style.setProperty(VARIABLE, `${Math.round(top)}px`);
-  else root.style.removeProperty(VARIABLE);
-}
-function installSafeTop() {
-  if (typeof document === "undefined") return void 0;
-  measure();
-  const observer = new MutationObserver(() => measure());
-  observer.observe(document.body, { childList: true, subtree: true });
-  window.addEventListener("resize", measure);
-  window.addEventListener("orientationchange", measure);
-  return () => {
-    observer.disconnect();
-    window.removeEventListener("resize", measure);
-    window.removeEventListener("orientationchange", measure);
-    document.documentElement.style.removeProperty(VARIABLE);
-  };
-}
-
 // src/client/open-listed.js
 function listedOpener({ list, open, refresh, current }) {
   let drop = () => {
@@ -28999,7 +28980,6 @@ function listedOpener({ list, open, refresh, current }) {
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
   ctx.effect(() => installLocale(ctx.get("locale")), "ds-bot: interface copy");
-  ctx.effect(() => installSafeTop(), "ds-bot: system bar height");
   const roster = createSource(EMPTY_ROSTER);
   migrateStorage();
   const unreadStore = sharedMap(STORAGE.unread);

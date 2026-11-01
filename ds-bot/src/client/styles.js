@@ -572,7 +572,12 @@ html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side
    chrome's row instead: title in the middle, buttons at the edges. */
 /* The row takes the phone layout's measured header band and centers in it, which is the
    line its own drawer toggle is drawn on; pill and menu button match that toggle's 28px. */
-html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 11px);height:36px;margin:0;z-index:20;align-items:center}
+/* One offset for everything that must clear the system bar: the page is edge to edge and
+   this WebView reports no inset, so the bar's height is the same measured fallback the
+   header row uses; the details panel starts on that line too. */
+html:has([data-mobile-nav="frame"]){--bt-safe-top:calc(env(safe-area-inset-top, 0px) + 11px)}
+html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:var(--bt-safe-top);height:36px;margin:0;z-index:20;align-items:center}
+html:has([data-mobile-nav="frame"]) .bt-panel{top:var(--bt-safe-top)}
 /* The layout's own header button floats: a solid surface, a hairline ring and the soft
    drop shadow. The pill and the session menu borrow that surface. */
 html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03),var(--bt-float-shadow);color:var(--bt-ink)}
