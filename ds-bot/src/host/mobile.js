@@ -29,6 +29,8 @@ function roomItem(rt, line) {
     // draws. Other kinds name themselves.
     ...(line.kind === 'notice' ? (line.reason === undefined ? {} : { event: line.reason }) : line.kind === undefined ? {} : { event: line.kind }),
     ...(line.files === undefined ? {} : { images: line.files.length }),
+    // The phone draws the files themselves; `images` stays as the count older clients read.
+    ...(line.files === undefined ? {} : { files: line.files.map(file => ({ id: file.attachmentId, mediaType: file.mediaType, ...(file.name === undefined ? {} : { name: file.name }) })) }),
     ...(wholeOf(line) === undefined ? {} : { whole: wholeOf(line) }),
   }
   return item

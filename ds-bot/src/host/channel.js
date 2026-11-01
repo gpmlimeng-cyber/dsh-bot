@@ -528,7 +528,11 @@ export function install(rt) {
         }
         case 'send': {
           const text = String(body.text ?? '').trim()
-          if (text === '' || typeof body.sessionId !== 'string') return fail('Nothing to send', 'bot/invalid')
+          // A phone message may carry images and files beside its text: images inline as
+          // base64, files as receipts the client already staged in this session.
+          const images = (Array.isArray(body.images) ? body.images : []).filter(image => typeof image?.mediaType === 'string' && typeof image?.data === 'string' && image.data !== '')
+          const fileReceiptIds = (Array.isArray(body.fileReceiptIds) ? body.fileReceiptIds : []).filter(id => typeof id === 'string' && id !== '')
+          if ((text === '' && images.length === 0 && fileReceiptIds.length === 0) || typeof body.sessionId !== 'string') return fail('Nothing to send', 'bot/invalid')
           await rt.load()
           // A Bot id or an earlier part of its own chat means the current part.
           const past = rt.pastOwners.get(body.sessionId)
@@ -538,7 +542,11 @@ export function install(rt) {
             requestId: randomUUID(),
             sessionId,
             mode: 'queue',
-            content: [{ type: 'text', text }],
+            content: [
+              ...(text === '' ? [] : [{ type: 'text', text }]),
+              ...images.map(image => ({ type: 'image', mediaType: image.mediaType, data: image.data, ...(image.name === undefined ? {} : { name: String(image.name) }) })),
+              ...fileReceiptIds.map(receiptId => ({ type: 'file', receiptId })),
+            ],
           }, AbortSignal.timeout(30_000))
           return ok(true)
         }
