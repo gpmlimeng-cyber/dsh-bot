@@ -192,10 +192,10 @@ index 23ef1007..864f7d9b 100644
        items.map((item, index) => (item.sep
          ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
 diff --git a/ds-bot/src/client/cells.js b/ds-bot/src/client/cells.js
-index 3555f0cf..3ba64a97 100644
+index 3555f0cf..93cf8743 100644
 --- a/ds-bot/src/client/cells.js
 +++ b/ds-bot/src/client/cells.js
-@@ -25,13 +25,39 @@ export { clockLabel }
+@@ -25,13 +25,40 @@ export { clockLabel }
  // -------------------------------------------------------------------------
  // Chat cells
  
@@ -203,9 +203,10 @@ index 3555f0cf..3ba64a97 100644
 +// sentence the group needs and the detail waits behind "Show all". Folding only hides
 +// what a preview keeps, so a reply barely past the limit stays whole. Private chats keep
 +// the wider FOLD_AT: there the whole reply is what the user came for.
-+// The limits are exceeded, not reached: `chars: 299` folds a 300-character paragraph,
-+// `lines: 15` leaves fifteen lines whole and folds the sixteenth.
-+export const GROUP_FOLD = { at: { chars: 299, lines: 15 }, preview: { chars: 120, lines: 4 } }
++// A group reply folds at the line it marks (an empty line, or a rule) and keeps the whole
++// point above it. Only a reply with no mark falls back to these, itself exceeded rather
++// than reached: a 1000-character or 20-line one still reads whole.
++export const GROUP_FOLD = { at: { chars: 1000, lines: 20 }, preview: { chars: 120, lines: 4 } }
 +
  const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied') }, footnotes: t('Footnotes') })
  
@@ -236,7 +237,7 @@ index 3555f0cf..3ba64a97 100644
    const onClick = (event) => {
      const target = mentionTarget(event)
      if (target === null) return
-@@ -44,7 +70,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
+@@ -44,7 +71,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
      texts.map((text, index) => {
        const last = index === texts.length - 1
        return h(Bubble, {
@@ -245,7 +246,7 @@ index 3555f0cf..3ba64a97 100644
          picked: msgKey ? reactions?.[index] ?? [] : [],
          live: streaming && last,
          lead: lead && last ? lead : null,
-@@ -53,10 +79,13 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
+@@ -53,10 +80,13 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
      }))
  }
  
@@ -262,7 +263,7 @@ index 3555f0cf..3ba64a97 100644
    const row = useRef(null)
    // Touch has no hover: a tap on the bubble opens its tools, a tap elsewhere
    // closes them. Interactive targets keep their own meaning.
-@@ -295,7 +324,7 @@ function SpeakerHead({ bot, time }) {
+@@ -295,7 +325,7 @@ function SpeakerHead({ bot, time }) {
  // One Bot message inside a group chat: avatar, name (with its group role), when it ran
  // and how long it took, bubble. The flat layout moves the avatar from beside the last
  // bubble to the head of the name row, so the text below runs the whole width.
@@ -271,7 +272,7 @@ index 3555f0cf..3ba64a97 100644
    const lead = h('button', { type: 'button', className: 'bt-lead', 'aria-label': t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
      h(BotMark, { bot, size: 22 }))
    const flat = layoutOf(roster.prefs) === 'flat'
-@@ -305,7 +334,7 @@ function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey
+@@ -305,7 +335,7 @@ function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey
        room?.admin === bot.id ? h('span', { className: 'bt-group-role' }, t('Admin')) : null,
        Number.isFinite(time) ? h('span', { className: 'bt-group-time', title: clockLabel(time) }, messageClock(time)) : null,
        took ? h('span', { className: 'bt-group-took', title: t('Ran for {duration}', { duration: took }) }, took) : null),
@@ -280,7 +281,7 @@ index 3555f0cf..3ba64a97 100644
  }
  
  // A member's messages in a row, as one block under its name: what it says while it
-@@ -545,7 +574,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
+@@ -545,7 +575,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
    }
  }
  
@@ -289,7 +290,7 @@ index 3555f0cf..3ba64a97 100644
    const roster = useRoster(value => value)
    const data = node.data
    const source = data.source !== null && typeof data.source === 'object' ? data.source : {}
-@@ -607,7 +636,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
+@@ -607,7 +637,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
          const text = stripHeader(contentText(data.content))
          // A trigger's data carries no turn; its event seq is the one durable name of this post.
          return h(GroupMessage, {
@@ -298,7 +299,7 @@ index 3555f0cf..3ba64a97 100644
            whole: file ? { length: source.length, load: () => actions.fileText(file) } : undefined,
          })
        }
-@@ -869,7 +898,7 @@ function scanReplies(text, start, replies) {
+@@ -869,7 +899,7 @@ function scanReplies(text, start, replies) {
    }
  }
  
@@ -307,7 +308,7 @@ index 3555f0cf..3ba64a97 100644
    const [live, setLive] = useState({ replies: [], speaking: null })
    useEffect(() => {
      if (done) return undefined
-@@ -949,7 +978,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
+@@ -949,7 +979,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
        if (reply.kind === 'done') {
          return h('div', { key: `${reply.botId}-${index}`, className: 'bt-event' }, t('{name} finished its work', { name: bot.name }))
        }
@@ -326,7 +327,7 @@ index 3555f0cf..3ba64a97 100644
      }),
      pending.map((id) => {
        const bot = roster.byId[id]
-@@ -993,7 +1032,7 @@ function useShownCards(actions, sessionId, callIds) {
+@@ -993,7 +1033,7 @@ function useShownCards(actions, sessionId, callIds) {
    }, [sessionId, key])
  }
  
@@ -335,7 +336,7 @@ index 3555f0cf..3ba64a97 100644
    const tool = toolName(call)
    const done = call.kind === 'tool-result'
    const { text: arg, value: argValue } = toolArgs(call)
-@@ -1019,7 +1058,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1019,7 +1059,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
        return done && target ? h(EventLine, { prefix: t('Updated'), bots: [target], onOpen: bot => actions.openSession(bot.id) }) : null
      }
      case 'group_relay':
@@ -344,7 +345,7 @@ index 3555f0cf..3ba64a97 100644
      case 'create_group':
      case 'update_group':
      case 'delete_group':
-@@ -1074,7 +1113,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1074,7 +1114,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
    }
  }
  
@@ -353,7 +354,7 @@ index 3555f0cf..3ba64a97 100644
    const roster = useRoster(value => value)
    const heldCards = useHeldCards?.(state => state[sessionId])
    const root = node.data.root
-@@ -1090,6 +1129,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
+@@ -1090,6 +1130,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
    useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note)
    useShownCards(actions, sessionId, drawn.filter(call => CARDS.has(toolName(call)) && call.callId).map(call => call.callId))
    if (drawn.length === 0) return null
@@ -550,7 +551,7 @@ index 00000000..8fca0d0f
 +  if (fromDrawer === true) collapse?.()
 +}
 diff --git a/ds-bot/src/client/fold.js b/ds-bot/src/client/fold.js
-index 2b49959d..5290e595 100644
+index 2b49959d..92f39bf5 100644
 --- a/ds-bot/src/client/fold.js
 +++ b/ds-bot/src/client/fold.js
 @@ -9,6 +9,10 @@ export const FOLD_HUGE = { chars: 20_000, lines: Infinity }
@@ -564,7 +565,7 @@ index 2b49959d..5290e595 100644
  const FENCE = /^ {0,3}(`{3,}|~{3,})/
  
  // Cuts `text` at `end` code units, backing up one when the last character is a
-@@ -18,6 +22,44 @@ function cutAt(text, end) {
+@@ -18,6 +22,58 @@ function cutAt(text, end) {
    return text.slice(0, code >= 0xd800 && code <= 0xdbff ? end - 1 : end)
  }
  
@@ -581,6 +582,20 @@ index 2b49959d..5290e595 100644
 +    if (endsSentence(text, at)) return at + 1
 +  }
 +  return -1
++}
++
++// A reply can mark where its point ends and its detail starts: an empty line, or a line
++// that is only a rule. A fold there keeps the whole point, so the point is never cut.
++// Returns the offset past the mark, or 0 when the reply has none.
++const RULE = /^[ \t]{0,3}(?:-{3,}|\*{3,}|_{3,})[ \t]*$/
++function coreEnd(text) {
++  let from = 0
++  for (const line of text.split('\n')) {
++    const end = Math.min(from + line.length + 1, text.length)
++    if (from > 0 && (line.trim() === '' || RULE.test(line))) return end
++    from = end
++  }
++  return 0
 +}
 +
 +// Where the last blank line before `to` ends, so a preview keeps the paragraph above it
@@ -609,18 +624,19 @@ index 2b49959d..5290e595 100644
  // More than `max` lines, counted only as far as needed.
  function moreLines(text, max) {
    let lines = 1
-@@ -29,19 +71,32 @@ function moreLines(text, max) {
+@@ -29,19 +85,40 @@ function moreLines(text, max) {
  
  // The start of a long text, cut at a line end (or inside a very long first line). In
  // Markdown a code fence left open is closed, so the preview does not run on as code.
 -// Null when `text` is within `limit`.
 -export function foldPreview(text, limit = FOLD_AT, markdown = true) {
+-  if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null
 +// Null when `text` is within `limit`, or when folding it would hide less than HIDDEN:
 +// `preview` is what a folded bubble keeps, and `force` folds regardless (a message kept
 +// only in part must fold however short its start).
++const DETAIL = 100
++
 +export function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false) {
-   if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null
-+  if (!force && text.length - preview.chars < HIDDEN.chars && !moreLines(text, preview.lines + HIDDEN.lines)) return null
    // Blank lines first: the preview starts at the first visible character. An
    // all-blank message has nothing to preview, so it does not fold at all.
    const body = text.replace(/^(\s*\n)+/, '')
@@ -629,6 +645,14 @@ index 2b49959d..5290e595 100644
 -  if (head.length > PREVIEW_CHARS) {
 -    const cut = head.lastIndexOf('\n', PREVIEW_CHARS)
 -    head = cutAt(head, cut > 0 ? cut : PREVIEW_CHARS)
++  // A marked point folds there, whole, as long as real detail follows it; a reply whose
++  // detail is a line long is not worth folding.
++  if (!force) {
++    const core = coreEnd(body)
++    if (core > 0 && body.length - core >= DETAIL) return body.slice(0, core)
++  }
++  if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null
++  if (!force && text.length - preview.chars < HIDDEN.chars && !moreLines(text, preview.lines + HIDDEN.lines)) return null
 +  let head = body.split('\n', preview.lines).join('\n')
 +  if (head.length > preview.chars) {
 +    // A paragraph break wins: the reply leads with its point, and a fold shows that point.
@@ -649,7 +673,7 @@ index 2b49959d..5290e595 100644
    if (!markdown) return head
    let open = null
    let openLine = -1
-@@ -56,7 +111,7 @@ export function foldPreview(text, limit = FOLD_AT, markdown = true) {
+@@ -56,7 +133,7 @@ export function foldPreview(text, limit = FOLD_AT, markdown = true) {
      // The cut kept only the fence marker (a card opening like ```dsh-ui on
      // its own line): an empty fence renders nothing, so pull the start of
      // the fenced text in as the preview instead.
@@ -658,7 +682,7 @@ index 2b49959d..5290e595 100644
      lines = head.split('\n')
      open = null
      openLine = -1
-@@ -83,13 +138,15 @@ export const stripLongNote = text => text.replace(/^\[A long message: \d+ charac
+@@ -83,13 +160,15 @@ export const stripLongNote = text => text.replace(/^\[A long message: \d+ charac
  // `whole`, when `text` is only the start of the message: its `length`, and `load()`,
  // which reads it whole ({ text, whole }). `live`: still streaming, never folded.
  // `markdown`: false for plain text.
@@ -677,7 +701,7 @@ index 2b49959d..5290e595 100644
    const count = (cut ? whole.length : text.length).toLocaleString()
    if (!open) {
      const show = async () => {
-@@ -98,7 +155,12 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
+@@ -98,7 +177,12 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
        setRead('loading')
        setRead(await whole.load() ?? { whole: false })
      }
@@ -16637,7 +16661,7 @@ index 00000000..d745c987
 +  assert.ok(mask !== null, 'the shell paperclip is not repainted as a plus where ours is missing')
 +})
 diff --git a/ds-bot/test/fold.test.js b/ds-bot/test/fold.test.js
-index 331d986a..f7426404 100644
+index 331d986a..27dadcea 100644
 --- a/ds-bot/test/fold.test.js
 +++ b/ds-bot/test/fold.test.js
 @@ -104,7 +104,8 @@ test('a long text opens and closes in place; a short one has no control', async
@@ -16660,7 +16684,7 @@ index 331d986a..f7426404 100644
    await buttons(folded.control)[0].props.onClick()
    assert.equal(render(start, { whole }).shown.length, 30_000)
    assert.deepEqual(buttons(render(start, { whole }).control).map(words), ['Show less'])
-@@ -150,3 +152,22 @@ test('a streaming text never folds', () => {
+@@ -150,3 +152,24 @@ test('a streaming text never folds', () => {
    fresh()
    assert.equal(render(lines(40), { live: true }).control, null)
  })
@@ -16676,9 +16700,11 @@ index 331d986a..f7426404 100644
 +  assert.equal(cut(`${'a'.repeat(140)}。${'b'.repeat(160)}`), `${'a'.repeat(140)}。`, 'the first end past the budget wins, up to 130%')
 +  assert.equal(cut('c'.repeat(300)), 'c'.repeat(120), 'one long sentence cuts at the budget')
 +  assert.equal(cut(Array.from({ length: 62 }, () => 'word').join(' ')), Array.from({ length: 24 }, () => 'word').join(' '), 'a cut falls back to a word end')
-+  // A paragraph break wins over a sentence: the preview keeps the point and the blank
-+  // line under it, however early the point is.
++  // A marked point folds there, whole, however early it is.
 +  assert.equal(cut(`结论。\n\n${'d'.repeat(800)}`), '结论。\n\n')
++  assert.equal(cut(`结论。\n---\n${'d'.repeat(800)}`), `结论。\n---\n`)
++  // A mark with only a line of detail after it does not fold.
++  assert.equal(cut(`结论。\n\n很短`), null, 'a mark with one short line after it does not fold')
 +  // A decimal point is not a sentence end.
 +  const number = `a${'a'.repeat(89)}3.14${'b'.repeat(210)}`
 +  assert.equal(cut(number), number.slice(0, 120))
@@ -17602,7 +17628,7 @@ index 4985bf19..5abf15ce 100644
      "usage-page.js": {
        "14px": 5,
 diff --git a/ds-bot/test/tool-cells.test.js b/ds-bot/test/tool-cells.test.js
-index 18780147..f3dda3b1 100644
+index 18780147..60bbca25 100644
 --- a/ds-bot/test/tool-cells.test.js
 +++ b/ds-bot/test/tool-cells.test.js
 @@ -9,7 +9,8 @@ import { build } from 'esbuild'
@@ -17624,7 +17650,7 @@ index 18780147..f3dda3b1 100644
  
  // Runs the effects collected since the last render; returns the cleanups.
  const mount = () => {
-@@ -853,3 +854,56 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
+@@ -853,3 +854,58 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
    assert.ok(frame.props.srcDoc.indexOf('Content-Security-Policy') < frame.props.srcDoc.indexOf('<b>hi</b>'), 'the policy comes before the markup')
    assert.equal(frame.props.title, 'A greeting')
  })
@@ -17664,22 +17690,24 @@ index 18780147..f3dda3b1 100644
 +  assert.deepEqual(JSON.parse(JSON.stringify(asked)), [file])
 +})
 +
-+// A group line folds only when folding hides something: past 300 characters, and keeping
-+// 120 of them. A reply barely past the limit stays whole, and so does an 8-line one.
-+test('a group reply folds only when folding hides something', () => {
++// A group reply folds at the line it marks, and keeps the whole point above it. With no
++// mark it folds past 1000 characters or 20 lines, and keeps 120 characters of four.
++test('a group reply folds at its own mark, or past a long enough line', () => {
 +  const folded = words => findAll(show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: words, time: 1 }] } }), { sessionId: 'room' }), node => node.props?.className === 'bt-more')
 +  const lines = count => Array.from({ length: count }, (_, index) => `line ${index}`).join('\n')
-+  assert.deepEqual([200, 301, 800].map(count => folded('z'.repeat(count)).length), [0, 1, 1], '200 stays whole; 301 and 800 fold')
-+  assert.deepEqual([14, 15, 16].map(count => folded(lines(count)).length), [0, 0, 1], '15 lines stay whole; 16 fold')
-+  assert.match(text(folded(lines(16))[0]), /Show all · 16 lines/, 'a line-triggered fold counts lines')
-+  // A paragraph with no break is folded by its characters instead.
-+  assert.deepEqual([299, 300, 301].map(count => folded('z'.repeat(count)).length), [0, 1, 1], 'a 300-character paragraph folds')
-+  assert.match(text(folded('z'.repeat(301))[0]), /Show all · 301 characters/)
-+  // A folded reply keeps 120 characters, so 301 that fold hide 181 of them.
-+  const at = { chars: 300, lines: 8 }
++  // The point reads whole, however short it is; the detail below it folds.
++  assert.equal(folded(`结论。\n\n${'d'.repeat(800)}`).length, 1)
++  assert.equal(folded(`结论。\n---\n${'d'.repeat(800)}`).length, 1)
++  // No mark: a 900-character line stays whole, a 1100-character one folds.
++  assert.deepEqual([900, 1100].map(count => folded('z'.repeat(count)).length), [0, 1])
++  assert.match(text(folded('z'.repeat(1100))[0]), /Show all · 1,100 characters/)
++  assert.deepEqual([20, 21].map(count => folded(lines(count)).length), [0, 1], '20 lines stay whole; 21 fold')
++  const at = { chars: 1000, lines: 20 }
 +  const preview = { chars: 120, lines: 4 }
-+  assert.equal(foldPreview('z'.repeat(301), at, true, preview).length, 120)
-+  assert.equal(foldPreview('z'.repeat(200), at, true, preview), null, '200 hides too little to fold')
++  assert.equal(foldPreview(`结论。\n\n${'d'.repeat(800)}`, at, true, preview), '结论。\n\n')
++  assert.equal(foldPreview('z'.repeat(1100), at, true, preview).length, 120)
++  assert.equal(foldPreview('z'.repeat(900), at, true, preview), null, '900 characters stay whole')
++  assert.equal(foldPreview('结论。\n\n很短', at, true, preview), null, 'a mark with one short line after it does not fold')
 +})
 diff --git a/ds-bot/test/user-bubble.test.js b/ds-bot/test/user-bubble.test.js
 index bdc9eb87..35fd4e50 100644

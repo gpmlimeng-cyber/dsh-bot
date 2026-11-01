@@ -9,7 +9,7 @@
 - hunk 数：**169**（`grep -c '^@@' design/ds-bot-patches.patch`）
 - **行号**：见 `design/ds-bot-patches.hunks.md`，由 `node tools/patch-ledger.mjs` 生成，勿手改。
   这里**不写行号**：手写行号已经错了三次，机械表是唯一来源。
-- minus 行共 **433**，分布在 29 个文件：`sidebar.js` 236、`styles.js` 70、`test/sidebar-switch.test.js` 33、`cells.js` 15、`fold.js` 12、`src/host/groups.js` 7、`index.js` 6、`icons.js` 6、`composer.js` 6、`new-chat.js` 5、`bot-settings.js` 5、`team-actions.js` 4、`test/style-debt.json` 3、`test/message-layout.test.js` 3、`test/tool-cells.test.js` 2、`test/fold.test.js` 2、`member-status.js` 2、`i18n.js` 2、`details-drawer.js` 2、`create-bot.js` 2、`browser-pane.js` 2、`test/user-bubble.test.js` 1、`test/client-bundle.test.js` 1、`src/host/channel.js` 1、`themes.js` 1、`settings.js` 1、`header.js` 1、`scripts/style-debt.mjs` 1、`ds-bot/index.js` 1；其余为纯 `+`
+- minus 行共 **434**，分布在 29 个文件：`sidebar.js` 236、`styles.js` 70、`test/sidebar-switch.test.js` 33、`cells.js` 15、`fold.js` 13、`src/host/groups.js` 7、`index.js` 6、`icons.js` 6、`composer.js` 6、`new-chat.js` 5、`bot-settings.js` 5、`team-actions.js` 4、`test/style-debt.json` 3、`test/message-layout.test.js` 3、`test/tool-cells.test.js` 2、`test/fold.test.js` 2、`member-status.js` 2、`i18n.js` 2、`details-drawer.js` 2、`create-bot.js` 2、`browser-pane.js` 2、`test/user-bubble.test.js` 1、`test/client-bundle.test.js` 1、`src/host/channel.js` 1、`themes.js` 1、`settings.js` 1、`header.js` 1、`scripts/style-debt.mjs` 1、`ds-bot/index.js` 1；其余为纯 `+`
 - 冲突自检：`tools/patch-conflict-check.sh <ref>`（升级前先跑，输出 `clean` 才合并）
 
 ## 1. 手改的文件（进补丁，共 31 个）
