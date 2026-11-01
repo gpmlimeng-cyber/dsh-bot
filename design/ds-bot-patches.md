@@ -5,8 +5,8 @@
 
 - 基线：**本仓标签 `v0.2.4`**（`f823773`）。生成口径（唯一来源，别凭记忆）：
   `git diff v0.2.4 HEAD -- ds-bot ':!ds-bot/client.js' ':!ds-bot/src/client/gaze.js' > design/ds-bot-patches.patch`
-- 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，**65** 个文件，含宿主侧 `src/host/channel.js`、`src/host/mcp.js` 与 `ds-bot/index.js` 的模块注册；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
-- hunk 数：**187**（`grep -c '^@@' design/ds-bot-patches.patch`）
+- 补丁：`design/ds-bot-patches.patch`（默认 `-U3`，**67** 个文件，含宿主侧 `src/host/channel.js`、`src/host/mcp.js` 与 `ds-bot/index.js` 的模块注册；`gaze.js` 与 `client.js` 不进补丁，见第 2 节）
+- hunk 数：**190**（`grep -c '^@@' design/ds-bot-patches.patch`）
 - **行号**：见 `design/ds-bot-patches.hunks.md`，由 `node tools/patch-ledger.mjs` 生成，勿手改。
   这里**不写行号**：手写行号已经错了三次，机械表是唯一来源。
 - minus 行共 **443**，分布在 31 个文件：`sidebar.js` 236、`styles.js` 71、`test/sidebar-switch.test.js` 33、`cells.js` 18、`fold.js` 13、`src/host/groups.js` 7、`index.js` 6、`icons.js` 6、`composer.js` 6、`new-chat.js` 5、`bot-settings.js` 5、`team-actions.js` 4、`settings.js` 4、`test/style-debt.json` 3、`test/message-layout.test.js` 3、`test/tool-cells.test.js` 2、`test/fold.test.js` 2、`member-status.js` 2、`i18n.js` 2、`details-drawer.js` 2、`create-bot.js` 2、`browser-pane.js` 2、`test/user-bubble.test.js` 1、`test/client-bundle.test.js` 1、`src/host/prompt.js` 1、`src/host/channel.js` 1、`src/host/approvals.js` 1、`themes.js` 1、`header.js` 1、`scripts/style-debt.mjs` 1、`ds-bot/index.js` 1；其余为纯 `+`
@@ -136,6 +136,16 @@ B 档：**只记录不拦截**。两个能起一轮的入口各包一层，写 `
 
 判定顺序与日志字段见 `design/superagent-c-decisions.md`；行号见 `design/ds-bot-patches.hunks.md`。
 日志独立成 `authorization-tools.jsonl`，不混进 `authorization.jsonl`（后者按行数算指标）。
+
+## 1f. 窗口三档（③）
+
+纯新增，无删改行：`src/client/tier.js`（`tierOf(width,height)`）、`test/tier.test.js`、`styles.js` 末尾三条
+`html[data-bt-tier=compact]:not(:has([data-mobile-nav=frame]))` 规则、`index.js` 里一个 `ctx.effect` 挂载
+`watchTier` 写到 `<html data-bt-tier>`。
+
+- 分档：宽 `<600` compact、`600–840` medium、`≥840` expanded；**高 `<480` 一律 compact**（横屏手机）。
+- 只在宿主没有移动端 frame 时生效，避免和宿主自己的手机布局叠两层；因此横屏手机即使被宿主判成桌面，也拿到整屏的面板与设置。
+- 没有开关：分档是布局，不是偏好。
 
 ## 2. 生成物（不进补丁）
 

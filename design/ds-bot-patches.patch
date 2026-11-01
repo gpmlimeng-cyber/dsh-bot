@@ -1203,10 +1203,13 @@ index eee56758..df5ba78f 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index 31f66057..ff94d074 100644
+index 31f66057..08253384 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
-@@ -3,7 +3,8 @@ import { isHex, inkText, paintCss } from './inks.js'
+@@ -1,9 +1,11 @@
+ import { call } from './api.js'
++import { watchTier } from './tier.js'
+ import { isHex, inkText, paintCss } from './inks.js'
  import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
  import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
  import { teamActions } from './team-actions.js'
@@ -1216,7 +1219,7 @@ index 31f66057..ff94d074 100644
  import { MENTION_ORIGIN, currentPart } from './text.js'
  import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
  import { lookOf } from './mark.js'
-@@ -35,7 +36,10 @@ import { FOLDER_CSS } from './folder-menu.js'
+@@ -35,7 +37,10 @@ import { FOLDER_CSS } from './folder-menu.js'
  import { USAGE_CSS } from './usage-page.js'
  import { SCHEDULE_CSS } from './schedules.js'
  import { STORAGE, migrateStorage } from './storage.js'
@@ -1227,7 +1230,7 @@ index 31f66057..ff94d074 100644
  import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
  import { installLocale, language, t } from './i18n.js'
  import { noteClientError, quietly } from './diagnostics.js'
-@@ -144,6 +148,8 @@ export function apply(ctx) {
+@@ -144,6 +149,8 @@ export function apply(ctx) {
    const PREFS_KEY = STORAGE.prefs
    let savedPrefs = {}
    try { savedPrefs = JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') ?? {} } catch { savedPrefs = {} }
@@ -1236,7 +1239,7 @@ index 31f66057..ff94d074 100644
    const writeUnread = (id, value) => {
      const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
      ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
-@@ -326,23 +332,42 @@ export function apply(ctx) {
+@@ -326,23 +333,42 @@ export function apply(ctx) {
        const layout = layoutOf(prefs)
        const width = widthOf(prefs)
        const flatWidth = flatWidthOf(prefs)
@@ -1282,7 +1285,7 @@ index 31f66057..ff94d074 100644
      const offRegistry = registry.subscribe(render)
      return () => {
        offRoster()
-@@ -352,6 +377,7 @@ export function apply(ctx) {
+@@ -352,6 +378,7 @@ export function apply(ctx) {
        } finally {
          delete document.body.dataset.btMotion
          delete document.body.dataset.btLayout
@@ -1290,7 +1293,20 @@ index 31f66057..ff94d074 100644
          document.body.style.removeProperty('--bt-msg-w')
          document.body.style.removeProperty('--bt-flat-w')
          style.remove()
-@@ -497,8 +523,150 @@ export function apply(ctx) {
+@@ -359,6 +386,12 @@ export function apply(ctx) {
+     }
+   }
+ 
++  // Our own layout rules read this tier; the host's mobile frame keeps its own phone shape.
++  ctx.effect(() => {
++    const stop = watchTier(tier => { document.documentElement.dataset.btTier = tier })
++    return () => { stop(); delete document.documentElement.dataset.btTier }
++  })
++
+   ctx.effect(() => {
+     const hub = { registerShape, registerTheme, themes: () => Object.keys(allThemes()), shapes: () => Object.keys(SHAPES) }
+     const queued = Array.isArray(window.dshBotQueue) ? window.dshBotQueue : []
+@@ -497,8 +530,150 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
@@ -1442,7 +1458,7 @@ index 31f66057..ff94d074 100644
      // The left column's own preference: 'open', 'rail' or 'hidden'. The switch
      // remembers the shown one it hid; a drag sets the open column's width.
      setSidebarPref: (pref) => {
-@@ -884,6 +1052,10 @@ export function apply(ctx) {
+@@ -884,6 +1059,10 @@ export function apply(ctx) {
      () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
      () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
      () => shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
@@ -1453,7 +1469,7 @@ index 31f66057..ff94d074 100644
    ]
    const installConversation = () => [
      () => installCompiledStyles(CONVERSATION_CSS, 'conversation'),
-@@ -1016,7 +1188,7 @@ export function apply(ctx) {
+@@ -1016,7 +1195,7 @@ export function apply(ctx) {
        } catch {
          declared = false
        }
@@ -1462,7 +1478,7 @@ index 31f66057..ff94d074 100644
        if (!declared) {
          // The slot itself is not declared yet; keep watching for a while.
          if (verifyAttempts < 20) {
-@@ -1031,8 +1203,297 @@ export function apply(ctx) {
+@@ -1031,8 +1210,297 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -1760,7 +1776,7 @@ index 31f66057..ff94d074 100644
        clearTimeout(verifyTimer)
        verifyAttempts = 0
        verifyTimer = setTimeout(verifySidebar, 250)
-@@ -1043,6 +1504,13 @@ export function apply(ctx) {
+@@ -1043,6 +1511,13 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
@@ -10915,7 +10931,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..f9122d0b 100644
+index eac6ea54..6d119ae5 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -11852,7 +11868,7 @@ index eac6ea54..f9122d0b 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1820,12 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1172,6 +1820,19 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -11862,6 +11878,13 @@ index eac6ea54..f9122d0b 100644
 +  .bt-plus,.bt-mic,.bt-voice{width:32px;height:32px}
 +  [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important}
 +}
++
++/* Window tiers (tier.js): compact under 600 wide or under 480 tall, medium to 840,
++   expanded above. The host's own mobile frame already gives the phone its shape; these
++   rules give a short landscape window the same one when that frame is absent. */
++html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-settings{--bt-set-w:100vw;--bt-set-h:100dvh;width:100vw;height:100dvh;border-radius:0;border-width:0;flex-direction:column}
++html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-market-frame{padding:0;align-items:stretch}
++html[data-bt-tier=compact]:not(:has([data-mobile-nav="frame"])) .bt-market-pane{width:100vw;max-width:100vw;height:100dvh;border-radius:0;flex-direction:column}
  `
  
  // -------------------------------------------------------------------------
@@ -12073,6 +12096,38 @@ index 82c3b3b9..5806d08a 100644
 +export const foldAtOf = (prefs) => (isFoldAt(prefs?.saFoldAt) ? { chars: prefs.saFoldAt.chars, lines: prefs.saFoldAt.lines } : SA_FOLD_AT)
 +
  export const flatWidthOf = prefs => percent(prefs?.flatWidth, 100)
+diff --git a/ds-bot/src/client/tier.js b/ds-bot/src/client/tier.js
+new file mode 100644
+index 00000000..bc3b25d5
+--- /dev/null
++++ b/ds-bot/src/client/tier.js
+@@ -0,0 +1,26 @@
++// Window tiers, read by our own layout rules. Width decides — compact under 600, medium to
++// 840, expanded above it — and a window shorter than 480 is compact whatever its width: a
++// phone on its side has room across but only a few lines down, so splitting it into columns
++// gives each one nothing.
++export const TIER_MEDIUM = 600
++export const TIER_EXPANDED = 840
++export const TIER_SHORT = 480
++
++export function tierOf(width, height) {
++  if (height < TIER_SHORT) return 'compact'
++  if (width < TIER_MEDIUM) return 'compact'
++  if (width < TIER_EXPANDED) return 'medium'
++  return 'expanded'
++}
++
++// Calls back with the tier now and on every resize, and returns the cleanup.
++export function watchTier(onChange) {
++  const update = () => onChange(tierOf(window.innerWidth, window.innerHeight))
++  update()
++  window.addEventListener('resize', update)
++  window.addEventListener('orientationchange', update)
++  return () => {
++    window.removeEventListener('resize', update)
++    window.removeEventListener('orientationchange', update)
++  }
++}
 diff --git a/ds-bot/src/host/approvals.js b/ds-bot/src/host/approvals.js
 index 9e7fa71a..b3f4320d 100644
 --- a/ds-bot/src/host/approvals.js
@@ -18178,6 +18233,28 @@ index 00000000..17f6e7c6
 +    assert.throws(() => applySuperAgentPrefs({}, { saFoldAt }), (error) => error.code === 'bot/invalid', `refused: ${JSON.stringify(saFoldAt)}`)
 +  }
 +  assert.deepEqual(applySuperAgentPrefs({ saFold: false }, { saFold: true }), { saFold: true }, 'a switch writes both ways')
++})
+diff --git a/ds-bot/test/tier.test.js b/ds-bot/test/tier.test.js
+new file mode 100644
+index 00000000..713d43d9
+--- /dev/null
++++ b/ds-bot/test/tier.test.js
+@@ -0,0 +1,16 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { TIER_EXPANDED, TIER_MEDIUM, TIER_SHORT, tierOf } from '../src/client/tier.js'
++
++// The width decides between the three tiers; a short window is compact whatever its width,
++// because a phone on its side has width but only a few lines to give a column.
++test('the window has three width tiers, and a short one is compact', () => {
++  assert.deepEqual(
++    [tierOf(TIER_MEDIUM - 1, 900), tierOf(TIER_MEDIUM, 900), tierOf(TIER_EXPANDED - 1, 900), tierOf(TIER_EXPANDED, 900)],
++    ['compact', 'medium', 'medium', 'expanded'],
++  )
++  assert.equal(tierOf(915, TIER_SHORT - 1), 'compact', 'a phone on its side stays compact')
++  assert.equal(tierOf(700, TIER_SHORT), 'medium', 'at the height limit the width decides again')
++  assert.equal(tierOf(915, TIER_SHORT), 'expanded')
++  assert.equal(tierOf(400, TIER_SHORT - 1), 'compact')
 +})
 diff --git a/ds-bot/test/tool-cells.test.js b/ds-bot/test/tool-cells.test.js
 index 18780147..eb6ab5d3 100644
