@@ -3481,8 +3481,11 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
 /* A phone pane hangs from the line the conversation header ends on: the phone layout
    measures that band as --mobile-nav-header-h, which already sits below the system bars
    (env(safe-area-inset-top) reads 0 in this WebView, so it cannot be used alone). */
-html:has([data-mobile-nav="frame"]) .bt-drawer-top .bt-round{width:28px;height:28px}
-html:has([data-mobile-nav="frame"]) .bt-drawer-top .bt-round svg{width:16px;height:16px}
+/* The details sheet's own top row sits on the line the conversation header uses: same
+   28px controls, and the padding puts their centres where the header's buttons are. */
+html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top{padding-top:4px}
+html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top .bt-round{width:28px;height:28px}
+html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top .bt-round svg{width:16px;height:16px}
 .bt-pane{position:fixed;top:var(--dsh-frame-chrome-top,0px);right:0;bottom:0;z-index:45;pointer-events:auto;background:var(--bt-main);color:var(--bt-ink);display:flex;font-family:var(--bt-font)}
 .bt-dialog{flex:1;display:flex;flex-direction:column;min-width:0}
 .bt-dialog .bt-head{height:62px}
