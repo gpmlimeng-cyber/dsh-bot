@@ -37,6 +37,20 @@ function endIn(text, from, to) {
   return -1
 }
 
+// Where the last blank line before `to` ends, so a preview keeps the paragraph above it
+// and the empty line that separates it: a reply that leads with its point folds to that
+// point. -1 when the text has no paragraph break before the budget.
+function paragraphIn(text, to) {
+  const end = Math.min(to, text.length)
+  for (let at = end - 2; at >= 0; at -= 1) {
+    if (text[at] !== '\n') continue
+    let next = at + 1
+    while (next < end && (text[next] === ' ' || text[next] === '\t')) next += 1
+    if (next < end - 1 && text[next] === '\n') return next + 1
+  }
+  return -1
+}
+
 // The first sentence end at or after `from`, before `to`; -1 when there is none.
 function endAfter(text, from, to) {
   for (let at = from; at < Math.min(to, text.length); at += 1) {
@@ -69,10 +83,12 @@ export function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PR
   if (body.trim() === '') return null
   let head = body.split('\n', preview.lines).join('\n')
   if (head.length > preview.chars) {
-    // End on a sentence where one ends near the budget; failing that widen to 130% for
-    // the first end after it, and only then cut hard, backing off a word.
+    // A paragraph break wins: the reply leads with its point, and a fold shows that point.
+    // Then a sentence: one that ends near the budget, else the first past it up to 130%.
+    // Only a message with no break and no sentence at all is cut hard, at a word end.
     const budget = preview.chars
-    const near = endIn(head, Math.floor(budget * 0.6), budget)
+    const paragraph = paragraphIn(head, budget)
+    const near = paragraph > 0 ? paragraph : endIn(head, Math.floor(budget * 0.6), budget)
     const wider = near > 0 ? near : endAfter(head, budget, Math.floor(budget * 1.3))
     if (wider > 0) head = cutAt(head, wider)
     else {

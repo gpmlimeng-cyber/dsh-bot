@@ -8224,6 +8224,16 @@ function endIn(text, from, to) {
   }
   return -1;
 }
+function paragraphIn(text, to) {
+  const end = Math.min(to, text.length);
+  for (let at = end - 2; at >= 0; at -= 1) {
+    if (text[at] !== "\n") continue;
+    let next = at + 1;
+    while (next < end && (text[next] === " " || text[next] === "	")) next += 1;
+    if (next < end - 1 && text[next] === "\n") return next + 1;
+  }
+  return -1;
+}
 function endAfter(text, from, to) {
   for (let at = from; at < Math.min(to, text.length); at += 1) {
     if (text[at] === "\n") return at;
@@ -8246,7 +8256,8 @@ function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, 
   let head = body.split("\n", preview.lines).join("\n");
   if (head.length > preview.chars) {
     const budget = preview.chars;
-    const near = endIn(head, Math.floor(budget * 0.6), budget);
+    const paragraph = paragraphIn(head, budget);
+    const near = paragraph > 0 ? paragraph : endIn(head, Math.floor(budget * 0.6), budget);
     const wider = near > 0 ? near : endAfter(head, budget, Math.floor(budget * 1.3));
     if (wider > 0) head = cutAt(head, wider);
     else {
