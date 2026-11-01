@@ -69,7 +69,7 @@ export function install(rt) {
   const modelsKey = () => `${rt.cachedCatalog().map(entry => `${entry.ref}${entry.needsKey ? '!' : ''}${entry.reasoning ? `:${JSON.stringify(entry.reasoning)}` : ''}`).join(',')}|${rt.cachedDefault() ?? ''}`
   // A photo's reference: the same bytes always name the same ref, so a client can cache
   // by it and ask `avatar` only when the ref changes.
-  const imageRef = image => `avatar:${createHash('sha1').update(String(image)).digest('hex').slice(0, 16)}`
+  const imageRef = image => `avatar:${createHash('sha256').update(String(image)).digest('hex').slice(0, 16)}`
   const refAvatar = avatar => {
     if (typeof avatar?.image !== 'string') return avatar
     const { image, ...rest } = avatar
@@ -665,13 +665,15 @@ export function install(rt) {
             api: shared.length === 0 ? null : Math.max(...shared),
             apiMin: API_MIN,
             apiMax: API_MAX,
-            plugin: { version: version() },
+            plugin: { name: 'ds-bot', version: version() },
             capabilities: CAPABILITIES,
             boot: BOOT_ID,
             seq: publishedSeq(),
             revision: state.revision,
             readOnly: rt.readOnly() ?? null,
             memory: rt.memoryEnabled !== false,
+            feed: 'api/bot/feed',
+            rpc: { call: 'dsBot/call', feed: 'dsBot/feed' },
           })
         }
         default:
@@ -684,6 +686,10 @@ export function install(rt) {
       return fail(message, code)
     }
   }
+
+  // The same call as a DSH Remote method, for a client that reaches this host only
+  // through a carrier that forwards Remote methods and not Fetch routes (remote.js).
+  rt.channelCall = handle
 
   // An exact Fetch route on the shared /api channel; the browser authenticates with its session cookie.
   ctx.effect(() => ctx.connection.fetch.register({
