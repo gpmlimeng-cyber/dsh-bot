@@ -29,7 +29,9 @@ export { clockLabel }
 // sentence the group needs and the detail waits behind "Show all". Folding only hides
 // what a preview keeps, so a reply barely past the limit stays whole. Private chats keep
 // the wider FOLD_AT: there the whole reply is what the user came for.
-export const GROUP_FOLD = { at: { chars: 300, lines: 8 }, preview: { chars: 120, lines: 4 } }
+// The limits are exceeded, not reached: `chars: 299` folds a 300-character paragraph,
+// `lines: 15` leaves fifteen lines whole and folds the sixteenth.
+export const GROUP_FOLD = { at: { chars: 299, lines: 15 }, preview: { chars: 120, lines: 4 } }
 
 const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied') }, footnotes: t('Footnotes') })
 

@@ -8611,7 +8611,7 @@ function BtwTurnTail({ turn, sessionId, useRoster, actions }) {
 // src/client/cells.js
 var import_react16 = require("react");
 var import_react_dom = require("react-dom");
-var GROUP_FOLD = { at: { chars: 300, lines: 8 }, preview: { chars: 120, lines: 4 } };
+var GROUP_FOLD = { at: { chars: 299, lines: 15 }, preview: { chars: 120, lines: 4 } };
 var mdLabels3 = () => ({ code: { copyLabel: t("Copy"), copiedLabel: t("Copied") }, footnotes: t("Footnotes") });
 var FILE_PATH = /^(?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.-]+)*$/;
 var FILE_EXT = /\.(?:md|txt|jsonl?|mjs|cjs|jsx?|tsx?|py|sh|ya?ml|toml|csv|html|css|png|jpe?g|webp|gif|pdf|patch|diff)$/i;

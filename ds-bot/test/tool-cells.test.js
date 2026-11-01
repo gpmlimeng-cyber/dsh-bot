@@ -896,8 +896,10 @@ test('a group reply folds only when folding hides something', () => {
   const folded = words => findAll(show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: words, time: 1 }] } }), { sessionId: 'room' }), node => node.props?.className === 'bt-more')
   const lines = count => Array.from({ length: count }, (_, index) => `line ${index}`).join('\n')
   assert.deepEqual([200, 301, 800].map(count => folded('z'.repeat(count)).length), [0, 1, 1], '200 stays whole; 301 and 800 fold')
-  assert.deepEqual([8, 9].map(count => folded(lines(count)).length), [0, 1], '8 lines stay whole; 9 fold')
-  assert.match(text(folded(lines(9))[0]), /Show all · 9 lines/, 'a line-triggered fold counts lines')
+  assert.deepEqual([14, 15, 16].map(count => folded(lines(count)).length), [0, 0, 1], '15 lines stay whole; 16 fold')
+  assert.match(text(folded(lines(16))[0]), /Show all · 16 lines/, 'a line-triggered fold counts lines')
+  // A paragraph with no break is folded by its characters instead.
+  assert.deepEqual([299, 300, 301].map(count => folded('z'.repeat(count)).length), [0, 1, 1], 'a 300-character paragraph folds')
   assert.match(text(folded('z'.repeat(301))[0]), /Show all · 301 characters/)
   // A folded reply keeps 120 characters, so 301 that fold hide 181 of them.
   const at = { chars: 300, lines: 8 }
