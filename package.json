@@ -1,0 +1,33 @@
+{
+  "name": "ds-bot",
+  "version": "0.2.4",
+  "description": "DS Bot: a team of long-lived Bots for DeepSeek Harness. This root manifest exists so the repository can be installed as a plugin; the package itself lives in ds-bot/.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./ds-bot/index.js",
+  "exports": {
+    ".": "./ds-bot/index.js",
+    "./client": "./ds-bot/client.js",
+    "./web-search": "./ds-bot/web-search.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "ds-bot/index.js",
+    "ds-bot/cordis.patch.yml",
+    "ds-bot/client.js",
+    "ds-bot/office.js",
+    "ds-bot/web-search.js",
+    "ds-bot/src/"
+  ],
+  "dsh": {
+    "client": {
+      "platform": "web"
+    },
+    "bundle": {
+      "patch": "./ds-bot/cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "deep-view": "0.1.0"
+  }
+}
