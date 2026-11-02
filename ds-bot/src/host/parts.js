@@ -1330,6 +1330,10 @@ export function install(rt) {
         if (hidden.has(event.data?.turn)) continue
         // One entry per text block: the chat shows each block in a bubble of its own.
         const content = Array.isArray(event.data?.message?.content) ? event.data.message.content : []
+        // The reasoning that led to them, as one marker per step: a phone draws it
+        // as a single line ("整理中…"), never as the model's own words.
+        const reasoned = content.some(block => block?.type === 'reasoning' && typeof block.text === 'string' && block.text.trim() !== '')
+        if (reasoned) stamp(event, { kind: 'thinking', time: event.time })
         for (const block of content) {
           if (block?.type === 'text' && typeof block.text === 'string' && block.text.trim() !== '') stamp(event, { kind: 'bot', text: block.text, time: event.time })
         }

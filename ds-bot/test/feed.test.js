@@ -194,6 +194,31 @@ test('a show_view call in a part reads back as a view row with its blueprint', a
   assert.equal(page.items.at(-2).title, '')
 })
 
+test('a step that reasoned leaves one thinking row before its reply', async (t) => {
+  const record = (event, seq) => ({ event: { ...event, seq } })
+  const step = (time, blocks) => ({ type: 'assistant/message', time, data: { turn: 1, step: 1, message: { content: blocks } } })
+  const { call, stop } = start({
+    pages: {
+      'm1c:end': {
+        records: [
+          record(userMessage('think about it', 70), 41),
+          record(step(71, [{ type: 'reasoning', text: 'hidden working' }]), 42),
+          record(step(72, [{ type: 'text', text: 'done' }]), 43),
+          // Reasoning with no text is still a step the person waited on.
+          record(step(73, [{ type: 'reasoning', text: 'more working' }]), 44),
+        ],
+        hasMore: false,
+      },
+    },
+  })
+  t.after(stop)
+  await call('state')
+  const page = (await call('chat', { botId: 'm1' })).value
+  assert.deepEqual(page.items.map(item => item.kind), ['divider', 'user', 'thinking', 'bot', 'thinking'])
+  // The model's own words never travel: only the marker does.
+  assert.equal(JSON.stringify(page.items).includes('hidden working'), false)
+})
+
 test('a tool call is a row of its own, running until its result lands', async (t) => {
   const record = (event, seq) => ({ event: { ...event, seq } })
   const call_ = (name, id, time, extra = {}) => ({ type: 'tool/call', time, data: { turn: 2, step: 1, callId: id, name, arguments: '{}', ...extra } })
