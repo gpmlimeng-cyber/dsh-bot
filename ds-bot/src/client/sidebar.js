@@ -549,6 +549,21 @@ export function TeamSidebar(props) {
     for (const name of ends) grip.addEventListener(name, onEnd)
   }
 
+  // The phone layout mounts its own drawer switch in the header; on the Bot surface it
+  // must move our column, not the shell's drawer — the shell's drawer leaves its own
+  // backdrop over the page. Caught in the capture phase, before that button's handler.
+  useEffect(() => {
+    const onTap = (event) => {
+      if (!(event.target instanceof Element) || event.target.closest('[data-mobile-nav="toggle"]') === null) return
+      if (typeof actions.toggleLeftHidden !== 'function') return
+      event.preventDefault()
+      event.stopPropagation()
+      actions.toggleLeftHidden()
+    }
+    document.addEventListener('click', onTap, true)
+    return () => document.removeEventListener('click', onTap, true)
+  }, [])
+
   // In the Bot view the shell's own sidebar stays collapsed under our column. A
   // flip we did not ask for is the user's own switch gesture (the shell's button
   // or shortcut where it still reaches), unless the width just crossed the

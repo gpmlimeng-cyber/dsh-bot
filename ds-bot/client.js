@@ -17086,6 +17086,17 @@ function TeamSidebar(props) {
     grip.addEventListener("pointermove", onMove);
     for (const name of ends) grip.addEventListener(name, onEnd);
   };
+  (0, import_react21.useEffect)(() => {
+    const onTap = (event) => {
+      if (!(event.target instanceof Element) || event.target.closest('[data-mobile-nav="toggle"]') === null) return;
+      if (typeof actions.toggleLeftHidden !== "function") return;
+      event.preventDefault();
+      event.stopPropagation();
+      actions.toggleLeftHidden();
+    };
+    document.addEventListener("click", onTap, true);
+    return () => document.removeEventListener("click", onTap, true);
+  }, []);
   const dsh = (0, import_react21.useRef)(null);
   const requested = (0, import_react21.useRef)(false);
   const requestLapse = (0, import_react21.useRef)(0);
@@ -22385,7 +22396,10 @@ function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus, useSe
       className: "bt-head-btn",
       "aria-label": t("Expand sidebar"),
       title: t("Expand sidebar"),
-      onClick: () => actions.toggleSidebar()
+      // The team draws its own column on the Bot surface; the shell's sidebar stays
+      // collapsed under it, so this switch moves ours, not the shell's (opening the
+      // shell's drawer would leave its backdrop over the page).
+      onClick: () => (actions.toggleLeftHidden ?? actions.toggleSidebar)()
     }, (0, import_react37.createElement)(MenuLinesIcon)),
     (0, import_react37.createElement)(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     (0, import_react37.createElement)(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions })

@@ -125,7 +125,10 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
     h('button', {
       type: 'button', className: 'bt-head-btn', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'),
-      onClick: () => actions.toggleSidebar(),
+      // The team draws its own column on the Bot surface; the shell's sidebar stays
+      // collapsed under it, so this switch moves ours, not the shell's (opening the
+      // shell's drawer would leave its backdrop over the page).
+      onClick: () => (actions.toggleLeftHidden ?? actions.toggleSidebar)(),
     }, h(MenuLinesIcon)),
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions }))
