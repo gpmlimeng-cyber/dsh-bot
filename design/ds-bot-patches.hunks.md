@@ -6,7 +6,7 @@
 |---|---|
 | 文件 | 84 |
 | hunks | 229 |
-| 新增行 | 17571 |
+| 新增行 | 17572 |
 | 删除行 | 258 |
 
 删除行最多的文件（前 10）：
@@ -237,7 +237,7 @@
 | 207 | `ds-bot/test/patch-client-bundle.test.js` | 1–14 | 14 |
 | 208 | `ds-bot/test/patch-features.test.js` | 1–52 | 52 |
 | 209 | `ds-bot/test/patch-i18n.test.js` | 1–46 | 46 |
-| 210 | `ds-bot/test/patch-ledger.test.js` | 1–75 | 75 |
+| 210 | `ds-bot/test/patch-ledger.test.js` | 1–76 | 76 |
 | 211 | `ds-bot/test/phone-scope.test.js` | 1–40 | 40 |
 | 212 | `ds-bot/test/sidebar-switch.test.js` | 31–37 | 4 |
 | 213 | `ds-bot/test/sidebar-switch.test.js` | 106–114 | 8 |

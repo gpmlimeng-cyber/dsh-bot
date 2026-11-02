@@ -18914,10 +18914,10 @@ index 00000000..d68432f2
 +})
 diff --git a/ds-bot/test/patch-ledger.test.js b/ds-bot/test/patch-ledger.test.js
 new file mode 100644
-index 00000000..9875a139
+index 00000000..1e4ef297
 --- /dev/null
 +++ b/ds-bot/test/patch-ledger.test.js
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,76 @@
 +// The patch is the replayable record of every local change. These tests keep it replayable
 +// without restating any of its numbers by hand: the statistics below are recounted from the
 +// patch, and the ledger's own table is only allowed to be the generator's output.
@@ -18933,8 +18933,9 @@ index 00000000..9875a139
 +const ROOT = dirname(PLUGIN)
 +const PATCH = join(ROOT, 'design/ds-bot-patches.patch')
 +const HUNKS = join(ROOT, 'design/ds-bot-patches.hunks.md')
-+// The ledger's baseline: the upstream release the local commits sit on top of.
-+const BASE = 'v0.2.4'
++// The ledger's baseline: the upstream release the local commits sit on top of. Read
++// from the ledger so a version bump does not leave this test asserting an old ref.
++const BASE = /基线：\*\*本仓标签 `([^`]+)`\*\*/.exec(readFileSync(join(ROOT, 'design/ds-bot-patches.md'), 'utf8'))?.[1] ?? 'v0.2.5'
 +// client.js is generated from src/client, and gaze.js carries generated images, so neither
 +// is part of the hand-maintained patch.
 +const PATCHED = ['ds-bot', ':!ds-bot/client.js', ':!ds-bot/src/client/gaze.js']
