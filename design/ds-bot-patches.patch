@@ -902,7 +902,7 @@ index 00000000..72438ba7
 +export const FONT_FACES = `@font-face{font-family:"Inter Variable";font-style:normal;font-display:swap;font-weight:100 900;src:url(${INTER}) format("woff2")}
 +@font-face{font-family:"Geist Variable";font-style:normal;font-display:swap;font-weight:100 900;src:url(${GEIST}) format("woff2")}`
 diff --git a/ds-bot/src/client/header.js b/ds-bot/src/client/header.js
-index c7b14888..98b1e26d 100644
+index c7b14888..68c32d61 100644
 --- a/ds-bot/src/client/header.js
 +++ b/ds-bot/src/client/header.js
 @@ -1,12 +1,14 @@
@@ -931,7 +931,7 @@ index c7b14888..98b1e26d 100644
      h('button', {
        type: 'button', className: 'bt-pill', 'aria-expanded': away ? undefined : detailsOpen, 'data-memory': memoryNotice ? 'updated' : undefined,
        'aria-label': away ? t('Back to chat') : memoryNotice ? t('Memory updated. Open {name}\'s memory', { name: roster.byId[changed]?.name ?? name }) : t('View conversation details'),
-@@ -109,11 +114,42 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
+@@ -109,11 +114,45 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
      h('span', { className: 'bt-pill-name' }, away ? t('Back to chat') : bot?.name ?? room?.name ?? (title || t('New chat'))),
      h(MemoryNotice, { shown: memoryNotice }),
      h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow))),
@@ -946,7 +946,10 @@ index c7b14888..98b1e26d 100644
      h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
 +    h('button', {
 +      type: 'button', className: 'bt-head-btn', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'),
-+      onClick: () => actions.toggleSidebar(),
++      // The team draws its own column on the Bot surface; the shell's sidebar stays
++      // collapsed under it, so this switch moves ours, not the shell's (opening the
++      // shell's drawer would leave its backdrop over the page).
++      onClick: () => (actions.toggleLeftHidden ?? actions.toggleSidebar)(),
 +    }, h(MenuLinesIcon)),
      h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
      h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions }))
@@ -4092,7 +4095,7 @@ index 00000000..ae116668
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 79e922a0..36f512af 100644
+index 79e922a0..a4b0a725 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -3,15 +3,19 @@ import { createPortal } from 'react-dom'
@@ -4296,7 +4299,29 @@ index 79e922a0..36f512af 100644
    useListGlide(listRef, wideContent, order.map(entry => entry.item.id).join(','))
    useLandOnMainBot(roster, useSessions, actions)
  
-@@ -512,6 +616,12 @@ export function TeamSidebar(props) {
+@@ -445,6 +549,21 @@ export function TeamSidebar(props) {
+     for (const name of ends) grip.addEventListener(name, onEnd)
+   }
+ 
++  // The phone layout mounts its own drawer switch in the header; on the Bot surface it
++  // must move our column, not the shell's drawer — the shell's drawer leaves its own
++  // backdrop over the page. Caught in the capture phase, before that button's handler.
++  useEffect(() => {
++    const onTap = (event) => {
++      if (!(event.target instanceof Element) || event.target.closest('[data-mobile-nav="toggle"]') === null) return
++      if (typeof actions.toggleLeftHidden !== 'function') return
++      event.preventDefault()
++      event.stopPropagation()
++      actions.toggleLeftHidden()
++    }
++    document.addEventListener('click', onTap, true)
++    return () => document.removeEventListener('click', onTap, true)
++  }, [])
++
+   // In the Bot view the shell's own sidebar stays collapsed under our column. A
+   // flip we did not ask for is the user's own switch gesture (the shell's button
+   // or shortcut where it still reaches), unless the width just crossed the
+@@ -512,6 +631,12 @@ export function TeamSidebar(props) {
      return () => { window.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey, true) }
    }, [mode])
  
@@ -4309,7 +4334,7 @@ index 79e922a0..36f512af 100644
    const navigate = (open, id) => {
      const result = open(id)
      if (uiNow.leftDrawer === true) actions.setLeftDrawer?.(false)
-@@ -567,7 +677,11 @@ export function TeamSidebar(props) {
+@@ -567,7 +692,11 @@ export function TeamSidebar(props) {
    // The foot stands in for the shell's hidden footer: the account avatar, and on
    // the rail the new-chat button above it.
    const foot = wideContent
@@ -4322,7 +4347,7 @@ index 79e922a0..36f512af 100644
      : h('div', { className: 'bt-leftcol-foot bt-leftcol-foot-rail' },
          h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
          h(AccountLauncher, { seat: false, actions }))
-@@ -575,13 +689,79 @@ export function TeamSidebar(props) {
+@@ -575,13 +704,79 @@ export function TeamSidebar(props) {
      top,
      wideContent && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
      h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
