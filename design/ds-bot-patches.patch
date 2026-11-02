@@ -29,7 +29,7 @@ index ea56b8cb..0e4ea00a 100644
  # restated. A profile patch that names another searchProvider (exa, perplexity,
  # deepseek-official) wins over this one. Turning off web-search-auto alone
 diff --git a/ds-bot/index.js b/ds-bot/index.js
-index b1465905..88d6d77f 100644
+index 1082a914..b2b2b31c 100644
 --- a/ds-bot/index.js
 +++ b/ds-bot/index.js
 @@ -2,6 +2,8 @@
@@ -41,7 +41,7 @@ index b1465905..88d6d77f 100644
  import * as diagnostics from './src/host/diagnostics.js'
  import * as store from './src/host/store.js'
  import * as models from './src/host/models.js'
-@@ -30,6 +32,7 @@ import * as browser from './src/host/browser.js'
+@@ -31,6 +33,7 @@ import * as browser from './src/host/browser.js'
  import * as browserPlugins from './src/host/browser-plugins.js'
  import * as secrets from './src/host/secrets.js'
  import * as connectors from './src/host/connectors.js'
@@ -49,7 +49,7 @@ index b1465905..88d6d77f 100644
  import * as capabilities from './src/host/capabilities.js'
  import * as learning from './src/host/learning.js'
  import * as schedules from './src/host/schedules.js'
-@@ -38,7 +41,9 @@ import * as update from './src/host/update.js'
+@@ -39,7 +42,9 @@ import * as update from './src/host/update.js'
  import * as dshUpdate from './src/host/dsh-update.js'
  import * as thinking from './src/host/thinking.js'
  import * as channel from './src/host/channel.js'
@@ -59,12 +59,12 @@ index b1465905..88d6d77f 100644
  import * as officeSkills from './src/host/office-skills.js'
  
  export { COLORS } from './src/host/constants.js'
-@@ -51,10 +56,27 @@ export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'ses
+@@ -52,10 +57,27 @@ export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'ses
  // install. Listeners run and tools are listed in registration order, so this order holds:
  // usage meters model requests after every listener that rewrites them. privacy checks a
  // call before the hooks of tools do, so a closed call never reaches a card they show.
--const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, officeSkills]
-+const MODULES = [diagnostics, store, models, providers, permissions, turns, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, mcp, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, remote, officeSkills, authorization, toolPolicy]
+-const MODULES = [diagnostics, store, models, providers, permissions, turns, steer, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, officeSkills]
++const MODULES = [diagnostics, store, models, providers, permissions, turns, steer, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, mcp, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, feed, channel, remote, officeSkills, authorization, toolPolicy]
  
  export function apply(ctx, config = {}) {
    createRuntime(ctx, config)
@@ -109,7 +109,7 @@ index 2d3f9d66..b4d9b53d 100644
        for (const value of check(file, text)) {
          const counts = (found[kind][file] ??= {})
 diff --git a/ds-bot/src/client/about.js b/ds-bot/src/client/about.js
-index 6dc05e26..a1bf478a 100644
+index 7f5d6dbd..065ff1cc 100644
 --- a/ds-bot/src/client/about.js
 +++ b/ds-bot/src/client/about.js
 @@ -107,6 +107,21 @@ export function AboutPage({ useUpdate, actions, run, Section, Row }) {
@@ -145,7 +145,7 @@ index 6dc05e26..a1bf478a 100644
        repo ? h(Row, { label: t('Source code'), hint: repo.replace(/^https:\/\//, '') }, h('a', linkProps(repo), h(GitHubMark), t('Open'))) : null,
        update.notesUrl ? h(Row, { label: t('Release notes') }, h('a', linkProps(update.notesUrl), t('Open'))) : null,
 diff --git a/ds-bot/src/client/bot-settings.js b/ds-bot/src/client/bot-settings.js
-index c8de9f87..47a59df6 100644
+index 072e4d7f..c0f8e4a4 100644
 --- a/ds-bot/src/client/bot-settings.js
 +++ b/ds-bot/src/client/bot-settings.js
 @@ -4,6 +4,7 @@ import { CHARACTERS, PICKER_SHAPES, PICKER_COLUMNS, CHARACTER_COLORS, SHAPES, ha
@@ -214,19 +214,19 @@ index 23ef1007..864f7d9b 100644
        items.map((item, index) => (item.sep
          ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
 diff --git a/ds-bot/src/client/cells.js b/ds-bot/src/client/cells.js
-index 3555f0cf..62049697 100644
+index 6575a1ba..629eb5c0 100644
 --- a/ds-bot/src/client/cells.js
 +++ b/ds-bot/src/client/cells.js
 @@ -1,7 +1,7 @@
  import { createElement as h, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
  import { createPortal } from 'react-dom'
- import { MarkdownText } from './dsh-primitives.js'
+ import { MarkdownText, writeClipboard } from './dsh-primitives.js'
 -import { inkText } from './inks.js'
 +import { inkFill, inkText } from './inks.js'
  import { linkMentions, mentionTarget, dayLabel, contentText, stripHeader, isHiddenTurn, isRelayContext, relaysBefore, relayPart, commRunOf, toolName, toolArgs, reminderPrompts, elapsedLabel, clockLabel, messageClock } from './text.js'
  import { SmileIcon, ReplyIcon, DotsIcon, CheckIcon, DownloadIcon, CopyIcon, MemoryIcon } from './icons.js'
  import { colorOf, toolState, BotMark, RoomAvatar } from './mark.js'
-@@ -18,20 +18,59 @@ import { noHover, useViewport, viewBottom } from './motion.js'
+@@ -20,20 +20,59 @@ import { noHover, useViewport, viewBottom } from './motion.js'
  import { heldCardKey } from './sources.js'
  import { BtwCardView } from './btw.js'
  import { partIndexOf, withBtwRows } from './btw-model.js'
@@ -288,7 +288,7 @@ index 3555f0cf..62049697 100644
    const onClick = (event) => {
      const target = mentionTarget(event)
      if (target === null) return
-@@ -44,7 +83,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
+@@ -46,7 +85,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
      texts.map((text, index) => {
        const last = index === texts.length - 1
        return h(Bubble, {
@@ -297,24 +297,19 @@ index 3555f0cf..62049697 100644
          picked: msgKey ? reactions?.[index] ?? [] : [],
          live: streaming && last,
          lead: lead && last ? lead : null,
-@@ -53,10 +92,13 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId,
-     }))
- }
+@@ -81,9 +120,10 @@ const foldArea = (body, code, codeHead, actions) => (code === undefined ? body
+     h(FoldCodeCopy, { code, actions })))
  
--function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, fold, picked, live, lead, whole }) {
--  const { shown, folded, control } = useFold(text, { limit: fold, whole, live })
-+function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, openFile, fold, picked, live, lead, whole }) {
-+  // `fold` is a limit, or a group's `{ at, preview }`: fold past `at`, keep `preview`.
-+  const { shown, folded, control } = useFold(text, { limit: fold.at ?? fold, preview: fold.preview, mark: fold.mark === true, whole, live })
+ function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, fold, picked, live, lead, whole }) {
+-  const { shown, folded, control, code, codeHead } = useFold(text, { limit: fold, whole, live })
++  const { shown, folded, control, code, codeHead } = useFold(text, { limit: fold.at ?? fold, preview: fold.preview, mark: fold.mark === true, whole, live })
    const key = msgKey ? `${msgKey}:${index}` : undefined
--  const body = h(MarkdownText, { text: linkMentions(shown, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact', fileMentions: mentions })
-+  // A bubble whose sender resolved its own mentions keeps them; a group reply links paths.
-+  const links = useMemo(() => mentions ?? pathMentions(openFile), [mentions, openFile])
-+  const body = h(MarkdownText, { text: linkMentions(shown, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact', fileMentions: links })
+   const body = shown === '' ? null : h(MarkdownText, { text: linkMentions(shown, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact', fileMentions: mentions })
++
    const row = useRef(null)
    // Touch has no hover: a tap on the bubble opens its tools, a tap elsewhere
    // closes them. Interactive targets keep their own meaning.
-@@ -295,17 +337,21 @@ function SpeakerHead({ bot, time }) {
+@@ -323,17 +363,21 @@ function SpeakerHead({ bot, time }) {
  // One Bot message inside a group chat: avatar, name (with its group role), when it ran
  // and how long it took, bubble. The flat layout moves the avatar from beside the last
  // bubble to the head of the name row, so the text below runs the whole width.
@@ -338,8 +333,8 @@ index 3555f0cf..62049697 100644
 +    h(Bubbles, { texts, roster, selfId: bot.id, actions, sessionId: room?.id, msgKey, useUi, lead: flat ? null : lead, whole, openFile, fold }))
  }
  
- // A member's messages in a row, as one block under its name: what it says while it
-@@ -545,7 +591,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
+ // A centered event line that names a group chat and opens it.
+@@ -578,7 +622,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
    }
  }
  
@@ -348,7 +343,7 @@ index 3555f0cf..62049697 100644
    const roster = useRoster(value => value)
    const data = node.data
    const source = data.source !== null && typeof data.source === 'object' ? data.source : {}
-@@ -607,7 +653,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
+@@ -640,7 +684,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
          const text = stripHeader(contentText(data.content))
          // A trigger's data carries no turn; its event seq is the one durable name of this post.
          return h(GroupMessage, {
@@ -357,18 +352,18 @@ index 3555f0cf..62049697 100644
            whole: file ? { length: source.length, load: () => actions.fileText(file) } : undefined,
          })
        }
-@@ -869,7 +915,7 @@ function scanReplies(text, start, replies) {
-   }
+@@ -901,7 +945,7 @@ function RelayEvent({ reply, bot, sessionId, actions }) {
+   return null
  }
  
 -function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork }) {
 +function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork, openFile }) {
-   const [live, setLive] = useState({ replies: [], speaking: null })
+   const [live, setLive] = useState({ replies: [], speaking: [] })
    useEffect(() => {
      if (done) return undefined
-@@ -949,7 +995,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
-       if (reply.kind === 'done') {
-         return h('div', { key: `${reply.botId}-${index}`, className: 'bt-event' }, t('{name} finished its work', { name: bot.name }))
+@@ -950,7 +994,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
+       if (reply.kind !== undefined) {
+         return h(RelayEvent, { key: `${reply.botId ?? reply.kind}-${index}`, reply, bot, sessionId, actions })
        }
 -      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration })
 +      // A reply past what a group line holds came as a file: the bubble keeps its
@@ -383,9 +378,9 @@ index 3555f0cf..62049697 100644
 +        room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration, openFile,
 +      })
      }),
-     pending.map((id) => {
+     pending.map((id, at) => {
        const bot = roster.byId[id]
-@@ -993,7 +1049,7 @@ function useShownCards(actions, sessionId, callIds) {
+@@ -995,7 +1049,7 @@ function useShownCards(actions, sessionId, callIds) {
    }, [sessionId, key])
  }
  
@@ -394,8 +389,8 @@ index 3555f0cf..62049697 100644
    const tool = toolName(call)
    const done = call.kind === 'tool-result'
    const { text: arg, value: argValue } = toolArgs(call)
-@@ -1019,7 +1075,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
-       return done && target ? h(EventLine, { prefix: t('Updated'), bots: [target], onOpen: bot => actions.openSession(bot.id) }) : null
+@@ -1021,7 +1075,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+       return done && target ? h(EventLine, { prefix: t('Updated'), bots: [target], onOpen: bot => actions.openSession(bot.id) }) : h(CellEmpty)
      }
      case 'group_relay':
 -      return h(GroupReplies, { sessionId, callId: call.callId, done, content: call.content, roster, actions, useUi, useWork })
@@ -403,7 +398,7 @@ index 3555f0cf..62049697 100644
      case 'create_group':
      case 'update_group':
      case 'delete_group':
-@@ -1074,7 +1130,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1076,7 +1130,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
    }
  }
  
@@ -412,16 +407,16 @@ index 3555f0cf..62049697 100644
    const roster = useRoster(value => value)
    const heldCards = useHeldCards?.(state => state[sessionId])
    const root = node.data.root
-@@ -1090,6 +1146,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
+@@ -1092,6 +1146,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
    useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note)
    useShownCards(actions, sessionId, drawn.filter(call => CARDS.has(toolName(call)) && call.callId).map(call => call.callId))
-   if (drawn.length === 0) return null
+   if (drawn.length === 0) return h(CellEmpty)
 -  const env = { sessionId, roster, actions, useUi, useWork, findBot, heldCards, hooks: { useBrowserHolds, useBrowserTabs, useBrowserPages } }
 +  const env = { sessionId, roster, actions, useUi, useWork, findBot, heldCards, openFile, hooks: { useBrowserHolds, useBrowserTabs, useBrowserPages } }
    return h(Fragment, null, drawn.map((call, index) => h(Fragment, { key: call.callId ?? index }, renderCall(call, env))))
  }
 diff --git a/ds-bot/src/client/composer.js b/ds-bot/src/client/composer.js
-index 08d3b669..da1627ed 100644
+index 1ea7632d..eaa2dcd9 100644
 --- a/ds-bot/src/client/composer.js
 +++ b/ds-bot/src/client/composer.js
 @@ -1,6 +1,6 @@
@@ -441,13 +436,11 @@ index 08d3b669..da1627ed 100644
      dictation.note ? h('span', { className: 'bt-mic-note', role: 'status' }, dictation.note) : null)
  }
  
-@@ -121,17 +121,81 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
-     window.addEventListener('keydown', onKey, true)
-     return () => { window.removeEventListener('mousedown', onDown, true); window.removeEventListener('keydown', onKey, true) }
-   }, [open])
-+  // The plus stands in every chat, including a plain session with no Bot or group behind it;
-+  // only the rows that need a target are left out there. Files go through the shell's own
-+  // mobile file input, which its paperclip button is injected with.
+@@ -130,17 +130,79 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
+     const rect = button.current.getBoundingClientRect()
+     return { left: rect.left, bottom: viewBottom() - rect.top + 8 }
+   }, [shown, open, tick])
++
    const target = roster.byId?.[sessionId]?.id ?? roster.roomsById?.[sessionId]?.id
 -  if (sessionId === undefined || target === undefined) return null
 -  const fileInput = () => button.current?.closest('[data-composer-card]')?.querySelector('input[type=file]')
@@ -528,16 +521,17 @@ index 08d3b669..da1627ed 100644
    }
    const schedule = () => {
      setOpen(null)
-@@ -143,7 +207,7 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
+@@ -152,7 +214,8 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
      setOpen(null)
      actions.referenceChat(sessionId, inputActions?.captureInsertion?.())
    }
 -  const canReference = typeof inputActions?.captureInsertion === 'function' && actions.canReferenceChat()
 +  const canReference = target !== undefined && typeof inputActions?.captureInsertion === 'function' && actions.canReferenceChat()
-   // Anchored to the "+" each render: the visible viewport can move (on-screen
-   // keyboard) while the menu is open.
-   const place = useMemo(() => {
-@@ -160,7 +224,10 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
++
+   return h(Fragment, null,
+     h('button', {
+       ref: button, type: 'button', className: 'bt-plus', 'aria-label': t('Add'), title: t('Add'),
+@@ -162,7 +225,10 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
        ref: menu, className: 'bt-menu bt-menu-up bt-plus-menu', role: 'menu', 'aria-label': t('Add'),
        style: place ?? {}, 'data-leaving': leaving || undefined,
      },
@@ -617,7 +611,7 @@ index 3956f8ff..40a05f4a 100644
      library ? h(AvatarLibraryPanel, { actions, onPick: entry => { setImage(entry.image); setLibrary(false) } }) : null,
      h('label', { className: 'bt-field' },
 diff --git a/ds-bot/src/client/details-drawer.js b/ds-bot/src/client/details-drawer.js
-index 76c8c048..e3ffb93d 100644
+index 9c94bdb4..7dfc954a 100644
 --- a/ds-bot/src/client/details-drawer.js
 +++ b/ds-bot/src/client/details-drawer.js
 @@ -1,7 +1,7 @@
@@ -660,10 +654,10 @@ index 00000000..8fca0d0f
 +  if (fromDrawer === true) collapse?.()
 +}
 diff --git a/ds-bot/src/client/fold.js b/ds-bot/src/client/fold.js
-index 2b49959d..4d24e3bd 100644
+index 040b5017..19b9c597 100644
 --- a/ds-bot/src/client/fold.js
 +++ b/ds-bot/src/client/fold.js
-@@ -9,6 +9,10 @@ export const FOLD_HUGE = { chars: 20_000, lines: Infinity }
+@@ -9,6 +9,13 @@ export const FOLD_HUGE = { chars: 20_000, lines: Infinity }
  const ALWAYS = { chars: -1, lines: 0 }
  const PREVIEW_LINES = 10
  const PREVIEW_CHARS = 600
@@ -671,13 +665,16 @@ index 2b49959d..4d24e3bd 100644
 +// Folding is only worth it when it hides something: a bubble that keeps a line and hides
 +// the one behind it reads as a no-op. Past the limit, this much has to be hidden.
 +const HIDDEN = { chars: 120, lines: 3 }
++// A mark only says where the point ends; it does not decide that the reply is long enough
++// to fold. Detail under this much reads whole, so a 500-character reply stays readable.
++const DETAIL = 600
  const FENCE = /^ {0,3}(`{3,}|~{3,})/
- 
- // Cuts `text` at `end` code units, backing up one when the last character is a
-@@ -18,6 +22,58 @@ function cutAt(text, end) {
-   return text.slice(0, code >= 0xd800 && code <= 0xdbff ? end - 1 : end)
- }
- 
+ // A closing fence is bare: a marker line carrying an info string (` ```js `) inside
+ // an open block is content, never a close.
+@@ -37,6 +44,58 @@ function moreLines(text, max) {
+ // The start of a long text, cut at a line end (or inside a very long first line). In
+ // Markdown a code fence left open is closed, so the preview does not run on as code.
+ // Null when `text` is within `limit`.
 +// A preview ends where a sentence does, so a fold does not stop mid-thought. A period
 +// counts only before a space or a line end, which leaves 3.14 and a.b alone.
 +const SENTENCE = new Set(['。', '！', '？', '!', '?'])
@@ -687,6 +684,15 @@ index 2b49959d..4d24e3bd 100644
 +// without it, a punctuation mark belongs to it. -1 when nothing ends one.
 +function endIn(text, from, to) {
 +  for (let at = Math.min(to, text.length) - 1; at >= from; at -= 1) {
++    if (text[at] === '\n') return at
++    if (endsSentence(text, at)) return at + 1
++  }
++  return -1
++}
++
++// The first sentence end at or after `from`, before `to`; -1 when there is none.
++function endAfter(text, from, to) {
++  for (let at = from; at < Math.min(to, text.length); at += 1) {
 +    if (text[at] === '\n') return at
 +    if (endsSentence(text, at)) return at + 1
 +  }
@@ -721,35 +727,26 @@ index 2b49959d..4d24e3bd 100644
 +  return -1
 +}
 +
-+// The first sentence end at or after `from`, before `to`; -1 when there is none.
-+function endAfter(text, from, to) {
-+  for (let at = from; at < Math.min(to, text.length); at += 1) {
-+    if (text[at] === '\n') return at
-+    if (endsSentence(text, at)) return at + 1
-+  }
-+  return -1
-+}
-+
- // More than `max` lines, counted only as far as needed.
- function moreLines(text, max) {
-   let lines = 1
-@@ -29,19 +85,43 @@ function moreLines(text, max) {
+ // The fence a preview cut left open: the marker and its line index in `lines`.
+ function openedFence(lines) {
+   let open = null
+@@ -65,48 +124,82 @@ function blockCode(body, fenceLine, open) {
+   return code.join('\n')
+ }
  
- // The start of a long text, cut at a line end (or inside a very long first line). In
- // Markdown a code fence left open is closed, so the preview does not run on as code.
--// Null when `text` is within `limit`.
--export function foldPreview(text, limit = FOLD_AT, markdown = true) {
+-// The preview `head` plus `code`, the whole block its cut fence opens (null when
+-// the cut does not sit inside a fence).
+-export function foldView(text, limit = FOLD_AT, markdown = true) {
 -  if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null
-+// Null when `text` is within `limit`, or when folding it would hide less than HIDDEN:
-+// `preview` is what a folded bubble keeps, and `force` folds regardless (a message kept
-+// only in part must fold however short its start).
-+// A mark only says where the point ends; it does not decide that the reply is long enough
-+// to fold. Detail under this much reads whole, so a 500-character reply stays readable.
-+const DETAIL = 600
-+
-+export function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false, mark = false) {
-   // Blank lines first: the preview starts at the first visible character. An
-   // all-blank message has nothing to preview, so it does not fold at all.
+-  // Blank lines first: the preview starts at the first visible character. An
+-  // all-blank message has nothing to preview, so it does not fold at all.
++// The preview of a long text, and the fence it cut open (if any). Null when `text` is
++// within `limit`, or when folding it would hide less than HIDDEN: `preview` is what a
++// folded bubble keeps, and `force` folds regardless (a message kept only in part must fold
++// however short its start). `mark`: the reply says where its point ends.
++function previewParts(text, limit, markdown, preview, force, mark) {
++  // Blank lines first: the preview starts at the first visible character. An all-blank
++  // message has nothing to preview, so it does not fold at all.
    const body = text.replace(/^(\s*\n)+/, '')
    if (body.trim() === '') return null
 -  let head = body.split('\n', PREVIEW_LINES).join('\n')
@@ -761,7 +758,7 @@ index 2b49959d..4d24e3bd 100644
 +  // does not fold at all.
 +  if (mark && !force) {
 +    const core = coreEnd(body)
-+    if (core > 0 && body.length - core >= DETAIL) return body.slice(0, core)
++    if (core > 0 && body.length - core >= DETAIL) return { body, lines: body.slice(0, core).split('\n'), open: null, openLine: -1 }
 +  }
 +  if (text.length <= limit.chars && !moreLines(text, limit.lines)) return null
 +  if (!force && text.length - preview.chars < HIDDEN.chars && !moreLines(text, preview.lines + HIDDEN.lines)) return null
@@ -781,20 +778,74 @@ index 2b49959d..4d24e3bd 100644
 +    }
    }
 -  if (head.trim() === '') head = cutAt(body, PREVIEW_CHARS)
+-  if (!markdown) return { head }
 +  if (head.trim() === '') head = cutAt(body, preview.chars)
-   if (!markdown) return head
-   let open = null
-   let openLine = -1
-@@ -56,7 +136,7 @@ export function foldPreview(text, limit = FOLD_AT, markdown = true) {
-     // The cut kept only the fence marker (a card opening like ```dsh-ui on
-     // its own line): an empty fence renders nothing, so pull the start of
-     // the fenced text in as the preview instead.
++  if (!markdown) return { body, lines: head.split('\n'), open: null, openLine: -1 }
+   let opened = openedFence(head.split('\n'))
+-  if (opened !== null && head.split('\n').slice(opened.line + 1).join('').trim() === '') {
+-    // The cut kept only the fence marker (a card opening like ```dsh-ui on
+-    // its own line): an empty fence renders nothing, so pull the start of
+-    // the fenced text in as the preview instead.
 -    head = cutAt(body, PREVIEW_CHARS)
-+    head = cutAt(body, preview.chars)
-     lines = head.split('\n')
-     open = null
-     openLine = -1
-@@ -83,13 +163,15 @@ export const stripLongNote = text => text.replace(/^\[A long message: \d+ charac
+-    opened = openedFence(head.split('\n'))
++  let lines = head.split('\n')
++  if (opened !== null && lines.slice(opened.line + 1).join('').trim() === '') {
++    // The cut kept only the fence marker (a card opening like ```dsh-ui on its own line):
++    // an empty fence renders nothing, so pull the start of the fenced text in instead.
++    lines = cutAt(body, preview.chars).split('\n')
++    opened = openedFence(lines)
+   }
+-  if (opened === null) return { head }
+-  // A fence the preview cut open loses its language tag: a downstream
+-  // renderer (dsh-ui cards) would otherwise claim the half message and the
+-  // expansion remounts its subtree looking like a no-op.
+-  const lines = head.split('\n')
++  if (opened === null) return { body, lines, open: null, openLine: -1 }
++  // The half block is drawn outside the host's Markdown, whose own fence would carry the
++  // language tag and claim the half message.
+   lines[opened.line] = opened.marker
++  return { body, lines, open: opened.marker, openLine: opened.line }
++}
++
++const closedHead = parts => (parts.open === null ? parts.lines.join('\n') : `${parts.lines.join('\n')}\n${parts.open}`)
++
++// The preview `head` plus `code`, the whole block its cut fence opens (null when
++// the cut does not sit inside a fence).
++export function foldView(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false, mark = false) {
++  const parts = previewParts(text, limit, markdown, preview, force, mark)
++  if (parts === null) return null
++  if (parts.open === null) return { head: closedHead(parts) }
++  // A fence the preview cut open loses its language tag: a downstream renderer (dsh-ui
++  // cards) would otherwise claim the half message and the expansion remounts its subtree
++  // looking like a no-op.
++  const lines = parts.lines
+   return {
+-    head: `${lines.join('\n')}\n${opened.marker}`,
+-    // The markdown before the block and the part of the block the preview
+-    // keeps: the half block is drawn outside the host's Markdown, whose own
+-    // copy control would hold only the part shown.
+-    prose: lines.slice(0, opened.line).join('\n'),
+-    codeHead: lines.slice(opened.line + 1).join('\n'),
+-    code: blockCode(body, opened.line, opened.marker),
++    head: `${lines.join('\n')}\n${parts.open}`,
++    // The markdown before the block and the part of the block the preview keeps: the half
++    // block is drawn outside the host's Markdown, whose own copy control would hold only
++    // the part shown.
++    prose: lines.slice(0, parts.openLine).join('\n'),
++    codeHead: lines.slice(parts.openLine + 1).join('\n'),
++    code: blockCode(parts.body, parts.openLine, parts.open),
+   }
+ }
+ 
+-export function foldPreview(text, limit = FOLD_AT, markdown = true) {
+-  return foldView(text, limit, markdown)?.head ?? null
++export function foldPreview(text, limit = FOLD_AT, markdown = true, preview = PREVIEW, force = false, mark = false) {
++  const parts = previewParts(text, limit, markdown, preview, force, mark)
++  return parts === null ? null : closedHead(parts)
+ }
+ 
+ // The line a long message that went as a file starts with (the host's attachLong) is
+@@ -117,12 +210,12 @@ export const stripLongNote = text => text.replace(/^\[A long message: \d+ charac
  // `whole`, when `text` is only the start of the message: its `length`, and `load()`,
  // which reads it whole ({ text, whole }). `live`: still streaming, never folded.
  // `markdown`: false for plain text.
@@ -804,26 +855,31 @@ index 2b49959d..4d24e3bd 100644
    const [read, setRead] = useState()
    const cut = whole !== undefined && whole.length > text.length
    // A message kept only in part folds whatever the length of its start.
--  const preview = useMemo(() => (live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown)), [text, live, limit, markdown, cut])
--  if (preview === null) return { shown: text, control: null }
-+  const kept = useMemo(() => (live ? null : foldPreview(text, cut ? ALWAYS : limit, markdown, preview, cut, mark)), [text, live, limit, markdown, preview, cut, mark])
-+  if (kept === null) return { shown: text, control: null }
+-  const view = useMemo(() => (live ? null : foldView(text, cut ? ALWAYS : limit, markdown)), [text, live, limit, markdown, cut])
++  const view = useMemo(() => (live ? null : foldView(text, cut ? ALWAYS : limit, markdown, preview, cut, mark)), [text, live, limit, markdown, preview, cut, mark])
+   if (view === null) return { shown: text, control: null }
+   // `code` is the whole block the preview's last code fence opens, for a copy
+   // that must not stop at the fold; only the full text can supply it, so a
+@@ -131,6 +224,8 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
+   // keeps, so the cell draws the half block itself.
+   const code = cut ? undefined : view.code
+   const shown = code === undefined ? view.head : view.prose
 +  // The count follows what made it fold: a message too long by lines says its lines.
 +  const rows = cut || !moreLines(text, limit.lines) ? undefined : text.split('\n').length
    const count = (cut ? whole.length : text.length).toLocaleString()
    if (!open) {
      const show = async () => {
-@@ -98,7 +180,12 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
+@@ -139,7 +234,12 @@ export function useFold(text, { limit = FOLD_AT, whole, live = false, markdown =
        setRead('loading')
        setRead(await whole.load() ?? { whole: false })
      }
--    return { shown: preview, folded: true, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, t('Show all · {count} characters', { count }))) }
+-    return { shown, folded: true, code, codeHead: view.codeHead, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, t('Show all · {count} characters', { count }))) }
 +    // A message kept only as a file says so: its "Show all" reads the attachment, and
 +    // its count is the whole message, not the start the bubble holds.
 +    const label = cut
 +      ? t('Open the whole reply · {count} characters, from its file', { count })
 +      : rows === undefined ? t('Show all · {count} characters', { count }) : t('Show all · {count} lines', { count: rows.toLocaleString() })
-+    return { shown: kept, folded: true, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, label)) }
++    return { shown, folded: true, code, codeHead: view.codeHead, control: h('span', { className: 'bt-fold' }, h('button', { type: 'button', className: 'bt-more', onClick: show }, label)) }
    }
    const loaded = typeof read?.text === 'string' ? read : undefined
    const note = !cut || read === undefined || read === 'loading' || loaded?.whole ? null
@@ -919,7 +975,7 @@ index c7b14888..98b1e26d 100644
  // replies land while the user is scrolled up; "N new messages ↑" points at an unread
  // divider above the viewport until it has been seen. The shell shows Back to bottom
 diff --git a/ds-bot/src/client/i18n.js b/ds-bot/src/client/i18n.js
-index 06962367..5e2b9175 100644
+index fa328fd3..8cc2bdab 100644
 --- a/ds-bot/src/client/i18n.js
 +++ b/ds-bot/src/client/i18n.js
 @@ -18,6 +18,146 @@ const ZH = {
@@ -1077,7 +1133,7 @@ index 06962367..5e2b9175 100644
    'New Bot': '新 Bot',
  
    // Sidebar and account menu
-@@ -170,7 +311,6 @@ const ZH = {
+@@ -172,7 +313,6 @@ const ZH = {
    'A provider id is lowercase letters, digits and dashes, starting with a letter': '服务商 ID 只能用小写字母、数字和短横线，并以字母开头',
    'Add at least one model': '至少添加一个模型',
    'Two models have the same id': '有两个模型的 ID 相同',
@@ -1085,7 +1141,7 @@ index 06962367..5e2b9175 100644
    'Sign in to DeepSeek': '登录 DeepSeek 账号',
    'Enter a DeepSeek API key': '填入 DeepSeek API key',
    'Open settings to set up a custom model': '打开设置配置自定义模型',
-@@ -226,6 +366,9 @@ const ZH = {
+@@ -228,6 +368,9 @@ const ZH = {
    About: '简介',
    'Show less': '收起',
    'Show more': '展开',
@@ -1180,7 +1236,7 @@ index 06962367..5e2b9175 100644
    Reactions: '表情',
    'Message actions': '消息操作',
    Download: '下载',
-@@ -682,7 +882,6 @@ const ZH = {
+@@ -681,7 +881,6 @@ const ZH = {
    ' At least {count} characters.': ' 至少 {count} 个字符。',
    'At least {count} characters.': '至少 {count} 个字符。',
    'Replace value': '替换值',
@@ -1188,7 +1244,7 @@ index 06962367..5e2b9175 100644
    Save: '保存',
    'Allowing…': '允许中…',
    Allow: '允许',
-@@ -931,6 +1130,10 @@ const ZH = {
+@@ -933,6 +1132,10 @@ const ZH = {
    // Feedback and errors
    Feedback: '反馈',
    'Report a problem': '报告问题',
@@ -1199,7 +1255,7 @@ index 06962367..5e2b9175 100644
    'What happened?': '发生了什么？',
    'What you did, what you expected, and what happened instead. It goes into the issue.': '你做了什么、期望什么、实际发生了什么。会写进 issue。',
    'For example: I asked Writer in the group chat and it showed an error.': '例如：我在群聊里问 Writer，它显示出错了。',
-@@ -973,6 +1176,7 @@ const ZH = {
+@@ -975,6 +1178,7 @@ const ZH = {
    'Its group conversation could not open, so it starts a new one next time': '它的群聊会话打不开，下次会换一个新的',
    // The composer's +
    'Add files': '添加文件',
@@ -1207,7 +1263,7 @@ index 06962367..5e2b9175 100644
    'Reference a chat': '引用对话',
    'Chat with {name}': '与 {name} 的对话',
    'Scheduled task': '定时任务',
-@@ -1068,6 +1272,10 @@ const ZH = {
+@@ -1070,6 +1274,10 @@ const ZH = {
    'Up one level': '上一级',
    'No folders inside.': '里面没有文件夹。',
    'Some folders are not shown.': '还有一些文件夹没有显示。',
@@ -1276,7 +1332,7 @@ index eee56758..df5ba78f 100644
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const ArrowDownIcon = lineIcon(['M10 4v12', 'M5 11l5 5 5-5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index 31f66057..69999fff 100644
+index 98e1b486..4a7ada04 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -1,9 +1,11 @@
@@ -1303,22 +1359,7 @@ index 31f66057..69999fff 100644
  import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
  import { installLocale, language, t } from './i18n.js'
  import { noteClientError, quietly } from './diagnostics.js'
-@@ -45,12 +50,14 @@ import { ABOUT_CSS } from './about.js'
- import { MEMBER_CSS, MemberDock } from './member-status.js'
- import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-message.js'
- import { noticeApprovals } from './approval-notices.js'
-+import { installSafeTop } from './safe-top.js'
- import { listedOpener } from './open-listed.js'
- 
- export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
- 
- export function apply(ctx) {
-   ctx.effect(() => installLocale(ctx.get('locale')), 'ds-bot: interface copy')
-+  ctx.effect(() => installSafeTop(), 'ds-bot: system bar height')
-   const roster = createSource(EMPTY_ROSTER)
-   migrateStorage()
-   const unreadStore = sharedMap(STORAGE.unread)
-@@ -144,6 +151,8 @@ export function apply(ctx) {
+@@ -147,6 +152,8 @@ export function apply(ctx) {
    const PREFS_KEY = STORAGE.prefs
    let savedPrefs = {}
    try { savedPrefs = JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') ?? {} } catch { savedPrefs = {} }
@@ -1327,7 +1368,7 @@ index 31f66057..69999fff 100644
    const writeUnread = (id, value) => {
      const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
      ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
-@@ -326,23 +335,42 @@ export function apply(ctx) {
+@@ -351,23 +358,42 @@ export function apply(ctx) {
        const layout = layoutOf(prefs)
        const width = widthOf(prefs)
        const flatWidth = flatWidthOf(prefs)
@@ -1373,7 +1414,7 @@ index 31f66057..69999fff 100644
      const offRegistry = registry.subscribe(render)
      return () => {
        offRoster()
-@@ -352,6 +380,7 @@ export function apply(ctx) {
+@@ -377,6 +403,7 @@ export function apply(ctx) {
        } finally {
          delete document.body.dataset.btMotion
          delete document.body.dataset.btLayout
@@ -1381,7 +1422,7 @@ index 31f66057..69999fff 100644
          document.body.style.removeProperty('--bt-msg-w')
          document.body.style.removeProperty('--bt-flat-w')
          style.remove()
-@@ -359,6 +388,12 @@ export function apply(ctx) {
+@@ -384,6 +411,12 @@ export function apply(ctx) {
      }
    }
  
@@ -1394,7 +1435,7 @@ index 31f66057..69999fff 100644
    ctx.effect(() => {
      const hub = { registerShape, registerTheme, themes: () => Object.keys(allThemes()), shapes: () => Object.keys(SHAPES) }
      const queued = Array.isArray(window.dshBotQueue) ? window.dshBotQueue : []
-@@ -497,8 +532,150 @@ export function apply(ctx) {
+@@ -525,8 +558,150 @@ export function apply(ctx) {
        const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
        show(target)
      },
@@ -1546,7 +1587,7 @@ index 31f66057..69999fff 100644
      // The left column's own preference: 'open', 'rail' or 'hidden'. The switch
      // remembers the shown one it hid; a drag sets the open column's width.
      setSidebarPref: (pref) => {
-@@ -884,6 +1061,10 @@ export function apply(ctx) {
+@@ -930,6 +1105,10 @@ export function apply(ctx) {
      () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
      () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
      () => shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
@@ -1557,7 +1598,7 @@ index 31f66057..69999fff 100644
    ]
    const installConversation = () => [
      () => installCompiledStyles(CONVERSATION_CSS, 'conversation'),
-@@ -1016,7 +1197,7 @@ export function apply(ctx) {
+@@ -1062,7 +1241,7 @@ export function apply(ctx) {
        } catch {
          declared = false
        }
@@ -1566,7 +1607,7 @@ index 31f66057..69999fff 100644
        if (!declared) {
          // The slot itself is not declared yet; keep watching for a while.
          if (verifyAttempts < 20) {
-@@ -1031,8 +1212,297 @@ export function apply(ctx) {
+@@ -1077,8 +1256,297 @@ export function apply(ctx) {
        groups.remount('shell')
        verifyTimer = setTimeout(verifySidebar, 250)
      }
@@ -1864,7 +1905,7 @@ index 31f66057..69999fff 100644
        clearTimeout(verifyTimer)
        verifyAttempts = 0
        verifyTimer = setTimeout(verifySidebar, 250)
-@@ -1043,6 +1513,13 @@ export function apply(ctx) {
+@@ -1089,6 +1557,13 @@ export function apply(ctx) {
      return () => {
        unsub()
        clearTimeout(verifyTimer)
@@ -2687,10 +2728,10 @@ index 00000000..d0ebce78
 +      error ? h('p', { className: 'bt-mcp-error', role: 'alert' }, error) : null))
 +}
 diff --git a/ds-bot/src/client/member-status.js b/ds-bot/src/client/member-status.js
-index 018478e2..fd94ddfd 100644
+index 401f2ecb..53f53600 100644
 --- a/ds-bot/src/client/member-status.js
 +++ b/ds-bot/src/client/member-status.js
-@@ -200,8 +200,8 @@ export function useMemberWork(room, useWork) {
+@@ -198,8 +198,8 @@ export function useMemberWork(room, useWork) {
  
  export const MEMBER_CSS = `
  .bt-mw-dock{display:flex;justify-content:center;margin:0 auto 8px;pointer-events:none}
@@ -2761,7 +2802,7 @@ index 00000000..b01891a8
 +  return slot
 +}
 diff --git a/ds-bot/src/client/model-menu.js b/ds-bot/src/client/model-menu.js
-index 731f0931..40f3e328 100644
+index 4ac48362..d4f59e8c 100644
 --- a/ds-bot/src/client/model-menu.js
 +++ b/ds-bot/src/client/model-menu.js
 @@ -6,6 +6,7 @@ import { BotMark } from './mark.js'
@@ -3944,43 +3985,6 @@ index 00000000..0328db2f
 +    fill: mark.fill, 'aria-hidden': true, 'data-provider': mark.id,
 +  }, mark.paths.map((d, index) => h('path', { key: index, d })))
 +}
-diff --git a/ds-bot/src/client/safe-top.js b/ds-bot/src/client/safe-top.js
-new file mode 100644
-index 00000000..e87b754e
---- /dev/null
-+++ b/ds-bot/src/client/safe-top.js
-@@ -0,0 +1,31 @@
-+// How tall the system bar is over the page.
-+//
-+// The page is edge to edge (the layout sets viewport-fit=cover), but this WebView
-+// reports `env(safe-area-inset-top)` as 0, so a fixed layer that starts at the viewport
-+// top lands inside the status bar. The one element that is already placed below it is the
-+// host's own conversation header, so its top edge is measured and published as
-+// `--bt-safe-top`; layers that must clear the bar read that variable.
-+const VARIABLE = '--bt-safe-top'
-+
-+function measure() {
-+  const root = document.documentElement
-+  const header = document.querySelector('[data-phase] header') ?? document.querySelector('header[data-window-drag]')
-+  const top = header?.getBoundingClientRect?.().top
-+  if (typeof top === 'number' && top > 0) root.style.setProperty(VARIABLE, `${Math.round(top)}px`)
-+  else root.style.removeProperty(VARIABLE)
-+}
-+
-+export function installSafeTop() {
-+  if (typeof document === 'undefined') return undefined
-+  measure()
-+  const observer = new MutationObserver(() => measure())
-+  observer.observe(document.body, { childList: true, subtree: true })
-+  window.addEventListener('resize', measure)
-+  window.addEventListener('orientationchange', measure)
-+  return () => {
-+    observer.disconnect()
-+    window.removeEventListener('resize', measure)
-+    window.removeEventListener('orientationchange', measure)
-+    document.documentElement.style.removeProperty(VARIABLE)
-+  }
-+}
 diff --git a/ds-bot/src/client/settings.js b/ds-bot/src/client/settings.js
 index 4428659d..19588586 100644
 --- a/ds-bot/src/client/settings.js
@@ -4088,15 +4092,15 @@ index 00000000..ae116668
 +
 +export const emptyArrangement = () => ({ ...EMPTY })
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index b8f0a61e..f7a61d18 100644
+index 79e922a0..36f512af 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
-@@ -3,16 +3,19 @@ import { createPortal } from 'react-dom'
+@@ -3,15 +3,19 @@ import { createPortal } from 'react-dom'
  import { FishLogo } from './dsh-primitives.js'
  import { isMainOf } from './sources.js'
  import { currentPart, previewOf, relativeShort } from './text.js'
 -import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon } from './icons.js'
-+import { PlusIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon } from './icons.js'
++import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon } from './icons.js'
  import { MAIN_LOOK } from './characters.js'
  import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
  import { reducedMotion } from './activity-row.js'
@@ -4105,32 +4109,14 @@ index b8f0a61e..f7a61d18 100644
  import { hostText, t } from './i18n.js'
 +import { MarketPanel } from './market.js'
 +import { holdDrawerDismiss } from './drawer-dismiss.js'
+ import { clientErrors } from './diagnostics.js'
  import { showsDshRow } from './dsh-offer.js'
--import { frameLayout, dragColumn, RAIL_WIDTH, FALLBACK_SIDEBAR_WIDTH, userSidebarToggle } from './frame-layout.js'
--import { chatRoom, dshCollapsed } from './frame-watch.js'
 +import { STORAGE } from './storage.js'
 +import { readArrangement, writeArrangement } from './sidebar-groups.js'
-+
+ import { frameLayout, dragColumn, RAIL_WIDTH, FALLBACK_SIDEBAR_WIDTH, userSidebarToggle } from './frame-layout.js'
+ import { chatRoom, dshCollapsed } from './frame-watch.js'
  
- // -------------------------------------------------------------------------
- // Sidebar
-@@ -26,15 +29,6 @@ function useMarkedUnread(id, active, marked, actions) {
- 
- const PinMark = () => h('span', { className: 'bt-pin', 'aria-hidden': true }, h(PinMarkIcon))
- 
--// The rail shows a row's name only on hover; the wide list does so when the name is
--// cut, which only the laid-out row can tell, so it is measured as the pointer enters.
--const nameIfCut = (event) => {
--  const row = event.currentTarget
--  const name = row.querySelector('.bt-row-title')
--  if (name && name.scrollWidth > name.clientWidth) row.title = name.textContent
--  else row.removeAttribute('title')
--}
--
- // Whether an approval waits for the user: for a Bot, in any of its Sessions; for a group,
- // from any of its members there.
- const useApproval = (useWork, match) => (useWork ? useWork(work => (work.approvals ?? []).some(match)) : false)
-@@ -54,7 +48,7 @@ const waitingFor = (roster, waits) => {
+@@ -55,7 +59,7 @@ const waitingFor = (roster, waits) => {
    return names.length === 0 ? '' : t('Waiting for {names}', { names: names.join(t(' and ')) })
  }
  
@@ -4139,22 +4125,13 @@ index b8f0a61e..f7a61d18 100644
    const id = bot.id
    const part = currentPart(bot)
    const preview = useSessions(list => previewOf(list, part, roster.exchangeTurns[part]))
-@@ -89,26 +83,25 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
-       'data-bot-id': id, title: preview || bot.name, onClick: () => actions.openSession(id), onContextMenu,
-     },
-     h(BotAvatar, { bot, size: 60, state, main: true }),
--    h('span', { className: 'bt-tile-name' }, bot.name),
--    bot.role ? h('span', { className: 'bt-chip' }, bot.role) : null))
-+    h('span', { className: 'bt-tile-name' }, bot.name)))
-   }
+@@ -96,11 +100,12 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
    return h('button', {
      type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
--    'data-bot-id': id, title: wide ? undefined : bot.name, onMouseEnter: wide ? nameIfCut : undefined, onClick: () => actions.openSession(id), onContextMenu,
-+    'data-bot-id': id, title: wide ? undefined : bot.name, onClick: () => actions.openSession(id), onContextMenu,
+     'data-bot-id': id, title: wide ? undefined : bot.name, onMouseEnter: wide ? nameIfCut : undefined, onClick: () => actions.openSession(id), onContextMenu,
 +    draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', id); event.dataTransfer.effectAllowed = 'move' },
    },
--  h(BotAvatar, { bot, size: wide ? 36 : 44, state, main }),
-+  h(BotAvatar, { bot, size: 36, state, main }),
+   h(BotAvatar, { bot, size: wide ? 36 : 44, state, main }),
    pinned && !wide ? h(PinMark) : null,
    wide ? h('span', { className: 'bt-row-body' },
 -    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null),
@@ -4162,41 +4139,30 @@ index b8f0a61e..f7a61d18 100644
      runningLine ? h('span', { className: 'bt-row-preview' }, runningLine)
        : awayLine ? h('span', { className: 'bt-row-preview' }, awayLine)
          : waitsFor ? h('span', { className: 'bt-row-preview' }, waitsFor)
-           : preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
--  wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true })
--    : !wide && !active && (alert || unread) ? h('span', { className: `bt-dot${alert ? ' bt-dot-wait' : ''}`, 'aria-hidden': true }) : null)
-+  wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
+@@ -109,7 +114,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
+     : !wide && !active && (alert || unread) ? h('span', { className: `bt-dot${alert ? ' bt-dot-wait' : ''}`, 'aria-hidden': true }) : null)
  }
  
 -function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked }) {
 +function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked, at }) {
    const id = room.id
-   const fallback = useSessions(list => previewOf(list, id))
-   const preview = room.preview?.replace(/\s+/g, ' ').trim() || fallback
-@@ -124,17 +117,17 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
-   const label = [room.name, pinned ? t('Pinned') : '', members.length > 0 ? t('Working') : '', approval ? t('Waiting for your approval') : ''].filter(Boolean).join(', ')
-   return h('button', {
+   // The group's own Session is a chain of parts; the row shows the current one.
+   const sessionId = room.sessionId ?? id
+@@ -129,11 +134,12 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
      type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
--    'data-room-id': id, title: wide ? undefined : room.name, onMouseEnter: wide ? nameIfCut : undefined, onClick: () => actions.openSession(id),
-+    'data-room-id': id, title: wide ? undefined : room.name, onClick: () => actions.openSession(id),
+     'data-room-id': id, title: wide ? undefined : room.name, onMouseEnter: wide ? nameIfCut : undefined, onClick: () => actions.openSession(id),
      onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'room', id, x: event.clientX, y: event.clientY }) },
 +    draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', id); event.dataTransfer.effectAllowed = 'move' },
    },
--  h(RoomAvatar, { room, roster, size: wide ? 36 : 44 }),
-+  h(RoomAvatar, { room, roster, size: 36 }),
+   h(RoomAvatar, { room, roster, size: wide ? 36 : 44 }),
    pinned && !wide ? h(PinMark) : null,
    wide ? h('span', { className: 'bt-row-body' },
 -    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null),
 +    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null, h(RowTime, { at })),
      workingLine ? h('span', { className: 'bt-row-preview' }, workingLine) : preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
    wide && approval && !active ? h('span', { className: 'bt-unread bt-unread-wait', 'aria-hidden': true })
--    : wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true })
--      : !wide && !active && (approval || unread) ? h('span', { className: `bt-dot${approval ? ' bt-dot-wait' : ''}`, 'aria-hidden': true }) : null)
-+    : wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null)
- }
- 
- // One expanded DSH Agent Session row: title, relative stamp, rename field, and a
-@@ -186,7 +179,14 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
+     : wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true })
+@@ -189,7 +195,14 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
  
  // The DSH Agent row: a plain dsh Session list lives in the Bot workspace, so it
  // sits among the Bots with the harness's own whale mark.
@@ -4212,164 +4178,37 @@ index b8f0a61e..f7a61d18 100644
    const info = useSessions(list => JSON.stringify(agent.sessions.map((id) => {
      const row = list.byId[id]
      return {
-@@ -220,14 +220,14 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide,
+@@ -223,11 +236,12 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide,
      h('button', {
        type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
        'data-agent-id': agent.id, title: wide ? undefined : 'DSH Agent', onClick: () => actions.openAgent(agent.id),
 +      draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', agent.id); event.dataTransfer.effectAllowed = 'move' },
        onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'agent', id: agent.id, x: event.clientX, y: event.clientY }) },
      },
--    h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: wide ? 22 : 24 })),
-+    h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: 22 })),
+     h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: wide ? 22 : 24 })),
      wide ? h('span', { className: 'bt-row-body' },
 -      h('span', { className: 'bt-row-name' }, 'DSH Agent'),
 +      h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, 'DSH Agent'), h(RowTime, { at })),
        preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
--    wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true })
--      : !wide && unread && !active ? h('span', { className: 'bt-dot', 'aria-hidden': true }) : null),
-+    wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true }) : null),
-     h('div', { className: 'bt-agent-sub', 'data-open': open || undefined },
-       h('div', { className: 'bt-agent-sub-in' },
-         h('button', { type: 'button', className: 'bt-agent-sub-row bt-agent-new', style: { '--i': 0 }, onClick: () => { void actions.newAgentSession(agent.id).catch(error => actions.reportError(error, 'agent-session')) } },
-@@ -262,48 +262,27 @@ function useListGlide(listRef, layout, key) {
-   }, [layout, key])
- }
- 
--// In the Bot view the left column is ours, drawn on <body> over the shell's
--// collapsed sidebar: the open column or the avatar rail push the conversation
--// over, the drawer floats above it. Its right edge drags the open width, and
--// down to the rail.
--function LeftColumn({ mode, width, onGrip, children }) {
--  return createPortal(h('div', { className: 'bt-leftcol', 'data-left': mode, style: { width: `${width}px` } },
--    children,
--    h('div', { className: 'bt-leftcol-grip', role: 'separator', 'aria-orientation': 'vertical', 'aria-label': t('Resize sidebar'), title: t('Resize sidebar'), onPointerDown: onGrip })), document.body)
--}
--
--// The top-left switch hides the whole column and brings it back. Under a
--// Windows title bar it takes the shell's own place in the title band; elsewhere
--// it shows only while the column is hidden, since the column's own top row
--// carries it otherwise.
--function TitleToggle({ hidden, onToggle }) {
--  if (typeof document === 'undefined') return null
--  const titlebar = document.documentElement.hasAttribute('data-windows-titlebar')
--  if (!titlebar && !hidden) return null
--  const label = t(hidden ? 'Expand sidebar' : 'Collapse sidebar')
--  return createPortal(h('button', {
--    type: 'button', className: titlebar ? 'bt-title-toggle' : 'bt-round bt-title-toggle', 'aria-label': label, title: label, onClick: onToggle,
--  }, h(SidebarIcon)), document.body)
--}
--
+     wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true })
+       : !wide && unread && !active ? h('span', { className: 'bt-dot', 'aria-hidden': true }) : null),
+@@ -303,6 +317,7 @@ const bootHint = () => {
  export function TeamSidebar(props) {
--  const { wide, useRoster, useUi, useSessions, actions } = props
-+  const { wide, expandSidebar, useRoster, useUi, useSessions, actions } = props
-+  const [market, setMarket] = useState(false)
+   const { wide, useRoster, useUi, useSessions, actions } = props
    const listRef = useRef(null)
-+  // The caption row looks the same in the window and in a browser: the desktop build carries
-+  // its own controls in a band above, and this row is not asked to join it any more.
-+  const closing = useRef(false)
-+  useLayoutEffect(() => { closing.current = false })
-+  // The collapse lives here because this component alone knows `wide` and the latch that
-+  // `navigate` uses; entries inside the drawer ask for it (see drawer-dismiss.js).
-+  const collapseDrawer = useRef(null)
-+  collapseDrawer.current = () => {
-+    if (!wide || window.innerWidth >= 1024 || closing.current) return
-+    closing.current = true
-+    expandSidebar?.()
-+    actions.toggleSidebar()
-+  }
-+  useEffect(() => holdDrawerDismiss(() => collapseDrawer.current?.()), [])
++  const [market, setMarket] = useState(false)
    const roster = useRoster(value => value)
    const markedUnread = useUi(value => value.unread)
--  const uiNow = useUi(value => value)
-   props.useRegistry(value => value)
--  const frameSnap = props.useFrame ? props.useFrame(value => value) : { viewport: typeof window === 'undefined' ? 0 : window.innerWidth, sidebarWidth: FALLBACK_SIDEBAR_WIDTH, collapsedWidth: 0 }
--  const pref = props.useSidebarPref ? props.useSidebarPref(value => value) : 'open'
--  const layout = frameLayout({
--    viewport: frameSnap.viewport, sidebarWidth: frameSnap.sidebarWidth,
--    pref, drawer: uiNow.leftDrawer === true,
--    panel: uiNow.details ? { view: uiNow.view, yielded: uiNow.panelYield === true } : null,
--  })
--  // A drag of the column's edge shows where it would land, live.
--  const [drag, setDrag] = useState(null)
--  const mode = drag?.left ?? layout.left
--  const wideContent = mode !== 'rail'
-   const updated = useSessions(list => {
-     const stamps = {}
-     for (const id of list.ids) stamps[id] = list.byId[id]?.updatedAt ?? 0
-@@ -320,122 +299,107 @@ export function TeamSidebar(props) {
+   const uiNow = useUi(value => value)
+@@ -334,6 +349,95 @@ export function TeamSidebar(props) {
      return entries.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at)
    }, [roster, updated])
    const main = roster.byId[roster.mainBotId]
--  useListGlide(listRef, wideContent, order.map(entry => entry.item.id).join(','))
--  useLandOnMainBot(roster, useSessions, actions)
--
--  // Our column pushes the conversation over by what it takes beyond the shell's
--  // collapsed track; a drawer floats over the rail's place, so it pushes as much
--  // as the rail and the chat stays put when it opens or closes.
--  const openWidth = drag?.width ?? frameSnap.sidebarWidth
--  const ourWidth = mode === 'rail' ? RAIL_WIDTH : openWidth
--  const pushed = mode === 'open' ? openWidth : mode === 'hidden' ? 0 : RAIL_WIDTH
--  useLayoutEffect(() => {
--    if (typeof document === 'undefined') return
--    chatRoom.setLeft(Math.max(0, pushed - (frameSnap.collapsedWidth ?? 0)))
--  }, [pushed, frameSnap.collapsedWidth])
--  useEffect(() => () => { if (typeof document !== 'undefined') chatRoom.setLeft(null) }, [])
--
--  // The edge drag: live while the pointer moves, the column's new state on release.
--  const startDrag = (event) => {
--    if (event.button !== 0) return
--    event.preventDefault()
--    const grip = event.currentTarget
--    grip.setPointerCapture?.(event.pointerId)
--    chatRoom.hold(true)
--    let last = null
--    let done = false
--    const onMove = (move) => { last = dragColumn(move.clientX, window.innerWidth); setDrag(last) }
--    const ends = ['pointerup', 'pointercancel', 'lostpointercapture']
--    const onEnd = (end) => {
--      if (done) return
--      done = true
--      if (end.type === 'pointerup') last = dragColumn(end.clientX, window.innerWidth)
--      grip.removeEventListener('pointermove', onMove)
--      for (const name of ends) grip.removeEventListener(name, onEnd)
--      setDrag(null)
--      chatRoom.hold(false)
--      if (last === null) return
--      // The drag is the latest explicit gesture: it takes back a yielded panel's room.
--      actions.setPanelYield?.(false)
--      if (last.left === 'rail') { actions.setLeftDrawer?.(false); actions.setSidebarPref?.('rail'); return }
--      actions.setSidebarWidth?.(last.width)
--      actions.setSidebarPref?.('open')
--      actions.setLeftDrawer?.(last.left === 'drawer')
--    }
--    grip.addEventListener('pointermove', onMove)
--    for (const name of ends) grip.addEventListener(name, onEnd)
--  }
--
--  // In the Bot view the shell's own sidebar stays collapsed under our column. A
--  // flip we did not ask for is the user's own switch gesture (the shell's button
--  // or shortcut where it still reaches), unless the width just crossed the
--  // shell's auto-collapse line, which re-applies the shell's own rule.
--  const dsh = useRef(null)
--  const requested = useRef(false)
--  // The request mark always lapses on its own: a re-render before the shell's
--  // flip must not leave it set, or the user's next switch would read as ours.
--  // A lapse checks the shell again, since our flip and another one landing in
--  // the same frame cancel out and no flip arrives to settle it.
--  const requestLapse = useRef(0)
--  const [lapsed, setLapsed] = useState(0)
--  useEffect(() => () => clearTimeout(requestLapse.current), [])
--  // The window's own resize event lands before the shell's next-frame measure,
--  // so it dates a width change even while our frame source still holds the old one.
--  const resizedAt = useRef(0)
 +  // Sections, as the reference product draws them: pinned first, the user's own groups, then
 +  // whatever is left over under Bots and Group chats. A built-in section with nothing in it
 +  // is not drawn; a group the user made always is, so an empty one can still be filled.
 +  const [arrange, setArrange] = useState(readArrangement)
-   useEffect(() => {
--    const onResize = () => { resizedAt.current = performance.now() }
--    window.addEventListener('resize', onResize)
--    return () => window.removeEventListener('resize', onResize)
++  useEffect(() => {
 +    const reload = () => setArrange(readArrangement())
 +    // A group made from a row's menu is named right away, as the list's own row is.
 +    const rename = (event) => { reload(); setRenamingSection(event.detail) }
@@ -4379,12 +4218,7 @@ index b8f0a61e..f7a61d18 100644
 +      window.removeEventListener('ds-bot:groups', reload)
 +      window.removeEventListener('ds-bot:group-created', rename)
 +    }
-   }, [])
--  const quiet = (on) => {
--    // Our own collapse of the shell's sidebar lands at once: its slide would drag
--    // the conversation across under our column.
--    if (on) document.documentElement.setAttribute('data-bt-collapsing', '')
--    else document.documentElement.removeAttribute('data-bt-collapsing')
++  }, [])
 +  const [renamingSection, setRenamingSection] = useState(null)
 +  const [sectionMenu, setSectionMenu] = useState(null)
 +  const [sectionPicker, setSectionPicker] = useState(null)
@@ -4410,47 +4244,7 @@ index b8f0a61e..f7a61d18 100644
 +  const changeArrange = (next) => {
 +    setArrange(next)
 +    writeArrangement(next)
-   }
--  useEffect(() => () => quiet(false), [])
--  useLayoutEffect(() => {
--    if (typeof document === 'undefined' || typeof actions.toggleSidebar !== 'function') return undefined
--    const collapsed = dshCollapsed() ?? !wide
--    const prev = dsh.current
--    const viewport = window.innerWidth
--    dsh.current = { collapsed, viewport }
--    if (prev !== null && collapsed !== prev.collapsed) {
--      if (requested.current) requested.current = false
--      else if (!collapsed && userSidebarToggle({ before: prev, after: { collapsed, viewport }, sinceResize: performance.now() - resizedAt.current })) {
--        toggleRef.current()
--      }
--    }
--    if (collapsed) { requested.current = false; quiet(false); return undefined }
--    if (requested.current) return undefined
--    requested.current = true
--    quiet(true)
--    actions.toggleSidebar()
--    clearTimeout(requestLapse.current)
--    requestLapse.current = setTimeout(() => { requested.current = false; quiet(false); setLapsed(value => value + 1) }, 300)
--    return undefined
--  }, [wide, frameSnap.viewport, lapsed])
--
--  // The drawer closes on a row pick, on Escape and on a press outside it.
--  useEffect(() => {
--    if (mode !== 'drawer') return undefined
--    const onDown = (event) => {
--      if (event.target instanceof Element && event.target.closest('.bt-leftcol')) return
--      actions.setLeftDrawer?.(false)
--    }
--    const onKey = (event) => {
--      if (event.key !== 'Escape') return
--      event.stopPropagation()
--      actions.setLeftDrawer?.(false)
--    }
--    window.addEventListener('mousedown', onDown)
--    window.addEventListener('keydown', onKey, true)
--    return () => { window.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey, true) }
--  }, [mode])
--
++  }
 +  // The new-group row turns into a name field in place: nothing is created until it is named.
 +  const beginCreate = () => {
 +    setSectionMenu(null)
@@ -4499,101 +4293,49 @@ index b8f0a61e..f7a61d18 100644
 +    try { localStorage.setItem(STORAGE.folded, JSON.stringify(next)) } catch { /* storage unavailable */ }
 +    return next
 +  })
-+  useListGlide(listRef, wide, order.map(entry => entry.item.id).join(','))
-+  useLandOnMainBot(roster, useSessions, actions)
-+  // The shell keeps wide content during its collapse fade. Normalize through its
-+  // public expansion action before toggling; coalesce synchronous activations
-+  // until React commits the result.
+   useListGlide(listRef, wideContent, order.map(entry => entry.item.id).join(','))
+   useLandOnMainBot(roster, useSessions, actions)
+ 
+@@ -512,6 +616,12 @@ export function TeamSidebar(props) {
+     return () => { window.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey, true) }
+   }, [mode])
+ 
++  // Entries inside the drawer that are not sidebar rows (a menu's page, the palette, a
++  // fresh chat) report where they came from; only a drawer entry then collapses it.
++  const modeRef = useRef(mode)
++  modeRef.current = mode
++  useEffect(() => holdDrawerDismiss(() => { if (modeRef.current === 'drawer') actions.setLeftDrawer?.(false) }), [])
++
    const navigate = (open, id) => {
      const result = open(id)
--    if (uiNow.leftDrawer === true) actions.setLeftDrawer?.(false)
-+    if (wide && window.innerWidth < 1024 && !closing.current) {
-+      closing.current = true
-+      expandSidebar?.()
-+      actions.toggleSidebar()
-+    }
-     return result
-   }
-   const rowActions = {
-@@ -444,68 +408,100 @@ export function TeamSidebar(props) {
-     openAgent: id => navigate(actions.openAgent, id),
-     openAgentSession: id => navigate(actions.openAgentSession, id),
-     newAgentSession: id => navigate(actions.newAgentSession, id),
-+    // A row's menu opens its page above the drawer, so the drawer collapses first.
-+    openSettings: (page, id) => actions.openSettings(page, id, { fromDrawer: true }),
-   }
--  const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide: wideContent }
-+  const rowProps = { roster, actions: rowActions, useSessions, useUi, useSessionStatus: props.useSessionStatus, useSessionRetainInfo: props.useSessionRetainInfo, useActivity: props.useActivity, useWork: props.useWork, wide }
-   // Typing while the sidebar has focus starts a search.
-   const typeToSearch = (event) => {
-     if (event.defaultPrevented || event.key.length !== 1 || event.key === ' ' || event.metaKey || event.ctrlKey || event.altKey || event.nativeEvent.isComposing) return
-     if (event.target instanceof Element && event.target.closest('input,textarea,[contenteditable]')) return
-     event.preventDefault()
--    actions.openPalette(event.key)
-+    actions.openPalette(event.key, { fromDrawer: true })
-   }
--  // The switch (top-left button, the shortcut) hides the whole column or brings
--  // back the one it hid.
--  const onToggle = () => actions.toggleLeftHidden?.()
--  // The shell's sidebar shortcut is caught on its way down, before the shell's
--  // own listener on window sees it: left to the shell, it would expand the shell's
--  // sidebar first and our sync would pull it back, a visible flash.
--  const toggleRef = useRef(onToggle)
--  toggleRef.current = onToggle
--  useEffect(() => {
--    const onKey = (event) => {
--      if (event.defaultPrevented || event.isComposing || !pressesShellShortcut(event, 'sidebar.left.toggle')) return
--      if (event.target instanceof Element && event.target.closest('.xterm')) return
--      if (document.querySelector('[aria-modal="true"]')) return
--      event.preventDefault()
--      event.stopPropagation()
--      toggleRef.current()
--    }
--    document.addEventListener('keydown', onKey, true)
--    return () => document.removeEventListener('keydown', onKey, true)
--  }, [])
--  const top = wideContent
--    ? h('div', { className: 'bt-side-top' },
--        h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
--        h(UpdateButton, { useUpdate: props.useUpdate, actions }),
--        h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
--        h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
--        h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: onToggle }, h(SidebarIcon)))
--    : h('div', { className: 'bt-rail-top' },
--        h(UpdateButton, { useUpdate: props.useUpdate, actions }),
--        h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: onToggle }, h(SidebarIcon)),
--        main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
--        h('span', { className: 'bt-rail-sep', 'aria-hidden': true }))
--  // The foot stands in for the shell's hidden footer: the account avatar, and on
--  // the rail the new-chat button above it.
--  const foot = wideContent
+     if (uiNow.leftDrawer === true) actions.setLeftDrawer?.(false)
+@@ -567,7 +677,11 @@ export function TeamSidebar(props) {
+   // The foot stands in for the shell's hidden footer: the account avatar, and on
+   // the rail the new-chat button above it.
+   const foot = wideContent
 -    ? h('div', { className: 'bt-leftcol-foot' }, h(AccountLauncher, { seat: false, actions }))
--    : h('div', { className: 'bt-leftcol-foot bt-leftcol-foot-rail' },
--        h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
--        h(AccountLauncher, { seat: false, actions }))
--  const content = h('div', { className: wideContent ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
--    top,
--    wideContent && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
-+  return h('div', { className: wide ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
-+    wide ? null
-+      : h(Fragment, null,
-+          // The rail opens with the way back: the same control that folded it.
-+          h('button', { type: 'button', className: 'bt-round bt-side-expand', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'), onClick: () => actions.toggleSidebar() }, h(SidebarIcon)),
-+          h(UpdateButton, { useUpdate: props.useUpdate, actions }),
-+          h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new', { fromDrawer: true }) }, h(PlusIcon))),
-+    wide && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
++    ? h('div', { className: 'bt-leftcol-foot' },
++        h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => { actions.openPluginsPanel?.() } },
++          h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
++          h('span', { className: 'bt-apps-label' }, t('Connect apps'))),
++        h(AccountLauncher, { seat: false, actions }))
+     : h('div', { className: 'bt-leftcol-foot bt-leftcol-foot-rail' },
+         h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
+         h(AccountLauncher, { seat: false, actions }))
+@@ -575,13 +689,79 @@ export function TeamSidebar(props) {
+     top,
+     wideContent && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
      h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
--      wideContent ? (main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…'))) : null,
+-      wideContent ? (main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, uiNow.bootFailed ? bootHint() : t('Setting up your Main Bot…'))) : null,
 -      order.map(entry => (entry.kind === 'bot'
 -        ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
 -        : entry.kind === 'room'
 -          ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
 -          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))),
 -    foot)
--  return h(Fragment, null,
--    h(TitleToggle, { hidden: mode === 'hidden', onToggle }),
--    mode === 'hidden' ? null : h(LeftColumn, { mode, width: ourWidth, onGrip: startDrag }, content))
-+      main && !arrange.assign[main.id] ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true }) : roster.ready || main ? null : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…')),
++      wideContent ? (main && !arrange.assign[main.id]
++        ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true })
++        : roster.ready || main ? null : h('div', { className: 'bt-hint' }, uiNow.bootFailed ? bootHint() : t('Setting up your Main Bot…'))) : null,
 +      ...sections.flatMap(section => [
 +        h('div', {
 +          key: `section:${section.id}`, className: 'bt-sec-row',
@@ -4662,67 +4404,11 @@ index b8f0a61e..f7a61d18 100644
 +        })
 +        : h('button', { key: 'new-group', type: 'button', className: 'bt-sec-new', onClick: beginCreate },
 +          h(PlusIcon), h('span', null, t('New section')))),
-+    h('div', { className: 'bt-side-foot' },
-+      h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => { actions.openPluginsPanel?.() } },
-+        h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
-+        wide ? h('span', { className: 'bt-apps-label' }, t('Connect apps')) : null)),
++    foot,
 +    market ? h(MarketPanel, { open: true, onClose: () => setMarket(false), roster, actions }) : null)
- }
- 
- // The update button at the sidebar's top right: a cloud while a newer DS Bot —
-@@ -662,15 +658,6 @@ function pressSettingsShortcut() {
-   }))
- }
- 
--// Whether a key press is the shell's current binding for one of its shortcuts.
--function pressesShellShortcut(event, id) {
--  const binding = shellShortcuts?.catalog.getSnapshot().find(row => row.id === id)?.binding
--  if (!binding) return false
--  const held = new Set(binding.modifiers)
--  return event.code === binding.code && event.ctrlKey === held.has('control') && event.altKey === held.has('alt')
--    && event.shiftKey === held.has('shift') && event.metaKey === held.has('meta')
--}
--
- const NO_SUBSCRIBE = () => () => {}
- const NO_SNAPSHOT = () => null
- 
-@@ -679,7 +666,17 @@ const NO_SNAPSHOT = () => null
- // `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
- // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
- // back in Agent mode; FooterAccount stands in while no seat exists at all.
--export function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions }) {
-+export function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions: baseActions }) {
-+  // This menu sits in the drawer (the shell's settings seat renders the same component
-+  // with the drawer closed, where the collapse is a no-op), so its page entries collapse
-+  // the drawer on the way. Wrapped here so the entries keep their own shape.
-+  const drawerSeat = seat === false ? { fromDrawer: true } : undefined
-+  const actions = {
-+    ...baseActions,
-+    openSettings: (page, id) => baseActions.openSettings(page, id, drawerSeat),
-+    openConnectors: () => baseActions.openConnectors(drawerSeat),
-+    selectPanel: id => baseActions.selectPanel(id, drawerSeat),
-+  }
-   const [open, setOpen] = useState(false)
-   useLayoutEffect(() => {
-     if (!seat) return undefined
-@@ -761,7 +758,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
-   }, [open])
-   const groups = [
-     [
--      [t('Usage'), GaugeIcon, () => actions.openSettings('usage')],
-+      [t('Usage'), GaugeIcon, () => actions.openSettings('usage', null, { fromDrawer: true })],
-       [t('Connectors'), ConnectorIcon, () => actions.openConnectors()],
-       [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
-       [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
-@@ -871,7 +868,7 @@ export const SIDEBAR_CSS = `
- .bt-brand .bt-mark{flex:none}
- .bt-pin{flex:none;display:inline-flex;color:var(--bt-ink-3)}
- .bt-rail .bt-row{position:relative}
--.bt-rail .bt-pin{position:absolute;top:1px;left:calc(50% + 14px)}
-+.bt-rail .bt-pin{position:absolute;top:3px;left:calc(50% + 12px)}
- .bt-side .bt-read-only{margin:4px 8px 6px;padding:8px 10px;border-radius:10px;background:var(--bt-hover);font-size:12px;line-height:1.45;text-align:left}
- [class*="_footArea"]:has(.bt-foot-account){grid-template-columns:auto minmax(0,1fr) auto;column-gap:6px}
- [class*="_footArea"]>[class*="_footerActions"]>div>.bt-foot-account{grid-column:1;order:1;display:inline-flex}
+   return h(Fragment, null,
+     h(TitleToggle, { hidden: mode === 'hidden', onToggle }),
+     mode === 'hidden' ? null : h(LeftColumn, { mode, width: ourWidth, onGrip: startDrag }, content))
 diff --git a/ds-bot/src/client/skill-market/panel.js b/ds-bot/src/client/skill-market/panel.js
 new file mode 100644
 index 00000000..86fd51d1
@@ -11056,7 +10742,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index eac6ea54..cfb72db2 100644
+index 324919f8..83c43fc9 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -11097,7 +10783,7 @@ index eac6ea54..cfb72db2 100644
  .bt-round:active{transform:scale(.94)}
  .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
  /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
-@@ -135,49 +141,448 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
+@@ -135,16 +141,423 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
  .bt-tile[aria-current=page]{background:var(--bt-active)}
  .bt-tile-name{font-size:13px;line-height:18px;font-weight:400;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  .bt-chip{font-size:11px;line-height:16px;padding:1px 4px;border-radius:4px;background:var(--bt-hover);border:1px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
@@ -11152,35 +10838,6 @@ index eac6ea54..cfb72db2 100644
  .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
  .bt-unread-wait{background:var(--bt-star)}
--/* Our own left column, portalled over the shell's collapsed sidebar. It reaches
--   the window's top edge so the title band and the column share one fill (under
--   Mica the app styles DSH's sidebar the same way, via --bt-leftcol-fill there);
--   it stays under the shell's title-bar switch (z 30) and the popovers (z 60),
--   and the floating drawer keeps the opaque fill over the conversation. */
--.bt-leftcol{position:fixed;left:0;top:0;bottom:0;z-index:25;display:flex;--bt-lc-clear:var(--dsh-frame-top-clearance,var(--dsh-windows-titlebar-height,0px));background:var(--bt-leftcol-fill,var(--bt-sidebar));border-right:.5px solid var(--bt-line);box-sizing:border-box;padding:calc(var(--bt-lc-clear) + 6px) 12px 6px;color:var(--bt-ink);font-family:var(--bt-font)}
--html[data-windows-titlebar] .bt-leftcol,html[data-platform=darwin] .bt-leftcol{border-right:none}
--.bt-leftcol-grip{position:absolute;right:-4px;top:0;bottom:0;width:8px;cursor:col-resize;z-index:3;touch-action:none}
--.bt-leftcol-grip:hover,.bt-leftcol-grip:active{background:linear-gradient(to right,transparent 3px,var(--bt-line-2) 3px,var(--bt-line-2) 5px,transparent 5px)}
--/* The shell's collapsed sidebar keeps no track in the Bot view, so a hidden
--   column leaves nothing behind (the shell's right column, when open, keeps its
--   own geometry). Our own collapse of it lands without the shell's slide. */
--[class*="_frame"][data-sidebar-collapsed][data-rightbar-collapsed]:has(>[class*="_sidebarCol"]){grid-template-columns:0px minmax(0,1fr) 0px!important}
--html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transition:none!important}
--.bt-leftcol[data-left=drawer]{background:var(--bt-sidebar);box-shadow:8px 0 24px rgba(0,0,0,.14)}
--.bt-leftcol>.bt-side{width:100%}
--.bt-leftcol-foot{display:flex;align-items:center;gap:9px;padding-top:8px;flex:none}
--.bt-rail{align-items:center;padding:0}
--.bt-rail .bt-row{justify-content:center;width:56px;height:56px;min-height:56px;padding:0;border-radius:16px}
--.bt-rail-top{display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:8px}
--.bt-rail-sep{width:24px;height:1px;flex:none;background:var(--bt-line)}
--.bt-rail .bt-agent-ava{width:44px;height:44px}
--.bt-rail .bt-list{align-self:stretch;align-items:center;gap:4px}
--/* The rail's list spans the whole column: the badges and dots that sit on a row's
--   edge need room beside the 56px rows, or the list scrolls sideways. */
--.bt-leftcol[data-left=rail]{padding:calc(var(--bt-lc-clear) + 8px) 0 8px}
--.bt-leftcol-foot-rail{flex-direction:column;gap:6px}
--.bt-dot{position:absolute;top:4px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--bt-accent);box-shadow:0 0 0 1.5px var(--bt-sidebar)}
--.bt-dot-wait{background:var(--bt-star)}
 +.bt-rail{display:flex;flex-direction:column;align-items:center;padding:0 0 8px;gap:8px}
 +.bt-rail>.bt-rail-foot{margin-top:auto;display:flex;justify-content:center;width:100%}
 +/* The way into the apps market, where MausBot keeps its own connect entry: one pill on
@@ -11547,6 +11204,10 @@ index eac6ea54..cfb72db2 100644
 +/* The rail is 56 wide, so a row's hover chip is a 40px rounded tile inside it rather than
 +   a band across the full column. */
 +.bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px;width:40px;border-radius:12px;margin:0 auto}
+ /* Our own left column, portalled over the shell's collapsed sidebar. It reaches
+    the window's top edge so the title band and the column share one fill (under
+    Mica the app styles DSH's sidebar the same way, via --bt-leftcol-fill there);
+@@ -182,7 +595,32 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
  .bt-side-foot{display:flex;padding-top:8px}
  
  .bt-head{position:relative;display:flex;justify-content:center;align-items:center;height:40px;flex:none;pointer-events:none}
@@ -11562,7 +11223,11 @@ index eac6ea54..cfb72db2 100644
 +   chrome's row instead: title in the middle, buttons at the edges. */
 +/* The row takes the phone layout's measured header band and centers in it, which is the
 +   line its own drawer toggle is drawn on; pill and menu button match that toggle's 28px. */
-+html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top, 0px) + 11px);height:36px;margin:0;z-index:20;align-items:center}
++/* One offset for everything that must clear the system bar: the page is edge to edge and
++   this WebView reports no inset, so the bar's height is the same measured fallback the
++   header row uses; the details panel starts on that line too. */
++html:has([data-mobile-nav="frame"]){--bt-safe-top:calc(env(safe-area-inset-top, 0px) + 11px)}
++html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:var(--bt-safe-top);height:36px;margin:0;z-index:20;align-items:center}
 +/* The layout's own header button floats: a solid surface, a hairline ring and the soft
 +   drop shadow. The pill and the session menu borrow that surface. */
 +html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03),var(--bt-float-shadow);color:var(--bt-ink)}
@@ -11576,7 +11241,7 @@ index eac6ea54..cfb72db2 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -201,7 +606,7 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
+@@ -206,7 +644,7 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
  @media (prefers-reduced-motion:reduce){.bt-pill,.bt-pill-go,.bt-pill-go svg{transition:none!important}.bt-pill-go{filter:none}.bt-pill:active{transform:none}}
  
  /* The width settings: the share of the column a bubble may take, and the flat text. */
@@ -11585,7 +11250,7 @@ index eac6ea54..cfb72db2 100644
  .bt-astack{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0}
  .bt-bubble{max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px));background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 10px);box-sizing:border-box;overflow-wrap:anywhere;text-wrap:pretty;text-autospace:normal}
  .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:6px}
-@@ -344,6 +749,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -350,6 +788,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -11612,28 +11277,32 @@ index eac6ea54..cfb72db2 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -354,6 +779,12 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -360,6 +818,16 @@ button.bt-q-opt:active{background:var(--bt-active)}
     window. Where the chrome top already clears the title bar the band is 0. */
  html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel){--bt-caption-band:calc(var(--dsh-windows-titlebar-height,0px) - var(--dsh-frame-chrome-top,0px));padding-top:var(--bt-caption-band)}
  html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::before{content:"";position:absolute;top:0;left:0;right:0;height:var(--bt-caption-band);-webkit-app-region:drag}
 +/* A phone pane hangs from the line the conversation header ends on: the phone layout
 +   measures that band as --mobile-nav-header-h, which already sits below the system bars
 +   (env(safe-area-inset-top) reads 0 in this WebView, so it cannot be used alone). */
-+html:has([data-mobile-nav="frame"]) .bt-panel{top:var(--bt-safe-top, 0px)}
-+html:has([data-mobile-nav="frame"]) .bt-drawer-top .bt-round{width:28px;height:28px}
-+html:has([data-mobile-nav="frame"]) .bt-drawer-top .bt-round svg{width:16px;height:16px}
++/* The details sheet's own top row sits on the line the conversation header uses: same
++   28px controls, and the padding puts their centres where the header's buttons are. */
++/* The sheet may run to the very top, but its buttons stay below the system bar: the row
++   above them is a blank spacer. */
++html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top{padding-top:calc(env(safe-area-inset-top, 0px) + 44px)}
++html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top .bt-round{width:28px;height:28px}
++html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top .bt-round svg{width:16px;height:16px}
  .bt-pane{position:fixed;top:var(--dsh-frame-chrome-top,0px);right:0;bottom:0;z-index:45;pointer-events:auto;background:var(--bt-main);color:var(--bt-ink);display:flex;font-family:var(--bt-font)}
  .bt-dialog{flex:1;display:flex;flex-direction:column;min-width:0}
  .bt-dialog .bt-head{height:62px}
-@@ -368,7 +799,6 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
- .bt-exchange .bt-tools{display:none}
- .bt-fold{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin-top:4px;white-space:normal}
+@@ -380,7 +848,6 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
+ .bt-fold-code>.bt-fold-pre{margin:0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,currentColor 6%,transparent);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:20px;overflow-x:auto}
+ .bt-fold-code>*+.bt-fold-pre{margin-top:6px}
  .bt-fold-note{font-size:12px;line-height:16px;color:var(--bt-ink-3)}
 -[data-folded] .bt-fold-body{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 40px),transparent)}
  .bt-ubody .bt-fold .bt-more,.bt-ububble .bt-fold .bt-more,.bt-ubody .bt-fold-note,.bt-ububble .bt-fold-note{color:inherit;opacity:.7}
  .bt-ubody .bt-fold .bt-more:hover,.bt-ububble .bt-fold .bt-more:hover{opacity:1}
- .bt-exchange .bt-dialog-foot{position:absolute;left:0;right:0;bottom:0;height:76px;box-sizing:border-box;align-items:flex-end;padding:0 0 28px;background:var(--bt-main);z-index:3;animation:bt-foot-in .3s cubic-bezier(.22,1,.36,1) .3s both}
-@@ -571,7 +1001,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+ .bt-ubody .bt-fold-code>.bt-tool,.bt-ububble .bt-fold-code>.bt-tool{color:inherit;opacity:.7}
+@@ -585,7 +1052,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -11644,7 +11313,7 @@ index eac6ea54..cfb72db2 100644
  /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
     collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
     the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -587,6 +1019,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+@@ -601,6 +1070,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
  /* Elsewhere the switch shows only while the column is hidden, where the column's
     own top row had it. */
  html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
@@ -11653,7 +11322,7 @@ index eac6ea54..cfb72db2 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -626,7 +1060,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -640,7 +1111,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -11663,7 +11332,7 @@ index eac6ea54..cfb72db2 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -676,6 +1111,16 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
+@@ -690,6 +1162,16 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
  .bt-menu button:hover{background:var(--bt-hover)}
  .bt-menu button svg{flex:none;width:16px;height:16px;margin:0 1px}
  .bt-menu .bt-danger{color:var(--bt-danger)}
@@ -11680,7 +11349,7 @@ index eac6ea54..cfb72db2 100644
  .bt-menu-sep{height:.5px;flex:none;background:var(--bt-line-2);margin:4px 8px}
  .bt-menu-up{--bt-origin:bottom left;animation-name:bt-pop-lift,bt-veil-in}
  .bt-menu[data-leaving]{pointer-events:none;animation:bt-pop-out .12s cubic-bezier(.4,0,1,1) forwards}
-@@ -921,6 +1366,192 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -935,6 +1417,192 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  @media (max-width:640px) and (pointer:coarse){
    .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
  }
@@ -11873,7 +11542,7 @@ index eac6ea54..cfb72db2 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1020,49 +1651,104 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1047,49 +1715,104 @@ html[data-platform=darwin] header[class*="_header"]:has(.bt-head) :is(a,button,i
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -12002,7 +11671,7 @@ index eac6ea54..cfb72db2 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1081,7 +1767,7 @@ header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+@@ -1108,7 +1831,7 @@ html[data-platform=darwin] header[class*="_header"]:has(.bt-head) :is(a,button,i
  }
  [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
  body[data-bt-room] .bt-voice{display:none!important}
@@ -12011,7 +11680,7 @@ index eac6ea54..cfb72db2 100644
  .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
  [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
  .bt-q{order:1}
-@@ -1112,17 +1798,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1139,17 +1862,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -12038,7 +11707,7 @@ index eac6ea54..cfb72db2 100644
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
  @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
  .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
-@@ -1131,7 +1818,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1158,7 +1882,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -12047,7 +11716,7 @@ index eac6ea54..cfb72db2 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1172,6 +1859,19 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1200,6 +1924,19 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -12144,7 +11813,7 @@ index 00000000..910b15c8
 +      h('p', { className: 'bt-set-hint' }, t('A reply that marks where its detail starts folds there, keeping the whole point above it, and only when the detail is long enough. A reply over 20,000 characters goes as a file instead.'))))
 +}
 diff --git a/ds-bot/src/client/team-actions.js b/ds-bot/src/client/team-actions.js
-index 47d791d4..1695a5b8 100644
+index 31ab7852..42d39fba 100644
 --- a/ds-bot/src/client/team-actions.js
 +++ b/ds-bot/src/client/team-actions.js
 @@ -1,5 +1,6 @@
@@ -12179,7 +11848,7 @@ index 47d791d4..1695a5b8 100644
      setPanelView: (view) => {
        if (view !== 'details' && view !== 'browser' && view !== 'side') return
        ui.set(state => (state.details && state.view !== view ? { ...state, view, panelYield: yieldTo(state, view) } : state))
-@@ -120,6 +121,15 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
+@@ -119,6 +120,15 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
      secretCancel: requestId => after(call('secret-cancel', { requestId })),
      secretUpdate: (name, { scope, purpose } = {}) => after(call('secret-update', { name, scope, purpose })),
      secretDelete: name => after(call('secret-delete', { name })),
@@ -12481,10 +12150,10 @@ index 00000000..4a3a44c9
 +  return published
 +}
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
-index 3fc5c7c6..0c3acfb9 100644
+index 59168534..39c96668 100644
 --- a/ds-bot/src/host/channel.js
 +++ b/ds-bot/src/host/channel.js
-@@ -1,12 +1,17 @@
+@@ -1,11 +1,16 @@
  // Client channel: the team view the browser renders, and the POST /api/bot endpoints.
 -import { randomUUID } from 'node:crypto'
 +import { randomUUID, createHash } from 'node:crypto'
@@ -12494,17 +12163,16 @@ index 3fc5c7c6..0c3acfb9 100644
  import { install as installBtw } from './btw.js'
  import { install as installSide } from './side.js'
  import { handoffReply, questionReply, viewReply } from './parts.js'
- import { defaultRelayLimit } from './groups.js'
  import { validateViewAnswer } from 'deep-view/core'
 -import { COLORS, EXTRA_COLORS, ROUTE } from './constants.js'
 +import { applySuperAgentPrefs } from '../shared/superagent-prefs.js'
-+import { COLORS, EXTRA_COLORS, ROUTE, API_MIN, API_MAX } from './constants.js'
++import { COLORS, EXTRA_COLORS, ROUTE, API_MIN, API_MAX, MAX_INLINE_IMAGES } from './constants.js'
 +import { BOOT_ID, publishedSeq } from './boot.js'
 +import { noticesView, roomChatPage } from './mobile.js'
  
  const LANGUAGES = { zh: 'Chinese (简体中文)', en: 'English' }
  const RUN_STATS = ['sessionStats', 'tokenUsage', 'contextPressure']
-@@ -21,6 +26,33 @@ export function errorCode(error) {
+@@ -20,6 +25,33 @@ export function errorCode(error) {
    return isInternal(error) ? 'bot/internal' : 'bot/refused'
  }
  
@@ -12523,7 +12191,7 @@ index 3fc5c7c6..0c3acfb9 100644
 +  'folders', 'hello', 'learning-answer', 'mcp-add', 'mcp-list', 'mcp-market', 'mcp-remove',
 +  'mcp-save', 'mcp-toggle', 'mcp-tools', 'memory-ask', 'memory-forget', 'memory-view',
 +  'models', 'notices', 'private-release', 'provider-add', 'provider-key', 'provider-models',
-+  'provider-remove', 'providers', 'remove-agent', 'repo-stars', 'room-chat', 'room-continue',
++  'provider-remove', 'providers', 'remove-agent', 'repo-stars', 'room-chat',
 +  'room-progress', 'run-stats', 'schedule-create', 'schedule-delete', 'schedules',
 +  'secret-allow', 'secret-cancel', 'secret-delete', 'secret-set', 'secret-update', 'send',
 +  'set-flags', 'set-main', 'set-prefs', 'side-ask', 'side-cancel', 'side-close', 'side-new',
@@ -12538,7 +12206,7 @@ index 3fc5c7c6..0c3acfb9 100644
  export function install(rt) {
    installBtw(rt)
    installSide(rt)
-@@ -35,7 +67,15 @@ export function install(rt) {
+@@ -34,7 +66,15 @@ export function install(rt) {
    // Models come from DSH, not state.json, so a provider added in Harness settings
    // changes the view without a new revision.
    const modelsKey = () => `${rt.cachedCatalog().map(entry => `${entry.ref}${entry.needsKey ? '!' : ''}${entry.reasoning ? `:${JSON.stringify(entry.reasoning)}` : ''}`).join(',')}|${rt.cachedDefault() ?? ''}`
@@ -12555,7 +12223,7 @@ index 3fc5c7c6..0c3acfb9 100644
      revision: state.revision,
      workspaceId: state.workspaceId ?? null,
      // `mainBotId` is the first Main Bot, which the sidebar shows as its tile.
-@@ -44,7 +84,11 @@ export function install(rt) {
+@@ -43,7 +83,11 @@ export function install(rt) {
      // `sessionId` is the Bot's current own-chat part; `parts` its earlier ones.
      // `waiting`: the Bot holds its greeting until the user picks its model.
      bots: Object.values(state.bots).map(({ segments, kickoff, ...bot }) => ({
@@ -12566,10 +12234,10 @@ index 3fc5c7c6..0c3acfb9 100644
 +      ...(options.avatars === 'ref' ? { avatar: refAvatar(bot.avatar) } : {}),
 +      sessionId: rt.chatOf(bot.id), parts: (segments ?? []).map(segment => segment.sessionId), ...(kickoff ? { waiting: true } : {}),
      })),
-     // `parts`: the members' hidden group Sessions and their earlier segments, for usage.
-     rooms: Object.values(state.rooms).map(({ log, seen, lateRounds, relays, sessions, segments, ...room }) => {
-@@ -99,7 +143,7 @@ export function install(rt) {
-   })
+     // `sessionId` is the group's own Session's current part, `ownParts` its earlier
+     // ones; `parts` the members' hidden group Sessions and their earlier segments,
+@@ -114,7 +158,7 @@ export function install(rt) {
+   }
    // What a host that only reads the team may still answer.
    // Updates change the dsh profile, not the team, so a reading host may run them too.
 -  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library'])
@@ -12577,7 +12245,7 @@ index 3fc5c7c6..0c3acfb9 100644
  
    function setPrefs(body) {
      if (body.theme !== undefined) {
-@@ -116,6 +160,21 @@ export function install(rt) {
+@@ -131,6 +175,21 @@ export function install(rt) {
        else if (body.motion === 'quiet' || body.motion === 'lively') state.prefs.motion = body.motion
        else throw invalid('Motion must be quiet, normal or lively')
      }
@@ -12599,7 +12267,7 @@ index 3fc5c7c6..0c3acfb9 100644
      if (body.layout !== undefined) {
        if (body.layout === null || body.layout === 'bubble') delete state.prefs.layout
        else if (body.layout === 'flat') state.prefs.layout = body.layout
-@@ -137,6 +196,17 @@ export function install(rt) {
+@@ -152,6 +211,17 @@ export function install(rt) {
        if (body.thinking === true) state.prefs.thinking = true
        else if (body.thinking === false || body.thinking === null) delete state.prefs.thinking
      }
@@ -12617,16 +12285,16 @@ index 3fc5c7c6..0c3acfb9 100644
      return rt.save()
    }
  
-@@ -153,7 +223,7 @@ export function install(rt) {
-           await rt.catalog()
-           await rt.loadSecrets()
-           if (body.since === state.revision && (body.models === undefined || body.models === modelsKey())) return ok({ revision: state.revision, unchanged: true, ...live() })
--          return ok({ ...view(), ...live() })
-+          return ok({ ...view({ avatars: body.avatars }), ...live() })
+@@ -172,7 +242,7 @@ export function install(rt) {
+             if (body.live === answer.key) return ok({ revision: state.revision, unchanged: true, liveKey: answer.key })
+             return ok({ revision: state.revision, unchanged: true, liveKey: answer.key, ...answer.value })
+           }
+-          return ok({ ...view(), liveKey: answer.key, ...answer.value })
++          return ok({ ...view({ avatars: body.avatars }), liveKey: answer.key, ...answer.value })
+         }
          case 'models':
            await rt.catalog({ fresh: true })
-           return ok({ modelsKey: modelsKey() })
-@@ -212,6 +282,17 @@ export function install(rt) {
+@@ -232,6 +302,17 @@ export function install(rt) {
          case 'chat':
            await rt.load()
            return ok(await rt.chatPage(String(body.botId ?? ''), body.cursor ?? undefined))
@@ -12644,7 +12312,7 @@ index 3fc5c7c6..0c3acfb9 100644
          // DSH's own whole-log figures for the current part of a Bot's chat, the ones its
          // status bar shows; a window without that bar shows them in the Bot's details.
          case 'run-stats': {
-@@ -236,6 +317,15 @@ export function install(rt) {
+@@ -259,6 +340,15 @@ export function install(rt) {
          case 'update-bot':
            await rt.load()
            return ok(await rt.updateBot(body.id, body))
@@ -12660,7 +12328,7 @@ index 3fc5c7c6..0c3acfb9 100644
          // The avatar library: photos the user imported once, kept beside the team.
          case 'avatar-library':
            await rt.load()
-@@ -352,6 +442,18 @@ export function install(rt) {
+@@ -369,6 +459,18 @@ export function install(rt) {
          case 'secret-delete':
            await rt.load()
            return ok(await rt.secretEndpoint(endpoint, body))
@@ -12679,7 +12347,34 @@ index 3fc5c7c6..0c3acfb9 100644
          case 'connector-connect':
          case 'connector-disconnect':
          case 'connector-retry':
-@@ -554,6 +656,26 @@ export function install(rt) {
+@@ -443,7 +545,12 @@ export function install(rt) {
+         }
+         case 'send': {
+           const text = String(body.text ?? '').trim()
+-          if (text === '' || typeof body.sessionId !== 'string') return fail('Nothing to send', 'bot/invalid')
++          // A phone message may carry images and files beside its text: images inline as
++          // base64, files as receipts the client already staged in this session.
++          const images = (Array.isArray(body.images) ? body.images : []).filter(image => typeof image?.mediaType === 'string' && typeof image?.data === 'string' && image.data !== '')
++          const fileReceiptIds = (Array.isArray(body.fileReceiptIds) ? body.fileReceiptIds : []).filter(id => typeof id === 'string' && id !== '')
++          if (images.length > MAX_INLINE_IMAGES) return fail('Too many images', 'bot/invalid')
++          if ((text === '' && images.length === 0 && fileReceiptIds.length === 0) || typeof body.sessionId !== 'string') return fail('Nothing to send', 'bot/invalid')
+           await rt.load()
+           // A Bot id, a group chat's id, or an earlier part of either means the
+           // current part.
+@@ -458,7 +565,11 @@ export function install(rt) {
+             requestId: randomUUID(),
+             sessionId,
+             mode: 'queue',
+-            content: [{ type: 'text', text }],
++            content: [
++              ...(text === '' ? [] : [{ type: 'text', text }]),
++              ...images.map(image => ({ type: 'image', mediaType: image.mediaType, data: image.data, ...(image.name === undefined ? {} : { name: String(image.name) }) })),
++              ...fileReceiptIds.map(receiptId => ({ type: 'file', receiptId })),
++            ],
+           }, AbortSignal.timeout(30_000))
+           return ok(true)
+         }
+@@ -576,6 +687,26 @@ export function install(rt) {
          case 'diagnostics-clear':
            await rt.diagnostics.clear()
            return ok(true)
@@ -12706,7 +12401,7 @@ index 3fc5c7c6..0c3acfb9 100644
          default:
            return fail(`Unknown endpoint ${endpoint}`, 'bot/not-found')
        }
-@@ -565,6 +687,10 @@ export function install(rt) {
+@@ -587,6 +718,10 @@ export function install(rt) {
      }
    }
  
@@ -12718,28 +12413,34 @@ index 3fc5c7c6..0c3acfb9 100644
    ctx.effect(() => ctx.connection.fetch.register({
      path: ROUTE,
 diff --git a/ds-bot/src/host/constants.js b/ds-bot/src/host/constants.js
-index 0df0d7d6..69a92625 100644
+index 988bff72..fe864efa 100644
 --- a/ds-bot/src/host/constants.js
 +++ b/ds-bot/src/host/constants.js
-@@ -20,6 +20,10 @@ export const OCR_RETRY_MS = 120_000
+@@ -20,6 +20,14 @@ export const OCR_RETRY_MS = 120_000
  export const OCR_CACHE_MAX = 500
  export const MAX_AVATAR_IMAGE = 160_000
  export const ROUTE = '/api/bot'
 +// The mobile API this host speaks. A client asks `hello` with the versions it knows and
 +// draws the team only when the two ranges overlap; an older host answers with no `api`.
 +export const API_MIN = 1
-+export const API_MAX = 1
++// 2: `send` also accepts inline images and staged file receipts.
++export const API_MAX = 2
++// One message's inline images, matching the limit DSH applies to a prompt: a phone
++// is not the only client that may call `send`, and the request carries the bytes.
++export const MAX_INLINE_IMAGES = 20
  export const MAX_EXCHANGES = 600
  // state.json is written whole on every save, so a long message between Bots or a long
  // group line keeps only its start there. The rest stays where it already is (a message
-@@ -85,3 +89,5 @@ export const HISTORY_PAGES_MAX = 50
+@@ -89,5 +97,7 @@ export const HISTORY_PAGES_MAX = 50
  export const HISTORY_TIMEOUT_MS = 20_000
  // Shown when an aside stops at the route's own output limit. The partial answer stays.
  export const ASIDE_LIMIT = 'Answer cut off at the output limit.'
 +// The most notices one answer carries; the phone reads them as a list, not a log.
 +export const NOTICE_MAX = 50
+ 
+ export const STEER_CUT = 'ds-bot/steer'
 diff --git a/ds-bot/src/host/feed.js b/ds-bot/src/host/feed.js
-index 98719a3f..a4130234 100644
+index 98719a3f..9ac23327 100644
 --- a/ds-bot/src/host/feed.js
 +++ b/ds-bot/src/host/feed.js
 @@ -4,7 +4,8 @@
@@ -12752,7 +12453,17 @@ index 98719a3f..a4130234 100644
  
  export const FEED_ROUTE = `${ROUTE}/feed`
  // A comment line now and then keeps an idle connection open.
-@@ -27,18 +28,35 @@ export function install(rt) {
+@@ -15,6 +16,9 @@ const LIVE_DELAY_MS = 150
+ // reconnects and catches up from `hello`.
+ const MAX_QUEUED = 512
+ 
++// A group writes a round's lines in a burst; one event per room per burst is enough.
++const ROUND_EVENT_LAG = 150
++
+ export function install(rt) {
+   const { ctx, state } = rt
+   const encoder = new TextEncoder()
+@@ -27,18 +31,48 @@ export function install(rt) {
      }
      try { controller.enqueue(chunk) } catch { clients.delete(controller) }
    }
@@ -12778,6 +12489,19 @@ index 98719a3f..a4130234 100644
 +    return () => feedListeners.delete(listener)
 +  }
 +
++  // A room's log or round changed. One `room` event per room per ROUND_EVENT_LAG, so a
++  // round that writes several lines wakes the phone once, not once per line.
++  const roomTimers = new Map()
++  rt.roomChanged = (roomId) => {
++    if (!readers() || roomTimers.has(roomId)) return
++    const timer = setTimeout(() => {
++      roomTimers.delete(roomId)
++      publish('room', { roomId })
++    }, ROUND_EVENT_LAG)
++    timer.unref?.()
++    roomTimers.set(roomId, timer)
++  }
++
    rt.stateSaved = () => {
 -    if (clients.size > 0) publish('revision', { revision: state.revision })
 +    if (readers()) publish('revision', { revision: state.revision })
@@ -12790,7 +12514,7 @@ index 98719a3f..a4130234 100644
      liveTimer = setTimeout(() => {
        liveTimer = undefined
        publish('live', {})
-@@ -49,7 +67,7 @@ export function install(rt) {
+@@ -49,7 +83,7 @@ export function install(rt) {
    })
  
    ctx.on('session/event', (session, event) => {
@@ -12799,7 +12523,7 @@ index 98719a3f..a4130234 100644
      const botId = rt.chatOwners.get(session.id)
      if (botId === undefined) return
      for (const item of rt.displayItems(session.id, [event])) publish('message', { botId, sessionId: session.id, item })
-@@ -62,7 +80,7 @@ export function install(rt) {
+@@ -62,7 +96,7 @@ export function install(rt) {
    ctx.on('agent/assistant-stream', ({ agent, frame }) => {
      if (frame.type === 'start') {
        const botId = rt.chatOwners.get(agent.id)
@@ -12808,7 +12532,7 @@ index 98719a3f..a4130234 100644
        writing.set(frame.attemptId, { botId, sessionId: agent.id })
        publish('stream', { botId, sessionId: agent.id, attemptId: frame.attemptId, phase: 'start' })
        return
-@@ -78,7 +96,7 @@ export function install(rt) {
+@@ -78,7 +112,7 @@ export function install(rt) {
  
    const leave = (controller) => {
      clients.delete(controller)
@@ -12817,7 +12541,7 @@ index 98719a3f..a4130234 100644
      try { controller.close() } catch { /* already closed or errored */ }
    }
  
-@@ -92,7 +110,9 @@ export function install(rt) {
+@@ -92,7 +126,9 @@ export function install(rt) {
          start(own) {
            controller = own
            clients.add(own)
@@ -12828,20 +12552,37 @@ index 98719a3f..a4130234 100644
          },
          cancel() { leave(controller) },
        })
+@@ -109,6 +145,8 @@ export function install(rt) {
+     return () => {
+       clearInterval(keepalive)
+       clearTimeout(liveTimer)
++      for (const timer of roomTimers.values()) clearTimeout(timer)
++      roomTimers.clear()
+       for (const controller of clients) leave(controller)
+     }
+   }, 'ds-bot: live feed')
 diff --git a/ds-bot/src/host/groups.js b/ds-bot/src/host/groups.js
-index c3372da2..74acd249 100644
+index 0432b038..507d77a0 100644
 --- a/ds-bot/src/host/groups.js
 +++ b/ds-bot/src/host/groups.js
 @@ -22,7 +22,7 @@ import { readFile, rm } from 'node:fs/promises'
  import { join } from 'node:path'
  import { createUserMessage } from '@deepseek-ai/dsh-llm'
  import { defineTool } from '@deepseek-ai/dsh-tools'
--import { GROUP_LINE_READ, ROOM_REPLY_TIMEOUT_MS, ROOM_STEP_GAP_MS, ROOM_WORK_GRACE_MS, SOURCE_KIND, TEAM_TOOLS, TEXT_KEPT } from './constants.js'
-+import { GROUP_LINE_READ, MESSAGE_INLINE_MAX, ROOM_REPLY_TIMEOUT_MS, ROOM_STEP_GAP_MS, ROOM_WORK_GRACE_MS, SOURCE_KIND, TEAM_TOOLS, TEXT_KEPT } from './constants.js'
+-import { GROUP_LINE_READ, ROOM_IDLE_RELAY_LIMIT, ROOM_REPLY_TIMEOUT_MS, ROOM_STEP_GAP_MS, ROOM_WORK_GRACE_MS, SOURCE_KIND, TEAM_TOOLS, TEXT_KEPT } from './constants.js'
++import { GROUP_LINE_READ, MESSAGE_INLINE_MAX, ROOM_IDLE_RELAY_LIMIT, ROOM_REPLY_TIMEOUT_MS, ROOM_STEP_GAP_MS, ROOM_WORK_GRACE_MS, SOURCE_KIND, TEAM_TOOLS, TEXT_KEPT } from './constants.js'
  import { escapeRegExp, headOf, splitRef, textOf } from './text.js'
  import { mentionSpans, speakerOf } from '../shared/mentions.js'
  import { GROUP_REF, output } from './tools.js'
-@@ -282,9 +282,14 @@ export function install(rt) {
+@@ -222,6 +222,7 @@ export function install(rt) {
+     const log = [...room.log, keepGroupLine(room.id, { ...line, seq: room.seq }, line.text ?? '')]
+     for (const gone of log.slice(0, -ROOM_LOG_MAX)) dropGroupLine(room.id, gone)
+     room.log = log.slice(-ROOM_LOG_MAX)
++    rt.roomChanged?.(room.id)
+   }
+   Object.assign(rt, { keepGroupLine, dropGroupLines })
+ 
+@@ -425,9 +426,14 @@ export function install(rt) {
  
    // A member's message in the round: in the log, for the members after it, and in the
    // round's replies, for the user.
@@ -12859,21 +12600,45 @@ index c3372da2..74acd249 100644
      void rt.save().catch(() => {})
    }
  
-@@ -530,7 +535,12 @@ export function install(rt) {
-         round.replies.push({ kind: 'working', botId: member.id, name: member.name, color: member.color, time: Date.now() })
-       } else if (final !== undefined || (typeof reply === 'string' && said.length > 0)) {
-         slot.status = 'posted'
--        if (final !== undefined) postInRound(room, round, member, final, Date.now() - startedAt)
+@@ -793,8 +799,11 @@ export function install(rt) {
+     } else if (final !== undefined || (typeof reply === 'string' && said.length > 0)) {
+       slot.status = 'posted'
+       if (final !== undefined) {
+-        postInRound(room, round, member, final, Date.now() - startedAt)
+-        callFrom(room, round, member, final, called, { worked, byBot: slot.by !== undefined })
 +        // A long answer rides as a file here too, as a late reply does: the group line
 +        // keeps its start, and the chat reads the rest from the attachment.
-+        const long = final !== undefined && final.length > MESSAGE_INLINE_MAX
-+          ? await rt.attachLong(final, `Reply from ${member.name}.txt`)
-+          : undefined
-+        if (final !== undefined) postInRound(room, round, member, long?.text ?? final, Date.now() - startedAt, long)
-       } else {
-         slot.status = typeof reply === 'string' ? 'passed' : 'missed'
-         round.passed.push(member.name)
-@@ -814,7 +824,12 @@ export function install(rt) {
++        const long = final.length > MESSAGE_INLINE_MAX ? await rt.attachLong(final, `Reply from ${member.name}.txt`) : undefined
++        postInRound(room, round, member, long?.text ?? final, Date.now() - startedAt, long)
++        callFrom(room, round, member, long?.text ?? final, called, { worked, byBot: slot.by !== undefined })
+       }
+     } else {
+       slot.status = typeof reply === 'string' ? 'passed' : 'missed'
+@@ -864,6 +873,8 @@ export function install(rt) {
+           ...(post.botId ? { who: rt.botOf(post.botId)?.name ?? post.name ?? 'Bot', botId: post.botId } : { who: 'User' }),
+           text,
+           ...(post.files === undefined ? {} : { files: post.files }),
++          // The line keeps the pictures too: the phone draws them from their ids.
++          ...(post.images === undefined ? {} : { images: post.images }),
+         })
+       }
+       await rt.save()
+@@ -923,12 +934,14 @@ export function install(rt) {
+       if (posts.some(post => post.resumed || post.stopped || post.done)) await rt.save()
+       releaseParked(room, round)
+       rt.roomProgress.set(exec.callId, round)
++      rt.roomChanged?.(room.id)
+       try {
+         await runRound(room, round, exec.signal, exec.agent)
+       } catch (error) {
+         rt.warn('ds-bot: group round in %s stopped: %s', room.name, error)
+       } finally {
+         rt.roomProgress.delete(exec.callId)
++        rt.roomChanged?.(room.id)
+       }
+       if (exec.signal?.aborted) {
+         for (const turn of round.started) void rt.stopRoomTurn?.(room.sessions?.[turn.botId] ?? turn.sessionId, turn.exchangeId)
+@@ -1114,7 +1127,12 @@ export function install(rt) {
        } else {
          const line = [text, ...files.map(fileLine)].filter(Boolean).join('\n')
          appendRoom(room, { who: sender.name, botId: sender.id, text: line, ...(files.length > 0 ? { files } : {}) })
@@ -12884,14 +12649,14 @@ index c3372da2..74acd249 100644
 +          botId: sender.id, name: sender.name, color: sender.color, text: line, time: Date.now(),
 +          ...(files.length > 0 ? { files } : {}), ...(extra.length ? { length: extra.length } : {}),
 +        })
-         logged = room.seq
        }
+       callPost(room, running, sender, text, extra)
        await rt.save()
-@@ -842,7 +857,17 @@ export function install(rt) {
-     const text = stripOwnName(member.name, reply)
-     const done = isPass(text) && shown && info.askedBy !== undefined
+@@ -1172,7 +1190,17 @@ export function install(rt) {
+     }
+     const done = isPass(text) && (shown || batchDoneBefore) && askedBy !== undefined
      if (isPass(text) && !done) return
--    await postToRoom(room, member, done ? '' : text, { late: true, ...(done ? { done: true } : {}), ...(info.askedBy ? { askedBy: info.askedBy } : {}) })
+-    await postToRoom(room, member, done ? '' : text, { late: true, ...(done ? { done: true } : {}), ...(askedBy ? { askedBy } : {}) })
 +    // A long reply rides as a file, as `message_bot` and `post_to_group` already do: the
 +    // group line keeps its head, the whole text stays with it as an attachment. A short
 +    // one comes back unchanged, with no files, so nothing below the limit moves.
@@ -12901,7 +12666,7 @@ index c3372da2..74acd249 100644
 +      late: true,
 +      ...(done ? { done: true } : {}),
 +      ...(long?.length ? { length: long.length } : {}),
-+      ...(info.askedBy ? { askedBy: info.askedBy } : {}),
++      ...(askedBy ? { askedBy } : {}),
 +    }, long?.files ?? [])
        .catch(error => rt.warn('ds-bot: late group reply from %s failed: %s', member.name, error))
    }
@@ -13522,10 +13287,10 @@ index 00000000..b3d867e4
 +}
 diff --git a/ds-bot/src/host/mobile.js b/ds-bot/src/host/mobile.js
 new file mode 100644
-index 00000000..8d8b50c7
+index 00000000..042fcb02
 --- /dev/null
 +++ b/ds-bot/src/host/mobile.js
-@@ -0,0 +1,102 @@
+@@ -0,0 +1,110 @@
 +// The two mobile reads the web view never needed: one page of a group chat, and the
 +// notices a client that is not looking should hear about.
 +//
@@ -13540,6 +13305,12 @@ index 00000000..8d8b50c7
 +// The room log keeps a line's start; the rest waits in the line's own file. A page says
 +// how long the whole line is so the client can offer to show all of it.
 +const wholeOf = line => (line.length === undefined ? undefined : { length: line.length })
++
++// What a line carries: the pictures it was sent with and the files beside them.
++const attachmentsOf = line => {
++  const all = [...(line.images ?? []), ...(line.files ?? [])]
++  return all.length === 0 ? undefined : all
++}
 +
 +function roomItem(rt, line) {
 +  const bot = line.botId === undefined ? undefined : rt.botOf(line.botId)
@@ -13556,7 +13327,9 @@ index 00000000..8d8b50c7
 +    // `kind: 'notice'` carries why it happened in `reason`; that is the event the client
 +    // draws. Other kinds name themselves.
 +    ...(line.kind === 'notice' ? (line.reason === undefined ? {} : { event: line.reason }) : line.kind === undefined ? {} : { event: line.kind }),
-+    ...(line.files === undefined ? {} : { images: line.files.length }),
++    ...(attachmentsOf(line) === undefined ? {} : { images: attachmentsOf(line).length }),
++    // The phone draws the files themselves; `images` stays as the count older clients read.
++    ...(attachmentsOf(line) === undefined ? {} : { files: attachmentsOf(line).map(file => ({ id: file.attachmentId, name: file.name, mediaType: file.mediaType })) }),
 +    ...(wholeOf(line) === undefined ? {} : { whole: wholeOf(line) }),
 +  }
 +  return item
@@ -13628,6 +13401,31 @@ index 00000000..8d8b50c7
 +  const fresh = reset || since === undefined || since < seq
 +  return { boot: BOOT_ID, seq, reset, notices: fresh ? snapshot(rt, seq) : [] }
 +}
+diff --git a/ds-bot/src/host/parts.js b/ds-bot/src/host/parts.js
+index cce1737c..64938d7c 100644
+--- a/ds-bot/src/host/parts.js
++++ b/ds-bot/src/host/parts.js
+@@ -1374,8 +1374,18 @@ export function install(rt) {
+       const source = event.data?.source
+       if (source?.kind === 'user') {
+         const content = Array.isArray(event.data.content) ? event.data.content : []
+-        const images = content.filter(block => block?.type === 'image').length
+-        stamp(event, { kind: 'user', text: textOf(content), ...(images > 0 ? { images } : {}), time: event.time })
++        const images = content.filter(block => block?.type === 'image' && !block.offloaded)
++        // The phone draws the pictures and files themselves, so the line names them;
++        // `images` stays as the count a client without that read still shows.
++        const attachments = [...images, ...content.filter(block => block?.type === 'file' && block.attachment !== undefined)]
++          .map(block => block.attachment)
++        stamp(event, {
++          kind: 'user',
++          text: textOf(content),
++          ...(images.length > 0 ? { images: images.length } : {}),
++          ...(attachments.length > 0 ? { files: attachments.map(file => ({ id: file.attachmentId, name: file.name, mediaType: file.mediaType })) } : {}),
++          time: event.time,
++        })
+       } else if (source?.kind === REPLY_KIND) {
+         const text = textOf(event.data.content)
+         const reply = readReply(text)
 diff --git a/ds-bot/src/host/prompt.js b/ds-bot/src/host/prompt.js
 index 682b53d5..6c3ef40a 100644
 --- a/ds-bot/src/host/prompt.js
@@ -17744,6 +17542,44 @@ index 00000000..c179abc5
 +    assert.notEqual(policyOf(b.rt.state), after)
 +  } finally { b.done() }
 +})
+diff --git a/ds-bot/test/bot-messages.test.js b/ds-bot/test/bot-messages.test.js
+index 863bad36..587b09af 100644
+--- a/ds-bot/test/bot-messages.test.js
++++ b/ds-bot/test/bot-messages.test.js
+@@ -777,6 +777,33 @@ test('an agentless part keeps the turn that opened on an older page', async () =
+   assert.equal(first?.turn, 6)
+ })
+ 
++test('a user line names its pictures and files, so the phone can draw them', () => {
++  const rt = earlierParts([])
++  const items = rt.displayItems('b1', [
++    {
++      type: 'user/message',
++      seq: 1,
++      time: 1,
++      data: {
++        content: [
++          { type: 'text', text: '' },
++          { type: 'image', attachment: { attachmentId: 'sha256:a', mediaType: 'image/png', name: 'shot.png', bytes: 12 } },
++          { type: 'image', attachment: { attachmentId: 'sha256:old', mediaType: 'image/png' }, offloaded: true },
++          { type: 'file', attachment: { attachmentId: 'sha256:b', name: 'notes.pdf', bytes: 34 } },
++        ],
++        source: { kind: 'user' },
++      },
++    },
++  ])
++  // An offloaded picture is no longer there to fetch, so it is not named.
++  assert.deepEqual(items[0].files, [
++    { id: 'sha256:a', name: 'shot.png', mediaType: 'image/png' },
++    { id: 'sha256:b', name: 'notes.pdf', mediaType: undefined },
++  ])
++  assert.equal(items[0].images, 1)
++  assert.equal(items[0].text, '')
++})
++
+ test('each text block of a Bot message is an entry of its own, as each is a bubble of its own', async () => {
+   const rt = earlierParts([
+     { type: 'assistant/message', seq: 1, time: 11, data: { turn: 1, message: { content: [{ type: 'text', text: 'First.' }, { type: 'tool-call', id: 'c1' }, { type: 'text', text: '  ' }, { type: 'text', text: 'Second.' }] } } },
 diff --git a/ds-bot/test/client-bundle.test.js b/ds-bot/test/client-bundle.test.js
 index a7405c12..307aafd9 100644
 --- a/ds-bot/test/client-bundle.test.js
@@ -17776,29 +17612,42 @@ index a7405c12..307aafd9 100644
      '@deepseek-ai/dsh-client-ui-primitives': { MarkdownText: () => null },
    }
 diff --git a/ds-bot/test/composer-plus.test.js b/ds-bot/test/composer-plus.test.js
-new file mode 100644
-index 00000000..cd84292b
---- /dev/null
+index d01e49b8..4ce6f4ac 100644
+--- a/ds-bot/test/composer-plus.test.js
 +++ b/ds-bot/test/composer-plus.test.js
-@@ -0,0 +1,122 @@
-+import assert from 'node:assert/strict'
+@@ -1,54 +1,171 @@
+ import assert from 'node:assert/strict'
+-import { test } from 'node:test'
 +import { readFileSync } from 'node:fs'
-+import { fileURLToPath } from 'node:url'
-+import { runInNewContext } from 'node:vm'
+ import { fileURLToPath } from 'node:url'
+ import { runInNewContext } from 'node:vm'
 +import { test } from 'node:test'
-+import { build } from 'esbuild'
-+
+ import { build } from 'esbuild'
+ 
+-// The composer's "+" bundled with a React stand-in that counts hook calls. React needs a
+-// component to call the same hooks on every render: one render that calls a hook the
+-// previous render did not is an error, and the composer's slot drops the "+" for good.
 +// The "+" is the phone's only upload entry: it stands in every chat (including one with no
 +// Bot or group behind it) and brings its own file picker, so attaching never depends on what
 +// the shell happens to put in the composer.
-+const { outputFiles } = await build({
+ const { outputFiles } = await build({
+-  entryPoints: [fileURLToPath(new URL('../src/client/composer.js', import.meta.url))],
 +  stdin: { contents: "export { ComposerPlus } from './src/client/composer.js'", resolveDir: fileURLToPath(new URL('..', import.meta.url)) },
-+  bundle: true, format: 'cjs', platform: 'browser', write: false, logLevel: 'silent',
+   bundle: true, format: 'cjs', platform: 'browser', write: false, logLevel: 'silent',
+-  external: ['react', 'react-dom'],
 +  external: ['react', 'react-dom', '@deepseek-ai/dsh-client-ui-primitives'],
-+})
+ })
+-let hooks = 0
 +const slots = []
 +let cursor = 0
-+const react = {
+ const react = {
+-  Fragment: 'fragment',
+-  createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) }),
+-  useState: initial => { hooks += 1; return [initial, () => {}] },
+-  useRef: current => { hooks += 1; return { current } },
+-  useEffect: () => { hooks += 1 },
+-  useLayoutEffect: () => { hooks += 1 },
+-  useMemo: make => { hooks += 1; return make() },
 +  createElement: (type, props, ...children) => {
 +    const node = { type, props: { ...props, children: children.flat(Infinity) } }
 +    if (props?.ref && typeof props.ref === 'object') props.ref.current = node
@@ -17813,21 +17662,21 @@ index 00000000..cd84292b
 +  },
 +  useRef(initial) { const i = cursor++; if (slots[i] === undefined) slots[i] = { current: initial }; return slots[i] },
 +  useMemo: make => make(), useCallback: fn => fn, useEffect() {}, useLayoutEffect() {}, useId: () => 'id',
-+}
-+const module = { exports: {} }
+ }
+ const module = { exports: {} }
 +const created = []
-+runInNewContext(outputFiles[0].text, {
-+  module, exports: module.exports,
+ runInNewContext(outputFiles[0].text, {
+   module, exports: module.exports,
 +  window: { innerHeight: 800, addEventListener() {}, removeEventListener() {} },
 +  document: {
 +    body: {},
 +    createElement: () => { const node = { style: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v }, getAttribute(k) { return this.attrs[k] ?? null }, addEventListener() {}, click() { this.clicked = true } }; created.push(node); return node },
 +    addEventListener() {}, removeEventListener() {},
 +  },
-+  require: name => (name === 'react' ? react : name === 'react-dom' ? { createPortal: node => node } : {}),
-+})
-+const { ComposerPlus } = module.exports
-+
+   require: name => (name === 'react' ? react : name === 'react-dom' ? { createPortal: node => node } : {}),
+ })
+ const { ComposerPlus } = module.exports
+ 
 +const walk = (node, match, out = []) => {
 +  if (Array.isArray(node)) { node.forEach(child => walk(child, match, out)); return out }
 +  if (!node || typeof node !== 'object') return out
@@ -17903,8 +17752,69 @@ index 00000000..cd84292b
 +  const mask = /:not\(:has\(\.bt-plus\)\) \[data-mobile-nav="file-upload"\]\{[^}]*mask:url\("data:image\/svg\+xml/.exec(text)
 +  assert.ok(mask !== null, 'the shell paperclip is not repainted as a plus where ours is missing')
 +})
++
++// A second bundle of the same component with a React stand-in that counts hook calls: React
++// needs a component to call the same hooks on every render, and one render that calls a hook
++// the previous render did not is an error, so the composer's slot drops the "+" for good.
++const { outputFiles: hookOutputFiles } = await build({
++  entryPoints: [fileURLToPath(new URL('../src/client/composer.js', import.meta.url))],
++  bundle: true, format: 'cjs', platform: 'browser', write: false, logLevel: 'silent',
++  external: ['react', 'react-dom'],
++})
++let hookCalls = 0
++const hookReact = {
++  Fragment: 'fragment',
++  createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) }),
++  useState: initial => { hookCalls += 1; return [initial, () => {}] },
++  useRef: current => { hookCalls += 1; return { current } },
++  useEffect: () => { hookCalls += 1 },
++  useLayoutEffect: () => { hookCalls += 1 },
++  useMemo: make => { hookCalls += 1; return make() },
++}
++const hookModule = { exports: {} }
++runInNewContext(hookOutputFiles[0].text, {
++  module: hookModule, exports: hookModule.exports,
++  require: name => (name === 'react' ? hookReact : name === 'react-dom' ? { createPortal: node => node } : {}),
++})
++const { ComposerPlus: ComposerPlusHooks } = hookModule.exports
++
+ // Renders the "+" for a chat whose Bot is in the roster as `roster` says, and counts its hook calls.
+-function render(roster) {
+-  hooks = 0
+-  const tree = ComposerPlus({
++function renderHooks(roster) {
++  hookCalls = 0
++  const tree = ComposerPlusHooks({
+     sessionId: 'chief', useRoster: select => select(roster),
+     actions: { canReferenceChat: () => false },
+   })
+-  return { tree, hooks }
++  return { tree, hookCalls }
+ }
+ 
+ test('the "+" calls the same hooks whether or not its roster knows the Bot yet', () => {
+   const roster = { ready: false }
+-  const unknown = render(roster)
++  const unknown = renderHooks(roster)
+   roster.byId = { chief: { id: 'chief' } }
+-  const known = render(roster)
++  const known = renderHooks(roster)
+   roster.byId = {}
+-  const forgotten = render(roster)
+-  assert.equal(unknown.tree, null)
+-  assert.equal(known.tree.type, 'fragment')
+-  assert.equal(forgotten.tree, null)
+-  assert.equal(known.hooks, unknown.hooks)
+-  assert.equal(forgotten.hooks, unknown.hooks)
++  const forgotten = renderHooks(roster)
++  // The plus stands in every chat, so each of these states draws it; what must not change
++  // between them is how many hooks its render called.
++  assert.ok(unknown.tree !== null && forgotten.tree !== null)
++  assert.equal(known.hookCalls, unknown.hookCalls)
++  assert.equal(forgotten.hookCalls, unknown.hookCalls)
+ })
 diff --git a/ds-bot/test/fold.test.js b/ds-bot/test/fold.test.js
-index 331d986a..e490db53 100644
+index a050ab62..7c160b96 100644
 --- a/ds-bot/test/fold.test.js
 +++ b/ds-bot/test/fold.test.js
 @@ -104,7 +104,8 @@ test('a long text opens and closes in place; a short one has no control', async
@@ -17927,7 +17837,7 @@ index 331d986a..e490db53 100644
    await buttons(folded.control)[0].props.onClick()
    assert.equal(render(start, { whole }).shown.length, 30_000)
    assert.deepEqual(buttons(render(start, { whole }).control).map(words), ['Show less'])
-@@ -150,3 +152,35 @@ test('a streaming text never folds', () => {
+@@ -189,3 +191,35 @@ test('a streaming text never folds', () => {
    fresh()
    assert.equal(render(lines(40), { live: true }).control, null)
  })
@@ -17964,10 +17874,10 @@ index 331d986a..e490db53 100644
 +  assert.equal(foldPreview(short, { chars: 1000, lines: 20 }, true, { chars: 120, lines: 4 }, false, true), null)
 +})
 diff --git a/ds-bot/test/install.test.js b/ds-bot/test/install.test.js
-index 172aa4c1..aa83c217 100644
+index 2eb38b4d..969a28e8 100644
 --- a/ds-bot/test/install.test.js
 +++ b/ds-bot/test/install.test.js
-@@ -120,6 +120,7 @@ test('apply registers listeners, tools, and effects in a fixed order', (t) => {
+@@ -100,6 +100,7 @@ test('apply registers listeners and effects in a fixed order', (t) => {
      'effect ds-bot: api route',
      'route POST /api/bot',
      'effect ds-bot: load state',
@@ -18441,10 +18351,10 @@ index 00000000..3e9c9428
 +})
 diff --git a/ds-bot/test/mobile-endpoints.test.js b/ds-bot/test/mobile-endpoints.test.js
 new file mode 100644
-index 00000000..c33e3a03
+index 00000000..a32fc438
 --- /dev/null
 +++ b/ds-bot/test/mobile-endpoints.test.js
-@@ -0,0 +1,168 @@
+@@ -0,0 +1,251 @@
 +// The two endpoints the phone app reads but the web view never needed: `room-chat` and
 +// `notices`. Their fields come from dsh_client's `DsBotRoomPage` and `DsBotNotices`, so
 +// these keep the answers to that shape and to the three cases every new endpoint owes:
@@ -18466,8 +18376,10 @@ index 00000000..c33e3a03
 +    provide: () => {},
 +    tool: () => {},
 +    sessions: { flush: async () => {} },
++    sessionController: { prompt: async request => { prompts.push(request) } },
 +    connection: { fetch: { register: route => { routes.push(route); return () => {} } } },
 +  }
++  const prompts = []
 +  const bots = { writer: { id: 'writer', name: 'Writer', color: 'blue', sessionId: 's-writer' } }
 +  const rooms = {
 +    [ROOM_ID]: {
@@ -18497,10 +18409,12 @@ index 00000000..c33e3a03
 +    selfOf: () => undefined,
 +    roomOf: id => (id === undefined ? undefined : rooms[id]),
 +    botOf: id => (id === undefined ? undefined : bots[id]),
++    pastOwners: new Map(),
++    ensureCapabilities: async () => {},
 +    roomProgress: new Map(),
 +  }
 +  installChannel(rt)
-+  return { routes, rt, rooms, bots }
++  return { routes, rt, rooms, bots, prompts }
 +}
 +
 +async function ask(routes, endpoint, payload) {
@@ -18613,6 +18527,85 @@ index 00000000..c33e3a03
 +  assert.equal(unknown.ok, false)
 +  assert.equal(unknown.error.code, 'bot/not-found')
 +});
++
++test('a file with no text still reaches the session', async () => {
++  const { routes, prompts } = runtime()
++  const answer = await ask(routes, 'send', { sessionId: 's-writer', text: '', fileReceiptIds: ['r1', 'r2'] })
++  assert.equal(answer.ok, true, answer.error?.message)
++  assert.deepEqual(prompts[0].content, [{ type: 'file', receiptId: 'r1' }, { type: 'file', receiptId: 'r2' }])
++});
++
++test('a message with no text and no attachments is nothing to send', async () => {
++  const { routes, prompts } = runtime()
++  const answer = await ask(routes, 'send', { sessionId: 's-writer', text: '  ', images: [], fileReceiptIds: [] })
++  assert.deepEqual(answer, { ok: false, error: { code: 'bot/invalid', message: 'Nothing to send', details: {} } })
++  assert.equal(prompts.length, 0)
++});
++
++test('an image without data or a media type is dropped, not sent as a broken block', async () => {
++  const { routes, prompts } = runtime()
++  const answer = await ask(routes, 'send', {
++    sessionId: 's-writer',
++    text: 'look',
++    images: [
++      { mediaType: 'image/png' },
++      { data: 'AAAA' },
++      { mediaType: 'image/png', data: '' },
++      null,
++      { mediaType: 'image/png', data: 'AAAA', name: 'shot.png' },
++    ],
++  })
++  assert.equal(answer.ok, true, answer.error?.message)
++  assert.deepEqual(prompts[0].content, [
++    { type: 'text', text: 'look' },
++    { type: 'image', mediaType: 'image/png', data: 'AAAA', name: 'shot.png' },
++  ])
++});
++
++test('more inline images than one message carries is refused', async () => {
++  const { routes, prompts } = runtime()
++  const images = Array.from({ length: 21 }, () => ({ mediaType: 'image/png', data: 'AAAA' }))
++  const answer = await ask(routes, 'send', { sessionId: 's-writer', text: 'all of these', images })
++  assert.equal(answer.ok, false)
++  assert.equal(answer.error.message, 'Too many images')
++  assert.equal(prompts.length, 0)
++});
++
++test('a group line lists the files it carries, not only how many', async () => {
++  const { routes, rooms } = runtime()
++  rooms[ROOM_ID].log.push({ seq: 4, who: 'User', text: '', files: [{ attachmentId: 'att-1', name: 'notes.pdf', bytes: 12 }] })
++  rooms[ROOM_ID].seq = 4
++  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
++  assert.deepEqual(page.items.at(-1).files, [{ id: 'att-1', name: 'notes.pdf' }])
++  assert.equal(page.items.at(-1).images, 1)
++});
++
++test('a line names the pictures and the files it carries', async () => {
++  const { routes, rooms } = runtime()
++  rooms[ROOM_ID].log.push({
++    seq: 4,
++    who: 'User',
++    text: 'look',
++    images: [{ attachmentId: 'img-1', name: 'shot.png', mediaType: 'image/png', bytes: 12 }],
++    files: [{ attachmentId: 'att-2', name: 'notes.pdf', bytes: 34 }],
++  })
++  rooms[ROOM_ID].seq = 4
++  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
++  const line = page.items.at(-1)
++  assert.deepEqual(line.files, [
++    { id: 'img-1', name: 'shot.png', mediaType: 'image/png' },
++    // JSON drops the undefined media type a file has on the host.
++    { id: 'att-2', name: 'notes.pdf' },
++  ])
++  assert.equal(line.images, 2)
++})
++
++test('a line without attachments names none', async () => {
++  const { routes } = runtime()
++  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
++  assert.equal('files' in page.items[0], false)
++  assert.equal('images' in page.items[0], false)
++})
 diff --git a/ds-bot/test/mobile-hello.test.js b/ds-bot/test/mobile-hello.test.js
 new file mode 100644
 index 00000000..dc751724
@@ -19047,7 +19040,7 @@ index 00000000..c352b04d
 +  }
 +})
 diff --git a/ds-bot/test/sidebar-switch.test.js b/ds-bot/test/sidebar-switch.test.js
-index 59109a99..429e92e8 100644
+index 0c05300a..40084c64 100644
 --- a/ds-bot/test/sidebar-switch.test.js
 +++ b/ds-bot/test/sidebar-switch.test.js
 @@ -28,10 +28,13 @@ let layoutEffects
@@ -19065,40 +19058,27 @@ index 59109a99..429e92e8 100644
    useMemo: make => make(), useRef: current => renderRefs ? renderRefs[refIndex++] ??= { current } : { current }, useId: () => 'id',
  }
  const module = { exports: {} }
-@@ -89,21 +92,27 @@ for (const width of [390, 1023, 1024, 1280]) {
-       assert.equal(initial.rows.length, 3)
-       for (const [index, row] of initial.rows.entries()) {
-         const names = row.type.name === 'AgentRow' ? ['openAgent', 'openAgentSession', 'newAgentSession'] : ['openSession']
-+        // Picking an entry inside the drawer folds it again: `navigate` toggles the sidebar
-+        // when the content is wide on a narrow window, and only then.
-+        const closesDrawer = wide && width < 1024
-         for (const name of names) {
-           const { rows, calls } = navigationSidebar(wide)
-           assert.equal(rows[index].props.actions[name]('selected'), 'selected')
--          assert.deepEqual(calls, [[name, 'selected']])
-+          assert.deepEqual(calls, closesDrawer ? [[name, 'selected'], ['toggleSidebar']] : [[name, 'selected']])
-         }
-       }
-     })
+@@ -100,11 +103,15 @@ for (const width of [390, 1023, 1024, 1280]) {
    }
  }
  
 -test('a row picked from the floating drawer closes it', () => {
-+test('a row picked from the drawer closes it, once', () => {
++test('a row picked from the drawer closes it', () => {
    viewport.innerWidth = 390
 -  const side = navigationSidebar(false, { leftDrawer: true })
 -  side.rows[0].props.actions.openSession('picked')
 -  assert.deepEqual(side.calls, [['openSession', 'picked'], ['setLeftDrawer', false]])
-+  const side = navigationSidebar(true)
++  const side = navigationSidebar(true, { leftDrawer: true })
 +  const pick = side.rows[0].props.actions.openSession
 +  pick('picked')
-+  // The latch holds for the rest of this commit: a second entry does not fold again.
 +  pick('again')
-+  assert.deepEqual(side.calls, [['openSession', 'picked'], ['toggleSidebar'], ['openSession', 'again']])
++  // Every pick asks the drawer shut; a second one changes nothing, since the drawer is
++  // already closed by then.
++  assert.deepEqual(side.calls, [['openSession', 'picked'], ['setLeftDrawer', false], ['openSession', 'again'], ['setLeftDrawer', false]])
  })
  
  test('a row picked outside the drawer leaves it alone', () => {
-@@ -281,7 +290,7 @@ const showing = rules.filter(rule => /display:inline-flex/.test(rule.body))
+@@ -282,7 +289,7 @@ const showing = rules.filter(rule => /display:inline-flex/.test(rule.body))
  function shell({ platform, collapsed }) {
    const darwin = platform === 'mac'
    const toggle = '<button class="x_iconButton x_toggle" aria-label="Toggle sidebar"></button>'
@@ -19107,7 +19087,7 @@ index 59109a99..429e92e8 100644
      <div${collapsed ? ' data-sidebar-collapsed="true"' : ''}>
        <div class="x_root${collapsed ? ' x_collapsed' : ''}">
          ${darwin ? `<div class="x_topStrip">${toggle}</div>` : ''}
-@@ -333,45 +342,37 @@ test('what the team view replaces in the shell sidebar stays out of sight', () =
+@@ -334,45 +341,39 @@ test('what the team view replaces in the shell sidebar stays out of sight', () =
    }
  })
  
@@ -19116,17 +19096,19 @@ index 59109a99..429e92e8 100644
 -test('the shell\'s collapsed sidebar keeps no track while its right column is closed', () => {
 -  const frame = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].find(rule => rule.selector.includes('[data-sidebar-collapsed][data-rightbar-collapsed]'))
 -  assert.match(frame?.body ?? '', /grid-template-columns:0px/)
-+// The sidebar is drawn inside the shell's own column now, so the sheets keep out of the
-+// frame's column geometry: an override there left a zero-width track behind.
-+test('the sheets keep out of the shell frame\'s column geometry', () => {
++// The column is portalled over the shell's collapsed sidebar, so the shell's own collapse
++// must leave no track behind: exactly one rule pins both side columns to zero width.
++test('the shell frame gives the portalled column no track of its own', () => {
 +  const own = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].filter(rule => /data-sidebar-collapsed|data-rightbar-collapsed/.test(rule.selector))
-+  assert.deepEqual(own.filter(rule => /grid-template-columns/.test(rule.body)), [])
++  const grids = own.filter(rule => /grid-template-columns/.test(rule.body))
++  assert.equal(grids.length, 1)
++  assert.match(grids[0].body, /0pxminmax\(0,1fr\)0px!important/)
  })
  
 -test('the column\'s top row hides it, on the rail too, and its edge is a drag grip', () => {
-+// The rail's own way back: the folded sidebar draws one button that unfolds it, and the
-+// drawn column carries none, since folding that one is the caption band's action.
-+test('the rail draws one way back and the drawn column none', () => {
++// Both forms of the column carry the switch that folds it away; on the rail the same
++// button is the way back to the open column.
++test('the rail and the open column both carry the fold switch', () => {
    viewport.innerWidth = 1280
    const calls = []
    const roster = { bots: [], rooms: [], agents: [], byId: {}, ready: true }
@@ -19138,7 +19120,7 @@ index 59109a99..429e92e8 100644
      useSessions: pick => pick({ ids: [], byId: {} }), useUpdate: () => ({}),
 -    useSidebarPref: pick => pick(pref),
 -    actions: { toggleLeftHidden: () => calls.push('toggle'), toggleSidebar: () => {} },
-+    actions: { toggleSidebar: () => calls.push('toggle') },
++    actions: { toggleSidebar: () => calls.push('toggle'), toggleLeftHidden: () => calls.push('left-hidden') },
    })
    const find = (node, match) => {
      if (Array.isArray(node)) return node.map(child => find(child, match)).find(Boolean)
@@ -19150,24 +19132,22 @@ index 59109a99..429e92e8 100644
 -    const tree = TeamSidebar(props(pref))
 -    const button = find(tree, collapse)
 -    assert.ok(button?.props.className.split(' ').includes('bt-side-collapse'), pref)
--    button.props.onClick()
++  const fold = node => node.type === 'button' && typeof node.props?.className === 'string' && node.props.className.includes('bt-side-collapse')
++  for (const wide of [false, true]) {
++    const button = find(TeamSidebar(props(wide)), fold)
++    assert.ok(button, `no fold switch on the ${wide ? 'open column' : 'rail'}`)
+     button.props.onClick()
 -    const column = find(tree, node => node.type?.name === 'LeftColumn')
 -    assert.equal(column.props.mode, pref)
 -    assert.equal(typeof column.props.onGrip, 'function')
--  }
+   }
 -  assert.deepEqual(calls, ['toggle', 'toggle'])
 -  // Hidden, there is no column at all; the floating switch brings it back.
 -  const hidden = TeamSidebar(props('hidden'))
 -  assert.equal(find(hidden, node => node.type?.name === 'LeftColumn'), undefined)
 -  const toggle = find(hidden, node => node.type?.name === 'TitleToggle')
 -  assert.equal(toggle.props.hidden, true)
-+  const expand = node => node.type === 'button' && node.props['aria-label'] === 'Expand sidebar'
-+  const rail = TeamSidebar(props(false))
-+  const button = find(rail, expand)
-+  assert.ok(button?.props.className.split(' ').includes('bt-side-expand'))
-+  button.props.onClick()
-+  assert.deepEqual(calls, ['toggle'])
-+  assert.equal(find(TeamSidebar(props(true)), expand), undefined)
++  assert.deepEqual(calls, ['left-hidden', 'left-hidden'])
  })
  
  test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
@@ -19571,33 +19551,33 @@ index 00000000..713d43d9
 +  assert.equal(tierOf(400, TIER_SHORT - 1), 'compact')
 +})
 diff --git a/ds-bot/test/tool-cells.test.js b/ds-bot/test/tool-cells.test.js
-index 18780147..eb6ab5d3 100644
+index 95790f56..1799a7d9 100644
 --- a/ds-bot/test/tool-cells.test.js
 +++ b/ds-bot/test/tool-cells.test.js
-@@ -9,7 +9,8 @@ import { build } from 'esbuild'
+@@ -9,8 +9,9 @@ import { build } from 'esbuild'
  const { outputFiles } = await build({
    stdin: {
      contents: [
--      "export { ToolCell, TriggerCell, callTree, stackReplies } from './src/client/cells.js'",
-+      "export { ToolCell, TriggerCell, callTree, stackReplies, pathMentions } from './src/client/cells.js'",
+-      "export { ToolCell, TriggerCell, callTree, CellEmpty, Bubbles } from './src/client/cells.js'",
++      "export { ToolCell, TriggerCell, callTree, CellEmpty, Bubbles, pathMentions } from './src/client/cells.js'",
+       "export { stackReplies } from './src/shared/group-replies.js'",
 +      "export { foldPreview } from './src/client/fold.js'",
        "export { QuestionDock } from './src/client/questions.js'",
        "export { SecretDock } from './src/client/secret-card.js'",
        "export { countCards } from './src/client/sources.js'",
-@@ -49,7 +50,7 @@ runInNewContext(outputFiles[0].text, {
+@@ -65,7 +66,7 @@ runInNewContext(outputFiles[0].text, {
      throw new Error(`Unexpected platform module ${name}`)
    },
  })
--const { ToolCell, TriggerCell, callTree, stackReplies, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
-+const { ToolCell, TriggerCell, callTree, stackReplies, pathMentions, foldPreview, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
+-const { ToolCell, TriggerCell, callTree, stackReplies, CellEmpty, Bubbles, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
++const { ToolCell, TriggerCell, callTree, stackReplies, pathMentions, foldPreview, CellEmpty, Bubbles, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
  
  // Runs the effects collected since the last render; returns the cleanups.
  const mount = () => {
-@@ -853,3 +854,86 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
-   assert.ok(frame.props.srcDoc.indexOf('Content-Security-Policy') < frame.props.srcDoc.indexOf('<b>hi</b>'), 'the policy comes before the markup')
+@@ -968,6 +969,89 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
    assert.equal(frame.props.title, 'A greeting')
  })
-+
+ 
 +// A path a bubble names in inline code opens the file view; code that only looks like a
 +// path (`console.log`) and code with an offset (`cells.js:611`) stay plain text.
 +test('a path in a bubble opens the file view, and code that is not a file stays plain', () => {
@@ -19680,6 +19660,10 @@ index 18780147..eb6ab5d3 100644
 +  const row = findAll(out, node => node.props?.className === 'bt-group-msg')[0]
 +  assert.match(row.props.style['--bt-bubble-tint'], /^color-mix\(in srgb, var\(--bt-ink-\w+\) 3%, var\(--bt-bubble\)\)$/)
 +})
++
+ // #718: a folded message's cut code block is drawn by DS Bot, so no copy control
+ // exists that holds only the part shown; DS Bot's own is bound to the whole
+ // block, and a short block keeps the host's normal rendering and copy.
 diff --git a/ds-bot/test/tool-policy.test.js b/ds-bot/test/tool-policy.test.js
 new file mode 100644
 index 00000000..99a5944b
