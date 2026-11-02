@@ -551,6 +551,9 @@ export function install(rt) {
           const fileReceiptIds = (Array.isArray(body.fileReceiptIds) ? body.fileReceiptIds : []).filter(id => typeof id === 'string' && id !== '')
           if (images.length > MAX_INLINE_IMAGES) return fail('Too many images', 'bot/invalid')
           if ((text === '' && images.length === 0 && fileReceiptIds.length === 0) || typeof body.sessionId !== 'string') return fail('Nothing to send', 'bot/invalid')
+          // A phone may ask the running turn to take this now (steer) or to wait
+          // for it to end (queue, the default a phone has always had).
+          const mode = body.mode === 'steer' ? 'steer' : 'queue'
           await rt.load()
           // A Bot id, a group chat's id, or an earlier part of either means the
           // current part.
@@ -564,7 +567,7 @@ export function install(rt) {
           await ctx.sessionController.prompt({
             requestId: randomUUID(),
             sessionId,
-            mode: 'queue',
+            mode,
             content: [
               ...(text === '' ? [] : [{ type: 'text', text }]),
               ...images.map(image => ({ type: 'image', mediaType: image.mediaType, data: image.data, ...(image.name === undefined ? {} : { name: String(image.name) }) })),
