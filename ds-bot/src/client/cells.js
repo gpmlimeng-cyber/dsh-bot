@@ -560,6 +560,9 @@ export function ChatRows({ items, sessionId, roster, actions, useUi, clock = fal
   const selfId = roster.byId[sessionId]?.id
   const rows = []
   for (const item of items) {
+    // A phone's own rows (the tool lines a mobile client draws) have no place in
+    // this layout, which already shows a run through its activity strip.
+    if (item.kind === 'tool') continue
     const last = rows.at(-1)
     if (item.kind === 'bot' && last?.kind === 'bot') {
       last.texts.push(item.text)

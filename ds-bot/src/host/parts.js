@@ -1349,6 +1349,13 @@ export function install(rt) {
           if (shown.error === undefined && !shown.interactive && args?.await_reply !== true) {
             items.push({ kind: 'view', title: shown.title, view, callId: event.data?.callId ?? null, time: event.time })
           }
+          continue
+        }
+        // Anything else is a line of its own: what ran, and whether it finished. A
+        // phone watching a Bot work needs this; without it the transcript only says
+        // "thinking". The two calls above draw something else instead.
+        if (event.data?.name !== 'group_relay' && !hidden.has(event.data?.turn)) {
+          stamp(event, { kind: 'tool', callId: event.data?.callId ?? null, name: event.data?.name ?? '', status: 'running', time: event.time })
         }
         continue
       }
@@ -1357,6 +1364,9 @@ export function install(rt) {
         // calls whose results hold the round's replies — the group's conversation,
         // read the way the live chat reads a settled call (shared/group-replies.js).
         const message = event.data?.message
+        // A call this page showed settles where its result lands.
+        const call = message?.toolCallId === undefined ? undefined : items.find(item => item.kind === 'tool' && item.callId === message.toolCallId)
+        if (call !== undefined) call.status = event.data?.error === undefined ? 'done' : 'failed'
         if (!relayCalls.has(message?.toolCallId)) continue
         const { replies } = parseReplies(textOf(message?.content))
         for (const { reply, texts, time, duration } of stackReplies(replies)) {
@@ -1408,6 +1418,11 @@ export function install(rt) {
       } else if (source?.kind === SOURCE_KIND && source.handoff !== true && source.deferred !== true && ['request', 'reply', 'report', 'stopped'].includes(source.role)) {
         stamp(event, { kind: 'event', role: source.role, botId: source.senderSessionId ?? null, name: source.senderName ?? null, roomId: source.roomId ?? null, time: event.time })
       }
+    }
+    // A call with no result on this page is history, except the last one: that is
+    // the call a live turn has running right now.
+    for (const item of items) {
+      if (item.kind === 'tool' && item.status === 'running' && item !== items.at(-1)) item.status = 'done'
     }
     return items
   }
