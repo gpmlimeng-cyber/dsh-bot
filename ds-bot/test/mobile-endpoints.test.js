@@ -222,3 +222,30 @@ test('a group line lists the files it carries, not only how many', async () => {
   assert.deepEqual(page.items.at(-1).files, [{ id: 'att-1', name: 'notes.pdf' }])
   assert.equal(page.items.at(-1).images, 1)
 });
+
+test('a line names the pictures and the files it carries', async () => {
+  const { routes, rooms } = runtime()
+  rooms[ROOM_ID].log.push({
+    seq: 4,
+    who: 'User',
+    text: 'look',
+    images: [{ attachmentId: 'img-1', name: 'shot.png', mediaType: 'image/png', bytes: 12 }],
+    files: [{ attachmentId: 'att-2', name: 'notes.pdf', bytes: 34 }],
+  })
+  rooms[ROOM_ID].seq = 4
+  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
+  const line = page.items.at(-1)
+  assert.deepEqual(line.files, [
+    { id: 'img-1', name: 'shot.png', mediaType: 'image/png' },
+    // JSON drops the undefined media type a file has on the host.
+    { id: 'att-2', name: 'notes.pdf' },
+  ])
+  assert.equal(line.images, 2)
+})
+
+test('a line without attachments names none', async () => {
+  const { routes } = runtime()
+  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
+  assert.equal('files' in page.items[0], false)
+  assert.equal('images' in page.items[0], false)
+})

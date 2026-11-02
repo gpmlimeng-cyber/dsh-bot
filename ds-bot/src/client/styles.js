@@ -558,6 +558,40 @@ html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side
 /* The rail is 56 wide, so a row's hover chip is a 40px rounded tile inside it rather than
    a band across the full column. */
 .bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px;width:40px;border-radius:12px;margin:0 auto}
+/* Our own left column, portalled over the shell's collapsed sidebar. It reaches
+   the window's top edge so the title band and the column share one fill (under
+   Mica the app styles DSH's sidebar the same way, via --bt-leftcol-fill there);
+   it stays under the shell's title-bar switch (z 30) and the popovers (z 60),
+   and the floating drawer keeps the opaque fill over the conversation. */
+.bt-leftcol{position:fixed;left:0;top:0;bottom:0;z-index:25;display:flex;--bt-lc-clear:var(--dsh-frame-top-clearance,var(--dsh-windows-titlebar-height,0px));background:var(--bt-leftcol-fill,var(--bt-sidebar));border-right:.5px solid var(--bt-line);box-sizing:border-box;padding:calc(var(--bt-lc-clear) + 6px) 12px 6px;color:var(--bt-ink);font-family:var(--bt-font)}
+html[data-windows-titlebar] .bt-leftcol,html[data-platform=darwin] .bt-leftcol{border-right:none}
+.bt-leftcol-grip{position:absolute;right:-4px;top:0;bottom:0;width:8px;cursor:col-resize;z-index:3;touch-action:none}
+.bt-leftcol-grip:hover,.bt-leftcol-grip:active{background:linear-gradient(to right,transparent 3px,var(--bt-line-2) 3px,var(--bt-line-2) 5px,transparent 5px)}
+/* The shell's collapsed sidebar keeps no track in the Bot view, so a hidden
+   column leaves nothing behind (the shell's right column, when open, keeps its
+   own geometry). Our own collapse of it lands without the shell's slide. */
+[class*="_frame"][data-sidebar-collapsed][data-rightbar-collapsed]:has(>[class*="_sidebarCol"]){grid-template-columns:0px minmax(0,1fr) 0px!important}
+html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transition:none!important}
+.bt-leftcol[data-left=drawer]{background:var(--bt-sidebar);box-shadow:8px 0 24px rgba(0,0,0,.14)}
+.bt-leftcol>.bt-side{width:100%}
+.bt-leftcol-foot{display:flex;align-items:center;gap:9px;padding-top:8px;flex:none}
+.bt-rail{align-items:center;padding:0}
+.bt-rail .bt-row{justify-content:center;width:56px;height:56px;min-height:56px;padding:0;border-radius:16px}
+.bt-rail-top{display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:8px}
+.bt-rail-sep{width:24px;height:1px;flex:none;background:var(--bt-line)}
+.bt-rail .bt-agent-ava{width:44px;height:44px}
+.bt-rail .bt-list{align-self:stretch;align-items:center;gap:4px}
+/* The rail's list spans the whole column: the badges and dots that sit on a row's
+   edge need room beside the 56px rows, or the list scrolls sideways. */
+.bt-leftcol[data-left=rail]{padding:calc(var(--bt-lc-clear) + 8px) 0 8px}
+.bt-leftcol-foot-rail{flex-direction:column;gap:6px}
+/* A drag that crosses the rail's snap line rides the spring to its target: the
+   content is pinned at the target size so only the column's edge moves. */
+.bt-leftcol[data-folding]{overflow:hidden;transition:width ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
+.bt-leftcol[data-folding]>.bt-side{flex:none;width:calc(var(--bt-lc-w) - 24px)}
+.bt-leftcol[data-left=rail][data-folding]>.bt-side{width:var(--bt-lc-w);margin-inline:auto}
+.bt-dot{position:absolute;top:4px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--bt-accent);box-shadow:0 0 0 1.5px var(--bt-sidebar)}
+.bt-dot-wait{background:var(--bt-star)}
 .bt-side-foot{display:flex;padding-top:8px}
 
 .bt-head{position:relative;display:flex;justify-content:center;align-items:center;height:40px;flex:none;pointer-events:none}
@@ -624,6 +658,7 @@ body{--bt-msg-w:.9;--bt-flat-w:1}
 .bt-bubble [class*="_markdown"] li::marker{color:var(--bt-ink-2)}
 /* line-height:1 keeps the monospace line box from making an inline code line taller. */
 .bt-bubble [class*="_markdown"] :not(pre)>code{line-height:1;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.bt-bubble :is(img,video),.bt-ububble :is(img,video),[data-chat-flow] [class*="_bubble"] :is(img,video){max-width:100%;height:auto}
 .bt-bubble a[href^="${MENTION_ORIGIN}"]{text-decoration:none;font-weight:400;cursor:pointer;white-space:nowrap}
 .bt-bubble a[href^="${MENTION_ORIGIN}"]::before{content:"";display:inline-block;width:16px;height:16px;margin-right:3px;vertical-align:-3px;background:currentColor;-webkit-mask:${DEFAULT_MASK} center/contain no-repeat;mask:${DEFAULT_MASK} center/contain no-repeat}
 .bt-group-msg{display:flex;flex-direction:column;gap:4px;margin:16px 0 0}
@@ -806,9 +841,17 @@ html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top .bt-round svg{width
 .bt-exchange .bt-dialog-log{max-width:none;margin:0;padding:39px max(16px,calc((100% - 960px)/2)) 116px;scrollbar-width:thin}
 .bt-exchange .bt-tools{display:none}
 .bt-fold{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin-top:4px;white-space:normal}
+.bt-fold-code{position:relative}
+.bt-fold-code>.bt-tool{position:absolute;right:6px;bottom:6px}
+/* The part of a cut code block the preview keeps, drawn by DS Bot so the host's
+   Markdown draws no copy control of its own for it. */
+.bt-fold-code>.bt-fold-pre{margin:0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,currentColor 6%,transparent);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:20px;overflow-x:auto}
+.bt-fold-code>*+.bt-fold-pre{margin-top:6px}
 .bt-fold-note{font-size:12px;line-height:16px;color:var(--bt-ink-3)}
 .bt-ubody .bt-fold .bt-more,.bt-ububble .bt-fold .bt-more,.bt-ubody .bt-fold-note,.bt-ububble .bt-fold-note{color:inherit;opacity:.7}
 .bt-ubody .bt-fold .bt-more:hover,.bt-ububble .bt-fold .bt-more:hover{opacity:1}
+.bt-ubody .bt-fold-code>.bt-tool,.bt-ububble .bt-fold-code>.bt-tool{color:inherit;opacity:.7}
+.bt-ubody .bt-fold-code>.bt-tool:hover,.bt-ububble .bt-fold-code>.bt-tool:hover{color:inherit;opacity:1}
 .bt-exchange .bt-dialog-foot{position:absolute;left:0;right:0;bottom:0;height:76px;box-sizing:border-box;align-items:flex-end;padding:0 0 28px;background:var(--bt-main);z-index:3;animation:bt-foot-in .3s cubic-bezier(.22,1,.36,1) .3s both}
 .bt-exchange .bt-dialog-foot::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:40px;background:linear-gradient(to top,var(--bt-main),transparent);pointer-events:none}
 .bt-exchange[data-leaving] .bt-dialog-foot{animation:bt-foot-out .22s cubic-bezier(.4,0,1,1) forwards}
@@ -1596,13 +1639,26 @@ body[data-bt-layout=flat] .bt-think{max-width:calc(var(--bt-flat-w) * 100%)}
 [data-step-process]>div:first-child{display:none!important}
 [data-step-process]>[data-step-process-body]{display:block!important;content-visibility:visible!important;max-height:none!important;overflow:visible!important;mask-image:none!important;scrollbar-gutter:auto!important}
 :is([data-step-process],[data-turn-process-hidden])[hidden]{content-visibility:visible!important}
-[class*="_flowItem"]:has(> [data-slot="conversation.chat.node"]:empty){display:none!important}
+[class*="_flowItem"]:has(> [data-slot="conversation.chat.node"]:empty, > [data-slot="conversation.chat.node"][data-bt-emptied]){display:none!important}
+/* A turn's process seat is a flow child of its own, not a flowItem: a seat whose
+   member cells all emptied themselves (a hidden exchange turn, a turn whose
+   calls draw nothing) still kept its margin, stacking a blank band per hidden
+   call. Only the slot a DS Bot cell marked counts, so a seat another renderer
+   fills — even with plain text and no element child — is never taken for empty. */
+[data-step-process]:has(> [data-step-process-body] [data-slot="conversation.chat.node"][data-bt-emptied]):not(:has(> [data-step-process-body] [data-slot="conversation.chat.node"]:not([data-bt-emptied]))){display:none!important}
 [class*="_header"]:has(.bt-head){border-bottom-color:transparent!important;box-shadow:none!important}
 /* The transcript runs under a floating header pill. */
 header[class*="_header"]:has(.bt-head){position:absolute!important;top:0;left:0;right:0;z-index:8;display:flex!important;padding:10px 0 0!important;background:transparent!important;pointer-events:none;justify-content:center}
 header[class*="_header"]:has(.bt-head)::before{content:"";position:absolute;inset:0 0 auto;height:calc(60px + env(safe-area-inset-top,0px));background:linear-gradient(to bottom,var(--bt-main),color-mix(in srgb,var(--bt-main) 0%,transparent));pointer-events:none;z-index:-1}
 header[class*="_header"]:has(.bt-head)>[class*="_headerLeading"]{position:absolute;left:12px;top:10px;pointer-events:auto}
 header[class*="_header"] .bt-head{flex:1 1 auto;width:100%}
+/* On macOS the shell's header row is the window's drag strip (data-window-drag
+   becomes -webkit-app-region:drag). The floating header stays click-through, so
+   the transcript under it still takes links and the wheel. Only the 40px .bt-head
+   bar the pill sits in is hit again and carries the drag mark; controls inside
+   keep no-drag. The data-slot anchor must not take no-drag, or the bar inherits it. */
+html[data-platform=darwin] header[class*="_header"]:has(.bt-head) .bt-head{pointer-events:auto;-webkit-app-region:drag}
+html[data-platform=darwin] header[class*="_header"]:has(.bt-head) :is(a,button,input,textarea,select,[role=button],[role=menuitem],[role=menu],[contenteditable=true]){-webkit-app-region:no-drag}
 [class*="_body"]:has(> [class*="_scrollBody"]){--dsh-chat-content-width:min(960px,100%)}
 /* The shell writes the column's width on the conversation root at every resize, only to
    derive the content width that the rule above replaces. Inherited, each write restyled
@@ -1834,6 +1890,7 @@ html:has([data-mobile-nav="frame"]) @media (prefers-reduced-motion:reduce){.bt-n
 .bt-open-new .bt-time-sep{height:16px;margin:32px 0 2px}
 .bt-earlier{display:flex;flex-direction:column;gap:6px}
 .bt-earlier-top{display:flex;justify-content:center;align-items:center;height:34px;flex:none}
+.bt-earlier-top:empty{display:none}
 .bt-earlier-top .bt-soft{height:28px;font-size:12px;padding:0 12px}
 .bt-urow{display:flex;justify-content:flex-end}
 .bt-ububble{max-width:calc(var(--bt-msg-w) * 100%);background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:14px;line-height:24px;box-sizing:border-box;overflow-wrap:anywhere;text-wrap:pretty;text-autospace:normal}

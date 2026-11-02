@@ -120,3 +120,52 @@ test('the phone shows one plus wherever the shell puts the paperclip', () => {
   const mask = /:not\(:has\(\.bt-plus\)\) \[data-mobile-nav="file-upload"\]\{[^}]*mask:url\("data:image\/svg\+xml/.exec(text)
   assert.ok(mask !== null, 'the shell paperclip is not repainted as a plus where ours is missing')
 })
+
+// A second bundle of the same component with a React stand-in that counts hook calls: React
+// needs a component to call the same hooks on every render, and one render that calls a hook
+// the previous render did not is an error, so the composer's slot drops the "+" for good.
+const { outputFiles: hookOutputFiles } = await build({
+  entryPoints: [fileURLToPath(new URL('../src/client/composer.js', import.meta.url))],
+  bundle: true, format: 'cjs', platform: 'browser', write: false, logLevel: 'silent',
+  external: ['react', 'react-dom'],
+})
+let hookCalls = 0
+const hookReact = {
+  Fragment: 'fragment',
+  createElement: (type, props, ...children) => ({ type, props: props ?? {}, children: children.flat(Infinity) }),
+  useState: initial => { hookCalls += 1; return [initial, () => {}] },
+  useRef: current => { hookCalls += 1; return { current } },
+  useEffect: () => { hookCalls += 1 },
+  useLayoutEffect: () => { hookCalls += 1 },
+  useMemo: make => { hookCalls += 1; return make() },
+}
+const hookModule = { exports: {} }
+runInNewContext(hookOutputFiles[0].text, {
+  module: hookModule, exports: hookModule.exports,
+  require: name => (name === 'react' ? hookReact : name === 'react-dom' ? { createPortal: node => node } : {}),
+})
+const { ComposerPlus: ComposerPlusHooks } = hookModule.exports
+
+// Renders the "+" for a chat whose Bot is in the roster as `roster` says, and counts its hook calls.
+function renderHooks(roster) {
+  hookCalls = 0
+  const tree = ComposerPlusHooks({
+    sessionId: 'chief', useRoster: select => select(roster),
+    actions: { canReferenceChat: () => false },
+  })
+  return { tree, hookCalls }
+}
+
+test('the "+" calls the same hooks whether or not its roster knows the Bot yet', () => {
+  const roster = { ready: false }
+  const unknown = renderHooks(roster)
+  roster.byId = { chief: { id: 'chief' } }
+  const known = renderHooks(roster)
+  roster.byId = {}
+  const forgotten = renderHooks(roster)
+  // The plus stands in every chat, so each of these states draws it; what must not change
+  // between them is how many hooks its render called.
+  assert.ok(unknown.tree !== null && forgotten.tree !== null)
+  assert.equal(known.hookCalls, unknown.hookCalls)
+  assert.equal(forgotten.hookCalls, unknown.hookCalls)
+})

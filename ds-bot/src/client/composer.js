@@ -121,9 +121,16 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     window.addEventListener('keydown', onKey, true)
     return () => { window.removeEventListener('mousedown', onDown, true); window.removeEventListener('keydown', onKey, true) }
   }, [open])
-  // The plus stands in every chat, including a plain session with no Bot or group behind it;
-  // only the rows that need a target are left out there. Files go through the shell's own
-  // mobile file input, which its paperclip button is injected with.
+  // Hooks stay above the early return below: the roster may not know the Bot yet, and a
+  // render that skips a hook breaks the composer's slot when the roster arrives.
+  // Anchored to the "+" each render: the visible viewport can move (on-screen
+  // keyboard) while the menu is open.
+  const place = useMemo(() => {
+    if (!shown || !button.current) return null
+    const rect = button.current.getBoundingClientRect()
+    return { left: rect.left, bottom: viewBottom() - rect.top + 8 }
+  }, [shown, open, tick])
+
   const target = roster.byId?.[sessionId]?.id ?? roster.roomsById?.[sessionId]?.id
   if (sessionId === undefined) return null
   // A composer without a file input has nothing to hand the picker. The card is
@@ -208,13 +215,7 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     actions.referenceChat(sessionId, inputActions?.captureInsertion?.())
   }
   const canReference = target !== undefined && typeof inputActions?.captureInsertion === 'function' && actions.canReferenceChat()
-  // Anchored to the "+" each render: the visible viewport can move (on-screen
-  // keyboard) while the menu is open.
-  const place = useMemo(() => {
-    if (!shown || !button.current) return null
-    const rect = button.current.getBoundingClientRect()
-    return { left: rect.left, bottom: viewBottom() - rect.top + 8 }
-  }, [shown, open, tick])
+
   return h(Fragment, null,
     h('button', {
       ref: button, type: 'button', className: 'bt-plus', 'aria-label': t('Add'), title: t('Add'),

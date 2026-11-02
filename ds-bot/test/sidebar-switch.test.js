@@ -39,11 +39,12 @@ const react = {
 }
 const module = { exports: {} }
 const viewport = { innerWidth: 1280 }
-runInNewContext(outputFiles[0].text, {
+const sandbox = {
   module, exports: module.exports,
   require: name => (name === 'react' ? react : {}),
   window: viewport,
-})
+}
+runInNewContext(outputFiles[0].text, sandbox)
 const { SHELL_CSS, SIDEBAR_CSS, TeamSidebar } = module.exports
 
 function navigationSidebar(wide, { leftDrawer = false } = {}) {
@@ -92,27 +93,25 @@ for (const width of [390, 1023, 1024, 1280]) {
       assert.equal(initial.rows.length, 3)
       for (const [index, row] of initial.rows.entries()) {
         const names = row.type.name === 'AgentRow' ? ['openAgent', 'openAgentSession', 'newAgentSession'] : ['openSession']
-        // Picking an entry inside the drawer folds it again: `navigate` toggles the sidebar
-        // when the content is wide on a narrow window, and only then.
-        const closesDrawer = wide && width < 1024
         for (const name of names) {
           const { rows, calls } = navigationSidebar(wide)
           assert.equal(rows[index].props.actions[name]('selected'), 'selected')
-          assert.deepEqual(calls, closesDrawer ? [[name, 'selected'], ['toggleSidebar']] : [[name, 'selected']])
+          assert.deepEqual(calls, [[name, 'selected']])
         }
       }
     })
   }
 }
 
-test('a row picked from the drawer closes it, once', () => {
+test('a row picked from the drawer closes it', () => {
   viewport.innerWidth = 390
-  const side = navigationSidebar(true)
+  const side = navigationSidebar(true, { leftDrawer: true })
   const pick = side.rows[0].props.actions.openSession
   pick('picked')
-  // The latch holds for the rest of this commit: a second entry does not fold again.
   pick('again')
-  assert.deepEqual(side.calls, [['openSession', 'picked'], ['toggleSidebar'], ['openSession', 'again']])
+  // Every pick asks the drawer shut; a second one changes nothing, since the drawer is
+  // already closed by then.
+  assert.deepEqual(side.calls, [['openSession', 'picked'], ['setLeftDrawer', false], ['openSession', 'again'], ['setLeftDrawer', false]])
 })
 
 test('a row picked outside the drawer leaves it alone', () => {
@@ -342,16 +341,18 @@ test('what the team view replaces in the shell sidebar stays out of sight', () =
   }
 })
 
-// The sidebar is drawn inside the shell's own column now, so the sheets keep out of the
-// frame's column geometry: an override there left a zero-width track behind.
-test('the sheets keep out of the shell frame\'s column geometry', () => {
+// The column is portalled over the shell's collapsed sidebar, so the shell's own collapse
+// must leave no track behind: exactly one rule pins both side columns to zero width.
+test('the shell frame gives the portalled column no track of its own', () => {
   const own = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].filter(rule => /data-sidebar-collapsed|data-rightbar-collapsed/.test(rule.selector))
-  assert.deepEqual(own.filter(rule => /grid-template-columns/.test(rule.body)), [])
+  const grids = own.filter(rule => /grid-template-columns/.test(rule.body))
+  assert.equal(grids.length, 1)
+  assert.match(grids[0].body, /0pxminmax\(0,1fr\)0px!important/)
 })
 
-// The rail's own way back: the folded sidebar draws one button that unfolds it, and the
-// drawn column carries none, since folding that one is the caption band's action.
-test('the rail draws one way back and the drawn column none', () => {
+// Both forms of the column carry the switch that folds it away; on the rail the same
+// button is the way back to the open column.
+test('the rail and the open column both carry the fold switch', () => {
   viewport.innerWidth = 1280
   const calls = []
   const roster = { bots: [], rooms: [], agents: [], byId: {}, ready: true }
@@ -359,20 +360,20 @@ test('the rail draws one way back and the drawn column none', () => {
     wide,
     useRoster: pick => pick(roster), useUi: pick => pick({ unread: {} }), useRegistry: pick => pick({}),
     useSessions: pick => pick({ ids: [], byId: {} }), useUpdate: () => ({}),
-    actions: { toggleSidebar: () => calls.push('toggle') },
+    actions: { toggleSidebar: () => calls.push('toggle'), toggleLeftHidden: () => calls.push('left-hidden') },
   })
   const find = (node, match) => {
     if (Array.isArray(node)) return node.map(child => find(child, match)).find(Boolean)
     if (!node || typeof node !== 'object') return undefined
     return match(node) ? node : find(node.props?.children, match)
   }
-  const expand = node => node.type === 'button' && node.props['aria-label'] === 'Expand sidebar'
-  const rail = TeamSidebar(props(false))
-  const button = find(rail, expand)
-  assert.ok(button?.props.className.split(' ').includes('bt-side-expand'))
-  button.props.onClick()
-  assert.deepEqual(calls, ['toggle'])
-  assert.equal(find(TeamSidebar(props(true)), expand), undefined)
+  const fold = node => node.type === 'button' && typeof node.props?.className === 'string' && node.props.className.includes('bt-side-collapse')
+  for (const wide of [false, true]) {
+    const button = find(TeamSidebar(props(wide)), fold)
+    assert.ok(button, `no fold switch on the ${wide ? 'open column' : 'rail'}`)
+    button.props.onClick()
+  }
+  assert.deepEqual(calls, ['left-hidden', 'left-hidden'])
 })
 
 test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
@@ -435,4 +436,102 @@ test('the Bot footer holds the account and the return button only', () => {
   const source = readFileSync(new URL('../src/client/index.js', import.meta.url), 'utf8')
   const ids = [...source.matchAll(/shadow\('sidebar\.footer\.action',\s*\{[^}]*?id:\s*['"]([^'"]+)['"]/g)].map(match => match[1])
   assert.deepEqual(ids.sort(), ['bot-account', 'bot-return'])
+})
+
+// The edge drag writes the column and the chat's margins straight into the page, so these
+// run it on a jsdom page with real timers. The sandbox gets the page and the timers only
+// while a drag runs; the release then re-renders the sidebar at the state it stored.
+async function edgeDrag({ start, reduced = false }, run) {
+  const dom = new JSDOM('<!doctype html><body><div class="x_centerCol"></div><div class="bt-leftcol"><div class="bt-leftcol-grip"></div></div></body>')
+  const { document } = dom.window
+  const column = document.querySelector('.bt-leftcol')
+  const grip = column.querySelector('.bt-leftcol-grip')
+  const center = document.querySelector('.x_centerCol')
+  const frame = { viewport: 1280, sidebarWidth: start.width, collapsedWidth: 0, collapsed: false }
+  const stored = { pref: start.pref }
+  const roster = { bots: [], rooms: [], agents: [], byId: {}, ready: true }
+  const actions = {
+    setPanelYield() {}, setLeftDrawer() {}, toggleSidebar() {}, toggleLeftHidden() {},
+    setSidebarWidth: (width) => { frame.sidebarWidth = width },
+    setSidebarPref: (pref) => { stored.pref = pref },
+  }
+  const render = () => TeamSidebar({
+    wide: false, actions,
+    useRoster: pick => pick(roster), useUi: pick => pick({ unread: {} }), useRegistry: pick => pick({}),
+    useSessions: pick => pick({ ids: [], byId: {} }), useUpdate: () => ({}),
+    useFrame: pick => pick(frame), useSidebarPref: pick => pick(stored.pref),
+  })
+  const leftColumn = () => {
+    const find = (node) => {
+      if (Array.isArray(node)) return node.map(find).find(Boolean)
+      if (!node || typeof node !== 'object') return undefined
+      return node.type?.name === 'LeftColumn' ? node : find(node.props?.children)
+    }
+    return find(render()).props
+  }
+  const globals = { document, performance, setTimeout, clearTimeout, requestAnimationFrame: next => setTimeout(next, 0), cancelAnimationFrame: clearTimeout, CSS: { escape: value => value } }
+  Object.assign(sandbox, globals)
+  viewport.innerWidth = 1280
+  if (reduced) viewport.matchMedia = () => ({ matches: true })
+  const pointer = (type, clientX) => grip.dispatchEvent(new dom.window.MouseEvent(type, { clientX }))
+  try {
+    return await run({
+      column, center, leftColumn,
+      press: () => leftColumn().onGrip({ button: 0, pointerId: 1, currentTarget: grip, preventDefault() {} }),
+      move: clientX => pointer('pointermove', clientX),
+      release: clientX => pointer('pointerup', clientX),
+      settle: ms => new Promise(resolve => setTimeout(resolve, ms)),
+    })
+  } finally {
+    for (const name of Object.keys(globals)) delete sandbox[name]
+    delete viewport.matchMedia
+  }
+}
+
+// After the drag ends the column's own width must be the one the sidebar renders for the
+// state it stored, or the edge sits at the CSS fallback (57px on the rail).
+test('a drag that ends on the rail leaves the column at the rail width', async () => {
+  await edgeDrag({ start: { pref: 'open', width: 350 } }, async ({ column, leftColumn, press, move, release, settle }) => {
+    press()
+    for (const x of [300, 250, 200, 150, 100]) move(x)
+    release(100)
+    await settle(800)
+    assert.equal(leftColumn().mode, 'rail')
+    assert.equal(leftColumn().width, 88)
+    assert.equal(column.style.width, '88px')
+    assert.equal(column.hasAttribute('data-folding'), false)
+  })
+})
+
+test('a reduced-motion drag that unfolds the rail lands at the dragged width', async () => {
+  await edgeDrag({ start: { pref: 'rail', width: 280 }, reduced: true }, async ({ column, leftColumn, press, move, release }) => {
+    press()
+    for (const x of [120, 160, 200, 260, 330]) move(x)
+    release(330)
+    assert.equal(leftColumn().mode, 'open')
+    assert.equal(leftColumn().width, 330)
+    assert.equal(column.style.width, '330px')
+    assert.equal(column.hasAttribute('data-folding'), false)
+  })
+})
+
+// The spring rides the snap switch only: after it settles the same drag follows the cursor
+// frame by frame, and the chat's margin takes no transition of its own.
+test('after a snap the spring stops and the drag follows the cursor', async () => {
+  await edgeDrag({ start: { pref: 'rail', width: 280 } }, async ({ column, center, leftColumn, press, move, release, settle }) => {
+    press()
+    move(200)
+    assert.equal(column.dataset.folding, '')
+    await settle(800)
+    assert.equal(column.hasAttribute('data-folding'), false)
+    assert.equal(center.style.getPropertyValue('transition'), 'none')
+    for (const x of [280, 300, 330]) {
+      move(x)
+      assert.equal(column.style.width, `${x}px`)
+    }
+    release(330)
+    await settle(800)
+    assert.equal(leftColumn().width, 330)
+    assert.equal(column.style.width, '330px')
+  })
 })

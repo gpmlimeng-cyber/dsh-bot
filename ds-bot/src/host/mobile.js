@@ -13,6 +13,12 @@ import { HISTORY_PAGE, NOTICE_MAX } from './constants.js'
 // how long the whole line is so the client can offer to show all of it.
 const wholeOf = line => (line.length === undefined ? undefined : { length: line.length })
 
+// What a line carries: the pictures it was sent with and the files beside them.
+const attachmentsOf = line => {
+  const all = [...(line.images ?? []), ...(line.files ?? [])]
+  return all.length === 0 ? undefined : all
+}
+
 function roomItem(rt, line) {
   const bot = line.botId === undefined ? undefined : rt.botOf(line.botId)
   const item = {
@@ -28,9 +34,9 @@ function roomItem(rt, line) {
     // `kind: 'notice'` carries why it happened in `reason`; that is the event the client
     // draws. Other kinds name themselves.
     ...(line.kind === 'notice' ? (line.reason === undefined ? {} : { event: line.reason }) : line.kind === undefined ? {} : { event: line.kind }),
-    ...(line.files === undefined ? {} : { images: line.files.length }),
+    ...(attachmentsOf(line) === undefined ? {} : { images: attachmentsOf(line).length }),
     // The phone draws the files themselves; `images` stays as the count older clients read.
-    ...(line.files === undefined ? {} : { files: line.files.map(file => ({ id: file.attachmentId, name: file.name, mediaType: file.mediaType })) }),
+    ...(attachmentsOf(line) === undefined ? {} : { files: attachmentsOf(line).map(file => ({ id: file.attachmentId, name: file.name, mediaType: file.mediaType })) }),
     ...(wholeOf(line) === undefined ? {} : { whole: wholeOf(line) }),
   }
   return item
