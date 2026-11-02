@@ -188,8 +188,38 @@ test('a show_view call in a part reads back as a view row with its blueprint', a
   assert.equal(row.callId, 'c1')
   assert.equal(row.view.children.length, 4)
   assert.equal(JSON.stringify(row.view).length > 7500, true)
-  assert.deepEqual(page.items.map(item => item.kind), ['divider', 'user', 'view', 'view'])
-  assert.equal(page.items.at(-1).title, '')
+  assert.deepEqual(page.items.map(item => item.kind), ['divider', 'user', 'view', 'view', 'tool'])
+  // The other tool call is a line of its own now: what ran, and that it finished.
+  assert.deepEqual(page.items.at(-1), { kind: 'tool', callId: 'c3', name: 'list_bots', status: 'running', time: 73, seq: 44 })
+  assert.equal(page.items.at(-2).title, '')
+})
+
+test('a tool call is a row of its own, running until its result lands', async (t) => {
+  const record = (event, seq) => ({ event: { ...event, seq } })
+  const call_ = (name, id, time, extra = {}) => ({ type: 'tool/call', time, data: { turn: 2, step: 1, callId: id, name, arguments: '{}', ...extra } })
+  const result = (time, id, extra = {}) => ({ type: 'tool/result', time, data: { turn: 2, step: 1, message: { toolCallId: id, content: [] }, ...extra } })
+  const { call, stop } = start({
+    pages: {
+      'm1c:end': {
+        records: [
+          record(call_('read_file', 'a1', 70), 41),
+          record(result(71, 'a1'), 42),
+          record(call_('bash', 'a2', 72), 43),
+          record(result(73, 'a2', { error: { name: 'BashError', code: 'FAILED' } }), 44),
+          // The last call has no result on this page: that is the one still running.
+          record(call_('web_search', 'a3', 74), 45),
+        ],
+        hasMore: false,
+      },
+    },
+  })
+  t.after(stop)
+  await call('state')
+  const page = (await call('chat', { botId: 'm1' })).value
+  assert.deepEqual(
+    page.items.filter(item => item.kind === 'tool').map(item => [item.name, item.status]),
+    [['read_file', 'done'], ['bash', 'failed'], ['web_search', 'running']],
+  )
 })
 
 test('view replay omits hidden, refused and interactive calls in pages and the live feed', async (t) => {
