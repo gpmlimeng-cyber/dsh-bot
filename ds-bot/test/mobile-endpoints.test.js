@@ -178,6 +178,22 @@ test('a file with no text still reaches the session', async () => {
   assert.deepEqual(prompts[0].content, [{ type: 'file', receiptId: 'r1' }, { type: 'file', receiptId: 'r2' }])
 });
 
+test('a phone may steer the running turn, and queues by default', async () => {
+  const queued = runtime()
+  await ask(queued.routes, 'send', { sessionId: 's-writer', text: 'later' })
+  assert.equal(queued.prompts[0].mode, 'queue')
+
+  const steered = runtime()
+  const answer = await ask(steered.routes, 'send', { sessionId: 's-writer', text: 'now', mode: 'steer' })
+  assert.equal(answer.ok, true, answer.error?.message)
+  assert.equal(steered.prompts[0].mode, 'steer')
+
+  // Anything else is the plain queue, never an unknown mode at the host.
+  const odd = runtime()
+  await ask(odd.routes, 'send', { sessionId: 's-writer', text: 'x', mode: 'interrupt' })
+  assert.equal(odd.prompts[0].mode, 'queue')
+});
+
 test('a message with no text and no attachments is nothing to send', async () => {
   const { routes, prompts } = runtime()
   const answer = await ask(routes, 'send', { sessionId: 's-writer', text: '  ', images: [], fileReceiptIds: [] })
