@@ -10742,7 +10742,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index 324919f8..83c43fc9 100644
+index 324919f8..e5945eb1 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -11230,9 +11230,9 @@ index 324919f8..83c43fc9 100644
 +html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:var(--bt-safe-top);height:36px;margin:0;z-index:20;align-items:center}
 +/* The layout's own header button floats: a solid surface, a hairline ring and the soft
 +   drop shadow. The pill and the session menu borrow that surface. */
-+html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03),var(--bt-float-shadow);color:var(--bt-ink)}
++html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:var(--bt-float-shadow-up),var(--bt-float-shadow);color:var(--bt-ink)}
 +html:has([data-mobile-nav="frame"]) .bt-pill:hover,html:has([data-mobile-nav="frame"]) .bt-pill:active{background:var(--bt-float-hover)}
-+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{border:0;background:var(--bt-float-surface);box-shadow:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03),var(--bt-float-shadow)}
++html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{border:0;background:var(--bt-float-surface);box-shadow:var(--bt-float-shadow-up),var(--bt-float-shadow)}
 +html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn:hover{background:var(--bt-float-hover)}
 +html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{top:0;bottom:0;right:10px;align-items:center}
 +html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:28px;height:28px;align-self:center}
@@ -11371,7 +11371,7 @@ index 324919f8..83c43fc9 100644
 +/* One floating surface for every control that rides over content: the surface tone, a
 +   half-pixel hairline, and a float shadow soft enough to read as separation, not depth.
 +   The phone carried a translucent tint of its own; it is gone with it, one recipe now. */
-+body{--bt-float-surface:var(--bt-main);--bt-float-ring:color-mix(in srgb,var(--bt-ink) 10%,transparent);--bt-float-shadow:0 4px 12px -1px rgba(28,28,28,.08),0 2px 4px -2px rgba(28,28,28,.06);--bt-float-hover:color-mix(in srgb,var(--bt-main),var(--bt-ink) 7%)}
++body{--bt-float-surface:var(--bt-main);--bt-float-ring:color-mix(in srgb,var(--bt-ink) 10%,transparent);--bt-float-shadow:0 4px 12px -1px rgba(28,28,28,.08),0 2px 4px -2px rgba(28,28,28,.06);--bt-float-shadow-up:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03);--bt-float-hover:color-mix(in srgb,var(--bt-main),var(--bt-ink) 7%)}
 +/* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
 +   into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
 +   that same plugin's marker rather than a width: the marker means "drawer form", where the
