@@ -1,5 +1,6 @@
 // Delivery: how one Bot, the user, or DS Bot itself puts a message into a Bot Session.
 import { randomUUID } from 'node:crypto'
+import { open } from 'node:fs/promises'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { HISTORY_TIMEOUT_MS, LONG_HEAD, MESSAGE_INLINE_MAX, READ_LINE_MAX, SOURCE_KIND, TEXT_KEPT, TEXT_SHOW_MAX } from './constants.js'
 import { headOf, textOf } from './text.js'
@@ -148,22 +149,53 @@ export function install(rt) {
   }
 
   // The text of a stored file, up to what the dialogs show.
+  //
+  // A phone names a file by its id and name only, so the reference it sends has no
+  // `bytes`: the store verifies a read against that count and refuses it as
+  // corrupt. The file is still on this host, at the path its id names, so the read
+  // falls back to that path instead of answering nothing. (The web client passes
+  // the whole reference and never needs this.)
   async function fileText(file) {
     const attachments = ctx.get?.('attachments')
     if (attachments === undefined) return undefined
-    const decoder = new TextDecoder()
-    let text = ''
     try {
-      for await (const chunk of attachments.readFileStream(file, AbortSignal.timeout(HISTORY_TIMEOUT_MS))) {
-        text += decoder.decode(chunk, { stream: true })
-        if (text.length > TEXT_SHOW_MAX) return { text: headOf(text, TEXT_SHOW_MAX), whole: false }
-      }
+      return await readStoredText(attachments, file)
+    } catch (error) {
+      rt.warn('ds-bot: file %s not read from the store (%s); reading it from its host path', file?.name, error)
+    }
+    try {
+      return await readHostText(attachments, file)
     } catch (error) {
       rt.warn('ds-bot: file %s not read: %s', file?.name, error)
       return undefined
     }
+  }
+
+  async function readStoredText(attachments, file) {
+    const decoder = new TextDecoder()
+    let text = ''
+    for await (const chunk of attachments.readFileStream(file, AbortSignal.timeout(HISTORY_TIMEOUT_MS))) {
+      text += decoder.decode(chunk, { stream: true })
+      if (text.length > TEXT_SHOW_MAX) return { text: headOf(text, TEXT_SHOW_MAX), whole: false }
+    }
     text += decoder.decode()
     return { text, whole: true }
+  }
+
+  // Bounded like a stored read: enough bytes for the characters a dialog shows,
+  // never the whole file.
+  async function readHostText(attachments, file) {
+    const path = attachments.fileHostPath(file)
+    if (typeof path !== 'string' || path === '') throw new Error('no host path for this file')
+    const handle = await open(path, 'r')
+    try {
+      const buffer = Buffer.alloc(TEXT_SHOW_MAX * 4 + 4)
+      const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0)
+      const text = new TextDecoder().decode(buffer.subarray(0, bytesRead))
+      return { text: headOf(text, TEXT_SHOW_MAX), whole: bytesRead < buffer.length }
+    } finally {
+      await handle.close()
+    }
   }
 
   Object.assign(rt, { resolveAgent, deliver, exchangeText, attachLong, fileText })
