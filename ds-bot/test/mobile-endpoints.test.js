@@ -192,3 +192,14 @@ test('a group page pages back by beforeSeq, newest page first', async () => {
   assert.equal(older.items[0].text, 'm1')
   assert.equal(older.cursor, null)
 });
+
+test('a group page that cannot read the Session still answers, and says why', async () => {
+  const { routes, rt } = runtime()
+  const logs = []
+  rt.warn = (...args) => logs.push(args)
+  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
+  assert.equal(page.items.length, 3)
+  assert.equal(page.sessionItems, undefined)
+  assert.equal(logs.length, 1)
+  assert.match(String(logs[0][0]), /room-chat could not page/)
+});

@@ -327,9 +327,11 @@ function legacyRoomChatPage(rt, roomId, cursor) {
       }
       sessionItems = items
       sessionCursor = page.hasMore && page.records.length > 0 ? { beforeSeq: page.records[0].event.seq } : null
-    } catch {
+    } catch (error) {
       // No agent for this group yet (or a Host without the Session page): the old
-      // shape is the whole answer.
+      // shape is the whole answer. Said out loud, because a phone that misses its
+      // new-shape items would otherwise leave no trail at all.
+      rt.warn?.('ds-bot: room-chat could not page the group Session for %s: %s', room.id, error?.message ?? error)
     }
     const running = [...rt.roomProgress.values()].filter(round => round.roomId === room.id)
     return {
