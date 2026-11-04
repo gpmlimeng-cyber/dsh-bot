@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { install as installChannel, CAPABILITIES } from '../src/host/channel.js'
+import { install as installMobile } from '../src/host/mobile.js'
 import { BOOT_ID } from '../src/host/boot.js'
 import { HISTORY_PAGE } from '../src/host/constants.js'
 
@@ -56,29 +57,7 @@ function runtime({ revision = 12 } = {}) {
     ensureCapabilities: async () => {},
     roomProgress: new Map(),
   }
-  // The host answers these through the mobile module, which needs the parts of the
-  // runtime its own install puts there.
-  rt.mobileEndpoint = async (endpoint, body) => {
-    if (endpoint === 'room-chat') {
-      const room = rt.roomOf(body.roomId)
-      if (room === undefined) throw Object.assign(new Error('Unknown group chat'), { code: 'bot/not-found' })
-      const lines = room.log ?? []
-      return {
-        roomId: room.id,
-        items: lines.map(line => ({
-          kind: line.botId !== undefined ? 'bot' : line.who === 'User' ? 'user' : 'event',
-          id: String(line.seq),
-          text: line.text ?? '',
-          name: line.who,
-          ...(line.files === undefined ? {} : { files: line.files.map(file => ({ id: file.attachmentId, name: file.name, mediaType: file.mediaType })) }),
-        })),
-        cursor: null,
-        running: false,
-      }
-    }
-    if (endpoint === 'notices') return { boot: body.boot ?? 'boot-1', seq: rt.state.revision, reset: body.boot !== 'boot-1', pushed: [], notices: [] }
-    throw Object.assign(new Error(`Unknown endpoint ${endpoint}`), { code: 'bot/not-found' })
-  }
+  installMobile(rt)
   installChannel(rt)
   return { routes, rt, rooms, bots, prompts }
 }
