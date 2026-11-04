@@ -240,36 +240,106 @@ export function install(rt) {
     return typeof image === 'string' ? { botId: bot.id, ref: avatarRef(image), image } : { botId: bot.id, ref: null, image: null }
   }
 
+// ── The 0.2.7 shape of a group page ────────────────────────────────────────────
+// 0.2.7 answered `room-chat` from `room.log`, one display item per line, and a phone
+// built for it reads `files`, `name` and `whole` off those items. 0.2.8 reads the group
+// Session's messages instead, and such a phone shows an empty group. So the answer keeps
+// the old shape; the Session-shaped items are added beside it as `sessionItems`, which a
+// client written for the new shape can start reading, and nothing the new answer said is
+// removed or overwritten.
+const legacyWholeOf = line => (line.length === undefined ? undefined : { length: line.length })
+
+// What a line carries: the pictures it was sent with and the files beside them.
+const legacyAttachmentsOf = line => {
+  const all = [...(line.images ?? []), ...(line.files ?? [])]
+  return all.length === 0 ? undefined : all
+}
+
+function legacyRoomItem(rt, line) {
+  const bot = line.botId === undefined ? undefined : rt.botOf(line.botId)
+  return {
+    // A line a member wrote is a Bot entry, one the user wrote is theirs; anything else
+    // is the round's own event (a missed reply, a lookup, a stop).
+    kind: line.botId !== undefined ? 'bot' : line.who === 'User' ? 'user' : 'event',
+    id: String(line.seq),
+    text: line.text ?? '',
+    name: line.who,
+    ...(bot?.color !== undefined ? { color: bot.color } : {}),
+    ...(typeof line.time === 'number' ? { time: line.time } : {}),
+    ...(line.botId !== undefined ? { botId: line.botId } : {}),
+    // `kind: 'notice'` carries why it happened in `reason`; that is the event the client
+    // draws. Other kinds name themselves.
+    ...(line.kind === 'notice' ? (line.reason === undefined ? {} : { event: line.reason }) : line.kind === undefined ? {} : { event: line.kind }),
+    ...(legacyAttachmentsOf(line) === undefined ? {} : { images: legacyAttachmentsOf(line).length }),
+    // The phone draws the files themselves; `images` stays as the count older clients read.
+    ...(legacyAttachmentsOf(line) === undefined ? {} : { files: legacyAttachmentsOf(line).map(file => ({ id: file.attachmentId, name: file.name, mediaType: file.mediaType })) }),
+    ...(legacyWholeOf(line) === undefined ? {} : { whole: legacyWholeOf(line) }),
+  }
+}
+
+// A page of a group chat in the 0.2.7 shape: newest page first, oldest first within it.
+function legacyRoomChatPage(rt, roomId, cursor) {
+  const room = rt.roomOf(roomId)
+  if (room === undefined) throw Object.assign(new Error('Unknown group chat'), { code: 'bot/not-found' })
+  const log = room.log ?? []
+  const before = Number.isInteger(cursor?.beforeSeq) ? cursor.beforeSeq : undefined
+  const older = before === undefined ? log : log.filter(line => line.seq < before)
+  const page = older.slice(-ROOM_PAGE)
+  const running = [...rt.roomProgress.values()].find(round => round.roomId === room.id)
+  return {
+    roomId: room.id,
+    items: page.map(line => legacyRoomItem(rt, line)),
+    cursor: older.length > page.length ? { beforeSeq: page[0].seq } : null,
+    running: running !== undefined,
+    ...(running?.speaking === undefined || running.speaking === null ? {} : { speaking: running.speaking }),
+  }
+}
+
   async function roomChat(body) {
     const room = rt.roomOf(String(body.roomId ?? ''))
     if (room === undefined) throw Object.assign(new Error('Unknown group chat'), { code: 'bot/not-found' })
+    // The answer a phone built for 0.2.7 reads, and the one shipped today still does:
+    // the room log in the old item shape. It is answered whether or not the group
+    // Session can be paged, so an older Host still shows its groups.
+    const legacy = legacyRoomChatPage(rt, room.id, body.cursor)
     const cursor = body.cursor ?? undefined
-    const agent = await rt.resolveAgent(room.id)
-    const page = await ctx.sessionController.page({
-      address: { kind: 'session', sessionId: room.id },
-      throughSeq: Number(agent.session.seq) - 1,
-      ...(Number.isInteger(cursor?.beforeSeq) ? { beforeSeq: cursor.beforeSeq } : {}),
-      maxMessages: ROOM_PAGE,
-    }, AbortSignal.timeout(HISTORY_TIMEOUT_MS))
-    const events = page.records.map(record => record.event)
-    const { items, open } = roomItems(events)
-    const running = [...rt.roomProgress.entries()].filter(([, round]) => round.roomId === room.id)
-    // The newest page shows what the running round has said so far, where its call sits.
-    if (cursor === undefined) {
-      for (const { callId, at } of open.reverse()) {
-        const round = rt.roomProgress.get(callId)
-        if (round === undefined) continue
-        const live = round.replies.map((reply, index) => replyItem(reply, `${callId}:${index}`, { live: true })).filter(Boolean)
-        items.splice(at, 0, ...live)
+    let sessionItems
+    let sessionCursor = null
+    try {
+      const agent = await rt.resolveAgent(room.id)
+      const page = await ctx.sessionController.page({
+        address: { kind: 'session', sessionId: room.id },
+        throughSeq: Number(agent.session.seq) - 1,
+        ...(Number.isInteger(cursor?.beforeSeq) ? { beforeSeq: cursor.beforeSeq } : {}),
+        maxMessages: ROOM_PAGE,
+      }, AbortSignal.timeout(HISTORY_TIMEOUT_MS))
+      const events = page.records.map(record => record.event)
+      const items = roomItems(events).items
+      // The newest page shows what the running round has said so far, where its call
+      // sits. Only the new shape does this; the old one names its live round instead.
+      if (cursor === undefined) {
+        for (const { callId, at } of roomItems(events).open.reverse()) {
+          const round = rt.roomProgress.get(callId)
+          if (round === undefined) continue
+          const live = round.replies.map((reply, index) => replyItem(reply, `${callId}:${index}`, { live: true })).filter(Boolean)
+          items.splice(at, 0, ...live)
+        }
       }
+      sessionItems = items
+      sessionCursor = page.hasMore && page.records.length > 0 ? { beforeSeq: page.records[0].event.seq } : null
+    } catch {
+      // No agent for this group yet (or a Host without the Session page): the old
+      // shape is the whole answer.
     }
-    const more = page.hasMore && events.length > 0
+    const running = [...rt.roomProgress.values()].filter(round => round.roomId === room.id)
     return {
-      roomId: room.id,
-      items,
-      cursor: more ? { beforeSeq: events[0].seq } : null,
-      running: running.length > 0,
-      speaking: running.map(([, round]) => round.speaking).find(Boolean) ?? null,
+      ...legacy,
+      // Everything the Session-shaped answer has, beside the old one: a client
+      // written for the new shape reads `sessionItems` with `sessionCursor`.
+      ...(sessionItems === undefined ? {} : { sessionItems }),
+      ...(sessionCursor === null ? {} : { sessionCursor }),
+      running: legacy.running || running.length > 0,
+      speaking: legacy.speaking ?? running.map(round => round.speaking).find(Boolean) ?? null,
     }
   }
 

@@ -139,3 +139,56 @@ test('more inline images than one message carries is refused', async () => {
 // The group page and notices are read from the group Session's events now (mobile.js
 // `roomChat`), not from the room log this file used to build: the cases above were
 // written for that older shape and are being rewritten against a session fixture.
+
+test('a group page keeps the 0.2.7 item shape a phone reads', async () => {
+  const { routes } = runtime()
+  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
+  assert.equal(page.roomId, ROOM_ID)
+  assert.deepEqual(page.items.map(item => item.kind), ['user', 'bot', 'event'])
+  assert.deepEqual(page.items[0], { kind: 'user', id: '1', text: 'Kick off the plan', name: 'User' })
+  assert.equal(page.items[1].botId, 'writer')
+  assert.equal(page.items[1].name, 'Writer')
+  assert.equal(page.items[1].color, 'blue')
+  assert.equal(page.items[2].event, 'missed')
+  assert.equal(page.cursor, null)
+  assert.equal(page.running, false)
+  // The Session-shaped answer is not there on a Host that cannot page one — and its
+  // absence must not take the old answer down.
+  assert.equal(page.sessionItems, undefined)
+});
+
+test('a line with files and a long body keeps files, images and whole', async () => {
+  const { routes, rooms } = runtime()
+  rooms[ROOM_ID].log = [
+    {
+      seq: 1,
+      who: 'Writer',
+      botId: 'writer',
+      text: 'see the attachments',
+      images: [{ attachmentId: 'a1', name: 'a.png', mediaType: 'image/png' }],
+      files: [{ attachmentId: 'f1', name: 'notes.txt', mediaType: 'text/plain' }],
+      length: 900,
+    },
+  ]
+  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
+  const item = page.items[0]
+  assert.equal(item.images, 2)
+  assert.deepEqual(item.files, [
+    { id: 'a1', name: 'a.png', mediaType: 'image/png' },
+    { id: 'f1', name: 'notes.txt', mediaType: 'text/plain' },
+  ])
+  assert.deepEqual(item.whole, { length: 900 })
+});
+
+test('a group page pages back by beforeSeq, newest page first', async () => {
+  const { routes, rooms } = runtime()
+  rooms[ROOM_ID].log = Array.from({ length: 65 }, (_, index) => ({ seq: index + 1, who: 'User', text: `m${index + 1}` }))
+  const first = await value(routes, 'room-chat', { roomId: ROOM_ID })
+  assert.equal(first.items.length, 60)
+  assert.equal(first.items[0].text, 'm6')
+  assert.deepEqual(first.cursor, { beforeSeq: 6 })
+  const older = await value(routes, 'room-chat', { roomId: ROOM_ID, cursor: first.cursor })
+  assert.equal(older.items.length, 5)
+  assert.equal(older.items[0].text, 'm1')
+  assert.equal(older.cursor, null)
+});
