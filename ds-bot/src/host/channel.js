@@ -769,7 +769,7 @@ export function install(rt) {
     } catch (error) {
       const code = errorCode(error)
       const message = error?.message ?? String(error)
-      if (code === 'bot/internal') rt.noteFailure({ source: 'api', text: `${endpoint}: ${message}`, code: error?.code ?? error?.name, stack: error?.stack })
+      if (code === 'bot/internal') rt.noteFailure?.({ source: 'api', text: `${endpoint}: ${message}`, code: error?.code ?? error?.name, stack: error?.stack })
       return fail(message, code)
     }
   }
