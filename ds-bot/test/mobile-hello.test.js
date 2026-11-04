@@ -77,10 +77,13 @@ test('a client that sends no version still learns the range', async () => {
   assert.equal(answer.apiMin, API_MIN)
 })
 
-test('the advertised capabilities are exactly the switch cases', () => {
+test('the advertised capabilities are all answered by the host', () => {
   const source = readFileSync(new URL('../src/host/channel.js', import.meta.url), 'utf8')
   const cases = new Set([...source.matchAll(/case '([a-z0-9-]+)':/g)].map(match => match[1]))
-  assert.deepEqual([...CAPABILITIES].sort(), [...cases].sort())
+  // The client is told only what it may call; the host answers much more, for the
+  // web client. Every advertised capability must have a case, not the other way round.
+  const missing = [...CAPABILITIES].filter(capability => !cases.has(capability))
+  assert.deepEqual(missing, [])
 })
 
 test('the feed opens with hello carrying api, boot and seq', async () => {
