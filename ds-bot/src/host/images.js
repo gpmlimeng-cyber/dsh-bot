@@ -156,6 +156,28 @@ export function install(rt) {
     }))
   }
 
+  // The phone shows a line's words, not the note that lets a text-only model read a
+  // picture. A line written since this field exists names its notes exactly; an older
+  // line falls back to the shape the generators above produce, and a note that does
+  // not match there is simply left in place — showing too much is better than a
+  // phone-side guess eating the words around it.
+  const READING_BLOCK = /\[Image [^\]]*?[.,][\s\S]*?\[End of image [^\]]*?\]/g
+  const READING_LINE = /\[Image [^\]]*?\]/g
+
+  function stripImageReadings(text, readings) {
+    if (typeof text !== 'string' || text === '') return text
+    const known = Array.isArray(readings) ? readings.filter(reading => typeof reading === 'string' && reading !== '') : []
+    let out = text
+    for (const reading of known) out = out.split(reading).join('')
+    if (known.length === 0) {
+      const without = out.replace(READING_BLOCK, '').replace(READING_LINE, '')
+      if (without === out) return text
+      out = without
+    }
+    // The notes were their own lines: joining the remains leaves the blank line behind.
+    return out.replace(/\n{2,}/g, '\n').trim()
+  }
+
   async function withImagesAsText(messages, sessionId) {
     await loadOcr()
     const images = new Map()
@@ -208,5 +230,5 @@ export function install(rt) {
     })
   })
 
-  Object.assign(rt, { imagesForGroup })
+  Object.assign(rt, { imagesForGroup, stripImageReadings })
 }

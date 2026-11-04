@@ -262,7 +262,8 @@ function legacyRoomItem(rt, line) {
     // is the round's own event (a missed reply, a lookup, a stop).
     kind: line.botId !== undefined ? 'bot' : line.who === 'User' ? 'user' : 'event',
     id: String(line.seq),
-    text: line.text ?? '',
+    // The note an image leaves is for the models, not for this screen.
+    text: rt.stripImageReadings?.(line.text ?? '', line.readings) ?? line.text ?? '',
     name: line.who,
     ...(bot?.color !== undefined ? { color: bot.color } : {}),
     ...(typeof line.time === 'number' ? { time: line.time } : {}),

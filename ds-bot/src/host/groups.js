@@ -922,6 +922,9 @@ export function install(rt) {
           ...(post.files === undefined ? {} : { files: post.files }),
           // The line keeps the pictures too: the phone draws them from their ids.
           ...(post.images === undefined ? {} : { images: post.images }),
+          // The notes also stay as their own field: the phone drops them from what it
+          // shows, the members and the reading tools still find them in `text`.
+          ...(readings.length === 0 ? {} : { readings }),
         })
       }
       await rt.save()

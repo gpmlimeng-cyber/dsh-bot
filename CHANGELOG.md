@@ -4,6 +4,21 @@ All notable changes to DS Bot are listed here. The format follows [Keep a Change
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-11-04
+
+### Added
+
+- A group's log keeps the notes a picture's reading leaves as their own `readings` field, beside the line's text, so a client can tell the note from what the person wrote.
+
+### Fixed
+
+- The phone no longer shows the `[Image …]` note that a picture's reading leaves in a group message. The note stays in the log — members, the reading tools and group memory still see it — and only the phone's own view drops it, so a message that was executed no longer reads as an image caption.
+- A line logged before this release is matched by the note's shape; a note that cannot be told apart is shown as before rather than guessed away.
+
+### Known issues
+
+- The web client still shows the note in a group's log: it reads the same text and does not filter it yet. The desktop app and the phone differ only in what they draw; nothing is removed from the log.
+
 ## [0.2.7] - 2026-11-03
 
 ### Added
