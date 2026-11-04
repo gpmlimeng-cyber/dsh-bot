@@ -10,7 +10,6 @@ import { validateViewAnswer } from 'deep-view/core'
 import { applySuperAgentPrefs } from '../shared/superagent-prefs.js'
 import { COLORS, EXTRA_COLORS, ROUTE, API_MIN, API_MAX, MAX_INLINE_IMAGES } from './constants.js'
 import { BOOT_ID, publishedSeq } from './boot.js'
-import { noticesView, roomChatPage } from './mobile.js'
 
 const LANGUAGES = { zh: 'Chinese (简体中文)', en: 'English' }
 const RUN_STATS = ['sessionStats', 'tokenUsage', 'contextPressure']
@@ -328,12 +327,12 @@ export function install(rt) {
         case 'room-chat': {
           if (typeof body.roomId !== 'string' || body.roomId === '') return fail('No group chat named', 'bot/invalid')
           await rt.load()
-          return ok(roomChatPage(rt, body.roomId, body.cursor ?? undefined))
+          return ok(await rt.mobileEndpoint('room-chat', body))
         }
         // What a client that was away should hear about. `boot` and `since` are the last
         // handshake and revision it read; a different host start answers `reset: true`.
         case 'notices':
-          return ok(noticesView(rt, body))
+          return ok(rt.mobileEndpoint('notices', body))
         // DSH's own whole-log figures for the current part of a Bot's chat, the ones its
         // status bar shows; a window without that bar shows them in the Bot's details.
         case 'run-stats': {
@@ -543,6 +542,12 @@ export function install(rt) {
         case 'memory-restore':
           await rt.load()
           return ok(await rt.memoryEndpoint(endpoint, body))
+        // The rest of the mobile API (mobile.js): memory edits and one Bot's usage.
+        case 'usage-summary':
+        case 'memory-edit':
+        case 'memory-add':
+          await rt.load()
+          return ok(await rt.mobileEndpoint(endpoint, body))
         case 'learning-answer':
           await rt.load()
           return ok(await rt.learningEndpoint(endpoint, body))
