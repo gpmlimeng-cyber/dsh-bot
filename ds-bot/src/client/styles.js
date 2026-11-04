@@ -2,6 +2,7 @@ import { INKS } from './inks.js'
 import { DEFAULT_MASK } from './characters.js'
 import { MENTION_ORIGIN } from './text.js'
 import { SPRING_SHAPE, SPRING_TAP, SPRING_STRETCH, SPRING_POP, spring } from './motion.js'
+import { FONT_FACES } from './fonts.js'
 
 // The pill stretches for "Memory updated" on SPRING_STRETCH, and its icon pops on
 // SPRING_POP; it closes on SPRING_SHAPE.
@@ -12,8 +13,8 @@ import { SPRING_SHAPE, SPRING_TAP, SPRING_STRETCH, SPRING_POP, spring } from './
 // question-card fields) stays here so a plain view keeps it styled.
 // CONVERSATION_CSS re-skins the shell's own conversation DOM and styles what only
 // the conversation renders.
-export const SHELL_CSS = `
-body{--bt-ink:#141414;--bt-danger:#e02135;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f7f7f7;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56);--bt-knob:#ffffff;--bt-glass-bg:color-mix(in srgb,var(--bt-main) 78%,transparent);--bt-glass-border:rgba(255,255,255,.72);--bt-glass-rim:rgba(20,20,20,.09);--bt-glass-shadow:0 8px 28px -6px rgba(0,0,0,.08),0 2px 6px -1px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.82);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;--bt-font:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif)}
+export const SHELL_CSS = FONT_FACES + `
+body{--bt-ink:#141414;--bt-danger:#e02135;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f7f7f7;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56);--bt-knob:#ffffff;--bt-glass-bg:color-mix(in srgb,var(--bt-main) 78%,transparent);--bt-glass-border:rgba(255,255,255,.72);--bt-glass-rim:rgba(20,20,20,.09);--bt-glass-shadow:0 8px 28px -6px rgba(0,0,0,.08),0 2px 6px -1px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.82);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;--bt-font:var(--bt-font-choice,var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif))}
 /* iOS waits out a double-tap zoom on buttons; the plugin's own controls never zoom. */
 :is(.bt-tool,.bt-uaction,.bt-menu button,.bt-menu-item,.bt-icon-btn,.bt-round,.bt-pill,.bt-account,.bt-set-row,.bt-settings-item,.bt-react-strip button,.bt-palette-row,.bt-palette-clear,.bt-tab,.bt-ptab,.bt-ptab-x,.bt-bcard-x,.bt-plus,.bt-q-btn,.bt-q-x,.bt-x,.bt-nc-send,.bt-send,.bt-soft,.bt-mini,.bt-side-send,.bt-shape,.bt-swatch,.bt-color,.bt-newchat,.bt-task-day,.bt-task-remove,.bt-fb-btn){touch-action:manipulation}
 :is(.bt-round,.bt-you,.bt-account,.bt-color,.bt-color span,.bt-swatch,.bt-icon-btn,.bt-avatar-trigger,.bt-avatar-pencil,.bt-plus,.bt-mic,.bt-voice){corner-shape:round}
@@ -117,11 +118,16 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-stack-more{font-size:11px;line-height:16px;color:var(--bt-ink-3);margin-left:3px!important}
 
 .bt-side{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;gap:2px;padding:0 12px 8px 0;color:var(--bt-ink);font-family:var(--bt-font)}
+.bt-surface{position:relative;display:inline-flex;min-width:0;margin-right:auto}
 .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
+/* Pinned to the window's top edge, the row only paints; its own controls stay clickable. */
+/* The sidebar's own controls sit a size below the panel buttons: 32px, where the round
+   buttons elsewhere are 36. */
+.bt-side-top .bt-round{width:32px;height:32px}
 .bt-brand{display:inline-flex;align-items:center;gap:6px;margin-right:auto;padding:4px 8px 4px 4px;border:0;border-radius:8px;background:none;cursor:pointer;font-family:inherit;font-size:15px;line-height:20px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink);white-space:nowrap}
 .bt-brand-whale{display:inline-flex;color:var(--bt-accent)}
-.bt-round{width:36px;height:36px;border-radius:50%;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .12s ease,transform .12s ease}
-.bt-round:hover{background:var(--bt-hover)}
+.bt-round{width:36px;height:36px;border-radius:50%;border:0;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .12s ease,transform .12s ease}
+.bt-round:hover{background:var(--bt-float-hover)}
 .bt-round:active{transform:scale(.94)}
 .bt-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0;flex:1 1 auto}
 /* Chromium ignores ::-webkit-scrollbar when scrollbar-width or scrollbar-color (inherited) is non-auto. */
@@ -137,6 +143,45 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-tile-name{font-size:13px;line-height:18px;font-weight:500;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-chip{font-size:11px;line-height:16px;padding:1px 7px;border-radius:999px;background:var(--bt-tag-bg);border:.5px solid var(--bt-line);color:var(--bt-ink-2);white-space:nowrap;max-width:92px;overflow:hidden;text-overflow:ellipsis}
 .bt-row{display:flex;align-items:center;gap:8px;min-height:54px;padding:8px;border:0;border-radius:12px;background:transparent;color:var(--bt-ink);text-align:left;cursor:pointer;width:100%;box-sizing:border-box;font-family:inherit;transition:background-color .12s ease}
+/* Density: one attribute on the body, so every list and row that already has a height
+   follows without a second stylesheet. */
+html body[data-bt-density=tight] .bt-row{min-height:46px}
+html body[data-bt-density=tight] .bt-tile{padding:4px 6px 2px}
+html body[data-bt-density=tight] .bt-market-card{padding:6px 8px}
+html body[data-bt-density=tight] .bt-market-inst,html body[data-bt-density=tight] .bt-market-cat{height:28px}
+html body[data-bt-density=roomy] .bt-row{min-height:62px}
+html body[data-bt-density=roomy] .bt-tile{padding:8px 10px 6px}
+html body[data-bt-density=roomy] .bt-market-card{padding:12px}
+html body[data-bt-density=roomy] .bt-market-inst,html body[data-bt-density=roomy] .bt-market-cat{height:36px}
+.bt-sec-row{position:relative;display:flex;align-items:center;gap:2px}
+.bt-sec-row .bt-sec{flex:1 1 auto;min-width:0}
+.bt-sec-more{flex:none;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;background:none;color:var(--bt-ink-3);cursor:pointer;opacity:0}
+.bt-sec-menu-head{padding:4px 8px 6px;font-size:11px;line-height:16px;color:var(--bt-ink-3)}
+.bt-sec-pick{padding-left:8px}
+.bt-sec-pick-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-sec-menu-empty{padding:6px 8px;font-size:12px;color:var(--bt-ink-3)}
+.bt-sec-menu{max-height:280px;overflow-y:auto}
+.bt-sec-row:hover .bt-sec-more,.bt-sec-more[aria-expanded=true]{opacity:1}
+.bt-sec-more:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-sec-menu{position:absolute;right:4px;top:24px;z-index:8;display:flex;flex-direction:column;min-width:150px;padding:4px;border-radius:10px;background:var(--bt-main);box-shadow:0 0 0 .5px var(--bt-line),0 12px 28px -12px rgba(0,0,0,.28)}
+.bt-sec-menu button{display:flex;align-items:center;gap:8px;height:28px;padding:0 8px;border:0;border-radius:7px;background:none;font:inherit;font-size:13px;color:var(--bt-ink-2);text-align:left;cursor:pointer;white-space:nowrap}
+.bt-sec-menu button:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-sec-menu button.bt-danger{color:var(--bt-danger)}
+.bt-sec-input{flex:1 1 auto;min-width:0;height:24px;margin:6px 8px 0;padding:0 6px;border:1px solid var(--bt-line-2);border-radius:7px;background:var(--bt-card);font:inherit;font-size:12px;color:var(--bt-ink);outline:none}
+.bt-sec-new{display:flex;align-items:center;gap:6px;width:100%;height:30px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;color:var(--bt-ink-3);cursor:pointer;text-align:left}
+.bt-sec-new:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
+.bt-sec-new svg{width:14px;height:14px}
+/* The name field takes the row's own box, so clicking the row turns it into the field. */
+.bt-sec-new-input{display:block;width:100%;height:30px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:12px;color:var(--bt-ink);outline:none;box-sizing:border-box}
+/* A section heading over its rows: small, quiet, and folding on a click. */
+.bt-sec{display:flex;align-items:center;gap:5px;width:100%;height:26px;margin-top:6px;padding:0 8px;border:0;border-radius:8px;background:none;font:inherit;font-size:11px;line-height:16px;letter-spacing:.02em;color:var(--bt-ink-3);cursor:pointer;text-align:left}
+.bt-sec:hover{background:var(--bt-hover);color:var(--bt-ink-2)}
+/* The caret shows on hover, and stays for a section that is open. */
+.bt-sec-caret{display:inline-flex;flex:none;opacity:0;transition:transform .15s ease,opacity .12s ease}
+.bt-sec-row:hover .bt-sec-caret{opacity:1}
+.bt-sec-caret[data-open]{transform:rotate(90deg)}
+.bt-sec-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.bt-sec-count{margin-left:auto;flex:none;font-variant-numeric:tabular-nums;color:var(--bt-ink-3)}
 .bt-row:hover{background:var(--bt-hover)}
 .bt-row[aria-current=page]{background:var(--bt-active)}
 /* Inset: the .bt-list scroll box clips anything drawn outside the row. */
@@ -145,10 +190,375 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-row-body{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
 .bt-row-name{display:flex;align-items:center;gap:6px;min-width:0;font-size:14px;line-height:20px;font-weight:400}
 .bt-row-title{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* When a row was last touched, on the right of its first line, as the shell's rows do. */
+.bt-row-time{margin-left:auto;flex:none;padding-left:6px;font-size:11px;line-height:16px;color:var(--bt-ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
 .bt-tag{flex:none;max-width:96px;font-size:12px;line-height:16px;font-weight:400;padding:1px 6px;border-radius:4px;background:var(--bt-tag-bg);color:var(--bt-tag-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-row-preview{font-size:13px;line-height:18px;color:var(--bt-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-unread{width:8px;height:8px;border-radius:50%;background:var(--bt-accent);flex:none;margin-right:2px;animation:bt-fade .13s cubic-bezier(.22,1,.36,1)}
 .bt-unread-wait{background:var(--bt-star)}
+.bt-rail{display:flex;flex-direction:column;align-items:center;padding:0 0 8px;gap:8px}
+.bt-rail>.bt-rail-foot{margin-top:auto;display:flex;justify-content:center;width:100%}
+/* The way into the apps market, where MausBot keeps its own connect entry: one pill on
+   the shared surface, the marks first, in the sidebar's bottom corner. */
+/* The market and the account share the bottom row; the chip takes what is left over and
+   its label truncates instead of wrapping. */
+/* The account and its settings stay the shell's own; the market chip rides beside it,
+   taking whatever room the footer leaves. */
+.bt-side{position:relative}
+.bt-side-foot{position:fixed;left:60px;bottom:18px;width:208px;display:flex;align-items:center;gap:8px;min-width:0}
+/* The chip wears the whale seat's own surface: a faint tint with the hairline drawn inside,
+   never a floating card, so the footer reads as one row of the same material. */
+.bt-apps-chip{display:flex;align-items:center;justify-content:center;gap:6px;flex:1 1 auto;min-width:0;padding:0 10px;height:32px;border:0;border-radius:999px;background:color-mix(in srgb,var(--bt-ink) 5%,var(--bt-sidebar));box-shadow:inset 0 0 0 1px var(--bt-line);color:var(--bt-ink);font:inherit;font-size:13px;line-height:18px;cursor:pointer;transition:background-color .12s ease}
+.bt-apps-chip:hover{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-sidebar))}
+.bt-apps-marks{display:inline-flex;flex:none;gap:3px}
+.bt-apps-mark{width:12px;height:12px;border-radius:3px;background:color-mix(in srgb,var(--bt-ink) 22%,transparent);display:block}
+.bt-apps-mark-b{border-radius:50%;background:color-mix(in srgb,var(--bt-accent) 60%,transparent)}
+.bt-apps-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+/* The market: main-area layout, categories and installed list on the left, the catalogue
+   or one entry's detail on the right. */
+/* The market is a dialog the size of the settings panel: a scrim, then a card holding the
+   category rail and the catalogue side by side. */
+.bt-market-frame{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:color-mix(in srgb,var(--bt-ink) 10%,transparent)}
+/* The market floats over the conversation as frosted glass: a translucent surface, the
+   page behind it blurred and lifted, and one hairline ring instead of a hard border. The
+   tint is mixed from --bt-main, so the panel keeps following the theme. */
+.bt-market-pane{width:min(1040px,92vw);height:min(800px,88vh);display:flex;border-radius:20px;overflow:hidden;background:color-mix(in srgb,var(--bt-main) 80%,transparent);backdrop-filter:blur(64px) saturate(2);-webkit-backdrop-filter:blur(64px) saturate(2);color:var(--bt-ink);box-shadow:0 0 0 .5px color-mix(in srgb,var(--bt-ink) 12%,transparent),0 32px 80px -32px rgba(0,0,0,.45),inset 0 .5px 0 color-mix(in srgb,var(--bt-main) 60%,transparent)}
+.bt-market-nav{flex:none;width:240px;display:flex;flex-direction:column;gap:8px;padding:16px 12px;border-right:1px solid var(--bt-line);overflow-y:auto;background:color-mix(in srgb,var(--bt-main) 40%,transparent)}
+.bt-market-navhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px}
+.bt-market-cats{display:flex;flex-direction:column;gap:2px}
+.bt-market-cat{height:32px;padding:0 10px;border:0;border-radius:10px;background:none;text-align:left;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink-2);cursor:pointer}
+.bt-market-cat:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-market-cat[aria-selected=true]{background:var(--bt-hover);color:var(--bt-ink);font-weight:600}
+.bt-market-insthead{margin-top:10px;padding:0 10px;font-size:11px;line-height:16px;letter-spacing:.04em;text-transform:uppercase;color:var(--bt-ink-3)}
+.bt-market-installed{display:flex;flex-direction:column;gap:2px}
+/* One enabled plugin: the Plugins page's icon and title on a single line, with a row menu
+   that stays out of sight until the row is hovered (or its menu is open). */
+.bt-market-instrow{position:relative;display:flex;align-items:center;gap:2px;padding-right:4px;border-radius:10px}
+.bt-market-instrow:hover,.bt-market-instrow[data-open],.bt-market-instrow:has(.bt-market-inst[aria-current=page]){background:var(--bt-hover)}
+.bt-market-inst{display:flex;align-items:center;gap:8px;flex:1 1 auto;height:32px;padding:0 4px 0 10px;border:0;border-radius:10px;background:none;font:inherit;font-size:13px;color:var(--bt-ink);cursor:pointer;min-width:0}
+.bt-market-inst:hover{background:none}
+.bt-market-instname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-instmore{flex:none;display:flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:0;border-radius:6px;background:none;color:var(--bt-ink-3);cursor:pointer;opacity:0;transition:opacity .12s ease,background-color .12s ease}
+.bt-market-instrow:hover .bt-market-instmore,.bt-market-instmore[aria-expanded=true],.bt-market-instmore:focus-visible{opacity:1}
+.bt-market-instmore:hover{background:var(--bt-active);color:var(--bt-ink)}
+.bt-market-instmore svg{width:14px;height:14px}
+.bt-market-instmenu{right:0;top:30px;min-width:126px}
+.bt-market-instrow[data-busy]{opacity:.6;pointer-events:none}
+/* The Plugins page's 50px frame around a 36px icon, scaled to a row: same radius share
+   (16/50), same hairline, same contain fit. */
+.bt-market-iconframe{display:flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:7px;border:.5px solid color-mix(in srgb,var(--bt-ink) 12%,transparent);box-sizing:border-box;overflow:hidden}
+.bt-market-iconimg{width:16px;height:16px;object-fit:contain;display:block}
+.bt-market-hint{display:block;padding:4px 10px;font-size:12px;color:var(--bt-ink-3)}
+/* The Skills tab hands its whole pane to the vendored skill market; it wants a definite
+   height, so the pane is a flex box the panel can fill. */
+.bt-market-skillhost{flex:1 1 auto;min-height:0;min-width:0;display:flex;overflow:hidden}
+/* The panel sizes itself from its content in a row flex box, which left a blank column on
+   the right of every page; as the host's only child it takes the whole pane instead. */
+.bt-market-skillhost>[data-skill-market]{flex:1 1 auto;min-width:0;width:100%}
+.bt-market-skillhost [data-skill-market] .sm-fixed,.bt-market-skillhost [data-skill-market] .sm-content,.bt-market-skillhost [data-skill-market] .sm-viewbar,.bt-market-skillhost [data-skill-market] .sm-statusbar{width:100%}
+/* Refresh and import ride the view tab row, pushed to its right end. */
+[data-skill-market] .sm-viewbar-actions{margin-left:auto;padding-left:12px;display:flex;align-items:center;gap:8px;flex:none}
+[data-skill-market] .sm-viewbar-actions .sm-icon-btn{width:28px;height:28px}
+[data-skill-market] .sm-viewbar-actions .sm-btn{height:28px}
+/* The panel owns its whole pane: no market padding, no page scroll behind it. */
+.bt-market-body:has(.bt-market-skillhost){display:flex;flex-direction:column;padding:0;overflow:hidden}
+/* The skills tab scrolls with the page, the way the shell's own Discover tab does: the
+   panel gives up its viewport height and its inner scroll, so the page carries the scroll. */
+[data-bt-skills]{min-height:0;width:100%;max-width:100%;height:auto}
+[data-bt-skills] [data-skill-market]{height:auto;max-height:none;overflow:visible}
+[data-bt-skills] .sm-content{flex:0 0 auto;overflow:visible}
+/* The market parks its skill drawer just past the panel's right edge and slides it in. The
+   panel's clipping stops the drawer but not its shadow, which painted a grey band down the
+   inside of that edge; the drawer only paints a shadow while it is open. */
+[data-bt-skills] .sm-inspector:not(.open){box-shadow:none}
+/* The MCP tab: the ModelScope plaza as plain rows at the page's own measure, with one
+   server's connection details behind a row. */
+/* The MCP tab: the shell's own plugin-market Discover section, taken as it ships
+   (MIT, @deepseek-ai/dsh-client-ui-plugin-market, DiscoverSection.module.css; see NOTICE).
+   Only the class prefix changed, dq5LxG_ -> bt-mm-, and the market dropdown is named for
+   what it picks here: bt-mm-source / bt-mm-source-name. Numbers, order and states are the
+   ones it ships, so this panel measures the same as the shell's own page. */
+.bt-mm-section{flex-direction:column;gap:16px;display:flex}
+
+.bt-mm-categories{flex-wrap:nowrap;align-items:center;gap:6px;display:flex;overflow:visible;flex:none}
+.bt-mm-tagrow{position:relative;min-width:0}.bt-mm-tagmeasure{position:absolute;left:-9999px;top:0;display:flex;gap:6px;white-space:nowrap;visibility:hidden;pointer-events:none;flex:none}.bt-mm-morewrap{position:relative;margin-left:auto;flex:none}
+.bt-mm-morepill{white-space:nowrap;gap:4px}
+.bt-mm-labelmenu{right:0;left:auto;max-height:320px;overflow-y:auto}
+/* The discover view is one column: the shell's toolbar row, its category row, then the
+   grouped cards. Everything here follows the vendored sheet's own metrics. */
+.bt-mm-discover{display:flex;flex-direction:column;gap:12px;min-width:0}
+.bt-mm-toolbar{display:flex;align-items:center;gap:8px;min-width:0}
+.bt-mm-toolbar .bt-mm-source{flex:none}
+/* The shell draws its search field with a TextField primitive we do not have; these are
+   that field's numbers (34px tall is too tall for this row, so 32 and the same border). */
+.bt-mm-toolbar .bt-mm-search{flex:1;min-width:160px;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-tertiary)}
+.bt-mm-toolbar .bt-mm-search svg{width:15px;height:15px;flex:none}
+.bt-mm-toolbar .bt-mm-search input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:13px;line-height:20px;color:var(--dsw-alias-label-primary);outline:none}
+.bt-mm-toolbar .bt-mm-sort{border:0;background:none;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:13px;line-height:20px}
+.bt-mm-toolbar .bt-mm-sort select{border:0;background:none;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;outline:none;cursor:pointer}
+
+.bt-mm-toolbar .bt-mm-sort{margin-left:auto}
+/* ds-bot chrome around the vendored card list: the source picker, its menu and the
+   add-source form. It follows the shell's menu look, not the vendored sheet's. */
+.bt-mm-sourcewrap{position:relative;flex:none}
+.bt-mm-source{max-width:240px;margin-left:-8px;font-weight:500;border:0;box-shadow:none;background:none;padding:0 4px;color:var(--dsw-alias-label-primary);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.bt-mm-source-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The dropdown card is the shell's own, copied verbatim from its primitives
+   (_float_ / _menuItem_ in dsh-web-frontend, MIT): same layer, panel radius and
+   elevation, so a ds-bot menu reads as one of the shell's. */
+.bt-mm-menu{position:absolute;z-index:30;top:calc(100% + 4px);left:0;box-sizing:border-box;display:flex;flex-direction:column;gap:0;padding:4px;overflow:hidden;min-width:164px;max-width:360px;background:var(--bt-card);background-image:none;border:0;border-radius:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 0 0 .5px var(--bt-line-2),0 6px 16px rgba(20,20,20,.08),0 3px 6px -4px rgba(20,20,20,.12),0 9px 28px 8px rgba(20,20,20,.05)}body[data-ds-dark-theme] .bt-mm-menu{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 0 .5px rgba(255,255,255,.1),0 6px 16px rgba(0,0,0,.5),0 3px 6px -4px rgba(0,0,0,.6),0 9px 28px 8px rgba(0,0,0,.35)} /* vendored */
+.bt-mm-menuitem{display:flex;align-items:center;gap:6px;width:100%;min-height:32px;padding:5px 10px;color:var(--dsw-alias-label-primary,var(--bt-ink));font-size:13px;line-height:20px;text-align:left;background:transparent;border:none;border-radius:6px;cursor:pointer;white-space:nowrap} /* vendored */
+.bt-mm-menuitem:hover{background:var(--dsw-alias-interactive-bg-hover,var(--bt-hover))} /* vendored */
+
+.bt-mm-menuitem-check{margin-left:auto;flex:none;width:16px;text-align:center;color:var(--bt-accent);visibility:hidden}
+.bt-mm-menuitem.is-on .bt-mm-menuitem-check{visibility:visible}
+.bt-mm-menuitem-gear{margin-left:auto;color:var(--dsw-alias-label-tertiary)}
+.bt-mm-menuitem-x{margin-left:auto;width:20px;height:20px;line-height:18px;text-align:center;border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary)}
+.bt-mm-menuitem-x:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.bt-mm-menu-footer{flex:none;margin-top:4px;padding-top:4px;border-top:.5px solid var(--dsw-alias-border-l2,var(--bt-line-2))}
+.bt-mm-addsource{position:fixed;z-index:40;right:32px;top:96px;width:min(360px,90vw);display:flex;flex-direction:column;gap:10px;padding:16px;overflow:hidden;background-color:color-mix(in srgb,var(--bt-card) 82%,transparent);background-image:none;backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-radius:8px;--dsw-elevation-stroke-color:var(--dsw-alias-border-l2);box-shadow:var(--dsw-elevation-prominent)} /* vendored */
+.bt-mm-addsource-head{display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:14px}
+.bt-mm-btn-ghost{background:none;box-shadow:inset 0 0 0 .5px var(--bt-line-2);color:var(--bt-ink-2)}
+/* Two cards a row on a desktop column, one when the column is narrow. The vendored card
+   keeps its -8px side margin for a list; in a grid the cells provide the gutter. */
+ul.bt-mm-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));row-gap:2px;column-gap:50px;align-items:stretch}
+ul.bt-mm-cards>.bt-mm-card{margin:0}
+/* Section headers over the card grid, the shape the shell's Discover list uses: a name and
+   its own control on the right. */
+.bt-mm-group{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
+.bt-mm-grouphead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 8px;border-bottom:.5px solid var(--bt-line)}
+.bt-mm-grouptitle{margin:0;font-size:14px;font-weight:600;line-height:22px;color:var(--dsw-alias-label-primary)}
+.bt-mm-groupmore{min-width:0;max-width:62%;margin-left:auto;padding:0;border:0;background:none;color:var(--dsw-alias-label-tertiary,var(--bt-ink-3));font:inherit;font-size:12.5px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.bt-mm-groupmore:hover{color:var(--dsw-alias-label-primary)}
+/* The installed card's switch is the shell's own switch, copied from its stylesheet:
+   36x20, layer-3 track, brand fill when on, 16px thumb that slides 16px. */
+.bt-mm-toggle{box-sizing:border-box;position:relative;flex:0 0 auto;width:36px;height:20px;padding:2px;border:0;border-radius:999px;corner-shape:round;background:var(--bt-line-2);cursor:pointer}
+.bt-mm-toggle[aria-checked=true]{background:var(--bt-accent)}
+.bt-mm-toggle:disabled{cursor:default;opacity:.5}
+.bt-mm-toggle-thumb{display:block;width:16px;height:16px;border-radius:50%;corner-shape:round;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .12s ease}
+.bt-mm-toggle[aria-checked=false] .bt-mm-toggle-thumb{background:#fff}
+.bt-mm-toggle[aria-checked=true] .bt-mm-toggle-thumb{transform:translate(16px)}
+.bt-mm-rowmenu{position:relative}
+.bt-mm-dots{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:var(--dsw-radius-md);background:none;color:var(--dsw-alias-label-tertiary);cursor:pointer}
+.bt-mm-dots:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.bt-mm-rowmenupop{right:0;left:auto;top:calc(100% + 4px);min-width:140px}
+@media (max-width:900px){ul.bt-mm-cards{grid-template-columns:minmax(0,1fr)}}.bt-mm-search{flex:1;min-width:120px}
+.bt-mm-muted,.bt-mm-meta{color:var(--dsw-alias-label-tertiary);margin:0;font-size:13px;line-height:20px}.bt-mm-meta{overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-strong{overflow-wrap:anywhere;font-size:14px;font-weight:500;line-height:20px}.bt-mm-error{color:var(--dsw-alias-state-error-primary);align-items:center;gap:6px;margin:0;font-size:13px;line-height:20px;display:inline-flex}.bt-mm-failure{align-items:center;gap:10px;display:flex}.bt-mm-notice{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-label-secondary);align-items:flex-start;gap:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px;display:flex}.bt-mm-notice>svg{color:var(--dsw-alias-state-warn-primary);flex:none;margin-top:2px}.bt-mm-cards{flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;display:flex}.bt-mm-card{border-radius:var(--dsw-radius-xl);align-items:center;gap:14px;margin:0 -8px;padding:8px;display:flex;position:relative}.bt-mm-card:hover{background:var(--dsw-alias-interactive-bg-hover)}.bt-mm-icon{border:.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-lg);width:48px;height:48px;color:var(--dsw-alias-label-secondary);flex:none;justify-content:center;align-items:center;display:inline-flex;overflow:hidden}.bt-mm-image{object-fit:cover;width:100%;height:100%}.bt-mm-main{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.bt-mm-titleRow{flex-wrap:nowrap;align-items:center;gap:8px;min-width:0;display:flex}.bt-mm-cardOpen{flex:0 1 auto;min-width:0;max-width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;background:0 0;border:0;padding:0;font-size:14px;font-weight:500;line-height:20px;overflow:hidden}.bt-mm-cardOpen:after{content:"";border-radius:var(--dsw-radius-xl);position:absolute;inset:0}.bt-mm-cardOpen:focus-visible{outline:none}.bt-mm-cardOpen:focus-visible:after{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-description{color:var(--dsw-alias-label-tertiary);-webkit-line-clamp:1;-webkit-box-orient:vertical;font-size:13px;line-height:18px;display:-webkit-box;overflow:hidden}.bt-mm-cardEnd{z-index:1;flex:none;align-items:center;gap:8px;display:inline-flex;position:relative}.bt-mm-blocked{opacity:.5;cursor:not-allowed}.bt-mm-more{align-self:center}.bt-mm-empty{text-align:center;flex-direction:column;align-items:center;gap:8px;padding:64px 0;display:flex}.bt-mm-emptyTitle{margin:8px 0 0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-empty>button{margin-top:8px}.bt-mm-detail{flex-direction:column;gap:16px;display:flex}.bt-mm-crumb{color:var(--dsw-alias-label-tertiary);font:inherit;cursor:pointer;background:0 0;border:0;align-self:flex-start;align-items:center;gap:6px;padding:0;font-size:12.5px;display:inline-flex}.bt-mm-crumb:hover{color:var(--dsw-alias-label-primary)}.bt-mm-crumb:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.bt-mm-crumbIcon{transform:rotate(90deg)}.bt-mm-detailHead{align-items:center;gap:14px;display:flex}.bt-mm-detailTitle{margin:0;font-size:20px;font-weight:500;line-height:28px}.bt-mm-detailDescription{color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere;margin:0;font-size:14px;line-height:22px}.bt-mm-detailSection{flex-direction:column;gap:12px;margin-top:16px;display:flex}.bt-mm-sectionTitle{margin:0;font-size:14px;font-weight:500;line-height:20px}.bt-mm-facts{margin:0}.bt-mm-facts div{border-bottom:.5px solid var(--dsw-alias-border-l2);justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:8px 2px;display:flex}.bt-mm-facts dt{color:var(--dsw-alias-label-secondary);flex:none;font-size:13px;line-height:20px}.bt-mm-facts dd{text-align:end;overflow-wrap:anywhere;min-width:0;margin:0;font-size:13px;line-height:20px}.bt-mm-facts code{background:var(--dsw-alias-bg-module-platform);box-decoration-break:clone;font-family:var(--ds-font-family-code);border-radius:4px;padding:2px 6px;font-size:12px}.bt-mm-tags{flex-wrap:wrap;justify-content:flex-end;gap:6px;display:flex}.bt-mm-dialog{width:min(480px,100vw - 32px)}.bt-mm-dialogBody{flex-direction:column;gap:12px;display:flex}.bt-mm-sourceList,.bt-mm-versions{flex-direction:column;margin:0;padding:0;list-style:none;display:flex}.bt-mm-sourceRow,.bt-mm-versionRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:8px 0;display:flex}.bt-mm-sourceError{color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere;font-size:12px;line-height:18px}.bt-mm-sourceForm{align-items:center;gap:8px;display:flex}.bt-mm-grow{flex:1;min-width:0}.bt-mm-confirmHead{align-items:center;gap:14px;display:flex}.bt-mm-skeletonFill{background:var(--dsw-alias-bg-skeleton);animation:2s cubic-bezier(.36,0,.64,1) infinite bt-mm-dsh-market-skeleton}.bt-mm-icon.bt-mm-skeletonFill{border-color:#0000}.bt-mm-skeletonBar{border-radius:var(--dsw-radius-xs);height:12px;margin:4px 0;display:block}.bt-mm-skeletonTitle{width:min(144px,60%)}.bt-mm-skeletonDescription{width:min(280px,85%)}@keyframes bt-mm-dsh-market-skeleton{0%{opacity:1}40%{opacity:.6}80%,to{opacity:1}}@media (prefers-reduced-motion:reduce){.bt-mm-skeletonFill{animation:none}}.bt-mm-link{color:var(--dsw-alias-link);overflow-wrap:anywhere;text-decoration:none}.bt-mm-link:hover{text-decoration:underline} /* vendored */
+/* The three controls the shell draws with its own primitives (Input, Pill, Button): the
+   geometry is the section's, this is only the chrome those primitives carry. */
+.bt-mm-box{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-3)}
+.bt-mm-box input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13.5px;color:var(--bt-ink);outline:none}
+/* The category chips are the shell's Pill primitive, copied from its stylesheet: 24px,
+   8px padding, layer-2 fill, and the ghost-active pair for the chosen one. */
+.bt-mm-pill{display:inline-flex;align-items:center;gap:4px;flex:none;height:24px;padding:0 8px;border:none;border-radius:999px;corner-shape:round;font:inherit;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);background:transparent;cursor:pointer} /* vendored */
+.bt-mm-pill:hover{background:var(--dsw-alias-interactive-bg-hover)} /* vendored */
+.bt-mm-pill.is-on{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-ghost-active-fill);box-shadow:inset 0 0 0 1px var(--dsw-alias-button-ghost-active-border)} /* vendored */
+.bt-mm-btn{height:28px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--bt-ink);box-shadow:inset 0 0 0 .5px var(--bt-line-2);font:inherit;font-size:12.5px;font-weight:500;cursor:pointer}
+.bt-mm-btn:hover{background:var(--bt-hover)}
+.bt-mm-btn[data-added]{box-shadow:none;color:var(--bt-ink-3);cursor:default}
+/* The parts the Discover section does not draw: the tab row, the source dropdown's own
+   menu, the detail drawer, the installed list and the custom form. */
+.bt-mm{display:flex;flex-direction:column;gap:10px;max-width:960px;padding:0 0 32px 10px;margin-top:-20px}
+.bt-mm-tabs{display:flex;align-items:center;gap:0;align-self:stretch;box-shadow:inset 0 -1px var(--bt-line-2)}
+.bt-mm-tab{display:inline-flex;align-items:center;gap:7px;padding:6px 4px;margin:0 18px -1px 0;border:0;border-bottom:2px solid transparent;background:none;color:var(--bt-ink-3);font:inherit;font-size:13.5px;font-weight:500;white-space:nowrap;cursor:pointer;transition:color .13s ease,border-color .13s ease}
+.bt-mm-tab:hover{color:var(--bt-ink)}
+.bt-mm-tab.is-on{color:var(--bt-ink);border-bottom-color:var(--bt-ink)}
+.bt-mm-tabcount{font-size:11px;font-weight:400;color:var(--bt-ink-3)}
+.bt-mm-total{font-size:12.5px;color:var(--bt-ink-3);flex:none}
+.bt-mm-sort{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--bt-ink-3);flex:none}
+.bt-mm-sort select{height:28px;padding:0 8px;border:0;border-radius:8px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:12.5px;cursor:pointer}
+.bt-mm-source-wrap{position:relative;flex:none}
+
+.bt-mm-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:0;border-radius:8px;background:none;color:var(--bt-ink);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.bt-mm-menu button:hover{background:var(--bt-hover)}
+.bt-mm-menu button[data-on]{font-weight:500}
+.bt-mm-menu hr{margin:4px 0;border:0;border-top:1px solid var(--bt-line-2)}
+.bt-mm-note{margin:0;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-done{margin:0;font-size:12.5px;color:var(--bt-accent)}
+.bt-mm-custom{display:flex;flex-direction:column;gap:12px;max-width:560px}
+.bt-mm-custom .bt-mm-field{align-items:flex-start}
+.bt-mm-custom .bt-mm-field>span{flex:0 0 88px;padding-top:8px;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-custom textarea{flex:1 1 auto;min-width:0;min-height:64px;padding:8px 10px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:13px;color:var(--bt-ink);outline:none;resize:vertical}
+.bt-mm-switchbar{display:inline-flex;gap:2px;padding:2px;border-radius:9px;background:var(--bt-hover);align-self:flex-start}
+.bt-mm-switchbar button{height:26px;padding:0 12px;border:0;border-radius:7px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12.5px;cursor:pointer}
+.bt-mm-switchbar button[data-on]{background:var(--bt-main,#fff);color:var(--bt-ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.bt-mm-installed{display:flex;flex-direction:column;box-shadow:inset 0 0 0 .5px var(--bt-line-2);border-radius:12px;padding:4px}
+.bt-mm-inst-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:9px}
+.bt-mm-inst-row:hover{background:var(--bt-hover)}
+.bt-mm-inst-row[data-off] .bt-mm-name{color:var(--bt-ink-3)}
+.bt-mm-inst-main{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}
+.bt-mm-inst-end{display:flex;align-items:center;gap:4px;flex:none}
+.bt-mm-remove{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--bt-ink-3);cursor:pointer}
+.bt-mm-remove:hover{background:var(--bt-hover);color:var(--bt-ink)}
+
+.bt-mm-remove svg{width:16px;height:16px}
+.bt-mm-remove:disabled{opacity:.5;cursor:default}
+.bt-mm-name{font-size:14px;font-weight:600}
+.bt-mm-tag{flex:none;white-space:nowrap;font-size:11px;line-height:16px;padding:0 6px;border-radius:6px;background:var(--bt-hover);color:var(--bt-ink-3);font-weight:400}
+.bt-mm-tag-on{color:var(--bt-accent)}
+.bt-mm-drawer{display:flex;flex-direction:column;gap:14px;max-width:820px}
+.bt-mm-detail-head{display:flex;align-items:center;gap:12px}
+.bt-mm-detail-title{flex:1 1 auto;min-width:0}
+.bt-mm-detail-title h3{margin:0;font-size:17px;font-weight:600}
+.bt-mm-detail-title p{margin:2px 0 0;font-size:12.5px;color:var(--bt-ink-3)}
+.bt-mm-close{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
+.bt-mm-close:hover{background:var(--bt-hover)}
+.bt-mm-detail-desc{margin:0;font-size:13.5px;line-height:21px;color:var(--bt-ink-2)}
+.bt-mm-config{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;box-shadow:inset 0 0 0 .5px var(--bt-line-2)}
+.bt-mm-config-label{font-size:12px;color:var(--bt-ink-3)}
+.bt-mm-code{font-family:var(--bt-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:12.5px;line-height:18px;color:var(--bt-ink);word-break:break-all}
+.bt-mm-field{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--bt-ink-2)}
+.bt-mm-field input{flex:1 1 auto;min-width:0;height:32px;padding:0 10px;border:0;border-radius:8px;background:var(--bt-hover);font:inherit;font-size:13px;color:var(--bt-ink);outline:none}
+.bt-mm-readme{margin:0;max-height:320px;overflow:auto;padding:12px 14px;border-radius:12px;background:var(--bt-hover);font-family:var(--bt-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:12.5px;line-height:19px;white-space:pre-wrap;color:var(--bt-ink-2)}
+.bt-mm-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+.bt-mm-add{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 16px;border:0;border-radius:999px;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.bt-mm-add:disabled{opacity:.5;cursor:default}
+.bt-mm-add svg{width:15px;height:15px}
+.bt-market-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.bt-market-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 6px;flex:none}
+.bt-market-heading{min-width:0}
+.bt-market-h2{margin:0;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink)}
+.bt-market-sub{margin:4px 0 0;font-size:13px;line-height:20px;color:var(--bt-ink-3)}
+.bt-market-close{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:none;color:var(--bt-ink-2);cursor:pointer}
+.bt-market-close:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-market-search{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-3);flex:none;width:260px;max-width:40vw}
+.bt-market-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:14px;color:var(--bt-ink);outline:none}
+.bt-market-back{flex:none;height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
+.bt-market-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:10px 28px 28px}
+.bt-market-embed{display:flex;flex-direction:column;min-height:0;height:100%;overflow:auto}
+.bt-market-embed>[data-slot=main]{flex:1 1 auto;min-height:0;overflow:auto}
+.bt-market-grid{display:flex;flex-direction:column;gap:0;border-radius:14px;box-shadow:inset 0 0 0 .5px var(--bt-line);overflow:hidden}
+/* Tiles sit on the panel like the reference's: no frame, a 40px mark, the name over one
+   line of description, and a pill on the right that appears with the row. */
+/* Rows, the way DSH draws its own settings list: mark, title over one grey line, control right. */
+.bt-market-card{display:flex;align-items:center;gap:12px;min-width:0;padding:12px 14px;border-radius:0;box-shadow:inset 0 -.5px var(--bt-line);transition:background-color .12s ease}
+.bt-market-card:last-child{box-shadow:none}
+.bt-market-card:hover{background:var(--bt-hover)}
+.bt-market-mark{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-2)}
+.bt-market-mark svg{width:20px;height:20px}
+.bt-market-mark[data-state=ready]{color:var(--bt-accent)}
+.bt-market-copy{display:flex;flex-direction:column;align-items:flex-start;min-width:0;flex:1 1 auto;border:0;background:none;padding:0;font:inherit;text-align:left;cursor:pointer;color:inherit}
+.bt-market-name{max-width:100%;font-size:14px;line-height:20px;font-weight:500;color:var(--bt-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-detail{max-width:100%;font-size:13px;line-height:18px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-market-go{flex:none;height:28px;min-width:64px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.bt-market-go:hover{background:var(--bt-active,var(--bt-hover))}
+.bt-market-go[data-on]{background:var(--bt-accent);color:var(--bt-accent-ink,#fff)}
+.bt-market-detailpane{display:flex;flex-direction:column;gap:14px;max-width:640px}
+.bt-market-state{flex:none;font-size:13px;line-height:18px;color:var(--bt-ink-3)}
+.bt-market-state[data-on]{color:var(--bt-ink-2)}
+.bt-market-note{font-size:13px;line-height:20px;color:var(--bt-ink-3)}
+.bt-market-more{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;border:0;background:none;padding:4px 0;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
+.bt-market-more:hover{color:var(--bt-ink)}
+.bt-market-empty{padding:24px 0;color:var(--bt-ink-3);font-size:13px}
+.bt-market-official{display:flex;align-items:center;justify-content:space-between;gap:12px}
+/* The plugin market's Discover pane, drawn the way the shell's own Discover tab draws it:
+   one toolbar, the index's category pills, then one card per entry. */
+.bt-mk{display:flex;flex-direction:column;gap:16px}
+.bt-mk-bar{display:flex;align-items:center;gap:8px;min-width:0}
+.bt-mk-name{flex:none;font-size:13px;line-height:18px;color:var(--bt-ink);white-space:nowrap}
+.bt-mk-search{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;height:34px;padding:0 8px;border-radius:12px;border:1px solid var(--bt-line);background:color-mix(in srgb,var(--bt-main) 88%,transparent);color:var(--bt-ink)}
+.bt-mk-search svg{flex:none;width:15px;height:15px}
+.bt-mk-search input{flex:1 1 auto;min-width:0;border:0;background:none;outline:none;font:inherit;font-size:14px;color:var(--bt-ink)}
+.bt-mk-search input::placeholder{color:var(--bt-ink-3)}
+.bt-mk-menu{position:relative;flex:none;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;color:var(--bt-ink);cursor:pointer}
+.bt-mk-menu:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mk-menu svg{flex:none;width:14px;height:14px}
+.bt-mk-menu>span{font-size:12px;line-height:18px;white-space:nowrap}
+.bt-mk-menu[data-on]{color:var(--bt-ink)}
+.bt-mk-pick{padding-right:22px}
+.bt-mk-pick::after{content:'';position:absolute;right:9px;top:50%;width:6px;height:6px;margin-top:-4px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg);pointer-events:none;opacity:.6}
+.bt-mk-pick select{appearance:none;-webkit-appearance:none;border:0;background:none;outline:none;font:inherit;font-size:12px;line-height:18px;color:inherit;cursor:pointer;padding:0}
+/* The sort control is one click target: its select covers the label and the name. */
+.bt-mk-sort{padding-right:22px}
+.bt-mk-sortname{display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mk-sort select{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;margin:0}
+/* The picker is as wide as the index it shows. The select sits on top of the name,
+   transparent, so the shell's own menu still opens on a click. */
+.bt-mk-switch{padding:0 22px 0 10px;max-width:60%}
+.bt-mk-switchname{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mk-switch select{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
+.bt-mk-refresh{flex:none;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:none;color:var(--bt-ink);cursor:pointer}
+.bt-mk-refresh:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mk-labels{display:flex;flex-wrap:wrap;gap:6px;margin-top:-6px}
+.bt-mk-tag{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--bt-line);border-radius:999px;background:color-mix(in srgb,var(--bt-main) 88%,transparent);font:inherit;font-size:11px;line-height:18px;font-weight:500;color:var(--bt-ink-3);white-space:nowrap}
+button.bt-mk-tag{cursor:pointer;color:var(--bt-ink)}
+button.bt-mk-tag:hover{color:var(--bt-ink)}
+.bt-mk-tag[data-on]{background:var(--bt-hover);border-color:transparent;color:var(--bt-ink)}
+.bt-mk-catrow{position:relative;display:flex;align-items:center;gap:6px;margin-top:-6px}
+.bt-mk-cats{display:flex;flex-wrap:nowrap;gap:6px;min-width:0;overflow:hidden}
+/* A hidden copy of the whole row: how many pills fit is measured on it, so the answer
+   never depends on how many the last render drew. */
+.bt-mk-catmirror{position:absolute;left:0;top:0;display:flex;flex-wrap:nowrap;gap:6px;visibility:hidden;pointer-events:none;white-space:nowrap}
+.bt-mk-catmore{position:relative;flex:none}
+.bt-mk-pill.bt-mk-morecat{background:var(--bt-ink);color:var(--bt-main);padding-right:20px}
+.bt-mk-pill.bt-mk-morecat::after{content:'';position:absolute;right:9px;top:50%;width:5px;height:5px;margin-top:-4px;border-right:1.4px solid currentColor;border-bottom:1.4px solid currentColor;transform:rotate(45deg);opacity:.85}
+.bt-mk-pill.bt-mk-morecat:hover,.bt-mk-pill.bt-mk-morecat[data-on]{background:var(--bt-ink);color:var(--bt-main);opacity:.92}
+.bt-mk-catmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:5;display:flex;flex-direction:column;min-width:160px;padding:4px;border-radius:12px;background:color-mix(in srgb,var(--bt-main) 92%,transparent);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 0 0 .5px var(--bt-line),0 12px 28px -12px rgba(0,0,0,.28)}
+.bt-mk-catitem{display:flex;align-items:center;height:30px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;font-size:13px;color:var(--bt-ink-2);text-align:left;cursor:pointer;white-space:nowrap}
+.bt-mk-catitem:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mk-catitem[data-on]{background:var(--bt-hover);color:var(--bt-ink);font-weight:500}
+.bt-mk-pill{flex:none;height:24px;padding:0 8px;border:0;border-radius:999px;background:color-mix(in srgb,var(--bt-main) 88%,transparent);font:inherit;font-size:12px;line-height:24px;color:var(--bt-ink);cursor:pointer}
+.bt-mk-pill:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mk-pill[data-on]{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mk-cards{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
+.bt-mk-card{display:flex;align-items:center;gap:14px;min-width:0;padding:8px;border-radius:20px}
+.bt-mk-card:hover{background:var(--bt-hover)}
+.bt-mk-mark{flex:none;width:50px;height:50px;display:inline-flex;align-items:center;justify-content:center;border-radius:16px;border:1px solid var(--bt-line);overflow:hidden;color:var(--bt-ink-2)}
+.bt-mk-mark img{width:32px;height:32px;object-fit:contain}
+.bt-mk-mark svg{width:22px;height:22px}
+.bt-mk-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bt-mk-titlerow{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.bt-mk-card .bt-mk-name{flex:0 1 auto;max-width:100%;font-size:14px;line-height:20px;font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.bt-mk-desc{display:block;font-size:13px;line-height:18px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mk-meta{display:block;font-size:12px;line-height:18px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mk-end{flex:none;display:flex;align-items:center;gap:8px}
+.bt-mk-install{flex:none;height:28px;padding:0 10px;border:1px solid var(--bt-line);border-radius:8px;background:none;font:inherit;font-size:12px;line-height:26px;color:var(--bt-ink);cursor:pointer}
+.bt-mk-install:hover{background:var(--bt-hover)}
+.bt-mk-install:disabled{opacity:.5;cursor:default}
+.bt-mk-installed{font-size:12px;line-height:18px;color:var(--bt-ink-3);white-space:nowrap}
+.bt-mk-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:4px}
+.bt-mk-count{font-size:12px;line-height:18px;color:var(--bt-ink-3)}
+.bt-mk-more{flex:none;height:28px;padding:0 12px;border:1px solid var(--bt-line);border-radius:8px;background:none;font:inherit;font-size:12px;color:var(--bt-ink);cursor:pointer}
+.bt-mk-more:hover{background:var(--bt-hover)}
+.bt-mk-more:disabled{opacity:.5;cursor:default}
+.bt-mk-empty{padding:28px 0;font-size:13px;color:var(--bt-ink-3)}
+@media (max-width:720px){.bt-market-pane{backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6)}.bt-mk-bar{flex-wrap:wrap}.bt-mk-search{order:-1;flex:1 1 100%}.bt-mk-mark{width:44px;height:44px;border-radius:14px}}
+/* The market on a phone: the rail is one row of tabs across the top and the panel fills the
+   screen, so a 240px column no longer eats most of it (this is the drawer form's marker,
+   the same one the other phone rules key on). The enabled list steps aside: each category
+   page already shows the same entries, and a horizontal rail would only push them down. */
+html:has([data-mobile-nav="frame"]) .bt-market-frame{padding:0;align-items:stretch}
+html:has([data-mobile-nav="frame"]) .bt-market-pane{width:100vw;max-width:100vw;height:100dvh;border-radius:0;flex-direction:column}
+html:has([data-mobile-nav="frame"]) .bt-market-nav{width:auto;flex:none;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px;border-right:0;border-bottom:1px solid var(--bt-line);overflow:visible;background:transparent}
+html:has([data-mobile-nav="frame"]) .bt-market-cats{flex-direction:row;gap:6px;overflow-x:auto;overflow-y:hidden;padding:0 0 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+html:has([data-mobile-nav="frame"]) .bt-market-cats::-webkit-scrollbar{display:none}
+html:has([data-mobile-nav="frame"]) .bt-market-cat{flex:none;height:30px;padding:0 12px;border-radius:999px;white-space:nowrap;text-align:center;background:transparent}
+html:has([data-mobile-nav="frame"]) .bt-market-cat[aria-selected=true]{background:var(--bt-hover);color:var(--bt-ink)}
+html:has([data-mobile-nav="frame"]) .bt-market-insthead,
+html:has([data-mobile-nav="frame"]) .bt-market-installed{display:none!important}
+html:has([data-mobile-nav="frame"]) .bt-market-head{padding:14px 16px 6px}
+html:has([data-mobile-nav="frame"]) .bt-market-body{padding:0 16px 16px}
+
+@media (max-width:720px){.bt-market-nav{width:200px}.bt-market-grid{grid-template-columns:1fr}}
+
+.bt-rail .bt-side-foot{position:static;flex-direction:column;gap:8px;padding:0 0 8px;margin-top:auto}
+.bt-rail .bt-apps-chip{flex:none;padding:0;width:40px;height:40px;justify-content:center;border-radius:12px}
+.bt-rail .bt-apps-label{display:none}
+/* Nothing in the rail may widen it: a row keeps its own width, the list scrolls
+   vertically only, and the document never gains a sideways scrollbar from it. */
+.bt-rail,.bt-rail>*{box-sizing:border-box;max-width:100%;min-width:0}
+.bt-rail .bt-list{width:100%;overflow-x:hidden}
+html:has(.bt-side.bt-rail){overflow-x:hidden}
+/* The shell hides a collapsed sidebar outright on macOS (it has no rail state of its own),
+   so the rail ds-bot draws gets a fixed column instead of the width the shell leaves it. */
+/* The shell zeroes its column at once and the rail only mounts on the next render, so it
+   slides in rather than popping into the empty space. */
+@keyframes bt-rail-in{from{opacity:0;transform:translateX(-10px)}}
+.bt-side.bt-rail{animation:bt-rail-in .18s cubic-bezier(.22,1,.36,1) both}
+html[data-platform=darwin] .bt-side.bt-rail,html[data-windows-titlebar] .bt-side.bt-rail{position:fixed;left:0;top:calc(var(--dsh-frame-chrome-top,0px) + 38px);bottom:0;width:56px;padding:8px 0;background:var(--bt-main);z-index:20;overflow:hidden;align-items:center}
+/* The rail is 56 wide, so a row's hover chip is a 40px rounded tile inside it rather than
+   a band across the full column. */
+.bt-rail .bt-row{justify-content:center;padding:6px 0;min-height:44px;width:40px;border-radius:12px;margin:0 auto}
 /* Our own left column, portalled over the shell's collapsed sidebar. It reaches
    the window's top edge so the title band and the column share one fill (under
    Mica the app styles DSH's sidebar the same way, via --bt-leftcol-fill there);
@@ -193,6 +603,31 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
 
 .bt-head{position:relative;display:flex;justify-content:center;align-items:center;height:40px;flex:none;pointer-events:none}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:var(--bt-glass-bg);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:.5px solid var(--bt-glass-rim);box-shadow:var(--bt-glass-shadow);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
+/* dsh-web-mobile zeroes the host header's 10px top padding on a phone, which leaves this
+   row flush with the status bar. Give the row a little air back, but only where that
+   plugin owns the header: on a desktop window the host padding is still there. */
+/* The phone layout now draws its own header row (the mark and a drawer button), so the
+   team's bar moves up into that same row instead of starting a second one. Where that
+   row's own toggle is mounted, the bar keeps only the title and the session menu. */
+/* The phone layout gives the session header's own cell no width, so its content used to
+   overflow into a second row under the chrome. Fixed to the frame's top it shares the
+   chrome's row instead: title in the middle, buttons at the edges. */
+/* The row takes the phone layout's measured header band and centers in it, which is the
+   line its own drawer toggle is drawn on; pill and menu button match that toggle's 28px. */
+/* One offset for everything that must clear the system bar: the page is edge to edge and
+   this WebView reports no inset, so the bar's height is the same measured fallback the
+   header row uses; the details panel starts on that line too. */
+html:has([data-mobile-nav="frame"]){--bt-safe-top:calc(env(safe-area-inset-top, 0px) + 11px)}
+html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:var(--bt-safe-top);height:36px;margin:0;z-index:20;align-items:center}
+/* The layout's own header button floats: a solid surface, a hairline ring and the soft
+   drop shadow. The pill and the session menu borrow that surface. */
+html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:var(--bt-float-shadow-up),var(--bt-float-shadow);color:var(--bt-ink)}
+html:has([data-mobile-nav="frame"]) .bt-pill:hover,html:has([data-mobile-nav="frame"]) .bt-pill:active{background:var(--bt-float-hover)}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{border:0;background:var(--bt-float-surface);box-shadow:var(--bt-float-shadow-up),var(--bt-float-shadow)}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn:hover{background:var(--bt-float-hover)}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{top:0;bottom:0;right:10px;align-items:center}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:28px;height:28px;align-self:center}
+html:has([data-mobile-nav="frame"]):has([data-mobile-nav="toggle"]) .bt-head-btn{display:none}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
 .bt-pill:active{transform:scale(.965)}
 .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
@@ -216,7 +651,7 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
 @media (prefers-reduced-motion:reduce){.bt-pill,.bt-pill-go,.bt-pill-go svg{transition:none!important}.bt-pill-go{filter:none}.bt-pill:active{transform:none}}
 
 /* The width settings: the share of the column a bubble may take, and the flat text. */
-body{--bt-msg-w:.8;--bt-flat-w:1}
+body{--bt-msg-w:.9;--bt-flat-w:1}
 .bt-astack{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0}
 .bt-bubble{max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px));background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 10px);box-sizing:border-box;overflow-wrap:anywhere;text-wrap:pretty;text-autospace:normal}
 .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:6px}
@@ -367,6 +802,26 @@ button.bt-q-opt:active{background:var(--bt-active)}
 .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
 .bt-create-go{height:36px;padding:0 20px}
 @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
+
+/* On a phone the new-chat pane hosts Create Bot, and a popover anchored to the composer
+   leaves that form squeezed into a column. Lift it into a bottom sheet instead. */
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){top:auto!important;left:0!important;right:0!important;width:auto;height:var(--bt-sheet-h,auto);max-height:var(--bt-sheet-h,88dvh);border-radius:20px 20px 0 0;padding-bottom:calc(var(--bt-sheet-foot,0px) + env(safe-area-inset-bottom,0px));box-sizing:border-box;box-shadow:0 -1px 0 var(--bt-line),0 -12px 40px -16px rgba(0,0,0,.24);overflow:hidden}
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){animation:bt-sheet-in .42s cubic-bezier(.32,.9,.24,1) both,bt-veil-in .18s ease-out both}
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head{position:relative;padding-top:15px;border-bottom:0}
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-body{padding:2px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.bt-sheet-catcher,.bt-sheet-grip{display:none}
+html:has([data-mobile-nav="frame"]) .bt-sheet-catcher{display:block;position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.32);animation:bt-veil-in .18s ease-out both}
+html:has([data-mobile-nav="frame"]) .bt-sheet-grip{display:block;position:absolute;left:0;right:0;top:0;height:16px;z-index:3;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent}
+html:has([data-mobile-nav="frame"]) .bt-pane[data-dragging]{animation:none;cursor:grabbing}
+html:has([data-mobile-nav="frame"]) .bt-pane[data-dragging] .bt-create-card{animation:none}
+/* The look picker is built in six-wide rows for the panel; on a phone the sixth wraps
+   onto a line of its own, so flatten the rows into one compact five-column tile. */
+html:has([data-mobile-nav="frame"]) .bt-shapes{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+html:has([data-mobile-nav="frame"]) .bt-shapes>.bt-shape-row{display:contents}
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-to{position:relative;padding-top:15px;border-bottom:0}
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-to::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
+html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-drop{position:static;left:auto;top:auto;width:auto;max-height:none;flex:1 1 auto;min-height:0;padding:0 6px calc(8px + env(safe-area-inset-bottom,0px));border:0;border-radius:0;background:transparent;box-shadow:none;overflow-y:auto;transform-origin:50% 0}
 .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
 .bt-send:disabled{opacity:.35;cursor:default}
 .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
@@ -377,6 +832,16 @@ button.bt-q-opt:active{background:var(--bt-active)}
    window. Where the chrome top already clears the title bar the band is 0. */
 html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel){--bt-caption-band:calc(var(--dsh-windows-titlebar-height,0px) - var(--dsh-frame-chrome-top,0px));padding-top:var(--bt-caption-band)}
 html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::before{content:"";position:absolute;top:0;left:0;right:0;height:var(--bt-caption-band);-webkit-app-region:drag}
+/* A phone pane hangs from the line the conversation header ends on: the phone layout
+   measures that band as --mobile-nav-header-h, which already sits below the system bars
+   (env(safe-area-inset-top) reads 0 in this WebView, so it cannot be used alone). */
+/* The details sheet's own top row sits on the line the conversation header uses: same
+   28px controls, and the padding puts their centres where the header's buttons are. */
+/* The sheet may run to the very top, but its buttons stay below the system bar: the row
+   above them is a blank spacer. */
+html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top{padding-top:calc(env(safe-area-inset-top, 0px) + 44px)}
+html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top .bt-round{width:28px;height:28px}
+html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top .bt-round svg{width:16px;height:16px}
 .bt-pane{position:fixed;top:var(--dsh-frame-chrome-top,0px);right:0;bottom:0;z-index:45;pointer-events:auto;background:var(--bt-main);color:var(--bt-ink);display:flex;font-family:var(--bt-font)}
 .bt-dialog{flex:1;display:flex;flex-direction:column;min-width:0}
 .bt-dialog .bt-head{height:62px}
@@ -397,7 +862,6 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
 .bt-fold-code>.bt-fold-pre{margin:0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,currentColor 6%,transparent);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:20px;overflow-x:auto}
 .bt-fold-code>*+.bt-fold-pre{margin-top:6px}
 .bt-fold-note{font-size:12px;line-height:16px;color:var(--bt-ink-3)}
-[data-folded] .bt-fold-body{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 40px),transparent)}
 .bt-ubody .bt-fold .bt-more,.bt-ububble .bt-fold .bt-more,.bt-ubody .bt-fold-note,.bt-ububble .bt-fold-note{color:inherit;opacity:.7}
 .bt-ubody .bt-fold .bt-more:hover,.bt-ububble .bt-fold .bt-more:hover{opacity:1}
 .bt-ubody .bt-fold-code>.bt-tool,.bt-ububble .bt-fold-code>.bt-tool{color:inherit;opacity:.7}
@@ -605,7 +1069,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 
 /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
    shell offers them and CSS-module name suffixes elsewhere. */
-[class*="_newSession"],nav[class*="_panelList"],[class*="_logoRow"]>[class*="_brand"],[class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
+/* Only the team view replaces the shell's own sidebar rows. The shell's own view keeps them:
+   hiding them there left that view with an empty column. */
+html.bt-bot [class*="_newSession"],html.bt-bot nav[class*="_panelList"],html.bt-bot [class*="_logoRow"]>[class*="_brand"],html.bt-bot [class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
 /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
    collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
    the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
@@ -621,6 +1087,8 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
 /* Elsewhere the switch shows only while the column is hidden, where the column's
    own top row had it. */
 html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
+/* ds-bot folds the side from its own row now, so the shell's copy in the caption band goes. */
+html[data-platform=darwin] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-platform=darwin] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right){display:none!important}
 /* The footer ends in the Bot row: the whale's settings seat, then the account menu
    when no plugin holds that seat. Every other plugin's entry takes a whole row above
    it, in the shell's order, so none of them squeezes the Bot row. */
@@ -660,7 +1128,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
 .bt-voice-end:hover{background:#e02135}
 @keyframes bt-fade{from{opacity:0}to{opacity:1}}
 @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
-@media (prefers-reduced-motion:reduce){.bt-voice-pane,.bt-voice-caption,.bt-voice-ring{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.bt-voice-pane,.bt-voice-caption,.bt-voice-ring{animation:none!important}
+@media (prefers-reduced-motion:reduce){.bt-side.bt-rail{animation:none}}}
 /* A bubble takes the set share of the column, as the user's does; 82px stays free for
    the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
 .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
@@ -717,6 +1186,16 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
 .bt-menu button:hover{background:var(--bt-hover)}
 .bt-menu button svg{flex:none;width:16px;height:16px;margin:0 1px}
 .bt-menu .bt-danger{color:var(--bt-danger)}
+/* An upload row is a label over its own input, so the picker opens natively; the row is
+   the menu item and the input is invisible but still in the flow of the label. */
+.bt-menu label.bt-menu-file{position:relative;display:flex;align-items:center;gap:4px;width:100%;min-height:30px;text-align:left;border-radius:6px;padding:6px 8px;font:inherit;font-size:13px;line-height:18px;color:var(--bt-ink);cursor:pointer;box-sizing:border-box}
+.bt-menu label.bt-menu-file:hover{background:var(--bt-hover)}
+.bt-menu label.bt-menu-file svg{flex:none;width:16px;height:16px;margin:0 1px}
+/* The input itself covers the row, so the tap lands on the control the platform asks
+   for a picker; no forwarding through the label and no programmatic click. */
+/* Kept out of the way of the rows; the row's button clicks it, and the platform opens
+   the picker for that click. */
+.bt-menu-input{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
 .bt-menu-sep{height:.5px;flex:none;background:var(--bt-line-2);margin:4px 8px}
 .bt-menu-up{--bt-origin:bottom left;animation-name:bt-pop-lift,bt-veil-in}
 .bt-menu[data-leaving]{pointer-events:none;animation:bt-pop-out .12s cubic-bezier(.4,0,1,1) forwards}
@@ -964,6 +1443,192 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 @media (max-width:640px) and (pointer:coarse){
   .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
 }
+/* Local patches (design/ds-bot-patches.md). Appended rather than edited into the rules
+   above, so an upstream change to those rules cannot conflict: same specificity, later
+   wins. Both only touch what this plugin renders itself. */
+.bt-mark-img{box-shadow:none}
+/* Unconditional: the overlay is absolutely placed under the avatar button, so it
+   overflows a short viewport in either orientation (a landscape phone is 844 wide and
+   a 640 max-width query misses it). A long window simply never scrolls. */
+.bt-avedit{max-height:calc(100dvh - 96px);overflow-y:auto}
+/* This renderer does not give border-radius its round default: a 50% radius alone paints a
+   rounded square. The shell ships the whole surface as superellipse(1.5) through this one
+   variable, so a round corner everywhere is one variable, not a pile of !important rules:
+   sizes, colours and layout stay exactly as the shell set them. */
+/* The shell's session-log export belongs in Settings, not at the bottom of the drawer. */
+[data-mobile-nav="drawer-actions"] [data-mobile-nav="session-log"]{display:none!important}
+html:root{--dsw-corner-shape:round}
+/* One floating surface for every control that rides over content: the surface tone, a
+   half-pixel hairline, and a float shadow soft enough to read as separation, not depth.
+   The phone carried a translucent tint of its own; it is gone with it, one recipe now. */
+body{--bt-float-surface:var(--bt-main);--bt-float-ring:color-mix(in srgb,var(--bt-ink) 10%,transparent);--bt-float-shadow:0 4px 12px -1px rgba(28,28,28,.08),0 2px 4px -2px rgba(28,28,28,.06);--bt-float-shadow-up:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03);--bt-float-hover:color-mix(in srgb,var(--bt-main),var(--bt-ink) 7%)}
+/* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
+   into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
+   that same plugin's marker rather than a width: the marker means "drawer form", where the
+   native button is gone. It is a private attribute of dsh-web-mobile used for visibility
+   only — if it is ever renamed the button stops showing (a safe failure) and the native one
+   returns, so two hangers never appear at once. */
+.bt-head-btn{display:none;position:absolute;left:0;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bt-head-btn:hover,.bt-head-btn:active{background:var(--bt-float-hover)}
+.bt-head-btn:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}
+/* 32px is the circle; a finger still gets 44. Grow up, down and left only, so the pill
+   beside it keeps its space. */
+.bt-head-btn::after{content:'';position:absolute;inset:-4px 0 -4px -4px}
+/* The phone layout mounts its own drawer toggle in the frame's leading cell, so the
+   self-drawn one would be a second hamburger beside it. Only that direct button is
+   dropped: the session menu inside .bt-pmenu shares the class and must stay. */
+html:has([data-mobile-nav="frame"]) .bt-head-btn{display:flex}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-head-btn{display:none}
+/* The session menu sits at the mirror position. The popover is the panel menu's own, which
+   already opens right-aligned below its button. */
+.bt-head>.bt-pmenu{position:absolute;right:0;top:2px;display:none}
+.bt-head>.bt-pmenu .bt-head-btn{position:static;left:auto}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{display:inline-flex}
+/* The head is pointer-events:none and the panel menu never restated it, so without this
+   the popover paints but no item can be tapped. */
+.bt-head>.bt-pmenu .bt-pmenu-pop{pointer-events:auto}
+/* The left button's hit area grows rightwards; this one mirrors it so it never reaches the pill. */
+.bt-head>.bt-pmenu .bt-head-btn::after{inset:-4px -4px -4px 0}
+/* The model the conversation runs on, at the title's right: one pill on the shared
+   floating surface, name and caret on one line. The phone keeps that slot for the
+   session menu instead. */
+.bt-head>.bt-model-trigger{position:absolute;right:66px;top:5px;flex:none;height:30px;min-height:30px;gap:4px;padding:0 8px 0 10px;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);pointer-events:auto;max-width:min(220px,40vw)}
+.bt-head>.bt-model-trigger:hover,.bt-head>.bt-model-trigger[aria-expanded=true]{background:var(--bt-float-hover)}
+.bt-head>.bt-model-trigger .bt-model-copy{flex-direction:row;align-items:baseline;gap:4px;min-width:0}
+.bt-head>.bt-model-trigger .bt-model-provider{display:none}
+.bt-head>.bt-model-trigger .bt-model-name{font-size:13px;line-height:18px}
+html:has([data-mobile-nav="frame"]) .bt-head>.bt-model-trigger{display:none}
+.bt-head>.bt-head-right{position:absolute;right:24px;top:5px;display:none;width:32px;height:32px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);pointer-events:auto;cursor:pointer}
+.bt-head>.bt-head-right:hover{background:var(--bt-float-hover)}
+html:not(:has([data-mobile-nav="frame"])) .bt-head>.bt-head-right{display:inline-flex}
+/* The MCP page: the Skills page's shape — a light surface, one title row with the page's
+   own action, then plain rows — because these are settings, not catalogue cards. */
+.bt-mcp-host{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;height:100%}
+.bt-mcp{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;height:100%}
+.bt-mcp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 28px 10px;flex:none}
+.bt-mcp-heading{min-width:0}
+.bt-mcp-h2{margin:0;font-size:20px;line-height:28px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink)}
+.bt-mcp-sub{margin:4px 0 0;font-size:13px;line-height:20px;color:var(--bt-ink-3)}
+.bt-mcp-actions{display:flex;align-items:center;gap:10px;flex:none}
+.bt-mcp-back{border:0;background:none;padding:0;margin:0 0 2px;font:inherit;font-size:13px;color:var(--bt-ink-3);cursor:pointer}
+.bt-mcp-back:hover{color:var(--bt-ink)}
+.bt-mcp-body{flex:1 1 auto;min-height:0;overflow:auto;padding:0 28px 28px}
+.bt-mcp-list{display:flex;flex-direction:column;gap:6px}
+.bt-mcp-row{display:flex;align-items:center;gap:8px;min-height:52px;padding:0 10px 0 0;border-radius:12px;border:.5px solid var(--bt-line);background:var(--bt-main)}
+.bt-mcp-row[data-off]{opacity:.62}
+.bt-mcp-main{display:flex;align-items:center;gap:12px;flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;text-align:left;color:var(--bt-ink);padding:8px 0 8px 12px;border-radius:12px;cursor:pointer}
+.bt-mcp-main:hover{background:var(--bt-hover)}
+.bt-mcp-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;width:32px;height:32px;border-radius:10px;background:var(--bt-hover);color:var(--bt-ink-2)}
+.bt-mcp-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.bt-mcp-name{font-size:14px;line-height:20px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mcp-detail{font-size:12px;line-height:17px;color:var(--bt-ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt-mcp-switch{display:inline-flex;align-items:center;flex:none;width:38px;height:22px;padding:2px;border:0;border-radius:999px;background:var(--bt-hover);cursor:pointer;transition:background-color .12s ease}
+.bt-mcp-switch[data-on]{background:var(--bt-accent)}
+.bt-mcp-switch[data-busy]{opacity:.5;cursor:default}
+.bt-mcp-knob{width:18px;height:18px;border-radius:50%;background:var(--bt-main);transition:translate .12s ease}
+.bt-mcp-switch[data-on] .bt-mcp-knob{translate:16px 0}
+.bt-mcp-empty{display:flex;align-items:center;justify-content:center;min-height:200px;padding:32px;border-radius:12px;border:.5px dashed var(--bt-line);color:var(--bt-ink-3);font-size:13px;line-height:20px;text-align:center}
+.bt-mcp-search{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink-3);flex:none;width:220px;max-width:36vw}
+.bt-mcp-search input{flex:1 1 auto;min-width:0;border:0;background:none;font:inherit;font-size:13px;color:var(--bt-ink);outline:none}
+.bt-mcp-primary{display:inline-flex;align-items:center;gap:6px;flex:none;height:34px;padding:0 14px;border:0;border-radius:999px;background:var(--bt-accent);color:var(--bt-accent-ink);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.bt-mcp-primary:disabled{opacity:.6;cursor:default}
+.bt-mcp-ghost{display:inline-flex;align-items:center;gap:6px;flex:none;height:34px;padding:0 12px;border:0;border-radius:999px;background:var(--bt-hover);color:var(--bt-ink);font:inherit;font-size:13px;cursor:pointer}
+.bt-mcp-ghost:disabled{opacity:.5;cursor:default}
+.bt-mcp-primary.bt-danger{background:var(--bt-danger);color:var(--bt-main)}
+.bt-mcp-ghost.bt-danger{color:var(--bt-danger)}
+.bt-mcp-confirm{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 28px 10px;padding:12px 14px;border-radius:12px;border:.5px solid var(--bt-line-2);background:var(--bt-hover)}
+.bt-mcp-confirmtext{font-size:13px;line-height:19px;color:var(--bt-ink)}
+.bt-mcp-confirmrow{display:flex;gap:8px;flex:none}
+.bt-mcp-note{margin:0 28px 10px;font-size:12px;line-height:18px;color:var(--bt-ink-3)}
+.bt-mcp-error{margin:10px 0 0;font-size:12px;line-height:18px;color:var(--bt-danger)}
+.bt-mcp-tools{display:flex;flex-direction:column;gap:6px}
+.bt-mcp-tool{border-radius:12px;border:.5px solid var(--bt-line);background:var(--bt-main)}
+.bt-mcp-toolrow{display:flex;flex-direction:column;gap:2px;width:100%;border:0;background:none;font:inherit;text-align:left;color:var(--bt-ink);padding:10px 14px;border-radius:12px;cursor:pointer}
+.bt-mcp-toolrow:hover{background:var(--bt-hover)}
+.bt-mcp-toolname{font-size:13px;line-height:19px;font-weight:500;font-family:var(--bt-mono,ui-monospace,monospace)}
+.bt-mcp-tooltext{font-size:12px;line-height:18px;color:var(--bt-ink-3)}
+.bt-mcp-schema{margin:0;padding:12px 14px;border-top:.5px solid var(--bt-line);font-family:var(--bt-mono,ui-monospace,monospace);font-size:11px;line-height:17px;color:var(--bt-ink-2);white-space:pre-wrap;overflow-wrap:anywhere;max-height:280px;overflow:auto}
+.bt-mcp-form{display:flex;flex-direction:column;gap:14px;max-width:560px}
+.bt-mcp-field{display:flex;flex-direction:column;gap:6px}
+.bt-mcp-label{font-size:12px;line-height:17px;font-weight:500;color:var(--bt-ink-2)}
+.bt-mcp-hint{font-size:11px;line-height:16px;color:var(--bt-ink-3)}
+.bt-mcp-input{width:100%;box-sizing:border-box;min-height:36px;padding:8px 12px;border-radius:10px;border:.5px solid var(--bt-line-2);background:var(--bt-main);font:inherit;font-size:13px;line-height:19px;color:var(--bt-ink);outline:none}
+.bt-mcp-input:focus-visible{border-color:var(--bt-accent)}
+.bt-mcp-area{resize:vertical;font-family:var(--bt-mono,ui-monospace,monospace);font-size:12px;line-height:18px}
+.bt-mcp-seg{display:inline-flex;gap:4px;padding:3px;border-radius:999px;background:var(--bt-hover);align-self:flex-start}
+.bt-mcp-seg button{border:0;border-radius:999px;background:none;color:var(--bt-ink-2);font:inherit;font-size:12px;padding:5px 12px;cursor:pointer}
+.bt-mcp-seg button[data-on]{background:var(--bt-main);color:var(--bt-ink);font-weight:500}
+.bt-mcp-formfoot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
+@media (max-width:720px){.bt-mcp-head{flex-direction:column;align-items:stretch}.bt-mcp-actions{justify-content:space-between}.bt-mcp-search{width:auto;max-width:none;flex:1 1 auto}.bt-mcp-body{padding:0 16px 20px}.bt-mcp-confirm,.bt-mcp-note{margin-left:16px;margin-right:16px}}
+
+/* The phone skin: the OpenBot chat shape, on this device. One --bt-app-* layer holds the
+   surfaces, radii and type pairs; every consumer carries the drawer marker, and no pick
+   leaves the attribute off, so the phone gets it and the desktop never can. Colours map to
+   the existing --bt-* set (style-debt forbids a second palette) and dark mode follows. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]){
+  --bt-app-surface:var(--bt-card);
+  --bt-app-raised:var(--bt-bubble);
+  --bt-app-control:var(--bt-card);
+  --bt-app-control-hover:var(--bt-hover);
+  --bt-app-border:var(--bt-line);
+  --bt-app-accent:var(--bt-accent);
+  --bt-app-radius-bubble:5px;
+  /* The small corner is the radius minus the 12px pad step; at or below 13px that would go
+     negative, which the browser drops whole, so it bottoms out at 2px. */
+  --bt-app-radius-bubble-inset:max(2px, calc(var(--bt-app-radius-bubble) - 12px - 1px));
+  --bt-app-blur:18px;
+  --bt-app-radius-card:14px;
+  --bt-app-radius-group:16px;
+  --bt-app-radius-modal:30px;
+  --bt-app-text-title:24px;  --bt-app-leading-title:30px;
+  --bt-app-text-row:16px;    --bt-app-leading-row:22px;
+  --bt-app-text-body:14px;   --bt-app-leading-body:20px;
+  --bt-app-text-sub:13px;    --bt-app-leading-sub:18px;
+  --bt-app-text-meta:12px;   --bt-app-leading-meta:16px;
+  --bt-app-gap:8px;
+  --bt-app-pad:8px 10px;
+  --bt-app-row:48px;
+  --bt-app-shadow-float:var(--bt-float-shadow);
+}
+/* The head buttons and composer controls already sit at the shell's sizes on a phone
+   (36/32px, 44px hit areas), so only the bubble, its stack, the row height and the empty
+   note take the app's own numbers here. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack{gap:var(--bt-app-gap)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg,
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack[data-lead]>.bt-msg{max-width:calc(var(--bt-msg-w) * 100%)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) body:not([data-bt-layout=flat]) .bt-bubble{border-radius:var(--bt-app-radius-bubble);padding:var(--bt-app-pad);font-size:var(--bt-app-text-body);line-height:1.625;overflow-wrap:anywhere}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:var(--bt-app-radius-bubble-inset)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:var(--bt-app-radius-bubble-inset)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-row{min-height:var(--bt-app-row)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-bubble .bt-tools{border-radius:999px}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-empty{font-size:var(--bt-app-text-sub);line-height:var(--bt-app-leading-sub)}
+/* The user's own bubbles are the host's, so the skin reaches them through the row marker it
+   draws. Radius and padding only: a width here would resolve against the width the host has
+   already shrunk, which squeezes the bubble instead of matching the Bot's side. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important}
+/* On the phone the bubble this plugin draws for the user's own messages drops its time; the
+   desktop keeps it. The shell's user row carries no time of its own to hide. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-utime{display:none}
+/* A tap on the bubble opens its tools; on the phone the three icons sit bare right under the
+   bubble's left edge — no plate, no shadow, no padding — instead of floating beside it. The
+   bubble's line already carries a position, so only the placement changes here, and a row
+   with a sender avatar starts the bubble 22+8px in. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools{top:calc(100% - 6px);right:auto;left:0;margin-left:0;transform:none;background:none;box-shadow:none;padding:0;z-index:1000}
+/* The 44px tap target puts 12px of empty button around each glyph, which reads as a gap under
+   the bubble; the icons take a 32px box here so the row sits against the bubble's bottom. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools .bt-tool{width:32px;height:32px}
+/* What a tap on the bubble opens comes above everything this plugin draws, its own sheets at
+   61 and its palette layer at 70 included, so nothing covers the icons or their popovers. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) :is(.bt-menu,.bt-react-strip){z-index:1001}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg-line:has(>.bt-lead) .bt-tools{left:30px}
+/* A group's own bubble is drawn here, so the skin's padding and radius reach it through the
+   same tokens as the rest. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-ububble{padding:var(--bt-app-pad);border-radius:var(--bt-app-radius-bubble)}
+/* A group line shows whose it is: its bubble carries that member's ink, mixed low enough to
+   stay paler than the name above it. The user's own bubbles and one-to-one chats keep theirs,
+   which is what makes a tinted bubble read as "someone in the group said this". A tint needs a
+   variable of its own: redefining --bt-bubble on the same node would reference itself. */
+.bt-group-msg .bt-bubble{background:var(--bt-bubble);background:var(--bt-bubble-tint,var(--bt-bubble))}
 `
 
 export const CONVERSATION_CSS = `
@@ -1078,49 +1743,104 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
 }
 @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
 @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
-[data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;min-height:44px!important;border-radius:22px!important;padding:7.5px!important;box-sizing:border-box;background:var(--bt-glass-bg)!important;-webkit-backdrop-filter:blur(20px) saturate(180%)!important;backdrop-filter:blur(20px) saturate(180%)!important;border:.5px solid var(--bt-glass-rim)!important;box-shadow:var(--bt-glass-shadow),0 0 0 1px rgba(228,228,228,.04)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
-[data-composer-card]:hover,[data-composer-card]:focus-within{border-color:color-mix(in srgb,var(--bt-ink) 30%,transparent)!important}
+html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:12px!important;min-height:48px!important;border-radius:26px!important;padding:7.5px!important;box-sizing:border-box;border:0!important;background:var(--bt-glass-bg)!important;-webkit-backdrop-filter:blur(20px) saturate(180%)!important;backdrop-filter:blur(20px) saturate(180%)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
+html:has([data-mobile-nav="frame"]) [data-composer-card]:hover,html:has([data-mobile-nav="frame"]) [data-composer-card]:focus-within{background:color-mix(in srgb,var(--bt-main) 96%,transparent)!important}
+/* The card was measuring 2px of top padding against 7.5px at the bottom, so its 32px row
+   sat a couple of pixels high inside the box. Equal 6px insets centre it exactly inside the
+   48px box (mobile-ui.md v3: 16px on the sides, as the app's composer has); the attribute is
+   repeated so this beats whichever rule pinned the top to 2px. */
+html:has([data-mobile-nav="frame"]) [data-composer-card][data-composer-card][data-composer-card]{padding:6px 16px!important}
+/* The shell lifts its primary send button 2px to suit its own row; in this card the plus,
+   the mic and the card's centre line all agree, so that lift leaves the send button high. */
+[data-composer-card] [class*="_primary"]{transform:none!important}
+/* The voice-input control the shell puts at the far right of the composer draws an 18px
+   mark on a bare seat. This surface asks for the fuller microphone used elsewhere, so the
+   shell's glyph is hidden and the mark is painted through a mask: it takes the button's own
+   colour, which keeps it right in light and dark themes alike. */
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[aria-label*="voice input" i]>svg{display:none}
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[aria-label*="voice input" i]{background-color:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='7.25' y='2' width='5.5' height='10' rx='2.75' fill='%23000' stroke='none'/%3E%3Cpath d='M4.75 9.5a5.25 5.25 0 0 0 10.5 0'/%3E%3Cpath d='M10 14.75v2.75M7 17.5h6'/%3E%3C/svg%3E") center/20px 20px no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='7.25' y='2' width='5.5' height='10' rx='2.75' fill='%23000' stroke='none'/%3E%3Cpath d='M4.75 9.5a5.25 5.25 0 0 0 10.5 0'/%3E%3Cpath d='M10 14.75v2.75M7 17.5h6'/%3E%3C/svg%3E") center/20px 20px no-repeat}
+/* The card centers its children, but a child that carries its own alignment still rides
+   the top of the row; pin every direct child's cross-axis alignment to the same centre. */
+html:has([data-mobile-nav="frame"]) [data-composer-card]>*{align-self:center!important}
+/* In DS Bot mode the composer's own "+" menu carries both file and image upload, so the
+   paperclip dsh-web-mobile injects beside it is a duplicate way to the same picker. Agent
+   mode draws no "+", so the paperclip stays there. */
+/* The paperclip is the shell's own mobile adaptation, and our plus reuses its file input;
+   where both can upload, one entry is enough. */
+html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus):has(input[type=file]) [data-mobile-nav="file-upload"]{display:none!important}
+/* The drawer's top edge is glass, in a layer of its own: the slide-in carries a transform,
+   so backdrop-filter cannot sample the page until it lands, and a transition would never
+   start (its computed value does not change). A delayed fade-in stands in. Known cost: the
+   first 0.42s of the slide has no blur; the material settles in just after it, not before. */
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){background:color-mix(in srgb,var(--bt-card) 76%,transparent)}
+html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-pane:has(> :is(.bt-create,.bt-newchat))::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;backdrop-filter:blur(var(--bt-app-blur)) saturate(1.4);-webkit-backdrop-filter:blur(var(--bt-app-blur)) saturate(1.4);animation:bt-sheet-glass .22s .4s ease-out both}
+@keyframes bt-sheet-glass{from{backdrop-filter:none;-webkit-backdrop-filter:none}}
+
+/* Where the plus is missing, the shell's button keeps its file input and wears the same plus
+   glyph through a mask, so the phone's left side always reads the same way. */
+html:has([data-mobile-nav="frame"]) [data-composer-card]:not(:has(.bt-plus)) [data-mobile-nav="file-upload"]{background-color:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M10 3.5v13M3.5 10h13'/%3E%3C/svg%3E") center/20px 20px no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M10 3.5v13M3.5 10h13'/%3E%3C/svg%3E") center/20px 20px no-repeat}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
 [class*="_root"]:has(> [data-composer-card]){padding:0 11px 13px 16px!important}
 [class*="_root"]:has(> [data-composer-card])>[data-composer-card]{max-width:min(992px,100%)!important}
+[data-composer-card]{background:var(--bt-float-surface)!important;box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow)!important}
+[data-composer-card]:focus-within{background:var(--bt-float-surface)!important}
+/* The shell's card is a column: the input on top, the controls on the line below. Both
+   surfaces want one capsule instead, so the card turns into a row and the shell's row is
+   flattened, its children ordered round the input. The phone frame restates its own
+   padding, radius and colours on the card above. */
+html:not(:has([data-mobile-nav="frame"])) [data-composer-card]{flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;padding:6px 8px!important;border-radius:24px!important}
 [data-composer-card]>[class*="_row"]{display:contents!important}
-[data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:flex-end!important;margin:0!important}
-[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0!important}
-[data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:flex-end!important;margin:0!important}
+[data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:center!important;margin:0!important}
+[data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0 0 0 -15px!important}
+/* The row's gap is 12 and the field adds 8 of its own inset, so pulling 8 back leaves 4
+   here and 12 from the plus's box edge to the text; 17px from the icon edge to the text is
+   that plus the 5px the 32px box keeps around its 22px icon. The desktop field keeps its
+   stock inset. */
+html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{margin-left:-8px!important}
+[data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:center!important;margin:0!important}
 /* The slot anchor is display:contents, so the rail inside it is the flex item. */
 [data-composer-card]>[data-slot="conversation.input.attachments"]>[class*="_rail"]{order:0!important;flex:0 0 100%!important;margin:0!important;padding:2px 8px 6px!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] > [class*="_rail"])>[data-input-scroll]{order:1!important;flex:0 0 100%!important;margin:0 0 6px!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] > [class*="_rail"]) [class*="_tools"]{order:2!important}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] > [class*="_rail"]) [class*="_trailing"]{margin-left:auto!important}
-[data-composer-card] [data-composer-input]{min-height:24px!important;padding:2px 0!important}
-[data-composer-card] [data-composer-placeholder]{left:0!important;top:2px!important}
+/* The line box is the caret: at 15px on a 24px line the caret stands the same height as the
+   text it sits beside, which is what the reference capsule does. */
+[data-composer-card] [data-composer-input]{min-height:24px!important;line-height:24px!important;font-size:15px!important;padding:0!important}
+[data-composer-card] [data-composer-placeholder]{left:0!important;top:0!important}
 [data-composer-placeholder]{font-size:0!important;line-height:0!important}
 /* The name sits on ::before so that ::after stays free for other composer skins. */
-[data-composer-placeholder]::before{content:var(--bt-placeholder,"Message")!important;display:block!important;font-size:14px!important;line-height:24px!important;color:color-mix(in srgb,var(--bt-ink) 36%,transparent)!important}
+[data-composer-placeholder]::before{content:var(--bt-placeholder,"Message")!important;display:block!important;font-size:15px!important;line-height:24px!important;color:color-mix(in srgb,var(--bt-ink) 36%,transparent)!important}
 /* The team's "+" (ComposerPlus) takes the seat of the shell's command-menu button. */
-[data-composer-card] button[class*="_add"]{display:none!important}
-.bt-plus{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bt-ink) 5%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink-2);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
-.bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_add"]{display:none!important}
+/* The desktop composer keeps the shell's own controls: the "+" that opens its command
+   menu, the trailing send button and the spacing between them. Only the phone frame gets
+   the team's replacement controls. */
+html:not(:has([data-mobile-nav="frame"])) [data-composer-card] :is(.bt-plus,.bt-mic,.bt-voice){display:none!important}
+.bt-plus{flex:none;align-self:center;width:32px;height:32px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;box-shadow:none;color:var(--bt-ink);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
+.bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 8%,transparent);color:var(--bt-ink)}
 .bt-plus:active{scale:.9}
-.bt-plus svg{width:14px;height:14px;transition:${spring(SPRING_POP, 'rotate')}}
+.bt-plus svg{width:18px;height:18px;transition:${spring(SPRING_POP, 'rotate')}}
 .bt-plus[aria-expanded=true] svg{rotate:45deg}
-.bt-plus-menu{min-width:180px}
-[data-composer-card] [class*="_tools"]{gap:0!important}
+/* Above the phone layout's own layers (its drawer sits at 1300): a layer under them
+   can be seen but not tapped. */
+.bt-plus-menu{min-width:180px;z-index:1500}
+html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_tools"]{gap:0!important}
 [data-composer-card] [class*="_modes"]:empty{display:none!important}
 [data-composer-card] [class*="_activity"]:not(:has([data-slot] > *)){display:none!important}
-[data-composer-card] [class*="_trailing"]{gap:8px!important}
+html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_trailing"]{gap:8px!important}
 /* No display here: DSH hides these controls with [hidden] while the Bot works. */
-[data-composer-card] [class*="_standardControls"]{align-items:center!important;gap:8px!important}
-[data-composer-card] button[class*="_primary"]{width:28px!important;height:28px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink,#fff)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-[data-composer-card] button[class*="_primary"]:hover:not(:disabled){opacity:.9}
-[data-composer-card] button[class*="_primary"]:active:not(:disabled){scale:.9}
+html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_standardControls"]{align-items:center!important;gap:8px!important}
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:hover:not(:disabled){opacity:.9}
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:active:not(:disabled){scale:.9}
 @keyframes bt-icon-swap{from{opacity:0;transform:scale(.5) rotate(-30deg)}}
-[data-composer-card] button[class*="_primary"] svg{width:14px;height:14px}
-[data-composer-card] button[class*="_primary"]:disabled{display:none!important}
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"] svg{width:16px;height:16px}
+html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:disabled{display:none!important}
 [data-composer-dock]{display:none!important}
-.bt-mic,.bt-voice{flex:none;width:28px;height:28px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
-.bt-mic{background:color-mix(in srgb,var(--bt-ink) 5%,transparent);box-shadow:inset 0 0 0 .5px var(--bt-line);color:var(--bt-ink-2)}
-.bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 10%,transparent);color:var(--bt-ink)}
+.bt-mic,.bt-voice{flex:none;width:32px;height:32px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
+.bt-mic{background:transparent;box-shadow:none;color:var(--bt-ink)}
+.bt-mic svg,.bt-voice svg{width:18px;height:18px}
+.bt-mic:hover{background:color-mix(in srgb,var(--bt-ink) 8%,transparent);color:var(--bt-ink)}
 .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
 @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
 .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
@@ -1139,7 +1859,7 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
 }
 [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
 body[data-bt-room] .bt-voice{display:none!important}
-body[data-bt-room] [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-mic:not([aria-pressed=true]){background:var(--bt-accent);color:var(--bt-accent-ink,#fff)}
+body[data-bt-room] [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-mic:not([aria-pressed=true]){background:var(--bt-accent);color:var(--bt-accent-ink)}
 .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
 [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
 .bt-q{order:1}
@@ -1170,17 +1890,18 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
 .bt-q-dock{width:100%;display:flex;justify-content:center}
 .bt-q-dock .bt-q{margin:0 auto 8px}
-[class*="_toBottomSlot"]{justify-content:center!important;padding-right:0!important}
-[data-conversation-scroll] [class*="_toBottomSlot"]{bottom:calc(var(--dsh-composer-height,152px) + 8px)!important}
-[class*="_toBottomSlot"]>button{width:36px!important;height:36px!important;margin-top:-36px!important;background:var(--bt-glass-bg)!important;-webkit-backdrop-filter:blur(16px) saturate(180%)!important;backdrop-filter:blur(16px) saturate(180%)!important;color:var(--bt-ink)!important;box-shadow:var(--bt-glass-shadow)!important;animation:bt-tobottom-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out;transition:background-color .12s ease,${spring(SPRING_TAP, 'scale')}}
-[class*="_toBottomSlot"]>button:active{scale:.9}
-[class*="_toBottomSlot"]>button:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))!important}
-[class*="_toBottomSlot"]>button svg{display:none}
-[class*="_toBottomSlot"]>button::before{content:"";width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4v12M5 11l5 5 5-5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4v12M5 11l5 5 5-5'/%3E%3C/svg%3E") center/contain no-repeat}
+html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]{justify-content:center!important;padding-right:0!important}
+html:has([data-mobile-nav="frame"]) [data-conversation-scroll] [class*="_toBottomSlot"]{bottom:calc(var(--dsh-composer-height,152px) + 8px)!important}
+html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button{width:36px!important;height:36px!important;margin-top:-36px!important;background:color-mix(in srgb,var(--bt-main) 72%,transparent)!important;-webkit-backdrop-filter:blur(16px) saturate(180%)!important;backdrop-filter:blur(16px) saturate(180%)!important;color:var(--bt-ink)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)!important;animation:bt-tobottom-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out;transition:background-color .12s ease,${spring(SPRING_TAP, 'scale')}}
+html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button:active{scale:.9}
+html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))!important}
+html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button svg{display:none}
+html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button::before{content:"";width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4v12M5 11l5 5 5-5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4v12M5 11l5 5 5-5'/%3E%3C/svg%3E") center/contain no-repeat}
 @keyframes bt-tobottom-in{from{translate:0 8px;scale:.8}}
-[data-bt-news] [class*="_toBottomSlot"]>button{visibility:hidden!important;pointer-events:none!important}
+html:has([data-mobile-nav="frame"]) [data-bt-news] [class*="_toBottomSlot"]>button{visibility:hidden!important;pointer-events:none!important}
 .bt-news{position:fixed;z-index:30;transform:translateX(-50%);display:inline-flex;align-items:center;overflow:hidden;border-radius:999px;background:var(--bt-accent);color:var(--bt-accent-ink);box-shadow:inset 0 0 0 1px rgba(20,20,20,.05),0 1px 3px 0 rgba(0,0,0,.12);font-family:var(--bt-font);animation:bt-news-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out}
 @keyframes bt-news-in{from{translate:0 8px;scale:.9}}
+html:has([data-mobile-nav="frame"]) .bt-news{background:color-mix(in srgb,var(--bt-main) 72%,transparent);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
 .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
 @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
 .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
@@ -1189,7 +1910,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-news-x svg{width:12px;height:12px}
 .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
-@media (prefers-reduced-motion:reduce){.bt-news,[class*="_toBottomSlot"]>button{animation:none}}
+@media (prefers-reduced-motion:reduce){html:has([data-mobile-nav="frame"]) :is(.bt-news,[class*="_toBottomSlot"]>button){animation:none}}
 .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
 .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
 .bt-open-new{display:flex;flex-direction:column}
@@ -1231,6 +1952,19 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-btw-answer p{margin:0}
 .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
 @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
+/* Local patch: the composer's four small controls get a finger-sized target on touch.
+   The send button restates !important because it is set that way above. */
+@media (pointer:coarse){
+  .bt-plus,.bt-mic,.bt-voice{width:32px;height:32px}
+  [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important}
+}
+
+/* Window tiers (tier.js): compact under 600 wide or under 480 tall, medium to 840,
+   expanded above. The host's own mobile frame already gives the phone its shape; these
+   rules give a short landscape window the same one when that frame is absent. */
+html[data-bt-tier=compact] .bt-settings{--bt-set-w:100vw;--bt-set-h:100dvh;width:100vw;height:100dvh;border-radius:0;border-width:0;flex-direction:column}
+html[data-bt-tier=compact] .bt-market-frame{padding:0;align-items:stretch}
+html[data-bt-tier=compact] .bt-market-pane{width:100vw;max-width:100vw;height:100dvh;border-radius:0;flex-direction:column}
 `
 
 // -------------------------------------------------------------------------

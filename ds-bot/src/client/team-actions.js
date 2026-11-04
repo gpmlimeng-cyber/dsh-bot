@@ -1,5 +1,6 @@
 import { countCards, heldCardKey } from './sources.js'
 import { noteClientError } from './diagnostics.js'
+import { dismissDrawerIfOpen } from './drawer-dismiss.js'
 
 // The actions every window that draws the Bot views shares: dialogs and panels (the `ui`
 // source), requests to the host, and the notes the transcript keeps. The shell around the
@@ -18,10 +19,10 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     ui.set(state => ({ ...state, details: sessionId, view: 'side', side: chatId ?? null, renaming: false, tab: null, panelYield: yieldTo(state, 'side') }))
   }
   // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
-  const openSettings = (page = 'general', id = null) => { ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null })) }
+  const openSettings = (page = 'general', id = null, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null })) }
   return {
-    openNewChat: (mode) => { ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null })) },
-    openPalette: (query = '') => { ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null })) },
+    openNewChat: (mode, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null })) },
+    openPalette: (query = '', opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null })) },
     // The token keeps a late exit timer from closing a palette opened again since.
     closePalette: (token) => { ui.set(state => (state.palette && (token === undefined || state.palette.token === token) ? { ...state, palette: null } : state)) },
     openExchange: (a, b) => { if (a && b) ui.set(state => ({ ...state, exchange: [a, b] })) },
@@ -58,7 +59,7 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     closeSettings: () => { ui.set(state => (state.settings ? { ...state, settings: null } : state)) },
     openMemory: (id) => { ui.set(state => ({ ...state, memory: id, menu: null, palette: null })) },
     closeMemory: () => { ui.set(state => (state.memory ? { ...state, memory: null } : state)) },
-    openConnectors: () => { ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null })) },
+    openConnectors: (opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null })) },
     setPanelView: (view) => {
       if (view !== 'details' && view !== 'browser' && view !== 'side') return
       ui.set(state => (state.details && state.view !== view ? { ...state, view, panelYield: yieldTo(state, view) } : state))
@@ -138,6 +139,15 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     secretCancel: requestId => after(call('secret-cancel', { requestId })),
     secretUpdate: (name, { scope, purpose } = {}) => after(call('secret-update', { name, scope, purpose })),
     secretDelete: name => after(call('secret-delete', { name })),
+    // MCP servers: the reading calls answer with the profile's own rows; the mutating
+    // ones answer with the fresh list so the panel never reads twice.
+    mcpList: () => call('mcp-list'),
+    mcpMarket: payload => call('mcp-market', payload),
+    mcpTools: serverName => call('mcp-tools', { serverName }),
+    mcpSave: payload => after(call('mcp-save', payload)),
+    mcpToggle: payload => after(call('mcp-toggle', payload)),
+    mcpAdd: payload => after(call('mcp-add', payload)),
+    mcpRemove: payload => after(call('mcp-remove', payload)),
     connectorConnect: (id, token) => after(call('connector-connect', { id, token })),
     connectorDisconnect: id => after(call('connector-disconnect', { id })),
     connectorRetry: id => after(call('connector-retry', { id })),

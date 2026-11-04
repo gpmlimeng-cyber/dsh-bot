@@ -9,8 +9,9 @@ import { build } from 'esbuild'
 const { outputFiles } = await build({
   stdin: {
     contents: [
-      "export { ToolCell, TriggerCell, callTree, CellEmpty, Bubbles } from './src/client/cells.js'",
+      "export { ToolCell, TriggerCell, callTree, CellEmpty, Bubbles, pathMentions } from './src/client/cells.js'",
       "export { stackReplies } from './src/shared/group-replies.js'",
+      "export { foldPreview } from './src/client/fold.js'",
       "export { QuestionDock } from './src/client/questions.js'",
       "export { SecretDock } from './src/client/secret-card.js'",
       "export { countCards } from './src/client/sources.js'",
@@ -65,7 +66,7 @@ runInNewContext(outputFiles[0].text, {
     throw new Error(`Unexpected platform module ${name}`)
   },
 })
-const { ToolCell, TriggerCell, callTree, stackReplies, CellEmpty, Bubbles, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
+const { ToolCell, TriggerCell, callTree, stackReplies, pathMentions, foldPreview, CellEmpty, Bubbles, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
 
 // Runs the effects collected since the last render; returns the cleanups.
 const mount = () => {
@@ -1013,6 +1014,89 @@ test('a Retry after a failed turn shows as one event line', () => {
     useTurnClock: select => select({}), useUi: select => select({ visits: {}, reactions: {} }),
   }))
   assert.equal(text(out), 'Went on after the failed turn')
+})
+
+// A path a bubble names in inline code opens the file view; code that only looks like a
+// path (`console.log`) and code with an offset (`cells.js:611`) stay plain text.
+test('a path in a bubble opens the file view, and code that is not a file stays plain', () => {
+  const opened = []
+  const mentions = pathMentions(path => opened.push(path))
+  const at = value => mentions.resolve(value)
+  assert.equal(at('design/ds-bot-patches.md').title, 'design/ds-bot-patches.md')
+  at('./src/client/cells.js').open()
+  assert.deepEqual(opened, ['./src/client/cells.js'])
+  assert.deepEqual(['console.log', 'npm test', 'cells.js:611', 'MESSAGE_INLINE_MAX', 'obj.prop'].map(value => at(value)), [undefined, undefined, undefined, undefined, undefined])
+  assert.equal(pathMentions(undefined), undefined)
+})
+
+// A group reply past what a line holds arrived as a file: the bubble shows its start with
+// "Show all" against the whole length, reads the rest from the attachment, and never shows
+// the note the host wrote for the model.
+test('a group reply that came as a file shows Show all with its whole length, and loads it', async () => {
+  const file = { name: 'Reply from Writer.txt', bytes: 20_001 }
+  const asked = []
+  const actions = { fileText: async (given) => { asked.push(given); return { text: 'All of it.', whole: true } } }
+  const note = '[A long message: 20001 characters. Its start is below; all of it is in the attached file. Read the file before you act on it.]'
+  const replies = [{ botId: 'writer', text: `${note}\nThe start of a very long reply…`, length: 20_001, files: [file] }]
+  const out = show(call('group_relay', 'direct', { content: { replies } }), { sessionId: 'room', actions })
+  const more = findAll(out, node => node.props?.className === 'bt-more')
+  assert.equal(more.length, 1)
+  assert.match(text(more[0]), /20,001/)
+  // The file-backed count is the whole reply, and the label says where it comes from.
+  assert.match(text(more[0]), /from its file/)
+  assert.ok(!text(out).includes('[A long message'), 'the note the host wrote for the model stays out of the bubble')
+  more[0].props.onClick()
+  await Promise.resolve()
+  await Promise.resolve()
+  assert.deepEqual(JSON.parse(JSON.stringify(asked)), [file])
+})
+
+// A group reply folds at the line it marks, and keeps the whole point above it. With no
+// mark it folds past 1000 characters or 20 lines, and keeps 120 characters of four.
+test('a group reply folds at its own mark, or past a long enough line', () => {
+  const folded = words => findAll(show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: words, time: 1 }] } }), { sessionId: 'room' }), node => node.props?.className === 'bt-more')
+  const lines = count => Array.from({ length: count }, (_, index) => `line ${index}`).join('\n')
+  // The point reads whole, however short it is; the detail below it folds.
+  assert.equal(folded(`结论。\n\n${'d'.repeat(800)}`).length, 1)
+  assert.equal(folded(`结论。\n---\n${'d'.repeat(800)}`).length, 1)
+  // No mark: a 900-character line stays whole, a 1100-character one folds.
+  assert.deepEqual([900, 1100].map(count => folded('z'.repeat(count)).length), [0, 1])
+  assert.match(text(folded('z'.repeat(1100))[0]), /Show all · 1,100 characters/)
+  assert.deepEqual([20, 21].map(count => folded(lines(count)).length), [0, 1], '20 lines stay whole; 21 fold')
+  const at = { chars: 1000, lines: 20 }
+  const preview = { chars: 120, lines: 4 }
+  assert.equal(foldPreview(`结论。\n\n${'d'.repeat(800)}`, at, true, preview, false, true), '结论。\n\n')
+  assert.equal(foldPreview('z'.repeat(1100), at, true, preview).length, 120)
+  assert.equal(foldPreview('z'.repeat(900), at, true, preview), null, '900 characters stay whole')
+  assert.equal(foldPreview('结论。\n\n很短', at, true, preview, false, true), null, 'a mark with one short line after it does not fold')
+})
+
+// The SuperAgent page decides the group fold: off reads the whole reply, and a threshold
+// out of range reads as the default rather than folding a chat shut.
+test('the SuperAgent page decides whether and where a group reply folds', () => {
+  const folded = (text, prefs) => findAll(
+    show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text, time: 1 }] } }), { sessionId: 'room', roster: team({ prefs }) }),
+    node => node.props?.className === 'bt-more',
+  ).length
+  assert.equal(folded('z'.repeat(800), { saFold: false }), 0, 'off reads the whole reply')
+  assert.equal(folded(`结论。\n\n${'d'.repeat(800)}`, { saFold: false }), 0, 'off also stops the fold at a mark')
+  assert.equal(folded('z'.repeat(800), {}), 0, 'the default threshold is 1000 characters')
+  assert.equal(folded('z'.repeat(1100), {}), 1)
+  assert.deepEqual([400, 600].map(chars => folded('z'.repeat(chars), { saFoldAt: { chars: 500, lines: 20 } })), [0, 1], 'a saved threshold decides')
+  assert.equal(folded('z'.repeat(1100), { saFoldAt: { chars: 200, lines: 20 } }), 1, 'an out-of-range threshold falls back to the default')
+  // A reply the host kept only in part folds whatever the page says: its text lives in a
+  // file, and "Show all" is the only way back to it.
+  const cut = [{ botId: 'writer', text: 'head…', time: 1, length: 20_001, files: [{ name: 'Reply from Writer.txt', bytes: 20_001 }] }]
+  const more = findAll(show(call('group_relay', 'direct', { content: { replies: cut } }), { sessionId: 'room', roster: team({ prefs: { saFold: false } }), actions: { fileText: async () => ({ text: 'x', whole: true }) } }), node => node.props?.className === 'bt-more')
+  assert.equal(more.length, 1, 'a cut reply still folds with the page off')
+})
+
+// A group line carries its member's ink, mixed low: the tint makes it clear who spoke, and
+// stays a tint, so it does not compete with the name above it.
+test('a group bubble is tinted with its member ink', () => {
+  const out = show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: 'Draft is up.', time: 1 }] } }), { sessionId: 'room' })
+  const row = findAll(out, node => node.props?.className === 'bt-group-msg')[0]
+  assert.match(row.props.style['--bt-bubble-tint'], /^color-mix\(in srgb, var\(--bt-ink-\w+\) 3%, var\(--bt-bubble\)\)$/)
 })
 
 // #718: a folded message's cut code block is drawn by DS Bot, so no copy control
