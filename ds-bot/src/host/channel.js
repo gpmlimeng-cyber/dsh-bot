@@ -95,7 +95,17 @@ export function install(rt) {
     rooms: Object.values(state.rooms).map(({ log, seen, paused, sessions, segments, parts: ownParts, ...room }) => {
       const parts = [...Object.values(sessions ?? {}), ...Object.values(segments ?? {}).flat().map(segment => segment.sessionId), ...(ownParts ?? []).map(segment => segment.sessionId)]
       const last = (log ?? []).filter(line => line.kind === undefined).at(-1)
-      return { ...room, sessionId: rt.sessionOfRoom(room), ownParts: (ownParts ?? []).map(segment => segment.sessionId), parts, ...(last ? { preview: last.who === 'User' ? last.text : `${last.who}：${last.text}` } : {}) }
+      return {
+        ...room,
+        sessionId: rt.sessionOfRoom(room),
+        // Each member's hidden group Session, by member id: the phone sums a group's
+        // figures from the Sessions the members actually work in there, not from
+        // their own chats. Null for a member whose group Session has not opened yet.
+        sessions: sessions ?? {},
+        ownParts: (ownParts ?? []).map(segment => segment.sessionId),
+        parts,
+        ...(last ? { preview: last.who === 'User' ? last.text : `${last.who}：${last.text}` } : {}),
+      }
     }),
     // Deleted private Bots whose folder, memory and chats stay closed to the others.
     privateArchives: rt.archivesView(),
@@ -317,11 +327,15 @@ export function install(rt) {
         // status bar shows; a window without that bar shows them in the Bot's details.
         case 'run-stats': {
           await rt.load()
-          const bot = rt.botOf(String(body.botId ?? ''))
-          if (bot === undefined) return fail('Unknown Bot', 'bot/not-found')
+          // A Session id asks for that Session's own figures: a member's group
+          // Session is a Session of its own, and a group's totals must not read the
+          // member's private chat. A Bot id keeps the older meaning (its chat).
+          const asked = typeof body.sessionId === 'string' && body.sessionId !== '' ? body.sessionId : undefined
+          const bot = asked === undefined ? rt.botOf(String(body.botId ?? '')) : undefined
+          if (asked === undefined && bot === undefined) return fail('Unknown Bot', 'bot/not-found')
           const projections = ctx.get?.('sessionProjections')
           if (projections === undefined) return ok(null)
-          const agent = await rt.resolveAgent(rt.chatOf(bot.id))
+          const agent = await rt.resolveAgent(asked ?? rt.chatOf(bot.id))
           return ok(projections.snapshot(agent.session, RUN_STATS).values)
         }
         case 'usage':
