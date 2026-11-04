@@ -4,257 +4,134 @@
 
 | 项 | 值 |
 |---|---|
-| 文件 | 84 |
-| hunks | 230 |
-| 新增行 | 17590 |
-| 删除行 | 258 |
+| 文件 | 20 |
+| hunks | 107 |
+| 新增行 | 2490 |
+| 删除行 | 140 |
 
 删除行最多的文件（前 10）：
 
 | 文件 | 删除行 |
 |---|---|
-| `ds-bot/src/client/styles.js` | 43 |
-| `ds-bot/src/client/fold.js` | 35 |
-| `ds-bot/test/sidebar-switch.test.js` | 30 |
-| `ds-bot/test/composer-plus.test.js` | 26 |
+| `ds-bot/src/client/styles.js` | 42 |
+| `ds-bot/test/sidebar-switch.test.js` | 27 |
 | `ds-bot/src/client/cells.js` | 16 |
 | `ds-bot/src/client/sidebar.js` | 15 |
 | `ds-bot/src/client/composer.js` | 10 |
-| `ds-bot/src/host/channel.js` | 8 |
-| `ds-bot/src/host/groups.js` | 8 |
-| `ds-bot/src/host/feed.js` | 7 |
+| `ds-bot/test/mobile-endpoints.test.js` | 8 |
+| `ds-bot/src/client/index.js` | 6 |
+| `ds-bot/src/client/settings.js` | 4 |
+| `ds-bot/src/client/team-actions.js` | 4 |
+| `ds-bot/src/client/i18n.js` | 2 |
 
 ## 新增行号
 
 | # | 文件 | 新增行号 | 新增数 |
 |---|---|---|---|
-| 1 | `ds-bot/.oxlintrc.json` | 3 | 1 |
-| 2 | `ds-bot/cordis.patch.yml` | 11–18 | 8 |
-| 3 | `ds-bot/index.js` | 5–6 | 2 |
-| 4 | `ds-bot/index.js` | 36 | 1 |
-| 5 | `ds-bot/index.js` | 45–47 | 2 |
-| 6 | `ds-bot/index.js` | 60–80 | 18 |
-| 7 | `ds-bot/scripts/style-debt.mjs` | 112–119 | 7 |
-| 8 | `ds-bot/src/client/about.js` | 110–124 | 15 |
-| 9 | `ds-bot/src/client/about.js` | 142–144 | 3 |
-| 10 | `ds-bot/src/client/bot-settings.js` | 7 | 1 |
-| 11 | `ds-bot/src/client/bot-settings.js` | 100–108 | 9 |
-| 12 | `ds-bot/src/client/bot-settings.js` | 151–157 | 7 |
-| 13 | `ds-bot/src/client/browser-pane.js` | 86 | 1 |
-| 14 | `ds-bot/src/client/browser-pane.js` | 106 | 1 |
-| 15 | `ds-bot/src/client/cells.js` | 4 | 1 |
-| 16 | `ds-bot/src/client/cells.js` | 23–75 | 41 |
-| 17 | `ds-bot/src/client/cells.js` | 88 | 1 |
-| 18 | `ds-bot/src/client/cells.js` | 123–126 | 2 |
-| 19 | `ds-bot/src/client/cells.js` | 366–380 | 7 |
-| 20 | `ds-bot/src/client/cells.js` | 625 | 1 |
-| 21 | `ds-bot/src/client/cells.js` | 687 | 1 |
-| 22 | `ds-bot/src/client/cells.js` | 948 | 1 |
-| 23 | `ds-bot/src/client/cells.js` | 997–1007 | 11 |
-| 24 | `ds-bot/src/client/cells.js` | 1052 | 1 |
-| 25 | `ds-bot/src/client/cells.js` | 1078 | 1 |
-| 26 | `ds-bot/src/client/cells.js` | 1133 | 1 |
-| 27 | `ds-bot/src/client/cells.js` | 1149 | 1 |
-| 28 | `ds-bot/src/client/composer.js` | 3 | 1 |
-| 29 | `ds-bot/src/client/composer.js` | 88 | 1 |
-| 30 | `ds-bot/src/client/composer.js` | 133–205 | 67 |
-| 31 | `ds-bot/src/client/composer.js` | 217–218 | 2 |
-| 32 | `ds-bot/src/client/composer.js` | 228–233 | 5 |
-| 33 | `ds-bot/src/client/context-menu.js` | 8 | 1 |
-| 34 | `ds-bot/src/client/context-menu.js` | 47–71 | 25 |
-| 35 | `ds-bot/src/client/create-bot.js` | 3 | 1 |
-| 36 | `ds-bot/src/client/create-bot.js` | 76–77 | 2 |
-| 37 | `ds-bot/src/client/details-drawer.js` | 4 | 1 |
-| 38 | `ds-bot/src/client/details-drawer.js` | 235 | 1 |
-| 39 | `ds-bot/src/client/drawer-dismiss.js` | 1–15 | 15 |
-| 40 | `ds-bot/src/client/fold.js` | 12–18 | 7 |
-| 41 | `ds-bot/src/client/fold.js` | 47–98 | 52 |
-| 42 | `ds-bot/src/client/fold.js` | 127–202 | 66 |
-| 43 | `ds-bot/src/client/fold.js` | 213–218 | 2 |
-| 44 | `ds-bot/src/client/fold.js` | 227–228 | 2 |
-| 45 | `ds-bot/src/client/fold.js` | 237–242 | 6 |
-| 46 | `ds-bot/src/client/fonts.js` | 1–12 | 12 |
-| 47 | `ds-bot/src/client/header.js` | 4–11 | 3 |
-| 48 | `ds-bot/src/client/header.js` | 103–105 | 3 |
-| 49 | `ds-bot/src/client/header.js` | 117–155 | 34 |
-| 50 | `ds-bot/src/client/i18n.js` | 21–160 | 140 |
-| 51 | `ds-bot/src/client/i18n.js` | 198 | 1 |
-| 52 | `ds-bot/src/client/i18n.js` | 313 | 0 |
-| 53 | `ds-bot/src/client/i18n.js` | 371–373 | 3 |
-| 54 | `ds-bot/src/client/i18n.js` | 576–592 | 17 |
-| 55 | `ds-bot/src/client/i18n.js` | 608–628 | 21 |
-| 56 | `ds-bot/src/client/i18n.js` | 707–708 | 2 |
-| 57 | `ds-bot/src/client/i18n.js` | 731–747 | 17 |
-| 58 | `ds-bot/src/client/i18n.js` | 881 | 0 |
-| 59 | `ds-bot/src/client/i18n.js` | 1135–1138 | 4 |
-| 60 | `ds-bot/src/client/i18n.js` | 1181 | 1 |
-| 61 | `ds-bot/src/client/i18n.js` | 1277–1280 | 4 |
-| 62 | `ds-bot/src/client/icons.js` | 21–30 | 7 |
-| 63 | `ds-bot/src/client/icons.js` | 61–83 | 23 |
-| 64 | `ds-bot/src/client/index.js` | 2–8 | 3 |
-| 65 | `ds-bot/src/client/index.js` | 40–43 | 3 |
-| 66 | `ds-bot/src/client/index.js` | 155–156 | 2 |
-| 67 | `ds-bot/src/client/index.js` | 361–396 | 22 |
-| 68 | `ds-bot/src/client/index.js` | 406 | 1 |
-| 69 | `ds-bot/src/client/index.js` | 414–419 | 6 |
-| 70 | `ds-bot/src/client/index.js` | 561–704 | 143 |
-| 71 | `ds-bot/src/client/index.js` | 1108–1111 | 4 |
-| 72 | `ds-bot/src/client/index.js` | 1244 | 1 |
-| 73 | `ds-bot/src/client/index.js` | 1259–1549 | 289 |
-| 74 | `ds-bot/src/client/index.js` | 1560–1566 | 7 |
-| 75 | `ds-bot/src/client/market.js` | 1–532 | 532 |
-| 76 | `ds-bot/src/client/mcp-panel.js` | 1–264 | 264 |
-| 77 | `ds-bot/src/client/member-status.js` | 201–202 | 2 |
-| 78 | `ds-bot/src/client/mode-row.js` | 1–53 | 53 |
-| 79 | `ds-bot/src/client/model-menu.js` | 9 | 1 |
-| 80 | `ds-bot/src/client/model-menu.js` | 95 | 1 |
-| 81 | `ds-bot/src/client/model-menu.js` | 185 | 1 |
-| 82 | `ds-bot/src/client/model-menu.js` | 328 | 1 |
-| 83 | `ds-bot/src/client/new-chat.js` | 1 | 1 |
-| 84 | `ds-bot/src/client/new-chat.js` | 10–83 | 73 |
-| 85 | `ds-bot/src/client/new-chat.js` | 188–196 | 5 |
-| 86 | `ds-bot/src/client/new-chat.js` | 205–208 | 4 |
-| 87 | `ds-bot/src/client/new-chat.js` | 258 | 1 |
-| 88 | `ds-bot/src/client/plugin-mcp.js` | 1–861 | 861 |
-| 89 | `ds-bot/src/client/plugin-skills.js` | 1–10 | 10 |
-| 90 | `ds-bot/src/client/provider-marks.js` | 1–131 | 131 |
-| 91 | `ds-bot/src/client/settings.js` | 4–5 | 2 |
-| 92 | `ds-bot/src/client/settings.js` | 22 | 1 |
-| 93 | `ds-bot/src/client/settings.js` | 31–32 | 2 |
-| 94 | `ds-bot/src/client/settings.js` | 84–87 | 4 |
-| 95 | `ds-bot/src/client/settings.js` | 100–111 | 12 |
-| 96 | `ds-bot/src/client/settings.js` | 299 | 1 |
-| 97 | `ds-bot/src/client/sidebar-groups.js` | 1–28 | 28 |
-| 98 | `ds-bot/src/client/sidebar.js` | 6–18 | 5 |
-| 99 | `ds-bot/src/client/sidebar.js` | 62 | 1 |
-| 100 | `ds-bot/src/client/sidebar.js` | 103–108 | 2 |
-| 101 | `ds-bot/src/client/sidebar.js` | 117 | 1 |
-| 102 | `ds-bot/src/client/sidebar.js` | 137–142 | 2 |
-| 103 | `ds-bot/src/client/sidebar.js` | 198–205 | 8 |
-| 104 | `ds-bot/src/client/sidebar.js` | 239–244 | 2 |
-| 105 | `ds-bot/src/client/sidebar.js` | 320 | 1 |
-| 106 | `ds-bot/src/client/sidebar.js` | 352–440 | 89 |
-| 107 | `ds-bot/src/client/sidebar.js` | 552–566 | 15 |
-| 108 | `ds-bot/src/client/sidebar.js` | 634–639 | 6 |
-| 109 | `ds-bot/src/client/sidebar.js` | 695–699 | 5 |
-| 110 | `ds-bot/src/client/sidebar.js` | 707–779 | 73 |
-| 111 | `ds-bot/src/client/skill-market/panel.js` | 1–6313 | 6313 |
-| 112 | `ds-bot/src/client/storage.js` | 9–10 | 2 |
-| 113 | `ds-bot/src/client/styles.js` | 5 | 1 |
-| 114 | `ds-bot/src/client/styles.js` | 16–17 | 2 |
-| 115 | `ds-bot/src/client/styles.js` | 120–129 | 7 |
-| 116 | `ds-bot/src/client/styles.js` | 144–560 | 407 |
-| 117 | `ds-bot/src/client/styles.js` | 598–623 | 26 |
-| 118 | `ds-bot/src/client/styles.js` | 647 | 1 |
-| 119 | `ds-bot/src/client/styles.js` | 791–810 | 20 |
-| 120 | `ds-bot/src/client/styles.js` | 821–830 | 10 |
-| 121 | `ds-bot/src/client/styles.js` | 848 | 0 |
-| 122 | `ds-bot/src/client/styles.js` | 1055–1057 | 3 |
-| 123 | `ds-bot/src/client/styles.js` | 1073–1074 | 2 |
-| 124 | `ds-bot/src/client/styles.js` | 1114–1115 | 2 |
-| 125 | `ds-bot/src/client/styles.js` | 1165–1174 | 10 |
-| 126 | `ds-bot/src/client/styles.js` | 1420–1605 | 186 |
-| 127 | `ds-bot/src/client/styles.js` | 1718–1815 | 79 |
-| 128 | `ds-bot/src/client/styles.js` | 1834 | 1 |
-| 129 | `ds-bot/src/client/styles.js` | 1865–1876 | 9 |
-| 130 | `ds-bot/src/client/styles.js` | 1885 | 1 |
-| 131 | `ds-bot/src/client/styles.js` | 1927–1939 | 13 |
-| 132 | `ds-bot/src/client/superagent-settings.js` | 1–70 | 70 |
-| 133 | `ds-bot/src/client/team-actions.js` | 3 | 1 |
-| 134 | `ds-bot/src/client/team-actions.js` | 22–23 | 2 |
-| 135 | `ds-bot/src/client/team-actions.js` | 55–59 | 2 |
-| 136 | `ds-bot/src/client/team-actions.js` | 123–131 | 9 |
-| 137 | `ds-bot/src/client/themes.js` | 4 | 1 |
-| 138 | `ds-bot/src/client/themes.js` | 27–36 | 10 |
-| 139 | `ds-bot/src/client/themes.js` | 136–180 | 43 |
-| 140 | `ds-bot/src/client/tier.js` | 1–39 | 39 |
-| 141 | `ds-bot/src/host/approvals.js` | 8–10 | 3 |
-| 142 | `ds-bot/src/host/approvals.js` | 40–59 | 13 |
-| 143 | `ds-bot/src/host/authorization.js` | 1–96 | 96 |
-| 144 | `ds-bot/src/host/boot.js` | 1–10 | 10 |
-| 145 | `ds-bot/src/host/channel.js` | 2–13 | 7 |
-| 146 | `ds-bot/src/host/channel.js` | 28–54 | 27 |
-| 147 | `ds-bot/src/host/channel.js` | 69–77 | 9 |
-| 148 | `ds-bot/src/host/channel.js` | 86–90 | 5 |
-| 149 | `ds-bot/src/host/channel.js` | 161 | 1 |
-| 150 | `ds-bot/src/host/channel.js` | 178–192 | 15 |
-| 151 | `ds-bot/src/host/channel.js` | 214–224 | 11 |
-| 152 | `ds-bot/src/host/channel.js` | 245 | 1 |
-| 153 | `ds-bot/src/host/channel.js` | 305–315 | 11 |
-| 154 | `ds-bot/src/host/channel.js` | 343–351 | 9 |
-| 155 | `ds-bot/src/host/channel.js` | 462–473 | 12 |
-| 156 | `ds-bot/src/host/channel.js` | 548–553 | 6 |
-| 157 | `ds-bot/src/host/channel.js` | 568–572 | 5 |
-| 158 | `ds-bot/src/host/channel.js` | 690–709 | 20 |
-| 159 | `ds-bot/src/host/channel.js` | 721–724 | 4 |
-| 160 | `ds-bot/src/host/constants.js` | 23–30 | 8 |
-| 161 | `ds-bot/src/host/constants.js` | 100–101 | 2 |
-| 162 | `ds-bot/src/host/feed.js` | 7–8 | 2 |
-| 163 | `ds-bot/src/host/feed.js` | 19–21 | 3 |
-| 164 | `ds-bot/src/host/feed.js` | 34–75 | 32 |
-| 165 | `ds-bot/src/host/feed.js` | 86 | 1 |
-| 166 | `ds-bot/src/host/feed.js` | 99 | 1 |
-| 167 | `ds-bot/src/host/feed.js` | 115 | 1 |
-| 168 | `ds-bot/src/host/feed.js` | 129–131 | 3 |
-| 169 | `ds-bot/src/host/feed.js` | 148–149 | 2 |
-| 170 | `ds-bot/src/host/groups.js` | 25 | 1 |
-| 171 | `ds-bot/src/host/groups.js` | 225 | 1 |
-| 172 | `ds-bot/src/host/groups.js` | 429–436 | 8 |
-| 173 | `ds-bot/src/host/groups.js` | 802–806 | 5 |
-| 174 | `ds-bot/src/host/groups.js` | 876–877 | 2 |
-| 175 | `ds-bot/src/host/groups.js` | 937–944 | 2 |
-| 176 | `ds-bot/src/host/groups.js` | 1130–1135 | 6 |
-| 177 | `ds-bot/src/host/groups.js` | 1193–1203 | 11 |
-| 178 | `ds-bot/src/host/mcp.js` | 1–608 | 608 |
-| 179 | `ds-bot/src/host/mobile.js` | 1–110 | 110 |
-| 180 | `ds-bot/src/host/parts.js` | 1377–1388 | 12 |
-| 181 | `ds-bot/src/host/prompt.js` | 27–40 | 14 |
-| 182 | `ds-bot/src/host/prompt.js` | 59 | 1 |
-| 183 | `ds-bot/src/host/prompt.js` | 68 | 1 |
-| 184 | `ds-bot/src/host/remote.js` | 1–78 | 78 |
-| 185 | `ds-bot/src/host/skill-market/index.js` | 1–2813 | 2813 |
-| 186 | `ds-bot/src/host/skill-market/locale.js` | 1–787 | 787 |
-| 187 | `ds-bot/src/host/tool-policy.js` | 1–84 | 84 |
-| 188 | `ds-bot/src/shared/fold-at.js` | 1–12 | 12 |
-| 189 | `ds-bot/src/shared/superagent-prefs.js` | 1–30 | 30 |
-| 190 | `ds-bot/src/shared/tool-policy.js` | 1–35 | 35 |
-| 191 | `ds-bot/src/shared/turn-summary.js` | 1–47 | 47 |
-| 192 | `ds-bot/test/authorization.test.js` | 1–134 | 134 |
-| 193 | `ds-bot/test/bot-messages.test.js` | 780–806 | 27 |
-| 194 | `ds-bot/test/client-bundle.test.js` | 25–43 | 19 |
-| 195 | `ds-bot/test/composer-plus.test.js` | 2–170 | 143 |
-| 196 | `ds-bot/test/fold.test.js` | 107–108 | 2 |
-| 197 | `ds-bot/test/fold.test.js` | 126–127 | 2 |
-| 198 | `ds-bot/test/fold.test.js` | 194–225 | 32 |
-| 199 | `ds-bot/test/install.test.js` | 103 | 1 |
-| 200 | `ds-bot/test/mcp-panel.test.js` | 1–93 | 93 |
-| 201 | `ds-bot/test/mcp.test.js` | 1–237 | 237 |
-| 202 | `ds-bot/test/message-layout.test.js` | 19–20 | 2 |
-| 203 | `ds-bot/test/message-layout.test.js` | 30 | 1 |
-| 204 | `ds-bot/test/mobile-avatar.test.js` | 1–92 | 92 |
-| 205 | `ds-bot/test/mobile-endpoints.test.js` | 1–251 | 251 |
-| 206 | `ds-bot/test/mobile-hello.test.js` | 1–101 | 101 |
-| 207 | `ds-bot/test/mode-row.test.js` | 1–63 | 63 |
-| 208 | `ds-bot/test/patch-client-bundle.test.js` | 1–14 | 14 |
-| 209 | `ds-bot/test/patch-features.test.js` | 1–52 | 52 |
-| 210 | `ds-bot/test/patch-i18n.test.js` | 1–46 | 46 |
-| 211 | `ds-bot/test/patch-ledger.test.js` | 1–76 | 76 |
-| 212 | `ds-bot/test/phone-scope.test.js` | 1–40 | 40 |
-| 213 | `ds-bot/test/sidebar-switch.test.js` | 31–37 | 4 |
-| 214 | `ds-bot/test/sidebar-switch.test.js` | 106–114 | 8 |
-| 215 | `ds-bot/test/sidebar-switch.test.js` | 292 | 1 |
-| 216 | `ds-bot/test/sidebar-switch.test.js` | 344–376 | 18 |
-| 217 | `ds-bot/test/skin.test.js` | 1–217 | 217 |
-| 218 | `ds-bot/test/style-debt.json` | 22–57 | 28 |
-| 219 | `ds-bot/test/style-debt.json` | 84–89 | 2 |
-| 220 | `ds-bot/test/style-debt.json` | 108–111 | 4 |
-| 221 | `ds-bot/test/style-debt.json` | 122–129 | 7 |
-| 222 | `ds-bot/test/superagent-settings.test.js` | 1–59 | 59 |
-| 223 | `ds-bot/test/tier.test.js` | 1–16 | 16 |
-| 224 | `ds-bot/test/tool-cells.test.js` | 12–14 | 2 |
-| 225 | `ds-bot/test/tool-cells.test.js` | 69 | 1 |
-| 226 | `ds-bot/test/tool-cells.test.js` | 972–1054 | 83 |
-| 227 | `ds-bot/test/tool-policy.test.js` | 1–47 | 47 |
-| 228 | `ds-bot/test/turn-summary.test.js` | 1–21 | 21 |
-| 229 | `ds-bot/test/user-bubble.test.js` | 31–37 | 6 |
-| 230 | `ds-bot/test/user-bubble.test.js` | 139 | 1 |
+| 1 | `ds-bot/src/client/cells.js` | 4 | 1 |
+| 2 | `ds-bot/src/client/cells.js` | 25–78 | 41 |
+| 3 | `ds-bot/src/client/cells.js` | 91 | 1 |
+| 4 | `ds-bot/src/client/cells.js` | 127–130 | 2 |
+| 5 | `ds-bot/src/client/cells.js` | 401 | 1 |
+| 6 | `ds-bot/src/client/cells.js` | 411–424 | 6 |
+| 7 | `ds-bot/src/client/cells.js` | 669 | 1 |
+| 8 | `ds-bot/src/client/cells.js` | 731 | 1 |
+| 9 | `ds-bot/src/client/cells.js` | 996 | 1 |
+| 10 | `ds-bot/src/client/cells.js` | 1049–1059 | 11 |
+| 11 | `ds-bot/src/client/cells.js` | 1104 | 1 |
+| 12 | `ds-bot/src/client/cells.js` | 1130 | 1 |
+| 13 | `ds-bot/src/client/cells.js` | 1185 | 1 |
+| 14 | `ds-bot/src/client/cells.js` | 1201 | 1 |
+| 15 | `ds-bot/src/client/composer.js` | 3 | 1 |
+| 16 | `ds-bot/src/client/composer.js` | 100 | 1 |
+| 17 | `ds-bot/src/client/composer.js` | 177–249 | 67 |
+| 18 | `ds-bot/src/client/composer.js` | 261 | 1 |
+| 19 | `ds-bot/src/client/composer.js` | 276–282 | 5 |
+| 20 | `ds-bot/src/client/header.js` | 4–12 | 3 |
+| 21 | `ds-bot/src/client/header.js` | 137–178 | 37 |
+| 22 | `ds-bot/src/client/i18n.js` | 21–160 | 140 |
+| 23 | `ds-bot/src/client/i18n.js` | 198 | 1 |
+| 24 | `ds-bot/src/client/i18n.js` | 315 | 0 |
+| 25 | `ds-bot/src/client/i18n.js` | 410–412 | 3 |
+| 26 | `ds-bot/src/client/i18n.js` | 616–632 | 17 |
+| 27 | `ds-bot/src/client/i18n.js` | 649–669 | 21 |
+| 28 | `ds-bot/src/client/i18n.js` | 749–750 | 2 |
+| 29 | `ds-bot/src/client/i18n.js` | 773–789 | 17 |
+| 30 | `ds-bot/src/client/i18n.js` | 965 | 0 |
+| 31 | `ds-bot/src/client/i18n.js` | 1226–1229 | 4 |
+| 32 | `ds-bot/src/client/i18n.js` | 1277 | 1 |
+| 33 | `ds-bot/src/client/i18n.js` | 1375–1378 | 4 |
+| 34 | `ds-bot/src/client/index.js` | 2–8 | 3 |
+| 35 | `ds-bot/src/client/index.js` | 41–44 | 3 |
+| 36 | `ds-bot/src/client/index.js` | 160–161 | 2 |
+| 37 | `ds-bot/src/client/index.js` | 366–401 | 22 |
+| 38 | `ds-bot/src/client/index.js` | 411 | 1 |
+| 39 | `ds-bot/src/client/index.js` | 419–424 | 6 |
+| 40 | `ds-bot/src/client/index.js` | 566–709 | 143 |
+| 41 | `ds-bot/src/client/index.js` | 1130–1133 | 4 |
+| 42 | `ds-bot/src/client/index.js` | 1269 | 1 |
+| 43 | `ds-bot/src/client/index.js` | 1284–1574 | 289 |
+| 44 | `ds-bot/src/client/index.js` | 1585–1591 | 7 |
+| 45 | `ds-bot/src/client/settings.js` | 4–5 | 2 |
+| 46 | `ds-bot/src/client/settings.js` | 22 | 1 |
+| 47 | `ds-bot/src/client/settings.js` | 32–33 | 2 |
+| 48 | `ds-bot/src/client/settings.js` | 85–88 | 4 |
+| 49 | `ds-bot/src/client/settings.js` | 101–112 | 12 |
+| 50 | `ds-bot/src/client/settings.js` | 311 | 1 |
+| 51 | `ds-bot/src/client/sidebar.js` | 6–19 | 5 |
+| 52 | `ds-bot/src/client/sidebar.js` | 63 | 1 |
+| 53 | `ds-bot/src/client/sidebar.js` | 104–109 | 2 |
+| 54 | `ds-bot/src/client/sidebar.js` | 118 | 1 |
+| 55 | `ds-bot/src/client/sidebar.js` | 138–143 | 2 |
+| 56 | `ds-bot/src/client/sidebar.js` | 199–206 | 8 |
+| 57 | `ds-bot/src/client/sidebar.js` | 240–245 | 2 |
+| 58 | `ds-bot/src/client/sidebar.js` | 321 | 1 |
+| 59 | `ds-bot/src/client/sidebar.js` | 356–444 | 89 |
+| 60 | `ds-bot/src/client/sidebar.js` | 557–571 | 15 |
+| 61 | `ds-bot/src/client/sidebar.js` | 639–644 | 6 |
+| 62 | `ds-bot/src/client/sidebar.js` | 700–704 | 5 |
+| 63 | `ds-bot/src/client/sidebar.js` | 712–784 | 73 |
+| 64 | `ds-bot/src/client/styles.js` | 5 | 1 |
+| 65 | `ds-bot/src/client/styles.js` | 16–17 | 2 |
+| 66 | `ds-bot/src/client/styles.js` | 121–130 | 7 |
+| 67 | `ds-bot/src/client/styles.js` | 146–184 | 39 |
+| 68 | `ds-bot/src/client/styles.js` | 193–561 | 365 |
+| 69 | `ds-bot/src/client/styles.js` | 606–630 | 25 |
+| 70 | `ds-bot/src/client/styles.js` | 654 | 1 |
+| 71 | `ds-bot/src/client/styles.js` | 805–824 | 20 |
+| 72 | `ds-bot/src/client/styles.js` | 835–844 | 10 |
+| 73 | `ds-bot/src/client/styles.js` | 862 | 0 |
+| 74 | `ds-bot/src/client/styles.js` | 1072–1074 | 3 |
+| 75 | `ds-bot/src/client/styles.js` | 1090–1091 | 2 |
+| 76 | `ds-bot/src/client/styles.js` | 1131–1132 | 2 |
+| 77 | `ds-bot/src/client/styles.js` | 1189–1198 | 10 |
+| 78 | `ds-bot/src/client/styles.js` | 1446–1631 | 186 |
+| 79 | `ds-bot/src/client/styles.js` | 1746–1843 | 79 |
+| 80 | `ds-bot/src/client/styles.js` | 1862 | 1 |
+| 81 | `ds-bot/src/client/styles.js` | 1893–1904 | 9 |
+| 82 | `ds-bot/src/client/styles.js` | 1913 | 1 |
+| 83 | `ds-bot/src/client/styles.js` | 1955–1967 | 13 |
+| 84 | `ds-bot/src/client/team-actions.js` | 3 | 1 |
+| 85 | `ds-bot/src/client/team-actions.js` | 22–25 | 3 |
+| 86 | `ds-bot/src/client/team-actions.js` | 62 | 1 |
+| 87 | `ds-bot/src/client/team-actions.js` | 142–150 | 9 |
+| 88 | `ds-bot/test/app-ready.test.js` | 26–30 | 3 |
+| 89 | `ds-bot/test/mobile-endpoints.test.js` | 6 | 0 |
+| 90 | `ds-bot/test/mobile-endpoints.test.js` | 66 | 0 |
+| 91 | `ds-bot/test/patch-client-bundle.test.js` | 1–14 | 14 |
+| 92 | `ds-bot/test/patch-features.test.js` | 1–52 | 52 |
+| 93 | `ds-bot/test/patch-i18n.test.js` | 1–46 | 46 |
+| 94 | `ds-bot/test/patch-ledger.test.js` | 1–76 | 76 |
+| 95 | `ds-bot/test/phone-scope.test.js` | 1–40 | 40 |
+| 96 | `ds-bot/test/sidebar-switch.test.js` | 31–37 | 4 |
+| 97 | `ds-bot/test/sidebar-switch.test.js` | 106–114 | 8 |
+| 98 | `ds-bot/test/sidebar-switch.test.js` | 292 | 1 |
+| 99 | `ds-bot/test/sidebar-switch.test.js` | 344–381 | 23 |
+| 100 | `ds-bot/test/skin.test.js` | 1–217 | 217 |
+| 101 | `ds-bot/test/style-debt.json` | 22–31 | 10 |
+| 102 | `ds-bot/test/style-debt.json` | 84 | 1 |
+| 103 | `ds-bot/test/style-debt.json` | 108–111 | 4 |
+| 104 | `ds-bot/test/style-debt.json` | 122–129 | 7 |
+| 105 | `ds-bot/test/tool-cells.test.js` | 12–14 | 2 |
+| 106 | `ds-bot/test/tool-cells.test.js` | 69 | 1 |
+| 107 | `ds-bot/test/tool-cells.test.js` | 1019–1101 | 83 |
