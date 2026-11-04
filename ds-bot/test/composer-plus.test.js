@@ -151,6 +151,7 @@ function renderHooks(roster) {
   hookCalls = 0
   const tree = ComposerPlusHooks({
     sessionId: 'chief', useRoster: select => select(roster),
+    useInput: select => select({ phase: 'plain', draft: '', attachmentIds: [], queue: [] }),
     actions: { canReferenceChat: () => false },
   })
   return { tree, hookCalls }

@@ -9,9 +9,8 @@ import { build } from 'esbuild'
 const { outputFiles } = await build({
   stdin: {
     contents: [
-      "export { ToolCell, TriggerCell, callTree, CellEmpty, Bubbles, pathMentions } from './src/client/cells.js'",
+      "export { ToolCell, TriggerCell, callTree, CellEmpty, Bubbles } from './src/client/cells.js'",
       "export { stackReplies } from './src/shared/group-replies.js'",
-      "export { foldPreview } from './src/client/fold.js'",
       "export { QuestionDock } from './src/client/questions.js'",
       "export { SecretDock } from './src/client/secret-card.js'",
       "export { countCards } from './src/client/sources.js'",
@@ -66,7 +65,7 @@ runInNewContext(outputFiles[0].text, {
     throw new Error(`Unexpected platform module ${name}`)
   },
 })
-const { ToolCell, TriggerCell, callTree, stackReplies, pathMentions, foldPreview, CellEmpty, Bubbles, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
+const { ToolCell, TriggerCell, callTree, stackReplies, CellEmpty, Bubbles, QuestionDock, SecretDock, countCards, ViewMenuList, WidgetView } = module.exports
 
 // Runs the effects collected since the last render; returns the cleanups.
 const mount = () => {
@@ -181,6 +180,15 @@ test('an old paused round shows the pause as a plain line', () => {
   const events = findAll(out, node => node.props?.className === 'bt-event').map(text)
   assert.deepEqual(events, ['Paused after 6 Bot relays. Waiting: Writer and Coder'])
   assert.equal(find(out, node => node.type === 'button'), undefined)
+})
+
+// #872: Bots that went back and forth without progress paused; the line names both
+// and says what lets them go on.
+test('a round the idle guard paused names the Bots and how they go on', () => {
+  const replies = [{ kind: 'paused', idle: true, botId: 'chief', name: 'Chief', names: ['Writer'], count: 6, limit: 6, time: at(0, 14, 5) }]
+  const out = show(call('group_relay', 'direct', { content: { replies } }), { sessionId: 'room' })
+  const events = findAll(out, node => node.props?.className === 'bt-event').map(text)
+  assert.deepEqual(events, ['Chief and Writer went back and forth 6 times without progress and paused. Write here to go on'])
 })
 
 // The admin was alone with the user's message and passed: the round shows the
@@ -618,6 +626,32 @@ test('a card whose call is not drawn waits in the dock; a drawn one shows only a
   assert.match(docks(store, roster), /Which draft\?.*Chief needs a key/)
 })
 
+// React needs the same hooks on every render: the dock reads the Enter preference
+// before its early returns, so a card arriving or moving to the transcript never
+// changes the count.
+test('the question dock calls the same hooks whether its card shows or not', () => {
+  const store = cardStore()
+  const render = (roster) => {
+    let calls = 0
+    const props = dockProps(store, roster)
+    props.useRoster = (select) => { calls += 1; return select(roster) }
+    const out = expand(QuestionDock(props))
+    return { calls, out }
+  }
+  const empty = render(team({}))
+  const roster = team({ questions: { chief: question('program:ptc:1') } })
+  const waiting = render(roster)
+  assert.equal(empty.out, null)
+  assert.notEqual(waiting.out, null)
+  assert.equal(waiting.calls, empty.calls)
+  // The transcript drew the call: the dock steps back, still on the same hooks.
+  store.state = { chief: { 'program:ptc:1': 1 } }
+  const drawn = render(roster)
+  assert.equal(drawn.out, null)
+  assert.equal(drawn.calls, empty.calls)
+  effects = []
+})
+
 test('the docks keep pending cards through history loading until their calls actually mount', () => {
   const store = cardStore()
   const roster = team({ questions: { chief: question('program:ptc:1') }, secretRequests: { chief: [request('program:ptc:2')] } })
@@ -969,87 +1003,16 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
   assert.equal(frame.props.title, 'A greeting')
 })
 
-// A path a bubble names in inline code opens the file view; code that only looks like a
-// path (`console.log`) and code with an offset (`cells.js:611`) stay plain text.
-test('a path in a bubble opens the file view, and code that is not a file stays plain', () => {
-  const opened = []
-  const mentions = pathMentions(path => opened.push(path))
-  const at = value => mentions.resolve(value)
-  assert.equal(at('design/ds-bot-patches.md').title, 'design/ds-bot-patches.md')
-  at('./src/client/cells.js').open()
-  assert.deepEqual(opened, ['./src/client/cells.js'])
-  assert.deepEqual(['console.log', 'npm test', 'cells.js:611', 'MESSAGE_INLINE_MAX', 'obj.prop'].map(value => at(value)), [undefined, undefined, undefined, undefined, undefined])
-  assert.equal(pathMentions(undefined), undefined)
-})
-
-// A group reply past what a line holds arrived as a file: the bubble shows its start with
-// "Show all" against the whole length, reads the rest from the attachment, and never shows
-// the note the host wrote for the model.
-test('a group reply that came as a file shows Show all with its whole length, and loads it', async () => {
-  const file = { name: 'Reply from Writer.txt', bytes: 20_001 }
-  const asked = []
-  const actions = { fileText: async (given) => { asked.push(given); return { text: 'All of it.', whole: true } } }
-  const note = '[A long message: 20001 characters. Its start is below; all of it is in the attached file. Read the file before you act on it.]'
-  const replies = [{ botId: 'writer', text: `${note}\nThe start of a very long reply…`, length: 20_001, files: [file] }]
-  const out = show(call('group_relay', 'direct', { content: { replies } }), { sessionId: 'room', actions })
-  const more = findAll(out, node => node.props?.className === 'bt-more')
-  assert.equal(more.length, 1)
-  assert.match(text(more[0]), /20,001/)
-  // The file-backed count is the whole reply, and the label says where it comes from.
-  assert.match(text(more[0]), /from its file/)
-  assert.ok(!text(out).includes('[A long message'), 'the note the host wrote for the model stays out of the bubble')
-  more[0].props.onClick()
-  await Promise.resolve()
-  await Promise.resolve()
-  assert.deepEqual(JSON.parse(JSON.stringify(asked)), [file])
-})
-
-// A group reply folds at the line it marks, and keeps the whole point above it. With no
-// mark it folds past 1000 characters or 20 lines, and keeps 120 characters of four.
-test('a group reply folds at its own mark, or past a long enough line', () => {
-  const folded = words => findAll(show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: words, time: 1 }] } }), { sessionId: 'room' }), node => node.props?.className === 'bt-more')
-  const lines = count => Array.from({ length: count }, (_, index) => `line ${index}`).join('\n')
-  // The point reads whole, however short it is; the detail below it folds.
-  assert.equal(folded(`结论。\n\n${'d'.repeat(800)}`).length, 1)
-  assert.equal(folded(`结论。\n---\n${'d'.repeat(800)}`).length, 1)
-  // No mark: a 900-character line stays whole, a 1100-character one folds.
-  assert.deepEqual([900, 1100].map(count => folded('z'.repeat(count)).length), [0, 1])
-  assert.match(text(folded('z'.repeat(1100))[0]), /Show all · 1,100 characters/)
-  assert.deepEqual([20, 21].map(count => folded(lines(count)).length), [0, 1], '20 lines stay whole; 21 fold')
-  const at = { chars: 1000, lines: 20 }
-  const preview = { chars: 120, lines: 4 }
-  assert.equal(foldPreview(`结论。\n\n${'d'.repeat(800)}`, at, true, preview, false, true), '结论。\n\n')
-  assert.equal(foldPreview('z'.repeat(1100), at, true, preview).length, 120)
-  assert.equal(foldPreview('z'.repeat(900), at, true, preview), null, '900 characters stay whole')
-  assert.equal(foldPreview('结论。\n\n很短', at, true, preview, false, true), null, 'a mark with one short line after it does not fold')
-})
-
-// The SuperAgent page decides the group fold: off reads the whole reply, and a threshold
-// out of range reads as the default rather than folding a chat shut.
-test('the SuperAgent page decides whether and where a group reply folds', () => {
-  const folded = (text, prefs) => findAll(
-    show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text, time: 1 }] } }), { sessionId: 'room', roster: team({ prefs }) }),
-    node => node.props?.className === 'bt-more',
-  ).length
-  assert.equal(folded('z'.repeat(800), { saFold: false }), 0, 'off reads the whole reply')
-  assert.equal(folded(`结论。\n\n${'d'.repeat(800)}`, { saFold: false }), 0, 'off also stops the fold at a mark')
-  assert.equal(folded('z'.repeat(800), {}), 0, 'the default threshold is 1000 characters')
-  assert.equal(folded('z'.repeat(1100), {}), 1)
-  assert.deepEqual([400, 600].map(chars => folded('z'.repeat(chars), { saFoldAt: { chars: 500, lines: 20 } })), [0, 1], 'a saved threshold decides')
-  assert.equal(folded('z'.repeat(1100), { saFoldAt: { chars: 200, lines: 20 } }), 1, 'an out-of-range threshold falls back to the default')
-  // A reply the host kept only in part folds whatever the page says: its text lives in a
-  // file, and "Show all" is the only way back to it.
-  const cut = [{ botId: 'writer', text: 'head…', time: 1, length: 20_001, files: [{ name: 'Reply from Writer.txt', bytes: 20_001 }] }]
-  const more = findAll(show(call('group_relay', 'direct', { content: { replies: cut } }), { sessionId: 'room', roster: team({ prefs: { saFold: false } }), actions: { fileText: async () => ({ text: 'x', whole: true }) } }), node => node.props?.className === 'bt-more')
-  assert.equal(more.length, 1, 'a cut reply still folds with the page off')
-})
-
-// A group line carries its member's ink, mixed low: the tint makes it clear who spoke, and
-// stays a tint, so it does not compete with the name above it.
-test('a group bubble is tinted with its member ink', () => {
-  const out = show(call('group_relay', 'direct', { content: { replies: [{ botId: 'writer', text: 'Draft is up.', time: 1 }] } }), { sessionId: 'room' })
-  const row = findAll(out, node => node.props?.className === 'bt-group-msg')[0]
-  assert.match(row.props.style['--bt-bubble-tint'], /^color-mix\(in srgb, var\(--bt-ink-\w+\) 3%, var\(--bt-bubble\)\)$/)
+// The repair card's Retry reaches the Bot as a plugin trigger; the chat shows that it went
+// on, never the note to the Bot or the user's message again.
+test('a Retry after a failed turn shows as one event line', () => {
+  const out = expand(TriggerCell({
+    node: { key: 'trigger', kind: 'turn-trigger', location: { turn: { turn: 4 } }, data: { seq: 9, time: 1, content: text$('[Retry after a failed turn]\nYour last turn failed (AUTH) and the user has fixed it.'), source: { kind: 'bot', role: 'continue', exchangeId: 'c1' } } },
+    sessionId: chief.id, actions: {},
+    useRoster: select => select(team()), useSessions: select => select({ byId: {} }),
+    useTurnClock: select => select({}), useUi: select => select({ visits: {}, reactions: {} }),
+  }))
+  assert.equal(text(out), 'Went on after the failed turn')
 })
 
 // #718: a folded message's cut code block is drawn by DS Bot, so no copy control

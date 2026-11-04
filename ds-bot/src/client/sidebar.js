@@ -3,19 +3,16 @@ import { createPortal } from 'react-dom'
 import { FishLogo } from './dsh-primitives.js'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
-import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon } from './icons.js'
-import { MAIN_LOOK } from './characters.js'
+import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignInIcon, SignOutIcon, SlidersIcon } from './icons.js'
+import { lookOf, MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
 import { Shimmer, workPhrase } from './cells.js'
-import { springEasing, SPRING_SHAPE, useViewport, viewBottom } from './motion.js'
+import { springEasing, SPRING_POP, SPRING_SHAPE, useLinger, useViewport, viewBottom } from './motion.js'
 import { hostText, t } from './i18n.js'
-import { MarketPanel } from './market.js'
-import { holdDrawerDismiss } from './drawer-dismiss.js'
 import { clientErrors } from './diagnostics.js'
 import { showsDshRow } from './dsh-offer.js'
-import { STORAGE } from './storage.js'
-import { readArrangement, writeArrangement } from './sidebar-groups.js'
+import { quietly } from './diagnostics.js'
 import { frameLayout, dragColumn, RAIL_WIDTH, FALLBACK_SIDEBAR_WIDTH, userSidebarToggle } from './frame-layout.js'
 import { chatRoom, dshCollapsed } from './frame-watch.js'
 
@@ -59,7 +56,7 @@ const waitingFor = (roster, waits) => {
   return names.length === 0 ? '' : t('Waiting for {names}', { names: names.join(t(' and ')) })
 }
 
-function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, marked, at }) {
+function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, marked }) {
   const id = bot.id
   const part = currentPart(bot)
   const preview = useSessions(list => previewOf(list, part, roster.exchangeTurns[part]))
@@ -100,12 +97,11 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   return h('button', {
     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
     'data-bot-id': id, title: wide ? undefined : bot.name, onMouseEnter: wide ? nameIfCut : undefined, onClick: () => actions.openSession(id), onContextMenu,
-    draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', id); event.dataTransfer.effectAllowed = 'move' },
   },
   h(BotAvatar, { bot, size: wide ? 36 : 44, state, main }),
   pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
-    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null, h(RowTime, { at })),
+    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null),
     runningLine ? h('span', { className: 'bt-row-preview' }, runningLine)
       : awayLine ? h('span', { className: 'bt-row-preview' }, awayLine)
         : waitsFor ? h('span', { className: 'bt-row-preview' }, waitsFor)
@@ -114,7 +110,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
     : !wide && !active && (alert || unread) ? h('span', { className: `bt-dot${alert ? ' bt-dot-wait' : ''}`, 'aria-hidden': true }) : null)
 }
 
-function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked, at }) {
+function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked }) {
   const id = room.id
   // The group's own Session is a chain of parts; the row shows the current one.
   const sessionId = room.sessionId ?? id
@@ -134,12 +130,11 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
     'data-room-id': id, title: wide ? undefined : room.name, onMouseEnter: wide ? nameIfCut : undefined, onClick: () => actions.openSession(id),
     onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'room', id, x: event.clientX, y: event.clientY }) },
-    draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', id); event.dataTransfer.effectAllowed = 'move' },
   },
   h(RoomAvatar, { room, roster, size: wide ? 36 : 44 }),
   pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
-    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null, h(RowTime, { at })),
+    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null),
     workingLine ? h('span', { className: 'bt-row-preview' }, workingLine) : preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
   wide && approval && !active ? h('span', { className: 'bt-unread bt-unread-wait', 'aria-hidden': true })
     : wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true })
@@ -195,14 +190,7 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
 
 // The DSH Agent row: a plain dsh Session list lives in the Bot workspace, so it
 // sits among the Bots with the harness's own whale mark.
-// The first line of a row ends with when it was last touched, in the shell's own short form
-// ("just now", "5 min", "3 h", "2 d", then a date).
-function RowTime({ at }) {
-  if (!at) return null
-  return h('span', { className: 'bt-row-time' }, relativeShort(at))
-}
-
-function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked, at }) {
+function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked }) {
   const info = useSessions(list => JSON.stringify(agent.sessions.map((id) => {
     const row = list.byId[id]
     return {
@@ -236,12 +224,11 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
     h('button', {
       type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
       'data-agent-id': agent.id, title: wide ? undefined : 'DSH Agent', onClick: () => actions.openAgent(agent.id),
-      draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', agent.id); event.dataTransfer.effectAllowed = 'move' },
       onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'agent', id: agent.id, x: event.clientX, y: event.clientY }) },
     },
     h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: wide ? 22 : 24 })),
     wide ? h('span', { className: 'bt-row-body' },
-      h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, 'DSH Agent'), h(RowTime, { at })),
+      h('span', { className: 'bt-row-name' }, 'DSH Agent'),
       preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
     wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true })
       : !wide && unread && !active ? h('span', { className: 'bt-dot', 'aria-hidden': true }) : null),
@@ -283,8 +270,8 @@ function useListGlide(listRef, layout, key) {
 // collapsed sidebar: the open column or the avatar rail push the conversation
 // over, the drawer floats above it. Its right edge drags the open width, and
 // down to the rail.
-function LeftColumn({ mode, width, onGrip, children }) {
-  return createPortal(h('div', { className: 'bt-leftcol', 'data-left': mode, style: { width: `${width}px` } },
+function LeftColumn({ mode, width, onGrip, leaving, children }) {
+  return createPortal(h('div', { className: 'bt-leftcol', 'data-left': mode, 'data-leaving': leaving || undefined, 'aria-hidden': leaving || undefined, style: { width: `${width}px` } },
     children,
     h('div', { className: 'bt-leftcol-grip', role: 'separator', 'aria-orientation': 'vertical', 'aria-label': t('Resize sidebar'), title: t('Resize sidebar'), onPointerDown: onGrip })), document.body)
 }
@@ -317,7 +304,6 @@ const bootHint = () => {
 export function TeamSidebar(props) {
   const { wide, useRoster, useUi, useSessions, actions } = props
   const listRef = useRef(null)
-  const [market, setMarket] = useState(false)
   const roster = useRoster(value => value)
   const markedUnread = useUi(value => value.unread)
   const uiNow = useUi(value => value)
@@ -332,7 +318,10 @@ export function TeamSidebar(props) {
   // A drag of the column's edge shows where it would land, live.
   const [drag, setDrag] = useState(null)
   const mode = drag?.left ?? layout.left
-  const wideContent = mode !== 'rail'
+  // A hidden column stays mounted for its slide out; `shown` is the mode it last had.
+  const [held, leaving] = useLinger(mode === 'hidden' ? null : mode, SPRING_SHAPE.duration)
+  const shown = held ?? mode
+  const wideContent = shown !== 'rail'
   const updated = useSessions(list => {
     const stamps = {}
     for (const id of list.ids) stamps[id] = list.byId[id]?.updatedAt ?? 0
@@ -349,103 +338,15 @@ export function TeamSidebar(props) {
     return entries.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at)
   }, [roster, updated])
   const main = roster.byId[roster.mainBotId]
-  // Sections, as the reference product draws them: pinned first, the user's own groups, then
-  // whatever is left over under Bots and Group chats. A built-in section with nothing in it
-  // is not drawn; a group the user made always is, so an empty one can still be filled.
-  const [arrange, setArrange] = useState(readArrangement)
-  useEffect(() => {
-    const reload = () => setArrange(readArrangement())
-    // A group made from a row's menu is named right away, as the list's own row is.
-    const rename = (event) => { reload(); setRenamingSection(event.detail) }
-    window.addEventListener('ds-bot:groups', reload)
-    window.addEventListener('ds-bot:group-created', rename)
-    return () => {
-      window.removeEventListener('ds-bot:groups', reload)
-      window.removeEventListener('ds-bot:group-created', rename)
-    }
-  }, [])
-  const [renamingSection, setRenamingSection] = useState(null)
-  const [sectionMenu, setSectionMenu] = useState(null)
-  const [sectionPicker, setSectionPicker] = useState(null)
-  const [creating, setCreating] = useState(false)
-  const sections = useMemo(() => {
-    const pinned = order.filter(entry => entry.item.pinned)
-    // The Main Bot's row otherwise sits above every section; once it is put in a group it
-    // belongs to that group like any other row.
-    const mainAssigned = main ? arrange.assign[main.id] : undefined
-    const rest = order.filter(entry => !entry.item.pinned)
-    if (main && mainAssigned) rest.unshift({ kind: 'bot', item: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt })
-    const inGroup = (id) => rest.filter(entry => arrange.assign[entry.item.id] === id)
-    const assigned = new Set(Object.keys(arrange.assign))
-    const loose = rest.filter(entry => !assigned.has(entry.item.id))
-    const custom = arrange.groups.map(group => ({ id: group.id, name: group.name, custom: true, collapsed: group.collapsed, entries: inGroup(group.id) }))
-    return [
-      { id: 'top', name: t('Top'), entries: pinned },
-      ...custom,
-      { id: 'bots', name: t('Bots'), entries: loose.filter(entry => entry.kind !== 'room') },
-      { id: 'rooms', name: t('Group chats'), entries: loose.filter(entry => entry.kind === 'room') },
-    ].filter(section => section.entries.length > 0 || section.custom)
-  }, [order, arrange, t, main, updated])
-  const changeArrange = (next) => {
-    setArrange(next)
-    writeArrangement(next)
-  }
-  // The new-group row turns into a name field in place: nothing is created until it is named.
-  const beginCreate = () => {
-    setSectionMenu(null)
-    setSectionPicker(null)
-    setRenamingSection(null)
-    setCreating(true)
-  }
-  const createGroup = (name) => {
-    const clean = name.trim().slice(0, 24)
-    setCreating(false)
-    if (!clean) return
-    const id = `g${Date.now().toString(36)}`
-    changeArrange({ ...arrange, groups: arrange.groups.concat({ id, name: clean, collapsed: false }) })
-  }
-  const renameGroup = (id, name) => {
-    const clean = name.trim().slice(0, 24)
-    changeArrange({ ...arrange, groups: arrange.groups.map(group => (group.id === id ? { ...group, name: clean || group.name } : group)) })
-    setRenamingSection(null)
-  }
-  const deleteGroup = (id) => {
-    const assign = { ...arrange.assign }
-    for (const entryId of Object.keys(assign)) if (assign[entryId] === id) delete assign[entryId]
-    changeArrange({ groups: arrange.groups.filter(group => group.id !== id), assign })
-    setSectionMenu(null)
-  }
-  const assignTo = (entryId, groupId) => {
-    const assign = { ...arrange.assign }
-    if (groupId) assign[entryId] = groupId
-    else delete assign[entryId]
-    changeArrange({ ...arrange, assign })
-  }
-  const foldGroup = (id) => changeArrange({ ...arrange, groups: arrange.groups.map(group => (group.id === id ? { ...group, collapsed: !group.collapsed } : group)) })
-  const isFolded = (section) => (section.custom ? section.collapsed === true : folded[section.id] === true)
-  const foldSection = (section) => (section.custom ? foldGroup(section.id) : toggleSection(section.id))
-  const dropOn = (event, section) => {
-    const entryId = event.dataTransfer?.getData('text/plain') ?? ''
-    if (!entryId) return
-    event.preventDefault()
-    assignTo(entryId, section.custom ? section.id : null)
-  }
-  const [folded, setFolded] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORAGE.folded) ?? '{}') ?? {} } catch { return {} }
-  })
-  const toggleSection = (id) => setFolded((current) => {
-    const next = { ...current, [id]: !current[id] }
-    try { localStorage.setItem(STORAGE.folded, JSON.stringify(next)) } catch { /* storage unavailable */ }
-    return next
-  })
   useListGlide(listRef, wideContent, order.map(entry => entry.item.id).join(','))
   useLandOnMainBot(roster, useSessions, actions)
+  useReportReady(roster.ready, roster)
 
   // Our column pushes the conversation over by what it takes beyond the shell's
   // collapsed track; a drawer floats over the rail's place, so it pushes as much
   // as the rail and the chat stays put when it opens or closes.
   const openWidth = drag?.width ?? frameSnap.sidebarWidth
-  const ourWidth = mode === 'rail' ? RAIL_WIDTH : openWidth
+  const ourWidth = shown === 'rail' ? RAIL_WIDTH : openWidth
   const pushed = mode === 'open' ? openWidth : mode === 'hidden' ? 0 : RAIL_WIDTH
   useLayoutEffect(() => {
     if (typeof document === 'undefined') return
@@ -549,21 +450,6 @@ export function TeamSidebar(props) {
     for (const name of ends) grip.addEventListener(name, onEnd)
   }
 
-  // The phone layout mounts its own drawer switch in the header; on the Bot surface it
-  // must move our column, not the shell's drawer — the shell's drawer leaves its own
-  // backdrop over the page. Caught in the capture phase, before that button's handler.
-  useEffect(() => {
-    const onTap = (event) => {
-      if (!(event.target instanceof Element) || event.target.closest('[data-mobile-nav="toggle"]') === null) return
-      if (typeof actions.toggleLeftHidden !== 'function') return
-      event.preventDefault()
-      event.stopPropagation()
-      actions.toggleLeftHidden()
-    }
-    document.addEventListener('click', onTap, true)
-    return () => document.removeEventListener('click', onTap, true)
-  }, [])
-
   // In the Bot view the shell's own sidebar stays collapsed under our column. A
   // flip we did not ask for is the user's own switch gesture (the shell's button
   // or shortcut where it still reaches), unless the width just crossed the
@@ -631,12 +517,6 @@ export function TeamSidebar(props) {
     return () => { window.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey, true) }
   }, [mode])
 
-  // Entries inside the drawer that are not sidebar rows (a menu's page, the palette, a
-  // fresh chat) report where they came from; only a drawer entry then collapses it.
-  const modeRef = useRef(mode)
-  modeRef.current = mode
-  useEffect(() => holdDrawerDismiss(() => { if (modeRef.current === 'drawer') actions.setLeftDrawer?.(false) }), [])
-
   const navigate = (open, id) => {
     const result = open(id)
     if (uiNow.leftDrawer === true) actions.setLeftDrawer?.(false)
@@ -679,7 +559,7 @@ export function TeamSidebar(props) {
   }, [])
   const top = wideContent
     ? h('div', { className: 'bt-side-top' },
-        h('span', { className: 'bt-brand' }, h(BrandMark, { size: 22 }), h(BrandName)),
+        h('span', { className: 'bt-brand' }, h(BrandName)),
         h(UpdateButton, { useUpdate: props.useUpdate, actions }),
         h('button', { type: 'button', className: 'bt-round', 'aria-label': t('Search'), title: t('Search'), onClick: () => actions.openPalette() }, h(SearchIcon)),
         h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
@@ -692,11 +572,7 @@ export function TeamSidebar(props) {
   // The foot stands in for the shell's hidden footer: the account avatar, and on
   // the rail the new-chat button above it.
   const foot = wideContent
-    ? h('div', { className: 'bt-leftcol-foot' },
-        h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => { actions.openPluginsPanel?.() } },
-          h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
-          h('span', { className: 'bt-apps-label' }, t('Connect apps'))),
-        h(AccountLauncher, { seat: false, actions }))
+    ? h('div', { className: 'bt-leftcol-foot' }, h(AccountLauncher, { seat: false, actions }))
     : h('div', { className: 'bt-leftcol-foot bt-leftcol-foot-rail' },
         h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
         h(AccountLauncher, { seat: false, actions }))
@@ -704,82 +580,16 @@ export function TeamSidebar(props) {
     top,
     wideContent && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
     h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
-      wideContent ? (main && !arrange.assign[main.id]
-        ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true })
-        : roster.ready || main ? null : h('div', { className: 'bt-hint' }, uiNow.bootFailed ? bootHint() : t('Setting up your Main Bot…'))) : null,
-      ...sections.flatMap(section => [
-        h('div', {
-          key: `section:${section.id}`, className: 'bt-sec-row',
-          onDragOver: (event) => { if (event.dataTransfer?.types?.includes('text/plain')) { event.preventDefault(); event.dataTransfer.dropEffect = 'move' } },
-          onDrop: (event) => dropOn(event, section),
-        },
-        renamingSection === section.id
-          ? h('input', {
-            className: 'bt-sec-input', autoFocus: true, defaultValue: section.name, 'aria-label': t('Section name'),
-            onClick: (event) => event.stopPropagation(),
-            onBlur: (event) => renameGroup(section.id, event.target.value),
-            onKeyDown: (event) => {
-              if (event.key === 'Enter') { event.preventDefault(); renameGroup(section.id, event.currentTarget.value) }
-              if (event.key === 'Escape') { event.stopPropagation(); setRenamingSection(null) }
-            },
-          })
-          : h('button', {
-            type: 'button', className: 'bt-sec',
-            'aria-expanded': !isFolded(section),
-            onClick: () => foldSection(section),
-          },
-          h('span', { className: 'bt-sec-name' }, section.name),
-          h('span', { className: 'bt-sec-caret', 'data-open': !isFolded(section) ? '' : undefined, 'aria-hidden': true }, h(ChevronRightIcon)),
-          h('span', { className: 'bt-sec-count' }, String(section.entries.length))),
-        section.custom
-          ? h('button', {
-            type: 'button', className: 'bt-sec-more', 'aria-label': t('Section options'), 'aria-expanded': sectionMenu === section.id,
-            onClick: (event) => { event.stopPropagation(); setSectionPicker(null); setSectionMenu((open) => (open === section.id ? null : section.id)) },
-          }, h(MoreDotsIcon))
-          : null,
-        sectionMenu === section.id
-          ? h('div', { className: 'bt-sec-menu', role: 'menu' },
-            sectionPicker === section.id
-              ? [
-                h('div', { key: 'head', className: 'bt-sec-menu-head' }, t('Move to this group')),
-                ...order.filter(entry => arrange.assign[entry.item.id] !== section.id).map(entry => h('button', {
-                  key: entry.item.id, type: 'button', role: 'menuitem', className: 'bt-sec-pick',
-                  onClick: () => assignTo(entry.item.id, section.id),
-                }, h('span', { className: 'bt-sec-pick-name' }, entry.item.name))),
-                order.every(entry => arrange.assign[entry.item.id] === section.id)
-                  ? h('div', { key: 'none', className: 'bt-sec-menu-empty' }, t('Everything is here already'))
-                  : null,
-              ]
-              : [
-                h('button', { key: 'rename', type: 'button', role: 'menuitem', onClick: () => { setSectionMenu(null); setRenamingSection(section.id) } }, h(PencilIcon), t('Rename section')),
-                h('button', { key: 'move', type: 'button', role: 'menuitem', onClick: () => setSectionPicker(section.id) }, h(PlusIcon), t('Move rows here')),
-                h('button', { key: 'new', type: 'button', role: 'menuitem', onClick: () => beginCreate() }, h(PlusIcon), t('New section')),
-                h('button', { key: 'delete', type: 'button', role: 'menuitem', className: 'bt-danger', onClick: () => deleteGroup(section.id) }, h(TrashIcon), t('Delete section')),
-              ])
-          : null),
-        ...(isFolded(section) ? [] : section.entries.map(entry => (entry.kind === 'bot'
-          ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
-          : entry.kind === 'room'
-            ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
-            : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })))),
-      ]),
-      creating
-        ? h('input', {
-          key: 'new-group-input', className: 'bt-sec-new-input', autoFocus: true, placeholder: t('New section'),
-          'aria-label': t('New section'),
-          onBlur: (event) => createGroup(event.target.value),
-          onKeyDown: (event) => {
-            if (event.key === 'Enter') { event.preventDefault(); createGroup(event.currentTarget.value) }
-            if (event.key === 'Escape') { event.stopPropagation(); setCreating(false) }
-          },
-        })
-        : h('button', { key: 'new-group', type: 'button', className: 'bt-sec-new', onClick: beginCreate },
-          h(PlusIcon), h('span', null, t('New section')))),
-    foot,
-    market ? h(MarketPanel, { open: true, onClose: () => setMarket(false), roster, actions }) : null)
+      wideContent ? (main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, uiNow.bootFailed ? bootHint() : t('Setting up your Main Bot…'))) : null,
+      order.map(entry => (entry.kind === 'bot'
+        ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
+        : entry.kind === 'room'
+          ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
+          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))),
+    foot)
   return h(Fragment, null,
     h(TitleToggle, { hidden: mode === 'hidden', onToggle }),
-    mode === 'hidden' ? null : h(LeftColumn, { mode, width: ourWidth, onGrip: startDrag }, content))
+    shown === 'hidden' ? null : h(LeftColumn, { mode: shown, width: ourWidth, onGrip: startDrag, leaving }, content))
 }
 
 // The update button at the sidebar's top right: a cloud while a newer DS Bot —
@@ -877,7 +687,7 @@ function UpdateButton({ useUpdate, actions }) {
 // Account seat of the Settings trigger: the visible label stays for assistive tech only.
 export function YouAvatar() {
   return h('span', { className: 'bt-you-wrap' },
-    h('span', { className: 'bt-you', 'aria-hidden': true }, h(BotMark, { look: MAIN_LOOK, size: 24 })),
+    h('span', { className: 'bt-you', 'aria-hidden': true }, h(GearIcon)),
     h('span', { style: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } }, t('Settings')))
 }
 
@@ -910,6 +720,23 @@ export function openHarnessOnboarding(id) {
     if (openShellOnboarding) openShellOnboarding(id)
     else openHarnessSettings()
   })
+}
+
+// The launcher seat can only open DSH's settings on their first section. This onboarding
+// step of DS Bot's own, opened by id, hands the shell's openSection the Models page; the
+// first-run pass meets it last and it steps aside at once.
+export const MODELS_STEP = 'ds-bot-models'
+export const MODELS_STEP_ORDER = 1000
+
+export function OpenModelsStep({ explicit, complete, openSection }) {
+  useEffect(() => {
+    if (explicit) {
+      if (typeof openSection === 'function') openSection('models')
+      else openHarnessSettings()
+    }
+    complete()
+  }, [explicit])
+  return null
 }
 
 function openThroughMenu(trigger) {
@@ -993,6 +820,7 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
   const accountSource = ops.hooks?.account
   const account = useSyncExternalStore(accountSource?.subscribe ?? NO_SUBSCRIBE, accountSource ? () => accountSource.getSnapshot() : NO_SNAPSHOT)
   const signedIn = signIn !== null && typeof ops.signOut === 'function' && account?.view?.status === 'credential-stored'
+  const signedOut = signIn !== null && typeof actions.signIn === 'function' && account?.view?.status === 'signed-out'
   const accountT = actions.accountT?.() ?? (key => key)
   const [confirm, setConfirm] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -1033,21 +861,25 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
     setSignOutError('')
     setBusy(false)
   }, [open])
+  // DS Bot's Models page where the host serves the providers, else DSH's own.
+  const openModels = actions.providers ? actions.openModels : actions.openHarnessModels
   const groups = [
     [
       [t('Usage'), GaugeIcon, () => actions.openSettings('usage')],
+      openModels ? [t('Models and API keys'), SlidersIcon, () => openModels()] : null,
       [t('Connectors'), ConnectorIcon, () => actions.openConnectors()],
       [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
       [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
-    ],
+    ].filter(Boolean),
     [
       [t('Switch to classic Agent mode'), SwitchIcon, () => actions.setSurface('agent')],
     ],
   ]
   if (signedIn) groups.push([[accountT('signOut'), SignOutIcon, askSignOut, undefined, true]])
+  else if (signedOut) groups.push([[t('Sign in to DeepSeek'), SignInIcon, () => actions.signIn()]])
   return h(Fragment, null,
     h('button', { ref: button, type: 'button', className: 'bt-account', 'aria-label': t('Account'), 'aria-haspopup': 'menu', 'aria-expanded': open, onClick: toggle },
-      h('span', { className: 'bt-you', 'aria-hidden': true }, h(BotMark, { look: MAIN_LOOK, size: 24 }))),
+      h('span', { className: 'bt-you', 'aria-hidden': true }, h(GearIcon))),
     open && box ? createPortal(h('div', { className: 'bt-menu bt-menu-up bt-account-menu', role: 'menu', 'aria-label': t('Account'), style: box },
       confirm !== null ? h('div', { className: 'bt-confirm', role: 'alertdialog', 'aria-label': accountT('signOut') },
         h('p', { className: 'bt-confirm-text' }, accountT(confirm === 'running' ? 'signOutRunningDescription' : confirm === 'unknown' ? 'signOutUnknownDescription' : 'signOutDescription')),
@@ -1061,6 +893,92 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
             key: label, type: 'button', role: 'menuitem',
             onClick: () => { if (stay !== true) setOpen(false); void Promise.resolve(run()).catch(error => actions.reportError(error, 'menu')) },
           }, h(Icon), h('span', { className: 'bt-menu-label' }, label), hint ? h('span', { className: 'bt-menu-hint' }, hint) : null))))), document.body) : null)
+}
+
+// The desktop app keeps its main window hidden until the team interface has drawn
+// the first state, and shows its failure page when that never comes. The report
+// says where the Main Bot's avatar is when it wears the start window's whale: the
+// start window hands that whale over at the top of its jump, and it glides onto
+// the avatar here.
+let readyReported = false
+function useReportReady(drawn, roster) {
+  useEffect(() => {
+    if (!drawn || readyReported) return
+    readyReported = true
+    void Promise.resolve().then(() => {
+      const app = globalThis.dsBotApp
+      if (typeof app?.ready !== 'function') return undefined
+      // The place is a nicety: whatever goes wrong measuring it, the report still goes.
+      let place
+      try { place = mainAvatarPlace(roster) } catch { place = undefined }
+      if (place === undefined) return app.ready()
+      const mainId = roster.mainBotId
+      app.onHandoff?.((from) => { try { glideOnto(mainMarkOf(mainId), from) } catch (error) { quietly('handoff')(error) } })
+      return app.ready(place)
+    }).catch(quietly('app ready'))
+  }, [drawn])
+}
+
+function mainMarkOf(id) {
+  if (typeof document === 'undefined') return null
+  const key = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(id) : id
+  return document.querySelector(`.bt-side [data-bot-id="${key}"] .bt-mark`)
+}
+
+// The Main Bot's avatar in the team column, in CSS px of the page, with the page's size.
+// Only the default look: a photo or another character would not match the start window's whale.
+function mainAvatarPlace(roster) {
+  const main = roster?.byId?.[roster.mainBotId]
+  if (main === undefined || main.avatar?.image || typeof document === 'undefined') return undefined
+  const look = lookOf(main)
+  if (look.shape !== MAIN_LOOK.shape || look.color !== MAIN_LOOK.color) return undefined
+  const mark = mainMarkOf(main.id)
+  // Not the opacity: the column fades in as it first draws, which is when this is measured.
+  if (!mark || mark.checkVisibility?.({ visibilityProperty: true }) === false) return undefined
+  const box = mark.getBoundingClientRect()
+  const view = document.documentElement
+  return { x: box.left, y: box.top, width: box.width, height: box.height, viewportWidth: globalThis.innerWidth ?? view.clientWidth, viewportHeight: globalThis.innerHeight ?? view.clientHeight }
+}
+
+// The whale the start window hands over (app/src/start-window.mjs): `from` is where it is on
+// this page at the top of its jump. A copy of the avatar waits there for `hold` ms, while the two
+// windows cross-fade, then glides onto the avatar in one compositor animation, so the jump does
+// not stutter the way a window that resizes under it would. x and y ease differently, so the path
+// bows upward; the avatar itself is hidden until the copy is on it, then gives a small bounce.
+// Hidden by opacity, not visibility: the copy draws through the avatar's own masks (same ids),
+// which a hidden avatar would stop drawing.
+const GLIDE_MS = 460
+function glideOnto(mark, from) {
+  if (!mark || reducedMotion()) return
+  const box = mark.getBoundingClientRect()
+  if (!box.width) return
+  const outer = document.createElement('div')
+  const inner = document.createElement('div')
+  const copy = mark.cloneNode(true)
+  copy.removeAttribute('data-live')
+  Object.assign(outer.style, { position: 'fixed', left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px`, zIndex: '2147483647', pointerEvents: 'none' })
+  Object.assign(inner.style, { width: '100%', height: '100%', transformOrigin: '0 0' })
+  Object.assign(copy.style, { width: '100%', height: '100%' })
+  copy.style.setProperty('--bt-ink-deepseek', getComputedStyle(mark).getPropertyValue('--bt-ink-deepseek'))
+  inner.append(copy)
+  outer.append(inner)
+  outer.setAttribute('aria-hidden', 'true')
+  document.body.append(outer)
+  mark.style.opacity = '0'
+  const timing = { delay: Math.max(0, Number(from.hold) || 0), duration: GLIDE_MS, fill: 'both' }
+  outer.animate([{ transform: `translateX(${from.x - box.left}px)` }, { transform: 'none' }], { ...timing, easing: 'cubic-bezier(.45,0,.25,1)' })
+  const glide = inner.animate([{ transform: `translateY(${from.y - box.top}px) scale(${from.size / box.width})` }, { transform: 'none' }], { ...timing, easing: 'cubic-bezier(.2,.65,.3,1)' })
+  let landed = false
+  const land = () => {
+    if (landed) return
+    landed = true
+    outer.remove()
+    mark.style.opacity = ''
+    mark.animate([{ transform: 'scale(1.08, .92)' }, { transform: 'none' }], { duration: SPRING_POP.duration, easing: SPRING_POP.easing })
+  }
+  glide.finished.then(land, land)
+  // A hidden page stops ticking animations: the avatar comes back regardless.
+  setTimeout(land, timing.delay + GLIDE_MS + 500)
 }
 
 // Opens the Main Bot whenever the main view holds no Bot conversation, the way
@@ -1109,8 +1027,11 @@ export function FooterAccount(props) {
 
 // The only entry registered in every mode: in Agent mode the whole Bot surface is
 // withdrawn, and this button in the shell's own footer is the way back.
-export function BotReturn({ wide, useSurface, actions }) {
+export function BotReturn({ wide, useSurface, useRoster, actions }) {
   const mode = useSurface(value => value.mode)
+  const ready = useRoster(value => value.ready)
+  // Agent mode draws no team sidebar; there this button is the team interface.
+  useReportReady(mode === 'agent' && ready)
   if (mode !== 'agent') return null
   return h('button', { type: 'button', className: 'bt-return', 'aria-label': t('DS Bot'), title: t('DS Bot'), onClick: () => actions.setSurface('bot') },
     h(BotMark, { look: MAIN_LOOK, size: 20 }),
@@ -1195,6 +1116,8 @@ export const SIDEBAR_CSS = `
 .bt-agent-sub-row{display:flex;align-items:center;gap:8px;width:100%;padding:5px 10px 5px 8px;border:0;border-radius:8px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;line-height:20px;text-align:left;cursor:pointer}
 .bt-agent-sub-row:hover{background:var(--bt-hover);color:var(--bt-ink)}
 .bt-agent-sub-row[aria-current=page]{background:var(--bt-hover);color:var(--bt-ink);font-weight:500}
+/* .bt-agent-sub-in clips for the expand animation and the rows touch its edges, so the ring goes inside. */
+.bt-agent-sub-row:focus-visible{outline:2px solid var(--bt-accent);outline-offset:-2px}
 .bt-agent-sub-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-agent-sub-time{flex:none;font-size:11px;color:var(--bt-ink-3)}
 .bt-agent-new{color:var(--bt-ink-3)}

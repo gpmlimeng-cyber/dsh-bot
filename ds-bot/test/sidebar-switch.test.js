@@ -28,13 +28,10 @@ let layoutEffects
 const react = {
   createContext: (initial) => { const ctx = { value: initial }; ctx.Provider = ({ value, children }) => { ctx.value = value; return children }; return ctx },
   useContext: ctx => ctx.value,
-  // The vendored skill market panel keeps an error boundary, so a module body touches
-  // React.Component before any render.
-  Component: class { constructor(props) { this.props = props } setState() {} },
   useCallback: fn => fn,
   useSyncExternalStore: (subscribe, getSnapshot) => getSnapshot(),
   createElement: (type, props, ...children) => ({ type, props: { ...props, children } }), Fragment: Symbol('Fragment'),
-  useEffect() {}, useLayoutEffect: effect => layoutEffects?.push(effect), useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}],
+  useEffect() {}, useLayoutEffect: effect => layoutEffects?.push(effect), useState: initial => [initial, () => {}],
   useMemo: make => make(), useRef: current => renderRefs ? renderRefs[refIndex++] ??= { current } : { current }, useId: () => 'id',
 }
 const module = { exports: {} }
@@ -103,15 +100,11 @@ for (const width of [390, 1023, 1024, 1280]) {
   }
 }
 
-test('a row picked from the drawer closes it', () => {
+test('a row picked from the floating drawer closes it', () => {
   viewport.innerWidth = 390
-  const side = navigationSidebar(true, { leftDrawer: true })
-  const pick = side.rows[0].props.actions.openSession
-  pick('picked')
-  pick('again')
-  // Every pick asks the drawer shut; a second one changes nothing, since the drawer is
-  // already closed by then.
-  assert.deepEqual(side.calls, [['openSession', 'picked'], ['setLeftDrawer', false], ['openSession', 'again'], ['setLeftDrawer', false]])
+  const side = navigationSidebar(false, { leftDrawer: true })
+  side.rows[0].props.actions.openSession('picked')
+  assert.deepEqual(side.calls, [['openSession', 'picked'], ['setLeftDrawer', false]])
 })
 
 test('a row picked outside the drawer leaves it alone', () => {
@@ -289,7 +282,7 @@ const showing = rules.filter(rule => /display:inline-flex/.test(rule.body))
 function shell({ platform, collapsed }) {
   const darwin = platform === 'mac'
   const toggle = '<button class="x_iconButton x_toggle" aria-label="Toggle sidebar"></button>'
-  const html = `<!doctype html><html class="bt-bot"${platform === 'windows' ? ' data-windows-titlebar' : ''}${darwin ? ' data-platform="darwin"' : ''}><body>
+  const html = `<!doctype html><html${platform === 'windows' ? ' data-windows-titlebar' : ''}${darwin ? ' data-platform="darwin"' : ''}><body>
     <div${collapsed ? ' data-sidebar-collapsed="true"' : ''}>
       <div class="x_root${collapsed ? ' x_collapsed' : ''}">
         ${darwin ? `<div class="x_topStrip">${toggle}</div>` : ''}
@@ -341,39 +334,47 @@ test('what the team view replaces in the shell sidebar stays out of sight', () =
   }
 })
 
-// The column is portalled over the shell's collapsed sidebar, so the shell's own collapse
-// must leave no track behind: exactly one rule pins both side columns to zero width.
-test('the shell frame gives the portalled column no track of its own', () => {
-  const own = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].filter(rule => /data-sidebar-collapsed|data-rightbar-collapsed/.test(rule.selector))
-  const grids = own.filter(rule => /grid-template-columns/.test(rule.body))
-  assert.equal(grids.length, 1)
-  assert.match(grids[0].body, /0pxminmax\(0,1fr\)0px!important/)
+// The shell's collapsed sidebar keeps no track in the Bot view, so a hidden
+// column leaves nothing behind; the shell's right column keeps its own geometry.
+test('the shell\'s collapsed sidebar keeps no track while its right column is closed', () => {
+  const frame = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].find(rule => rule.selector.includes('[data-sidebar-collapsed][data-rightbar-collapsed]'))
+  assert.match(frame?.body ?? '', /grid-template-columns:0px/)
 })
 
-// Both forms of the column carry the switch that folds it away; on the rail the same
-// button is the way back to the open column.
-test('the rail and the open column both carry the fold switch', () => {
+test('the column\'s top row hides it, on the rail too, and its edge is a drag grip', () => {
   viewport.innerWidth = 1280
   const calls = []
   const roster = { bots: [], rooms: [], agents: [], byId: {}, ready: true }
-  const props = wide => ({
-    wide,
+  const props = pref => ({
+    wide: false,
     useRoster: pick => pick(roster), useUi: pick => pick({ unread: {} }), useRegistry: pick => pick({}),
     useSessions: pick => pick({ ids: [], byId: {} }), useUpdate: () => ({}),
-    actions: { toggleSidebar: () => calls.push('toggle'), toggleLeftHidden: () => calls.push('left-hidden') },
+    useSidebarPref: pick => pick(pref),
+    actions: { toggleLeftHidden: () => calls.push('toggle'), toggleSidebar: () => {} },
   })
   const find = (node, match) => {
     if (Array.isArray(node)) return node.map(child => find(child, match)).find(Boolean)
     if (!node || typeof node !== 'object') return undefined
     return match(node) ? node : find(node.props?.children, match)
   }
-  const fold = node => node.type === 'button' && typeof node.props?.className === 'string' && node.props.className.includes('bt-side-collapse')
-  for (const wide of [false, true]) {
-    const button = find(TeamSidebar(props(wide)), fold)
-    assert.ok(button, `no fold switch on the ${wide ? 'open column' : 'rail'}`)
+  const collapse = node => node.type === 'button' && node.props['aria-label'] === 'Collapse sidebar'
+  for (const pref of ['open', 'rail']) {
+    const tree = TeamSidebar(props(pref))
+    const button = find(tree, collapse)
+    assert.ok(button?.props.className.split(' ').includes('bt-side-collapse'), pref)
     button.props.onClick()
+    const column = find(tree, node => node.type?.name === 'LeftColumn')
+    assert.equal(column.props.mode, pref)
+    assert.equal(typeof column.props.onGrip, 'function')
   }
-  assert.deepEqual(calls, ['left-hidden', 'left-hidden'])
+  assert.deepEqual(calls, ['toggle', 'toggle'])
+  // Hidden, there is no column at all; the floating switch brings it back.
+  const hidden = TeamSidebar(props('hidden'))
+  assert.equal(find(hidden, node => node.type?.name === 'LeftColumn'), undefined)
+  const toggle = find(hidden, node => node.type?.name === 'TitleToggle')
+  assert.equal(toggle.props.hidden, true)
+  // Reduced motion disables both the column slide and the conversation margin transition.
+  assert.match(SHELL_CSS, /@media\s*\(prefers-reduced-motion:reduce\)\{\.bt-leftcol\{animation:none\}\.bt-leftcol\[data-leaving\],\[class\*="_centerCol"\]\{transition:none\}\}/)
 })
 
 test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
@@ -428,6 +429,18 @@ test('the Bot footer lays out the account, another plugin\'s entry and the setti
   assert.equal(columnOf(document.querySelector('.x_other-plugin')), '1/-1')
   // The settings trigger keeps the right of the row.
   assert.equal(columnOf(document.querySelector('.x_settingsArea')), '3')
+})
+
+// 公开#502: the rail's icons keep the open column's rhythm — its row gap puts
+// the same ~20px between avatar edges that the open list's padding and gap do,
+// and the stacks and sections breathe on the same 6–8px steps.
+test('the rail spaces its icons on the open column\'s rhythm', () => {
+  const all = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)]
+  const bodyOf = selector => all.filter(rule => rule.selector === selector).map(rule => rule.body).pop() ?? ''
+  assert.match(bodyOf('.bt-rail .bt-list'), /(^|;)gap:8px/)
+  assert.match(bodyOf('.bt-rail-top'), /(^|;)gap:8px/)
+  assert.match(bodyOf('.bt-leftcol-foot-rail'), /(^|;)gap:8px/)
+  assert.match(bodyOf('.bt-rail'), /(^|;)gap:6px/)
 })
 
 // #452: the Connect plugins button left the footer; what DS Bot puts there is

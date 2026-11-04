@@ -1,15 +1,13 @@
 import { call } from './api.js'
-import { watchTier } from './tier.js'
 import { isHex, inkText, paintCss } from './inks.js'
 import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
 import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
 import { teamActions } from './team-actions.js'
-import { dismissDrawerIfOpen } from './drawer-dismiss.js'
-import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, skinOf, SKIN_CHOICES, SIZE_CHOICES } from './themes.js'
+import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
 import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
 import { lookOf } from './mark.js'
-import { TeamSidebar, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts, openHarnessOnboarding, openHarnessSettings } from './sidebar.js'
+import { TeamSidebar, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts, openHarnessOnboarding, openHarnessSettings, MODELS_STEP, MODELS_STEP_ORDER, OpenModelsStep } from './sidebar.js'
 import { frameLayout, readSidebar, writeSidebar, toggledPref, DSH_NARROW } from './frame-layout.js'
 import { installFrameWatch } from './frame-watch.js'
 import { HeaderPill } from './header.js'
@@ -24,6 +22,7 @@ import { AnsweredReply, WidgetDock, WIDGET_CSS } from './widget-cell.js'
 import { HandoffDock, HANDOFF_CSS } from './handoff-card.js'
 import { installHeaderNavigation } from './header-navigation.js'
 import { AssistantCell, TriggerCell, TurnProcessCell, Nothing, CellEmpty, TurnTailCell, ToolCell } from './cells.js'
+import { FailureCell, TURN_ERROR_CSS } from './turn-error.js'
 import { Overlays } from './overlays.js'
 import { createBotBrowsers, serveBrowserReads } from './bot-browsers.js'
 import { BROWSER_CSS } from './browser-pane.js'
@@ -37,17 +36,16 @@ import { FOLDER_CSS } from './folder-menu.js'
 import { USAGE_CSS } from './usage-page.js'
 import { SCHEDULE_CSS } from './schedules.js'
 import { STORAGE, migrateStorage } from './storage.js'
-import { SkillsTab } from './plugin-skills.js'
-import { McpMarketTab } from './plugin-mcp.js'
 import { noteLeft, setUnread, sharedMap, toggleReaction } from './shared-map.js'
-import { drawerSlot, modeRowSlot, placeModeRow } from './mode-row.js'
 import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
 import { installLocale, language, t } from './i18n.js'
 import { noteClientError, quietly } from './diagnostics.js'
+import { steerQueued } from './enter-steer.js'
 import { RIGHTBAR_ATTRIBUTES, columnOpened, createSwitchWindow, drawerOpened, rightColumnOpen } from './right-panel.js'
 import { ErrorToast, FEEDBACK_CSS } from './feedback.js'
 import { ABOUT_CSS } from './about.js'
 import { MEMBER_CSS, MemberDock } from './member-status.js'
+import { GOAL_CSS } from './goal.js'
 import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-message.js'
 import { noticeApprovals } from './approval-notices.js'
 import { listedOpener } from './open-listed.js'
@@ -56,8 +54,13 @@ export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'th
 
 export function apply(ctx) {
   ctx.effect(() => installLocale(ctx.get('locale')), 'ds-bot: interface copy')
-  const roster = createSource(EMPTY_ROSTER)
   migrateStorage()
+  // The window's cached prefs stand in until the first pull answers: a saved
+  // `enterToSend: false` then already holds, instead of Enter sending meanwhile.
+  const PREFS_KEY = STORAGE.prefs
+  let savedPrefs = {}
+  try { savedPrefs = JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') ?? {} } catch { savedPrefs = {} }
+  const roster = createSource({ ...EMPTY_ROSTER, prefs: savedPrefs })
   const unreadStore = sharedMap(STORAGE.unread)
   const reactionStore = sharedMap(STORAGE.reactions)
   // When each conversation was last left; a visit compares new turns against it.
@@ -65,7 +68,7 @@ export function apply(ctx) {
   let seenAt = seenStore.read()
   // `details` is the panel's subject (a Session id); `view` picks details or the
   // subject Bot's browser inside it.
-  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, side: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, toast: null, signIn: null, renameAgent: null, unread: unreadStore.read(), reactions: reactionStore.read(), visits: {}, panelYield: false, leftDrawer: false, bootFailed: false })
+  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, side: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, toast: null, signIn: null, renameAgent: null, unread: unreadStore.read(), reactions: reactionStore.read(), visits: {}, panelYield: false, leftDrawer: false, bootFailed: false, goalCompose: null, goalOpen: null })
   // The left column's kept preference, and the frame geometry the layout rules
   // in frame-layout.js read: the window and the shell's collapsed track come from
   // installFrameWatch, the open column's width is the user's own.
@@ -149,11 +152,6 @@ export function apply(ctx) {
     memoryNews.set(state => Object.fromEntries(Object.entries(next).map(([id, entry]) => [id,
       state[id]?.at === entry.at ? state[id] : { ...entry, seen: opening ? 0 : Date.now() }])))
   }
-  const PREFS_KEY = STORAGE.prefs
-  let savedPrefs = {}
-  try { savedPrefs = JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') ?? {} } catch { savedPrefs = {} }
-  // The chosen font repaints this device at once; the host makes it the team's choice.
-  let reapplyPrefs = () => {}
   const writeUnread = (id, value) => {
     const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
     ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
@@ -358,42 +356,23 @@ export function apply(ctx) {
       const layout = layoutOf(prefs)
       const width = widthOf(prefs)
       const flatWidth = flatWidthOf(prefs)
-      const font = fontOf(prefs.font ? prefs : savedPrefs)
-      const size = sizeOf(prefs.size ? prefs : savedPrefs)
-      const density = densityOf(prefs.density ? prefs : savedPrefs)
-      // The skin is this device's own pick, so it never comes from the host's prefs. Until
-      // there is one, the attribute stays off and the CSS gives the phone the app's shape:
-      // the drawer can mount after this runs, and the default still follows it.
-      const skin = SKIN_CHOICES[savedPrefs.skin] ? savedPrefs.skin : null
       document.body.dataset.btMotion = motion
-      document.body.dataset.btFont = font
-      document.body.dataset.btDensity = density
-      if (skin === null) delete document.documentElement.dataset.btSkin
-      else document.documentElement.dataset.btSkin = skin
-      if (size === 'm') delete document.body.dataset.btSize
-      else document.body.dataset.btSize = size
-      // The shell writes this one inline, so it has to be answered inline as well; the rest
-      // of the scale (secondary sizes, deltas) comes from the attribute rule in sizeCss.
-      const px = (SIZE_CHOICES[size] ?? SIZE_CHOICES.m).px
-      if (px === 14) document.body.style.removeProperty('--dsh-content-font-size')
-      else document.body.style.setProperty('--dsh-content-font-size', `${px}px`)
       document.body.dataset.btLayout = layout
       document.body.style.setProperty('--bt-msg-w', String(width / 100))
       document.body.style.setProperty('--bt-flat-w', String(flatWidth / 100))
-      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${font}|${size}|${skin ?? 'auto'}|${registry.getSnapshot()}`
+      const next = `${id}|${accent ?? ''}|${motion}|${layout}|${width}|${flatWidth}|${registry.getSnapshot()}`
       if (next === key) return
       key = next
-      style.textContent = themeCss(themes[id], accent) + fontCss(font) + sizeCss(size)
+      style.textContent = themeCss(themes[id], accent)
       const release = releaseTokens
       releaseTokens = ctx.theme.overrideTokens('ds-bot', shellTokens(themes[id]))
       if (typeof release === 'function') release()
       if (snapshot.ready) {
-        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, font: prefs.font ?? savedPrefs.font, size: prefs.size ?? savedPrefs.size, density: prefs.density ?? savedPrefs.density, skin: savedPrefs.skin })) } catch { /* storage unavailable */ }
+        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking, defaultBotModel: prefs.defaultBotModel, enterToSend: prefs.enterToSend })) } catch { /* storage unavailable */ }
       }
     }
     render()
     const offRoster = roster.subscribe(render)
-    reapplyPrefs = render
     const offRegistry = registry.subscribe(render)
     return () => {
       offRoster()
@@ -403,19 +382,12 @@ export function apply(ctx) {
       } finally {
         delete document.body.dataset.btMotion
         delete document.body.dataset.btLayout
-        delete document.documentElement.dataset.btSkin
         document.body.style.removeProperty('--bt-msg-w')
         document.body.style.removeProperty('--bt-flat-w')
         style.remove()
       }
     }
   }
-
-  // Our own layout rules read this tier; the host's mobile frame keeps its own phone shape.
-  ctx.effect(() => {
-    const stop = watchTier(tier => { document.documentElement.dataset.btTier = tier })
-    return () => { stop(); delete document.documentElement.dataset.btTier }
-  })
 
   ctx.effect(() => {
     const hub = { registerShape, registerTheme, themes: () => Object.keys(allThemes()), shapes: () => Object.keys(SHAPES) }
@@ -558,150 +530,8 @@ export function apply(ctx) {
       const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
       show(target)
     },
-    selectPanel: (id, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ctx.layout.selectPanel(id) },
+    selectPanel: (id) => { ctx.layout.selectPanel(id) },
     toggleSidebar: () => { ctx.layout.toggleSidebar() },
-    // The shell's own plugin pages, reached through its remotes. They answer
-    // { ok, value }, and some wrap twice, so unwrap until a list or an error appears.
-    // The shell's Plugins page is a global main panel with this id; selecting it is the only
-    // supported way to show that page, so the market hands over to it.
-    openPluginsPanel: () => {
-      try {
-        ctx.layout.selectPanel('plugins')
-      } catch (error) {
-        actions.reportError(error, 'plugins-panel')
-      }
-    },
-    // The installed list is the shell's Plugins page installed list, not everything loaded:
-    // a bundle the installation ships with is not the user's to see or remove here.
-    pluginsList: async () => {
-      const unwrap = (answer) => {
-        let value = answer
-        for (let i = 0; i < 5 && value && typeof value === 'object' && 'ok' in value; i += 1) value = value.value
-        return value
-      }
-      const manager = ctx.get('remote.pluginManager')
-      if (!manager?.listBundles) return []
-      const raw = unwrap(await manager.listBundles())
-      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.bundles) ? raw.bundles : []
-      const zh = language().startsWith('zh')
-      const text = (value) => (value && typeof value === 'object' ? (zh ? value.zh : value.en) ?? value.en ?? value.zh : value)
-      return list
-        .filter((entry) => entry && entry.availability === 'profile')
-        .map((entry) => ({
-          id: entry.name,
-          name: text(entry.meta?.title) ?? entry.name,
-          detail: text(entry.meta?.description) ?? '',
-          icon: typeof entry.meta?.icon === 'string' ? entry.meta.icon : '',
-          enabled: entry.enabled !== false,
-          removable: entry.removable === true,
-        }))
-        .sort((a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name))
-    },
-    // The shell's plugin market: its configured indexes, one page of the discover list,
-    // and the categories, labels and sort keys the index itself declares. Installing goes
-    // through the shell's package manager, so a plugin lands exactly as its own page would
-    // put it; nothing about the profile is written here.
-    pluginsMarket: async (query = {}) => {
-      const unwrap = (answer) => {
-        let value = answer
-        for (let i = 0; i < 5 && value && typeof value === 'object' && 'ok' in value; i += 1) value = value.value
-        return value
-      }
-      const market = ctx.get('remote.pluginMarket')
-      if (!market) return null
-      const indexes = unwrap(await market.listIndexes()) ?? []
-      const url = query.index ?? indexes[0]?.url
-      if (!url) return null
-      const answer = await market.search(url, {
-        sort: query.sort ?? { kind: 'index' },
-        offset: query.offset ?? 0,
-        limit: query.limit ?? 24,
-        ...(query.text ? { text: query.text } : {}),
-        ...(query.category ? { category: query.category } : {}),
-        ...(query.labels?.length ? { labels: query.labels } : {}),
-        ...(query.refresh ? { refresh: true } : {}),
-      })
-      const page = unwrap(answer)
-      if (!page || page.ok === false || !Array.isArray(page.entries)) return null
-      const zh = language().startsWith('zh')
-      const pick = (text) => (text && typeof text === 'object' ? (zh ? text.zh : text.en) ?? text.en ?? text.zh : text)
-      const metadata = page.metadata ?? {}
-      const labelNames = Object.fromEntries(Object.entries(metadata.labels ?? {}).map(([id, label]) => [id, pick(label?.title) ?? id]))
-      const names = (group) => Object.entries(group ?? {}).map(([id, entry]) => ({ id, name: pick(entry?.title) ?? id }))
-      return {
-        index: { url, name: pick(page.title) ?? url, note: pick(page.description) ?? '' },
-        indexes: indexes.map((entry) => ({ url: entry.url, name: pick(entry.title) ?? entry.url })),
-        categories: names(metadata.categories),
-        labels: names(metadata.labels),
-        sorts: names(metadata.sortKeys),
-        total: page.total ?? 0,
-        nextOffset: page.nextOffset ?? null,
-        entries: page.entries.map((entry) => {
-          const version = (entry.versions ?? []).find((item) => item.version === entry.defaultVersion) ?? entry.versions?.[0]
-          return {
-            id: entry.name,
-            name: pick(entry.title) ?? entry.name,
-            detail: pick(entry.description) ?? '',
-            icon: entry.icon,
-            author: entry.author,
-            version: entry.defaultVersion ?? version?.version,
-            published: version?.publishTimestamp ? version.publishTimestamp * 1000 : null,
-            category: entry.metadata?.category,
-            labels: (entry.metadata?.labels ?? []).map((id) => ({ id, name: labelNames[id] ?? id })),
-            stars: entry.metadata?.sortKeys?.['github-stars'],
-            status: entry.installation?.status ?? 'not-installed',
-            compatible: version?.compatibility?.compatible !== false,
-            spec: version?.install?.spec,
-            registry: version?.install?.registry,
-          }
-        }),
-      }
-    },
-    installMarketPlugin: async (spec, registry) => {
-      const manager = ctx.get('remote.pluginManager')
-      if (!manager?.installBundle || !spec) return false
-      const answer = await manager.installBundle(spec, registry ? { registry } : undefined)
-      return answer?.ok !== false && answer?.value?.ok !== false
-    },
-    // A look that must show on this device at once, before the host keeps it for the team:
-    // it lands in the local copy, repaints, and goes to the host in the same gesture.
-    localPref: (key, value) => {
-      savedPrefs = { ...savedPrefs, [key]: value === 'normal' || value === 'm' || value === 'system' ? undefined : value }
-      try { localStorage.setItem(PREFS_KEY, JSON.stringify(savedPrefs)) } catch { /* storage unavailable */ }
-      reapplyPrefs()
-      // The skin is a phone look of this device only; there is nothing for the host to keep.
-      if (key === 'skin') return undefined
-      return actions.setPrefs({ [key]: value })
-    },
-    // The font picker shows what this device already uses, not what the host last answered.
-    fontPref: () => fontOf(savedPrefs),
-    // Same for the skin, which the host never hears about: the row must show this device's pick,
-    // and with none the phone still wears the app's shape.
-    skinPref: () => skinOf(savedPrefs, { phone: document.querySelector('[data-mobile-nav="frame"]') !== null }),
-    // A bundle is the unit the enabled list shows, so its switch is the bundle switch the
-    // shell's own Plugins page offers; the identity is the package name.
-    setBundleEnabled: async (name, enabled) => {
-      const manager = ctx.get('remote.pluginManager')
-      if (!manager?.setBundleEnabled) return false
-      const answer = await manager.setBundleEnabled(name, enabled)
-      return answer?.ok !== false
-    },
-    // Removal goes through the shell's own package manager, which refuses whenever taking the
-    // bundle out would stop or break the running profile; that refusal is reported, not hidden.
-    removeBundle: async (name) => {
-      const manager = ctx.get('remote.pluginManager')
-      if (!manager?.removeBundle) return false
-      const answer = await manager.removeBundle(name)
-      return answer?.ok !== false
-    },
-    // DSH's own right column; the header button opens and closes it.
-    toggleRightPanel: () => {
-      try {
-        ctx.get('sidebarRight')?.toggleExpanded()
-      } catch (error) {
-        actions.reportError(error, 'right-sidebar')
-      }
-    },
     // The left column's own preference: 'open', 'rail' or 'hidden'. The switch
     // remembers the shown one it hid; a drag sets the open column's width.
     setSidebarPref: (pref) => {
@@ -836,6 +666,12 @@ export function apply(ctx) {
   // DSH's own settings: models, providers, keys and its plugins.
   actions.openHarnessSettings = openHarnessSettings
   actions.openHarnessOnboarding = openHarnessOnboarding
+  // DSH's Models page, through DS Bot's own onboarding step while it is registered.
+  actions.openHarnessModels = () => {
+    const step = (ctx.slots.entries?.('settings.onboarding') ?? []).some(entry => entry.options?.id === MODELS_STEP)
+    if (step) openHarnessOnboarding(MODELS_STEP)
+    else openHarnessSettings()
+  }
   // With the plugin manager mounted, setup is its bundle page (the model's size
   // and download notes live there). Where it is not mounted — the desktop app's
   // profile has no plugin manager — the speech Remote prepares the provider
@@ -939,6 +775,15 @@ export function apply(ctx) {
       return () => { offChat(); offOpen() }
     } catch {
       return () => {}
+    }
+  }
+  // Enter on an empty composer while the Bot works sends the user's queued
+  // messages into the running turn (the "+" owns the key; #839).
+  actions.steerQueued = async (sessionId) => {
+    const session = ctx.sessions.binding(sessionId)?.session
+    if (session === undefined) return
+    if (await steerQueued(session) === 'failed') {
+      actions.reportError(new Error(t('Couldn’t steer the queued messages. Try again.')), 'steer-queue')
     }
   }
   // A terminal tab in DSH's right column, only where the terminal plugin
@@ -1085,6 +930,7 @@ export function apply(ctx) {
     () => installCompiledStyles(FEEDBACK_CSS, 'feedback'),
     () => installCompiledStyles(ABOUT_CSS, 'about'),
     () => installCompiledStyles(MEMBER_CSS, 'members'),
+    () => installCompiledStyles(GOAL_CSS, 'goal'),
     () => installCompiledStyles(USER_MESSAGE_CSS, 'user-messages'),
     () => installCompiledStyles(WIDGET_CSS, 'widgets'),
     () => installCompiledStyles(HANDOFF_CSS, 'handoff'),
@@ -1102,16 +948,14 @@ export function apply(ctx) {
     // The whale wins the seat over a shell account plugin's own launcher (the
     // Desktop's "··· More"), which comes back in Agent mode.
     () => shadow('settings.launcher', { priority: BOT_PRIORITY, inject: face }, AccountLauncher),
+    () => shadow('settings.onboarding', { id: MODELS_STEP, order: MODELS_STEP_ORDER }, OpenModelsStep),
     () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
     () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
     () => shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
-    // The shell's Plugins page grows its own tabs through this slot; skills come from the
-    // market panel we already ship, so the page shows them beside Installed.
-    () => shadow('plugins.tab', { id: 'skills', order: 20, label: () => t('Skills') }, SkillsTab),
-    () => shadow('plugins.tab', { id: 'mcp', order: 30, label: () => t('MCP'), inject: face }, McpMarketTab),
   ]
   const installConversation = () => [
     () => installCompiledStyles(CONVERSATION_CSS, 'conversation'),
+    () => installCompiledStyles(TURN_ERROR_CSS, 'turn-errors'),
     () => installMentions(),
     () => installAtMenu(),
     installHeader,
@@ -1119,6 +963,8 @@ export function apply(ctx) {
     () => shadow('conversation.chat.node', { key: 'turn-trigger', priority: BOT_PRIORITY, locale: 'chat', inject: face }, TriggerCell),
     () => shadow('conversation.chat.node', { key: 'tool-call', priority: BOT_PRIORITY, locale: 'chat', inject: face }, ToolCell),
     () => shadow('conversation.chat.node', { key: 'turn-process', priority: BOT_PRIORITY, locale: 'chat', inject: face }, TurnProcessCell),
+    // A failed turn shows what the user can do about it instead of the provider's raw text.
+    () => shadow('conversation.chat.node', { key: 'turn-error', priority: BOT_PRIORITY, locale: 'chat', inject: face }, FailureCell),
     // DSH's own turn tail stays, so what other plugins add there shows, such as the
     // cards of the files a turn delivered; its copy and branch row is hidden.
     () => shadow('conversation.chat.turnTail', { id: 'bot-turn-separators', order: 1000, inject: face }, TurnTailCell),
@@ -1241,7 +1087,7 @@ export function apply(ctx) {
       } catch {
         declared = false
       }
-      if (landed) { paintModeBar(); return }
+      if (landed) return
       if (!declared) {
         // The slot itself is not declared yet; keep watching for a while.
         if (verifyAttempts < 20) {
@@ -1256,297 +1102,8 @@ export function apply(ctx) {
       groups.remount('shell')
       verifyTimer = setTimeout(verifySidebar, 250)
     }
-    // The window reserves a caption band above everything; the two modes live in its first
-    // row, clear of the traffic lights, as one dropdown rather than a row of buttons. Styled
-    // inline: in the shell's own view the plugin's stylesheet is gone.
-    let modeBar = null
-    let modeMenu = null
-    let modeOpen = false
-    const closeModeMenu = () => {
-      modeOpen = false
-      if (modeMenu) { modeMenu.remove(); modeMenu = null }
-      if (modeBar) modeBar.setAttribute('aria-expanded', 'false')
-    }
-    const openModeMenu = (left, top) => {
-      const mode = surface.getSnapshot().mode
-      modeMenu = document.createElement('div')
-      modeMenu.className = 'bt-modebar-menu'
-      modeMenu.setAttribute('role', 'menu')
-      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:61;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 16px 36px -18px rgba(0,0,0,.3)`
-      for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
-        const selected = mode === id
-        const item = document.createElement('button')
-        item.type = 'button'
-        item.setAttribute('role', 'menuitemradio')
-        item.setAttribute('aria-checked', String(selected))
-        item.style.cssText = `display:flex;align-items:center;gap:8px;width:100%;height:30px;padding:0 8px;border:0;border-radius:7px;background:transparent;font-family:inherit;font-size:13px;font-weight:${selected ? 500 : 400};text-align:left;cursor:pointer;color:var(--bt-ink,#141414)`
-        const name = document.createElement('span')
-        name.textContent = label
-        name.style.cssText = 'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'
-        item.appendChild(name)
-        if (selected) {
-          const tick = document.createElement('span')
-          tick.textContent = '✓'
-          tick.style.cssText = 'flex:none;font-size:12px;color:var(--bt-accent,#4d6bfe)'
-          item.appendChild(tick)
-        }
-        item.addEventListener('mouseenter', () => { item.style.background = 'rgba(119,119,119,.08)' })
-        item.addEventListener('mouseleave', () => { item.style.background = 'transparent' })
-        item.addEventListener('click', () => { closeModeMenu(); actions.setSurface(id) })
-        modeMenu.appendChild(item)
-      }
-      modeOpen = true
-      modeBar.setAttribute('aria-expanded', 'true')
-      document.body.appendChild(modeMenu)
-    }
-    // The sidebar's own controls, moved up beside the switcher: plain icons, no circles.
-    let bandActions = null
-    const iconPaths = (name) => ({
-      search: [{ tag: 'circle', attrs: { cx: '9', cy: '9', r: '5.2' } }, { tag: 'path', attrs: { d: 'M12.9 12.9L17 17' } }],
-      plus: [{ tag: 'path', attrs: { d: 'M10 4.5v11M4.5 10h11' } }],
-      collapse: [{ tag: 'rect', attrs: { x: '3.5', y: '4.5', width: '13', height: '11', rx: '2.4' } }, { tag: 'path', attrs: { d: 'M8 4.9v10.2' } }],
-    }[name] ?? [])
-    const buildAction = (label, name, run) => {
-      const button = document.createElement('button')
-      button.type = 'button'
-      button.className = 'bt-band-action'
-      button.setAttribute('aria-label', label)
-      button.title = label
-      button.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;box-shadow:none;color:rgba(20,20,20,.72);cursor:pointer'
-      button.addEventListener('mouseenter', () => { button.style.background = 'rgba(20,20,20,.07)' })
-      button.addEventListener('mouseleave', () => { button.style.background = 'transparent' })
-      button.addEventListener('click', run)
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-      svg.setAttribute('width', '18')
-      svg.setAttribute('height', '18')
-      svg.setAttribute('viewBox', '0 0 20 20')
-      svg.setAttribute('fill', 'none')
-      svg.setAttribute('stroke', 'currentColor')
-      svg.setAttribute('stroke-width', '1.6')
-      svg.setAttribute('stroke-linecap', 'round')
-      svg.setAttribute('stroke-linejoin', 'round')
-      for (const { tag, attrs } of iconPaths(name)) {
-        const node = document.createElementNS('http://www.w3.org/2000/svg', tag)
-        for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value)
-        svg.appendChild(node)
-      }
-      button.appendChild(svg)
-      return button
-    }
-    // The drawer stacks its children, so the two parts of the row share one line here.
-    let modeRow = null
-    const inDrawer = () => drawerSlot(document) !== null
-    const placeRow = () => {
-      const drew = inDrawer()
-      if (drew) {
-        bandPatch?.remove()
-        if (modeRow === null) {
-          modeRow = document.createElement('div')
-          modeRow.className = 'bt-modebar-row'
-          modeRow.style.cssText = 'display:flex;align-items:center;gap:4px;padding:6px 0 2px'
-        }
-        if (modeRow.parentNode !== modeRowSlot(document)) placeModeRow(document, [modeRow])
-        for (const node of [modeBar, bandActions]) if (node !== null && node.parentNode !== modeRow) modeRow.appendChild(node)
-        return
-      }
-      modeRow?.remove()
-      // The row stays where the window puts it — a body child, so a re-render of the shell
-      // never takes it with it. The band's draggable region is cancelled under it instead,
-      // by a transparent patch inside that region that opts out of dragging.
-      placeModeRow(document, [modeBar, bandActions], document.body)
-      const owner = bandOwner()
-      const patch = dragPatch()
-      if (owner === null) {
-        patch.remove()
-        return
-      }
-      owner.appendChild(patch)
-      const hosted = owner.getBoundingClientRect()
-      const box = modeBar.getBoundingClientRect()
-      const actions = bandActions?.isConnected === true ? bandActions.getBoundingClientRect() : box
-      const left = Math.min(box.left, actions.left)
-      const right = Math.max(box.right, actions.right)
-      const top = Math.min(box.top, actions.top)
-      const bottom = Math.max(box.bottom, actions.bottom)
-      patch.style.cssText = `position:absolute;left:${Math.round(left - hosted.left)}px;top:${Math.round(top - hosted.top)}px;`
-        + `width:${Math.round(right - left)}px;height:${Math.round(bottom - top)}px;`
-        + '-webkit-app-region:no-drag;pointer-events:auto;background:transparent'
-    }
-
-    let bandPatch = null
-    const dragPatch = () => {
-      if (bandPatch === null || !bandPatch.isConnected) {
-        bandPatch = document.createElement('div')
-        bandPatch.className = 'bt-band-patch'
-        bandPatch.setAttribute('aria-hidden', 'true')
-      }
-      return bandPatch
-    }
-
-    // The element that declares the caption band's draggable region, found in the stack under
-    // the row: a draggable region takes every press in it whatever paints above, and only a
-    // descendant of that very element can opt out.
-    const bandOwner = () => {
-      if (modeBar === null) return null
-      const box = modeBar.getBoundingClientRect()
-      if (box.width === 0) return null
-      const x = Math.round(box.left + Math.min(12, box.width / 2))
-      const y = Math.round(box.top + box.height / 2)
-      const stack = typeof document.elementsFromPoint === 'function'
-        ? document.elementsFromPoint(x, y)
-        : [document.elementFromPoint(x, y)].filter(node => node !== null)
-      for (const node of stack) {
-        if (node === document.body || node === document.documentElement) continue
-        if (typeof node.closest === 'function' && node.closest('.bt-modebar, .bt-band-actions, .bt-band-patch') !== null) continue
-        if (appRegion(node) === 'drag') return node
-      }
-      return null
-    }
-
-    const appRegion = (node) => {
-      try {
-        return getComputedStyle(node).getPropertyValue('-webkit-app-region').trim()
-      } catch {
-        return ''
-      }
-    }
-
-    const paintActions = () => {
-      const box = modeBar.getBoundingClientRect()
-      if (!bandActions) {
-        bandActions = document.createElement('div')
-        bandActions.className = 'bt-band-actions'
-      }
-      bandActions.style.cssText = inDrawer()
-        ? 'position:static;display:flex;align-items:center;gap:2px;margin-left:auto'
-        : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:2147483000;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`
-      bandActions.textContent = ''
-      // In the shell's own view these three do what the shell's own controls do, so the row
-      // never lies about what a click will get.
-      const hostClick = (selector) => document.querySelector(selector)?.click()
-      const inAgent = () => surface.getSnapshot().mode === 'agent'
-      bandActions.appendChild(buildAction(t('Search'), 'search', () => {
-        if (inAgent()) hostClick('button[class*="_searchButton"],button[aria-label*="搜索会话"],button[aria-label*="Search sessions"]')
-        else actions.openPalette('', { fromDrawer: true })
-      }))
-      bandActions.appendChild(buildAction(t('New…'), 'plus', () => {
-        if (inAgent()) hostClick('button[class*="_newSession"],button[aria-label*="新建会话"],button[aria-label*="New session"]')
-        else actions.openNewChat('new', { fromDrawer: true })
-      }))
-      bandActions.appendChild(buildAction(t('Collapse sidebar'), 'collapse', () => {
-        if (inAgent()) hostClick('button[class*="_toggle"],button[class*="_logoRow"] button')
-        else actions.toggleSidebar()
-      }))
-    }
-    // The band carries our own toggle now, so the shell's rail toggle is hidden from both
-    // views. It lives in its own style element, since the plugin's sheet is gone in Agent mode.
-    if (!document.getElementById('bt-modebar-rules')) {
-      const rules = document.createElement('style')
-      rules.id = 'bt-modebar-rules'
-      // The shell's own sidebar toggles go, so only one control per role is on screen. The
-      // exclusions are ours: the header's own button is labelled "Expand sidebar" too, and
-      // without the exemption this rule hid it along with the shell's.
-      const hostToggle = label => `button[aria-label="${label}"]:not(.bt-head-btn):not(.bt-side-expand):not(.bt-band-action)`
-      rules.textContent = ['打开侧边栏', '收起侧边栏', '展开侧边栏', 'Open sidebar', 'Close sidebar'].map(hostToggle).join(',')
-        + '{display:none!important}'
-        + 'html.bt-agent [class*="_logoRow"]{display:none!important}'
-        + '.bt-modebar-row:empty{display:none}'
-      document.head.appendChild(rules)
-    }
-    const paintModeBar = () => {
-      const mac = /Mac/i.test(navigator.platform || navigator.userAgent)
-      // The desktop window may keep its caption as an overlay and never publish the band
-      // height, so a Mac window falls back to the standard 44px band.
-      const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue('--dsh-frame-chrome-top')) || (mac ? 44 : 0)
-      const mode = surface.getSnapshot().mode
-      // The shell's logo row belongs to its own view; hide it there, since the band carries
-      // the controls. The Bot view never renders that row.
-      document.documentElement.classList.toggle('bt-agent', mode === 'agent')
-      document.documentElement.classList.toggle('bt-bot', mode !== 'agent')
-      // Clear of the traffic lights: past them in the window, at the edge without one.
-      // A Mac window's traffic lights take the left corner, so the control sits well past
-      // them; everywhere else it sits 15px from the window's left edge.
-      const left = mac ? 84 : 15
-      // A few pixels lower than the band's own centre, so the control sits on the traffic
-      // lights' horizontal line instead of above it.
-      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9
-      if (!modeBar) {
-        // A surface effect that re-runs gets a fresh closure; clear anything an earlier
-        // closure left on the page so the row never stacks up.
-        for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row')) stale.remove()
-        // The row the stale wrapper lived in is gone too; a kept handle would place the new
-        // row into a detached div and leave the drawer showing an empty line.
-        modeRow = null
-        modeBar = document.createElement('button')
-        modeBar.type = 'button'
-        modeBar.className = 'bt-modebar'
-        modeBar.setAttribute('aria-haspopup', 'menu')
-        modeBar.setAttribute('aria-expanded', 'false')
-        document.addEventListener('mousedown', (event) => {
-          if (!modeOpen) return
-          const target = event.target
-          if (target instanceof Element && (target.closest('.bt-modebar') || target.closest('.bt-modebar-menu'))) return
-          closeModeMenu()
-        })
-        modeBar.addEventListener('click', () => {
-          if (modeOpen) { closeModeMenu(); return }
-          paintModeBar()
-          const box = modeBar.getBoundingClientRect()
-          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
-        })
-        // A layer over the caption band can take the press before the row sees it. The window
-        // sees it first, so a press that lands on the row's own box but belongs to another
-        // element is handled here instead: the row then works wherever it is painted.
-        window.addEventListener('pointerdown', (event) => {
-          if (!modeBar.isConnected || event.defaultPrevented) return
-          const target = event.target
-          if (target instanceof Element && (target.closest('.bt-modebar') || target.closest('.bt-modebar-menu'))) return
-          const rect = modeBar.getBoundingClientRect()
-          if (rect.width === 0) return
-          if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) return
-          event.preventDefault()
-          event.stopPropagation()
-          if (modeOpen) { closeModeMenu(); return }
-          paintModeBar()
-          const box = modeBar.getBoundingClientRect()
-          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
-        }, true)
-        window.addEventListener('resize', () => paintModeBar())
-      }
-      modeBar.style.cssText = inDrawer()
-        ? 'position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)'
-        : `position:fixed;left:${left}px;top:${top}px;z-index:2147483000;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`
-      // The drawer has no band: the row keeps the drawer's top, and a closed drawer takes it
-      // off the page with everything else instead of leaving it floating over the content.
-      placeRow()
-      // No mark: the name and the chevron are enough, and the control stays narrow.
-      modeBar.textContent = ''
-      const label = document.createElement('span')
-      label.textContent = mode === 'bot' ? t('Bot mode') : t('DSH mode')
-      modeBar.appendChild(label)
-      paintActions()
-      const caret = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-      caret.setAttribute('width', '12')
-      caret.setAttribute('height', '12')
-      caret.setAttribute('viewBox', '0 0 20 20')
-      caret.setAttribute('fill', 'none')
-      caret.setAttribute('stroke', 'currentColor')
-      caret.setAttribute('stroke-width', '1.8')
-      caret.setAttribute('stroke-linecap', 'round')
-      caret.setAttribute('stroke-linejoin', 'round')
-      caret.style.cssText = 'flex:none;color:rgba(20,20,20,.44);margin-left:1px'
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-      path.setAttribute('d', 'M5.5 8l4.5 4.5L14.5 8')
-      caret.appendChild(path)
-      modeBar.appendChild(caret)
-      if (modeOpen) { closeModeMenu() }
-    }
     const reconcile = () => {
-      paintModeBar()
       groups.reconcile(groupsFor(surface.getSnapshot()))
-      // The sidebar mounts a frame after the shell group; until it does the row has no
-      // drawer to sit in, so it is painted again once its host is there.
-      requestAnimationFrame(() => paintModeBar())
       clearTimeout(verifyTimer)
       verifyAttempts = 0
       verifyTimer = setTimeout(verifySidebar, 250)
@@ -1557,13 +1114,6 @@ export function apply(ctx) {
     return () => {
       unsub()
       clearTimeout(verifyTimer)
-      if (modeBar) { modeBar.remove(); modeBar = null }
-      modeOpen = false
-      if (modeMenu) { modeMenu.remove(); modeMenu = null }
-      modeRow?.remove()
-      modeRow = null
-      for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row')) stale.remove()
-      document.getElementById('bt-modebar-rules')?.remove()
       groups.dispose()
     }
   }, 'ds-bot: surface')

@@ -1,6 +1,5 @@
 import { countCards, heldCardKey } from './sources.js'
 import { noteClientError } from './diagnostics.js'
-import { dismissDrawerIfOpen } from './drawer-dismiss.js'
 
 // The actions every window that draws the Bot views shares: dialogs and panels (the `ui`
 // source), requests to the host, and the notes the transcript keeps. The shell around the
@@ -18,9 +17,11 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
   const openSideChat = (sessionId, chatId) => {
     ui.set(state => ({ ...state, details: sessionId, view: 'side', side: chatId ?? null, renaming: false, tab: null, panelYield: yieldTo(state, 'side') }))
   }
+  // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
+  const openSettings = (page = 'general', id = null) => { ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null })) }
   return {
-    openNewChat: (mode, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null })) },
-    openPalette: (query = '', opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null })) },
+    openNewChat: (mode) => { ui.set(state => ({ ...state, newChat: mode, menu: null, palette: null })) },
+    openPalette: (query = '') => { ui.set(state => ({ ...state, palette: { query, token: Date.now() }, newChat: null, menu: null })) },
     // The token keeps a late exit timer from closing a palette opened again since.
     closePalette: (token) => { ui.set(state => (state.palette && (token === undefined || state.palette.token === token) ? { ...state, palette: null } : state)) },
     openExchange: (a, b) => { if (a && b) ui.set(state => ({ ...state, exchange: [a, b] })) },
@@ -51,12 +52,13 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     showDetails: (id, tab = null) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: false, tab, panelYield: yieldTo(state, 'details') })) },
     // Opening the conversation would move focus to its composer and blur the name field.
     renameBot: (id) => { ui.set(state => ({ ...state, details: id, view: 'details', renaming: true, tab: null, panelYield: yieldTo(state, 'details') })) },
-    // `id` opens one Bot (page 'bots') or one group chat (page 'groups').
-    openSettings: (page = 'general', id = null, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, settings: { page, id }, menu: null, palette: null, newChat: null })) },
+    openSettings,
+    // DS Bot's own Models page: the providers DSH serves, their keys and models.
+    openModels: () => openSettings('models'),
     closeSettings: () => { ui.set(state => (state.settings ? { ...state, settings: null } : state)) },
     openMemory: (id) => { ui.set(state => ({ ...state, memory: id, menu: null, palette: null })) },
     closeMemory: () => { ui.set(state => (state.memory ? { ...state, memory: null } : state)) },
-    openConnectors: (opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null })) },
+    openConnectors: () => { ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null })) },
     setPanelView: (view) => {
       if (view !== 'details' && view !== 'browser' && view !== 'side') return
       ui.set(state => (state.details && state.view !== view ? { ...state, view, panelYield: yieldTo(state, view) } : state))
@@ -95,6 +97,14 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     updateBot: (id, patch) => after(call('update-bot', { id, ...patch })),
     refreshModels: () => after(call('models')).catch(() => {}),
     efforts: ref => call('efforts', { ref }),
+    // Model providers and their API keys; DSH keeps them, and a key only travels to the host.
+    providers: () => call('providers'),
+    setProviderKey: (provider, value) => after(call('provider-key', { provider, value })),
+    addProvider: body => after(call('provider-add', body)),
+    providerModels: body => call('provider-models', body),
+    removeProvider: provider => after(call('provider-remove', { provider })),
+    // After a failed turn: the Bot answers the user's last unanswered message, which is never sent again.
+    resume: botId => after(call('resume', { botId })),
     folders: () => call('folders'),
     folderPick: () => call('folder-pick'),
     folderList: path => call('folder-list', { path: path ?? '' }),
@@ -114,21 +124,20 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     answerApproval: (id, choice) => after(call('approval-answer', { id, choice })),
     stopMemberWork: (roomId, botId) => after(call('stop-member-work', { roomId, botId })),
     stopRoomWork: roomId => after(call('stop-room-work', { roomId })),
+    goalDraft: (roomId, text) => after(call('goal-draft', { roomId, text })),
+    goalControl: (roomId, goalId, action, stopWork) => after(call('goal-control', { roomId, goalId, action, ...(stopWork ? { stopWork: true } : {}) })),
+    // The goal island: `goalCompose` holds the room whose draft form is open,
+    // `goalOpen` the room whose panel is open.
+    composeGoal: roomId => ui.set(state => ({ ...state, goalCompose: roomId, goalOpen: roomId })),
+    closeGoalCompose: () => ui.set(state => (state.goalCompose ? { ...state, goalCompose: null } : state)),
+    toggleGoal: roomId => ui.set(state => ({ ...state, goalOpen: state.goalOpen === roomId ? null : roomId })),
+    closeGoal: () => ui.set(state => (state.goalOpen ? { ...state, goalOpen: null } : state)),
     // Values go out in these requests and never come back in a response.
     secretSet: payload => after(call('secret-set', payload)),
     secretAllow: requestId => after(call('secret-allow', { requestId })),
     secretCancel: requestId => after(call('secret-cancel', { requestId })),
     secretUpdate: (name, { scope, purpose } = {}) => after(call('secret-update', { name, scope, purpose })),
     secretDelete: name => after(call('secret-delete', { name })),
-    // MCP servers: the reading calls answer with the profile's own rows; the mutating
-    // ones answer with the fresh list so the panel never reads twice.
-    mcpList: () => call('mcp-list'),
-    mcpMarket: payload => call('mcp-market', payload),
-    mcpTools: serverName => call('mcp-tools', { serverName }),
-    mcpSave: payload => after(call('mcp-save', payload)),
-    mcpToggle: payload => after(call('mcp-toggle', payload)),
-    mcpAdd: payload => after(call('mcp-add', payload)),
-    mcpRemove: payload => after(call('mcp-remove', payload)),
     connectorConnect: (id, token) => after(call('connector-connect', { id, token })),
     connectorDisconnect: id => after(call('connector-disconnect', { id })),
     connectorRetry: id => after(call('connector-retry', { id })),
@@ -150,6 +159,8 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     memoryView: (id, flags = {}) => call('memory-view', { ...memoryOf(id), ...flags }),
     memoryAsk: (id, text) => call('memory-ask', { ...memoryOf(id), text }),
     memoryForget: (id, entry) => call('memory-forget', { ...memoryOf(id), scope: entry.scope, topic: entry.topic, text: entry.text }),
+    memoryHistory: (id, before) => call('memory-history', { ...memoryOf(id), ...(before === undefined ? {} : { before }) }),
+    memoryRestore: (id, rowId) => call('memory-restore', { ...memoryOf(id), id: rowId }),
     diagnostics: payload => call('diagnostics', payload),
     diagnosticsLog: () => call('diagnostics-log'),
     diagnosticsClear: () => call('diagnostics-clear'),

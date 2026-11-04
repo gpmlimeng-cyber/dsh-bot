@@ -1,8 +1,8 @@
 import { createElement as h, useCallback, useEffect, useRef, useState } from 'react'
 import { ACCENT_INKS, INKS } from './inks.js'
 import { isMainOf } from './sources.js'
-import { DENSITY_CHOICES, FONT_CHOICES, MESSAGE_WIDTH, SIZE_CHOICES, SKIN_CHOICES, allThemes, densityOf, flatWidthOf, fontOf, layoutOf, sizeOf, skinOf, thinkingShown, widthOf } from './themes.js'
-import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, InfoIcon, PlugIcon, PlusIcon, SlidersIcon, SwitchIcon, SETTINGS_ICONS } from './icons.js'
+import { MESSAGE_WIDTH, allThemes, flatWidthOf, layoutOf, thinkingShown, widthOf } from './themes.js'
+import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, ConnectorIcon, InfoIcon, PlugIcon, PlusIcon, SlidersIcon, SETTINGS_ICONS } from './icons.js'
 import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
 import { useEscape } from './overlay-hooks.js'
 import { BotSettingsForm, Switch } from './bot-settings.js'
@@ -19,17 +19,17 @@ import { SchedulesPage } from './schedules.js'
 import { FeedbackIcon, FeedbackPage } from './feedback.js'
 import { AboutPage } from './about.js'
 import { ProvidersPage } from './providers-page.js'
-import { SuperAgentPage } from './superagent-settings.js'
 import { FolderMenu } from './folder-menu.js'
+import { ModelMenu } from './model-menu.js'
 import { t } from './i18n.js'
 
 const capitalize = word => word[0].toUpperCase() + word.slice(1)
 
 // Settings dialog: a 198px page list beside the page. Bots and group chats each list
 // their members, and one opens on its own settings form. Usage widens the dialog.
-// Models is there only in a window without DSH's own settings, which carry the providers.
-const SETTINGS_PAGES = [['general', 'General'], ['superagent', 'SuperAgent'], ['models', 'Models'], ['bots', 'Bots'], ['groups', 'Group chats'], ['connectors', 'Connectors'], ['capabilities', 'Capabilities'], ['browser', 'Browser'], ['schedules', 'Scheduled tasks'], ['usage', 'Usage'], ['secrets', 'Secrets'], ['feedback', 'Feedback'], ['about', 'About DS Bot']]
-const PAGE_ICONS = { ...SETTINGS_ICONS, superagent: SwitchIcon, models: SlidersIcon, connectors: ConnectorIcon, capabilities: PlugIcon, browser: ConnectorIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon }
+// Models is there wherever the host serves the model providers, beside DSH's own settings.
+const SETTINGS_PAGES = [['general', 'General'], ['models', 'Models'], ['bots', 'Bots'], ['groups', 'Group chats'], ['connectors', 'Connectors'], ['capabilities', 'Capabilities'], ['browser', 'Browser'], ['schedules', 'Scheduled tasks'], ['usage', 'Usage'], ['secrets', 'Secrets'], ['feedback', 'Feedback'], ['about', 'About DS Bot']]
+const PAGE_ICONS = { ...SETTINGS_ICONS, models: SlidersIcon, connectors: ConnectorIcon, capabilities: PlugIcon, browser: ConnectorIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon }
 
 function SetSection({ title, className = '', children }) {
   return h('section', { className: `bt-set-section ${className}`.trim() }, h('h3', null, title), h('div', { className: 'bt-set-card' }, children))
@@ -81,10 +81,6 @@ function GeneralPage({ roster, actions, run }) {
   const themes = allThemes()
   const current = themes[prefs.theme] ? prefs.theme : 'deepseek'
   const [custom, setCustom] = useState(prefs.accent ?? '#4d6bfe')
-  // The font applies on this device before the host answers, so the picker keeps its own copy.
-  const [font, setFont] = useState(() => (actions.fontPref ? actions.fontPref() : fontOf(prefs)))
-  // The skin is this device's own pick and never reaches the host, so the row reads it locally too.
-  const [skin, setSkin] = useState(() => (actions.skinPref ? actions.skinPref() : skinOf(prefs)))
   const timer = useRef(0)
   useEffect(() => () => clearTimeout(timer.current), [])
   const pickCustom = (value) => {
@@ -97,18 +93,6 @@ function GeneralPage({ roster, actions, run }) {
       h(SetRow, { label: t('Theme'), hint: t('Colors for the whole team, on every device.') },
         h('select', { className: 'bt-select', 'aria-label': t('Theme'), value: current, onChange: event => run(actions.setPrefs({ theme: event.target.value })) },
           Object.entries(themes).map(([id, theme]) => h('option', { key: id, value: id }, t(theme.label))))),
-      h(SetRow, { label: t('Font'), hint: t('The typeface for names, messages and menus.') },
-        h('select', {
-          className: 'bt-select', 'aria-label': t('Font'), value: font,
-          onChange: (event) => { setFont(event.target.value); run(actions.localPref('font', event.target.value)) },
-        },
-          Object.entries(FONT_CHOICES).map(([id, face]) => h('option', { key: id, value: id }, t(face.label))))),
-      h(SetRow, { label: t('Text size'), hint: t('How large messages and their markdown read.') },
-        h(Choice, { label: t('Text size'), value: sizeOf(prefs), options: Object.entries(SIZE_CHOICES).map(([id, face]) => [id, face.label]), pick: id => run(actions.localPref('size', id)) })),
-      h(SetRow, { label: t('Density'), hint: t('How much room rows and lists take.') },
-        h(Choice, { label: t('Density'), value: densityOf(prefs), options: Object.entries(DENSITY_CHOICES).map(([id, face]) => [id, face.label]), pick: id => run(actions.localPref('density', id)) })),
-      h(SetRow, { label: t('Mobile skin'), hint: t('How chat looks on a phone. The desktop keeps this plugin\'s own shape.') },
-        h(Choice, { label: t('Mobile skin'), value: skin, options: Object.entries(SKIN_CHOICES).map(([id, face]) => [id, t(face.label)]), pick: (id) => { setSkin(id); run(actions.localPref('skin', id)) } })),
       h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },
         h('div', { className: 'bt-swatches' },
           h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
@@ -123,6 +107,17 @@ function GeneralPage({ roster, actions, run }) {
       layoutOf(prefs) === 'flat' ? h(SetRow, { label: t('Text width') }, h(WidthSlider, { label: t('Text width'), value: flatWidthOf(prefs), save: flatWidth => run(actions.setPrefs({ flatWidth })) })) : null,
       h(SetRow, { label: t('Bubble width') }, h(WidthSlider, { label: t('Bubble width'), value: widthOf(prefs), save: width => run(actions.setPrefs({ width })) })),
       h(SetRow, { label: t('Show thinking') }, h(Switch, { label: t('Show thinking'), on: thinkingShown(prefs), onChange: thinking => run(actions.setPrefs({ thinking })) }))),
+    h(SetSection, { key: 'new', title: t('New Bots') },
+      h(SetRow, { label: t('Default model'), className: 'bt-set-model' },
+        h(ModelMenu, {
+          bot: { id: 'new-bots', name: t('New Bots'), model: prefs.defaultBotModel },
+          roster, actions, run, wide: true, withEfforts: false,
+          onPick: ref => run(actions.setPrefs({ defaultBotModel: ref })),
+        }),
+        prefs.defaultBotModel ? h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: () => run(actions.setPrefs({ defaultBotModel: null })) }, t('Reset')) : null)),
+    h(SetSection, { key: 'input', title: t('Input') },
+      h(SetRow, { label: t('Enter sends message') },
+        h(Switch, { label: t('Enter sends message'), on: prefs.enterToSend !== false, onChange: enterToSend => run(actions.setPrefs({ enterToSend })) }))),
     actions.setSurface ? h(SetSection, { key: 'mode', title: t('Mode') },
       h(SetRow, { label: t('Classic Agent mode') },
         h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: () => actions.setSurface('agent') }, t('Switch')))) : null,
@@ -296,7 +291,6 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
         shown === 'usage' ? null : h('div', { key: pageKey, className: 'bt-settings-scroll bt-settings-page', 'data-move': last.current.move },
           errorLine,
           shown === 'general' ? h(GeneralPage, { roster, actions, run }) : null,
-          shown === 'superagent' ? h(SuperAgentPage, { roster, actions, run, Section: SetSection, Row: SetRow }) : null,
           shown === 'models' ? h(ProvidersPage, { actions, run, Section: SetSection }) : null,
           bot ? h('div', { className: 'bt-settings-form' }, h(BotSettingsForm, { key: bot.id, bot, roster, actions, run })) : null,
           shown === 'bots' && !bot ? h(BotsPage, { roster, actions, run }) : null,
