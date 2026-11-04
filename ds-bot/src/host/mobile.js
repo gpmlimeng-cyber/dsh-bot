@@ -161,7 +161,8 @@ export function install(rt) {
     roomChanged(room.id)
     if (line.botId === undefined || line.who === 'User') return
     const base = { roomId: room.id, title: room.name }
-    if (line.kind === undefined) botNotice(line.botId, { kind: 'group', ...base, text: line.text })
+    const shown = rt.stripImageReadings?.(line.text ?? '', line.readings) ?? line.text
+    if (line.kind === undefined) botNotice(line.botId, { kind: 'group', ...base, text: shown })
     else if (line.kind === 'done') botNotice(line.botId, { kind: 'done', ...base, text: '' })
   }
 
