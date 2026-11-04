@@ -1,6 +1,6 @@
 import { createElement as h, Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChatsIcon, ClockIcon, GoalIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
+import { ChatsIcon, ClockIcon, GoalIcon, ImageIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
 import { canSetGoal } from './goal.js'
 import { BotMark } from './mark.js'
 import { useLinger, useViewport, viewBottom } from './motion.js'
@@ -97,7 +97,7 @@ export function ComposerVoice({ sessionId, inputActions, actions, useUi, useRost
     h('button', {
       ref: composerRoot, type: 'button', className: 'bt-voice', 'aria-label': t('Start voice chat'), title: t('Voice chat'),
       onMouseDown: keepComposerFocus, onClick: () => actions.openVoice(sessionId),
-    }, h(WaveIcon, { size: 18 })),
+    }, h(WaveIcon)),
     dictation.note ? h('span', { className: 'bt-mic-note', role: 'status' }, dictation.note) : null)
 }
 
@@ -174,17 +174,79 @@ export function ComposerPlus({ sessionId, inputActions, useInput, useRoster, act
     const rect = button.current.getBoundingClientRect()
     return { left: rect.left, bottom: viewBottom() - rect.top + 8 }
   }, [shown, open, tick])
+
   const target = roster.byId?.[sessionId]?.id ?? roster.roomsById?.[sessionId]?.id
-  if (sessionId === undefined || target === undefined) return null
-  const fileInput = () => button.current?.closest('[data-composer-card]')?.querySelector('input[type=file]')
+  if (sessionId === undefined) return null
+  // A composer without a file input has nothing to hand the picker. The card is
+  // looked up through the button first; when the phone layout moves the plus out of
+  // the card, the card is still found on its own before giving up.
+  // Our own picker inputs must never be the target: handing the files back to them
+  // would only re-enter this component and leave the shell's intake untouched.
+  const SHELL_INPUT = 'input[type=file]:not(.bt-menu-input)'
+  const fileInput = () => button.current?.closest?.('[data-composer-card]')?.querySelector(SHELL_INPUT)
+    ?? document.querySelector?.(`[data-composer-card] ${SHELL_INPUT}`)
+    ?? document.querySelector?.(SHELL_INPUT)
+    ?? null
   const toggle = () => {
     if (open) { setOpen(null); return }
-    // Files go through the composer's own file input; a composer without one takes none.
     setOpen({ files: Boolean(fileInput()) })
   }
-  const attach = () => {
+  // The two upload rows are plain buttons that click their own input: a click on a
+  // label or on the input itself loses its default action in this page's capture
+  // handlers, while a button's handler still runs (the rows beside them work so).
+  // The shell's own field is marked `hidden`, and a WebView opens no picker for a click
+  // on a hidden control: it is shown off-screen for that click and put back at once. The
+  // files then reach the shell through its own change handler, as its paperclip would.
+  const pickFile = (kind) => {
+    const input = fileInput()
     setOpen(null)
-    fileInput()?.click()
+    if (input === null) {
+      // No shell field at all: our own input collects the files and hands them over.
+      ;(kind === 'image' ? imagePick : filePick).current?.click()
+      return
+    }
+    const accept = kind === 'image' ? 'image/*' : null
+    const prior = { accept: input.getAttribute('accept'), hidden: input.hasAttribute('hidden'), style: input.getAttribute('style') }
+    if (accept !== null) input.setAttribute('accept', accept)
+    if (prior.hidden) {
+      input.removeAttribute('hidden')
+      input.setAttribute('style', 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0')
+    }
+    // Put back only after the chooser has taken the request (and never before the files
+    // arrive): restoring on the same tick could undo it in a WebView that reads the
+    // field later.
+    const restore = () => {
+      if (prior.hidden) {
+        input.setAttribute('hidden', '')
+        if (prior.style === null) input.removeAttribute('style')
+        else input.setAttribute('style', prior.style)
+      }
+      if (accept !== null) {
+        if (prior.accept === null) input.removeAttribute('accept')
+        else input.setAttribute('accept', prior.accept)
+      }
+    }
+    input.addEventListener('change', restore, { once: true })
+    input.click()
+    setTimeout(restore, 30_000)
+  }
+  const filePick = useRef(null)
+  const imagePick = useRef(null)
+  const handFiles = (event) => {
+    const picked = event.target.files
+    const input = fileInput()
+    if (event.target.value !== undefined) event.target.value = ''
+    setOpen(null)
+    if (!input || !picked || picked.length === 0) return
+    try {
+      const transfer = new DataTransfer()
+      for (const file of picked) transfer.items.add(file)
+      input.files = transfer.files
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+    } catch {
+      // Without a transferable FileList the shell's own click path is the only one left.
+      input.click()
+    }
   }
   const schedule = () => {
     setOpen(null)
@@ -196,7 +258,7 @@ export function ComposerPlus({ sessionId, inputActions, useInput, useRoster, act
     setOpen(null)
     actions.referenceChat(sessionId, inputActions?.captureInsertion?.())
   }
-  const canReference = typeof inputActions?.captureInsertion === 'function' && actions.canReferenceChat()
+  const canReference = target !== undefined && typeof inputActions?.captureInsertion === 'function' && actions.canReferenceChat()
   const room = roster.roomsById?.[sessionId]
   const goal = () => {
     setOpen(null)
@@ -211,8 +273,11 @@ export function ComposerPlus({ sessionId, inputActions, useInput, useRoster, act
       ref: menu, className: 'bt-menu bt-menu-up bt-plus-menu', role: 'menu', 'aria-label': t('Add'),
       style: place ?? {}, 'data-leaving': leaving || undefined,
     },
-    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attach }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
+    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => pickFile('file') }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
+    shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: () => pickFile('image') }, h(ImageIcon), h('span', { className: 'bt-menu-label' }, t('Add image'))) : null,
+    shown.files ? h('input', { ref: imagePick, type: 'file', accept: 'image/*', multiple: true, className: 'bt-menu-input', onChange: handFiles }) : null,
+    shown.files ? h('input', { ref: filePick, type: 'file', multiple: true, className: 'bt-menu-input', onChange: handFiles }) : null,
     canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
     canSetGoal(room, roster) ? h('button', { type: 'button', role: 'menuitem', onClick: goal }, h(GoalIcon), h('span', { className: 'bt-menu-label' }, t('Set a goal'))) : null,
-    h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
+    target !== undefined ? h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task'))) : null), document.body) : null)
 }

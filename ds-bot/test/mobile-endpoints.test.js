@@ -6,8 +6,6 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { install as installChannel, CAPABILITIES } from '../src/host/channel.js'
 import { install as installMobile } from '../src/host/mobile.js'
-import { BOOT_ID } from '../src/host/boot.js'
-import { HISTORY_PAGE } from '../src/host/constants.js'
 
 const ROOM_ID = 'room'
 
@@ -66,12 +64,6 @@ async function ask(routes, endpoint, payload) {
   const route = routes.find(entry => entry.path === '/api/bot')
   const request = { json: async () => ({ endpoint, payload }), signal: new AbortController().signal }
   return (await route.fetch(request)).json()
-}
-
-const value = async (routes, endpoint, payload) => {
-  const answer = await ask(routes, endpoint, payload)
-  assert.equal(answer.ok, true, answer.error?.message)
-  return answer.value
 }
 
 

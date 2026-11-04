@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MarkdownText, writeClipboard } from './dsh-primitives.js'
-import { inkText } from './inks.js'
+import { inkFill, inkText } from './inks.js'
 import { linkMentions, mentionTarget, dayLabel, contentText, stripHeader, isHiddenTurn, isRelayContext, relaysBefore, relayPart, commRunOf, toolName, toolArgs, reminderPrompts, elapsedLabel, clockLabel, messageClock } from './text.js'
 import { SmileIcon, ReplyIcon, DotsIcon, CheckIcon, DownloadIcon, CopyIcon, GoalIcon, MemoryIcon } from './icons.js'
 import { goalEventText } from './goal.js'
@@ -22,21 +22,60 @@ import { noHover, useViewport, viewBottom } from './motion.js'
 import { heldCardKey } from './sources.js'
 import { BtwCardView } from './btw.js'
 import { partIndexOf, withBtwRows } from './btw-model.js'
-import { layoutOf, thinkingShown } from './themes.js'
+import { foldAtOf, layoutOf, saOn, thinkingShown } from './themes.js'
 
 export { clockLabel }
 
 // -------------------------------------------------------------------------
 // Chat cells
 
+// A group line shows its point: past this the bubble folds, so a reply reads as the
+// sentence the group needs and the detail waits behind "Show all". Folding only hides
+// what a preview keeps, so a reply barely past the limit stays whole. Private chats keep
+// the wider FOLD_AT: there the whole reply is what the user came for.
+// A group reply folds at the line it marks (an empty line, or a rule) and keeps the whole
+// point above it. Only a reply with no mark falls back to these, itself exceeded rather
+// than reached: a 1000-character or 20-line one still reads whole.
+export const GROUP_FOLD = { preview: { chars: 120, lines: 4 }, mark: true }
+// How much of a member's ink a group bubble carries: a hint of hue that says who spoke, far
+// below the name above it, so the bubble never competes with what it says. Mixed in srgb,
+// like every other color-mix here: oklab would raise the browser floor for one tint.
+export const GROUP_TINT = 3
+const NEVER = { chars: Infinity, lines: Infinity }
+
+// The SuperAgent page sets the threshold, or turns the threshold and the mark rule off. A
+// reply the host kept only in part still folds: its whole text is a file, and "Show all" is
+// the only way back to it, so that fold is not the page's to switch off.
+export const groupFoldOf = prefs => (saOn(prefs, 'saFold')
+  ? { ...GROUP_FOLD, at: foldAtOf(prefs) }
+  : { ...GROUP_FOLD, at: NEVER, mark: false })
+
 const mdLabels = () => ({ code: { copyLabel: t('Copy'), copiedLabel: t('Copied') }, footnotes: t('Footnotes') })
+
+// A path a bubble names in inline code opens in the file view, as DSH's own chat links
+// the files a turn delivered. The host resolves those from the turn; a group reply is a
+// relay result with no turn, so the path itself is the only handle it has.
+const FILE_PATH = /^(?:\.{0,2}\/)?[\w@.-]+(?:\/[\w@.-]+)*$/
+// Only names that end like a file: `console.log` is as path-shaped as `state.json`.
+const FILE_EXT = /\.(?:md|txt|jsonl?|mjs|cjs|jsx?|tsx?|py|sh|ya?ml|toml|csv|html|css|png|jpe?g|webp|gif|pdf|patch|diff)$/i
+
+export function pathMentions(openFile) {
+  if (typeof openFile !== 'function') return undefined
+  return {
+    resolve: (value) => {
+      const path = String(value).trim()
+      if (!FILE_PATH.test(path) || !FILE_EXT.test(path)) return undefined
+      return { title: path, label: t('Open {path}', { path }), open: () => openFile(path) }
+    },
+  }
+}
 
 // `lead` (a sender avatar in group chats) sits beside the last bubble, in the same
 // row, so it lines up with the bubble whether or not reactions hang below it.
 // `fold`: past what a bubble folds (fold.js); `whole`: the last text is only the start
 // of its message (see useFold). `time` marks the bubbles' message below them; a caller
 // whose own head already shows one (the flat speaker line, the group name row) leaves it unset.
-export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions, fold = FOLD_AT, whole, time }) {
+export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, msgKey, useUi, lead, mentions, openFile, fold = FOLD_AT, whole, time }) {
   const onClick = (event) => {
     const target = mentionTarget(event)
     if (target === null) return
@@ -49,7 +88,7 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, 
     texts.map((text, index) => {
       const last = index === texts.length - 1
       return h(Bubble, {
-        key: index, text, index, roster, selfId, actions, sessionId, msgKey, mentions, fold,
+        key: index, text, index, roster, selfId, actions, sessionId, msgKey, mentions, openFile, fold,
         picked: msgKey ? reactions?.[index] ?? [] : [],
         live: streaming && last,
         lead: lead && last ? lead : null,
@@ -85,9 +124,10 @@ const foldArea = (body, code, codeHead, actions) => (code === undefined ? body
     h(FoldCodeCopy, { code, actions })))
 
 function Bubble({ text, index, roster, selfId, actions, sessionId, msgKey, mentions, fold, picked, live, lead, whole }) {
-  const { shown, folded, control, code, codeHead } = useFold(text, { limit: fold, whole, live })
+  const { shown, folded, control, code, codeHead } = useFold(text, { limit: fold.at ?? fold, preview: fold.preview, mark: fold.mark === true, whole, live })
   const key = msgKey ? `${msgKey}:${index}` : undefined
   const body = shown === '' ? null : h(MarkdownText, { text: linkMentions(shown, roster.bots, selfId), streaming: live, labels: mdLabels(), variant: 'compact', fileMentions: mentions })
+
   const row = useRef(null)
   // Touch has no hover: a tap on the bubble opens its tools, a tap elsewhere
   // closes them. Interactive targets keep their own meaning.
@@ -358,7 +398,7 @@ function scheduleGroupChains(flow) {
 // One Bot message inside a group chat: avatar, name (with its group role), when it ran
 // and how long it took, bubble. The flat layout moves the avatar from beside the last
 // bubble to the head of the name row, so the text below runs the whole width.
-function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey, useUi, whole, time, duration }) {
+function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey, useUi, whole, time, duration, openFile }) {
   const ref = useRef(null)
   useLayoutEffect(() => {
     const el = ref.current
@@ -368,16 +408,20 @@ function GroupMessage({ bot, text, texts = [text], room, roster, actions, msgKey
     scheduleGroupChains(flow)
     return () => scheduleGroupChains(flow)
   }, [bot.id])
+  const fold = groupFoldOf(roster.prefs)
   const lead = h('button', { type: 'button', className: 'bt-lead', 'aria-label': t("Open {name}'s chat", { name: bot.name }), onClick: () => actions.openSession(bot.id) },
     h(BotMark, { bot, size: 22 }))
   const flat = layoutOf(roster.prefs) === 'flat'
   const took = Number.isFinite(duration) && duration >= 1000 ? elapsedLabel(duration) : undefined
-  return h('div', { ref, className: 'bt-group-msg', 'data-bot-id': bot.id },
+  // The bubble reads as this member's, well under the strength of the name above it; the
+  // tint is its own variable because --bt-bubble cannot reference itself.
+  const tint = `color-mix(in srgb, ${inkFill(colorOf(bot))} ${GROUP_TINT}%, var(--bt-bubble))`
+  return h('div', { ref, className: 'bt-group-msg', 'data-bot-id': bot.id, style: { '--bt-bubble-tint': tint } },
     h('span', { className: 'bt-group-name', style: flat ? undefined : { color: inkText(colorOf(bot)) } }, flat ? lead : null, bot.name,
       room?.admin === bot.id ? h('span', { className: 'bt-group-role' }, t('Admin')) : null,
       Number.isFinite(time) ? h('span', { className: 'bt-group-time', title: clockLabel(time) }, messageClock(time)) : null,
       took ? h('span', { className: 'bt-group-took', title: t('Ran for {duration}', { duration: took }) }, took) : null),
-    h(Bubbles, { texts, roster, selfId: bot.id, actions, sessionId: room?.id, msgKey, useUi, lead: flat ? null : lead, whole }))
+    h(Bubbles, { texts, roster, selfId: bot.id, actions, sessionId: room?.id, msgKey, useUi, lead: flat ? null : lead, whole, openFile, fold }))
 }
 
 // A centered event line that names a group chat and opens it.
@@ -622,7 +666,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
   }
 }
 
-export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnClock, useUi, actions }) {
+export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnClock, useUi, actions, openFile }) {
   const roster = useRoster(value => value)
   const data = node.data
   const source = data.source !== null && typeof data.source === 'object' ? data.source : {}
@@ -684,7 +728,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
         const text = stripHeader(contentText(data.content))
         // A trigger's data carries no turn; its event seq is the one durable name of this post.
         return h(GroupMessage, {
-          bot: poster, text: file ? stripLongNote(text) : text, room, roster, actions, msgKey: `${sessionId}:post:${data.seq ?? node.key}`, useUi, time: data.time,
+          bot: poster, text: file ? stripLongNote(text) : text, room, roster, actions, msgKey: `${sessionId}:post:${data.seq ?? node.key}`, useUi, time: data.time, openFile,
           whole: file ? { length: source.length, load: () => actions.fileText(file) } : undefined,
         })
       }
@@ -949,7 +993,7 @@ function RelayEvent({ reply, bot, sessionId, actions }) {
   return null
 }
 
-function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork }) {
+function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork, openFile }) {
   const [live, setLive] = useState({ replies: [], speaking: [] })
   useEffect(() => {
     if (done) return undefined
@@ -1002,7 +1046,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
         return h('div', { key: `goal-${index}`, className: 'bt-event', title: reply.text || undefined },
           h('span', { className: 'bt-event-ico', 'aria-hidden': true }, h(GoalIcon)), goalEventText(reply))
       }
-      return h(GroupMessage, { key: `${reply.botId}-${index}`, bot, texts, room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration })
+      // A reply past what a group line holds came as a file: the bubble keeps its
+      // start, drops the host's note for the model, and "Show all" reads the rest.
+      // A member's messages in a row stack, and only the last of them takes `whole`.
+      const last = replies[index + texts.length - 1] ?? reply
+      const whole = last.length !== undefined && last.files?.[0] !== undefined
+        ? { length: last.length, load: () => actions.fileText(last.files[0]) }
+        : undefined
+      return h(GroupMessage, {
+        key: `${reply.botId}-${index}`, bot, texts: whole ? texts.map(stripLongNote) : texts, whole,
+        room, roster, actions, msgKey: callId ? `${sessionId}:${callId}:${index}` : undefined, useUi, time, duration, openFile,
+      })
     }),
     pending.map((id, at) => {
       const bot = roster.byId[id]
@@ -1047,7 +1101,7 @@ function useShownCards(actions, sessionId, callIds) {
   }, [sessionId, key])
 }
 
-function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot, heldCards, hooks }) {
+function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot, heldCards, openFile, hooks }) {
   const tool = toolName(call)
   const done = call.kind === 'tool-result'
   const { text: arg, value: argValue } = toolArgs(call)
@@ -1073,7 +1127,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
       return done && target ? h(EventLine, { prefix: t('Updated'), bots: [target], onOpen: bot => actions.openSession(bot.id) }) : h(CellEmpty)
     }
     case 'group_relay':
-      return h(GroupReplies, { sessionId, callId: call.callId, done, content: call.content, roster, actions, useUi, useWork })
+      return h(GroupReplies, { sessionId, callId: call.callId, done, content: call.content, roster, actions, useUi, useWork, openFile })
     case 'create_group':
     case 'update_group':
     case 'delete_group':
@@ -1128,7 +1182,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
   }
 }
 
-export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCards, useBrowserHolds, useBrowserTabs, useBrowserPages, actions }) {
+export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCards, useBrowserHolds, useBrowserTabs, useBrowserPages, actions, openFile }) {
   const roster = useRoster(value => value)
   const heldCards = useHeldCards?.(state => state[sessionId])
   const root = node.data.root
@@ -1144,6 +1198,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
   useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note)
   useShownCards(actions, sessionId, drawn.filter(call => CARDS.has(toolName(call)) && call.callId).map(call => call.callId))
   if (drawn.length === 0) return h(CellEmpty)
-  const env = { sessionId, roster, actions, useUi, useWork, findBot, heldCards, hooks: { useBrowserHolds, useBrowserTabs, useBrowserPages } }
+  const env = { sessionId, roster, actions, useUi, useWork, findBot, heldCards, openFile, hooks: { useBrowserHolds, useBrowserTabs, useBrowserPages } }
   return h(Fragment, null, drawn.map((call, index) => h(Fragment, { key: call.callId ?? index }, renderCall(call, env))))
 }

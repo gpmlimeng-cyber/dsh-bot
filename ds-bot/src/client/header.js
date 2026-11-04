@@ -1,13 +1,15 @@
 import { createElement as h, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { currentPart, latestMemoryChange } from './text.js'
-import { ArrowUpIcon, CloseIcon, ArrowDownIcon, GoalIcon, MemoryIcon } from './icons.js'
+import { ArrowUpIcon, CloseIcon, ArrowDownIcon, GoalIcon, MemoryIcon, PencilIcon, PinIcon, TrashIcon, MenuLinesIcon, BigDotsIcon, PanelRightIcon } from './icons.js'
 import { botState, BotAvatar, RoomAvatar } from './mark.js'
 import { ActivityIndicator } from './activity-row.js'
 import { clockLabel, openingTurn, unseenSince } from './cells.js'
 import { GoalIsland, goalView } from './goal.js'
 import { viewBottom } from './motion.js'
 import { t } from './i18n.js'
+import { PanelMenu } from './browser-pane.js'
+import { ModelMenu } from './model-menu.js'
 
 // -------------------------------------------------------------------------
 // Conversation header
@@ -132,9 +134,46 @@ export function HeaderPill({ sessionId, useRoster, useSessions, useSessionStatus
     h('span', { className: 'bt-pill-go', 'aria-hidden': true }, h(GoArrow)))
   return h('div', { className: 'bt-head' },
     showGoal ? h(GoalIsland, { room, goal, view, open: goalOpen, composing: goalCompose, roomWork, roster, actions, pill }) : pill,
+    // The model sits beside the title, where the conversation says what it runs on.
+    bot ? h(ModelMenu, { key: `model:${sessionId}`, bot, roster, actions, run: promise => Promise.resolve(promise) }) : null,
+    // The right column's own switch, where the header can reach it.
+    h('button', {
+      type: 'button', className: 'bt-head-right', 'aria-label': t('Toggle right panel'), title: t('Toggle right panel'),
+      onClick: () => actions.toggleRightPanel(),
+    }, h(PanelRightIcon)),
+    h(SessionMenu, { sessionId, bot, room, roster, actions }),
     h('span', { className: 'bt-sr', role: 'status' }, memoryNotice ? t('Memory updated') : ''),
+    // dsh-web-mobile's own sidebar toggle renders into a slot this plugin shadows, so it
+    // never mounts on a phone. This is that missing entry: narrow screens only, and it
+    // only toggles the shell's sidebar, which is where the drawer lives.
+    h('button', {
+      type: 'button', className: 'bt-head-btn', 'aria-label': t('Expand sidebar'), title: t('Expand sidebar'),
+      // The team draws its own column on the Bot surface; the shell's sidebar stays
+      // collapsed under it, so this switch moves ours, not the shell's (opening the
+      // shell's drawer would leave its backdrop over the page).
+      onClick: () => (actions.toggleLeftHidden ?? actions.toggleSidebar)(),
+    }, h(MenuLinesIcon)),
     h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
     h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions }))
+}
+
+// The session's own actions, at the drawer button's mirror position. Only the entries that
+// exist for this session kind appear: a Bot has a memory, an Agent Session can be archived,
+// a group chat has neither.
+function SessionMenu({ sessionId, bot, room, roster, actions }) {
+  const agent = Object.values(roster.agentsById ?? {}).find(entry => (entry.sessions ?? []).includes(sessionId))
+  const subject = bot?.id ?? room?.id
+  const items = []
+  if (subject !== undefined) {
+    items.push({ key: 'rename', icon: PencilIcon, label: bot ? t('Rename Bot') : t('Rename'), onPick: () => actions.renameBot(subject) })
+    items.push({ key: 'pin', icon: PinIcon, label: (bot ?? room).pinned ? t('Unpin') : t('Pin'), onPick: () => actions.setFlags(subject, { pinned: !(bot ?? room).pinned }) })
+  }
+  if (bot !== undefined) items.push({ key: 'memory', icon: MemoryIcon, label: t('Memory'), onPick: () => actions.openMemory(bot.id) })
+  if (agent !== undefined) {
+    items.push({ key: 'rename-agent', icon: PencilIcon, label: t('Rename'), onPick: () => actions.beginAgentRename(sessionId) })
+    items.push({ key: 'archive', icon: TrashIcon, label: t('Archive'), onPick: () => actions.archiveAgentSession(agent.id, sessionId) })
+  }
+  return h(PanelMenu, { items, className: 'bt-head-btn', icon: BigDotsIcon, 'aria-label': t('Session actions') })
 }
 
 // New-message pills. "N new messages ↓" takes Back to bottom's place when

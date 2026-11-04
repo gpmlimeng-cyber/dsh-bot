@@ -3,16 +3,20 @@ import { createPortal } from 'react-dom'
 import { FishLogo } from './dsh-primitives.js'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
-import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignInIcon, SignOutIcon, SlidersIcon } from './icons.js'
+import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignInIcon, SignOutIcon, SlidersIcon, ChevronRightIcon, MoreDotsIcon, PencilIcon, TrashIcon } from './icons.js'
 import { lookOf, MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
 import { Shimmer, workPhrase } from './cells.js'
 import { springEasing, SPRING_POP, SPRING_SHAPE, useLinger, useViewport, viewBottom } from './motion.js'
 import { hostText, t } from './i18n.js'
+import { MarketPanel } from './market.js'
+import { holdDrawerDismiss } from './drawer-dismiss.js'
 import { clientErrors } from './diagnostics.js'
 import { showsDshRow } from './dsh-offer.js'
 import { quietly } from './diagnostics.js'
+import { STORAGE } from './storage.js'
+import { readArrangement, writeArrangement } from './sidebar-groups.js'
 import { frameLayout, dragColumn, RAIL_WIDTH, FALLBACK_SIDEBAR_WIDTH, userSidebarToggle } from './frame-layout.js'
 import { chatRoom, dshCollapsed } from './frame-watch.js'
 
@@ -56,7 +60,7 @@ const waitingFor = (roster, waits) => {
   return names.length === 0 ? '' : t('Waiting for {names}', { names: names.join(t(' and ')) })
 }
 
-function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, marked }) {
+function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useActivity, useWork, wide, marked, at }) {
   const id = bot.id
   const part = currentPart(bot)
   const preview = useSessions(list => previewOf(list, part, roster.exchangeTurns[part]))
@@ -97,11 +101,12 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
   return h('button', {
     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
     'data-bot-id': id, title: wide ? undefined : bot.name, onMouseEnter: wide ? nameIfCut : undefined, onClick: () => actions.openSession(id), onContextMenu,
+    draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', id); event.dataTransfer.effectAllowed = 'move' },
   },
   h(BotAvatar, { bot, size: wide ? 36 : 44, state, main }),
   pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
-    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null),
+    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, bot.name), pinned ? h(PinMark) : null, h(RowTime, { at })),
     runningLine ? h('span', { className: 'bt-row-preview' }, runningLine)
       : awayLine ? h('span', { className: 'bt-row-preview' }, awayLine)
         : waitsFor ? h('span', { className: 'bt-row-preview' }, waitsFor)
@@ -110,7 +115,7 @@ function BotRow({ bot, roster, actions, useSessions, useSessionStatus, useSessio
     : !wide && !active && (alert || unread) ? h('span', { className: `bt-dot${alert ? ' bt-dot-wait' : ''}`, 'aria-hidden': true }) : null)
 }
 
-function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked }) {
+function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSessionRetainInfo, useWork, wide, marked, at }) {
   const id = room.id
   // The group's own Session is a chain of parts; the row shows the current one.
   const sessionId = room.sessionId ?? id
@@ -130,11 +135,12 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
     type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
     'data-room-id': id, title: wide ? undefined : room.name, onMouseEnter: wide ? nameIfCut : undefined, onClick: () => actions.openSession(id),
     onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'room', id, x: event.clientX, y: event.clientY }) },
+    draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', id); event.dataTransfer.effectAllowed = 'move' },
   },
   h(RoomAvatar, { room, roster, size: wide ? 36 : 44 }),
   pinned && !wide ? h(PinMark) : null,
   wide ? h('span', { className: 'bt-row-body' },
-    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null),
+    h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, room.name), pinned ? h(PinMark) : null, h(RowTime, { at })),
     workingLine ? h('span', { className: 'bt-row-preview' }, workingLine) : preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
   wide && approval && !active ? h('span', { className: 'bt-unread bt-unread-wait', 'aria-hidden': true })
     : wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true })
@@ -190,7 +196,14 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
 
 // The DSH Agent row: a plain dsh Session list lives in the Bot workspace, so it
 // sits among the Bots with the harness's own whale mark.
-function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked }) {
+// The first line of a row ends with when it was last touched, in the shell's own short form
+// ("just now", "5 min", "3 h", "2 d", then a date).
+function RowTime({ at }) {
+  if (!at) return null
+  return h('span', { className: 'bt-row-time' }, relativeShort(at))
+}
+
+function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked, at }) {
   const info = useSessions(list => JSON.stringify(agent.sessions.map((id) => {
     const row = list.byId[id]
     return {
@@ -224,11 +237,12 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
     h('button', {
       type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
       'data-agent-id': agent.id, title: wide ? undefined : 'DSH Agent', onClick: () => actions.openAgent(agent.id),
+      draggable: true, onDragStart: (event) => { event.dataTransfer.setData('text/plain', agent.id); event.dataTransfer.effectAllowed = 'move' },
       onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'agent', id: agent.id, x: event.clientX, y: event.clientY }) },
     },
     h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: wide ? 22 : 24 })),
     wide ? h('span', { className: 'bt-row-body' },
-      h('span', { className: 'bt-row-name' }, 'DSH Agent'),
+      h('span', { className: 'bt-row-name' }, h('span', { className: 'bt-row-title' }, 'DSH Agent'), h(RowTime, { at })),
       preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
     wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true })
       : !wide && unread && !active ? h('span', { className: 'bt-dot', 'aria-hidden': true }) : null),
@@ -304,6 +318,7 @@ const bootHint = () => {
 export function TeamSidebar(props) {
   const { wide, useRoster, useUi, useSessions, actions } = props
   const listRef = useRef(null)
+  const [market, setMarket] = useState(false)
   const roster = useRoster(value => value)
   const markedUnread = useUi(value => value.unread)
   const uiNow = useUi(value => value)
@@ -338,6 +353,95 @@ export function TeamSidebar(props) {
     return entries.sort((a, b) => Number(Boolean(b.item.pinned)) - Number(Boolean(a.item.pinned)) || b.at - a.at)
   }, [roster, updated])
   const main = roster.byId[roster.mainBotId]
+  // Sections, as the reference product draws them: pinned first, the user's own groups, then
+  // whatever is left over under Bots and Group chats. A built-in section with nothing in it
+  // is not drawn; a group the user made always is, so an empty one can still be filled.
+  const [arrange, setArrange] = useState(readArrangement)
+  useEffect(() => {
+    const reload = () => setArrange(readArrangement())
+    // A group made from a row's menu is named right away, as the list's own row is.
+    const rename = (event) => { reload(); setRenamingSection(event.detail) }
+    window.addEventListener('ds-bot:groups', reload)
+    window.addEventListener('ds-bot:group-created', rename)
+    return () => {
+      window.removeEventListener('ds-bot:groups', reload)
+      window.removeEventListener('ds-bot:group-created', rename)
+    }
+  }, [])
+  const [renamingSection, setRenamingSection] = useState(null)
+  const [sectionMenu, setSectionMenu] = useState(null)
+  const [sectionPicker, setSectionPicker] = useState(null)
+  const [creating, setCreating] = useState(false)
+  const sections = useMemo(() => {
+    const pinned = order.filter(entry => entry.item.pinned)
+    // The Main Bot's row otherwise sits above every section; once it is put in a group it
+    // belongs to that group like any other row.
+    const mainAssigned = main ? arrange.assign[main.id] : undefined
+    const rest = order.filter(entry => !entry.item.pinned)
+    if (main && mainAssigned) rest.unshift({ kind: 'bot', item: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt })
+    const inGroup = (id) => rest.filter(entry => arrange.assign[entry.item.id] === id)
+    const assigned = new Set(Object.keys(arrange.assign))
+    const loose = rest.filter(entry => !assigned.has(entry.item.id))
+    const custom = arrange.groups.map(group => ({ id: group.id, name: group.name, custom: true, collapsed: group.collapsed, entries: inGroup(group.id) }))
+    return [
+      { id: 'top', name: t('Top'), entries: pinned },
+      ...custom,
+      { id: 'bots', name: t('Bots'), entries: loose.filter(entry => entry.kind !== 'room') },
+      { id: 'rooms', name: t('Group chats'), entries: loose.filter(entry => entry.kind === 'room') },
+    ].filter(section => section.entries.length > 0 || section.custom)
+  }, [order, arrange, t, main, updated])
+  const changeArrange = (next) => {
+    setArrange(next)
+    writeArrangement(next)
+  }
+  // The new-group row turns into a name field in place: nothing is created until it is named.
+  const beginCreate = () => {
+    setSectionMenu(null)
+    setSectionPicker(null)
+    setRenamingSection(null)
+    setCreating(true)
+  }
+  const createGroup = (name) => {
+    const clean = name.trim().slice(0, 24)
+    setCreating(false)
+    if (!clean) return
+    const id = `g${Date.now().toString(36)}`
+    changeArrange({ ...arrange, groups: arrange.groups.concat({ id, name: clean, collapsed: false }) })
+  }
+  const renameGroup = (id, name) => {
+    const clean = name.trim().slice(0, 24)
+    changeArrange({ ...arrange, groups: arrange.groups.map(group => (group.id === id ? { ...group, name: clean || group.name } : group)) })
+    setRenamingSection(null)
+  }
+  const deleteGroup = (id) => {
+    const assign = { ...arrange.assign }
+    for (const entryId of Object.keys(assign)) if (assign[entryId] === id) delete assign[entryId]
+    changeArrange({ groups: arrange.groups.filter(group => group.id !== id), assign })
+    setSectionMenu(null)
+  }
+  const assignTo = (entryId, groupId) => {
+    const assign = { ...arrange.assign }
+    if (groupId) assign[entryId] = groupId
+    else delete assign[entryId]
+    changeArrange({ ...arrange, assign })
+  }
+  const foldGroup = (id) => changeArrange({ ...arrange, groups: arrange.groups.map(group => (group.id === id ? { ...group, collapsed: !group.collapsed } : group)) })
+  const isFolded = (section) => (section.custom ? section.collapsed === true : folded[section.id] === true)
+  const foldSection = (section) => (section.custom ? foldGroup(section.id) : toggleSection(section.id))
+  const dropOn = (event, section) => {
+    const entryId = event.dataTransfer?.getData('text/plain') ?? ''
+    if (!entryId) return
+    event.preventDefault()
+    assignTo(entryId, section.custom ? section.id : null)
+  }
+  const [folded, setFolded] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(STORAGE.folded) ?? '{}') ?? {} } catch { return {} }
+  })
+  const toggleSection = (id) => setFolded((current) => {
+    const next = { ...current, [id]: !current[id] }
+    try { localStorage.setItem(STORAGE.folded, JSON.stringify(next)) } catch { /* storage unavailable */ }
+    return next
+  })
   useListGlide(listRef, wideContent, order.map(entry => entry.item.id).join(','))
   useLandOnMainBot(roster, useSessions, actions)
   useReportReady(roster.ready, roster)
@@ -450,6 +554,21 @@ export function TeamSidebar(props) {
     for (const name of ends) grip.addEventListener(name, onEnd)
   }
 
+  // The phone layout mounts its own drawer switch in the header; on the Bot surface it
+  // must move our column, not the shell's drawer — the shell's drawer leaves its own
+  // backdrop over the page. Caught in the capture phase, before that button's handler.
+  useEffect(() => {
+    const onTap = (event) => {
+      if (!(event.target instanceof Element) || event.target.closest('[data-mobile-nav="toggle"]') === null) return
+      if (typeof actions.toggleLeftHidden !== 'function') return
+      event.preventDefault()
+      event.stopPropagation()
+      actions.toggleLeftHidden()
+    }
+    document.addEventListener('click', onTap, true)
+    return () => document.removeEventListener('click', onTap, true)
+  }, [])
+
   // In the Bot view the shell's own sidebar stays collapsed under our column. A
   // flip we did not ask for is the user's own switch gesture (the shell's button
   // or shortcut where it still reaches), unless the width just crossed the
@@ -517,6 +636,12 @@ export function TeamSidebar(props) {
     return () => { window.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey, true) }
   }, [mode])
 
+  // Entries inside the drawer that are not sidebar rows (a menu's page, the palette, a
+  // fresh chat) report where they came from; only a drawer entry then collapses it.
+  const modeRef = useRef(mode)
+  modeRef.current = mode
+  useEffect(() => holdDrawerDismiss(() => { if (modeRef.current === 'drawer') actions.setLeftDrawer?.(false) }), [])
+
   const navigate = (open, id) => {
     const result = open(id)
     if (uiNow.leftDrawer === true) actions.setLeftDrawer?.(false)
@@ -572,7 +697,11 @@ export function TeamSidebar(props) {
   // The foot stands in for the shell's hidden footer: the account avatar, and on
   // the rail the new-chat button above it.
   const foot = wideContent
-    ? h('div', { className: 'bt-leftcol-foot' }, h(AccountLauncher, { seat: false, actions }))
+    ? h('div', { className: 'bt-leftcol-foot' },
+        h('button', { type: 'button', className: 'bt-apps-chip', 'aria-label': t('Connect apps'), title: t('Connect apps'), onClick: () => { actions.openPluginsPanel?.() } },
+          h('span', { className: 'bt-apps-marks', 'aria-hidden': true }, h('i', { className: 'bt-apps-mark' }), h('i', { className: 'bt-apps-mark bt-apps-mark-b' })),
+          h('span', { className: 'bt-apps-label' }, t('Connect apps'))),
+        h(AccountLauncher, { seat: false, actions }))
     : h('div', { className: 'bt-leftcol-foot bt-leftcol-foot-rail' },
         h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
         h(AccountLauncher, { seat: false, actions }))
@@ -580,13 +709,79 @@ export function TeamSidebar(props) {
     top,
     wideContent && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
     h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
-      wideContent ? (main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, uiNow.bootFailed ? bootHint() : t('Setting up your Main Bot…'))) : null,
-      order.map(entry => (entry.kind === 'bot'
-        ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
-        : entry.kind === 'room'
-          ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true })
-          : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true })))),
-    foot)
+      wideContent ? (main && !arrange.assign[main.id]
+        ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true })
+        : roster.ready || main ? null : h('div', { className: 'bt-hint' }, uiNow.bootFailed ? bootHint() : t('Setting up your Main Bot…'))) : null,
+      ...sections.flatMap(section => [
+        h('div', {
+          key: `section:${section.id}`, className: 'bt-sec-row',
+          onDragOver: (event) => { if (event.dataTransfer?.types?.includes('text/plain')) { event.preventDefault(); event.dataTransfer.dropEffect = 'move' } },
+          onDrop: (event) => dropOn(event, section),
+        },
+        renamingSection === section.id
+          ? h('input', {
+            className: 'bt-sec-input', autoFocus: true, defaultValue: section.name, 'aria-label': t('Section name'),
+            onClick: (event) => event.stopPropagation(),
+            onBlur: (event) => renameGroup(section.id, event.target.value),
+            onKeyDown: (event) => {
+              if (event.key === 'Enter') { event.preventDefault(); renameGroup(section.id, event.currentTarget.value) }
+              if (event.key === 'Escape') { event.stopPropagation(); setRenamingSection(null) }
+            },
+          })
+          : h('button', {
+            type: 'button', className: 'bt-sec',
+            'aria-expanded': !isFolded(section),
+            onClick: () => foldSection(section),
+          },
+          h('span', { className: 'bt-sec-name' }, section.name),
+          h('span', { className: 'bt-sec-caret', 'data-open': !isFolded(section) ? '' : undefined, 'aria-hidden': true }, h(ChevronRightIcon)),
+          h('span', { className: 'bt-sec-count' }, String(section.entries.length))),
+        section.custom
+          ? h('button', {
+            type: 'button', className: 'bt-sec-more', 'aria-label': t('Section options'), 'aria-expanded': sectionMenu === section.id,
+            onClick: (event) => { event.stopPropagation(); setSectionPicker(null); setSectionMenu((open) => (open === section.id ? null : section.id)) },
+          }, h(MoreDotsIcon))
+          : null,
+        sectionMenu === section.id
+          ? h('div', { className: 'bt-sec-menu', role: 'menu' },
+            sectionPicker === section.id
+              ? [
+                h('div', { key: 'head', className: 'bt-sec-menu-head' }, t('Move to this group')),
+                ...order.filter(entry => arrange.assign[entry.item.id] !== section.id).map(entry => h('button', {
+                  key: entry.item.id, type: 'button', role: 'menuitem', className: 'bt-sec-pick',
+                  onClick: () => assignTo(entry.item.id, section.id),
+                }, h('span', { className: 'bt-sec-pick-name' }, entry.item.name))),
+                order.every(entry => arrange.assign[entry.item.id] === section.id)
+                  ? h('div', { key: 'none', className: 'bt-sec-menu-empty' }, t('Everything is here already'))
+                  : null,
+              ]
+              : [
+                h('button', { key: 'rename', type: 'button', role: 'menuitem', onClick: () => { setSectionMenu(null); setRenamingSection(section.id) } }, h(PencilIcon), t('Rename section')),
+                h('button', { key: 'move', type: 'button', role: 'menuitem', onClick: () => setSectionPicker(section.id) }, h(PlusIcon), t('Move rows here')),
+                h('button', { key: 'new', type: 'button', role: 'menuitem', onClick: () => beginCreate() }, h(PlusIcon), t('New section')),
+                h('button', { key: 'delete', type: 'button', role: 'menuitem', className: 'bt-danger', onClick: () => deleteGroup(section.id) }, h(TrashIcon), t('Delete section')),
+              ])
+          : null),
+        ...(isFolded(section) ? [] : section.entries.map(entry => (entry.kind === 'bot'
+          ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
+          : entry.kind === 'room'
+            ? h(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })
+            : h(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, at: entry.at, marked: markedUnread[entry.item.id] === true })))),
+      ]),
+      creating
+        ? h('input', {
+          key: 'new-group-input', className: 'bt-sec-new-input', autoFocus: true, placeholder: t('New section'),
+          'aria-label': t('New section'),
+          onBlur: (event) => createGroup(event.target.value),
+          onKeyDown: (event) => {
+            if (event.key === 'Enter') { event.preventDefault(); createGroup(event.currentTarget.value) }
+            if (event.key === 'Escape') { event.stopPropagation(); setCreating(false) }
+          },
+        })
+        : h('button', { key: 'new-group', type: 'button', className: 'bt-sec-new', onClick: beginCreate },
+          h(PlusIcon), h('span', null, t('New section')))),
+    foot,
+    market ? h(MarketPanel, { open: true, onClose: () => setMarket(false), roster, actions }) : null)
   return h(Fragment, null,
     h(TitleToggle, { hidden: mode === 'hidden', onToggle }),
     shown === 'hidden' ? null : h(LeftColumn, { mode: shown, width: ourWidth, onGrip: startDrag, leaving }, content))

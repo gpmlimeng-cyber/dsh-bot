@@ -23,9 +23,11 @@ let hooks
 const react = {
   createElement: (type, props, ...children) => ({ type, props: { ...props, children } }), Fragment: Symbol('Fragment'),
   useRef: initial => hooks.ref(initial), useEffect: (run, deps) => hooks.effect(run, deps), useLayoutEffect() {},
-  useMemo: make => make(), useState: initial => [initial, () => {}], useId: () => 'id',
+  useMemo: make => make(), useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}], useId: () => 'id',
   // The bundled Deep View widgets make a React context when their module loads.
   createContext: value => ({ Provider: 'Provider', value }), useContext: context => context.value,
+  // One upstream widget is a class component; its base only has to be a constructor here.
+  Component: class {},
 }
 
 function mount(component) {
