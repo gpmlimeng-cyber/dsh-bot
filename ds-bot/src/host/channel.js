@@ -51,10 +51,31 @@ export const CAPABILITIES = [
 let pluginVersion
 const version = () => (pluginVersion ??= JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8')).version)
 
+// 客户端给的消息身份：App 重试时带同一个，Host 的 prompt 按它幂等，回显也按它带回。
+export function promptRequestId(value) {
+  if (typeof value !== 'string') return randomUUID()
+  const id = value.trim()
+  if (id === '' || id.length > 200 || /[\u0000-\u001f]/.test(id)) return randomUUID()
+  return id
+}
+
 export function install(rt) {
   installBtw(rt)
   installSide(rt)
   const { ctx, state } = rt
+
+  // 队列 payload 的唯一真相是 agent-loop 的 `inbox` 投影；拿不到就返回 undefined，
+  // App 按「老 Host 没有 inbox」降级成本地待发气泡。
+  const queueOf = async (sessionId) => {
+    const projections = ctx.get?.('sessionProjections')
+    if (projections === undefined || typeof sessionId !== 'string' || sessionId === '') return undefined
+    try {
+      const agent = await rt.resolveAgent(sessionId)
+      return queueView(sessionId, projections.snapshot(agent.session, ['inbox']).values, agent.status === 'running')
+    } catch {
+      return undefined
+    }
+  }
 
   // The DSH interface language of the last browser that asked for the team.
   let uiLocale
@@ -319,15 +340,21 @@ export function install(rt) {
         case 'earlier':
           await rt.load()
           return ok(await rt.earlierPage(String(body.sessionId ?? ''), body.cursor ?? undefined))
-        case 'chat':
+        case 'chat': {
           await rt.load()
-          return ok(await rt.chatPage(String(body.botId ?? ''), body.cursor ?? undefined))
+          const page = await rt.chatPage(String(body.botId ?? ''), body.cursor ?? undefined)
+          const inbox = await queueOf(page?.sessionId)
+          return ok(inbox === undefined ? page : { ...page, inbox })
+        }
         // A page of a group chat, for a window that draws the room itself. A missing
         // `roomId` is refused; an unknown one is answered as gone.
         case 'room-chat': {
           if (typeof body.roomId !== 'string' || body.roomId === '') return fail('No group chat named', 'bot/invalid')
           await rt.load()
-          return ok(await rt.mobileEndpoint('room-chat', body))
+          const page = await rt.mobileEndpoint('room-chat', body)
+          const room = rt.roomOf(body.roomId)
+          const inbox = room === undefined ? undefined : await queueOf(rt.sessionOfRoom(room))
+          return ok(inbox === undefined ? page : { ...page, inbox })
         }
         // What a client that was away should hear about. `boot` and `since` are the last
         // handshake and revision it read; a different host start answers `reset: true`.
@@ -617,8 +644,9 @@ export function install(rt) {
               : past?.roomId === undefined && past !== undefined ? rt.chatOf(past.botId)
                 : past !== undefined ? rt.sessionOfRoom(rt.roomOf(past.roomId)) : body.sessionId
           await rt.ensureCapabilities(sessionId)
+          const requestId = promptRequestId(body.requestId)
           await ctx.sessionController.prompt({
-            requestId: randomUUID(),
+            requestId,
             sessionId,
             mode: 'queue',
             content: [
@@ -627,7 +655,19 @@ export function install(rt) {
               ...fileReceiptIds.map(receiptId => ({ type: 'file', receiptId })),
             ],
           }, AbortSignal.timeout(30_000))
-          return ok(true)
+          // 入队是同步的：prompt 返回后这条已在 inbox 里，用我们自己的 requestId 精确找回。
+          // 找不到（例如已被消费）不是错误，App 等推送按 rpcId 补。
+          const projections = ctx.get?.('sessionProjections')
+          let queued = null
+          if (projections !== undefined) {
+            try {
+              const agent = await rt.resolveAgent(sessionId)
+              queued = findQueueItem(projections.snapshot(agent.session, ['inbox']).values, requestId)
+            } catch {
+              queued = null
+            }
+          }
+          return ok({ requestId, itemId: queued?.itemId ?? null, slot: queued?.slot ?? null })
         }
         case 'btw-delete': {
           if (typeof body.sessionId !== 'string' || body.sessionId === '' || typeof body.cardId !== 'string' || body.cardId === '') return fail('Nothing to delete', 'bot/invalid')

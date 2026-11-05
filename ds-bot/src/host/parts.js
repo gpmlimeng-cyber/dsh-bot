@@ -1382,6 +1382,7 @@ export function install(rt) {
         stamp(event, {
           kind: 'user',
           text: textOf(content),
+          ...(typeof source.rpcId === 'string' && source.rpcId !== '' ? { rpcId: source.rpcId } : {}),
           ...(images.length > 0 ? { images: images.length } : {}),
           ...(attachments.length > 0 ? { files: attachments.map(file => ({ id: file.attachmentId, name: file.name, mediaType: file.mediaType })) } : {}),
           time: event.time,

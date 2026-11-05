@@ -81,7 +81,7 @@ export function roomItems(events) {
       const content = Array.isArray(event.data?.content) ? event.data.content : []
       if (source?.kind === 'user') {
         const images = content.filter(block => block?.type === 'image').length
-        items.push({ id: `${seq}`, kind: 'user', text: textOf(content), ...(images > 0 ? { images } : {}), time: event.time ?? null })
+        items.push({ id: `${seq}`, kind: 'user', text: textOf(content), ...(typeof source.rpcId === 'string' && source.rpcId !== '' ? { rpcId: source.rpcId } : {}), ...(images > 0 ? { images } : {}), time: event.time ?? null })
       } else if (source?.kind === 'schedule') {
         items.push({ id: `${seq}`, kind: 'event', event: 'schedule', text: reminderText(textOf(content)), time: event.time ?? null })
       } else if (source?.kind === SOURCE_KIND && source.role === 'post') {
