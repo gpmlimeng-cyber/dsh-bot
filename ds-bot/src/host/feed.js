@@ -70,6 +70,10 @@ export function install(rt) {
     if (readers()) publish('revision', { revision: state.revision })
   }
 
+  const offSaved = rt.onSaved(() => {
+    if (clients.size > 0) publish('revision', { revision: state.revision })
+  })
+
   let liveTimer
   const live = () => {
     if (!readers() || liveTimer !== undefined) return
@@ -110,8 +114,13 @@ export function install(rt) {
     }
   })
 
+  // A Request built on a caller's signal only follows it while the Request is reachable;
+  // once collected, its abort never fires and the feed stays open. Each open feed keeps
+  // its Request until it leaves.
+  const requests = new Map()
   const leave = (controller) => {
     clients.delete(controller)
+    requests.delete(controller)
     if (!readers()) writing.clear()
     try { controller.close() } catch { /* already closed or errored */ }
   }
@@ -132,6 +141,7 @@ export function install(rt) {
         },
         cancel() { leave(controller) },
       })
+      requests.set(controller, request)
       request.signal.addEventListener('abort', () => leave(controller), { once: true })
       return new Response(body, { status: 200, headers: { 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-store' } })
     },
@@ -147,6 +157,7 @@ export function install(rt) {
       clearTimeout(liveTimer)
       for (const timer of roomTimers.values()) clearTimeout(timer)
       roomTimers.clear()
+      offSaved()
       for (const controller of clients) leave(controller)
     }
   }, 'ds-bot: live feed')

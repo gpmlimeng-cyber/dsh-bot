@@ -32,8 +32,9 @@ import * as images from './src/host/images.js'
 import * as avatarLibrary from './src/host/avatar-library.js'
 import * as browser from './src/host/browser.js'
 import * as browserPlugins from './src/host/browser-plugins.js'
+import * as computer from './src/host/computer/index.js'
 import * as secrets from './src/host/secrets.js'
-import * as connectors from './src/host/connectors.js'
+import * as connectors from './src/host/connectors/index.js'
 import * as mcp from './src/host/mcp.js'
 import * as capabilities from './src/host/capabilities.js'
 import * as learning from './src/host/learning.js'
@@ -47,8 +48,10 @@ import * as channel from './src/host/channel.js'
 import * as skillMarket from './src/host/skill-market/index.js'
 import * as feed from './src/host/feed.js'
 import * as remote from './src/host/remote.js'
+import * as im from './src/host/im/index.js'
 import * as officeSkills from './src/host/office-skills.js'
 import * as goalSkills from './src/host/goal-skills.js'
+import * as localAgents from './src/host/local-agents/index.js'
 
 export { COLORS } from './src/host/constants.js'
 
@@ -60,7 +63,7 @@ export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'ses
 // install. Listeners run and tools are listed in registration order, so this order holds:
 // usage meters model requests after every listener that rewrites them. privacy checks a
 // call before the hooks of tools do, so a closed call never reaches a card they show.
-const MODULES = [diagnostics, store, models, providers, permissions, turns, steer, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, goals, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, mcp, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, mobile, feed, channel, remote, officeSkills, goalSkills, authorization, toolPolicy]
+const MODULES = [diagnostics, store, models, providers, permissions, turns, steer, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, goals, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, mcp, capabilities, learning, schedules, browser, browserPlugins, usage, update, dshUpdate, thinking, mobile, feed, channel, remote, officeSkills, goalSkills, authorization, toolPolicy, computer, im, localAgents]
 
 export function apply(ctx, config = {}) {
   createRuntime(ctx, config)
