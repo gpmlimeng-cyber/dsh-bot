@@ -368,12 +368,53 @@ function legacyRoomChatPage(rt, roomId, cursor) {
     return { botId: bot.id, day: totals(within(24)), week: totals(within(24 * 7)), month: totals(month), models, scanning: view.scanning }
   }
 
+
+  // The group's goal, as the phone draws it: the panel's stages, each with its
+  // acceptance and the members' tasks, and the goal's own words.
+  function goalView(body) {
+    const roomId = typeof body?.roomId === 'string' ? body.roomId : ''
+    const room = rt.roomOf(roomId)
+    if (room === undefined) throw Object.assign(new Error('Unknown group chat'), { code: 'bot/not-found' })
+    const goal = room.goal
+    if (goal === undefined) return { roomId: room.id, goal: null }
+    const stages = (goal.stages ?? []).map((stage, index) => ({
+      title: stage.title,
+      acceptance: stage.acceptance,
+      status: stage.status ?? (index < goal.current ? 'passed' : index === goal.current ? 'active' : 'pending'),
+      tasks: (stage.tasks ?? []).map(task => ({
+        botId: task.botId,
+        bot: rt.botOf(task.botId)?.name ?? task.botId,
+        color: rt.botOf(task.botId)?.color,
+        task: task.task,
+        status: task.status ?? 'pending',
+        rework: task.reworkCount ?? 0,
+        feedback: task.feedback ?? null,
+      })),
+    }))
+    return {
+      roomId: room.id,
+      goal: {
+        id: goal.id,
+        revision: goal.revision,
+        status: goal.status,
+        title: goal.title,
+        objective: goal.objective,
+        acceptance: goal.acceptance,
+        constraints: goal.constraints ?? [],
+        current: goal.current,
+        stageCount: stages.length,
+        stages,
+      },
+    }
+  }
+
   async function mobileEndpoint(endpoint, body) {
     switch (endpoint) {
       case 'hello': return hello(body)
       case 'notices': return notices(body)
       case 'avatar': return avatar(body)
       case 'room-chat': return roomChat(body)
+      case 'goal-view': return goalView(body)
       case 'usage-summary': return usageSummary(body)
       case 'memory-edit': return rt.memoryEdit({ ...memoryTarget(body), scope: body.scope, topic: body.topic, text: body.text, next: body.next })
       case 'memory-add': return rt.memoryAdd({ ...memoryTarget(body), scope: body.scope, topic: body.topic, text: body.text })
