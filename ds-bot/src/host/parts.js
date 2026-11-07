@@ -166,6 +166,17 @@ export function canonicalHeadings(note, names) {
   return lines.join('\n')
 }
 
+/** A picture or a file as the phone names it: the engine reads an image back by its id
+ * with the byte length and dimensions it was stored with, so all of them go along. */
+const fileRef = file => ({
+  id: file?.attachmentId ?? file?.id ?? '',
+  ...(file?.name ? { name: file.name } : {}),
+  ...(file?.mediaType ? { mediaType: file.mediaType } : {}),
+  ...(Number.isFinite(file?.bytes) ? { bytes: file.bytes } : {}),
+  ...(Number.isFinite(file?.width) ? { width: file.width } : {}),
+  ...(Number.isFinite(file?.height) ? { height: file.height } : {}),
+})
+
 export function install(rt) {
   const { ctx, config, state } = rt
 
@@ -1489,7 +1500,7 @@ export function install(rt) {
           text: textOf(content),
           ...(typeof source.rpcId === 'string' && source.rpcId !== '' ? { rpcId: source.rpcId } : {}),
           ...(images.length > 0 ? { images: images.length } : {}),
-          ...(attachments.length > 0 ? { files: attachments.map(file => ({ id: file.attachmentId, name: file.name, mediaType: file.mediaType })) } : {}),
+          ...(attachments.length > 0 ? { files: attachments.map(fileRef) } : {}),
           ...(via ? { via } : {}),
           time: event.time,
         })

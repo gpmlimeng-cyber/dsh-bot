@@ -470,18 +470,53 @@ export function install(rt) {
     return batch
   }
 
+  // A member's turn as the group's footnote reads it: the steps it took and the tokens
+  // it spent. The phone draws the same line a Bot's own reply carries (耗时 · 步数 ·
+  // tokens), so what DSH counts stays in one place: steps from the tool events, usage
+  // from the Session's own tokenUsage projection, minus the reading taken at turn start.
+  const turnMeter = new Map() // `${roomId}/${botId}` → { sessionId, session, from, steps }
+  const meterKey = (room, member) => `${room.id}/${member.id}`
+  const usageNow = (session) => {
+    const usage = ctx.get?.('sessionProjections')?.snapshot(session, ['tokenUsage'])?.values?.tokenUsage
+    if (usage === undefined) return undefined
+    return {
+      input: (usage.inputTokens ?? 0) + (usage.cacheReadTokens ?? 0) + (usage.cacheWriteTokens ?? 0),
+      output: usage.outputTokens ?? 0,
+    }
+  }
+  // A tool call the member made in this turn: one step, as the Bot footer counts them.
+  const noteStep = (sessionId) => {
+    for (const meter of turnMeter.values()) if (meter.sessionId === sessionId) meter.steps += 1
+  }
+
+  // What this member's turn has counted so far: a line written mid-turn shows the
+  // numbers up to that step, the last line of the turn shows all of them.
+  const figuresOf = (room, member) => {
+    const meter = turnMeter.get(meterKey(room, member))
+    if (meter === undefined) return undefined
+    const steps = meter.steps > 0 ? { steps: meter.steps } : {}
+    const now = meter.session === undefined ? undefined : usageNow(meter.session)
+    if (now === undefined) return Object.keys(steps).length > 0 ? steps : undefined
+    const input = Math.max(0, now.input - meter.from.input)
+    const output = Math.max(0, now.output - meter.from.output)
+    return { ...steps, ...(input + output > 0 ? { input, output, tokens: input + output } : {}) }
+  }
+
   // A member's message in the round: in the log, for the members after it, and in the
   // round's replies, for the user.
   const postInRound = (room, round, member, text, duration, long) => {
     const files = long?.files ?? []
+    const figures = figuresOf(room, member)
     appendRoom(room, {
       who: member.name, botId: member.id, text,
       ...(duration === undefined ? {} : { duration }),
+      ...(figures === undefined ? {} : figures),
       ...(files.length > 0 ? { files } : {}),
     })
     round.replies.push({
       botId: member.id, name: member.name, color: member.color, text, time: Date.now(),
       ...(duration === undefined ? {} : { duration }),
+      ...(figures === undefined ? {} : figures),
       ...(files.length > 0 ? { files } : {}), ...(long?.length ? { length: long.length } : {}),
     })
     void rt.save().catch(() => {})
@@ -500,6 +535,16 @@ export function install(rt) {
     const startedAt = Date.now()
     const exchangeId = randomUUID()
     const turn = { botId: member.id, sessionId, exchangeId }
+    // The footnote's baseline: this turn's tools count from here, and so do the tokens.
+    try {
+      const agent = await rt.resolveAgent(sessionId)
+      turnMeter.set(meterKey(room, member), {
+        sessionId,
+        session: agent?.session,
+        from: (agent?.session === undefined ? undefined : usageNow(agent.session)) ?? { input: 0, output: 0 },
+        steps: 0,
+      })
+    } catch { turnMeter.delete(meterKey(room, member)) }
     const { started } = round
     started.push(turn)
     // The read position is the one of this turn's start, and moves only when the
@@ -578,6 +623,7 @@ export function install(rt) {
   // The team's own tools are quick; any other tool is the start of work.
   const QUICK_TOOLS = new Set(TEAM_TOOLS)
   rt.workRoomTurn = (sessionId, tool) => {
+    noteStep(sessionId)
     if (QUICK_TOOLS.has(tool)) return
     const owner = rt.groupOwners.get(sessionId)
     if (owner !== undefined) markBatchWorked(owner.roomId, owner.botId)

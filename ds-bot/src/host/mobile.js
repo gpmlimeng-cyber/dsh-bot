@@ -54,11 +54,41 @@ function reminderText(text) {
 // One reply of a round as an item: a member's message, the user's message that came in
 // while the round ran, or an event of the round. `id` names it the same while the round
 // runs and once its result is logged, so a client can swap the one for the other.
+// A picture or a file as the phone names it. The engine reads an image back by its id
+// together with the byte length and the dimensions it was stored with, so all of them
+// travel with the reference: a phone given only the id cannot ask for the picture.
+const attachmentRef = file => ({
+  id: file?.attachmentId ?? file?.id ?? '',
+  ...(file?.name ? { name: file.name } : {}),
+  ...(file?.mediaType ? { mediaType: file.mediaType } : {}),
+  ...(Number.isFinite(file?.bytes) ? { bytes: file.bytes } : {}),
+  ...(Number.isFinite(file?.width) ? { width: file.width } : {}),
+  ...(Number.isFinite(file?.height) ? { height: file.height } : {}),
+})
+
+// A line's footnote numbers: the steps its turn took and the tokens it spent. Absent
+// when the turn's figures were not counted (an older state, or a line the user wrote).
+function figuresOf(reply) {
+  return {
+    ...(Number.isFinite(reply?.steps) ? { steps: reply.steps } : {}),
+    ...(Number.isFinite(reply?.tokens) ? { tokens: reply.tokens } : {}),
+    ...(Number.isFinite(reply?.input) ? { input: reply.input } : {}),
+    ...(Number.isFinite(reply?.output) ? { output: reply.output } : {}),
+  }
+}
+
 function replyItem(reply, id, extra = {}) {
   const who = { ...(reply.botId ? { botId: reply.botId } : {}), ...(reply.name ? { name: reply.name } : {}), ...(reply.color ? { color: reply.color } : {}) }
   const time = Number.isFinite(reply.time) ? reply.time : null
-  if (reply.kind === 'user') return { id, kind: 'user', text: String(reply.text ?? ''), time, ...extra }
-  if (reply.kind === undefined) return { id, kind: 'bot', ...who, text: String(reply.text ?? ''), time, ...(Number.isFinite(reply.duration) ? { duration: reply.duration } : {}), ...extra }
+  if (reply.kind === 'user') {
+    const attached = [...(reply.images ?? []), ...(reply.files ?? [])]
+    return {
+      id, kind: 'user', text: String(reply.text ?? ''), time,
+      ...(attached.length > 0 ? { files: attached.map(attachmentRef) } : {}),
+      ...extra,
+    }
+  }
+  if (reply.kind === undefined) return { id, kind: 'bot', ...who, text: String(reply.text ?? ''), time, ...(Number.isFinite(reply.duration) ? { duration: reply.duration } : {}), ...figuresOf(reply), ...(Array.isArray(reply.files) && reply.files.length > 0 ? { files: reply.files.map(attachmentRef) } : {}), ...extra }
   if (!ROUND_EVENTS.has(reply.kind)) return undefined
   return {
     id, kind: 'event', event: reply.kind, ...who,
@@ -80,8 +110,18 @@ export function roomItems(events) {
       const source = event.data?.source
       const content = Array.isArray(event.data?.content) ? event.data.content : []
       if (source?.kind === 'user') {
-        const images = content.filter(block => block?.type === 'image').length
-        items.push({ id: `${seq}`, kind: 'user', text: textOf(content), ...(typeof source.rpcId === 'string' && source.rpcId !== '' ? { rpcId: source.rpcId } : {}), ...(images > 0 ? { images } : {}), time: event.time ?? null })
+        const images = content.filter(block => block?.type === 'image' && !block.offloaded)
+        // The phone draws the pictures and files themselves, so the line names them;
+        // `images` stays as the count a client without that read still shows.
+        const attachments = [...images, ...content.filter(block => block?.type === 'file' && block.attachment !== undefined)]
+          .map(block => block.attachment)
+        items.push({
+          id: `${seq}`, kind: 'user', text: textOf(content),
+          ...(typeof source.rpcId === 'string' && source.rpcId !== '' ? { rpcId: source.rpcId } : {}),
+          ...(images.length > 0 ? { images: images.length } : {}),
+          ...(attachments.length > 0 ? { files: attachments.map(attachmentRef) } : {}),
+          time: event.time ?? null,
+        })
       } else if (source?.kind === 'schedule') {
         items.push({ id: `${seq}`, kind: 'event', event: 'schedule', text: reminderText(textOf(content)), time: event.time ?? null })
       } else if (source?.kind === SOURCE_KIND && source.role === 'post') {
@@ -269,13 +309,14 @@ function legacyRoomItem(rt, line) {
     ...(bot?.color !== undefined ? { color: bot.color } : {}),
     ...(typeof line.time === 'number' ? { time: line.time } : {}),
     ...(typeof line.duration === 'number' ? { duration: line.duration } : {}),
+    ...figuresOf(line),
     ...(line.botId !== undefined ? { botId: line.botId } : {}),
     // `kind: 'notice'` carries why it happened in `reason`; that is the event the client
     // draws. Other kinds name themselves.
     ...(line.kind === 'notice' ? (line.reason === undefined ? {} : { event: line.reason }) : line.kind === undefined ? {} : { event: line.kind }),
     ...(legacyAttachmentsOf(line) === undefined ? {} : { images: legacyAttachmentsOf(line).length }),
     // The phone draws the files themselves; `images` stays as the count older clients read.
-    ...(legacyAttachmentsOf(line) === undefined ? {} : { files: legacyAttachmentsOf(line).map(file => ({ id: file.attachmentId, name: file.name, mediaType: file.mediaType })) }),
+    ...(legacyAttachmentsOf(line) === undefined ? {} : { files: legacyAttachmentsOf(line).map(attachmentRef) }),
     ...(legacyWholeOf(line) === undefined ? {} : { whole: legacyWholeOf(line) }),
   }
 }
