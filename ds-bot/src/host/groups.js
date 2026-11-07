@@ -955,6 +955,9 @@ export function install(rt) {
           ...(post.images === undefined ? {} : { images: post.images }),
           // The notes also stay as their own field: the phone drops them from what it
           // shows, the members and the reading tools still find them in `text`.
+          // How long that reply took, when the round measured it: the phone
+          // draws it beside the member's name.
+          ...(post.duration === undefined ? {} : { duration: post.duration }),
           ...(readings.length === 0 ? {} : { readings }),
           ...(post.via === undefined ? {} : { via: post.via }),
         })
