@@ -237,7 +237,9 @@ export function install(rt) {
   const roomLineListeners = new Set()
   const appendRoom = (room, line) => {
     room.seq += 1
-    const whole = { ...line, seq: room.seq }
+    // Every line is dated when it lands: the phone shows a name line with its time
+    // (and the time gaps between rounds), and a line without one cannot.
+    const whole = { ...(line.time === undefined ? { time: Date.now() } : {}), ...line, seq: room.seq }
     const log = [...room.log, keepGroupLine(room.id, whole, line.text ?? '')]
     for (const gone of log.slice(0, -ROOM_LOG_MAX)) dropGroupLine(room.id, gone)
     room.log = log.slice(-ROOM_LOG_MAX)
@@ -472,7 +474,11 @@ export function install(rt) {
   // round's replies, for the user.
   const postInRound = (room, round, member, text, duration, long) => {
     const files = long?.files ?? []
-    appendRoom(room, { who: member.name, botId: member.id, text, ...(files.length > 0 ? { files } : {}) })
+    appendRoom(room, {
+      who: member.name, botId: member.id, text,
+      ...(duration === undefined ? {} : { duration }),
+      ...(files.length > 0 ? { files } : {}),
+    })
     round.replies.push({
       botId: member.id, name: member.name, color: member.color, text, time: Date.now(),
       ...(duration === undefined ? {} : { duration }),

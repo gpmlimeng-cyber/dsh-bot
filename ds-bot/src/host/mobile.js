@@ -268,6 +268,7 @@ function legacyRoomItem(rt, line) {
     name: line.who,
     ...(bot?.color !== undefined ? { color: bot.color } : {}),
     ...(typeof line.time === 'number' ? { time: line.time } : {}),
+    ...(typeof line.duration === 'number' ? { duration: line.duration } : {}),
     ...(line.botId !== undefined ? { botId: line.botId } : {}),
     // `kind: 'notice'` carries why it happened in `reason`; that is the event the client
     // draws. Other kinds name themselves.
