@@ -45,12 +45,17 @@ function findTask(room, id) {
   return task
 }
 
-const isDone = (room, id) => roomTasks(room).find(task => task.id === id)?.status === 'done'
+// 前置不再挡路：做完了，或者被取消了。取消的意思是「这件事不做了」,
+// 后面等着它的事应该照样能开工,否则取消一条就把整条链锁死。
+const isSettled = (room, id) => {
+  const status = roomTasks(room).find(task => task.id === id)?.status
+  return status === 'done' || status === 'cancelled'
+}
 
 // 依赖全完成？返回第一个未完成的前置（消息里写「等 N 号」）。
 function firstBlocking(room, task) {
   for (const depId of task.deps ?? []) {
-    if (!isDone(room, depId)) return roomTasks(room).find(entry => entry.id === depId) ?? { id: depId, no: null }
+    if (!isSettled(room, depId)) return roomTasks(room).find(entry => entry.id === depId) ?? { id: depId, no: null }
   }
   return undefined
 }
@@ -198,8 +203,10 @@ export function install(rt) {
     return { room, tasks: roomTasks(room) }
   }
 
+  // 「可开工」= 有人认领 + 前置不再挡路。未指派的不算:它还没人干,
+  // 和群回合给管理员的可开工作息(tasks.js 的 readyTasks)同一个口径。
   const readyIds = (room) => roomTasks(room)
-    .filter(task => task.status === 'pending' && (task.deps ?? []).every(depId => isDone(room, depId)))
+    .filter(task => task.status === 'pending' && task.assignee != null && (task.deps ?? []).every(depId => isSettled(room, depId)))
     .map(task => task.id)
 
   async function view(roomId) {
@@ -429,7 +436,7 @@ export function install(rt) {
     syncGoal(room)
     if (room.tasks === undefined || room.tasks.length === 0) return []
     return roomTasks(room)
-      .filter(task => task.status === 'pending' && task.assignee != null && (task.deps ?? []).every(depId => isDone(room, depId)))
+      .filter(task => task.status === 'pending' && task.assignee != null && (task.deps ?? []).every(depId => isSettled(room, depId)))
       .map(task => ({ no: task.no, id: task.id, title: task.title, assignee: task.assignee, name: rt.botOf(task.assignee)?.name ?? task.assignee }))
   }
 
