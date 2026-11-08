@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { install as installBtw } from './btw.js'
 import { install as installSide } from './side.js'
+import { install as installTasks } from './tasks.js'
 import { handoffReply, questionReply, viewReply } from './parts.js'
 import { validateViewAnswer } from 'deep-view/core'
 import { applySuperAgentPrefs } from '../shared/superagent-prefs.js'
@@ -20,7 +21,7 @@ const invalid = message => Object.assign(new Error(message), { code: 'bot/invali
 const isInternal = error => error instanceof TypeError || error instanceof ReferenceError || error instanceof RangeError
   || error instanceof SyntaxError || (typeof error?.code === 'string' && /^E[A-Z_]+$/.test(error.code))
 export function errorCode(error) {
-  if (typeof error?.code === 'string' && error.code.startsWith('bot/')) return error.code
+  if (typeof error?.code === 'string' && /^(bot|task)\//.test(error.code)) return error.code
   return isInternal(error) ? 'bot/internal' : 'bot/refused'
 }
 
@@ -41,7 +42,7 @@ export const CAPABILITIES = [
   'models', 'notices', 'private-release', 'provider-add', 'provider-key', 'provider-models',
   'provider-remove', 'providers', 'remove-agent', 'repo-stars', 'room-chat',
   'room-progress', 'run-stats', 'schedule-create', 'schedule-delete', 'schedules',
-  'secret-allow', 'secret-cancel', 'secret-delete', 'secret-set', 'secret-update', 'send',
+  'secret-allow', 'secret-cancel', 'secret-delete', 'secret-set', 'secret-update', 'send', 'task-add', 'task-comment', 'task-events', 'task-remove', 'task-update', 'tasks-view',
   'set-flags', 'set-main', 'set-prefs', 'side-ask', 'side-cancel', 'side-close', 'side-new',
   'state', 'stop-member-work', 'stop-room-work', 'team-workspace', 'thinking', 'update-bot',
   'update-check', 'update-install', 'update-room', 'usage', 'view-reply',
@@ -62,6 +63,7 @@ export function promptRequestId(value) {
 export function install(rt) {
   installBtw(rt)
   installSide(rt)
+  installTasks(rt)
   const { ctx, state } = rt
 
   // 队列 payload 的唯一真相是 agent-loop 的 `inbox` 投影；拿不到就返回 undefined，
@@ -82,7 +84,7 @@ export function install(rt) {
   rt.uiLanguage = () => (uiLocale === undefined ? undefined : LANGUAGES[uiLocale.split('-')[0].toLowerCase()] ?? uiLocale)
 
   const ok = value => ({ ok: true, value })
-  const fail = (message, code = 'bot/error') => ({ ok: false, error: { code, message, details: {} } })
+  const fail = (message, code = 'bot/error', data = {}) => ({ ok: false, error: { code, message, details: data, ...(Object.keys(data).length > 0 ? { data } : {}) } })
   // Models come from DSH, not state.json, so a provider added in Harness settings
   // changes the view without a new revision.
   const modelsKey = () => `${rt.cachedCatalog().map(entry => `${entry.ref}${entry.needsKey ? '!' : ''}${entry.reasoning ? `:${JSON.stringify(entry.reasoning)}` : ''}`).join(',')}|${rt.cachedDefault() ?? ''}`
@@ -206,7 +208,7 @@ export function install(rt) {
   }
   // What a host that only reads the team may still answer.
   // Updates change the dsh profile, not the team, so a reading host may run them too.
-  const READS = new Set(['hello', 'avatar', 'state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'room-chat', 'notices', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market', 'goal-view', 'computer-system-status', 'computer-shot', 'local-agents'])
+  const READS = new Set(['hello', 'avatar', 'state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'room-chat', 'notices', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market', 'goal-view', 'tasks-view', 'task-events', 'computer-system-status', 'computer-shot', 'local-agents'])
 
   async function setPrefs(body) {
     if (body.theme !== undefined) {
@@ -533,6 +535,24 @@ export function install(rt) {
           const result = await rt.goalControl(String(body.roomId ?? ''), body)
           return result.error !== undefined ? fail(result.error, result.code ?? 'bot/refused') : ok(view())
         }
+        case 'tasks-view':
+          await rt.load()
+          return ok(await rt.tasksView(String(body.roomId ?? '')))
+        case 'task-events':
+          await rt.load()
+          return ok(rt.taskEvents(String(body.roomId ?? ''), String(body.id ?? '')))
+        case 'task-add':
+          await rt.load()
+          return ok(await rt.taskAdd(String(body.roomId ?? ''), body))
+        case 'task-update':
+          await rt.load()
+          return ok(await rt.taskUpdate(String(body.roomId ?? ''), body))
+        case 'task-comment':
+          await rt.load()
+          return ok(await rt.taskComment(String(body.roomId ?? ''), body))
+        case 'task-remove':
+          await rt.load()
+          return ok(await rt.taskRemove(String(body.roomId ?? ''), body))
         case 'dismiss-question':
           await rt.load()
           if (rt.own(state.questions, body.sessionId) !== undefined) {
@@ -862,7 +882,7 @@ export function install(rt) {
       const code = errorCode(error)
       const message = error?.message ?? String(error)
       if (code === 'bot/internal') rt.noteFailure?.({ source: 'api', text: `${endpoint}: ${message}`, code: error?.code ?? error?.name, stack: error?.stack })
-      return fail(message, code)
+      return fail(message, code, error?.data)
     }
   }
 

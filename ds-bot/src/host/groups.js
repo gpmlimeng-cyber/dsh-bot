@@ -171,6 +171,13 @@ const adminNote = room => [
 ].filter(Boolean).join(' ')
 
 // The opening turn of a group the user just made without a first message.
+// 任务板本身不叫人：群回合开始前把这批可开工的活交给管理员，由它决定 @ 谁（spec §7）。
+const taskReadyNote = (rt, room) => {
+  const ready = rt.readyTasks?.(room) ?? []
+  if (ready.length === 0) return ''
+  return `Task board — ready to start now: ${ready.map(task => `#${task.no} ${task.title} → ${task.name}`).join('; ')}. The board wakes nobody: call whoever should take one with @Name.`
+}
+
 const roomKickoff = language => `The user just created this group and has not written yet. Greet the user in one short message and ask what they want this group to work on. Do not call members with @ yet, and do not reply [PASS]. No name prefix. Write in ${language ?? 'the user\'s language if known; otherwise Chinese'}.`
 
 const ROOM_READ_MAX = 30
@@ -345,6 +352,7 @@ export function install(rt) {
       members,
       notice,
       goal,
+      leads ? taskReadyNote(rt, room) : '',
       leads ? adminNote(room) : '',
       earlier.length ? `Earlier in the group, before this round (context only):\n${transcript(earlier, memberText(room))}` : '',
       current.length
