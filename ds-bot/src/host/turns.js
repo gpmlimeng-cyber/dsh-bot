@@ -624,6 +624,14 @@ export function install(rt) {
     if (rt.groupOwners.has(info?.id)) void rt.goalSettled?.(rt.roomOf(rt.groupOwners.get(info.id).roomId)).catch(error => rt.warn('ds-bot: goal settle failed: %s', error))
   })
 
+  // 这一轮花了多少:从 turn/start 到 turn/end 的时长、工具步数、token 用量差值。
+  // 群里 Bot 自己的一条发言要的「耗时 · 步数 · tokens」就是这些数。
+  const usageTotals = (session) => {
+    const usage = ctx.get?.('sessionProjections')?.snapshot(session, ['tokenUsage'])?.values?.tokenUsage
+    if (usage === undefined) return undefined
+    return (usage.inputTokens ?? 0) + (usage.cacheReadTokens ?? 0) + (usage.cacheWriteTokens ?? 0) + (usage.outputTokens ?? 0)
+  }
+
   ctx.on('session/event', (session, event) => {
     const id = session?.id
     if (id === undefined) return
@@ -668,6 +676,7 @@ export function install(rt) {
         setActivity(id, 'thinking')
         entry.turn = event.data.turn
         entry.since = event.time ?? Date.now()
+        entry.usageFrom = usageTotals(session)
         entry.texts = []
         entry.shown = 0
         entry.step = undefined
@@ -760,6 +769,10 @@ export function install(rt) {
             ...(files.length > 0 ? { files } : {}),
             botId: source.senderSessionId,
             name: source.senderName,
+            // 这一轮的数字跟着这条发言走,落盘时写在那一行上。
+            ...(typeof source.duration === 'number' ? { duration: source.duration } : {}),
+            ...(typeof source.steps === 'number' ? { steps: source.steps } : {}),
+            ...(typeof source.tokens === 'number' ? { tokens: source.tokens } : {}),
             reportBack: source.reportBack === true,
             ...(source.member ? { member: true } : {}),
             // Who the whole post called. `text` may be only its opening (attachLong).
@@ -911,6 +924,16 @@ export function install(rt) {
         const shown = entry.shown > 0 || (info?.retried === true && promisedOpenings.delete(info.exchangeId))
         const { lastText, lastCalled } = entry
         const toolCount = entry.toolCount ?? 0
+        // 这一轮的账，交给群里落盘那一步用（Bot 自己发言时也带上）。
+        if (entry.since !== undefined) {
+          const after = usageTotals(session)
+          const tokens = after === undefined || entry.usageFrom === undefined ? undefined : Math.max(0, after - entry.usageFrom)
+          rt.noteTurnFigures?.(id, {
+            duration: (event.time ?? Date.now()) - entry.since,
+            steps: toolCount,
+            ...(tokens === undefined ? {} : { tokens }),
+          })
+        }
         const suppressedSubagent = entry.suppressedSubagent === true
         // A turn stopped for a switch goes on in the next part, which answers instead.
         const switched = entry.switched === true

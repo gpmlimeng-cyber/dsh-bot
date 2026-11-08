@@ -474,6 +474,23 @@ export function install(rt) {
   // it spent. The phone draws the same line a Bot's own reply carries (耗时 · 步数 ·
   // tokens), so what DSH counts stays in one place: steps from the tool events, usage
   // from the Session's own tokenUsage projection, minus the reading taken at turn start.
+  // 一轮结束时由 turns.js 交过来：Bot 自己发到群里的那条也要有这笔账。
+  const lastFigures = new Map() // botId → { duration, steps, tokens, at }
+  const figuresOfBot = (botId) => {
+    const held = lastFigures.get(botId)
+    if (held === undefined || Date.now() - held.at > 10 * 60 * 1000) return undefined
+    const { duration, steps, tokens } = held
+    return {
+      duration,
+      ...(steps > 0 ? { steps } : {}),
+      ...(tokens === undefined || tokens <= 0 ? {} : { tokens }),
+    }
+  }
+  rt.noteTurnFigures = (sessionId, figures) => {
+    const botId = rt.selfOf(sessionId)
+    if (botId !== undefined) lastFigures.set(botId, { ...figures, at: Date.now() })
+  }
+
   const turnMeter = new Map() // `${roomId}/${botId}` → { sessionId, session, from, steps }
   const meterKey = (room, member) => `${room.id}/${member.id}`
   const usageNow = (session) => {
@@ -1004,6 +1021,8 @@ export function install(rt) {
           // How long that reply took, when the round measured it: the phone
           // draws it beside the member's name.
           ...(post.duration === undefined ? {} : { duration: post.duration }),
+          ...(post.steps === undefined ? {} : { steps: post.steps }),
+          ...(post.tokens === undefined ? {} : { tokens: post.tokens }),
           ...(readings.length === 0 ? {} : { readings }),
           ...(post.via === undefined ? {} : { via: post.via }),
         })
@@ -1036,6 +1055,7 @@ export function install(rt) {
       if (draftPost !== undefined && admin !== undefined && !speakers.some(member => member.id === admin.id)) speakers.push(admin)
       const round = {
         roomId: room.id,
+        startedAt: Date.now(),
         members: room.members,
         startSeq,
         goalRevision: room.goal?.revision,
@@ -1282,11 +1302,19 @@ export function install(rt) {
         running.replies.push({ kind, botId: sender.id, name: sender.name, color: sender.color, time: Date.now() })
       } else {
         const line = [text, ...files.map(fileLine)].filter(Boolean).join('\n')
-        appendRoom(room, { who: sender.name, botId: sender.id, text: line, ...(files.length > 0 ? { files } : {}) })
+        // 这一轮的账：回合从开场算起，步数与 token 取这位 Bot 刚结束的那一轮。
+        const held = figuresOfBot(sender.id)
+        const took = running.startedAt === undefined ? undefined : Date.now() - running.startedAt
+        const figures = {
+          ...(took === undefined || took < 1000 ? {} : { duration: took }),
+          ...(held?.steps === undefined ? {} : { steps: held.steps }),
+          ...(held?.tokens === undefined ? {} : { tokens: held.tokens }),
+        }
+        appendRoom(room, { who: sender.name, botId: sender.id, text: line, ...figures, ...(files.length > 0 ? { files } : {}) })
         // A reply that went as a file keeps the file with it: the chat shows "Show all"
         // against the whole length and reads the rest from the attachment.
         running.replies.push({
-          botId: sender.id, name: sender.name, color: sender.color, text: line, time: Date.now(),
+          botId: sender.id, name: sender.name, color: sender.color, text: line, time: Date.now(), ...figures,
           ...(files.length > 0 ? { files } : {}), ...(extra.length ? { length: extra.length } : {}),
         })
       }
@@ -1297,7 +1325,11 @@ export function install(rt) {
     const agent = await rt.resolveAgent(rt.sessionOfRoom(room))
     agent.followup(createUserMessage({
       content: [{ type: 'text', text: `[Group post from ${sender.name}]\n${text}` }, ...files.map(attachment => ({ type: 'file', attachment }))],
-      source: { kind: SOURCE_KIND, form: 'relay', role: 'post', exchangeId: randomUUID(), senderName: sender.name, senderSessionId: sender.id, roomId: room.id, ...extra },
+      source: {
+        kind: SOURCE_KIND, form: 'relay', role: 'post', exchangeId: randomUUID(),
+        senderName: sender.name, senderSessionId: sender.id, roomId: room.id,
+        ...figuresOfBot(sender.id), ...extra,
+      },
     }))
     await ctx.sessions.flush(agent.session)
   }
