@@ -162,6 +162,8 @@ const totals = rows => rows.reduce((sum, row) => ({
   input: sum.input + row[4], cacheRead: sum.cacheRead + row[5], cacheWrite: sum.cacheWrite + row[6], output: sum.output + row[7], calls: sum.calls + row[8],
 }), { input: 0, cacheRead: 0, cacheWrite: 0, output: 0, calls: 0 })
 
+import { appendFileSync } from 'node:fs'
+
 export function install(rt) {
   const { ctx, state } = rt
   const boot = randomUUID()
@@ -415,6 +417,15 @@ function legacyRoomChatPage(rt, roomId, cursor) {
   function goalView(body) {
     const roomId = typeof body?.roomId === 'string' ? body.roomId : ''
     const room = rt.roomOf(roomId)
+    // TEMP diagnostic: what this read actually saw.
+    try {
+      appendFileSync('/root/.dsh/bot/goalview.log', `${JSON.stringify({
+        at: Date.now(), asked: roomId, found: room !== undefined,
+        id: room?.id, name: room?.name, hasGoal: room?.goal !== undefined,
+        status: room?.goal?.status, title: room?.goal?.title,
+      })}
+`)
+    } catch {}
     if (room === undefined) throw Object.assign(new Error('Unknown group chat'), { code: 'bot/not-found' })
     const goal = room.goal
     if (goal === undefined) return { roomId: room.id, goal: null }
@@ -422,6 +433,9 @@ function legacyRoomChatPage(rt, roomId, cursor) {
       title: stage.title,
       acceptance: stage.acceptance,
       status: stage.status ?? (index < goal.current ? 'passed' : index === goal.current ? 'active' : 'pending'),
+      evidence: stage.evidence,
+      reworks: stage.reworks ?? 0,
+      feedback: stage.feedback,
       tasks: (stage.tasks ?? []).map(task => ({
         botId: task.botId,
         bot: rt.botOf(task.botId)?.name ?? task.botId,
@@ -444,6 +458,13 @@ function legacyRoomChatPage(rt, roomId, cursor) {
         constraints: goal.constraints ?? [],
         current: goal.current,
         stageCount: stages.length,
+        // The rest of what the web panel draws: a draft's brief, the closing
+        // words of a finished goal, and whether it waits on the user.
+        brief: goal.brief,
+        summary: goal.summary,
+        evidence: goal.evidence,
+        reason: goal.reason,
+        idle: goal.idle === true,
         stages,
       },
     }
