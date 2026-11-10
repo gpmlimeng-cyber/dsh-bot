@@ -135,11 +135,15 @@ test('a message kept only in part is read whole on request, and says when it is 
 
   fresh()
   const short = 'a short start'
-  const partly = { length: 300_000, load: async () => ({ text: 'y'.repeat(200_000), whole: false }) }
+  let partialReads = 0
+  const partly = { length: 300_000, load: async () => { partialReads++; return { text: 'y'.repeat(200_000), whole: false } } }
   assert.equal(render(short, { whole: partly }).folded, true, 'a cut message folds even when its start is short')
   assert.equal(render(short, { whole: partly }).shown, short)
   await buttons(render(short, { whole: partly }).control)[0].props.onClick()
   assert.match(words(render(short, { whole: partly }).control), /^Showing the first 200,000 characters/)
+  buttons(render(short, { whole: partly }).control)[0].props.onClick()
+  await buttons(render(short, { whole: partly }).control)[0].props.onClick()
+  assert.equal(partialReads, 1)
 
   fresh()
   const lost = { length: 300_000, load: async () => undefined }
@@ -222,4 +226,31 @@ test('a mark folds only where the caller asks for it', () => {
   // A mark does not fold a reply whose detail is short: the point alone is not a fold.
   const short = `结论。\n\n${'d'.repeat(450)}`
   assert.equal(foldPreview(short, { chars: 1000, lines: 20 }, true, { chars: 120, lines: 4 }, false, true), null)
+})
+
+test('an attached code block loads whole on copy and expansion reuses it', async () => {
+  const text = '```js\n' + lines(4000) + '\n```'
+  const head = text.slice(0, 1000)
+  let loads = 0
+  const whole = { length: text.length, load: async () => { loads++; return { text, whole: true } } }
+  fresh()
+  const folded = render(head, { whole })
+  assert.equal(folded.shown, '')
+  assert.equal(typeof folded.code, 'function')
+  assert.equal(await folded.code(), lines(4000))
+  assert.equal(loads, 1)
+  const ready = render(head, { whole })
+  await buttons(ready.control)[0].props.onClick()
+  assert.equal(render(head, { whole }).shown, text)
+  assert.equal(loads, 1)
+})
+
+test('copying an attachment refuses an incomplete read', async () => {
+  const head = '```js\n' + lines(40)
+  fresh()
+  const folded = render(head, { whole: { length: 40000, load: async () => ({ text: head, whole: false }) } })
+  await assert.rejects(folded.code(), /whole code block/)
+  fresh()
+  const failed = render(head, { whole: { length: 40000, load: async () => { throw new Error('read failed') } } })
+  await assert.rejects(failed.code(), /whole code block/)
 })

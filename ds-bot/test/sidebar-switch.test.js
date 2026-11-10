@@ -342,9 +342,19 @@ test('what the team view replaces in the shell sidebar stays out of sight', () =
 })
 
 // The column is portalled over the shell's collapsed sidebar, so the shell's own collapse
-// must leave no track behind: exactly one rule pins both side columns to zero width.
+// must leave no track behind: exactly one rule pins both side columns to zero width. That
+// rule sits inside a min-width query (a narrow host puts the conversation in the first
+// track), and `rulesOf` drops everything inside an @-rule, so this test scans the sheet
+// itself.
+function rulesInsideMedia(css) {
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, '')
+  return [...text.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(match => !match[1].trim().startsWith('@'))
+    .map(match => ({ selector: match[1].trim(), body: match[2].replace(/\s+/g, '') }))
+}
+
 test('the shell frame gives the portalled column no track of its own', () => {
-  const own = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].filter(rule => /data-sidebar-collapsed|data-rightbar-collapsed/.test(rule.selector))
+  const own = [...rulesInsideMedia(SHELL_CSS), ...rulesInsideMedia(SIDEBAR_CSS)].filter(rule => /data-sidebar-collapsed|data-rightbar-collapsed/.test(rule.selector))
   const grids = own.filter(rule => /grid-template-columns/.test(rule.body))
   assert.equal(grids.length, 1)
   assert.match(grids[0].body, /0pxminmax\(0,1fr\)0px!important/)

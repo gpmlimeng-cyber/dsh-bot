@@ -6,6 +6,9 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { DICTIONARY } from '../src/client/i18n.js'
+// The fork's own copy lands on the same dictionary from its own file, keeping i18n.js
+// exactly upstream's; the entries have to be in place before this file checks them.
+import '../src/client/zh-extra.js'
 
 const SOURCE = new URL('../src/client/i18n.js', import.meta.url)
 // The host renders its own copy through the same table, so its literals count too.

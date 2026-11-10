@@ -1,10 +1,6 @@
 // Where the mode row (the surface switcher and the band's own three controls) lives. A
-// desktop window keeps it in the caption band; a phone has no band, and a fixed row would
-// float over whatever the page shows first, so there it takes the drawer's first row and
-// scrolls out of sight with the drawer.
+// desktop window keeps it in the caption band.
 //
-// The drawer's marker belongs to dsh-web-mobile; without the plugin there is no drawer
-// form at all, so the row stays in the band (a safe failure: one row, in the band).
 // The band is the window's drag region on a desktop, and Chromium gives a drag region's
 // clicks to the window instead of the page. A button inside that region can take them back
 // with -webkit-app-region: no-drag; one floating above it cannot, because hit testing never
@@ -29,15 +25,14 @@ function readAppRegion(element) {
   }
 }
 
-// A phone has no caption band: the row takes the drawer's first row and scrolls out of sight
-// with it. This is also what tells the caller which of the two layouts it is painting.
-export function drawerSlot(document) {
-  if (document.querySelector('[data-mobile-nav="frame"]') === null) return null
-  return document.querySelector('.bt-side') ?? null
+// There is no drawer form any more: the phone layout was a separate plugin this one no
+// longer ships, so the row always lives in the window's caption band (or the body).
+export function drawerSlot() {
+  return null
 }
 
 export function modeRowSlot(document) {
-  return drawerSlot(document) ?? bandHost(document) ?? document.body
+  return bandHost(document) ?? document.body
 }
 
 // Moves the row into `slot` in the given order, once. Prepending in reverse keeps the order

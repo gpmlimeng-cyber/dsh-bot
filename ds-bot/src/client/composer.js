@@ -128,6 +128,10 @@ export function ComposerPlus({ sessionId, inputActions, useInput, useRoster, act
   // The selector runs on every input change, so inputNow stays live for the key
   // handler while `ready` re-renders only when steerability flips.
   const inputNow = useRef(undefined)
+  // The two picker inputs live up here with the other hooks: they are read after the
+  // early return, and a render that skipped them would break the slot.
+  const filePick = useRef(null)
+  const imagePick = useRef(null)
   const ready = useInput?.((state) => { inputNow.current = state; return steerable(state) }) === true
   useEffect(() => {
     if (!open) return undefined
@@ -179,7 +183,7 @@ export function ComposerPlus({ sessionId, inputActions, useInput, useRoster, act
   }, [shown, open, tick])
 
   const target = roster.byId?.[sessionId]?.id ?? roster.roomsById?.[sessionId]?.id
-  if (sessionId === undefined) return null
+  if (sessionId === undefined || target === undefined) return null
   // A composer without a file input has nothing to hand the picker. The card is
   // looked up through the button first; when the phone layout moves the plus out of
   // the card, the card is still found on its own before giving up.
@@ -233,8 +237,6 @@ export function ComposerPlus({ sessionId, inputActions, useInput, useRoster, act
     input.click()
     setTimeout(restore, 30_000)
   }
-  const filePick = useRef(null)
-  const imagePick = useRef(null)
   const handFiles = (event) => {
     const picked = event.target.files
     const input = fileInput()

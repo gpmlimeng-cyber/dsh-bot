@@ -30,7 +30,6 @@
     }
   },
   "dependencies": {
-    "deep-view": "0.1.0",
-    "dsh-web-mobile": "file:plugins/web-mobile"
+    "deep-view": "0.1.0"
   }
 }

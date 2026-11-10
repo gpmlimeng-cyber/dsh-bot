@@ -28,6 +28,7 @@ function runtime() {
     memoryEnabled: true,
     load: async () => {},
     save: async () => {},
+    onSaved: () => () => {},
     catalog: async () => {},
     loadSecrets: async () => {},
     chatOwners: new Map(),

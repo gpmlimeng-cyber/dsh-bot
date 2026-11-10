@@ -48,6 +48,7 @@ function runtime({ revision = 12 } = {}) {
     loadSecrets: async () => {},
     chatOwners: new Map([['s-writer', 'writer']]),
     chatOf: id => (bots[id]?.sessionId ?? id),
+    sessionOfRoom: room => (room === undefined ? undefined : room.sessionId ?? room.id),
     selfOf: () => undefined,
     roomOf: id => (id === undefined ? undefined : rooms[id]),
     botOf: id => (id === undefined ? undefined : bots[id]),
