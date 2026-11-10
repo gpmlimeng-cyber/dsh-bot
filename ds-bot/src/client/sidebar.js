@@ -719,7 +719,7 @@ export function TeamSidebar(props) {
     h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
       wideContent ? (main && !arrange.assign[main.id]
         ? h(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true })
-        : roster.ready || main ? null : h('div', { className: 'bt-hint' }, uiNow.bootFailed ? bootHint() : t('Setting up your Main Bot…'))) : null,
+        : roster.ready || main ? null : h('div', { className: 'bt-hint' }, bootFailed ? bootHint() : t('Setting up your Main Bot…'))) : null,
       ...sections.flatMap(section => [
         h('div', {
           key: `section:${section.id}`, className: 'bt-sec-row',

@@ -22687,7 +22687,7 @@ function TeamSidebar(props) {
     (0, import_react36.createElement)(
       "div",
       { ref: listRef, className: "bt-list", role: "region", "aria-label": t("Bot list") },
-      wideContent ? main && !arrange.assign[main.id] ? (0, import_react36.createElement)(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true }) : roster.ready || main ? null : (0, import_react36.createElement)("div", { className: "bt-hint" }, uiNow.bootFailed ? bootHint() : t("Setting up your Main Bot…")) : null,
+      wideContent ? main && !arrange.assign[main.id] ? (0, import_react36.createElement)(BotRow, { ...rowProps, bot: main, at: JSON.parse(updated)[currentPart(main)] ?? main.createdAt, marked: markedUnread[main.id] === true }) : roster.ready || main ? null : (0, import_react36.createElement)("div", { className: "bt-hint" }, bootFailed ? bootHint() : t("Setting up your Main Bot…")) : null,
       ...sections.flatMap((section) => [
         (0, import_react36.createElement)(
           "div",
