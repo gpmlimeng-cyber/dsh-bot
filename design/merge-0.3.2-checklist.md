@@ -152,3 +152,33 @@ for p in ~/.dsh/profiles/*/; do ls -d "$p/node_modules/dsh-web-mobile" 2>/dev/nu
 6. `modeBar` 用过的 i18n 词条（Bot mode / Classic Agent mode 之外那些）会变死词条，留在 `zh-extra.js` 不影响功能，收口后清。
 
 Note 1（第 1 项的重复钮）：`sidebar.js` 的 `TitleToggle` 只在「窗口有 Windows 标题栏」或「列被隐藏」时渲染；宿主那枚在 logo 行。两个同时可见就是重复，需要判谁该让位——**先看截图再决定，不要先删代码**。
+
+## 9. 验收记录（v0.3.2 合并，11-11）
+
+- **合入**：`main` = `ac2382c7`；来源分支 `chore/merge-upstream-0.3.2` = `0dc7a695`；两棵树 `git diff --numstat` 为 0 行。
+- **台账**（全量口径，含 fork 独有新文件）：84 文件 / 227 hunks / +17508 / −541；`node tools/patch-ledger.mjs` 重跑与 `.hunks.md` 逐字节一致；`git apply --check -R` rc=0；`tools/patch-conflict-check.sh v0.3.2` → **clean**。
+- **门禁**：`node scripts/build-client.mjs --check` → exit 0；`npm run lint` → 0 error / 78 warning（454 files）。
+- **全量测试**（清 `DS_*`/`DSH_*`，node 24，`DSH_HARNESS=dev/harness`）：2188 tests / 2184 pass / **1 fail** / 0 cancelled / 3 skipped。
+
+### 唯一那条红是环境性的，不是回归
+
+`test/computer.test.js` 的「the provider mounts when the switch comes on and reports its status」（断言在 `fibers[1].config` 那条）期望：
+
+```js
+process.platform === 'darwin' ? { agentPreset: false } : {}
+```
+
+而 `src/host/computer/index.js:184` 在 **进程环境里有 `DS_BOT_RUNTIME_DIR` 和 `DS_BOT_COMPUTER_HELPER_HOME`**、且 `prepareComputerHelper` 能解析到 helper 时，会往 config 里加 `helperPath`（本机是 `~/Library/Application Support/DeepSeek Bot/computer-use/…`），测试期望对象里没有这个键 → 必红。DS Bot 给 Bot 的 shell 就是导出这两个变量的，所以在 Bot 里跑测试必然踩到；这不是代码变更引起的。
+
+**实测（同一条命令，只差这两个变量）**
+```
+带变量：ℹ tests 45  ℹ pass 44  ℹ fail 1
+env -u DS_BOT_RUNTIME_DIR -u DS_BOT_COMPUTER_HELPER_HOME：ℹ tests 45  ℹ pass 45  ℹ fail 0
+```
+
+**干净机器 / 清变量后的预期基线：2188 tests / 2185 pass / 0 fail / 3 skipped。**
+注意别把 2184 当 0 fail 的基线：2188 − 3 skipped − 1 fail = 2184，那条红修掉后 pass 是 **2185**。
+
+复核方式：换一台没跑过 computer-use 的机器，或在本机用
+`env -u DS_BOT_RUNTIME_DIR -u DS_BOT_COMPUTER_HELPER_HOME npm test`。
+**不要为了复现去挪 `~/Library/Application Support/DeepSeek Bot/computer-use`**——那是用户的本机数据。
