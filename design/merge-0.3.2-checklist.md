@@ -117,6 +117,8 @@ for p in ~/.dsh/profiles/*/; do ls -d "$p/node_modules/dsh-web-mobile" 2>/dev/nu
 | ④ | 从抽屉点开的入口自动收起抽屉 | **退役**：抽屉形态属于 `dsh-web-mobile`（`mode-row.js` 注释），插件退役后没有抽屉 |
 | ⑦ | 会话头部右上「···」菜单 | **退役**：`styles.js:1514` 桌面本就 `display:none`，只有帧选择器才 `inline-flex`，从未在桌面显示；升级成桌面功能属新功能，另议 |
 | ⑯ | 模型选择器 | **保留胶囊 + 挂点**（`styles.js:1530` 说明胶囊是桌面专属），菜单实现换上游，⑰ 厂商图标重接 1 处 |
+| ㉜ | 品牌位改成模式选择器（caption 带里的下拉胶囊 + 面板） | **退役**（用户 11-11 定）：模式切换改用上游的「设置 → Mode」+ Agent 模式侧栏「DS Bot」返回钮 |
+| ㉟ | 窄屏把模式选择器那一行放进左侧抽屉顶部 | **退役**（同上，随 ㉜ 一起；抽屉本身也随手机皮没了） |
 
 仍未定：A 手机 web 皮退不退、B `zh-extra.js` + `MODULES.push` 是否本次一起做、C ㊴ 手机端点去留。
 
@@ -126,6 +128,8 @@ for p in ~/.dsh/profiles/*/; do ls -d "$p/node_modules/dsh-web-mobile" 2>/dev/nu
 - C ㊴ 手机端点：**先留**，登记「与上游原生 App 协议可能撞车」
 
 ## 8. 拆 mode bar 后的上游行为验收清单（Archi，11-11）
+
+**已执行（11-11）**：模式切换器与标题带自绘行全部退役，改用上游方案。dev 改动落在提交 `dcaa4a4e`（拆行）与 `fd13ab41`（台账重生成）：删 `src/client/mode-row.js` 与 `test/mode-row.test.js`，`index.js` 去掉 `modeBar`/`modeMenu`/`bandActions`/`bandPatch`/`placeRow`/`inDrawer`/`paintModeBar` 与 `#bt-modebar-rules`，`styles.js` 去掉 `.bt-modebar*`/`.bt-band-*`/`html.bt-bot` 压制规则。保留的是上游的「设置 → Mode」与 Agent 侧栏「DS Bot」返回钮。下表用于复核这四条上游行为是否真的回来了。
 
 用户 11-11 定：模式切换、标题栏左上那排（模式下拉 + 自绘搜索/新建/折叠）全部拆回上游；只留上游的「设置 → Mode」和 Agent 模式侧栏的「DS Bot」返回钮。
 
