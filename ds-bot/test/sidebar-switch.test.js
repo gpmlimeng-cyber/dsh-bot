@@ -311,14 +311,14 @@ function shell({ platform, collapsed }) {
   return { document, hidden, switches }
 }
 
-// The switch is always ours. Under a Windows title bar it is the title-band
-// button and the shell's own is hidden (left to the shell, it would expand the
-// shell's sidebar before we pull it back, a flash); elsewhere it is the column's
-// top-row button, or the floating one while the column is hidden.
+// The shell's own switch is left to the shell again (the mode row that replaced it is
+// gone); our floating switch only exists while the column is hidden, so the two never
+// stand for the same job.
 for (const collapsed of [false, true]) {
-  test(`${collapsed ? 'a collapsed' : 'an open'} shell sidebar under a Windows title bar shows only our switch`, () => {
-    const { switches } = shell({ platform: 'windows', collapsed })
-    assert.deepEqual(switches.map(node => node.className), ['bt-title-toggle'])
+  test(`the shell keeps its own switch under a Windows title bar, ${collapsed ? 'collapsed' : 'open'}`, () => {
+    const { document, hidden } = shell({ platform: 'windows', collapsed })
+    assert.equal(hidden(document.querySelector('.x_toggle')), false)
+    if (collapsed) assert.equal(hidden(document.querySelector('.bt-title-toggle')), false)
   })
 }
 
@@ -330,21 +330,33 @@ test('off a Windows title bar the column\'s top row and the floating switch are 
   }
 })
 
-test('what the team view replaces in the shell sidebar stays out of sight', () => {
+// The team view no longer swaps the shell's sidebar rows out, so the shell's own session
+// row and brand row are left alone on every platform.
+test('the shell keeps its own sidebar rows', () => {
   for (const platform of ['web', 'windows', 'mac']) {
     for (const collapsed of [false, true]) {
       const { document, hidden } = shell({ platform, collapsed })
-      assert.equal(hidden(document.querySelector('.x_newSession')), true)
+      assert.equal(hidden(document.querySelector('.x_newSession')), false, `${platform} ${collapsed}`)
       const brand = document.querySelector('.x_brand')
-      if (brand) assert.equal(hidden(brand), true)
+      if (brand) assert.equal(hidden(brand), false, `${platform} ${collapsed}`)
     }
   }
 })
 
 // The column is portalled over the shell's collapsed sidebar, so the shell's own collapse
-// must leave no track behind: exactly one rule pins both side columns to zero width.
+// must leave no track behind: exactly one rule pins both side columns to zero width. That
+// rule sits inside a min-width query (a narrow host puts the conversation in the first
+// track), and `rulesOf` drops everything inside an @-rule, so this test scans the sheet
+// itself.
+function rulesInsideMedia(css) {
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, '')
+  return [...text.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(match => !match[1].trim().startsWith('@'))
+    .map(match => ({ selector: match[1].trim(), body: match[2].replace(/\s+/g, '') }))
+}
+
 test('the shell frame gives the portalled column no track of its own', () => {
-  const own = [...rulesOf(SHELL_CSS), ...rulesOf(SIDEBAR_CSS)].filter(rule => /data-sidebar-collapsed|data-rightbar-collapsed/.test(rule.selector))
+  const own = [...rulesInsideMedia(SHELL_CSS), ...rulesInsideMedia(SIDEBAR_CSS)].filter(rule => /data-sidebar-collapsed|data-rightbar-collapsed/.test(rule.selector))
   const grids = own.filter(rule => /grid-template-columns/.test(rule.body))
   assert.equal(grids.length, 1)
   assert.match(grids[0].body, /0pxminmax\(0,1fr\)0px!important/)
@@ -386,12 +398,12 @@ test('the rail and the open column both carry the fold switch', () => {
   assert.match(SHELL_CSS, /@media\s*\(prefers-reduced-motion:reduce\)\{\.bt-leftcol\{animation:none\}\.bt-leftcol\[data-leaving\],\[class\*="_centerCol"\]\{transition:none\}\}/)
 })
 
-test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
+// The logo row is the shell's again: no rule of ours flattens it to take its room.
+test('no rule flattens the logo row under a Windows title bar', () => {
   const { document } = shell({ platform: 'windows', collapsed: false })
   const row = document.querySelector('.x_logoRow')
   const flat = rules.filter(rule => row.matches(rule.selector) && /height:0!important/.test(rule.body))
-  assert.equal(flat.length, 1)
-  assert.equal(shell({ platform: 'windows', collapsed: true }).document.querySelector('.x_logoRow').matches(flat[0].selector), false)
+  assert.deepEqual(flat.map(rule => rule.selector), [])
 })
 
 // The shell hides the footer of a collapsed sidebar under a Windows title bar, whose width

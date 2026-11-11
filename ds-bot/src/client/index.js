@@ -4,12 +4,12 @@ import { isHex, inkText, paintCss } from './inks.js'
 import { DEFAULT_MASK, SHAPES, markupCache, maskOf } from './characters.js'
 import { createSource, EMPTY_ROSTER, indexRoster, isAgentSession } from './sources.js'
 import { teamActions } from './team-actions.js'
-import { dismissDrawerIfOpen } from './drawer-dismiss.js'
 import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, skinOf, SKIN_CHOICES, SIZE_CHOICES } from './themes.js'
 import { MENTION_ORIGIN, currentPart } from './text.js'
-import { SHELL_CSS, CONVERSATION_CSS, installStyles, installCompiledStyles } from './styles.js'
+import { SHELL_CSS, CONVERSATION_CSS, botOwnCss, installStyles, installCompiledStyles } from './styles.js'
 import { lookOf } from './mark.js'
-import { TeamSidebar, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts, openHarnessOnboarding, openHarnessSettings, MODELS_STEP, MODELS_STEP_ORDER, OpenModelsStep } from './sidebar.js'
+import { TeamSidebar, YouAvatar, AccountLauncher, FooterAccount, BrandMark, BrandName, BotReturn, SIDEBAR_CSS, RETURN_CSS, holdShellShortcuts } from './sidebar.js'
+import { installSettingsShell, SETTINGS_SHELL_CSS } from './settings-shell.js'
 import { frameLayout, readSidebar, writeSidebar, toggledPref, DSH_NARROW } from './frame-layout.js'
 import { installFrameWatch } from './frame-watch.js'
 import { HeaderPill } from './header.js'
@@ -35,6 +35,7 @@ import { CONNECTORS_PAGE_CSS } from './connectors-page.js'
 import { LearningDock, LearningTurnTail, LEARNING_CSS } from './learning-card.js'
 import { MODEL_CSS, ModelChoiceDock, DeepSeekSignIn } from './model-menu.js'
 import { BOT_SETTINGS_CSS } from './bot-settings.js'
+import { AGENT_CARDS_CSS } from './agent-cards.js'
 import { AVATAR_LIBRARY_CSS } from './avatar-library.js'
 import { GROUP_SETTINGS_CSS } from './group-settings.js'
 import { FOLDER_CSS } from './folder-menu.js'
@@ -44,7 +45,6 @@ import { STORAGE, migrateStorage } from './storage.js'
 import { SkillsTab } from './plugin-skills.js'
 import { McpMarketTab } from './plugin-mcp.js'
 import { noteLeft, setUnread, sharedMap, toggleReaction } from './shared-map.js'
-import { drawerSlot, modeRowSlot, placeModeRow } from './mode-row.js'
 import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
 import { installLocale, language, t } from './i18n.js'
 import { noteClientError, quietly } from './diagnostics.js'
@@ -59,6 +59,8 @@ import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-m
 import { QueueDock, QUEUE_CSS } from './queue-dock.js'
 import { noticeApprovals } from './approval-notices.js'
 import { listedOpener } from './open-listed.js'
+// The fork's Chinese copy rides in after i18n's own dictionary, so i18n.js stays untouched.
+import './zh-extra.js'
 
 export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
 
@@ -89,6 +91,9 @@ export function apply(ctx) {
   // style so the shell's own interface returns. `plain` stays false until a Bot-mode
   // view hosts a plain session, which drops only the conversation replacements.
   const surface = createSource({ mode: readMode(), plain: false })
+  // Whether DS Bot holds the settings seat; Overlays draws the Settings dialog while it does not.
+  const settingsShellHeld = createSource(false)
+  let settingsShell = null
   // DSH Agent Session ids from the last pull, so a reload already knows the main
   // view is a plain Session before the team answers.
   let agentSessionCache = new Set()
@@ -578,7 +583,7 @@ export function apply(ctx) {
       const target = bot && currentPart(bot) !== last.sessionId ? currentPart(bot) : partFor(id)
       show(target)
     },
-    selectPanel: (id, opts) => { dismissDrawerIfOpen(opts?.fromDrawer); ctx.layout.selectPanel(id) },
+    selectPanel: (id) => { ctx.layout.selectPanel(id) },
     toggleSidebar: () => { ctx.layout.toggleSidebar() },
     // The shell's own plugin pages, reached through its remotes. They answer
     // { ok, value }, and some wrap twice, so unwrap until a list or an error appears.
@@ -695,9 +700,9 @@ export function apply(ctx) {
     },
     // The font picker shows what this device already uses, not what the host last answered.
     fontPref: () => fontOf(savedPrefs),
-    // Same for the skin, which the host never hears about: the row must show this device's pick,
-    // and with none the phone still wears the app's shape.
-    skinPref: () => skinOf(savedPrefs, { phone: document.querySelector('[data-mobile-nav="frame"]') !== null }),
+    // The phone skin is retired with the web-mobile plugin, so the host's pref alone
+    // answers here and no device probe is left to guess at it.
+    skinPref: () => skinOf(savedPrefs),
     // A bundle is the unit the enabled list shows, so its switch is the bundle switch the
     // shell's own Plugins page offers; the identity is the package name.
     setBundleEnabled: async (name, enabled) => {
@@ -743,6 +748,7 @@ export function apply(ctx) {
     setPanelYield: (on) => ui.set(state => (state.panelYield === on ? state : { ...state, panelYield: on })),
     // Agent mode hands the surface back to the shell; everything open on the Bot
     // surface closes first so nothing stale reopens on the way back.
+    surfaceMode: () => surface.getSnapshot().mode,
     setSurface: (mode) => {
       if (mode !== 'bot' && mode !== 'agent') return
       // Already there: still worth the landing check — a cold start never calls
@@ -853,15 +859,9 @@ export function apply(ctx) {
   actions.accountT = () => ctx.get('locale').bind('settings.account')
   // The Voice Input plugin's speech Remote; absent while that plugin is off.
   actions.speech = () => ctx.get('remote.speech') ?? undefined
-  // DSH's own settings: models, providers, keys and its plugins.
-  actions.openHarnessSettings = openHarnessSettings
-  actions.openHarnessOnboarding = openHarnessOnboarding
-  // DSH's Models page, through DS Bot's own onboarding step while it is registered.
-  actions.openHarnessModels = () => {
-    const step = (ctx.slots.entries?.('settings.onboarding') ?? []).some(entry => entry.options?.id === MODELS_STEP)
-    if (step) openHarnessOnboarding(MODELS_STEP)
-    else openHarnessSettings()
-  }
+  // One of DSH's onboarding editors, such as the DeepSeek API key form, opened by id
+  // through the settings shell's coordinator.
+  actions.openHarnessOnboarding = id => settingsShell?.openOnboarding(id)
   // With the plugin manager mounted, setup is its bundle page (the model's size
   // and download notes live there). Where it is not mounted — the desktop app's
   // profile has no plugin manager — the speech Remote prepares the provider
@@ -993,7 +993,14 @@ export function apply(ctx) {
       else if (kind === 'letgo') void actions.computerAllowForeground(botId)
     })
   }
-  const face = () => ({ actions, hooks: { roster, ui, activity, work, memoryNews, registry, turnClock, live, computer, cards, heldCards, browserPages, browserTabs, browserHolds, surface, update, frame, sidebarPref } })
+  const face = () => ({ actions, hooks: { roster, ui, activity, work, memoryNews, registry, turnClock, live, computer, cards, heldCards, browserPages, browserTabs, browserHolds, surface, update, frame, sidebarPref, settingsShellHeld } })
+  // DS Bot holds the settings seat in every mode, Agent mode included: the bundle patch
+  // turns DSH's own shell off, and this one draws DSH's settings pages in DS Bot's dialog.
+  ctx.effect(() => {
+    const offStyles = installCompiledStyles(SETTINGS_SHELL_CSS, 'settings-shell')
+    settingsShell = installSettingsShell(ctx, { face, actions, ui, held: settingsShellHeld })
+    return () => { settingsShell?.dispose(); settingsShell = null; offStyles() }
+  }, 'ds-bot: settings shell')
   // The queue dock's per-session verbs, supplied the way the shell's own dock
   // injects them (the session facade and the conversation service).
   const queueFace = (sessionId) => ({
@@ -1192,25 +1199,44 @@ export function apply(ctx) {
   // The shell group paints the team surface around the session; the conversation
   // group re-skins the session itself. Each step returns a disposer from slots.inject,
   // so a surface change withdraws the whole group and the outlets re-render.
+  // The shell group's sheets. Strip and panel styles also serve the side-chat tabs, which need no bridge.
+  const SHELL_SHEETS = [
+    [SHELL_CSS, 'shell'],
+    [SIDEBAR_CSS, 'sidebar'],
+    [SECRET_CSS + CONNECTOR_CSS + CONNECTORS_PAGE_CSS, 'secrets'],
+    [LEARNING_CSS, 'learning'],
+    [MODEL_CSS + FOLDER_CSS + BOT_SETTINGS_CSS + AGENT_CARDS_CSS + GROUP_SETTINGS_CSS + AVATAR_LIBRARY_CSS, 'models'],
+    [USAGE_CSS, 'usage'],
+    [SCHEDULE_CSS, 'schedules'],
+    [FEEDBACK_CSS, 'feedback'],
+    [ABOUT_CSS, 'about'],
+    [MEMBER_CSS, 'members'],
+    [IM_CSS, 'im'],
+    [GOAL_CSS, 'goal'],
+    [USER_MESSAGE_CSS, 'user-messages'],
+    [WIDGET_CSS, 'widgets'],
+    [HANDOFF_CSS, 'handoff'],
+    [SIDE_CSS, 'side'],
+    [BROWSER_CSS, 'browser'],
+  ]
+  // Settings outside Bot mode (Agent mode) brings DS Bot's own rules and colors while it
+  // shows; the shell overrides and DSH's tokens stay as Agent mode has them.
+  let shellSheets = 0
+  actions.holdSettingsLook = () => {
+    if (shellSheets > 0) return () => {}
+    const snapshot = roster.getSnapshot()
+    const prefs = snapshot.ready ? snapshot.prefs ?? {} : savedPrefs
+    const themes = allThemes()
+    const theme = themes[prefs.theme] ?? themes.deepseek
+    const offs = [
+      ...SHELL_SHEETS.map(([text, tag]) => installCompiledStyles(botOwnCss(text), `settings-${tag}`)),
+      installCompiledStyles(botOwnCss(themeCss(theme, isHex(prefs.accent) ? prefs.accent : undefined)), 'settings-theme'),
+    ]
+    return () => { for (const off of offs) off() }
+  }
   const installShell = () => [
-    () => installCompiledStyles(SHELL_CSS, 'shell'),
-    () => installCompiledStyles(SIDEBAR_CSS, 'sidebar'),
-    () => installCompiledStyles(SECRET_CSS + CONNECTOR_CSS + CONNECTORS_PAGE_CSS, 'secrets'),
-    () => installCompiledStyles(LEARNING_CSS, 'learning'),
-    () => installCompiledStyles(MODEL_CSS + FOLDER_CSS + BOT_SETTINGS_CSS + GROUP_SETTINGS_CSS + AVATAR_LIBRARY_CSS, 'models'),
-    () => installCompiledStyles(USAGE_CSS, 'usage'),
-    () => installCompiledStyles(SCHEDULE_CSS, 'schedules'),
-    () => installCompiledStyles(FEEDBACK_CSS, 'feedback'),
-    () => installCompiledStyles(ABOUT_CSS, 'about'),
-    () => installCompiledStyles(MEMBER_CSS, 'members'),
-    () => installCompiledStyles(IM_CSS, 'im'),
-    () => installCompiledStyles(GOAL_CSS, 'goal'),
-    () => installCompiledStyles(USER_MESSAGE_CSS, 'user-messages'),
-    () => installCompiledStyles(WIDGET_CSS, 'widgets'),
-    () => installCompiledStyles(HANDOFF_CSS, 'handoff'),
-    () => installCompiledStyles(SIDE_CSS, 'side'),
-    // Strip and panel styles also serve the side-chat tabs, which need no bridge.
-    () => installCompiledStyles(BROWSER_CSS, 'browser'),
+    () => { shellSheets += 1; return () => { shellSheets -= 1 } },
+    ...SHELL_SHEETS.map(([text, tag]) => () => installCompiledStyles(text, tag)),
     () => installFrameWatch(frame),
     () => installFrameSync(),
     () => installTheme(),
@@ -1222,7 +1248,6 @@ export function apply(ctx) {
     // The whale wins the seat over a shell account plugin's own launcher (the
     // Desktop's "··· More"), which comes back in Agent mode.
     () => shadow('settings.launcher', { priority: BOT_PRIORITY, inject: face }, AccountLauncher),
-    () => shadow('settings.onboarding', { id: MODELS_STEP, order: MODELS_STEP_ORDER }, OpenModelsStep),
     () => shadow('shell.overlay', { id: 'bot-computer', order: 40, inject: face }, ComputerIndicator),
     () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
     () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
@@ -1376,7 +1401,7 @@ export function apply(ctx) {
       } catch {
         declared = false
       }
-      if (landed) { paintModeBar(); return }
+      if (landed) return
       if (!declared) {
         // The slot itself is not declared yet; keep watching for a while.
         if (verifyAttempts < 20) {
@@ -1391,297 +1416,8 @@ export function apply(ctx) {
       groups.remount('shell')
       verifyTimer = setTimeout(verifySidebar, 250)
     }
-    // The window reserves a caption band above everything; the two modes live in its first
-    // row, clear of the traffic lights, as one dropdown rather than a row of buttons. Styled
-    // inline: in the shell's own view the plugin's stylesheet is gone.
-    let modeBar = null
-    let modeMenu = null
-    let modeOpen = false
-    const closeModeMenu = () => {
-      modeOpen = false
-      if (modeMenu) { modeMenu.remove(); modeMenu = null }
-      if (modeBar) modeBar.setAttribute('aria-expanded', 'false')
-    }
-    const openModeMenu = (left, top) => {
-      const mode = surface.getSnapshot().mode
-      modeMenu = document.createElement('div')
-      modeMenu.className = 'bt-modebar-menu'
-      modeMenu.setAttribute('role', 'menu')
-      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:61;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 16px 36px -18px rgba(0,0,0,.3)`
-      for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
-        const selected = mode === id
-        const item = document.createElement('button')
-        item.type = 'button'
-        item.setAttribute('role', 'menuitemradio')
-        item.setAttribute('aria-checked', String(selected))
-        item.style.cssText = `display:flex;align-items:center;gap:8px;width:100%;height:30px;padding:0 8px;border:0;border-radius:7px;background:transparent;font-family:inherit;font-size:13px;font-weight:${selected ? 500 : 400};text-align:left;cursor:pointer;color:var(--bt-ink,#141414)`
-        const name = document.createElement('span')
-        name.textContent = label
-        name.style.cssText = 'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'
-        item.appendChild(name)
-        if (selected) {
-          const tick = document.createElement('span')
-          tick.textContent = '✓'
-          tick.style.cssText = 'flex:none;font-size:12px;color:var(--bt-accent,#4d6bfe)'
-          item.appendChild(tick)
-        }
-        item.addEventListener('mouseenter', () => { item.style.background = 'rgba(119,119,119,.08)' })
-        item.addEventListener('mouseleave', () => { item.style.background = 'transparent' })
-        item.addEventListener('click', () => { closeModeMenu(); actions.setSurface(id) })
-        modeMenu.appendChild(item)
-      }
-      modeOpen = true
-      modeBar.setAttribute('aria-expanded', 'true')
-      document.body.appendChild(modeMenu)
-    }
-    // The sidebar's own controls, moved up beside the switcher: plain icons, no circles.
-    let bandActions = null
-    const iconPaths = (name) => ({
-      search: [{ tag: 'circle', attrs: { cx: '9', cy: '9', r: '5.2' } }, { tag: 'path', attrs: { d: 'M12.9 12.9L17 17' } }],
-      plus: [{ tag: 'path', attrs: { d: 'M10 4.5v11M4.5 10h11' } }],
-      collapse: [{ tag: 'rect', attrs: { x: '3.5', y: '4.5', width: '13', height: '11', rx: '2.4' } }, { tag: 'path', attrs: { d: 'M8 4.9v10.2' } }],
-    }[name] ?? [])
-    const buildAction = (label, name, run) => {
-      const button = document.createElement('button')
-      button.type = 'button'
-      button.className = 'bt-band-action'
-      button.setAttribute('aria-label', label)
-      button.title = label
-      button.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;box-shadow:none;color:rgba(20,20,20,.72);cursor:pointer'
-      button.addEventListener('mouseenter', () => { button.style.background = 'rgba(20,20,20,.07)' })
-      button.addEventListener('mouseleave', () => { button.style.background = 'transparent' })
-      button.addEventListener('click', run)
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-      svg.setAttribute('width', '18')
-      svg.setAttribute('height', '18')
-      svg.setAttribute('viewBox', '0 0 20 20')
-      svg.setAttribute('fill', 'none')
-      svg.setAttribute('stroke', 'currentColor')
-      svg.setAttribute('stroke-width', '1.6')
-      svg.setAttribute('stroke-linecap', 'round')
-      svg.setAttribute('stroke-linejoin', 'round')
-      for (const { tag, attrs } of iconPaths(name)) {
-        const node = document.createElementNS('http://www.w3.org/2000/svg', tag)
-        for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value)
-        svg.appendChild(node)
-      }
-      button.appendChild(svg)
-      return button
-    }
-    // The drawer stacks its children, so the two parts of the row share one line here.
-    let modeRow = null
-    const inDrawer = () => drawerSlot(document) !== null
-    const placeRow = () => {
-      const drew = inDrawer()
-      if (drew) {
-        bandPatch?.remove()
-        if (modeRow === null) {
-          modeRow = document.createElement('div')
-          modeRow.className = 'bt-modebar-row'
-          modeRow.style.cssText = 'display:flex;align-items:center;gap:4px;padding:6px 0 2px'
-        }
-        if (modeRow.parentNode !== modeRowSlot(document)) placeModeRow(document, [modeRow])
-        for (const node of [modeBar, bandActions]) if (node !== null && node.parentNode !== modeRow) modeRow.appendChild(node)
-        return
-      }
-      modeRow?.remove()
-      // The row stays where the window puts it — a body child, so a re-render of the shell
-      // never takes it with it. The band's draggable region is cancelled under it instead,
-      // by a transparent patch inside that region that opts out of dragging.
-      placeModeRow(document, [modeBar, bandActions], document.body)
-      const owner = bandOwner()
-      const patch = dragPatch()
-      if (owner === null) {
-        patch.remove()
-        return
-      }
-      owner.appendChild(patch)
-      const hosted = owner.getBoundingClientRect()
-      const box = modeBar.getBoundingClientRect()
-      const actions = bandActions?.isConnected === true ? bandActions.getBoundingClientRect() : box
-      const left = Math.min(box.left, actions.left)
-      const right = Math.max(box.right, actions.right)
-      const top = Math.min(box.top, actions.top)
-      const bottom = Math.max(box.bottom, actions.bottom)
-      patch.style.cssText = `position:absolute;left:${Math.round(left - hosted.left)}px;top:${Math.round(top - hosted.top)}px;`
-        + `width:${Math.round(right - left)}px;height:${Math.round(bottom - top)}px;`
-        + '-webkit-app-region:no-drag;pointer-events:auto;background:transparent'
-    }
-
-    let bandPatch = null
-    const dragPatch = () => {
-      if (bandPatch === null || !bandPatch.isConnected) {
-        bandPatch = document.createElement('div')
-        bandPatch.className = 'bt-band-patch'
-        bandPatch.setAttribute('aria-hidden', 'true')
-      }
-      return bandPatch
-    }
-
-    // The element that declares the caption band's draggable region, found in the stack under
-    // the row: a draggable region takes every press in it whatever paints above, and only a
-    // descendant of that very element can opt out.
-    const bandOwner = () => {
-      if (modeBar === null) return null
-      const box = modeBar.getBoundingClientRect()
-      if (box.width === 0) return null
-      const x = Math.round(box.left + Math.min(12, box.width / 2))
-      const y = Math.round(box.top + box.height / 2)
-      const stack = typeof document.elementsFromPoint === 'function'
-        ? document.elementsFromPoint(x, y)
-        : [document.elementFromPoint(x, y)].filter(node => node !== null)
-      for (const node of stack) {
-        if (node === document.body || node === document.documentElement) continue
-        if (typeof node.closest === 'function' && node.closest('.bt-modebar, .bt-band-actions, .bt-band-patch') !== null) continue
-        if (appRegion(node) === 'drag') return node
-      }
-      return null
-    }
-
-    const appRegion = (node) => {
-      try {
-        return getComputedStyle(node).getPropertyValue('-webkit-app-region').trim()
-      } catch {
-        return ''
-      }
-    }
-
-    const paintActions = () => {
-      const box = modeBar.getBoundingClientRect()
-      if (!bandActions) {
-        bandActions = document.createElement('div')
-        bandActions.className = 'bt-band-actions'
-      }
-      bandActions.style.cssText = inDrawer()
-        ? 'position:static;display:flex;align-items:center;gap:2px;margin-left:auto'
-        : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:2147483000;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`
-      bandActions.textContent = ''
-      // In the shell's own view these three do what the shell's own controls do, so the row
-      // never lies about what a click will get.
-      const hostClick = (selector) => document.querySelector(selector)?.click()
-      const inAgent = () => surface.getSnapshot().mode === 'agent'
-      bandActions.appendChild(buildAction(t('Search'), 'search', () => {
-        if (inAgent()) hostClick('button[class*="_searchButton"],button[aria-label*="搜索会话"],button[aria-label*="Search sessions"]')
-        else actions.openPalette('', { fromDrawer: true })
-      }))
-      bandActions.appendChild(buildAction(t('New…'), 'plus', () => {
-        if (inAgent()) hostClick('button[class*="_newSession"],button[aria-label*="新建会话"],button[aria-label*="New session"]')
-        else actions.openNewChat('new', { fromDrawer: true })
-      }))
-      bandActions.appendChild(buildAction(t('Collapse sidebar'), 'collapse', () => {
-        if (inAgent()) hostClick('button[class*="_toggle"],button[class*="_logoRow"] button')
-        else actions.toggleSidebar()
-      }))
-    }
-    // The band carries our own toggle now, so the shell's rail toggle is hidden from both
-    // views. It lives in its own style element, since the plugin's sheet is gone in Agent mode.
-    if (!document.getElementById('bt-modebar-rules')) {
-      const rules = document.createElement('style')
-      rules.id = 'bt-modebar-rules'
-      // The shell's own sidebar toggles go, so only one control per role is on screen. The
-      // exclusions are ours: the header's own button is labelled "Expand sidebar" too, and
-      // without the exemption this rule hid it along with the shell's.
-      const hostToggle = label => `button[aria-label="${label}"]:not(.bt-head-btn):not(.bt-side-expand):not(.bt-band-action)`
-      rules.textContent = ['打开侧边栏', '收起侧边栏', '展开侧边栏', 'Open sidebar', 'Close sidebar'].map(hostToggle).join(',')
-        + '{display:none!important}'
-        + 'html.bt-agent [class*="_logoRow"]{display:none!important}'
-        + '.bt-modebar-row:empty{display:none}'
-      document.head.appendChild(rules)
-    }
-    const paintModeBar = () => {
-      const mac = /Mac/i.test(navigator.platform || navigator.userAgent)
-      // The desktop window may keep its caption as an overlay and never publish the band
-      // height, so a Mac window falls back to the standard 44px band.
-      const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue('--dsh-frame-chrome-top')) || (mac ? 44 : 0)
-      const mode = surface.getSnapshot().mode
-      // The shell's logo row belongs to its own view; hide it there, since the band carries
-      // the controls. The Bot view never renders that row.
-      document.documentElement.classList.toggle('bt-agent', mode === 'agent')
-      document.documentElement.classList.toggle('bt-bot', mode !== 'agent')
-      // Clear of the traffic lights: past them in the window, at the edge without one.
-      // A Mac window's traffic lights take the left corner, so the control sits well past
-      // them; everywhere else it sits 15px from the window's left edge.
-      const left = mac ? 84 : 15
-      // A few pixels lower than the band's own centre, so the control sits on the traffic
-      // lights' horizontal line instead of above it.
-      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9
-      if (!modeBar) {
-        // A surface effect that re-runs gets a fresh closure; clear anything an earlier
-        // closure left on the page so the row never stacks up.
-        for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row')) stale.remove()
-        // The row the stale wrapper lived in is gone too; a kept handle would place the new
-        // row into a detached div and leave the drawer showing an empty line.
-        modeRow = null
-        modeBar = document.createElement('button')
-        modeBar.type = 'button'
-        modeBar.className = 'bt-modebar'
-        modeBar.setAttribute('aria-haspopup', 'menu')
-        modeBar.setAttribute('aria-expanded', 'false')
-        document.addEventListener('mousedown', (event) => {
-          if (!modeOpen) return
-          const target = event.target
-          if (target instanceof Element && (target.closest('.bt-modebar') || target.closest('.bt-modebar-menu'))) return
-          closeModeMenu()
-        })
-        modeBar.addEventListener('click', () => {
-          if (modeOpen) { closeModeMenu(); return }
-          paintModeBar()
-          const box = modeBar.getBoundingClientRect()
-          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
-        })
-        // A layer over the caption band can take the press before the row sees it. The window
-        // sees it first, so a press that lands on the row's own box but belongs to another
-        // element is handled here instead: the row then works wherever it is painted.
-        window.addEventListener('pointerdown', (event) => {
-          if (!modeBar.isConnected || event.defaultPrevented) return
-          const target = event.target
-          if (target instanceof Element && (target.closest('.bt-modebar') || target.closest('.bt-modebar-menu'))) return
-          const rect = modeBar.getBoundingClientRect()
-          if (rect.width === 0) return
-          if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) return
-          event.preventDefault()
-          event.stopPropagation()
-          if (modeOpen) { closeModeMenu(); return }
-          paintModeBar()
-          const box = modeBar.getBoundingClientRect()
-          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
-        }, true)
-        window.addEventListener('resize', () => paintModeBar())
-      }
-      modeBar.style.cssText = inDrawer()
-        ? 'position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)'
-        : `position:fixed;left:${left}px;top:${top}px;z-index:2147483000;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`
-      // The drawer has no band: the row keeps the drawer's top, and a closed drawer takes it
-      // off the page with everything else instead of leaving it floating over the content.
-      placeRow()
-      // No mark: the name and the chevron are enough, and the control stays narrow.
-      modeBar.textContent = ''
-      const label = document.createElement('span')
-      label.textContent = mode === 'bot' ? t('Bot mode') : t('DSH mode')
-      modeBar.appendChild(label)
-      paintActions()
-      const caret = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-      caret.setAttribute('width', '12')
-      caret.setAttribute('height', '12')
-      caret.setAttribute('viewBox', '0 0 20 20')
-      caret.setAttribute('fill', 'none')
-      caret.setAttribute('stroke', 'currentColor')
-      caret.setAttribute('stroke-width', '1.8')
-      caret.setAttribute('stroke-linecap', 'round')
-      caret.setAttribute('stroke-linejoin', 'round')
-      caret.style.cssText = 'flex:none;color:rgba(20,20,20,.44);margin-left:1px'
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-      path.setAttribute('d', 'M5.5 8l4.5 4.5L14.5 8')
-      caret.appendChild(path)
-      modeBar.appendChild(caret)
-      if (modeOpen) { closeModeMenu() }
-    }
     const reconcile = () => {
-      paintModeBar()
       groups.reconcile(groupsFor(surface.getSnapshot()))
-      // The sidebar mounts a frame after the shell group; until it does the row has no
-      // drawer to sit in, so it is painted again once its host is there.
-      requestAnimationFrame(() => paintModeBar())
       clearTimeout(verifyTimer)
       verifyAttempts = 0
       verifyTimer = setTimeout(verifySidebar, 250)
@@ -1692,13 +1428,6 @@ export function apply(ctx) {
     return () => {
       unsub()
       clearTimeout(verifyTimer)
-      if (modeBar) { modeBar.remove(); modeBar = null }
-      modeOpen = false
-      if (modeMenu) { modeMenu.remove(); modeMenu = null }
-      modeRow?.remove()
-      modeRow = null
-      for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row')) stale.remove()
-      document.getElementById('bt-modebar-rules')?.remove()
       groups.dispose()
     }
   }, 'ds-bot: surface')

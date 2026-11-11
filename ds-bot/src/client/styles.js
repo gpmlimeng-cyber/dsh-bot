@@ -15,8 +15,7 @@ import { DSH_NARROW } from './frame-layout.js'
 // CONVERSATION_CSS re-skins the shell's own conversation DOM and styles what only
 // the conversation renders.
 export const SHELL_CSS = FONT_FACES + `
-body{--bt-im-telegram:#229ed9;--bt-im-weixin:#07c160;--bt-im-feishu:#3370ff;--bt-im-dingtalk:#1e88e5;--bt-im-wecom:#0082ef;--bt-im-qq:#e03e3e;--bt-im-discord:#5865f2;--bt-im-slack:#4a154b;--bt-im-mark-ink:#ffffff;--bt-qr-paper:#ffffff;--bt-qr-ink:#141414;--bt-ink:#141414;--bt-danger:#e02135;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f7f7f7;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56);--bt-knob:#ffffff;--bt-glass-bg:color-mix(in srgb,var(--bt-main) 78%,transparent);--bt-glass-border:rgba(255,255,255,.72);--bt-glass-rim:rgba(20,20,20,.09);--bt-glass-shadow:0 8px 28px -6px rgba(0,0,0,.08),0 2px 6px -1px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.82);--bt-accent-soft:color-mix(in srgb,var(--bt-accent) 14%,transparent);--bt-danger-soft:color-mix(in srgb,var(--bt-danger) 14%,transparent);--bt-danger-glow:color-mix(in srgb,var(--bt-danger) 24%,transparent);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;--bt-font:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif)}
-body{--bt-ink:#141414;--bt-danger:#e02135;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f7f7f7;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56);--bt-knob:#ffffff;--bt-glass-bg:color-mix(in srgb,var(--bt-main) 78%,transparent);--bt-glass-border:rgba(255,255,255,.72);--bt-glass-rim:rgba(20,20,20,.09);--bt-glass-shadow:0 8px 28px -6px rgba(0,0,0,.08),0 2px 6px -1px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.82);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;--bt-font:var(--bt-font-choice,var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif))}
+body{--bt-im-telegram:#229ed9;--bt-im-weixin:#07c160;--bt-im-feishu:#3370ff;--bt-im-dingtalk:#1e88e5;--bt-im-wecom:#0082ef;--bt-im-qq:#e03e3e;--bt-im-discord:#5865f2;--bt-im-slack:#4a154b;--bt-im-mark-ink:#ffffff;--bt-qr-paper:#ffffff;--bt-qr-ink:#141414;--bt-ink:#141414;--bt-danger:#e02135;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f7f7f7;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56);--bt-knob:#ffffff;--bt-glass-bg:color-mix(in srgb,var(--bt-main) 78%,transparent);--bt-glass-border:rgba(255,255,255,.72);--bt-glass-rim:rgba(20,20,20,.09);--bt-glass-shadow:0 8px 28px -6px rgba(0,0,0,.08),0 2px 6px -1px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.82);--bt-accent-soft:color-mix(in srgb,var(--bt-accent) 14%,transparent);--bt-danger-soft:color-mix(in srgb,var(--bt-danger) 14%,transparent);--bt-danger-glow:color-mix(in srgb,var(--bt-danger) 24%,transparent);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;--bt-font:var(--bt-font-choice,var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif))}
 /* iOS waits out a double-tap zoom on buttons; the plugin's own controls never zoom. */
 :is(.bt-tool,.bt-uaction,.bt-menu button,.bt-menu-item,.bt-icon-btn,.bt-round,.bt-pill,.bt-account,.bt-set-row,.bt-settings-item,.bt-react-strip button,.bt-palette-row,.bt-palette-clear,.bt-tab,.bt-ptab,.bt-ptab-x,.bt-bcard-x,.bt-plus,.bt-q-btn,.bt-q-x,.bt-x,.bt-nc-send,.bt-send,.bt-soft,.bt-mini,.bt-side-send,.bt-shape,.bt-swatch,.bt-color,.bt-newchat,.bt-task-day,.bt-task-remove,.bt-fb-btn){touch-action:manipulation}
 :is(.bt-round,.bt-you,.bt-account,.bt-color,.bt-color span,.bt-swatch,.bt-icon-btn,.bt-avatar-trigger,.bt-avatar-pencil,.bt-plus,.bt-mic,.bt-voice){corner-shape:round}
@@ -525,21 +524,6 @@ button.bt-mk-tag:hover{color:var(--bt-ink)}
 .bt-mk-more:disabled{opacity:.5;cursor:default}
 .bt-mk-empty{padding:28px 0;font-size:13px;color:var(--bt-ink-3)}
 @media (max-width:720px){.bt-market-pane{backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6)}.bt-mk-bar{flex-wrap:wrap}.bt-mk-search{order:-1;flex:1 1 100%}.bt-mk-mark{width:44px;height:44px;border-radius:14px}}
-/* The market on a phone: the rail is one row of tabs across the top and the panel fills the
-   screen, so a 240px column no longer eats most of it (this is the drawer form's marker,
-   the same one the other phone rules key on). The enabled list steps aside: each category
-   page already shows the same entries, and a horizontal rail would only push them down. */
-html:has([data-mobile-nav="frame"]) .bt-market-frame{padding:0;align-items:stretch}
-html:has([data-mobile-nav="frame"]) .bt-market-pane{width:100vw;max-width:100vw;height:100dvh;border-radius:0;flex-direction:column}
-html:has([data-mobile-nav="frame"]) .bt-market-nav{width:auto;flex:none;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px;border-right:0;border-bottom:1px solid var(--bt-line);overflow:visible;background:transparent}
-html:has([data-mobile-nav="frame"]) .bt-market-cats{flex-direction:row;gap:6px;overflow-x:auto;overflow-y:hidden;padding:0 0 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-html:has([data-mobile-nav="frame"]) .bt-market-cats::-webkit-scrollbar{display:none}
-html:has([data-mobile-nav="frame"]) .bt-market-cat{flex:none;height:30px;padding:0 12px;border-radius:999px;white-space:nowrap;text-align:center;background:transparent}
-html:has([data-mobile-nav="frame"]) .bt-market-cat[aria-selected=true]{background:var(--bt-hover);color:var(--bt-ink)}
-html:has([data-mobile-nav="frame"]) .bt-market-insthead,
-html:has([data-mobile-nav="frame"]) .bt-market-installed{display:none!important}
-html:has([data-mobile-nav="frame"]) .bt-market-head{padding:14px 16px 6px}
-html:has([data-mobile-nav="frame"]) .bt-market-body{padding:0 16px 16px}
 
 @media (max-width:720px){.bt-market-nav{width:200px}.bt-market-grid{grid-template-columns:1fr}}
 
@@ -608,9 +592,6 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
 
 .bt-head{position:relative;display:flex;justify-content:center;align-items:center;height:40px;flex:none;pointer-events:none}
 .bt-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:7.5px 13.5px 7.5px 7.5px;border-radius:999px;background:var(--bt-glass-bg);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:.5px solid var(--bt-glass-rim);box-shadow:var(--bt-glass-shadow);color:var(--bt-ink);font-family:inherit;font-size:14px;line-height:20px;cursor:pointer;max-width:70%;box-sizing:border-box;transition:background-color .12s ease,transform ${SPRING_TAP.duration}ms ${SPRING_TAP.easing}}
-/* dsh-web-mobile zeroes the host header's 10px top padding on a phone, which leaves this
-   row flush with the status bar. Give the row a little air back, but only where that
-   plugin owns the header: on a desktop window the host padding is still there. */
 /* The phone layout now draws its own header row (the mark and a drawer button), so the
    team's bar moves up into that same row instead of starting a second one. Where that
    row's own toggle is mounted, the bar keeps only the title and the session menu. */
@@ -619,20 +600,6 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
    chrome's row instead: title in the middle, buttons at the edges. */
 /* The row takes the phone layout's measured header band and centers in it, which is the
    line its own drawer toggle is drawn on; pill and menu button match that toggle's 28px. */
-/* One offset for everything that must clear the system bar: the page is edge to edge and
-   this WebView reports no inset, so the bar's height is the same measured fallback the
-   header row uses; the details panel starts on that line too. */
-html:has([data-mobile-nav="frame"]){--bt-safe-top:calc(env(safe-area-inset-top, 0px) + 11px)}
-html:has([data-mobile-nav="frame"]) .bt-head{position:fixed;left:0;right:0;top:var(--bt-safe-top);height:36px;margin:0;z-index:20;align-items:center}
-/* The layout's own header button floats: a solid surface, a hairline ring and the soft
-   drop shadow. The pill and the session menu borrow that surface. */
-html:has([data-mobile-nav="frame"]) .bt-pill{height:28px;padding:0 10px 0 6px;font-size:13px;line-height:18px;gap:6px;max-width:66vw;border:0;border-radius:999px;background:var(--bt-float-surface);box-shadow:var(--bt-float-shadow-up),var(--bt-float-shadow);color:var(--bt-ink)}
-html:has([data-mobile-nav="frame"]) .bt-pill:hover,html:has([data-mobile-nav="frame"]) .bt-pill:active{background:var(--bt-float-hover)}
-html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{border:0;background:var(--bt-float-surface);box-shadow:var(--bt-float-shadow-up),var(--bt-float-shadow)}
-html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn:hover{background:var(--bt-float-hover)}
-html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{top:0;bottom:0;right:10px;align-items:center}
-html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu .bt-head-btn{width:28px;height:28px;align-self:center}
-html:has([data-mobile-nav="frame"]):has([data-mobile-nav="toggle"]) .bt-head-btn{display:none}
 .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
 .bt-pill:active{transform:scale(.965)}
 .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
@@ -812,25 +779,6 @@ button.bt-q-opt:active{background:var(--bt-active)}
 .bt-create-go{height:36px;padding:0 20px}
 @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
 
-/* On a phone the new-chat pane hosts Create Bot, and a popover anchored to the composer
-   leaves that form squeezed into a column. Lift it into a bottom sheet instead. */
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){top:auto!important;left:0!important;right:0!important;width:auto;height:var(--bt-sheet-h,auto);max-height:var(--bt-sheet-h,88dvh);border-radius:20px 20px 0 0;padding-bottom:calc(var(--bt-sheet-foot,0px) + env(safe-area-inset-bottom,0px));box-sizing:border-box;box-shadow:0 -1px 0 var(--bt-line),0 -12px 40px -16px rgba(0,0,0,.24);overflow:hidden}
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){animation:bt-sheet-in .42s cubic-bezier(.32,.9,.24,1) both,bt-veil-in .18s ease-out both}
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head{position:relative;padding-top:15px;border-bottom:0}
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-head::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-create) .bt-create-body{padding:2px 16px calc(16px + env(safe-area-inset-bottom,0px))}
-.bt-sheet-catcher,.bt-sheet-grip{display:none}
-html:has([data-mobile-nav="frame"]) .bt-sheet-catcher{display:block;position:fixed;inset:0;z-index:44;background:rgba(0,0,0,.32);animation:bt-veil-in .18s ease-out both}
-html:has([data-mobile-nav="frame"]) .bt-sheet-grip{display:block;position:absolute;left:0;right:0;top:0;height:16px;z-index:3;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent}
-html:has([data-mobile-nav="frame"]) .bt-pane[data-dragging]{animation:none;cursor:grabbing}
-html:has([data-mobile-nav="frame"]) .bt-pane[data-dragging] .bt-create-card{animation:none}
-/* The look picker is built in six-wide rows for the panel; on a phone the sixth wraps
-   onto a line of its own, so flatten the rows into one compact five-column tile. */
-html:has([data-mobile-nav="frame"]) .bt-shapes{display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
-html:has([data-mobile-nav="frame"]) .bt-shapes>.bt-shape-row{display:contents}
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-to{position:relative;padding-top:15px;border-bottom:0}
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-to::before{content:"";position:absolute;left:50%;top:7px;translate:-50% 0;width:36px;height:4px;border-radius:999px;background:var(--bt-line-2)}
-html:has([data-mobile-nav="frame"]) .bt-pane:has(> .bt-newchat) .bt-drop{position:static;left:auto;top:auto;width:auto;max-height:none;flex:1 1 auto;min-height:0;padding:0 6px calc(8px + env(safe-area-inset-bottom,0px));border:0;border-radius:0;background:transparent;box-shadow:none;overflow-y:auto;transform-origin:50% 0}
 .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
 .bt-send:disabled{opacity:.35;cursor:default}
 .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
@@ -846,11 +794,6 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
    (env(safe-area-inset-top) reads 0 in this WebView, so it cannot be used alone). */
 /* The details sheet's own top row sits on the line the conversation header uses: same
    28px controls, and the padding puts their centres where the header's buttons are. */
-/* The sheet may run to the very top, but its buttons stay below the system bar: the row
-   above them is a blank spacer. */
-html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top{padding-top:calc(env(safe-area-inset-top, 0px) + 44px)}
-html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top .bt-round{width:28px;height:28px}
-html:has([data-mobile-nav="frame"]) .bt-panel .bt-drawer-top .bt-round svg{width:16px;height:16px}
 .bt-pane{position:fixed;top:var(--dsh-frame-chrome-top,0px);right:0;bottom:0;z-index:45;pointer-events:auto;background:var(--bt-main);color:var(--bt-ink);display:flex;font-family:var(--bt-font)}
 .bt-dialog{flex:1;display:flex;flex-direction:column;min-width:0}
 .bt-dialog .bt-head{height:62px}
@@ -999,7 +942,24 @@ body[data-ds-dark-theme] .bt-scrim{background:rgba(0,0,0,.5)}
 .bt-settings-item[aria-current=page]{background:var(--bt-active);color:var(--bt-ink)}
 .bt-settings-nav>.bt-thumb{left:8px;right:8px;border-radius:8px;background:var(--bt-active)}
 .bt-settings-nav[data-glide] .bt-settings-item[aria-current=page]{background:transparent}
-.bt-settings-shell{margin-top:auto}
+.bt-settings-nav{overflow-y:auto;scrollbar-width:thin}
+.bt-settings-rule{flex:none;height:.5px;margin:6px 8px;background:var(--bt-line)}
+.bt-settings-icon{display:inline-flex;flex:none;width:16px;height:16px;align-items:center;justify-content:center}
+.bt-settings-actions{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0}
+.bt-settings-actions:empty{display:none}
+.bt-dsh-section{min-width:0}
+/* A DSH page opens on its own title, which the dialog head already shows. */
+.bt-dsh-section>[data-slot]>*>h2:first-child,.bt-dsh-section>[data-slot]>*>:first-child>h2:first-child{display:none}
+.bt-dsh-item{min-width:0}
+/* DSH's General rows draw their own row inside DS Bot's card: the card's inset and
+   rules apply, an empty row takes no line, and Appearance is already the section title. */
+.bt-dsh-item>[data-slot]>*{padding-left:12px;padding-right:12px;border-bottom-width:0}
+.bt-dsh-item>[data-slot]>.bt-set-row{padding:10px 12px}
+.bt-dsh-item:has(>[data-slot]:empty){display:none}
+.bt-dsh-item[data-item=appearance]>[data-slot]>*>:first-child{display:none}
+.bt-advanced{width:100%;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;justify-content:space-between}
+.bt-advanced:hover{background:var(--bt-hover)}
+.bt-advanced>svg{flex:none;color:var(--bt-ink-3)}
 .bt-settings-item>svg{flex:none}
 /* Usage while another page is open: out of the flow, so it keeps its layout, and not
    rendered. */
@@ -1040,6 +1000,7 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 .bt-set-places .bt-set-control{flex:0 1 auto;max-width:50%;min-width:0}
 /* Shrinkable, so a long model name gets its ellipsis instead of pushing Reset out of the card. */
 .bt-set-model .bt-set-control{flex:0 1 auto;min-width:0;max-width:65%}
+.bt-set-number{width:112px}
 .bt-set-places .bt-set-hint{overflow-wrap:anywhere}
 .bt-set-value{font-size:13px;color:var(--bt-ink-2);text-align:right}
 .bt-set-bot{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
@@ -1096,26 +1057,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 
 /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
    shell offers them and CSS-module name suffixes elsewhere. */
-/* Only the team view replaces the shell's own sidebar rows. The shell's own view keeps them:
-   hiding them there left that view with an empty column. */
-html.bt-bot [class*="_newSession"],html.bt-bot nav[class*="_panelList"],html.bt-bot [class*="_logoRow"]>[class*="_brand"],html.bt-bot [class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
-/* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
-   collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
-   the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
-html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
-html[data-windows-titlebar] .bt-side-collapse{display:none}
-/* Under a Windows title bar our own switch replaces the shell's: the shell's
-   toggle expands the shell sidebar first, and pulling it back afterwards is a
-   visible flash of the shell's column. */
-html[data-windows-titlebar] [class*="_logoRow"]>[class*="_toggle"]{display:none!important}
-html[data-windows-titlebar] .bt-title-toggle{position:fixed;left:12px;top:calc((var(--dsh-windows-titlebar-height,0px) - 28px) / 2);width:28px;height:28px;z-index:30;-webkit-app-region:no-drag;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;padding:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:var(--bt-font)}
-html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
-/* Elsewhere the switch shows only while the column is hidden, where the column's
-   own top row had it. */
-html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
-/* ds-bot folds the side from its own row now, so the shell's copy in the caption band goes. */
-html[data-platform=darwin] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="sidebar" i]:not(.bt-head-btn):not(.bt-head-right),html[data-platform=darwin] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right),html[data-windows-titlebar] header button[aria-label*="侧边栏"]:not(.bt-head-btn):not(.bt-head-right){display:none!important}
+/* The switch that brings the Bot view's own column back floats at the top left; while the
+   column is shown its own top row carries the control, so this one is not rendered. */
+.bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
 /* The footer ends in the Bot row: the whale's settings seat, then the account menu
    when no plugin holds that seat. Every other plugin's entry takes a whole row above
    it, in the shell's order, so none of them squeezes the Bot row. */
@@ -1289,6 +1233,7 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
 :is(.bt-round,.bt-icon-btn,.bt-soft,.bt-send,.bt-mini,.bt-pill,.bt-plus,.bt-mic,.bt-voice,.bt-account,.bt-title-toggle,.bt-settings-close,.bt-avatar-trigger,.bt-shape,.bt-color,.bt-swatch,.bt-pick,.bt-more,.bt-mem-row,.bt-mem-send):focus-visible{outline:2px solid var(--bt-accent);outline-offset:2px}
 :is(.bt-row,.bt-tile,.bt-tab,.bt-avedit-tab,.bt-settings-item,.bt-menu button,.bt-option,.bt-palette-row,button.bt-set-row):focus-visible{outline:2px solid var(--bt-accent);outline-offset:-2px}
 .bt-note{font-size:12px;line-height:16px;color:var(--bt-ink-2);margin-top:6px}
+.bt-set-hint .bt-note.bt-danger{color:var(--bt-danger)}
 .bt-swatch-sep{width:1px;height:22px;background:var(--bt-line-2);margin:0 2px}
 .bt-swatch-custom{position:relative;overflow:hidden;background:conic-gradient(#ff3e51,#ffaf38,#00c972,#1cc3b0,#2a92fe,#a97efe,#ff5eb1,#ff3e51);box-sizing:border-box}
 .bt-swatch-custom[data-on=true]{border-color:var(--bt-ink)}
@@ -1349,6 +1294,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 .bt-mem-head-gap{flex:1}
 .bt-mem-menu{position:absolute;top:52px;right:50px;min-width:220px;--bt-origin:top right}
 .bt-mem-menu button:disabled{opacity:.4;cursor:default;background:none}
+.bt-mem-move{min-width:200px;max-width:min(280px,calc(100vw - 24px));overflow-y:auto;overscroll-behavior:contain;--bt-origin:top right}
 .bt-mem-body{flex:1;overflow-y:auto;padding:22px 28px 24px;scrollbar-width:thin;display:flex;flex-direction:column;gap:12px}
 .bt-mem-summary{transition:opacity .3s ease}
 .bt-mem-summary[data-stale]{opacity:.55}
@@ -1391,6 +1337,14 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 .bt-mem-remove{flex:none;height:28px;min-width:28px;border-radius:999px;border:0;background:none;color:var(--bt-ink-3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0 6px;font:inherit;font-size:12px;opacity:0;transition:opacity .12s ease,background-color .12s ease,color .12s ease}
 .bt-mem-entry:hover .bt-mem-remove,.bt-mem-remove:focus-visible,.bt-mem-remove[data-confirm]{opacity:1}
 .bt-mem-remove:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-mem-pin[data-on]{opacity:1;color:var(--bt-accent)}
+.bt-mem-tidy{margin-bottom:12px;font-size:12px;color:var(--bt-ink-3)}
+.bt-mem-tidy summary{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer}
+.bt-mem-tidy ul{margin:8px 0 0;padding-left:16px}
+.bt-mem-place{flex:none;height:28px;padding:0 8px;border:0;border-radius:999px;background:none;color:var(--bt-ink-3);font:inherit;font-size:12px;cursor:pointer;opacity:0}
+.bt-mem-entry:hover .bt-mem-place,.bt-mem-place:focus-visible{opacity:1}
+.bt-mem-place:hover{background:var(--bt-hover);color:var(--bt-ink)}
+@media (hover:none){.bt-mem-place{opacity:1}}
 .bt-mem-remove[data-confirm]{background:color-mix(in srgb,var(--bt-danger) 10%,transparent);color:var(--bt-danger);padding:0 10px}
 @media (hover:none){.bt-mem-remove{opacity:1}}
 .bt-mem-none{font-size:13px;line-height:18px;color:var(--bt-ink-3);padding:8px 4px}
@@ -1449,7 +1403,7 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
      right border keeps the last tab clear of the close button. */
   .bt-settings-nav{width:100%;flex:none;flex-direction:row;align-items:center;overflow-x:auto;padding:8px;border:0;border-right:52px solid transparent;border-bottom:.5px solid var(--bt-line);scrollbar-width:thin;box-sizing:border-box}
   .bt-settings-item{flex:none}
-  .bt-settings-shell{margin-top:0;margin-left:auto;flex:none}
+  .bt-settings-rule{width:.5px;height:16px;margin:0 4px}
   .bt-settings-main{width:100%;flex:1;min-height:0;height:auto}
   .bt-settings-usage[data-off]{left:0;width:100%}
   .bt-settings-scroll{overflow-x:clip}
@@ -1469,10 +1423,6 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
 .bt-settings-scroll{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
 .bt-voice-bar{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
 .bt-exchange .bt-dialog-foot{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
-/* iOS zooms the whole page on focused inputs under 16px. */
-@media (max-width:640px) and (pointer:coarse){
-  .bt-input,.bt-bs-input,.bt-browser-address input,.bt-folder-input,.bt-secret-input,.bt-q-input,.bt-to input,.bt-palette-head input,.bt-mem-input{font-size:16px}
-}
 /* Local patches (design/ds-bot-patches.md). Appended rather than edited into the rules
    above, so an upstream change to those rules cannot conflict: same specificity, later
    wins. Both only touch what this plugin renders itself. */
@@ -1485,52 +1435,21 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
    rounded square. The shell ships the whole surface as superellipse(1.5) through this one
    variable, so a round corner everywhere is one variable, not a pile of !important rules:
    sizes, colours and layout stay exactly as the shell set them. */
-/* The shell's session-log export belongs in Settings, not at the bottom of the drawer. */
-[data-mobile-nav="drawer-actions"] [data-mobile-nav="session-log"]{display:none!important}
 html:root{--dsw-corner-shape:round}
 /* One floating surface for every control that rides over content: the surface tone, a
    half-pixel hairline, and a float shadow soft enough to read as separation, not depth.
    The phone carried a translucent tint of its own; it is gone with it, one recipe now. */
 body{--bt-float-surface:var(--bt-main);--bt-float-ring:color-mix(in srgb,var(--bt-ink) 10%,transparent);--bt-float-shadow:0 4px 12px -1px rgba(28,28,28,.08),0 2px 4px -2px rgba(28,28,28,.06);--bt-float-shadow-up:0 -4px 12px -1px rgba(28,28,28,.04),0 -2px 4px -2px rgba(28,28,28,.03);--bt-float-hover:color-mix(in srgb,var(--bt-main),var(--bt-ink) 7%)}
-/* The drawer's open button. dsh-web-mobile's own toggle never mounts, because it renders
-   into a slot this plugin shadows (see header.js), so this draws it. Visibility keys off
-   that same plugin's marker rather than a width: the marker means "drawer form", where the
-   native button is gone. It is a private attribute of dsh-web-mobile used for visibility
-   only — if it is ever renamed the button stops showing (a safe failure) and the native one
-   returns, so two hangers never appear at once. */
-.bt-head-btn{display:none;position:absolute;left:0;top:2px;width:36px;height:36px;aspect-ratio:1/1;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;corner-shape:round;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.bt-head-btn:hover,.bt-head-btn:active{background:var(--bt-float-hover)}
-.bt-head-btn:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:1px}
-/* 32px is the circle; a finger still gets 44. Grow up, down and left only, so the pill
-   beside it keeps its space. */
-.bt-head-btn::after{content:'';position:absolute;inset:-4px 0 -4px -4px}
-/* The phone layout mounts its own drawer toggle in the frame's leading cell, so the
-   self-drawn one would be a second hamburger beside it. Only that direct button is
-   dropped: the session menu inside .bt-pmenu shares the class and must stay. */
-html:has([data-mobile-nav="frame"]) .bt-head-btn{display:flex}
-html:has([data-mobile-nav="frame"]) .bt-head>.bt-head-btn{display:none}
-/* The session menu sits at the mirror position. The popover is the panel menu's own, which
-   already opens right-aligned below its button. */
-.bt-head>.bt-pmenu{position:absolute;right:0;top:2px;display:none}
-.bt-head>.bt-pmenu .bt-head-btn{position:static;left:auto}
-html:has([data-mobile-nav="frame"]) .bt-head>.bt-pmenu{display:inline-flex}
-/* The head is pointer-events:none and the panel menu never restated it, so without this
-   the popover paints but no item can be tapped. */
-.bt-head>.bt-pmenu .bt-pmenu-pop{pointer-events:auto}
-/* The left button's hit area grows rightwards; this one mirrors it so it never reaches the pill. */
-.bt-head>.bt-pmenu .bt-head-btn::after{inset:-4px -4px -4px 0}
 /* The model the conversation runs on, at the title's right: one pill on the shared
-   floating surface, name and caret on one line. The phone keeps that slot for the
-   session menu instead. */
+   floating surface, name and caret on one line. */
 .bt-head>.bt-model-trigger{position:absolute;right:66px;top:5px;flex:none;height:30px;min-height:30px;gap:4px;padding:0 8px 0 10px;border-radius:999px;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);pointer-events:auto;max-width:min(220px,40vw)}
 .bt-head>.bt-model-trigger:hover,.bt-head>.bt-model-trigger[aria-expanded=true]{background:var(--bt-float-hover)}
 .bt-head>.bt-model-trigger .bt-model-copy{flex-direction:row;align-items:baseline;gap:4px;min-width:0}
 .bt-head>.bt-model-trigger .bt-model-provider{display:none}
 .bt-head>.bt-model-trigger .bt-model-name{font-size:13px;line-height:18px}
-html:has([data-mobile-nav="frame"]) .bt-head>.bt-model-trigger{display:none}
 .bt-head>.bt-head-right{position:absolute;right:24px;top:5px;display:none;width:32px;height:32px;align-items:center;justify-content:center;padding:0;border:0;border-radius:50%;background:var(--bt-float-surface);box-shadow:0 0 0 .5px var(--bt-float-ring),var(--bt-float-shadow);color:var(--bt-ink);pointer-events:auto;cursor:pointer}
 .bt-head>.bt-head-right:hover{background:var(--bt-float-hover)}
-html:not(:has([data-mobile-nav="frame"])) .bt-head>.bt-head-right{display:inline-flex}
+.bt-head>.bt-head-right{display:inline-flex}
 /* The MCP page: the Skills page's shape — a light surface, one title row with the page's
    own action, then plain rows — because these are settings, not catalogue cards. */
 .bt-mcp-host{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;height:100%}
@@ -1591,69 +1510,6 @@ html:not(:has([data-mobile-nav="frame"])) .bt-head>.bt-head-right{display:inline
 .bt-mcp-formfoot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
 @media (max-width:720px){.bt-mcp-head{flex-direction:column;align-items:stretch}.bt-mcp-actions{justify-content:space-between}.bt-mcp-search{width:auto;max-width:none;flex:1 1 auto}.bt-mcp-body{padding:0 16px 20px}.bt-mcp-confirm,.bt-mcp-note{margin-left:16px;margin-right:16px}}
 
-/* The phone skin: the OpenBot chat shape, on this device. One --bt-app-* layer holds the
-   surfaces, radii and type pairs; every consumer carries the drawer marker, and no pick
-   leaves the attribute off, so the phone gets it and the desktop never can. Colours map to
-   the existing --bt-* set (style-debt forbids a second palette) and dark mode follows. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]){
-  --bt-app-surface:var(--bt-card);
-  --bt-app-raised:var(--bt-bubble);
-  --bt-app-control:var(--bt-card);
-  --bt-app-control-hover:var(--bt-hover);
-  --bt-app-border:var(--bt-line);
-  --bt-app-accent:var(--bt-accent);
-  --bt-app-radius-bubble:5px;
-  /* The small corner is the radius minus the 12px pad step; at or below 13px that would go
-     negative, which the browser drops whole, so it bottoms out at 2px. */
-  --bt-app-radius-bubble-inset:max(2px, calc(var(--bt-app-radius-bubble) - 12px - 1px));
-  --bt-app-blur:18px;
-  --bt-app-radius-card:14px;
-  --bt-app-radius-group:16px;
-  --bt-app-radius-modal:30px;
-  --bt-app-text-title:24px;  --bt-app-leading-title:30px;
-  --bt-app-text-row:16px;    --bt-app-leading-row:22px;
-  --bt-app-text-body:14px;   --bt-app-leading-body:20px;
-  --bt-app-text-sub:13px;    --bt-app-leading-sub:18px;
-  --bt-app-text-meta:12px;   --bt-app-leading-meta:16px;
-  --bt-app-gap:8px;
-  --bt-app-pad:8px 10px;
-  --bt-app-row:48px;
-  --bt-app-shadow-float:var(--bt-float-shadow);
-}
-/* The head buttons and composer controls already sit at the shell's sizes on a phone
-   (36/32px, 44px hit areas), so only the bubble, its stack, the row height and the empty
-   note take the app's own numbers here. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack{gap:var(--bt-app-gap)}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg,
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-astack[data-lead]>.bt-msg{max-width:calc(var(--bt-msg-w) * 100%)}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) body:not([data-bt-layout=flat]) .bt-bubble{border-radius:var(--bt-app-radius-bubble);padding:var(--bt-app-pad);font-size:var(--bt-app-text-body);line-height:1.625;overflow-wrap:anywhere}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:var(--bt-app-radius-bubble-inset)}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg:not(:last-child)>.bt-msg-line>.bt-bubble{border-end-start-radius:var(--bt-app-radius-bubble-inset)}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-row{min-height:var(--bt-app-row)}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-bubble .bt-tools{border-radius:999px}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-empty{font-size:var(--bt-app-text-sub);line-height:var(--bt-app-leading-sub)}
-/* The user's own bubbles are the host's, so the skin reaches them through the row marker it
-   draws. Radius and padding only: a width here would resolve against the width the host has
-   already shrunk, which squeezes the bubble instead of matching the Bot's side. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) [class*="_userRow"] [class*="_bubble"]{border-radius:var(--bt-app-radius-bubble)!important;padding:var(--bt-app-pad)!important}
-/* On the phone the bubble this plugin draws for the user's own messages drops its time; the
-   desktop keeps it. The shell's user row carries no time of its own to hide. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-utime{display:none}
-/* A tap on the bubble opens its tools; on the phone the three icons sit bare right under the
-   bubble's left edge — no plate, no shadow, no padding — instead of floating beside it. The
-   bubble's line already carries a position, so only the placement changes here, and a row
-   with a sender avatar starts the bubble 22+8px in. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools{top:calc(100% - 6px);right:auto;left:0;margin-left:0;transform:none;background:none;box-shadow:none;padding:0;z-index:1000}
-/* The 44px tap target puts 12px of empty button around each glyph, which reads as a gap under
-   the bubble; the icons take a 32px box here so the row sits against the bubble's bottom. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-tools .bt-tool{width:32px;height:32px}
-/* What a tap on the bubble opens comes above everything this plugin draws, its own sheets at
-   61 and its palette layer at 70 included, so nothing covers the icons or their popovers. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) :is(.bt-menu,.bt-react-strip){z-index:1001}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-msg-line:has(>.bt-lead) .bt-tools{left:30px}
-/* A group's own bubble is drawn here, so the skin's padding and radius reach it through the
-   same tokens as the rest. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-ububble{padding:var(--bt-app-pad);border-radius:var(--bt-app-radius-bubble)}
 /* A group line shows whose it is: its bubble carries that member's ink, mixed low enough to
    stay paler than the name above it. The user's own bubbles and one-to-one chats keep theirs,
    which is what makes a tinted bubble read as "someone in the group said this". A tint needs a
@@ -1773,42 +1629,13 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
 }
 @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
 @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
-html:has([data-mobile-nav="frame"]) [data-composer-card]{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;align-content:center!important;gap:12px!important;min-height:48px!important;border-radius:26px!important;padding:7.5px!important;box-sizing:border-box;border:0!important;background:var(--bt-glass-bg)!important;-webkit-backdrop-filter:blur(20px) saturate(180%)!important;backdrop-filter:blur(20px) saturate(180%)!important;transition:border-color .15s ease,background-color .15s ease,${spring(SPRING_SHAPE, 'border-radius')}!important}
-html:has([data-mobile-nav="frame"]) [data-composer-card]:hover,html:has([data-mobile-nav="frame"]) [data-composer-card]:focus-within{background:color-mix(in srgb,var(--bt-main) 96%,transparent)!important}
-/* The card was measuring 2px of top padding against 7.5px at the bottom, so its 32px row
-   sat a couple of pixels high inside the box. Equal 6px insets centre it exactly inside the
-   48px box (mobile-ui.md v3: 16px on the sides, as the app's composer has); the attribute is
-   repeated so this beats whichever rule pinned the top to 2px. */
-html:has([data-mobile-nav="frame"]) [data-composer-card][data-composer-card][data-composer-card]{padding:6px 16px!important}
 /* The shell lifts its primary send button 2px to suit its own row; in this card the plus,
    the mic and the card's centre line all agree, so that lift leaves the send button high. */
 [data-composer-card] [class*="_primary"]{transform:none!important}
-/* The voice-input control the shell puts at the far right of the composer draws an 18px
-   mark on a bare seat. This surface asks for the fuller microphone used elsewhere, so the
-   shell's glyph is hidden and the mark is painted through a mask: it takes the button's own
-   colour, which keeps it right in light and dark themes alike. */
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[aria-label*="voice input" i]>svg{display:none}
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[aria-label*="voice input" i]{background-color:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='7.25' y='2' width='5.5' height='10' rx='2.75' fill='%23000' stroke='none'/%3E%3Cpath d='M4.75 9.5a5.25 5.25 0 0 0 10.5 0'/%3E%3Cpath d='M10 14.75v2.75M7 17.5h6'/%3E%3C/svg%3E") center/20px 20px no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='7.25' y='2' width='5.5' height='10' rx='2.75' fill='%23000' stroke='none'/%3E%3Cpath d='M4.75 9.5a5.25 5.25 0 0 0 10.5 0'/%3E%3Cpath d='M10 14.75v2.75M7 17.5h6'/%3E%3C/svg%3E") center/20px 20px no-repeat}
-/* The card centers its children, but a child that carries its own alignment still rides
-   the top of the row; pin every direct child's cross-axis alignment to the same centre. */
-html:has([data-mobile-nav="frame"]) [data-composer-card]>*{align-self:center!important}
 /* In DS Bot mode the composer's own "+" menu carries both file and image upload, so the
    paperclip dsh-web-mobile injects beside it is a duplicate way to the same picker. Agent
    mode draws no "+", so the paperclip stays there. */
-/* The paperclip is the shell's own mobile adaptation, and our plus reuses its file input;
-   where both can upload, one entry is enough. */
-html:has([data-mobile-nav="frame"]) [data-composer-card]:has(.bt-plus):has(input[type=file]) [data-mobile-nav="file-upload"]{display:none!important}
-/* The drawer's top edge is glass, in a layer of its own: the slide-in carries a transform,
-   so backdrop-filter cannot sample the page until it lands, and a transition would never
-   start (its computed value does not change). A delayed fade-in stands in. Known cost: the
-   first 0.42s of the slide has no blur; the material settles in just after it, not before. */
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-pane:has(> :is(.bt-create,.bt-newchat)){background:color-mix(in srgb,var(--bt-card) 76%,transparent)}
-html:has([data-mobile-nav="frame"]):not([data-bt-skin=ours]) .bt-pane:has(> :is(.bt-create,.bt-newchat))::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;backdrop-filter:blur(var(--bt-app-blur)) saturate(1.4);-webkit-backdrop-filter:blur(var(--bt-app-blur)) saturate(1.4);animation:bt-sheet-glass .22s .4s ease-out both}
-@keyframes bt-sheet-glass{from{backdrop-filter:none;-webkit-backdrop-filter:none}}
 
-/* Where the plus is missing, the shell's button keeps its file input and wears the same plus
-   glyph through a mask, so the phone's left side always reads the same way. */
-html:has([data-mobile-nav="frame"]) [data-composer-card]:not(:has(.bt-plus)) [data-mobile-nav="file-upload"]{background-color:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M10 3.5v13M3.5 10h13'/%3E%3C/svg%3E") center/20px 20px no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M10 3.5v13M3.5 10h13'/%3E%3C/svg%3E") center/20px 20px no-repeat}
 [data-composer-card]:has(> [data-slot="conversation.input.attachments"] *),[data-composer-card]:has([data-composer-input] br + *),[data-composer-card]:has([data-composer-input] > :nth-child(2)){border-radius:18px!important}
 [class*="_root"]:has(> [data-composer-card]){padding:0 11px 13px 16px!important}
 [class*="_root"]:has(> [data-composer-card])>[data-composer-card]{max-width:min(992px,100%)!important}
@@ -1818,15 +1645,10 @@ html:has([data-mobile-nav="frame"]) [data-composer-card]:not(:has(.bt-plus)) [da
    surfaces want one capsule instead, so the card turns into a row and the shell's row is
    flattened, its children ordered round the input. The phone frame restates its own
    padding, radius and colours on the card above. */
-html:not(:has([data-mobile-nav="frame"])) [data-composer-card]{flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;padding:6px 8px!important;border-radius:24px!important}
+[data-composer-card]{flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:0!important;padding:6px 8px!important;border-radius:24px!important}
 [data-composer-card]>[class*="_row"]{display:contents!important}
 [data-composer-card] [class*="_tools"]{order:1!important;flex:none!important;align-self:center!important;margin:0!important}
 [data-composer-card]>[data-input-scroll]{order:2!important;flex:1 1 0!important;min-width:0!important;padding:0 8px!important;margin:0 0 0 -15px!important}
-/* The row's gap is 12 and the field adds 8 of its own inset, so pulling 8 back leaves 4
-   here and 12 from the plus's box edge to the text; 17px from the icon edge to the text is
-   that plus the 5px the 32px box keeps around its 22px icon. The desktop field keeps its
-   stock inset. */
-html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{margin-left:-8px!important}
 [data-composer-card] [class*="_trailing"]{order:3!important;flex:none!important;align-self:center!important;margin:0!important}
 /* The slot anchor is display:contents, so the rail inside it is the flex item. */
 [data-composer-card]>[data-slot="conversation.input.attachments"]>[class*="_rail"]{order:0!important;flex:0 0 100%!important;margin:0!important;padding:2px 8px 6px!important}
@@ -1840,12 +1662,10 @@ html:has([data-mobile-nav="frame"]) [data-composer-card]>[data-input-scroll]{mar
 [data-composer-placeholder]{font-size:0!important;line-height:0!important}
 /* The name sits on ::before so that ::after stays free for other composer skins. */
 [data-composer-placeholder]::before{content:var(--bt-placeholder,"Message")!important;display:block!important;font-size:15px!important;line-height:24px!important;color:color-mix(in srgb,var(--bt-ink) 36%,transparent)!important}
-/* The team's "+" (ComposerPlus) takes the seat of the shell's command-menu button. */
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_add"]{display:none!important}
 /* The desktop composer keeps the shell's own controls: the "+" that opens its command
    menu, the trailing send button and the spacing between them. Only the phone frame gets
    the team's replacement controls. */
-html:not(:has([data-mobile-nav="frame"])) [data-composer-card] :is(.bt-plus,.bt-mic,.bt-voice){display:none!important}
+[data-composer-card] :is(.bt-plus,.bt-mic,.bt-voice){display:none!important}
 .bt-plus{flex:none;align-self:center;width:32px;height:32px;padding:0;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:transparent;box-shadow:none;color:var(--bt-ink);cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-plus:hover,.bt-plus[aria-expanded=true]{background:color-mix(in srgb,var(--bt-ink) 8%,transparent);color:var(--bt-ink)}
 .bt-plus:active{scale:.9}
@@ -1854,18 +1674,9 @@ html:not(:has([data-mobile-nav="frame"])) [data-composer-card] :is(.bt-plus,.bt-
 /* Above the phone layout's own layers (its drawer sits at 1300): a layer under them
    can be seen but not tapped. */
 .bt-plus-menu{min-width:180px;z-index:1500}
-html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_tools"]{gap:0!important}
 [data-composer-card] [class*="_modes"]:empty{display:none!important}
 [data-composer-card] [class*="_activity"]:not(:has([data-slot] > *)){display:none!important}
-html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_trailing"]{gap:8px!important}
-/* No display here: DSH hides these controls with [hidden] while the Bot works. */
-html:has([data-mobile-nav="frame"]) [data-composer-card] [class*="_standardControls"]{align-items:center!important;gap:8px!important}
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, 'scale')};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:hover:not(:disabled){opacity:.9}
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:active:not(:disabled){scale:.9}
 @keyframes bt-icon-swap{from{opacity:0;transform:scale(.5) rotate(-30deg)}}
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"] svg{width:16px;height:16px}
-html:has([data-mobile-nav="frame"]) [data-composer-card] button[class*="_primary"]:disabled{display:none!important}
 [data-composer-dock]{display:none!important}
 .bt-mic,.bt-voice{flex:none;width:32px;height:32px;border-radius:50%;border:0;padding:0;display:inline-grid;place-items:center;cursor:pointer;transition:background-color .15s ease,color .15s ease,${spring(SPRING_TAP, 'scale')}}
 .bt-mic{background:transparent;box-shadow:none;color:var(--bt-ink)}
@@ -1920,18 +1731,9 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
 .bt-q-dock{width:100%;display:flex;justify-content:center}
 .bt-q-dock .bt-q{margin:0 auto 8px}
-html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]{justify-content:center!important;padding-right:0!important}
-html:has([data-mobile-nav="frame"]) [data-conversation-scroll] [class*="_toBottomSlot"]{bottom:calc(var(--dsh-composer-height,152px) + 8px)!important}
-html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button{width:36px!important;height:36px!important;margin-top:-36px!important;background:color-mix(in srgb,var(--bt-main) 72%,transparent)!important;-webkit-backdrop-filter:blur(16px) saturate(180%)!important;backdrop-filter:blur(16px) saturate(180%)!important;color:var(--bt-ink)!important;box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)!important;animation:bt-tobottom-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out;transition:background-color .12s ease,${spring(SPRING_TAP, 'scale')}}
-html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button:active{scale:.9}
-html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button:hover{background:color-mix(in srgb,var(--bt-ink) 4%,var(--bt-main))!important}
-html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button svg{display:none}
-html:has([data-mobile-nav="frame"]) [class*="_toBottomSlot"]>button::before{content:"";width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4v12M5 11l5 5 5-5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4v12M5 11l5 5 5-5'/%3E%3C/svg%3E") center/contain no-repeat}
 @keyframes bt-tobottom-in{from{translate:0 8px;scale:.8}}
-html:has([data-mobile-nav="frame"]) [data-bt-news] [class*="_toBottomSlot"]>button{visibility:hidden!important;pointer-events:none!important}
 .bt-news{position:fixed;z-index:30;transform:translateX(-50%);display:inline-flex;align-items:center;overflow:hidden;border-radius:999px;background:var(--bt-accent);color:var(--bt-accent-ink);box-shadow:inset 0 0 0 1px rgba(20,20,20,.05),0 1px 3px 0 rgba(0,0,0,.12);font-family:var(--bt-font);animation:bt-news-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out}
 @keyframes bt-news-in{from{translate:0 8px;scale:.9}}
-html:has([data-mobile-nav="frame"]) .bt-news{background:color-mix(in srgb,var(--bt-main) 72%,transparent);color:var(--bt-ink);box-shadow:0 2px 8px -1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
 .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
 @keyframes bt-news-in-up{from{translate:0 -8px;scale:.9}}
 .bt-news-jump{display:inline-flex;align-items:center;gap:2px;margin:0;padding:4px 26px 4px 4px;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px;line-height:18px;white-space:nowrap;cursor:pointer;outline:none}
@@ -1940,7 +1742,6 @@ html:has([data-mobile-nav="frame"]) .bt-news{background:color-mix(in srgb,var(--
 .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .bt-news-x svg{width:12px;height:12px}
 .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
-@media (prefers-reduced-motion:reduce){html:has([data-mobile-nav="frame"]) :is(.bt-news,[class*="_toBottomSlot"]>button){animation:none}}
 .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
 .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
 .bt-open-new{display:flex;flex-direction:column}
@@ -1998,12 +1799,6 @@ html:has([data-mobile-nav="frame"]) .bt-news{background:color-mix(in srgb,var(--
 .bt-btw-answer p{margin:0}
 .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
 @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
-/* Local patch: the composer's four small controls get a finger-sized target on touch.
-   The send button restates !important because it is set that way above. */
-@media (pointer:coarse){
-  .bt-plus,.bt-mic,.bt-voice{width:32px;height:32px}
-  [data-composer-card] button[class*="_primary"]{width:32px!important;height:32px!important}
-}
 
 /* Window tiers (tier.js): compact under 600 wide or under 480 tall, medium to 840,
    expanded above. The host's own mobile frame already gives the phone its shape; these
@@ -2019,6 +1814,59 @@ html[data-bt-tier=compact] .bt-market-pane{width:100vw;max-width:100vw;height:10
 // it is materializing and deletes a module's styles when it unloads. Ours carry our
 // module id from the start, so another plugin's claim or teardown never takes them.
 const PLUGIN_ID = 'ds-bot'
+
+// The part of a style sheet that only reaches DS Bot's own elements: selectors on a
+// `.bt-` class, the `--bt-*` variables on the page root, and the keyframes they run.
+// Rules that re-skin the shell's own elements (the `[class*=…]` overrides) drop out, so
+// Settings can show in Agent mode without dressing DSH's page in Bot mode.
+const ROOT_SELECTOR = /^(?:html\s+)?(?:body|:root)(?:\[[^\]]*\])*$/
+const ownSelector = selector => selector.includes('.bt-') && !/\[class[*^$]?=/.test(selector)
+function splitTopLevel(text, separator) {
+  const parts = []
+  let depth = 0
+  let start = 0
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index]
+    if (char === '(' || char === '[') depth += 1
+    else if (char === ')' || char === ']') depth -= 1
+    else if (char === separator && depth === 0) { parts.push(text.slice(start, index)); start = index + 1 }
+  }
+  parts.push(text.slice(start))
+  return parts
+}
+export function botOwnCss(css) {
+  let out = ''
+  let index = 0
+  while (index < css.length) {
+    const open = css.indexOf('{', index)
+    if (open === -1) break
+    let depth = 1
+    let close = open + 1
+    while (close < css.length && depth > 0) {
+      if (css[close] === '{') depth += 1
+      else if (css[close] === '}') depth -= 1
+      close += 1
+    }
+    const head = css.slice(index, open).replace(/\/\*[\s\S]*?\*\//g, '').trim()
+    const body = css.slice(open + 1, close - 1)
+    index = close
+    if (head.startsWith('@keyframes') || head.startsWith('@font-face')) { out += `${head}{${body}}\n`; continue }
+    if (head.startsWith('@')) {
+      const inner = botOwnCss(body)
+      if (inner.trim() !== '') out += `${head}{${inner}}\n`
+      continue
+    }
+    const selectors = splitTopLevel(head, ',').map(part => part.trim())
+    if (selectors.every(selector => ROOT_SELECTOR.test(selector))) {
+      const custom = splitTopLevel(body, ';').map(part => part.trim()).filter(part => part.startsWith('--'))
+      if (custom.length > 0) out += `${head}{${custom.join(';')}}\n`
+      continue
+    }
+    const own = selectors.filter(ownSelector)
+    if (own.length > 0) out += `${own.join(',')}{${body}}\n`
+  }
+  return out
+}
 
 export function installStyles(text, tag) {
   const style = document.createElement('style')

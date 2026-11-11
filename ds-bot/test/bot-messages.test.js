@@ -582,8 +582,14 @@ test('a Bot\'s answer waits for the work it handed on, and carries what came bac
   assert.match(await tool('list_bots', {}, 'a'), /- Writer \(Write\)\n {2}now: waiting for Tester to hand back work, for Chief\n/)
   assert.deepEqual(Object.values(await worksIn(team)).map(work => [work.from, work.to, work.open.length, work.held]), [['a', 'b', 1, 'handed it to Tester'], ['b', 'c', 0, undefined]])
   assert.deepEqual(callsOf(agents, 'a'), [])
-  // Its mark shows it waits, and its row whom for.
-  assert.deepEqual(await shown(), [true, { b: { bots: ['c'], rooms: [], for: ['a'] } }])
+  // Its mark shows it waits, its row whom for, and the menu names the wait to give up.
+  const [, waitingWork] = await shown()
+  const waits = waitingWork.b.waits
+  assert.equal(waits.length, 1)
+  assert.equal(typeof waits[0].id, 'string')
+  assert.deepEqual([waits[0].to, waits[0].name], ['c', 'Tester'])
+  delete waitingWork.b.waits
+  assert.deepEqual(waitingWork, { b: { bots: ['c'], rooms: [], for: ['a'] } })
 
   take('c')
   end('c', 'two things to fix')
@@ -796,9 +802,10 @@ test('a user line names its pictures and files, so the phone can draw them', () 
     },
   ])
   // An offloaded picture is no longer there to fetch, so it is not named.
+  // `bytes` is this fork's own addition: the client prints the size beside the name.
   assert.deepEqual(items[0].files, [
-    { id: 'sha256:a', name: 'shot.png', mediaType: 'image/png' },
-    { id: 'sha256:b', name: 'notes.pdf', mediaType: undefined },
+    { id: 'sha256:a', name: 'shot.png', mediaType: 'image/png', bytes: 12 },
+    { id: 'sha256:b', name: 'notes.pdf', mediaType: undefined, bytes: 34 },
   ])
   assert.equal(items[0].images, 1)
   assert.equal(items[0].text, '')

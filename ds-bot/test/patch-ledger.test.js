@@ -15,7 +15,7 @@ const PATCH = join(ROOT, 'design/ds-bot-patches.patch')
 const HUNKS = join(ROOT, 'design/ds-bot-patches.hunks.md')
 // The ledger's baseline: the upstream release the local commits sit on top of. Read
 // from the ledger so a version bump does not leave this test asserting an old ref.
-const BASE = /基线：\*\*本仓标签 `([^`]+)`\*\*/.exec(readFileSync(join(ROOT, 'design/ds-bot-patches.md'), 'utf8'))?.[1] ?? 'v0.2.5'
+const BASE = /基线：\*\*(?:本仓|上游)标签 `([^`]+)`\*\*/.exec(readFileSync(join(ROOT, 'design/ds-bot-patches.md'), 'utf8'))?.[1] ?? 'v0.3.2'
 // client.js is generated from src/client, and gaze.js carries generated images, so neither
 // is part of the hand-maintained patch.
 const PATCHED = ['ds-bot', ':!ds-bot/client.js', ':!ds-bot/src/client/gaze.js']

@@ -1,87 +1,14 @@
-import { Fragment, createElement as h, useEffect, useRef, useState } from 'react'
+import { createElement as h, useRef, useState } from 'react'
 import { FishLogo } from './dsh-primitives.js'
 import { PlusIcon, PeopleIcon, ArrowUpIcon } from './icons.js'
 import { AdminStar, BotMark } from './mark.js'
-import { useEscape, usePaneLeft } from './overlay-hooks.js'
+import { useEscape } from './overlay-hooks.js'
 import { CreateBot } from './create-bot.js'
 import { QUICK_EDGES, useFlip, useGlide, useMorph } from './motion.js'
 import { t } from './i18n.js'
 import { sendsOnEnter } from './enter-key.js'
 
-// The pane is a bottom sheet on a phone: a drag on its grip stretches it (the list inside
-// then scrolls), and it may not grow past the visible area.
-function useSheetGrip(ref) {
-  useEffect(() => {
-    const pane = ref.current
-    const grip = pane?.querySelector('.bt-sheet-grip')
-    if (!pane || !grip || !document.querySelector('[data-mobile-nav="frame"]')) return undefined
-    const down = (event) => {
-      if (event.pointerType === 'mouse' && event.button !== 0) return
-      event.preventDefault()
-      const from = pane.getBoundingClientRect().height
-      const y0 = event.clientY
-      const ceiling = Math.min(window.visualViewport?.height ?? window.innerHeight, window.innerHeight) * 0.96
-      pane.dataset.dragging = '1'
-      const move = (ev) => {
-        const next = Math.max(180, Math.min(ceiling, from + (y0 - ev.clientY)))
-        pane.style.setProperty('--bt-sheet-h', `${Math.round(next)}px`)
-      }
-      const up = () => {
-        delete pane.dataset.dragging
-        removeEventListener('pointermove', move)
-        removeEventListener('pointerup', up)
-        removeEventListener('pointercancel', up)
-      }
-      addEventListener('pointermove', move)
-      addEventListener('pointerup', up)
-      addEventListener('pointercancel', up)
-    }
-    grip.addEventListener('pointerdown', down)
-    return () => {
-      grip.removeEventListener('pointerdown', down)
-      pane.style.removeProperty('--bt-sheet-h')
-      delete pane.dataset.dragging
-    }
-  }, [])
-}
-
-// The sheet sits on the composer, but a phone keyboard shrinks only the visible area and
-// leaves the composer behind it. Measure the composer while it is on screen and reserve
-// exactly that much; once it is behind the keyboard the sheet goes flush against it.
-function useSheetFoot() {
-  useEffect(() => {
-    if (!document.querySelector('[data-mobile-nav="frame"]')) return undefined
-    const root = document.documentElement
-    const sync = () => {
-      const card = document.querySelector('[data-composer-card]')
-      const box = card?.closest('[class*="_root"]') ?? card
-      const visible = (window.visualViewport?.height ?? window.innerHeight) + 1
-      const rect = box?.getBoundingClientRect()
-      const foot = rect && rect.bottom <= visible ? Math.ceil(rect.height) : 0
-      root.style.setProperty('--bt-sheet-foot', `${foot}px`)
-    }
-    sync()
-    const viewport = window.visualViewport
-    addEventListener('resize', sync)
-    addEventListener('focusin', sync)
-    addEventListener('focusout', sync)
-    viewport?.addEventListener('resize', sync)
-    viewport?.addEventListener('scroll', sync)
-    return () => {
-      removeEventListener('resize', sync)
-      removeEventListener('focusin', sync)
-      removeEventListener('focusout', sync)
-      viewport?.removeEventListener('resize', sync)
-      viewport?.removeEventListener('scroll', sync)
-      root.style.removeProperty('--bt-sheet-foot')
-    }
-  }, [])
-}
-
-export function NewChat({ mode, roster, actions }) {
-  useSheetFoot()
-  const paneRef = useRef(null)
-  useSheetGrip(paneRef)
+export function NewChat({ mode, sectionId = null, paneLeft, roster, actions }) {
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState([])
   const [group, setGroup] = useState(mode === 'group')
@@ -92,11 +19,10 @@ export function NewChat({ mode, roster, actions }) {
   const [error, setError] = useState('')
   const [cursor, setCursor] = useState(0)
   // The Create Bot form, opened straight from 'create' mode or from the list.
-  const [draft, setDraft] = useState(mode === 'create' ? { name: '', fromList: false } : null)
+  const [draft, setDraft] = useState(mode === 'create' ? { name: '', fromList: false, sectionId } : null)
   const inputRef = useRef(null)
   const close = () => actions.closeOverlay()
   useEscape(close)
-  const paneLeft = usePaneLeft()
   const wanted = query.trim().toLowerCase()
   const matches = roster.bots.filter(bot => !picked.includes(bot.id) && bot.id !== admin && (wanted === '' || bot.name.toLowerCase().includes(wanted) || (bot.role ?? '').toLowerCase().includes(wanted)))
   const choosingAdmin = group && admin === null
@@ -123,7 +49,9 @@ export function NewChat({ mode, roster, actions }) {
   const openBot = bot => run(async () => {
     if (choosingAdmin) { chooseAdmin(bot); return }
     if (group || picked.length > 0) { pick(bot); return }
-    if (bot.hidden) await actions.setFlags(bot.id, { hidden: false })
+    if (bot.hidden || (sectionId && bot.sectionId !== sectionId)) {
+      await actions.setFlags(bot.id, { ...(bot.hidden ? { hidden: false } : {}), ...(sectionId ? { sectionId } : {}) })
+    }
     if (message.trim()) await actions.send(bot.id, message.trim())
     actions.openSession(bot.id)
     close()
@@ -131,7 +59,7 @@ export function NewChat({ mode, roster, actions }) {
   const createBot = () => {
     if (busy) return
     setError('')
-    setDraft({ name: query.trim() !== '' && !exact ? query.trim() : '', fromList: true })
+    setDraft({ name: query.trim() !== '' && !exact ? query.trim() : '', fromList: true, sectionId })
   }
   // Close first: closing the new-chat pane keeps the details panel, while closing
   // nothing would clear it.
@@ -145,7 +73,7 @@ export function NewChat({ mode, roster, actions }) {
   const makeGroup = async () => {
     if (admin === null || picked.length === 0) return
     const text = message.trim()
-    const room = await actions.createRoom([admin, ...picked], { admin, ...(text ? {} : { greet: true }) })
+    const room = await actions.createRoom([admin, ...picked], { admin, ...(sectionId ? { sectionId } : {}), ...(text ? {} : { greet: true }) })
     if (text) await actions.send(room.id, text)
     actions.openSession(room.id)
     close()
@@ -156,12 +84,13 @@ export function NewChat({ mode, roster, actions }) {
     if (group && admin !== null) { await makeGroup(); return }
     if (text === '' || picked.length === 0) return
     if (picked.length === 1) {
+      if (sectionId) await actions.setFlags(picked[0], { sectionId })
       await actions.send(picked[0], text)
       actions.openSession(picked[0])
       close()
       return
     }
-    const room = await actions.createRoom(picked)
+    const room = await actions.createRoom(picked, sectionId ? { sectionId } : {})
     await actions.send(room.id, text)
     actions.openSession(room.id)
     close()
@@ -186,15 +115,12 @@ export function NewChat({ mode, roster, actions }) {
   const drop = useRef(null)
   useMorph(drop, listed)
   if (draft) {
-    return h(Fragment, null,
-      h('div', { className: 'bt-sheet-catcher', onClick: close }),
-      h('div', { ref: paneRef, className: 'bt-pane', style: { left: paneLeft } },
-        h('div', { className: 'bt-sheet-grip', 'aria-hidden': true }),
+    return h('div', { className: 'bt-pane', style: { left: paneLeft } },
       h(CreateBot, {
         roster, actions, start: draft, brief: message.trim(), canGoBack: draft.fromList,
         onBack: draft.fromList ? () => { setDraft(null); setTimeout(() => inputRef.current?.focus()) } : close,
         onCreated: created,
-      })))
+      }))
   }
   const adminBot = admin === null ? undefined : roster.byId[admin]
   const recipients = adminBot ? [adminBot, ...pickedBots] : pickedBots
@@ -203,10 +129,7 @@ export function NewChat({ mode, roster, actions }) {
     if (picked.length > 0) setPicked(current => current.slice(0, -1))
     else if (admin !== null) setAdmin(null)
   }
-  return h(Fragment, null,
-    h('div', { className: 'bt-sheet-catcher', onClick: close }),
-    h('div', { ref: paneRef, className: 'bt-pane', style: { left: paneLeft } },
-      h('div', { className: 'bt-sheet-grip', 'aria-hidden': true }),
+  return h('div', { className: 'bt-pane', style: { left: paneLeft } },
     h('div', { className: 'bt-newchat', role: 'dialog', 'aria-label': mode === 'search' ? t('Search') : t('New chat') },
       h('div', { className: 'bt-to' },
         h('span', { className: 'bt-to-label' }, t('To:')),
@@ -256,5 +179,5 @@ export function NewChat({ mode, roster, actions }) {
               if (event.key === 'Enter' && sendsOnEnter(roster.prefs) && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); sendMessage() }
             },
           }),
-          h('button', { type: 'button', className: 'bt-nc-send', 'aria-label': t('Send message'), disabled: busy || message.trim() === '' || picked.length === 0, onClick: sendMessage }, h(ArrowUpIcon)))))))
+          h('button', { type: 'button', className: 'bt-nc-send', 'aria-label': t('Send message'), disabled: busy || message.trim() === '' || picked.length === 0, onClick: sendMessage }, h(ArrowUpIcon))))))
 }
