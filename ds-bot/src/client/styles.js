@@ -1057,26 +1057,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 
 /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
    shell offers them and CSS-module name suffixes elsewhere. */
-/* Only the team view replaces the shell's own sidebar rows. The shell's own view keeps them:
-   hiding them there left that view with an empty column. */
-html.bt-bot [class*="_newSession"],html.bt-bot nav[class*="_panelList"],html.bt-bot [class*="_logoRow"]>[class*="_brand"],html.bt-bot [class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
-/* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
-   collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
-   the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
-html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
-html[data-windows-titlebar] .bt-side-collapse{display:none}
-/* Under a Windows title bar our own switch replaces the shell's: the shell's
-   toggle expands the shell sidebar first, and pulling it back afterwards is a
-   visible flash of the shell's column. A host whose window controls stand at the band's
-   left (the macOS traffic lights) sets --bt-caption-start to the room they take. */
-html[data-windows-titlebar] [class*="_logoRow"]>[class*="_toggle"]{display:none!important}
-html[data-windows-titlebar] .bt-title-toggle{position:fixed;left:calc(12px + var(--bt-caption-start,0px));top:calc((var(--dsh-windows-titlebar-height,0px) - 28px) / 2);width:28px;height:28px;z-index:30;-webkit-app-region:no-drag;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;padding:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:var(--bt-font)}
-html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
-/* Elsewhere the switch shows only while the column is hidden, where the column's
-   own top row had it. */
-html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
-/* ds-bot folds the side from its own row now, so the shell's copy in the caption band goes. */
+/* The switch that brings the Bot view's own column back floats at the top left; while the
+   column is shown its own top row carries the control, so this one is not rendered. */
+.bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
 /* The footer ends in the Bot row: the whale's settings seat, then the account menu
    when no plugin holds that seat. Every other plugin's entry takes a whole row above
    it, in the shell's order, so none of them squeezes the Bot row. */

@@ -4224,26 +4224,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
 
 /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
    shell offers them and CSS-module name suffixes elsewhere. */
-/* Only the team view replaces the shell's own sidebar rows. The shell's own view keeps them:
-   hiding them there left that view with an empty column. */
-html.bt-bot [class*="_newSession"],html.bt-bot nav[class*="_panelList"],html.bt-bot [class*="_logoRow"]>[class*="_brand"],html.bt-bot [class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
-/* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
-   collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
-   the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
-html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
-html[data-windows-titlebar] .bt-side-collapse{display:none}
-/* Under a Windows title bar our own switch replaces the shell's: the shell's
-   toggle expands the shell sidebar first, and pulling it back afterwards is a
-   visible flash of the shell's column. A host whose window controls stand at the band's
-   left (the macOS traffic lights) sets --bt-caption-start to the room they take. */
-html[data-windows-titlebar] [class*="_logoRow"]>[class*="_toggle"]{display:none!important}
-html[data-windows-titlebar] .bt-title-toggle{position:fixed;left:calc(12px + var(--bt-caption-start,0px));top:calc((var(--dsh-windows-titlebar-height,0px) - 28px) / 2);width:28px;height:28px;z-index:30;-webkit-app-region:no-drag;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;padding:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:var(--bt-font)}
-html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
-/* Elsewhere the switch shows only while the column is hidden, where the column's
-   own top row had it. */
-html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
-/* ds-bot folds the side from its own row now, so the shell's copy in the caption band goes. */
+/* The switch that brings the Bot view's own column back floats at the top left; while the
+   column is shown its own top row carries the control, so this one is not rendered. */
+.bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
 /* The footer ends in the Bot row: the whale's settings seat, then the account menu
    when no plugin holds that seat. Every other plugin's entry takes a whole row above
    it, in the shell's order, so none of them squeezes the Bot row. */
@@ -16671,13 +16654,11 @@ function LeftColumn({ mode, width, onGrip, leaving, children }) {
   ), document.body);
 }
 function TitleToggle({ hidden, onToggle }) {
-  if (typeof document === "undefined") return null;
-  const titlebar = document.documentElement.hasAttribute("data-windows-titlebar");
-  if (!titlebar && !hidden) return null;
-  const label = t(hidden ? "Expand sidebar" : "Collapse sidebar");
+  if (typeof document === "undefined" || !hidden) return null;
+  const label = t("Expand sidebar");
   return (0, import_react_dom5.createPortal)((0, import_react35.createElement)("button", {
     type: "button",
-    className: titlebar ? "bt-title-toggle" : "bt-round bt-title-toggle",
+    className: "bt-round bt-title-toggle",
     "aria-label": label,
     title: label,
     onClick: onToggle
@@ -35435,41 +35416,6 @@ function McpMarketTab({ actions = {} }) {
   );
 }
 
-// src/client/mode-row.js
-function bandHost(document2) {
-  try {
-    for (const element of document2.querySelectorAll('header, [class*="_title"], [class*="_titlebar"], [class*="_caption"], [class*="_drag"], [class*="_window"]')) {
-      const rect = element.getBoundingClientRect();
-      if (rect.top > 6 || rect.bottom > 96 || rect.height <= 0) continue;
-      if (readAppRegion(element) === "drag") return element;
-    }
-  } catch {
-  }
-  return null;
-}
-function readAppRegion(element) {
-  try {
-    return getComputedStyle(element).getPropertyValue("-webkit-app-region").trim();
-  } catch {
-    return "";
-  }
-}
-function drawerSlot() {
-  return null;
-}
-function modeRowSlot(document2) {
-  return bandHost(document2) ?? document2.body;
-}
-function placeModeRow(document2, nodes, target) {
-  const slot = target ?? modeRowSlot(document2);
-  const wanted = nodes.filter((node) => node !== null && node !== void 0);
-  if (wanted.length > 0 && wanted.every((node) => node.parentNode === slot)) return slot;
-  for (const node of [...wanted].reverse()) {
-    if (node.parentNode !== slot) slot.insertBefore(node, slot.firstChild);
-  }
-  return slot;
-}
-
 // src/client/right-panel.js
 var RIGHTBAR_ATTRIBUTES = ["data-rightbar-collapsed", "data-rightbar-fullscreen"];
 function rightColumnOpen(doc) {
@@ -37283,10 +37229,7 @@ function apply(ctx) {
       } catch {
         declared = false;
       }
-      if (landed) {
-        paintModeBar();
-        return;
-      }
+      if (landed) return;
       if (!declared) {
         if (verifyAttempts < 20) {
           verifyAttempts += 1;
@@ -37300,265 +37243,8 @@ function apply(ctx) {
       groups.remount("shell");
       verifyTimer = setTimeout(verifySidebar, 250);
     };
-    let modeBar = null;
-    let modeMenu = null;
-    let modeOpen = false;
-    const closeModeMenu = () => {
-      modeOpen = false;
-      if (modeMenu) {
-        modeMenu.remove();
-        modeMenu = null;
-      }
-      if (modeBar) modeBar.setAttribute("aria-expanded", "false");
-    };
-    const openModeMenu = (left, top) => {
-      const mode = surface.getSnapshot().mode;
-      modeMenu = document.createElement("div");
-      modeMenu.className = "bt-modebar-menu";
-      modeMenu.setAttribute("role", "menu");
-      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:61;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 16px 36px -18px rgba(0,0,0,.3)`;
-      for (const [id, label] of [["bot", t("Bot mode")], ["agent", t("DSH mode")]]) {
-        const selected = mode === id;
-        const item = document.createElement("button");
-        item.type = "button";
-        item.setAttribute("role", "menuitemradio");
-        item.setAttribute("aria-checked", String(selected));
-        item.style.cssText = `display:flex;align-items:center;gap:8px;width:100%;height:30px;padding:0 8px;border:0;border-radius:7px;background:transparent;font-family:inherit;font-size:13px;font-weight:${selected ? 500 : 400};text-align:left;cursor:pointer;color:var(--bt-ink,#141414)`;
-        const name = document.createElement("span");
-        name.textContent = label;
-        name.style.cssText = "flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";
-        item.appendChild(name);
-        if (selected) {
-          const tick = document.createElement("span");
-          tick.textContent = "✓";
-          tick.style.cssText = "flex:none;font-size:12px;color:var(--bt-accent,#4d6bfe)";
-          item.appendChild(tick);
-        }
-        item.addEventListener("mouseenter", () => {
-          item.style.background = "rgba(119,119,119,.08)";
-        });
-        item.addEventListener("mouseleave", () => {
-          item.style.background = "transparent";
-        });
-        item.addEventListener("click", () => {
-          closeModeMenu();
-          actions.setSurface(id);
-        });
-        modeMenu.appendChild(item);
-      }
-      modeOpen = true;
-      modeBar.setAttribute("aria-expanded", "true");
-      document.body.appendChild(modeMenu);
-    };
-    let bandActions = null;
-    const iconPaths = (name) => ({
-      search: [{ tag: "circle", attrs: { cx: "9", cy: "9", r: "5.2" } }, { tag: "path", attrs: { d: "M12.9 12.9L17 17" } }],
-      plus: [{ tag: "path", attrs: { d: "M10 4.5v11M4.5 10h11" } }],
-      collapse: [{ tag: "rect", attrs: { x: "3.5", y: "4.5", width: "13", height: "11", rx: "2.4" } }, { tag: "path", attrs: { d: "M8 4.9v10.2" } }]
-    })[name] ?? [];
-    const buildAction = (label, name, run2) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "bt-band-action";
-      button.setAttribute("aria-label", label);
-      button.title = label;
-      button.style.cssText = "display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;box-shadow:none;color:rgba(20,20,20,.72);cursor:pointer";
-      button.addEventListener("mouseenter", () => {
-        button.style.background = "rgba(20,20,20,.07)";
-      });
-      button.addEventListener("mouseleave", () => {
-        button.style.background = "transparent";
-      });
-      button.addEventListener("click", run2);
-      const svg2 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg2.setAttribute("width", "18");
-      svg2.setAttribute("height", "18");
-      svg2.setAttribute("viewBox", "0 0 20 20");
-      svg2.setAttribute("fill", "none");
-      svg2.setAttribute("stroke", "currentColor");
-      svg2.setAttribute("stroke-width", "1.6");
-      svg2.setAttribute("stroke-linecap", "round");
-      svg2.setAttribute("stroke-linejoin", "round");
-      for (const { tag, attrs } of iconPaths(name)) {
-        const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
-        for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
-        svg2.appendChild(node);
-      }
-      button.appendChild(svg2);
-      return button;
-    };
-    let modeRow = null;
-    const inDrawer = () => drawerSlot(document) !== null;
-    const placeRow = () => {
-      const drew = inDrawer();
-      if (drew) {
-        bandPatch?.remove();
-        if (modeRow === null) {
-          modeRow = document.createElement("div");
-          modeRow.className = "bt-modebar-row";
-          modeRow.style.cssText = "display:flex;align-items:center;gap:4px;padding:6px 0 2px";
-        }
-        if (modeRow.parentNode !== modeRowSlot(document)) placeModeRow(document, [modeRow]);
-        for (const node of [modeBar, bandActions]) if (node !== null && node.parentNode !== modeRow) modeRow.appendChild(node);
-        return;
-      }
-      modeRow?.remove();
-      placeModeRow(document, [modeBar, bandActions], document.body);
-      const owner = bandOwner();
-      const patch = dragPatch();
-      if (owner === null) {
-        patch.remove();
-        return;
-      }
-      owner.appendChild(patch);
-      const hosted = owner.getBoundingClientRect();
-      const box = modeBar.getBoundingClientRect();
-      const actions2 = bandActions?.isConnected === true ? bandActions.getBoundingClientRect() : box;
-      const left = Math.min(box.left, actions2.left);
-      const right = Math.max(box.right, actions2.right);
-      const top = Math.min(box.top, actions2.top);
-      const bottom = Math.max(box.bottom, actions2.bottom);
-      patch.style.cssText = `position:absolute;left:${Math.round(left - hosted.left)}px;top:${Math.round(top - hosted.top)}px;width:${Math.round(right - left)}px;height:${Math.round(bottom - top)}px;-webkit-app-region:no-drag;pointer-events:auto;background:transparent`;
-    };
-    let bandPatch = null;
-    const dragPatch = () => {
-      if (bandPatch === null || !bandPatch.isConnected) {
-        bandPatch = document.createElement("div");
-        bandPatch.className = "bt-band-patch";
-        bandPatch.setAttribute("aria-hidden", "true");
-      }
-      return bandPatch;
-    };
-    const bandOwner = () => {
-      if (modeBar === null) return null;
-      const box = modeBar.getBoundingClientRect();
-      if (box.width === 0) return null;
-      const x = Math.round(box.left + Math.min(12, box.width / 2));
-      const y = Math.round(box.top + box.height / 2);
-      const stack = typeof document.elementsFromPoint === "function" ? document.elementsFromPoint(x, y) : [document.elementFromPoint(x, y)].filter((node) => node !== null);
-      for (const node of stack) {
-        if (node === document.body || node === document.documentElement) continue;
-        if (typeof node.closest === "function" && node.closest(".bt-modebar, .bt-band-actions, .bt-band-patch") !== null) continue;
-        if (appRegion(node) === "drag") return node;
-      }
-      return null;
-    };
-    const appRegion = (node) => {
-      try {
-        return getComputedStyle(node).getPropertyValue("-webkit-app-region").trim();
-      } catch {
-        return "";
-      }
-    };
-    const paintActions = () => {
-      const box = modeBar.getBoundingClientRect();
-      if (!bandActions) {
-        bandActions = document.createElement("div");
-        bandActions.className = "bt-band-actions";
-      }
-      bandActions.style.cssText = inDrawer() ? "position:static;display:flex;align-items:center;gap:2px;margin-left:auto" : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:2147483000;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`;
-      bandActions.textContent = "";
-      const hostClick = (selector) => document.querySelector(selector)?.click();
-      const inAgent = () => surface.getSnapshot().mode === "agent";
-      bandActions.appendChild(buildAction(t("Search"), "search", () => {
-        if (inAgent()) hostClick('button[class*="_searchButton"],button[aria-label*="搜索会话"],button[aria-label*="Search sessions"]');
-        else actions.openPalette("");
-      }));
-      bandActions.appendChild(buildAction(t("New…"), "plus", () => {
-        if (inAgent()) hostClick('button[class*="_newSession"],button[aria-label*="新建会话"],button[aria-label*="New session"]');
-        else actions.openNewChat("new");
-      }));
-      bandActions.appendChild(buildAction(t("Collapse sidebar"), "collapse", () => {
-        if (inAgent()) hostClick('button[class*="_toggle"],button[class*="_logoRow"] button');
-        else actions.toggleSidebar();
-      }));
-    };
-    if (!document.getElementById("bt-modebar-rules")) {
-      const rules = document.createElement("style");
-      rules.id = "bt-modebar-rules";
-      const hostToggle = (label) => `button[aria-label="${label}"]:not(.bt-head-btn):not(.bt-side-expand):not(.bt-band-action)`;
-      rules.textContent = ["打开侧边栏", "收起侧边栏", "展开侧边栏", "Open sidebar", "Close sidebar"].map(hostToggle).join(",") + '{display:none!important}html.bt-agent [class*="_logoRow"]{display:none!important}.bt-modebar-row:empty{display:none}';
-      document.head.appendChild(rules);
-    }
-    const paintModeBar = () => {
-      const mac = /Mac/i.test(navigator.platform || navigator.userAgent);
-      const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue("--dsh-frame-chrome-top")) || (mac ? 44 : 0);
-      const mode = surface.getSnapshot().mode;
-      document.documentElement.classList.toggle("bt-agent", mode === "agent");
-      document.documentElement.classList.toggle("bt-bot", mode !== "agent");
-      const left = mac ? 84 : 15;
-      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9;
-      if (!modeBar) {
-        for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row")) stale.remove();
-        modeRow = null;
-        modeBar = document.createElement("button");
-        modeBar.type = "button";
-        modeBar.className = "bt-modebar";
-        modeBar.setAttribute("aria-haspopup", "menu");
-        modeBar.setAttribute("aria-expanded", "false");
-        document.addEventListener("mousedown", (event) => {
-          if (!modeOpen) return;
-          const target = event.target;
-          if (target instanceof Element && (target.closest(".bt-modebar") || target.closest(".bt-modebar-menu"))) return;
-          closeModeMenu();
-        });
-        modeBar.addEventListener("click", () => {
-          if (modeOpen) {
-            closeModeMenu();
-            return;
-          }
-          paintModeBar();
-          const box = modeBar.getBoundingClientRect();
-          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6));
-        });
-        window.addEventListener("pointerdown", (event) => {
-          if (!modeBar.isConnected || event.defaultPrevented) return;
-          const target = event.target;
-          if (target instanceof Element && (target.closest(".bt-modebar") || target.closest(".bt-modebar-menu"))) return;
-          const rect = modeBar.getBoundingClientRect();
-          if (rect.width === 0) return;
-          if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) return;
-          event.preventDefault();
-          event.stopPropagation();
-          if (modeOpen) {
-            closeModeMenu();
-            return;
-          }
-          paintModeBar();
-          const box = modeBar.getBoundingClientRect();
-          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6));
-        }, true);
-        window.addEventListener("resize", () => paintModeBar());
-      }
-      modeBar.style.cssText = inDrawer() ? "position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)" : `position:fixed;left:${left}px;top:${top}px;z-index:2147483000;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`;
-      placeRow();
-      modeBar.textContent = "";
-      const label = document.createElement("span");
-      label.textContent = mode === "bot" ? t("Bot mode") : t("DSH mode");
-      modeBar.appendChild(label);
-      paintActions();
-      const caret = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      caret.setAttribute("width", "12");
-      caret.setAttribute("height", "12");
-      caret.setAttribute("viewBox", "0 0 20 20");
-      caret.setAttribute("fill", "none");
-      caret.setAttribute("stroke", "currentColor");
-      caret.setAttribute("stroke-width", "1.8");
-      caret.setAttribute("stroke-linecap", "round");
-      caret.setAttribute("stroke-linejoin", "round");
-      caret.style.cssText = "flex:none;color:rgba(20,20,20,.44);margin-left:1px";
-      const path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path2.setAttribute("d", "M5.5 8l4.5 4.5L14.5 8");
-      caret.appendChild(path2);
-      modeBar.appendChild(caret);
-      if (modeOpen) {
-        closeModeMenu();
-      }
-    };
     const reconcile = () => {
-      paintModeBar();
       groups.reconcile(groupsFor(surface.getSnapshot()));
-      requestAnimationFrame(() => paintModeBar());
       clearTimeout(verifyTimer);
       verifyAttempts = 0;
       verifyTimer = setTimeout(verifySidebar, 250);
@@ -37569,19 +37255,6 @@ function apply(ctx) {
     return () => {
       unsub();
       clearTimeout(verifyTimer);
-      if (modeBar) {
-        modeBar.remove();
-        modeBar = null;
-      }
-      modeOpen = false;
-      if (modeMenu) {
-        modeMenu.remove();
-        modeMenu = null;
-      }
-      modeRow?.remove();
-      modeRow = null;
-      for (const stale of document.querySelectorAll(".bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row")) stale.remove();
-      document.getElementById("bt-modebar-rules")?.remove();
       groups.dispose();
     };
   }, "ds-bot: surface");

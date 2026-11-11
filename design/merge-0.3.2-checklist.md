@@ -124,3 +124,27 @@ for p in ~/.dsh/profiles/*/; do ls -d "$p/node_modules/dsh-web-mobile" 2>/dev/nu
 - A 手机 web 皮：**退役**（卸 vendored 插件 + 10 组补丁）
 - B 收口：**本次一起做**（`zh-extra.js` 承接中文词条；`MODULES.push` 追加注册）
 - C ㊴ 手机端点：**先留**，登记「与上游原生 App 协议可能撞车」
+
+## 8. 拆 mode bar 后的上游行为验收清单（Archi，11-11）
+
+用户 11-11 定：模式切换、标题栏左上那排（模式下拉 + 自绘搜索/新建/折叠）全部拆回上游；只留上游的「设置 → Mode」和 Agent 模式侧栏的「DS Bot」返回钮。
+
+拆的是这一块：`src/client/mode-row.js` 整个文件 + `src/client/index.js` 的 `modeBar`/`modeMenu`/`bandActions`/`bandPatch`/`placeRow`/`inDrawer`/`paintModeBar`，以及它注入的 `#bt-modebar-rules`。
+
+| # | 该恢复的上游行为 | 上游出处 | 我们的代码压掉了什么 | 怎么验 |
+|---|---|---|---|---|
+| 1 | 宿主自己的侧栏折叠/展开钮 | `dsh-client-ui-sidebar` 的 `HeaderLeadingControls`（logo 行里那枚）；上游 `styles.js` 只在侧栏展开时藏 logo 行 | `#bt-modebar-rules` 里 `button[aria-label="打开侧边栏\|收起侧边栏\|展开侧边栏\|Open sidebar\|Close sidebar"]:not(...){display:none!important}` | 收起侧栏后，`document.querySelectorAll('button[aria-label*="侧边栏"],button[aria-label*="sidebar"]')` 里应有宿主那枚；`document.getElementById('bt-modebar-rules')` 必须是 `null`；且**不能出现两枚展开钮**（我们的 `TitleToggle` 在 `hidden` 时也画一枚，见 note 1） |
+| 2 | Agent 模式下 DSH 的 logo 行 | 上游 `styles.js`：非 Windows 标题栏时 `:not([class*="_collapsed"])>[class*="_logoRow"]{display:none}`，收起时显示 | `html.bt-agent [class*="_logoRow"]{display:none!important}`（在 `#bt-modebar-rules` 里） | 切到 Agent 模式：`document.documentElement.classList.contains('bt-agent')` 应为 `false`（我们不再打这个 class）；侧栏展开时 logo 行按上游规则隐藏、收起时显示 |
+| 3 | Agent 模式侧栏的「DS Bot」返回钮 | 上游 `sidebar.js:1231` `h('button',{className:'bt-return','aria-label':t('DS Bot')})` | 没压，它在上游版 sidebar 里 | Agent 模式下 `document.querySelector('.bt-return')` 存在，点它回到 Bot 模式 |
+| 4 | 设置 → Mode（只显示「要切过去的那个模式」一行） | 上游 `settings.js:164-167`：Bot 模式下显示 `Classic Agent mode` 按钮，Agent 模式下显示 `Bot mode` 按钮，都调 `actions.setSurface(...)` | 没压；但我们 settings 里有 SuperAgent 页与 ㉕㉗ 行，解冲突时容易连带删 | 设置 → General 里有 `Mode` 段，且**只有一行、行内是另一个模式的按钮**；点它切过去后，回头再看这行应变成反向按钮 |
+
+**拆的时候必须一起处理的连带面**
+
+1. **`html.bt-bot` 会变成永不命中的死规则**：`styles.js` 里 `html.bt-bot [class*="_newSession"],html.bt-bot nav[class*="_panelList"],html.bt-bot [class*="_logoRow"]>[class*="_brand"],…{display:none!important}` 只靠 `paintModeBar` 打的 class 生效。class 不再切换后，**Bot 模式下宿主自己的会话行/品牌行可能重新出现**（和我们侧栏重复）。要么删掉这条规则，要么改成上游口径，不能留着。这是拆 mode bar 唯一真正有回归风险的地方。
+2. `bt-band-patch` 是给标题带里的行挡拖动区的透明补丁；拆完 `document.querySelector('.bt-band-patch')` 应为 `null`（它随 `dragPatch` 销毁逻辑一起删）。
+3. `paintModeBar` 挂的 `window.addEventListener('resize'…)`、`document` 的 mousedown 监听要随块删，别留监听泄漏。
+4. `mode-row.js` 删了就别留 `import`：`src/client/index.js` 顶部 `import { drawerSlot, modeRowSlot, placeModeRow } from './mode-row.js'` 必须清；`test/mode-row.test.js` 也要删，否则测试直接挂。
+5. **不要把侧栏列顶那三枚一起删掉**：`.bt-side-top`（搜索/新建/折叠）在侧栏列里，不是标题带里那排。判断标准：侧栏展开时列顶部仍有这三枚。
+6. `modeBar` 用过的 i18n 词条（Bot mode / Classic Agent mode 之外那些）会变死词条，留在 `zh-extra.js` 不影响功能，收口后清。
+
+Note 1（第 1 项的重复钮）：`sidebar.js` 的 `TitleToggle` 只在「窗口有 Windows 标题栏」或「列被隐藏」时渲染；宿主那枚在 logo 行。两个同时可见就是重复，需要判谁该让位——**先看截图再决定，不要先删代码**。

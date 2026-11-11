@@ -465,17 +465,13 @@ function LeftColumn({ mode, width, onGrip, leaving, children }) {
     h('div', { className: 'bt-leftcol-grip', role: 'separator', 'aria-orientation': 'vertical', 'aria-label': t('Resize sidebar'), title: t('Resize sidebar'), onPointerDown: onGrip })), document.body)
 }
 
-// The top-left switch hides the whole column and brings it back. Under a
-// Windows title bar it takes the shell's own place in the title band; elsewhere
-// it shows only while the column is hidden, since the column's own top row
-// carries it otherwise.
+// The top-left switch brings the column back while it is hidden; the column's
+// own top row carries it otherwise, so it never sits in the shell's title band.
 function TitleToggle({ hidden, onToggle }) {
-  if (typeof document === 'undefined') return null
-  const titlebar = document.documentElement.hasAttribute('data-windows-titlebar')
-  if (!titlebar && !hidden) return null
-  const label = t(hidden ? 'Expand sidebar' : 'Collapse sidebar')
+  if (typeof document === 'undefined' || !hidden) return null
+  const label = t('Expand sidebar')
   return createPortal(h('button', {
-    type: 'button', className: titlebar ? 'bt-title-toggle' : 'bt-round bt-title-toggle', 'aria-label': label, title: label, onClick: onToggle,
+    type: 'button', className: 'bt-round bt-title-toggle', 'aria-label': label, title: label, onClick: onToggle,
   }, h(SidebarIcon)), document.body)
 }
 
