@@ -953,7 +953,7 @@ index c0b86e8a..7c6acdd2 100644
  export const SignInIcon = lineIcon(['M11.5 3H14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2.5', 'M3.5 10H10', 'M7 7l3 3-3 3'])
  export const PaperclipIcon = lineIcon(['M15.5 9.5l-5.6 5.6a3.4 3.4 0 0 1-4.8-4.8l6.1-6.1a2.25 2.25 0 0 1 3.2 3.2l-6 6a1.1 1.1 0 0 1-1.6-1.6l5.5-5.5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index e666fb3c..ad9f64ca 100644
+index e666fb3c..decec289 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -1,9 +1,10 @@
@@ -968,18 +968,16 @@ index e666fb3c..ad9f64ca 100644
  import { MENTION_ORIGIN, currentPart } from './text.js'
  import { SHELL_CSS, CONVERSATION_CSS, botOwnCss, installStyles, installCompiledStyles } from './styles.js'
  import { lookOf } from './mark.js'
-@@ -41,7 +42,10 @@ import { FOLDER_CSS } from './folder-menu.js'
+@@ -41,6 +42,8 @@ import { FOLDER_CSS } from './folder-menu.js'
  import { USAGE_CSS } from './usage-page.js'
  import { SCHEDULE_CSS } from './schedules.js'
  import { STORAGE, migrateStorage } from './storage.js'
 +import { SkillsTab } from './plugin-skills.js'
 +import { McpMarketTab } from './plugin-mcp.js'
  import { noteLeft, setUnread, sharedMap, toggleReaction } from './shared-map.js'
-+import { drawerSlot, modeRowSlot, placeModeRow } from './mode-row.js'
  import { freePriority, groupsFor, readMode, surfaceGroups, writeMode } from './surface.js'
  import { installLocale, language, t } from './i18n.js'
- import { noteClientError, quietly } from './diagnostics.js'
-@@ -56,6 +60,8 @@ import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-m
+@@ -56,6 +59,8 @@ import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-m
  import { QueueDock, QUEUE_CSS } from './queue-dock.js'
  import { noticeApprovals } from './approval-notices.js'
  import { listedOpener } from './open-listed.js'
@@ -988,7 +986,7 @@ index e666fb3c..ad9f64ca 100644
  
  export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
  
-@@ -165,6 +171,8 @@ export function apply(ctx) {
+@@ -165,6 +170,8 @@ export function apply(ctx) {
      memoryNews.set(state => Object.fromEntries(Object.entries(next).map(([id, entry]) => [id,
        state[id]?.at === entry.at ? state[id] : { ...entry, seen: opening ? 0 : Date.now() }])))
    }
@@ -997,7 +995,7 @@ index e666fb3c..ad9f64ca 100644
    const writeUnread = (id, value) => {
      const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
      ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
-@@ -376,23 +384,42 @@ export function apply(ctx) {
+@@ -376,23 +383,42 @@ export function apply(ctx) {
        const layout = layoutOf(prefs)
        const width = widthOf(prefs)
        const flatWidth = flatWidthOf(prefs)
@@ -1043,7 +1041,7 @@ index e666fb3c..ad9f64ca 100644
      const offRegistry = registry.subscribe(render)
      return () => {
        offRoster()
-@@ -402,6 +429,7 @@ export function apply(ctx) {
+@@ -402,6 +428,7 @@ export function apply(ctx) {
        } finally {
          delete document.body.dataset.btMotion
          delete document.body.dataset.btLayout
@@ -1051,7 +1049,7 @@ index e666fb3c..ad9f64ca 100644
          document.body.style.removeProperty('--bt-msg-w')
          document.body.style.removeProperty('--bt-flat-w')
          style.remove()
-@@ -409,6 +437,12 @@ export function apply(ctx) {
+@@ -409,6 +436,12 @@ export function apply(ctx) {
      }
    }
  
@@ -1064,7 +1062,7 @@ index e666fb3c..ad9f64ca 100644
    ctx.effect(() => {
      const hub = { registerShape, registerTheme, themes: () => Object.keys(allThemes()), shapes: () => Object.keys(SHAPES) }
      const queued = Array.isArray(window.dshBotQueue) ? window.dshBotQueue : []
-@@ -552,6 +586,148 @@ export function apply(ctx) {
+@@ -552,6 +585,148 @@ export function apply(ctx) {
      },
      selectPanel: (id) => { ctx.layout.selectPanel(id) },
      toggleSidebar: () => { ctx.layout.toggleSidebar() },
@@ -1213,7 +1211,7 @@ index e666fb3c..ad9f64ca 100644
      // The left column's own preference: 'open', 'rail' or 'hidden'. The switch
      // remembers the shown one it hid; a drag sets the open column's width.
      setSidebarPref: (pref) => {
-@@ -1077,6 +1253,10 @@ export function apply(ctx) {
+@@ -1077,6 +1252,10 @@ export function apply(ctx) {
      () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
      () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
      () => shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
@@ -1224,327 +1222,6 @@ index e666fb3c..ad9f64ca 100644
    ]
    const installConversation = () => [
      () => installCompiledStyles(CONVERSATION_CSS, 'conversation'),
-@@ -1222,7 +1402,7 @@ export function apply(ctx) {
-       } catch {
-         declared = false
-       }
--      if (landed) return
-+      if (landed) { paintModeBar(); return }
-       if (!declared) {
-         // The slot itself is not declared yet; keep watching for a while.
-         if (verifyAttempts < 20) {
-@@ -1237,8 +1417,297 @@ export function apply(ctx) {
-       groups.remount('shell')
-       verifyTimer = setTimeout(verifySidebar, 250)
-     }
-+    // The window reserves a caption band above everything; the two modes live in its first
-+    // row, clear of the traffic lights, as one dropdown rather than a row of buttons. Styled
-+    // inline: in the shell's own view the plugin's stylesheet is gone.
-+    let modeBar = null
-+    let modeMenu = null
-+    let modeOpen = false
-+    const closeModeMenu = () => {
-+      modeOpen = false
-+      if (modeMenu) { modeMenu.remove(); modeMenu = null }
-+      if (modeBar) modeBar.setAttribute('aria-expanded', 'false')
-+    }
-+    const openModeMenu = (left, top) => {
-+      const mode = surface.getSnapshot().mode
-+      modeMenu = document.createElement('div')
-+      modeMenu.className = 'bt-modebar-menu'
-+      modeMenu.setAttribute('role', 'menu')
-+      modeMenu.style.cssText = `position:fixed;left:${left}px;top:${top}px;z-index:61;min-width:164px;padding:5px;border-radius:11px;background:#ffffff;box-shadow:0 0 0 .5px rgba(20,20,20,.1),0 16px 36px -18px rgba(0,0,0,.3)`
-+      for (const [id, label] of [['bot', t('Bot mode')], ['agent', t('DSH mode')]]) {
-+        const selected = mode === id
-+        const item = document.createElement('button')
-+        item.type = 'button'
-+        item.setAttribute('role', 'menuitemradio')
-+        item.setAttribute('aria-checked', String(selected))
-+        item.style.cssText = `display:flex;align-items:center;gap:8px;width:100%;height:30px;padding:0 8px;border:0;border-radius:7px;background:transparent;font-family:inherit;font-size:13px;font-weight:${selected ? 500 : 400};text-align:left;cursor:pointer;color:var(--bt-ink,#141414)`
-+        const name = document.createElement('span')
-+        name.textContent = label
-+        name.style.cssText = 'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'
-+        item.appendChild(name)
-+        if (selected) {
-+          const tick = document.createElement('span')
-+          tick.textContent = '✓'
-+          tick.style.cssText = 'flex:none;font-size:12px;color:var(--bt-accent,#4d6bfe)'
-+          item.appendChild(tick)
-+        }
-+        item.addEventListener('mouseenter', () => { item.style.background = 'rgba(119,119,119,.08)' })
-+        item.addEventListener('mouseleave', () => { item.style.background = 'transparent' })
-+        item.addEventListener('click', () => { closeModeMenu(); actions.setSurface(id) })
-+        modeMenu.appendChild(item)
-+      }
-+      modeOpen = true
-+      modeBar.setAttribute('aria-expanded', 'true')
-+      document.body.appendChild(modeMenu)
-+    }
-+    // The sidebar's own controls, moved up beside the switcher: plain icons, no circles.
-+    let bandActions = null
-+    const iconPaths = (name) => ({
-+      search: [{ tag: 'circle', attrs: { cx: '9', cy: '9', r: '5.2' } }, { tag: 'path', attrs: { d: 'M12.9 12.9L17 17' } }],
-+      plus: [{ tag: 'path', attrs: { d: 'M10 4.5v11M4.5 10h11' } }],
-+      collapse: [{ tag: 'rect', attrs: { x: '3.5', y: '4.5', width: '13', height: '11', rx: '2.4' } }, { tag: 'path', attrs: { d: 'M8 4.9v10.2' } }],
-+    }[name] ?? [])
-+    const buildAction = (label, name, run) => {
-+      const button = document.createElement('button')
-+      button.type = 'button'
-+      button.className = 'bt-band-action'
-+      button.setAttribute('aria-label', label)
-+      button.title = label
-+      button.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;box-shadow:none;color:rgba(20,20,20,.72);cursor:pointer'
-+      button.addEventListener('mouseenter', () => { button.style.background = 'rgba(20,20,20,.07)' })
-+      button.addEventListener('mouseleave', () => { button.style.background = 'transparent' })
-+      button.addEventListener('click', run)
-+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-+      svg.setAttribute('width', '18')
-+      svg.setAttribute('height', '18')
-+      svg.setAttribute('viewBox', '0 0 20 20')
-+      svg.setAttribute('fill', 'none')
-+      svg.setAttribute('stroke', 'currentColor')
-+      svg.setAttribute('stroke-width', '1.6')
-+      svg.setAttribute('stroke-linecap', 'round')
-+      svg.setAttribute('stroke-linejoin', 'round')
-+      for (const { tag, attrs } of iconPaths(name)) {
-+        const node = document.createElementNS('http://www.w3.org/2000/svg', tag)
-+        for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value)
-+        svg.appendChild(node)
-+      }
-+      button.appendChild(svg)
-+      return button
-+    }
-+    // The drawer stacks its children, so the two parts of the row share one line here.
-+    let modeRow = null
-+    const inDrawer = () => drawerSlot(document) !== null
-+    const placeRow = () => {
-+      const drew = inDrawer()
-+      if (drew) {
-+        bandPatch?.remove()
-+        if (modeRow === null) {
-+          modeRow = document.createElement('div')
-+          modeRow.className = 'bt-modebar-row'
-+          modeRow.style.cssText = 'display:flex;align-items:center;gap:4px;padding:6px 0 2px'
-+        }
-+        if (modeRow.parentNode !== modeRowSlot(document)) placeModeRow(document, [modeRow])
-+        for (const node of [modeBar, bandActions]) if (node !== null && node.parentNode !== modeRow) modeRow.appendChild(node)
-+        return
-+      }
-+      modeRow?.remove()
-+      // The row stays where the window puts it — a body child, so a re-render of the shell
-+      // never takes it with it. The band's draggable region is cancelled under it instead,
-+      // by a transparent patch inside that region that opts out of dragging.
-+      placeModeRow(document, [modeBar, bandActions], document.body)
-+      const owner = bandOwner()
-+      const patch = dragPatch()
-+      if (owner === null) {
-+        patch.remove()
-+        return
-+      }
-+      owner.appendChild(patch)
-+      const hosted = owner.getBoundingClientRect()
-+      const box = modeBar.getBoundingClientRect()
-+      const actions = bandActions?.isConnected === true ? bandActions.getBoundingClientRect() : box
-+      const left = Math.min(box.left, actions.left)
-+      const right = Math.max(box.right, actions.right)
-+      const top = Math.min(box.top, actions.top)
-+      const bottom = Math.max(box.bottom, actions.bottom)
-+      patch.style.cssText = `position:absolute;left:${Math.round(left - hosted.left)}px;top:${Math.round(top - hosted.top)}px;`
-+        + `width:${Math.round(right - left)}px;height:${Math.round(bottom - top)}px;`
-+        + '-webkit-app-region:no-drag;pointer-events:auto;background:transparent'
-+    }
-+
-+    let bandPatch = null
-+    const dragPatch = () => {
-+      if (bandPatch === null || !bandPatch.isConnected) {
-+        bandPatch = document.createElement('div')
-+        bandPatch.className = 'bt-band-patch'
-+        bandPatch.setAttribute('aria-hidden', 'true')
-+      }
-+      return bandPatch
-+    }
-+
-+    // The element that declares the caption band's draggable region, found in the stack under
-+    // the row: a draggable region takes every press in it whatever paints above, and only a
-+    // descendant of that very element can opt out.
-+    const bandOwner = () => {
-+      if (modeBar === null) return null
-+      const box = modeBar.getBoundingClientRect()
-+      if (box.width === 0) return null
-+      const x = Math.round(box.left + Math.min(12, box.width / 2))
-+      const y = Math.round(box.top + box.height / 2)
-+      const stack = typeof document.elementsFromPoint === 'function'
-+        ? document.elementsFromPoint(x, y)
-+        : [document.elementFromPoint(x, y)].filter(node => node !== null)
-+      for (const node of stack) {
-+        if (node === document.body || node === document.documentElement) continue
-+        if (typeof node.closest === 'function' && node.closest('.bt-modebar, .bt-band-actions, .bt-band-patch') !== null) continue
-+        if (appRegion(node) === 'drag') return node
-+      }
-+      return null
-+    }
-+
-+    const appRegion = (node) => {
-+      try {
-+        return getComputedStyle(node).getPropertyValue('-webkit-app-region').trim()
-+      } catch {
-+        return ''
-+      }
-+    }
-+
-+    const paintActions = () => {
-+      const box = modeBar.getBoundingClientRect()
-+      if (!bandActions) {
-+        bandActions = document.createElement('div')
-+        bandActions.className = 'bt-band-actions'
-+      }
-+      bandActions.style.cssText = inDrawer()
-+        ? 'position:static;display:flex;align-items:center;gap:2px;margin-left:auto'
-+        : `position:fixed;left:${Math.round(box.right + 15)}px;top:${Math.round(box.top - 1)}px;z-index:2147483000;display:flex;align-items:center;gap:2px;-webkit-app-region:no-drag`
-+      bandActions.textContent = ''
-+      // In the shell's own view these three do what the shell's own controls do, so the row
-+      // never lies about what a click will get.
-+      const hostClick = (selector) => document.querySelector(selector)?.click()
-+      const inAgent = () => surface.getSnapshot().mode === 'agent'
-+      bandActions.appendChild(buildAction(t('Search'), 'search', () => {
-+        if (inAgent()) hostClick('button[class*="_searchButton"],button[aria-label*="搜索会话"],button[aria-label*="Search sessions"]')
-+        else actions.openPalette('')
-+      }))
-+      bandActions.appendChild(buildAction(t('New…'), 'plus', () => {
-+        if (inAgent()) hostClick('button[class*="_newSession"],button[aria-label*="新建会话"],button[aria-label*="New session"]')
-+        else actions.openNewChat('new')
-+      }))
-+      bandActions.appendChild(buildAction(t('Collapse sidebar'), 'collapse', () => {
-+        if (inAgent()) hostClick('button[class*="_toggle"],button[class*="_logoRow"] button')
-+        else actions.toggleSidebar()
-+      }))
-+    }
-+    // The band carries our own toggle now, so the shell's rail toggle is hidden from both
-+    // views. It lives in its own style element, since the plugin's sheet is gone in Agent mode.
-+    if (!document.getElementById('bt-modebar-rules')) {
-+      const rules = document.createElement('style')
-+      rules.id = 'bt-modebar-rules'
-+      // The shell's own sidebar toggles go, so only one control per role is on screen. The
-+      // exclusions are ours: the header's own button is labelled "Expand sidebar" too, and
-+      // without the exemption this rule hid it along with the shell's.
-+      const hostToggle = label => `button[aria-label="${label}"]:not(.bt-head-btn):not(.bt-side-expand):not(.bt-band-action)`
-+      rules.textContent = ['打开侧边栏', '收起侧边栏', '展开侧边栏', 'Open sidebar', 'Close sidebar'].map(hostToggle).join(',')
-+        + '{display:none!important}'
-+        + 'html.bt-agent [class*="_logoRow"]{display:none!important}'
-+        + '.bt-modebar-row:empty{display:none}'
-+      document.head.appendChild(rules)
-+    }
-+    const paintModeBar = () => {
-+      const mac = /Mac/i.test(navigator.platform || navigator.userAgent)
-+      // The desktop window may keep its caption as an overlay and never publish the band
-+      // height, so a Mac window falls back to the standard 44px band.
-+      const chrome = parseFloat(getComputedStyle(document.body).getPropertyValue('--dsh-frame-chrome-top')) || (mac ? 44 : 0)
-+      const mode = surface.getSnapshot().mode
-+      // The shell's logo row belongs to its own view; hide it there, since the band carries
-+      // the controls. The Bot view never renders that row.
-+      document.documentElement.classList.toggle('bt-agent', mode === 'agent')
-+      document.documentElement.classList.toggle('bt-bot', mode !== 'agent')
-+      // Clear of the traffic lights: past them in the window, at the edge without one.
-+      // A Mac window's traffic lights take the left corner, so the control sits well past
-+      // them; everywhere else it sits 15px from the window's left edge.
-+      const left = mac ? 84 : 15
-+      // A few pixels lower than the band's own centre, so the control sits on the traffic
-+      // lights' horizontal line instead of above it.
-+      const top = chrome >= 24 ? Math.max(0, Math.round((chrome - 26) / 2) + 4) : 9
-+      if (!modeBar) {
-+        // A surface effect that re-runs gets a fresh closure; clear anything an earlier
-+        // closure left on the page so the row never stacks up.
-+        for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row')) stale.remove()
-+        // The row the stale wrapper lived in is gone too; a kept handle would place the new
-+        // row into a detached div and leave the drawer showing an empty line.
-+        modeRow = null
-+        modeBar = document.createElement('button')
-+        modeBar.type = 'button'
-+        modeBar.className = 'bt-modebar'
-+        modeBar.setAttribute('aria-haspopup', 'menu')
-+        modeBar.setAttribute('aria-expanded', 'false')
-+        document.addEventListener('mousedown', (event) => {
-+          if (!modeOpen) return
-+          const target = event.target
-+          if (target instanceof Element && (target.closest('.bt-modebar') || target.closest('.bt-modebar-menu'))) return
-+          closeModeMenu()
-+        })
-+        modeBar.addEventListener('click', () => {
-+          if (modeOpen) { closeModeMenu(); return }
-+          paintModeBar()
-+          const box = modeBar.getBoundingClientRect()
-+          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
-+        })
-+        // A layer over the caption band can take the press before the row sees it. The window
-+        // sees it first, so a press that lands on the row's own box but belongs to another
-+        // element is handled here instead: the row then works wherever it is painted.
-+        window.addEventListener('pointerdown', (event) => {
-+          if (!modeBar.isConnected || event.defaultPrevented) return
-+          const target = event.target
-+          if (target instanceof Element && (target.closest('.bt-modebar') || target.closest('.bt-modebar-menu'))) return
-+          const rect = modeBar.getBoundingClientRect()
-+          if (rect.width === 0) return
-+          if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) return
-+          event.preventDefault()
-+          event.stopPropagation()
-+          if (modeOpen) { closeModeMenu(); return }
-+          paintModeBar()
-+          const box = modeBar.getBoundingClientRect()
-+          openModeMenu(Math.round(box.left), Math.round(box.bottom + 6))
-+        }, true)
-+        window.addEventListener('resize', () => paintModeBar())
-+      }
-+      modeBar.style.cssText = inDrawer()
-+        ? 'position:static;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:28px;cursor:pointer;white-space:nowrap;color:var(--bt-ink)'
-+        : `position:fixed;left:${left}px;top:${top}px;z-index:2147483000;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 2px;border:0;border-radius:8px;background:transparent;box-shadow:none;font-family:inherit;font-size:12.5px;font-weight:500;letter-spacing:-.005em;line-height:26px;cursor:pointer;white-space:nowrap;color:#141414;-webkit-app-region:no-drag`
-+      // The drawer has no band: the row keeps the drawer's top, and a closed drawer takes it
-+      // off the page with everything else instead of leaving it floating over the content.
-+      placeRow()
-+      // No mark: the name and the chevron are enough, and the control stays narrow.
-+      modeBar.textContent = ''
-+      const label = document.createElement('span')
-+      label.textContent = mode === 'bot' ? t('Bot mode') : t('DSH mode')
-+      modeBar.appendChild(label)
-+      paintActions()
-+      const caret = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-+      caret.setAttribute('width', '12')
-+      caret.setAttribute('height', '12')
-+      caret.setAttribute('viewBox', '0 0 20 20')
-+      caret.setAttribute('fill', 'none')
-+      caret.setAttribute('stroke', 'currentColor')
-+      caret.setAttribute('stroke-width', '1.8')
-+      caret.setAttribute('stroke-linecap', 'round')
-+      caret.setAttribute('stroke-linejoin', 'round')
-+      caret.style.cssText = 'flex:none;color:rgba(20,20,20,.44);margin-left:1px'
-+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-+      path.setAttribute('d', 'M5.5 8l4.5 4.5L14.5 8')
-+      caret.appendChild(path)
-+      modeBar.appendChild(caret)
-+      if (modeOpen) { closeModeMenu() }
-+    }
-     const reconcile = () => {
-+      paintModeBar()
-       groups.reconcile(groupsFor(surface.getSnapshot()))
-+      // The sidebar mounts a frame after the shell group; until it does the row has no
-+      // drawer to sit in, so it is painted again once its host is there.
-+      requestAnimationFrame(() => paintModeBar())
-       clearTimeout(verifyTimer)
-       verifyAttempts = 0
-       verifyTimer = setTimeout(verifySidebar, 250)
-@@ -1249,6 +1718,13 @@ export function apply(ctx) {
-     return () => {
-       unsub()
-       clearTimeout(verifyTimer)
-+      if (modeBar) { modeBar.remove(); modeBar = null }
-+      modeOpen = false
-+      if (modeMenu) { modeMenu.remove(); modeMenu = null }
-+      modeRow?.remove()
-+      modeRow = null
-+      for (const stale of document.querySelectorAll('.bt-modebar,.bt-modebar-menu,.bt-band-actions,.bt-modebar-row')) stale.remove()
-+      document.getElementById('bt-modebar-rules')?.remove()
-       groups.dispose()
-     }
-   }, 'ds-bot: surface')
 diff --git a/ds-bot/src/client/market.js b/ds-bot/src/client/market.js
 new file mode 100644
 index 00000000..308b545c
@@ -2368,60 +2045,6 @@ index 94bed28b..2f4908e0 100644
  .bt-mw-pill:active{scale:.97}
  .bt-mw-dock[data-leaving] .bt-mw-pill{animation:bt-mw-out .16s cubic-bezier(.4,0,1,1) forwards;pointer-events:none}
  .bt-mw-pill-in{display:inline-flex;align-items:center;gap:8px;flex:none;padding:0 13px 0 6px;white-space:nowrap}
-diff --git a/ds-bot/src/client/mode-row.js b/ds-bot/src/client/mode-row.js
-new file mode 100644
-index 00000000..305c2e4b
---- /dev/null
-+++ b/ds-bot/src/client/mode-row.js
-@@ -0,0 +1,48 @@
-+// Where the mode row (the surface switcher and the band's own three controls) lives. A
-+// desktop window keeps it in the caption band.
-+//
-+// The band is the window's drag region on a desktop, and Chromium gives a drag region's
-+// clicks to the window instead of the page. A button inside that region can take them back
-+// with -webkit-app-region: no-drag; one floating above it cannot, because hit testing never
-+// reaches it. So on a desktop the row goes inside the band element when the shell has one,
-+// and back to the body when it does not.
-+export function bandHost(document) {
-+  try {
-+    for (const element of document.querySelectorAll('header, [class*="_title"], [class*="_titlebar"], [class*="_caption"], [class*="_drag"], [class*="_window"]')) {
-+      const rect = element.getBoundingClientRect()
-+      if (rect.top > 6 || rect.bottom > 96 || rect.height <= 0) continue
-+      if (readAppRegion(element) === 'drag') return element
-+    }
-+  } catch { /* a document without layout keeps the body */ }
-+  return null
-+}
-+
-+function readAppRegion(element) {
-+  try {
-+    return getComputedStyle(element).getPropertyValue('-webkit-app-region').trim()
-+  } catch {
-+    return ''
-+  }
-+}
-+
-+// There is no drawer form any more: the phone layout was a separate plugin this one no
-+// longer ships, so the row always lives in the window's caption band (or the body).
-+export function drawerSlot() {
-+  return null
-+}
-+
-+export function modeRowSlot(document) {
-+  return bandHost(document) ?? document.body
-+}
-+
-+// Moves the row into `slot` in the given order, once. Prepending in reverse keeps the order
-+// the caller means, and a row already there is left alone so a repaint never doubles it.
-+export function placeModeRow(document, nodes, target) {
-+  const slot = target ?? modeRowSlot(document)
-+  const wanted = nodes.filter(node => node !== null && node !== undefined)
-+  if (wanted.length > 0 && wanted.every(node => node.parentNode === slot)) return slot
-+  for (const node of [...wanted].reverse()) {
-+    if (node.parentNode !== slot) slot.insertBefore(node, slot.firstChild)
-+  }
-+  return slot
-+}
 diff --git a/ds-bot/src/client/model-menu.js b/ds-bot/src/client/model-menu.js
 index ee76e0d3..5d4849a1 100644
 --- a/ds-bot/src/client/model-menu.js
@@ -3546,7 +3169,7 @@ index 7c31aea6..caab97e9 100644
            advanced ? h('div', { className: 'bt-dsh-section' }, dsh.renderSlot('settings.section', { close }, { only: 'models' })) : null,
            section ? h('div', { className: 'bt-dsh-section' }, dsh.renderSlot('settings.section', { close }, { only: section.id })) : null,
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 80c0f6b5..971a4353 100644
+index 80c0f6b5..5b43343e 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -60,7 +60,14 @@ const waitingFor = (roster, waits) => {
@@ -3624,7 +3247,30 @@ index 80c0f6b5..971a4353 100644
  }
  
  function SectionBlock({ section, entries, rowProps, markedUnread, renaming, dropTarget, onDragStart, onDragOverSec, onDropSec }) {
-@@ -796,7 +803,7 @@ export function TeamSidebar(props) {
+@@ -458,17 +465,13 @@ function LeftColumn({ mode, width, onGrip, leaving, children }) {
+     h('div', { className: 'bt-leftcol-grip', role: 'separator', 'aria-orientation': 'vertical', 'aria-label': t('Resize sidebar'), title: t('Resize sidebar'), onPointerDown: onGrip })), document.body)
+ }
+ 
+-// The top-left switch hides the whole column and brings it back. Under a
+-// Windows title bar it takes the shell's own place in the title band; elsewhere
+-// it shows only while the column is hidden, since the column's own top row
+-// carries it otherwise.
++// The top-left switch brings the column back while it is hidden; the column's
++// own top row carries it otherwise, so it never sits in the shell's title band.
+ function TitleToggle({ hidden, onToggle }) {
+-  if (typeof document === 'undefined') return null
+-  const titlebar = document.documentElement.hasAttribute('data-windows-titlebar')
+-  if (!titlebar && !hidden) return null
+-  const label = t(hidden ? 'Expand sidebar' : 'Collapse sidebar')
++  if (typeof document === 'undefined' || !hidden) return null
++  const label = t('Expand sidebar')
+   return createPortal(h('button', {
+-    type: 'button', className: titlebar ? 'bt-title-toggle' : 'bt-round bt-title-toggle', 'aria-label': label, title: label, onClick: onToggle,
++    type: 'button', className: 'bt-round bt-title-toggle', 'aria-label': label, title: label, onClick: onToggle,
+   }, h(SidebarIcon)), document.body)
+ }
+ 
+@@ -796,7 +799,7 @@ export function TeamSidebar(props) {
      : h('div', { className: 'bt-rail-top' },
          h(UpdateButton, { useUpdate: props.useUpdate, actions }),
          h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: onToggle }, h(SidebarIcon)),
@@ -3633,7 +3279,7 @@ index 80c0f6b5..971a4353 100644
          h('span', { className: 'bt-rail-sep', 'aria-hidden': true }))
    // The foot stands in for the shell's hidden footer: the account avatar, and on
    // the rail the new-chat button above it.
-@@ -813,7 +820,7 @@ export function TeamSidebar(props) {
+@@ -813,7 +816,7 @@ export function TeamSidebar(props) {
        onDragEnd: () => { setDragId(null); setDropTarget(null) },
        onDragLeave: (event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(null) },
      },
@@ -9975,7 +9621,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index 2693dc09..1c31886c 100644
+index 2693dc09..1367c3fd 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10475,26 +10121,34 @@ index 2693dc09..1c31886c 100644
  .bt-ubody .bt-fold .bt-more,.bt-ububble .bt-fold .bt-more,.bt-ubody .bt-fold-note,.bt-ububble .bt-fold-note{color:inherit;opacity:.7}
  .bt-ubody .bt-fold .bt-more:hover,.bt-ububble .bt-fold .bt-more:hover{opacity:1}
  .bt-ubody .bt-fold-code>.bt-tool,.bt-ububble .bt-fold-code>.bt-tool{color:inherit;opacity:.7}
-@@ -649,7 +1057,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -649,23 +1057,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
 -[class*="_newSession"],nav[class*="_panelList"],[class*="_logoRow"]>[class*="_brand"],[class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
-+/* Only the team view replaces the shell's own sidebar rows. The shell's own view keeps them:
-+   hiding them there left that view with an empty column. */
-+html.bt-bot [class*="_newSession"],html.bt-bot nav[class*="_panelList"],html.bt-bot [class*="_logoRow"]>[class*="_brand"],html.bt-bot [class*="_logoRow"]:not(:has([class*="_toggle"])){display:none!important}
- /* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
-    collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
-    the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
-@@ -666,6 +1076,7 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
- /* Elsewhere the switch shows only while the column is hidden, where the column's
-    own top row had it. */
- html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
-+/* ds-bot folds the side from its own row now, so the shell's copy in the caption band goes. */
+-/* The shell's sidebar switch stays where the shell puts it whenever the sidebar is
+-   collapsed: on the rail, or fixed in a Windows title bar, where it also stays while
+-   the sidebar is open. Elsewhere an open sidebar uses the team's own top row. */
+-html:not([data-windows-titlebar]) :not([class*="_collapsed"])>[class*="_logoRow"]{display:none!important}
+-html[data-windows-titlebar] :not([class*="_collapsed"])>[class*="_logoRow"]{height:0!important;margin:0!important}
+-html[data-windows-titlebar] .bt-side-collapse{display:none}
+-/* Under a Windows title bar our own switch replaces the shell's: the shell's
+-   toggle expands the shell sidebar first, and pulling it back afterwards is a
+-   visible flash of the shell's column. A host whose window controls stand at the band's
+-   left (the macOS traffic lights) sets --bt-caption-start to the room they take. */
+-html[data-windows-titlebar] [class*="_logoRow"]>[class*="_toggle"]{display:none!important}
+-html[data-windows-titlebar] .bt-title-toggle{position:fixed;left:calc(12px + var(--bt-caption-start,0px));top:calc((var(--dsh-windows-titlebar-height,0px) - 28px) / 2);width:28px;height:28px;z-index:30;-webkit-app-region:no-drag;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;padding:0;background:transparent;color:var(--bt-ink);cursor:pointer;font-family:var(--bt-font)}
+-html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
+-/* Elsewhere the switch shows only while the column is hidden, where the column's
+-   own top row had it. */
+-html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
++/* The switch that brings the Bot view's own column back floats at the top left; while the
++   column is shown its own top row carries the control, so this one is not rendered. */
++.bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -705,7 +1116,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -705,7 +1099,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -10504,7 +10158,7 @@ index 2693dc09..1c31886c 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -762,6 +1174,16 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
+@@ -762,6 +1157,16 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
  .bt-menu button:hover{background:var(--bt-hover)}
  .bt-menu button svg{flex:none;width:16px;height:16px;margin:0 1px}
  .bt-menu .bt-danger{color:var(--bt-danger)}
@@ -10521,7 +10175,7 @@ index 2693dc09..1c31886c 100644
  .bt-menu-sep{height:.5px;flex:none;background:var(--bt-line-2);margin:4px 8px}
  .bt-menu-up{--bt-origin:bottom left;animation-name:bt-pop-lift,bt-veil-in}
  .bt-menu[data-leaving]{pointer-events:none;animation:bt-pop-out .12s cubic-bezier(.4,0,1,1) forwards}
-@@ -1018,10 +1440,98 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -1018,10 +1423,98 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  .bt-settings-scroll{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
  .bt-voice-bar{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
  .bt-exchange .bt-dialog-foot{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
@@ -10624,7 +10278,7 @@ index 2693dc09..1c31886c 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1136,49 +1646,59 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
+@@ -1136,49 +1629,59 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -10710,7 +10364,7 @@ index 2693dc09..1c31886c 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1197,7 +1717,7 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
+@@ -1197,7 +1700,7 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
  }
  [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
  body[data-bt-room] .bt-voice{display:none!important}
@@ -10719,7 +10373,7 @@ index 2693dc09..1c31886c 100644
  .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
  [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
  .bt-q{order:1}
-@@ -1228,15 +1748,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1228,15 +1731,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -10735,7 +10389,7 @@ index 2693dc09..1c31886c 100644
  .bt-news{position:fixed;z-index:30;transform:translateX(-50%);display:inline-flex;align-items:center;overflow:hidden;border-radius:999px;background:var(--bt-accent);color:var(--bt-accent-ink);box-shadow:inset 0 0 0 1px rgba(20,20,20,.05),0 1px 3px 0 rgba(0,0,0,.12);font-family:var(--bt-font);animation:bt-news-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out}
  @keyframes bt-news-in{from{translate:0 8px;scale:.9}}
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
-@@ -1247,7 +1759,6 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1247,7 +1742,6 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -10743,7 +10397,7 @@ index 2693dc09..1c31886c 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1305,6 +1816,13 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1305,6 +1799,13 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -19456,51 +19110,6 @@ index 00000000..788a2afd
 +  assert.equal(Number.isInteger(data.seq), true)
 +  assert.equal(text.startsWith('event: hello'), true)
 +})
-diff --git a/ds-bot/test/mode-row.test.js b/ds-bot/test/mode-row.test.js
-new file mode 100644
-index 00000000..a43c4826
---- /dev/null
-+++ b/ds-bot/test/mode-row.test.js
-@@ -0,0 +1,39 @@
-+import { test } from 'node:test'
-+import assert from 'node:assert/strict'
-+import { createRequire } from 'node:module'
-+import { dirname, join } from 'node:path'
-+import { fileURLToPath } from 'node:url'
-+import { modeRowSlot, placeModeRow } from '../src/client/mode-row.js'
-+
-+const PLUGIN = dirname(dirname(fileURLToPath(import.meta.url)))
-+const { JSDOM } = createRequire(join(process.env.DSH_HARNESS ?? join(PLUGIN, '..', 'deepseek-harness'), 'package.json'))('jsdom')
-+
-+// A page with the shell's sidebar, which no longer takes the row: there is no drawer form.
-+const page = ({ sidebar = true } = {}) => {
-+  const dom = new JSDOM(`<!doctype html><body>${sidebar ? '<div class="bt-side"><div class="bt-side-top"></div></div>' : ''}</body>`)
-+  return dom.window.document
-+}
-+
-+const row = document => {
-+  const node = document.createElement('button')
-+  node.className = 'bt-modebar'
-+  return node
-+}
-+
-+test('a desktop window keeps the row in the band', () => {
-+  const document = page()
-+  assert.equal(modeRowSlot(document), document.body)
-+  const bar = row(document)
-+  placeModeRow(document, [bar])
-+  assert.equal(bar.parentNode, document.body)
-+})
-+
-+test('painting again never doubles the row', () => {
-+  const document = page()
-+  const bar = row(document)
-+  const actions = document.createElement('div')
-+  placeModeRow(document, [bar, actions])
-+  placeModeRow(document, [bar, actions])
-+  assert.equal(document.body.querySelectorAll('.bt-modebar').length, 1)
-+  assert.equal(bar.parentNode, document.body)
-+})
 diff --git a/ds-bot/test/model-menu.test.js b/ds-bot/test/model-menu.test.js
 index 664e4ec9..bbd62630 100644
 --- a/ds-bot/test/model-menu.test.js
@@ -19709,7 +19318,7 @@ index 00000000..bec01ac8
 +    { files, hunks, added, removed })
 +})
 diff --git a/ds-bot/test/sidebar-switch.test.js b/ds-bot/test/sidebar-switch.test.js
-index b0e6c425..01bb23b7 100644
+index b0e6c425..d4b677fa 100644
 --- a/ds-bot/test/sidebar-switch.test.js
 +++ b/ds-bot/test/sidebar-switch.test.js
 @@ -28,10 +28,13 @@ let layoutEffects
@@ -19756,7 +19365,45 @@ index b0e6c425..01bb23b7 100644
      <div${collapsed ? ' data-sidebar-collapsed="true"' : ''}>
        <div class="x_root${collapsed ? ' x_collapsed' : ''}">
          ${darwin ? `<div class="x_topStrip">${toggle}</div>` : ''}
-@@ -334,65 +341,54 @@ test('what the team view replaces in the shell sidebar stays out of sight', () =
+@@ -304,14 +311,14 @@ function shell({ platform, collapsed }) {
+   return { document, hidden, switches }
+ }
+ 
+-// The switch is always ours. Under a Windows title bar it is the title-band
+-// button and the shell's own is hidden (left to the shell, it would expand the
+-// shell's sidebar before we pull it back, a flash); elsewhere it is the column's
+-// top-row button, or the floating one while the column is hidden.
++// The shell's own switch is left to the shell again (the mode row that replaced it is
++// gone); our floating switch only exists while the column is hidden, so the two never
++// stand for the same job.
+ for (const collapsed of [false, true]) {
+-  test(`${collapsed ? 'a collapsed' : 'an open'} shell sidebar under a Windows title bar shows only our switch`, () => {
+-    const { switches } = shell({ platform: 'windows', collapsed })
+-    assert.deepEqual(switches.map(node => node.className), ['bt-title-toggle'])
++  test(`the shell keeps its own switch under a Windows title bar, ${collapsed ? 'collapsed' : 'open'}`, () => {
++    const { document, hidden } = shell({ platform: 'windows', collapsed })
++    assert.equal(hidden(document.querySelector('.x_toggle')), false)
++    if (collapsed) assert.equal(hidden(document.querySelector('.bt-title-toggle')), false)
+   })
+ }
+ 
+@@ -323,76 +330,67 @@ test('off a Windows title bar the column\'s top row and the floating switch are
+   }
+ })
+ 
+-test('what the team view replaces in the shell sidebar stays out of sight', () => {
++// The team view no longer swaps the shell's sidebar rows out, so the shell's own session
++// row and brand row are left alone on every platform.
++test('the shell keeps its own sidebar rows', () => {
+   for (const platform of ['web', 'windows', 'mac']) {
+     for (const collapsed of [false, true]) {
+       const { document, hidden } = shell({ platform, collapsed })
+-      assert.equal(hidden(document.querySelector('.x_newSession')), true)
++      assert.equal(hidden(document.querySelector('.x_newSession')), false, `${platform} ${collapsed}`)
+       const brand = document.querySelector('.x_brand')
+-      if (brand) assert.equal(hidden(brand), true)
++      if (brand) assert.equal(hidden(brand), false, `${platform} ${collapsed}`)
+     }
    }
  })
  
@@ -19853,6 +19500,22 @@ index b0e6c425..01bb23b7 100644
    assert.equal(find(hidden, node => node.type?.name === 'LeftColumn'), undefined)
    const toggle = find(hidden, node => node.type?.name === 'TitleToggle')
    assert.equal(toggle.props.hidden, true)
+@@ -400,12 +398,12 @@ test('the column\'s top row hides it, on the rail too, and its edge is a drag gr
+   assert.match(SHELL_CSS, /@media\s*\(prefers-reduced-motion:reduce\)\{\.bt-leftcol\{animation:none\}\.bt-leftcol\[data-leaving\],\[class\*="_centerCol"\]\{transition:none\}\}/)
+ })
+ 
+-test('the logo row takes no room in an open sidebar under a Windows title bar', () => {
++// The logo row is the shell's again: no rule of ours flattens it to take its room.
++test('no rule flattens the logo row under a Windows title bar', () => {
+   const { document } = shell({ platform: 'windows', collapsed: false })
+   const row = document.querySelector('.x_logoRow')
+   const flat = rules.filter(rule => row.matches(rule.selector) && /height:0!important/.test(rule.body))
+-  assert.equal(flat.length, 1)
+-  assert.equal(shell({ platform: 'windows', collapsed: true }).document.querySelector('.x_logoRow').matches(flat[0].selector), false)
++  assert.deepEqual(flat.map(rule => rule.selector), [])
+ })
+ 
+ // The shell hides the footer of a collapsed sidebar under a Windows title bar, whose width
 diff --git a/ds-bot/test/style-debt.json b/ds-bot/test/style-debt.json
 index d94626be..ca067dfb 100644
 --- a/ds-bot/test/style-debt.json
