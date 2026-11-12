@@ -8,6 +8,19 @@ English | [中文](README.zh.md)
 
 DS Bot is an open-source project built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH), available as a standalone desktop app or as a DSH plugin. It turns DSH into bots that you create, talk to and work with.
 
+> **This fork.** [`gpmlimeng-cyber/dsh-bot`](https://github.com/gpmlimeng-cyber/dsh-bot) tracks upstream [`Fei2411/DS-Bot`](https://github.com/Fei2411/DS-Bot) and keeps a small patch layer on top of it. This version, **1.3.5**, is baselined on upstream **v0.3.5**; the version rule is the upstream major + 1 (0.3.5 → 1.3.5, 0.4.x → 1.4.x). The patches are listed in [`design/ds-bot-patches.md`](design/ds-bot-patches.md) and replay from [`design/ds-bot-patches.patch`](design/ds-bot-patches.patch). The phone app is upstream's own in this version; the fork keeps no phone link of its own.
+
+## Sponsors
+
+<table>
+<tr>
+<td width="180" align="center"><a href="https://modelgo.ai/?utm_source=dsbot&utm_medium=sponsorship&utm_content=readme&campaign_id=dsbot&ad_group_id=readme"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/sponsors/modelgo-dark.svg"><img src="docs/images/sponsors/modelgo.svg" alt="ModelGo" width="150"></picture></a></td>
+<td>ModelGo is a reliable, high-performance, enterprise-grade AI API aggregation platform. Access leading AI models—including Claude, OpenAI, Gemini, and DeepSeek—with a single API key. Sign up now and get 40% off DeepSeek V4.1 Flash.<br>Exclusive perks for DS-Bot users: get $0.50 in credits when you sign up, earn another $2 after your first API call, and receive up to $10 in bonus credits when you top up! Try it now: <a href="https://modelgo.ai/?utm_source=dsbot&utm_medium=sponsorship&utm_content=readme&campaign_id=dsbot&ad_group_id=readme">ModelGo Official Website</a></td>
+</tr>
+</table>
+
+<h2></h2>
+
 ![Say one sentence to Chief, and it sets up the bots and the group chat](docs/images/team.png)
 
 ## Install

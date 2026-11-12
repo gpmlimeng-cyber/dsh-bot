@@ -8,6 +8,19 @@
 
 DS Bot 是一个基于 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（简称 dsh）的开源项目，提供独立桌面应用和 dsh 插件两种形态。它将 dsh 改造为 bot 形式，你可以与自己创建的 bot 交流、工作。
 
+> **关于本 fork。** [`gpmlimeng-cyber/dsh-bot`](https://github.com/gpmlimeng-cyber/dsh-bot) 跟随上游 [`Fei2411/DS-Bot`](https://github.com/Fei2411/DS-Bot)，并在其上维护一层小补丁。本版 **1.3.5** 以上游 **v0.3.5** 为基线；版本规则是上游主版本 + 1（0.3.5 → 1.3.5，0.4.x → 1.4.x）。补丁清单在 [`design/ds-bot-patches.md`](design/ds-bot-patches.md)，可用 [`design/ds-bot-patches.patch`](design/ds-bot-patches.patch) 重放。手机 App 在本版就是上游自己的实现，本 fork 不再自带手机链路。
+
+## 赞助
+
+<table>
+<tr>
+<td width="180" align="center"><a href="https://modelgo.ai/?utm_source=dsbot&utm_medium=sponsorship&utm_content=readme&campaign_id=dsbot&ad_group_id=readme"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/sponsors/modelgo-dark.svg"><img src="docs/images/sponsors/modelgo.svg" alt="ModelGo" width="150"></picture></a></td>
+<td>ModelGo 是一个稳定、高效的企业级 AI API 聚合平台，一个 API Key 即可调用 Claude、OpenAI、Gemini、DeepSeek 等主流 AI 模型。当前注册即享 6 折 deepseek v4.1 flash。<br>另为 DS-Bot 用户提供专属福利：注册即送 $0.5 额度，完成首次 API 调用再送 $2，充值赠金最高至 $10！立即体验：<a href="https://modelgo.ai/?utm_source=dsbot&utm_medium=sponsorship&utm_content=readme&campaign_id=dsbot&ad_group_id=readme">ModelGo 官网</a></td>
+</tr>
+</table>
+
+<h2></h2>
+
 ![和 Chief 说一句话，它就把 bot 和群聊建好](docs/images/team.zh.png)
 
 ## 安装

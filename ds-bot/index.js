@@ -2,8 +2,6 @@
 // Every Bot is one root Session; the roster, rooms, and the bot-to-bot exchange log live
 // in one JSON file under DSH_HOME so they survive restarts without new Session event types.
 import { join } from 'node:path'
-import * as authorization from './src/host/authorization.js'
-import * as toolPolicy from './src/host/tool-policy.js'
 import * as diagnostics from './src/host/diagnostics.js'
 import * as store from './src/host/store.js'
 import * as models from './src/host/models.js'
@@ -23,9 +21,8 @@ import * as timeContext from './src/host/time-context.js'
 import * as tools from './src/host/tools.js'
 import * as chatIndex from './src/host/chat-index.js'
 import * as groups from './src/host/groups.js'
-import * as groupLog from './src/host/group-log.js'
+import * as ledger from './src/host/ledger.js'
 import * as goals from './src/host/goals.js'
-import * as tasks from './src/host/tasks.js'
 import * as approvals from './src/host/approvals.js'
 import * as resume from './src/host/resume.js'
 import * as memory from './src/host/memory.js'
@@ -37,7 +34,6 @@ import * as browserPlugins from './src/host/browser-plugins.js'
 import * as computer from './src/host/computer/index.js'
 import * as secrets from './src/host/secrets.js'
 import * as connectors from './src/host/connectors/index.js'
-import * as mcp from './src/host/mcp.js'
 import * as capabilities from './src/host/capabilities.js'
 import * as learning from './src/host/learning.js'
 import * as schedules from './src/host/schedules.js'
@@ -45,11 +41,16 @@ import * as usage from './src/host/usage.js'
 import * as update from './src/host/update.js'
 import * as dshUpdate from './src/host/dsh-update.js'
 import * as thinking from './src/host/thinking.js'
-import * as mobile from './src/host/mobile.js'
+import * as phone from './src/host/phone.js'
 import * as channel from './src/host/channel.js'
+import * as authorization from './src/host/authorization.js'
+import * as toolPolicy from './src/host/tool-policy.js'
+import * as tasks from './src/host/tasks.js'
+import * as mcp from './src/host/mcp.js'
 import * as skillMarket from './src/host/skill-market/index.js'
-import * as feed from './src/host/feed.js'
 import * as remote from './src/host/remote.js'
+import * as mobile from './src/host/mobile.js'
+import * as feed from './src/host/feed.js'
 import * as im from './src/host/im/index.js'
 import * as officeSkills from './src/host/office-skills.js'
 import * as goalSkills from './src/host/goal-skills.js'
@@ -65,7 +66,7 @@ export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'ses
 // install. Listeners run and tools are listed in registration order, so this order holds:
 // usage meters model requests after every listener that rewrites them. privacy checks a
 // call before the hooks of tools do, so a closed call never reaches a card they show.
-const MODULES = [diagnostics, store, models, providers, permissions, turns, steer, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, groupLog, goals, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, capabilities, learning, schedules, browser, browserPlugins, computer, usage, update, dshUpdate, thinking, feed, im, channel, officeSkills, goalSkills, localAgents]
+const MODULES = [diagnostics, store, ledger, models, providers, permissions, turns, steer, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, goals, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, capabilities, learning, schedules, browser, browserPlugins, computer, usage, update, dshUpdate, thinking, mobile, feed, phone, im, channel, officeSkills, goalSkills, localAgents]
 // The fork's own modules go back to the seats they held before the merge: the feed's
 // listener must stay right before im's, and tool policy after the tool hooks. The upstream
 // list above is never edited; only these insertions run.
@@ -75,7 +76,6 @@ const ownModule = (before, ...modules) => {
 }
 ownModule(approvals, tasks)
 ownModule(capabilities, mcp)
-ownModule(feed, mobile)
 ownModule(officeSkills, remote)
 ownModule(localAgents, authorization, toolPolicy)
 
