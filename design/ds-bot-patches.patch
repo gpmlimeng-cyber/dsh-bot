@@ -10,50 +10,26 @@ index 190fbf30..0df0cbc5 100644
      "no-undef": "error",
      "no-unused-vars": ["error", { "ignoreRestSiblings": true }]
 diff --git a/ds-bot/index.js b/ds-bot/index.js
-index 8b356179..682c5e7c 100644
+index 250f57c2..c6744e6a 100644
 --- a/ds-bot/index.js
 +++ b/ds-bot/index.js
-@@ -2,6 +2,8 @@
- // Every Bot is one root Session; the roster, rooms, and the bot-to-bot exchange log live
- // in one JSON file under DSH_HOME so they survive restarts without new Session event types.
- import { join } from 'node:path'
+@@ -43,6 +43,12 @@ import * as dshUpdate from './src/host/dsh-update.js'
+ import * as thinking from './src/host/thinking.js'
+ import * as phone from './src/host/phone.js'
+ import * as channel from './src/host/channel.js'
 +import * as authorization from './src/host/authorization.js'
 +import * as toolPolicy from './src/host/tool-policy.js'
- import * as diagnostics from './src/host/diagnostics.js'
- import * as store from './src/host/store.js'
- import * as models from './src/host/models.js'
-@@ -23,6 +25,7 @@ import * as chatIndex from './src/host/chat-index.js'
- import * as groups from './src/host/groups.js'
- import * as groupLog from './src/host/group-log.js'
- import * as goals from './src/host/goals.js'
 +import * as tasks from './src/host/tasks.js'
- import * as approvals from './src/host/approvals.js'
- import * as resume from './src/host/resume.js'
- import * as memory from './src/host/memory.js'
-@@ -34,6 +37,7 @@ import * as browserPlugins from './src/host/browser-plugins.js'
- import * as computer from './src/host/computer/index.js'
- import * as secrets from './src/host/secrets.js'
- import * as connectors from './src/host/connectors/index.js'
 +import * as mcp from './src/host/mcp.js'
- import * as capabilities from './src/host/capabilities.js'
- import * as learning from './src/host/learning.js'
- import * as schedules from './src/host/schedules.js'
-@@ -41,8 +45,11 @@ import * as usage from './src/host/usage.js'
- import * as update from './src/host/update.js'
- import * as dshUpdate from './src/host/dsh-update.js'
- import * as thinking from './src/host/thinking.js'
-+import * as mobile from './src/host/mobile.js'
- import * as channel from './src/host/channel.js'
 +import * as skillMarket from './src/host/skill-market/index.js'
- import * as feed from './src/host/feed.js'
 +import * as remote from './src/host/remote.js'
+ import * as mobile from './src/host/mobile.js'
+ import * as feed from './src/host/feed.js'
  import * as im from './src/host/im/index.js'
- import * as officeSkills from './src/host/office-skills.js'
- import * as goalSkills from './src/host/goal-skills.js'
-@@ -59,9 +66,38 @@ export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'ses
+@@ -61,9 +67,37 @@ export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'ses
  // usage meters model requests after every listener that rewrites them. privacy checks a
  // call before the hooks of tools do, so a closed call never reaches a card they show.
- const MODULES = [diagnostics, store, models, providers, permissions, turns, steer, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, groupLog, goals, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, capabilities, learning, schedules, browser, browserPlugins, computer, usage, update, dshUpdate, thinking, feed, im, channel, officeSkills, goalSkills, localAgents]
+ const MODULES = [diagnostics, store, ledger, models, providers, permissions, turns, steer, handoffs, requests, delivery, roster, folders, privacy, agents, prompt, timeContext, tools, chatIndex, groups, goals, approvals, resume, memory, parts, images, avatarLibrary, secrets, connectors, capabilities, learning, schedules, browser, browserPlugins, computer, usage, update, dshUpdate, thinking, mobile, feed, phone, im, channel, officeSkills, goalSkills, localAgents]
 +// The fork's own modules go back to the seats they held before the merge: the feed's
 +// listener must stay right before im's, and tool policy after the tool hooks. The upstream
 +// list above is never edited; only these insertions run.
@@ -63,7 +39,6 @@ index 8b356179..682c5e7c 100644
 +}
 +ownModule(approvals, tasks)
 +ownModule(capabilities, mcp)
-+ownModule(feed, mobile)
 +ownModule(officeSkills, remote)
 +ownModule(localAgents, authorization, toolPolicy)
  
@@ -89,6 +64,37 @@ index 8b356179..682c5e7c 100644
  }
  
  export function createRuntime(ctx, config = {}) {
+diff --git a/ds-bot/package-lock.json b/ds-bot/package-lock.json
+index 3f0836e7..af95f519 100644
+--- a/ds-bot/package-lock.json
++++ b/ds-bot/package-lock.json
+@@ -1,12 +1,12 @@
+ {
+   "name": "ds-bot",
+-  "version": "0.3.5",
++  "version": "1.3.5",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+       "name": "ds-bot",
+-      "version": "0.3.5",
++      "version": "1.3.5",
+       "license": "Apache-2.0",
+       "dependencies": {
+         "@modelcontextprotocol/client": "2.4.0",
+diff --git a/ds-bot/package.json b/ds-bot/package.json
+index 706ed316..328a8eed 100644
+--- a/ds-bot/package.json
++++ b/ds-bot/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "ds-bot",
+-  "version": "0.3.5",
++  "version": "1.3.5",
+   "description": "DS Bot: a team of long-lived Bots for DeepSeek Harness, with Main Bots, Bot-to-Bot messages and group chats",
+   "keywords": [
+     "dsh-plugin",
 diff --git a/ds-bot/scripts/style-debt.mjs b/ds-bot/scripts/style-debt.mjs
 index 36bd1994..4aae68df 100644
 --- a/ds-bot/scripts/style-debt.mjs
@@ -215,7 +221,7 @@ index 6d6ed7a7..02b02930 100644
        items.map((item, index) => (item.sep
          ? h('span', { key: `sep-${index}`, className: 'bt-pmenu-sep', role: 'separator' })
 diff --git a/ds-bot/src/client/cells.js b/ds-bot/src/client/cells.js
-index 5eb51182..8df6e36c 100644
+index b5d56aaf..c3be873e 100644
 --- a/ds-bot/src/client/cells.js
 +++ b/ds-bot/src/client/cells.js
 @@ -1,7 +1,7 @@
@@ -343,7 +349,7 @@ index 5eb51182..8df6e36c 100644
  }
  
  // A centered event line that names a group chat and opens it.
-@@ -642,7 +686,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
+@@ -643,7 +687,7 @@ function chatRow(row, key, { sessionId, selfId, roster, actions, useUi, onBtwDel
    }
  }
  
@@ -352,7 +358,7 @@ index 5eb51182..8df6e36c 100644
    const roster = useRoster(value => value)
    const data = node.data
    const source = data.source !== null && typeof data.source === 'object' ? data.source : {}
-@@ -704,7 +748,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
+@@ -705,7 +749,7 @@ export function TriggerCell({ node, sessionId, useRoster, useSessions, useTurnCl
          const text = stripHeader(contentText(data.content))
          // A trigger's data carries no turn; its event seq is the one durable name of this post.
          return h(GroupMessage, {
@@ -361,16 +367,16 @@ index 5eb51182..8df6e36c 100644
            whole: file ? { length: source.length, load: () => actions.fileText(file) } : undefined,
          })
        }
-@@ -970,7 +1014,7 @@ function RelayEvent({ reply, bot, sessionId, actions }) {
-   return null
- }
+@@ -974,7 +1018,7 @@ function RelayEvent({ reply, bot, sessionId, actions }) {
+ // Rows a later call closed do not change: each is read from the group's book once per page.
+ const settledRows = new Map()
  
 -function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork }) {
 +function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi, useWork, openFile }) {
    const [live, setLive] = useState({ replies: [], speaking: [] })
    useEffect(() => {
      if (done) return undefined
-@@ -1023,7 +1067,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
+@@ -1060,7 +1104,17 @@ function GroupReplies({ sessionId, callId, done, content, roster, actions, useUi
          return h('div', { key: `goal-${index}`, className: 'bt-event', title: reply.text || undefined },
            h('span', { className: 'bt-event-ico', 'aria-hidden': true }, h(GoalIcon)), goalEventText(reply))
        }
@@ -389,7 +395,7 @@ index 5eb51182..8df6e36c 100644
      }),
      pending.map((id, at) => {
        const bot = roster.byId[id]
-@@ -1069,7 +1123,7 @@ function useShownCards(actions, sessionId, callIds) {
+@@ -1106,7 +1160,7 @@ function useShownCards(actions, sessionId, callIds) {
    }, [sessionId, key])
  }
  
@@ -398,7 +404,7 @@ index 5eb51182..8df6e36c 100644
    const tool = toolName(call)
    const done = call.kind === 'tool-result'
    const { text: arg, value: argValue } = toolArgs(call)
-@@ -1095,7 +1149,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1132,7 +1186,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
        return done && target ? h(EventLine, { prefix: t('Updated'), bots: [target], onOpen: bot => actions.openSession(bot.id) }) : h(CellEmpty)
      }
      case 'group_relay':
@@ -407,7 +413,7 @@ index 5eb51182..8df6e36c 100644
      case 'create_group':
      case 'update_group':
      case 'delete_group':
-@@ -1167,7 +1221,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
+@@ -1204,7 +1258,7 @@ function renderCall(call, { sessionId, roster, actions, useUi, useWork, findBot,
    }
  }
  
@@ -416,7 +422,7 @@ index 5eb51182..8df6e36c 100644
    const roster = useRoster(value => value)
    const heldCards = useHeldCards?.(state => state[sessionId])
    const root = node.data.root
-@@ -1183,6 +1237,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
+@@ -1225,6 +1279,6 @@ export function ToolCell({ node, sessionId, useRoster, useUi, useWork, useHeldCa
    useLiveNote(actions, sessionId, `tool:${root.callId ?? node.key}`, note)
    useShownCards(actions, sessionId, drawn.filter(call => (CARDS.has(toolName(call)) || isComputerCall(toolName(call))) && call.callId).map(call => call.callId))
    if (drawn.length === 0) return h(CellEmpty)
@@ -888,7 +894,7 @@ index 1cb03906..363960e9 100644
      h(NewMessagePills, { key: sessionId, sessionId, useSessions, useUi, useTurnClock }),
      h(ActivityIndicator, { key: `activity:${sessionId}`, sessionId, useRoster, useSessionStatus, useSession, useLive, useWork, actions }))
 diff --git a/ds-bot/src/client/icons.js b/ds-bot/src/client/icons.js
-index c0b86e8a..7c6acdd2 100644
+index 757afd17..75f4ef1c 100644
 --- a/ds-bot/src/client/icons.js
 +++ b/ds-bot/src/client/icons.js
 @@ -18,15 +18,16 @@ export function PeopleIcon() {
@@ -944,16 +950,8 @@ index c0b86e8a..7c6acdd2 100644
  export const CheckIcon = lineIcon(['M4.5 10.5l3.5 3.5 7.5-8'])
  export const GlobeIcon = lineIcon(['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z', 'M3 10h14', 'M10 3c2 2.2 2.9 4.5 2.9 7S12 14.8 10 17c-2-2.2-2.9-4.5-2.9-7S8 5.2 10 3z'])
  export const MoveIcon = lineIcon(['M3.5 10h9.5', 'M9.5 6l4 4-4 4', 'M16.5 4.5v11'])
-@@ -68,6 +92,7 @@ export const GaugeIcon = lineIcon(['M3.5 13.5a6.5 6.5 0 1 1 13 0', 'M10 13.5l3-4
- export const PlugIcon = lineIcon(['M7 3v4M13 3v4', 'M5 7h10v2.5a5 5 0 0 1-10 0z', 'M10 14.5V17'])
- export const CalendarIcon = lineIcon(['M5.5 5h9A1.5 1.5 0 0 1 16 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 4 14.5v-8A1.5 1.5 0 0 1 5.5 5z', 'M4 8.75h12', 'M7.25 3.5v3M12.75 3.5v3'])
- export const ConnectorIcon = lineIcon(['M7 10a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z', 'M18 10a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z', 'M7 10h6'])
-+export const SwitchIcon = lineIcon(['M4 7h9.5M10.5 3.5L14 7l-3.5 3.5', 'M16 13H6.5M9.5 9.5L6 13l3.5 3.5'])
- export const SignOutIcon = lineIcon(['M8.5 17H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2.5', 'M10 10h6.5', 'M13.5 7l3 3-3 3'])
- export const SignInIcon = lineIcon(['M11.5 3H14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2.5', 'M3.5 10H10', 'M7 7l3 3-3 3'])
- export const PaperclipIcon = lineIcon(['M15.5 9.5l-5.6 5.6a3.4 3.4 0 0 1-4.8-4.8l6.1-6.1a2.25 2.25 0 0 1 3.2 3.2l-6 6a1.1 1.1 0 0 1-1.6-1.6l5.5-5.5'])
 diff --git a/ds-bot/src/client/index.js b/ds-bot/src/client/index.js
-index e666fb3c..decec289 100644
+index 66ceeff7..461b058a 100644
 --- a/ds-bot/src/client/index.js
 +++ b/ds-bot/src/client/index.js
 @@ -1,9 +1,10 @@
@@ -966,7 +964,7 @@ index e666fb3c..decec289 100644
 -import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf } from './themes.js'
 +import { themeCss, shellTokens, registry, registerShape, registerTheme, allThemes, layoutOf, widthOf, flatWidthOf, fontOf, fontCss, sizeOf, sizeCss, densityOf, skinOf, SKIN_CHOICES, SIZE_CHOICES } from './themes.js'
  import { MENTION_ORIGIN, currentPart } from './text.js'
- import { SHELL_CSS, CONVERSATION_CSS, botOwnCss, installStyles, installCompiledStyles } from './styles.js'
+ import { SHELL_CSS, CONVERSATION_CSS, botOwnCss, installStyles, installCompiledStyles, RETURN_TOKENS } from './styles.js'
  import { lookOf } from './mark.js'
 @@ -41,6 +42,8 @@ import { FOLDER_CSS } from './folder-menu.js'
  import { USAGE_CSS } from './usage-page.js'
@@ -983,10 +981,10 @@ index e666fb3c..decec289 100644
  import { listedOpener } from './open-listed.js'
 +// The fork's Chinese copy rides in after i18n's own dictionary, so i18n.js stays untouched.
 +import './zh-extra.js'
+ import { agentSessionToReuse, singleFlight } from './agent-new.js'
  
  export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
- 
-@@ -165,6 +170,8 @@ export function apply(ctx) {
+@@ -169,6 +174,8 @@ export function apply(ctx) {
      memoryNews.set(state => Object.fromEntries(Object.entries(next).map(([id, entry]) => [id,
        state[id]?.at === entry.at ? state[id] : { ...entry, seen: opening ? 0 : Date.now() }])))
    }
@@ -995,7 +993,7 @@ index e666fb3c..decec289 100644
    const writeUnread = (id, value) => {
      const unread = unreadStore.update(marks => setUnread(marks, id, value), ui.getSnapshot().unread)
      ui.set(state => (JSON.stringify(state.unread) === JSON.stringify(unread) ? state : { ...state, unread }))
-@@ -376,23 +383,42 @@ export function apply(ctx) {
+@@ -384,23 +391,42 @@ export function apply(ctx) {
        const layout = layoutOf(prefs)
        const width = widthOf(prefs)
        const flatWidth = flatWidthOf(prefs)
@@ -1041,7 +1039,7 @@ index e666fb3c..decec289 100644
      const offRegistry = registry.subscribe(render)
      return () => {
        offRoster()
-@@ -402,6 +428,7 @@ export function apply(ctx) {
+@@ -410,6 +436,7 @@ export function apply(ctx) {
        } finally {
          delete document.body.dataset.btMotion
          delete document.body.dataset.btLayout
@@ -1049,7 +1047,7 @@ index e666fb3c..decec289 100644
          document.body.style.removeProperty('--bt-msg-w')
          document.body.style.removeProperty('--bt-flat-w')
          style.remove()
-@@ -409,6 +436,12 @@ export function apply(ctx) {
+@@ -417,6 +444,12 @@ export function apply(ctx) {
      }
    }
  
@@ -1062,7 +1060,7 @@ index e666fb3c..decec289 100644
    ctx.effect(() => {
      const hub = { registerShape, registerTheme, themes: () => Object.keys(allThemes()), shapes: () => Object.keys(SHAPES) }
      const queued = Array.isArray(window.dshBotQueue) ? window.dshBotQueue : []
-@@ -552,6 +585,148 @@ export function apply(ctx) {
+@@ -568,6 +601,148 @@ export function apply(ctx) {
      },
      selectPanel: (id) => { ctx.layout.selectPanel(id) },
      toggleSidebar: () => { ctx.layout.toggleSidebar() },
@@ -1211,7 +1209,7 @@ index e666fb3c..decec289 100644
      // The left column's own preference: 'open', 'rail' or 'hidden'. The switch
      // remembers the shown one it hid; a drag sets the open column's width.
      setSidebarPref: (pref) => {
-@@ -1077,6 +1252,10 @@ export function apply(ctx) {
+@@ -1097,6 +1272,10 @@ export function apply(ctx) {
      () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
      () => shadow('shell.overlay', { id: 'bot-signin', order: 55, inject: face }, DeepSeekSignIn),
      () => shadow('shell.overlay', { id: 'bot-toast', order: 60, inject: face }, ErrorToast),
@@ -3094,7 +3092,7 @@ index 00000000..0328db2f
 +  }, mark.paths.map((d, index) => h('path', { key: index, d })))
 +}
 diff --git a/ds-bot/src/client/settings.js b/ds-bot/src/client/settings.js
-index 7c31aea6..caab97e9 100644
+index 118dc91d..34b6a336 100644
 --- a/ds-bot/src/client/settings.js
 +++ b/ds-bot/src/client/settings.js
 @@ -1,8 +1,8 @@
@@ -3102,13 +3100,13 @@ index 7c31aea6..caab97e9 100644
  import { ACCENT_INKS, INKS } from './inks.js'
  import { isMainOf } from './sources.js'
 -import { MESSAGE_WIDTH, allThemes, flatWidthOf, layoutOf, thinkingShown, widthOf } from './themes.js'
--import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ChatsIcon, ClockIcon, ConnectorIcon, GlobeIcon, InfoIcon, MonitorIcon, PlugIcon, PlusIcon, SlidersIcon, TerminalIcon, SETTINGS_ICONS } from './icons.js'
+-import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ChatsIcon, ClockIcon, ConnectorIcon, GlobeIcon, InfoIcon, MonitorIcon, PhoneIcon, PlugIcon, PlusIcon, SlidersIcon, TerminalIcon, SETTINGS_ICONS } from './icons.js'
 +import { DENSITY_CHOICES, FONT_CHOICES, MESSAGE_WIDTH, SIZE_CHOICES, allThemes, densityOf, flatWidthOf, fontOf, layoutOf, sizeOf, thinkingShown, widthOf } from './themes.js'
-+import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ChatsIcon, ClockIcon, ConnectorIcon, GlobeIcon, InfoIcon, MonitorIcon, PlugIcon, PlusIcon, SlidersIcon, SwitchIcon, TerminalIcon, SETTINGS_ICONS } from './icons.js'
++import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, ChatsIcon, ClockIcon, ConnectorIcon, GlobeIcon, InfoIcon, MonitorIcon, PhoneIcon, PlugIcon, PlusIcon, SlidersIcon, SwitchIcon, TerminalIcon, SETTINGS_ICONS } from './icons.js'
  import { IconAgentPresetOutlineMedium, IconArchiveOutlineMedium, IconPersonalizationOutlineMedium, IconSettingsOutlineMedium, IconUserOutlineMedium } from '@deepseek-ai/dsh-client-ui-primitives'
  import { AdminStar, BotAvatar, RoomAvatar } from './mark.js'
  import { useEscape } from './overlay-hooks.js'
-@@ -22,6 +22,7 @@ import { SchedulesPage } from './schedules.js'
+@@ -23,6 +23,7 @@ import { SchedulesPage } from './schedules.js'
  import { FeedbackIcon, FeedbackPage } from './feedback.js'
  import { AboutPage } from './about.js'
  import { ProvidersPage } from './providers-page.js'
@@ -3116,25 +3114,25 @@ index 7c31aea6..caab97e9 100644
  import { LocalAgentsPage } from './local-agents-page.js'
  import { FolderMenu } from './folder-menu.js'
  import { ModelMenu } from './model-menu.js'
-@@ -35,7 +36,7 @@ const capitalize = word => word[0].toUpperCase() + word.slice(1)
+@@ -36,7 +37,7 @@ const capitalize = word => word[0].toUpperCase() + word.slice(1)
  // DS Bot's pages come first; below a rule, the pages DSH and other plugins register
  // (`settings.section`), then Feedback and About. DSH's General rows join General, and
  // its Models page opens from DS Bot's Models page as the advanced settings.
--const SETTINGS_PAGES = [['general', 'General'], ['models', 'Models'], ['local-agents', 'Local agents'], ['bots', 'Bots'], ['groups', 'Group chats'], ['connectors', 'Connectors'], ['im', 'IM'], ['capabilities', 'Capabilities'], ['browser', 'Browser'], ['computer', 'Computer use'], ['schedules', 'Scheduled tasks'], ['usage', 'Usage'], ['secrets', 'Secrets'], ['feedback', 'Feedback'], ['about', 'About DS Bot']]
-+const SETTINGS_PAGES = [['general', 'General'], ['superagent', 'SuperAgent'], ['models', 'Models'], ['local-agents', 'Local agents'], ['bots', 'Bots'], ['groups', 'Group chats'], ['connectors', 'Connectors'], ['im', 'IM'], ['capabilities', 'Capabilities'], ['browser', 'Browser'], ['computer', 'Computer use'], ['schedules', 'Scheduled tasks'], ['usage', 'Usage'], ['secrets', 'Secrets'], ['feedback', 'Feedback'], ['about', 'About DS Bot']]
+-const SETTINGS_PAGES = [['general', 'General'], ['models', 'Models'], ['local-agents', 'Local agents'], ['bots', 'Bots'], ['groups', 'Group chats'], ['connectors', 'Connectors'], ['im', 'IM'], ['phone', 'Phone'], ['capabilities', 'Capabilities'], ['browser', 'Browser'], ['computer', 'Computer use'], ['schedules', 'Scheduled tasks'], ['usage', 'Usage'], ['secrets', 'Secrets'], ['feedback', 'Feedback'], ['about', 'About DS Bot']]
++const SETTINGS_PAGES = [['general', 'General'], ['superagent', 'SuperAgent'], ['models', 'Models'], ['local-agents', 'Local agents'], ['bots', 'Bots'], ['groups', 'Group chats'], ['connectors', 'Connectors'], ['im', 'IM'], ['phone', 'Phone'], ['capabilities', 'Capabilities'], ['browser', 'Browser'], ['computer', 'Computer use'], ['schedules', 'Scheduled tasks'], ['usage', 'Usage'], ['secrets', 'Secrets'], ['feedback', 'Feedback'], ['about', 'About DS Bot']]
  const LAST_PAGES = new Set(['feedback', 'about'])
  // DSH sections DS Bot's own pages already hold.
  const MERGED_SECTIONS = new Set(['general', 'models'])
-@@ -45,7 +46,7 @@ const DSH_ICONS = { account: IconUserOutlineMedium, 'agent-presets': IconAgentPr
+@@ -46,7 +47,7 @@ const DSH_ICONS = { account: IconUserOutlineMedium, 'agent-presets': IconAgentPr
  export const dshPages = dsh => (dsh?.sections ?? []).filter(row => row.id !== '' && !MERGED_SECTIONS.has(row.id))
  const hasSection = (dsh, id) => (dsh?.sections ?? []).some(row => row.id === id)
  const dshItem = (dsh, id) => h('div', { key: id, className: 'bt-dsh-item', 'data-item': id }, dsh.renderSlot('settings.general.item', {}, { only: id }))
--const PAGE_ICONS = { ...SETTINGS_ICONS, models: SlidersIcon, 'local-agents': TerminalIcon, connectors: ConnectorIcon, im: ChatsIcon, capabilities: PlugIcon, browser: GlobeIcon, computer: MonitorIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon }
-+const PAGE_ICONS = { ...SETTINGS_ICONS, models: SlidersIcon, 'local-agents': TerminalIcon, connectors: ConnectorIcon, im: ChatsIcon, capabilities: PlugIcon, browser: GlobeIcon, computer: MonitorIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon, superagent: SwitchIcon }
+-const PAGE_ICONS = { ...SETTINGS_ICONS, models: SlidersIcon, 'local-agents': TerminalIcon, connectors: ConnectorIcon, im: ChatsIcon, phone: PhoneIcon, capabilities: PlugIcon, browser: GlobeIcon, computer: MonitorIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon }
++const PAGE_ICONS = { ...SETTINGS_ICONS, models: SlidersIcon, 'local-agents': TerminalIcon, connectors: ConnectorIcon, im: ChatsIcon, phone: PhoneIcon, capabilities: PlugIcon, browser: GlobeIcon, computer: MonitorIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon, superagent: SwitchIcon }
  
  // What each MEMORY.md holds by default, in characters of entry text.
  const MEMORY_SIZES = [
-@@ -117,6 +118,8 @@ function GeneralPage({ roster, actions, run, dsh }) {
+@@ -118,6 +119,8 @@ function GeneralPage({ roster, actions, run, dsh }) {
    const themes = allThemes()
    const current = themes[prefs.theme] ? prefs.theme : 'deepseek'
    const [custom, setCustom] = useState(prefs.accent ?? '#4d6bfe')
@@ -3143,7 +3141,7 @@ index 7c31aea6..caab97e9 100644
    const timer = useRef(0)
    useEffect(() => () => clearTimeout(timer.current), [])
    const pickCustom = (value) => {
-@@ -129,6 +132,16 @@ function GeneralPage({ roster, actions, run, dsh }) {
+@@ -130,6 +133,16 @@ function GeneralPage({ roster, actions, run, dsh }) {
        h(SetRow, { label: t('Theme'), hint: t('Colors for the whole team, on every device.') },
          h('select', { className: 'bt-select', 'aria-label': t('Theme'), value: current, onChange: event => run(actions.setPrefs({ theme: event.target.value })) },
            Object.entries(themes).map(([id, theme]) => h('option', { key: id, value: id }, t(theme.label))))),
@@ -3160,7 +3158,7 @@ index 7c31aea6..caab97e9 100644
        h(SetRow, { label: t('Accent'), hint: t('Unread marks, badges, and the brand mark.') },
          h('div', { className: 'bt-swatches' },
            h('button', { type: 'button', className: 'bt-swatch bt-swatch-default', title: t('Theme accent'), 'aria-label': t('Theme accent'), 'aria-pressed': !prefs.accent, onClick: () => run(actions.setPrefs({ accent: null })) }),
-@@ -362,6 +375,7 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
+@@ -363,6 +376,7 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
            h(PageBoundary, null,
            shown === 'computer' ? h(ComputerPage, { roster, actions, run, Section: SetSection, Row: SetRow, Switch }) : null,
            shown === 'general' ? h(GeneralPage, { roster, actions, run, dsh }) : null,
@@ -3169,7 +3167,7 @@ index 7c31aea6..caab97e9 100644
            advanced ? h('div', { className: 'bt-dsh-section' }, dsh.renderSlot('settings.section', { close }, { only: 'models' })) : null,
            section ? h('div', { className: 'bt-dsh-section' }, dsh.renderSlot('settings.section', { close }, { only: section.id })) : null,
 diff --git a/ds-bot/src/client/sidebar.js b/ds-bot/src/client/sidebar.js
-index 80c0f6b5..5b43343e 100644
+index 6cc779af..6803b6d5 100644
 --- a/ds-bot/src/client/sidebar.js
 +++ b/ds-bot/src/client/sidebar.js
 @@ -60,7 +60,14 @@ const waitingFor = (roster, waits) => {
@@ -3279,7 +3277,7 @@ index 80c0f6b5..5b43343e 100644
          h('span', { className: 'bt-rail-sep', 'aria-hidden': true }))
    // The foot stands in for the shell's hidden footer: the account avatar, and on
    // the rail the new-chat button above it.
-@@ -813,7 +816,7 @@ export function TeamSidebar(props) {
+@@ -814,7 +817,7 @@ export function TeamSidebar(props) {
        onDragEnd: () => { setDragId(null); setDropTarget(null) },
        onDragLeave: (event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(null) },
      },
@@ -9621,7 +9619,7 @@ index 5614f9d4..b68b45b1 100644
    agentSessions: 'ds-bot:agent-sessions',
    browserWidth: 'ds-bot:browser-width',
 diff --git a/ds-bot/src/client/styles.js b/ds-bot/src/client/styles.js
-index 2693dc09..1367c3fd 100644
+index 8382a40e..7f50d8da 100644
 --- a/ds-bot/src/client/styles.js
 +++ b/ds-bot/src/client/styles.js
 @@ -2,6 +2,7 @@ import { INKS } from './inks.js'
@@ -10084,16 +10082,17 @@ index 2693dc09..1367c3fd 100644
  .bt-pill:hover{background:color-mix(in srgb,var(--bt-main),#777 9%)}
  .bt-pill:active{transform:scale(.965)}
  .bt-pill-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-@@ -220,7 +623,7 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
+@@ -220,8 +623,7 @@ html[data-bt-collapsing] [class*="_frame"]:has(>[class*="_sidebarCol"]){transiti
  @media (prefers-reduced-motion:reduce){.bt-pill,.bt-pill-go,.bt-pill-go svg{transition:none!important}.bt-pill-go{filter:none}.bt-pill:active{transform:none}}
  
  /* The width settings: the share of the column a bubble may take, and the flat text. */
 -body{--bt-msg-w:.8;--bt-flat-w:1}
-+body{--bt-msg-w:.9;--bt-flat-w:1}
+-body{--bt-qr-paper:#fff;--bt-qr-ink:#000}
++body{--bt-msg-w:.9;--bt-flat-w:1;--bt-qr-paper:#fff;--bt-qr-ink:#000}
  .bt-astack{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0}
  .bt-bubble{max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px));background:var(--bt-bubble);color:var(--bt-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 10px);box-sizing:border-box;overflow-wrap:anywhere;text-wrap:pretty;text-autospace:normal}
  .bt-msg:not(:first-child)>.bt-msg-line>.bt-bubble{border-start-start-radius:6px}
-@@ -375,6 +778,7 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -376,6 +778,7 @@ button.bt-q-opt:active{background:var(--bt-active)}
  .bt-create-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
  .bt-create-go{height:36px;padding:0 20px}
  @media (prefers-reduced-motion:reduce){.bt-create-card,.bt-create-pop{animation:none}}
@@ -10101,7 +10100,7 @@ index 2693dc09..1367c3fd 100644
  .bt-send{height:40px;min-width:40px;border-radius:999px;border:0;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);font-size:14px;padding:0 14px;cursor:pointer;flex:none;white-space:nowrap}
  .bt-send:disabled{opacity:.35;cursor:default}
  .bt-error{padding:0 14px 10px;color:var(--bt-danger);font-size:12px}
-@@ -385,6 +789,11 @@ button.bt-q-opt:active{background:var(--bt-active)}
+@@ -386,6 +789,11 @@ button.bt-q-opt:active{background:var(--bt-active)}
     window. Where the chrome top already clears the title bar the band is 0. */
  html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel){--bt-caption-band:calc(var(--dsh-windows-titlebar-height,0px) - var(--dsh-frame-chrome-top,0px));padding-top:var(--bt-caption-band)}
  html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::before{content:"";position:absolute;top:0;left:0;right:0;height:var(--bt-caption-band);-webkit-app-region:drag}
@@ -10113,7 +10112,7 @@ index 2693dc09..1367c3fd 100644
  .bt-pane{position:fixed;top:var(--dsh-frame-chrome-top,0px);right:0;bottom:0;z-index:45;pointer-events:auto;background:var(--bt-main);color:var(--bt-ink);display:flex;font-family:var(--bt-font)}
  .bt-dialog{flex:1;display:flex;flex-direction:column;min-width:0}
  .bt-dialog .bt-head{height:62px}
-@@ -405,7 +814,6 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
+@@ -406,7 +814,6 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
  .bt-fold-code>.bt-fold-pre{margin:0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,currentColor 6%,transparent);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:20px;overflow-x:auto}
  .bt-fold-code>*+.bt-fold-pre{margin-top:6px}
  .bt-fold-note{font-size:12px;line-height:16px;color:var(--bt-ink-3)}
@@ -10121,7 +10120,7 @@ index 2693dc09..1367c3fd 100644
  .bt-ubody .bt-fold .bt-more,.bt-ububble .bt-fold .bt-more,.bt-ubody .bt-fold-note,.bt-ububble .bt-fold-note{color:inherit;opacity:.7}
  .bt-ubody .bt-fold .bt-more:hover,.bt-ububble .bt-fold .bt-more:hover{opacity:1}
  .bt-ubody .bt-fold-code>.bt-tool,.bt-ububble .bt-fold-code>.bt-tool{color:inherit;opacity:.7}
-@@ -649,23 +1057,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
+@@ -685,23 +1092,9 @@ button.bt-set-row:hover{background:var(--bt-hover)}
  
  /* Shell chrome reshaped for the team view. Selectors use stable data attributes where the
     shell offers them and CSS-module name suffixes elsewhere. */
@@ -10148,7 +10147,7 @@ index 2693dc09..1367c3fd 100644
  /* The footer ends in the Bot row: the whale's settings seat, then the account menu
     when no plugin holds that seat. Every other plugin's entry takes a whole row above
     it, in the shell's order, so none of them squeezes the Bot row. */
-@@ -705,7 +1099,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
+@@ -741,7 +1134,8 @@ html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"
  .bt-voice-end:hover{background:#e02135}
  @keyframes bt-fade{from{opacity:0}to{opacity:1}}
  @keyframes bt-blur-in{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
@@ -10158,7 +10157,7 @@ index 2693dc09..1367c3fd 100644
  /* A bubble takes the set share of the column, as the user's does; 82px stays free for
     the hover toolbar beside it: a 6px margin and three 24px tools 2px apart. */
  .bt-msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(calc(var(--bt-msg-w) * 100%),calc(100% - 82px))}
-@@ -762,6 +1157,16 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
+@@ -798,6 +1192,16 @@ button:hover .bt-you{background:color-mix(in srgb,var(--bt-ink) 9%,var(--bt-side
  .bt-menu button:hover{background:var(--bt-hover)}
  .bt-menu button svg{flex:none;width:16px;height:16px;margin:0 1px}
  .bt-menu .bt-danger{color:var(--bt-danger)}
@@ -10175,7 +10174,7 @@ index 2693dc09..1367c3fd 100644
  .bt-menu-sep{height:.5px;flex:none;background:var(--bt-line-2);margin:4px 8px}
  .bt-menu-up{--bt-origin:bottom left;animation-name:bt-pop-lift,bt-veil-in}
  .bt-menu[data-leaving]{pointer-events:none;animation:bt-pop-out .12s cubic-bezier(.4,0,1,1) forwards}
-@@ -1018,10 +1423,98 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
+@@ -1056,10 +1460,98 @@ body[data-ds-dark-theme] .bt-theme-chip i{background:var(--da)}
  .bt-settings-scroll{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
  .bt-voice-bar{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
  .bt-exchange .bt-dialog-foot{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
@@ -10278,7 +10277,7 @@ index 2693dc09..1367c3fd 100644
  `
  
  export const CONVERSATION_CSS = `
-@@ -1136,49 +1629,59 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
+@@ -1174,49 +1666,59 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
  }
  @keyframes bt-fade-in{from{opacity:0}to{opacity:1}}
  @keyframes bt-fade-out{from{opacity:1}to{opacity:0}}
@@ -10364,7 +10363,7 @@ index 2693dc09..1367c3fd 100644
  .bt-mic[aria-pressed=true]{background:#ff3e51;color:#fff;animation:bt-mic-pulse 1.4s ease-in-out infinite}
  @keyframes bt-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,62,81,.35)}50%{box-shadow:0 0 0 5px rgba(255,62,81,0)}}
  .bt-voice{display:none;background:var(--bt-accent);color:var(--bt-accent-ink,#fff);animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
-@@ -1197,7 +1700,7 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
+@@ -1235,7 +1737,7 @@ body[data-bt-goal] [class*="_scroll"]:has(> [class*="_column"]){padding-top:calc
  }
  [data-composer-card]:has(button[class*="_primary"]:disabled) .bt-voice{display:inline-grid}
  body[data-bt-room] .bt-voice{display:none!important}
@@ -10373,7 +10372,7 @@ index 2693dc09..1367c3fd 100644
  .bt-mic-note{position:absolute;right:12px;bottom:calc(100% + 8px);padding:5px 10px;border-radius:8px;background:var(--bt-user);color:var(--bt-user-ink);font-size:12px;line-height:16px;white-space:nowrap;pointer-events:none;animation:bt-rise .16s ease-out}
  [data-chain-overlay-fallback="conversation.composer"]:has(~ .bt-q){display:block!important;order:2}
  .bt-q{order:1}
-@@ -1228,15 +1731,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1266,15 +1768,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-q-inline .bt-q{margin:0;max-width:min(550px,86%);order:0}
  .bt-q-dock{width:100%;display:flex;justify-content:center}
  .bt-q-dock .bt-q{margin:0 auto 8px}
@@ -10389,7 +10388,7 @@ index 2693dc09..1367c3fd 100644
  .bt-news{position:fixed;z-index:30;transform:translateX(-50%);display:inline-flex;align-items:center;overflow:hidden;border-radius:999px;background:var(--bt-accent);color:var(--bt-accent-ink);box-shadow:inset 0 0 0 1px rgba(20,20,20,.05),0 1px 3px 0 rgba(0,0,0,.12);font-family:var(--bt-font);animation:bt-news-in ${SPRING_TAP.duration}ms ${SPRING_TAP.easing},bt-veil-in .16s ease-out}
  @keyframes bt-news-in{from{translate:0 8px;scale:.9}}
  .bt-news[data-direction=up]{animation-name:bt-news-in-up,bt-veil-in}
-@@ -1247,7 +1742,6 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1285,7 +1779,6 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-news-x{position:absolute;right:4px;top:50%;z-index:1;transform:translateY(-50%);width:20px;height:20px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.75;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
  .bt-news-x svg{width:12px;height:12px}
  .bt-news-x:hover{opacity:1;background:rgba(20,20,20,.5)}
@@ -10397,7 +10396,7 @@ index 2693dc09..1367c3fd 100644
  .bt-new-sep{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:2px 0;font-size:11px;line-height:14px;font-weight:500;letter-spacing:.02em;text-transform:uppercase;color:var(--bt-accent);font-family:var(--bt-font)}
  .bt-new-sep::before,.bt-new-sep::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--bt-accent) 20%,transparent)}
  .bt-open-new{display:flex;flex-direction:column}
-@@ -1305,6 +1799,13 @@ div:has(> nav [class*="_marks"]){display:none!important}
+@@ -1343,6 +1836,13 @@ div:has(> nav [class*="_marks"]){display:none!important}
  .bt-btw-answer p{margin:0}
  .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
  @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
@@ -10488,7 +10487,7 @@ index 00000000..910b15c8
 +      h('p', { className: 'bt-set-hint' }, t('A reply that marks where its detail starts folds there, keeping the whole point above it, and only when the detail is long enough. A reply over 20,000 characters goes as a file instead.'))))
 +}
 diff --git a/ds-bot/src/client/team-actions.js b/ds-bot/src/client/team-actions.js
-index e7ebb3f4..824fed8f 100644
+index 8c93a575..04323dc4 100644
 --- a/ds-bot/src/client/team-actions.js
 +++ b/ds-bot/src/client/team-actions.js
 @@ -162,6 +162,15 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
@@ -10848,7 +10847,7 @@ index 00000000..c8ab8bbd
 +})
 +
 diff --git a/ds-bot/src/host/approvals.js b/ds-bot/src/host/approvals.js
-index 246e48c9..c6ec3ff7 100644
+index e3ddeee5..05e9aa8d 100644
 --- a/ds-bot/src/host/approvals.js
 +++ b/ds-bot/src/host/approvals.js
 @@ -6,6 +6,9 @@
@@ -10861,7 +10860,7 @@ index 246e48c9..c6ec3ff7 100644
  
  export function install(rt) {
    const { ctx } = rt
-@@ -60,6 +63,7 @@ export function install(rt) {
+@@ -61,6 +64,7 @@ export function install(rt) {
        return new Promise((resolve, reject) => {
          const complete = (outcome) => {
            if (!settle(outcome)) return
@@ -10869,7 +10868,7 @@ index 246e48c9..c6ec3ff7 100644
            resolve(outcome)
            linked.abort()
            if (request.signal === linked.signal) request.signal = original
-@@ -85,10 +89,22 @@ export function install(rt) {
+@@ -86,10 +90,22 @@ export function install(rt) {
      }
      rt.yieldRoomTurn?.(sessionId)
      return new Promise((resolve) => {
@@ -10994,199 +10993,48 @@ index 00000000..dbefdb0f
 +
 +  rt.admissionOf = admissionOf
 +}
-diff --git a/ds-bot/src/host/boot.js b/ds-bot/src/host/boot.js
-new file mode 100644
-index 00000000..4a3a44c9
---- /dev/null
-+++ b/ds-bot/src/host/boot.js
-@@ -0,0 +1,10 @@
-+// What tells one host start from the next, and how many events this host has published:
-+// a window that reconnects compares the two to tell "nothing missed" from "restart".
-+export const BOOT_ID = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
-+
-+let published = 0
-+export const publishedSeq = () => published
-+export const nextSeq = () => {
-+  published += 1
-+  return published
-+}
 diff --git a/ds-bot/src/host/channel.js b/ds-bot/src/host/channel.js
-index 3bf0fd63..d9495be4 100644
+index 4bae1948..8f6fba87 100644
 --- a/ds-bot/src/host/channel.js
 +++ b/ds-bot/src/host/channel.js
-@@ -1,11 +1,17 @@
- // Client channel: the team view the browser renders, and the POST /api/bot endpoints.
--import { randomUUID } from 'node:crypto'
-+import { randomUUID, createHash } from 'node:crypto'
-+import { readFileSync } from 'node:fs'
-+import { fileURLToPath } from 'node:url'
+@@ -3,8 +3,10 @@ import { randomUUID } from 'node:crypto'
  import { createUserMessage } from '@deepseek-ai/dsh-llm'
  import { install as installBtw } from './btw.js'
  import { install as installSide } from './side.js'
 +import { install as installTasks } from './tasks.js'
  import { handoffReply, questionReply, viewReply } from './parts.js'
  import { validateViewAnswer } from 'deep-view/core'
--import { COLORS, EXTRA_COLORS, ROUTE } from './constants.js'
 +import { applySuperAgentPrefs } from '../shared/superagent-prefs.js'
-+import { COLORS, EXTRA_COLORS, ROUTE, API_MIN, API_MAX, MAX_INLINE_IMAGES } from './constants.js'
-+import { BOOT_ID, publishedSeq } from './boot.js'
-+import { findQueueItem, queueView } from './queue.js'
+ import { COLORS, EXTRA_COLORS, ROUTE } from './constants.js'
  
- const LANGUAGES = { zh: 'Chinese (简体中文)', en: 'English' }
- const RUN_STATS = ['sessionStats', 'tokenUsage', 'contextPressure']
-@@ -20,25 +26,82 @@ const MEMORY_LIMIT_MIN = 1_000
- const MEMORY_LIMIT_MAX = 200_000
- 
- export function errorCode(error) {
--  if (typeof error?.code === 'string' && error.code.startsWith('bot/')) return error.code
-+  if (typeof error?.code === 'string' && /^(bot|task)\//.test(error.code)) return error.code
-   return isInternal(error) ? 'bot/internal' : 'bot/refused'
- }
- 
-+// What the handshake advertises. A client reads it to decide which parts of the team
-+// it can draw; the unit test `mobile-hello` keeps this list equal to the switch's cases,
-+// so a new endpoint is listed here or the test fails.
-+export const CAPABILITIES = [
-+  'add-agent', 'agent-adopt', 'agent-archive', 'agent-rename', 'agent-session',
-+  'answer-question', 'approval-answer', 'avatar', 'avatar-delete', 'avatar-import', 'avatar-library',
-+  'bot-capability', 'browser-give-back', 'browser-result', 'browser-stop', 'browser-takeover',
-+  'browser-wait', 'btw-delete', 'capability-approve', 'capability-delete', 'capability-save',
-+  'chat', 'connector-connect', 'connector-disconnect', 'connector-retry', 'create-bot',
-+  'create-room', 'delete-bot', 'delete-room', 'diagnostics', 'diagnostics-clear',
-+  'diagnostics-log', 'dismiss-question', 'dismiss-view', 'dsh-update-install', 'duplicate-bot',
-+  'earlier', 'efforts', 'exchange', 'exchange-text', 'file-text', 'folder-list', 'folder-pick',
-+  'folders', 'hello', 'learning-answer', 'mcp-add', 'mcp-list', 'mcp-market', 'mcp-remove',
-+  'mcp-save', 'mcp-toggle', 'mcp-tools', 'memory-ask', 'memory-forget', 'memory-view',
-+  'models', 'notices', 'private-release', 'provider-add', 'provider-key', 'provider-models',
-+  'provider-remove', 'providers', 'remove-agent', 'repo-stars', 'room-chat',
-+  'room-progress', 'run-stats', 'schedule-create', 'schedule-delete', 'schedules',
-+  'secret-allow', 'secret-cancel', 'secret-delete', 'secret-set', 'secret-update', 'send', 'task-add', 'task-comment', 'task-events', 'task-remove', 'task-update', 'tasks-view',
-+  'set-flags', 'set-main', 'set-prefs', 'side-ask', 'side-cancel', 'side-close', 'side-new',
-+  'state', 'stop-member-work', 'stop-room-work', 'team-workspace', 'thinking', 'update-bot',
-+  'update-check', 'update-install', 'update-room', 'usage', 'view-reply',
-+]
-+
-+// The installed plugin's own version, for the handshake.
-+let pluginVersion
-+const version = () => (pluginVersion ??= JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8')).version)
-+
-+// 客户端给的消息身份：App 重试时带同一个，Host 的 prompt 按它幂等，回显也按它带回。
-+export function promptRequestId(value) {
-+  if (typeof value !== 'string') return randomUUID()
-+  const id = value.trim()
-+  if (id === '' || id.length > 200 || /[\u0000-\u001f]/.test(id)) return randomUUID()
-+  return id
-+}
-+
+ const STAGED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+@@ -42,6 +44,7 @@ export function errorCode(error) {
  export function install(rt) {
    installBtw(rt)
    installSide(rt)
 +  installTasks(rt)
    const { ctx, state } = rt
  
-+  // 队列 payload 的唯一真相是 agent-loop 的 `inbox` 投影；拿不到就返回 undefined，
-+  // App 按「老 Host 没有 inbox」降级成本地待发气泡。
-+  const queueOf = async (sessionId) => {
-+    const projections = ctx.get?.('sessionProjections')
-+    if (projections === undefined || typeof sessionId !== 'string' || sessionId === '') return undefined
-+    try {
-+      const agent = await rt.resolveAgent(sessionId)
-+      return queueView(sessionId, projections.snapshot(agent.session, ['inbox']).values, agent.status === 'running')
-+    } catch {
-+      return undefined
-+    }
-+  }
-+
    // The DSH interface language of the last browser that asked for the team.
-   let uiLocale
-   rt.uiLanguage = () => (uiLocale === undefined ? undefined : LANGUAGES[uiLocale.split('-')[0].toLowerCase()] ?? uiLocale)
- 
+@@ -55,7 +58,7 @@ export function install(rt) {
+   // Photos staged by `stage-image`, kept until the message that names them is sent.
+   const staged = new Map()
    const ok = value => ({ ok: true, value })
 -  const fail = (message, code = 'bot/error') => ({ ok: false, error: { code, message, details: {} } })
 +  const fail = (message, code = 'bot/error', data = {}) => ({ ok: false, error: { code, message, details: data, ...(Object.keys(data).length > 0 ? { data } : {}) } })
    // Models come from DSH, not state.json, so a provider added on the Models pages of Settings
    // changes the view without a new revision.
    const modelsKey = () => `${rt.cachedCatalog().map(entry => `${entry.ref}${entry.needsKey ? '!' : ''}${entry.reasoning ? `:${JSON.stringify(entry.reasoning)}` : ''}`).join(',')}|${rt.cachedDefault() ?? ''}`
--  const view = () => ({
-+  // A photo's reference: the same bytes always name the same ref, so a client can cache
-+  // by it and ask `avatar` only when the ref changes.
-+  const imageRef = image => `avatar:${createHash('sha256').update(String(image)).digest('hex').slice(0, 16)}`
-+  const refAvatar = avatar => {
-+    if (typeof avatar?.image !== 'string') return avatar
-+    const { image, ...rest } = avatar
-+    return { ...rest, imageRef: imageRef(image) }
-+  }
-+  const view = (options = {}) => ({
-     revision: state.revision,
-     workspaceId: state.workspaceId ?? null,
-     // `mainBotId` is the first Main Bot, which the sidebar shows as its tile.
-@@ -48,7 +111,11 @@ export function install(rt) {
-     // `waiting`: the Bot holds its greeting until the user picks its model or fixes
-     // what failed it. `blocked`: the facts of a failure only the user can fix (turns.js).
-     bots: Object.values(state.bots).map(({ segments, kickoff, ...bot }) => ({
--      ...bot, sessionId: rt.chatOf(bot.id), parts: (segments ?? []).map(segment => segment.sessionId), ...(kickoff ? { waiting: true } : {}),
-+      ...bot,
-+      // A phone list draws small marks: with `avatars: 'ref'` the photo stays on the
-+      // host and only its reference travels, so a list costs no image bytes.
-+      ...(options.avatars === 'ref' ? { avatar: refAvatar(bot.avatar) } : {}),
-+      sessionId: rt.chatOf(bot.id), parts: (segments ?? []).map(segment => segment.sessionId), ...(kickoff ? { waiting: true } : {}),
-       // `engine` is the Bot's local-agent route, present only on abots.
-       ...(rt.localAgentBadge?.(bot.model ?? bot.appliedModel) !== undefined ? { engine: rt.localAgentBadge(bot.model ?? bot.appliedModel) } : {}),
-     })),
-@@ -58,7 +125,17 @@ export function install(rt) {
-     rooms: Object.values(state.rooms).map(({ log, seen, paused, sessions, segments, parts: ownParts, ...room }) => {
-       const parts = [...Object.values(sessions ?? {}), ...Object.values(segments ?? {}).flat().map(segment => segment.sessionId), ...(ownParts ?? []).map(segment => segment.sessionId)]
-       const last = (log ?? []).filter(line => line.kind === undefined).at(-1)
--      return { ...room, sessionId: rt.sessionOfRoom(room), ownParts: (ownParts ?? []).map(segment => segment.sessionId), parts, ...(last ? { preview: last.who === 'User' ? last.text : `${last.who}：${last.text}` } : {}) }
-+      return {
-+        ...room,
-+        sessionId: rt.sessionOfRoom(room),
-+        // Each member's hidden group Session, by member id: the phone sums a group's
-+        // figures from the Sessions the members actually work in there, not from
-+        // their own chats. Null for a member whose group Session has not opened yet.
-+        sessions: sessions ?? {},
-+        ownParts: (ownParts ?? []).map(segment => segment.sessionId),
-+        parts,
-+        ...(last ? { preview: last.who === 'User' ? last.text : `${last.who}：${last.text}` } : {}),
-+      }
-     }),
-     // Deleted private Bots whose folder, memory and chats stay closed to the others.
-     privateArchives: rt.archivesView(),
-@@ -139,7 +216,10 @@ export function install(rt) {
+@@ -167,7 +170,7 @@ export function install(rt) {
    }
    // What a host that only reads the team may still answer.
    // Updates change the dsh profile, not the team, so a reading host may run them too.
--  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'computer-system-status', 'computer-shot', 'local-agents', 'local-agent-models'])
-+  // `hello` and `avatar` open every phone that talks to the team; the rest are this
-+  // fork's own read endpoints (MCP, goals, tasks, the computer switch), kept beside the
-+  // upstream list so a reading host answers them too.
-+  const READS = new Set(['hello', 'avatar', 'state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'room-chat', 'notices', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'mcp-list', 'mcp-tools', 'mcp-market', 'goal-view', 'tasks-view', 'task-events', 'computer-system-status', 'computer-shot', 'local-agents', 'local-agent-models'])
+-  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'group-rows', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'computer-system-status', 'computer-shot', 'local-agents', 'local-agent-models', 'browser-frame', 'hello', 'notices', 'avatar', 'room-chat', 'usage-summary', 'image'])
++  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'group-rows', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library', 'computer-system-status', 'computer-shot', 'local-agents', 'local-agent-models', 'browser-frame', 'hello', 'notices', 'avatar', 'room-chat', 'usage-summary', 'image', 'mcp-list', 'mcp-tools', 'mcp-market', 'goal-view', 'tasks-view', 'task-events'])
  
    async function setPrefs(body) {
      if (body.theme !== undefined) {
-@@ -156,6 +236,21 @@ export function install(rt) {
-       else if (body.motion === 'quiet' || body.motion === 'lively') state.prefs.motion = body.motion
-       else throw invalid('Motion must be quiet, normal or lively')
-     }
-+    if (body.size !== undefined) {
-+      if (body.size === null || body.size === 'm') delete state.prefs.size
-+      else if (['s', 'l', 'xl'].includes(body.size)) state.prefs.size = body.size
-+      else throw invalid('Size must be s, m, l or xl')
-+    }
-+    if (body.density !== undefined) {
-+      if (body.density === null || body.density === 'normal') delete state.prefs.density
-+      else if (body.density === 'tight' || body.density === 'roomy') state.prefs.density = body.density
-+      else throw invalid('Density must be tight, normal or roomy')
-+    }
-+    if (body.font !== undefined) {
-+      if (body.font === null || body.font === 'system') delete state.prefs.font
-+      else if (body.font === 'geist' || body.font === 'inter') state.prefs.font = body.font
-+      else throw invalid('Font must be system, geist or inter')
-+    }
-     if (body.layout !== undefined) {
-       if (body.layout === null || body.layout === 'bubble') delete state.prefs.layout
-       else if (body.layout === 'flat') state.prefs.layout = body.layout
-@@ -197,6 +292,17 @@ export function install(rt) {
+@@ -225,6 +228,17 @@ export function install(rt) {
        if (sizes.length === 0) delete state.prefs.memoryLimits
        else state.prefs.memoryLimits = { ...state.prefs.memoryLimits, ...Object.fromEntries(sizes) }
      }
@@ -11204,77 +11052,7 @@ index 3bf0fd63..d9495be4 100644
      return rt.save()
    }
  
-@@ -217,7 +323,7 @@ export function install(rt) {
-             if (body.live === answer.key) return ok({ revision: state.revision, unchanged: true, liveKey: answer.key })
-             return ok({ revision: state.revision, unchanged: true, liveKey: answer.key, ...answer.value })
-           }
--          return ok({ ...view(), liveKey: answer.key, ...answer.value })
-+          return ok({ ...view({ avatars: body.avatars }), liveKey: answer.key, ...answer.value })
-         }
-         case 'models':
-           await rt.catalog({ fresh: true })
-@@ -274,18 +380,39 @@ export function install(rt) {
-         case 'earlier':
-           await rt.load()
-           return ok(await rt.earlierPage(String(body.sessionId ?? ''), body.cursor ?? undefined))
--        case 'chat':
-+        case 'chat': {
-           await rt.load()
--          return ok(await rt.chatPage(String(body.botId ?? ''), body.cursor ?? undefined))
-+          const page = await rt.chatPage(String(body.botId ?? ''), body.cursor ?? undefined)
-+          const inbox = await queueOf(page?.sessionId)
-+          return ok(inbox === undefined ? page : { ...page, inbox })
-+        }
-+        // A page of a group chat, for a window that draws the room itself. A missing
-+        // `roomId` is refused; an unknown one is answered as gone.
-+        case 'room-chat': {
-+          if (typeof body.roomId !== 'string' || body.roomId === '') return fail('No group chat named', 'bot/invalid')
-+          await rt.load()
-+          const page = await rt.mobileEndpoint('room-chat', body)
-+          const room = rt.roomOf(body.roomId)
-+          const inbox = room === undefined ? undefined : await queueOf(rt.sessionOfRoom(room))
-+          return ok(inbox === undefined ? page : { ...page, inbox })
-+        }
-+        // What a client that was away should hear about. `boot` and `since` are the last
-+        // handshake and revision it read; a different host start answers `reset: true`.
-+        case 'notices':
-+          return ok(rt.mobileEndpoint('notices', body))
-         // DSH's own whole-log figures for the current part of a Bot's chat, the ones its
-         // status bar shows; a window without that bar shows them in the Bot's details.
-         case 'run-stats': {
-           await rt.load()
--          const bot = rt.botOf(String(body.botId ?? ''))
--          if (bot === undefined) return fail('Unknown Bot', 'bot/not-found')
-+          // A Session id asks for that Session's own figures: a member's group
-+          // Session is a Session of its own, and a group's totals must not read the
-+          // member's private chat. A Bot id keeps the older meaning (its chat).
-+          const asked = typeof body.sessionId === 'string' && body.sessionId !== '' ? body.sessionId : undefined
-+          const bot = asked === undefined ? rt.botOf(String(body.botId ?? '')) : undefined
-+          if (asked === undefined && bot === undefined) return fail('Unknown Bot', 'bot/not-found')
-           const projections = ctx.get?.('sessionProjections')
-           if (projections === undefined) return ok(null)
--          const agent = await rt.resolveAgent(rt.chatOf(bot.id))
-+          const agent = await rt.resolveAgent(asked ?? rt.chatOf(bot.id))
-           return ok(projections.snapshot(agent.session, RUN_STATS).values)
-         }
-         case 'usage':
-@@ -318,6 +445,15 @@ export function install(rt) {
-           await rt.resumeBot(bot)
-           return ok(true)
-         }
-+        // One Bot's photo, by reference: the list sends `imageRef`, and a client asks
-+        // here only when it holds no image for that ref.
-+        case 'avatar': {
-+          await rt.load()
-+          const bot = state.bots[String(body.botId ?? '')]
-+          if (bot === undefined) return fail('Unknown Bot', 'bot/not-found')
-+          const image = typeof bot.avatar?.image === 'string' ? bot.avatar.image : null
-+          return ok({ ref: image === null ? null : imageRef(image), image })
-+        }
-         // The avatar library: photos the user imported once, kept beside the team.
-         case 'avatar-library':
-           await rt.load()
-@@ -439,6 +575,24 @@ export function install(rt) {
+@@ -482,6 +496,36 @@ export function install(rt) {
            const result = await rt.goalControl(String(body.roomId ?? ''), body)
            return result.error !== undefined ? fail(result.error, result.code ?? 'bot/refused') : ok(view())
          }
@@ -11296,13 +11074,6 @@ index 3bf0fd63..d9495be4 100644
 +        case 'task-remove':
 +          await rt.load()
 +          return ok(await rt.taskRemove(String(body.roomId ?? ''), body))
-         case 'dismiss-question':
-           await rt.load()
-           if (rt.own(state.questions, body.sessionId) !== undefined) {
-@@ -462,6 +616,18 @@ export function install(rt) {
-         case 'secret-delete':
-           await rt.load()
-           return ok(await rt.secretEndpoint(endpoint, body))
 +        // MCP servers: the reading endpoints are in READS above; these change the profile.
 +        case 'mcp-save':
 +        case 'mcp-toggle':
@@ -11315,116 +11086,9 @@ index 3bf0fd63..d9495be4 100644
 +          return ok(await rt.mcpEndpoint(endpoint, body))
 +        case 'mcp-list':
 +          return ok(await rt.mcpView())
-         case 'connector-connect':
-         case 'connector-disconnect':
-         case 'connector-retry':
-@@ -503,6 +669,12 @@ export function install(rt) {
-         case 'memory-restore':
-           await rt.load()
-           return ok(await rt.memoryEndpoint(endpoint, body))
-+        // The rest of the mobile API (mobile.js): memory edits and one Bot's usage.
-+        case 'usage-summary':
-+        case 'memory-edit':
-+        case 'memory-add':
-+          await rt.load()
-+          return ok(await rt.mobileEndpoint(endpoint, body))
-         case 'learning-answer':
-           await rt.load()
-           return ok(await rt.learningEndpoint(endpoint, body))
-@@ -538,10 +710,44 @@ export function install(rt) {
-         }
-         case 'send': {
-           const text = String(body.text ?? '').trim()
--          if (text === '' || typeof body.sessionId !== 'string') return fail('Nothing to send', 'bot/invalid')
--          await rt.load()
--          await rt.sendUser({ sessionId: body.sessionId, content: [{ type: 'text', text }] })
--          return ok(true)
-+          // A phone message may carry images and files beside its text: images inline as
-+          // base64, files as receipts the client already staged in this session.
-+          const images = (Array.isArray(body.images) ? body.images : []).filter(image => typeof image?.mediaType === 'string' && typeof image?.data === 'string' && image.data !== '')
-+          const fileReceiptIds = (Array.isArray(body.fileReceiptIds) ? body.fileReceiptIds : []).filter(id => typeof id === 'string' && id !== '')
-+          if (images.length > MAX_INLINE_IMAGES) return fail('Too many images', 'bot/invalid')
-+          if ((text === '' && images.length === 0 && fileReceiptIds.length === 0) || typeof body.sessionId !== 'string') return fail('Nothing to send', 'bot/invalid')
-+          await rt.load()
-+          // A Bot id, a group chat's id, or an earlier part of either means the
-+          // current part.
-+          const past = rt.pastOwners.get(body.sessionId)
-+          const room = rt.roomOf(body.sessionId)
-+          const sessionId = rt.botOf(body.sessionId) ? rt.chatOf(body.sessionId)
-+            : room !== undefined ? rt.sessionOfRoom(room)
-+              : past?.roomId === undefined && past !== undefined ? rt.chatOf(past.botId)
-+                : past !== undefined ? rt.sessionOfRoom(rt.roomOf(past.roomId)) : body.sessionId
-+          const requestId = promptRequestId(body.requestId)
-+          await rt.sendUser({
-+            sessionId,
-+            requestId,
-+            content: [
-+              ...(text === '' ? [] : [{ type: 'text', text }]),
-+              ...images.map(image => ({ type: 'image', mediaType: image.mediaType, data: image.data, ...(image.name === undefined ? {} : { name: String(image.name) }) })),
-+              ...fileReceiptIds.map(receiptId => ({ type: 'file', receiptId })),
-+            ],
-+          })
-+          // 入队是同步的：prompt 返回后这条已在 inbox 里，用我们自己的 requestId 精确找回。
-+          // 找不到（例如已被消费）不是错误，App 等推送按 rpcId 补。
-+          const projections = ctx.get?.('sessionProjections')
-+          let queued = null
-+          if (projections !== undefined) {
-+            try {
-+              const agent = await rt.resolveAgent(sessionId)
-+              queued = findQueueItem(projections.snapshot(agent.session, ['inbox']).values, requestId)
-+            } catch {
-+              queued = null
-+            }
-+          }
-+          return ok({ requestId, itemId: queued?.itemId ?? null, slot: queued?.slot ?? null })
-         }
-         case 'btw-delete': {
-           if (typeof body.sessionId !== 'string' || body.sessionId === '' || typeof body.cardId !== 'string' || body.cardId === '') return fail('Nothing to delete', 'bot/invalid')
-@@ -690,6 +896,26 @@ export function install(rt) {
-         case 'diagnostics-clear':
-           await rt.diagnostics.clear()
-           return ok(true)
-+        // The version handshake: what this host speaks, so a client can stop before
-+        // drawing a team it cannot drive. `api` is null when the ranges do not overlap.
-+        case 'hello': {
-+          const known = Array.isArray(body.api) ? body.api.filter(value => Number.isInteger(value)) : []
-+          const shared = known.filter(value => value >= API_MIN && value <= API_MAX)
-+          return ok({
-+            api: shared.length === 0 ? null : Math.max(...shared),
-+            apiMin: API_MIN,
-+            apiMax: API_MAX,
-+            plugin: { name: 'ds-bot', version: version() },
-+            capabilities: CAPABILITIES,
-+            boot: BOOT_ID,
-+            seq: publishedSeq(),
-+            revision: state.revision,
-+            readOnly: rt.readOnly() ?? null,
-+            memory: rt.memoryEnabled !== false,
-+            feed: 'api/bot/feed',
-+            rpc: { call: 'dsBot/call', feed: 'dsBot/feed' },
-+          })
-+        }
-         default:
-           if (endpoint.startsWith('computer-')) {
-             await rt.load()
-@@ -700,11 +926,15 @@ export function install(rt) {
-     } catch (error) {
-       const code = errorCode(error)
-       const message = error?.message ?? String(error)
--      if (code === 'bot/internal') rt.noteFailure({ source: 'api', text: `${endpoint}: ${message}`, code: error?.code ?? error?.name, stack: error?.stack })
--      return fail(message, code)
-+      if (code === 'bot/internal') rt.noteFailure?.({ source: 'api', text: `${endpoint}: ${message}`, code: error?.code ?? error?.name, stack: error?.stack })
-+      return fail(message, code, error?.data)
-     }
-   }
- 
-+  // The same call as a DSH Remote method, for a client that reaches this host only
-+  // through a carrier that forwards Remote methods and not Fetch routes (remote.js).
-+  rt.channelCall = handle
-+
-   // How a user message reaches a Session: a Bot id, a group chat's id, or an earlier
-   // part of either resolves to its current part. `content` is the prompt blocks DSH
-   // takes (text, image, file receipts); `requestId` lands on the message's source.
+         case 'stop-chat':
+           return ok(await rt.stopChat(String(body.botId ?? '')))
+         case 'dismiss-question':
 diff --git a/ds-bot/src/host/constants.js b/ds-bot/src/host/constants.js
 index 5ef6d047..5cd4ccfe 100644
 --- a/ds-bot/src/host/constants.js
@@ -11452,220 +11116,14 @@ index 5ef6d047..5cd4ccfe 100644
 +export const NOTICE_MAX = 50
  
  export const STEER_CUT = 'ds-bot/steer'
-diff --git a/ds-bot/src/host/delivery.js b/ds-bot/src/host/delivery.js
-index ff60a6a8..0962c1ec 100644
---- a/ds-bot/src/host/delivery.js
-+++ b/ds-bot/src/host/delivery.js
-@@ -1,5 +1,6 @@
- // Delivery: how one Bot, the user, or DS Bot itself puts a message into a Bot Session.
- import { randomUUID } from 'node:crypto'
-+import { open } from 'node:fs/promises'
- import { createUserMessage } from '@deepseek-ai/dsh-llm'
- import { HISTORY_TIMEOUT_MS, LONG_HEAD, MESSAGE_INLINE_MAX, READ_LINE_MAX, SOURCE_KIND, TEXT_KEPT, TEXT_SHOW_MAX } from './constants.js'
- import { headOf, textOf } from './text.js'
-@@ -153,23 +154,54 @@ export function install(rt) {
-   }
- 
-   // The text of a stored file, up to what the dialogs show.
-+  //
-+  // A phone names a file by its id and name only, so the reference it sends has no
-+  // `bytes`: the store verifies a read against that count and refuses it as
-+  // corrupt. The file is still on this host, at the path its id names, so the read
-+  // falls back to that path instead of answering nothing. (The web client passes
-+  // the whole reference and never needs this.)
-   async function fileText(file) {
-     const attachments = ctx.get?.('attachments')
-     if (attachments === undefined) return undefined
--    const decoder = new TextDecoder()
--    let text = ''
-     try {
--      for await (const chunk of attachments.readFileStream(file, AbortSignal.timeout(HISTORY_TIMEOUT_MS))) {
--        text += decoder.decode(chunk, { stream: true })
--        if (text.length > TEXT_SHOW_MAX) return { text: headOf(text, TEXT_SHOW_MAX), whole: false }
--      }
-+      return await readStoredText(attachments, file)
-+    } catch (error) {
-+      rt.warn('ds-bot: file %s not read from the store (%s); reading it from its host path', file?.name, error)
-+    }
-+    try {
-+      return await readHostText(attachments, file)
-     } catch (error) {
-       rt.warn('ds-bot: file %s not read: %s', file?.name, error)
-       return undefined
-     }
-+  }
-+
-+  async function readStoredText(attachments, file) {
-+    const decoder = new TextDecoder()
-+    let text = ''
-+    for await (const chunk of attachments.readFileStream(file, AbortSignal.timeout(HISTORY_TIMEOUT_MS))) {
-+      text += decoder.decode(chunk, { stream: true })
-+      if (text.length > TEXT_SHOW_MAX) return { text: headOf(text, TEXT_SHOW_MAX), whole: false }
-+    }
-     text += decoder.decode()
-     return { text, whole: true }
-   }
- 
-+  // Bounded like a stored read: enough bytes for the characters a dialog shows,
-+  // never the whole file.
-+  async function readHostText(attachments, file) {
-+    const path = attachments.fileHostPath(file)
-+    if (typeof path !== 'string' || path === '') throw new Error('no host path for this file')
-+    const handle = await open(path, 'r')
-+    try {
-+      const buffer = Buffer.alloc(TEXT_SHOW_MAX * 4 + 4)
-+      const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0)
-+      const text = new TextDecoder().decode(buffer.subarray(0, bytesRead))
-+      return { text: headOf(text, TEXT_SHOW_MAX), whole: bytesRead < buffer.length }
-+    } finally {
-+      await handle.close()
-+    }
-+  }
-+
-   Object.assign(rt, { resolveAgent, deliver, exchangeText, attachLong, fileText })
- }
-diff --git a/ds-bot/src/host/feed.js b/ds-bot/src/host/feed.js
-index 396baac4..ee3b84d0 100644
---- a/ds-bot/src/host/feed.js
-+++ b/ds-bot/src/host/feed.js
-@@ -4,7 +4,8 @@
- //   live      work changed without a new revision: ask for `state` again
- //   message   a new entry of a Bot's own chat, as the `chat` endpoint returns it
- //   stream    the reply a Bot is writing: a start, its text as it comes, an end
--import { ROUTE } from './constants.js'
-+import { ROUTE, API_MAX } from './constants.js'
-+import { BOOT_ID, nextSeq, publishedSeq } from './boot.js'
- 
- export const FEED_ROUTE = `${ROUTE}/feed`
- // A comment line now and then keeps an idle connection open.
-@@ -15,6 +16,9 @@ const LIVE_DELAY_MS = 150
- // reconnects and catches up from `hello`.
- const MAX_QUEUED = 512
- 
-+// A group writes a round's lines in a burst; one event per room per burst is enough.
-+const ROUND_EVENT_LAG = 150
-+
- export function install(rt) {
-   const { ctx, state } = rt
-   const encoder = new TextEncoder()
-@@ -27,18 +31,52 @@ export function install(rt) {
-     }
-     try { controller.enqueue(chunk) } catch { clients.delete(controller) }
-   }
-+  // Remote readers (remote.js) take the same events as objects, in the same order as
-+  // the SSE windows; a window and a Remote reader can be connected at once.
-+  const feedListeners = new Set()
-+  const readers = () => clients.size > 0 || feedListeners.size > 0
-   const publish = (event, data) => {
-+    nextSeq()
-+    for (const listener of feedListeners) {
-+      try { listener(event, data) } catch { /* the reader's own side drops it */ }
-+    }
-     const chunk = encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
-     for (const controller of clients) send(controller, chunk)
-   }
- 
-+  // The feed as a subscription for the `dsBot/feed` Remote stream; returns the unsubscribe.
-+  rt.subscribeFeed = (listener) => {
-+    feedListeners.add(listener)
-+    try {
-+      listener('hello', { revision: state.revision, api: API_MAX, boot: BOOT_ID, seq: publishedSeq() })
-+    } catch { /* the reader is already gone */ }
-+    return () => feedListeners.delete(listener)
-+  }
-+
-+  // A room's log or round changed. One `room` event per room per ROUND_EVENT_LAG, so a
-+  // round that writes several lines wakes the phone once, not once per line.
-+  const roomTimers = new Map()
-+  rt.roomChanged = (roomId) => {
-+    if (!readers() || roomTimers.has(roomId)) return
-+    const timer = setTimeout(() => {
-+      roomTimers.delete(roomId)
-+      publish('room', { roomId })
-+    }, ROUND_EVENT_LAG)
-+    timer.unref?.()
-+    roomTimers.set(roomId, timer)
-+  }
-+
-+  rt.stateSaved = () => {
-+    if (readers()) publish('revision', { revision: state.revision })
-+  }
-+
-   const offSaved = rt.onSaved(() => {
-     if (clients.size > 0) publish('revision', { revision: state.revision })
-   })
- 
-   let liveTimer
-   const live = () => {
--    if (clients.size === 0 || liveTimer !== undefined) return
-+    if (!readers() || liveTimer !== undefined) return
-     liveTimer = setTimeout(() => {
-       liveTimer = undefined
-       publish('live', {})
-@@ -49,7 +87,7 @@ export function install(rt) {
-   })
- 
-   ctx.on('session/event', (session, event) => {
--    if (clients.size === 0) return
-+    if (!readers()) return
-     const botId = rt.chatOwners.get(session.id)
-     if (botId === undefined) return
-     for (const item of rt.displayItems(session.id, [event])) publish('message', { botId, sessionId: session.id, item })
-@@ -62,7 +100,7 @@ export function install(rt) {
-   ctx.on('agent/assistant-stream', ({ agent, frame }) => {
-     if (frame.type === 'start') {
-       const botId = rt.chatOwners.get(agent.id)
--      if (clients.size === 0 || botId === undefined || (state.exchangeTurns[agent.id] ?? []).includes(frame.turn)) return
-+      if (!readers() || botId === undefined || (state.exchangeTurns[agent.id] ?? []).includes(frame.turn)) return
-       writing.set(frame.attemptId, { botId, sessionId: agent.id })
-       publish('stream', { botId, sessionId: agent.id, attemptId: frame.attemptId, phase: 'start' })
-       return
-@@ -83,7 +121,7 @@ export function install(rt) {
-   const leave = (controller) => {
-     clients.delete(controller)
-     requests.delete(controller)
--    if (clients.size === 0) writing.clear()
-+    if (!readers()) writing.clear()
-     try { controller.close() } catch { /* already closed or errored */ }
-   }
- 
-@@ -97,7 +135,9 @@ export function install(rt) {
-         start(own) {
-           controller = own
-           clients.add(own)
--          send(own, encoder.encode(`event: hello\ndata: ${JSON.stringify({ revision: state.revision })}\n\n`))
-+          // A window that reconnects reads the same `hello` again: `boot` and `seq` tell it
-+          // whether this is the host it knew and where the stream had got to.
-+          send(own, encoder.encode(`event: hello\ndata: ${JSON.stringify({ revision: state.revision, api: API_MAX, boot: BOOT_ID, seq: publishedSeq() })}\n\n`))
-         },
-         cancel() { leave(controller) },
-       })
-@@ -115,6 +155,8 @@ export function install(rt) {
-     return () => {
-       clearInterval(keepalive)
-       clearTimeout(liveTimer)
-+      for (const timer of roomTimers.values()) clearTimeout(timer)
-+      roomTimers.clear()
-       offSaved()
-       for (const controller of clients) leave(controller)
-     }
 diff --git a/ds-bot/src/host/groups.js b/ds-bot/src/host/groups.js
-index 34efe347..ba128160 100644
+index a4a5e6e6..1e9cbae8 100644
 --- a/ds-bot/src/host/groups.js
 +++ b/ds-bot/src/host/groups.js
-@@ -22,7 +22,7 @@ import { readFile, rm } from 'node:fs/promises'
- import { join } from 'node:path'
- import { createUserMessage } from '@deepseek-ai/dsh-llm'
- import { defineTool } from '@deepseek-ai/dsh-tools'
--import { GROUP_LINE_READ, LATE_ANSWER, ROOM_IDLE_RELAY_LIMIT, ROOM_REPLY_TIMEOUT_MS, ROOM_STEP_GAP_MS, ROOM_WORK_GRACE_MS, SOURCE_KIND, TEAM_TOOLS, TEXT_KEPT } from './constants.js'
-+import { GROUP_LINE_READ, LATE_ANSWER, MESSAGE_INLINE_MAX, ROOM_IDLE_RELAY_LIMIT, ROOM_REPLY_TIMEOUT_MS, ROOM_STEP_GAP_MS, ROOM_WORK_GRACE_MS, SOURCE_KIND, TEAM_TOOLS, TEXT_KEPT } from './constants.js'
- import { escapeRegExp, headOf, splitRef, textOf } from './text.js'
- import { viaOf } from '../shared/im-platforms.js'
- import { mentionSpans, speakerOf } from '../shared/mentions.js'
-@@ -188,6 +188,13 @@ const adminNote = room => [
- ].filter(Boolean).join(' ')
+@@ -69,6 +69,13 @@ export const isIdleRelayText = (text, everyone, priorBodies) => {
+ }
  
- // The opening turn of a group the user just made without a first message.
+ // Rows only the group chat draws: members read who is at work from the round itself.
 +// 任务板本身不叫人：群回合开始前把这批可开工的活交给管理员，由它决定 @ 谁（spec §7）。
 +const taskReadyNote = (rt, room) => {
 +  const ready = rt.readyTasks?.(room) ?? []
@@ -11673,243 +11131,17 @@ index 34efe347..ba128160 100644
 +  return `Task board — ready to start now: ${ready.map(task => `#${task.no} ${task.title} → ${task.name}`).join('; ')}. The board wakes nobody: call whoever should take one with @Name.`
 +}
 +
- const roomKickoff = language => `The user just created this group and has not written yet. Greet the user in one short message and ask what they want this group to work on. Do not call members with @ yet, and do not reply [PASS]. No name prefix. Write in ${language ?? 'the user\'s language if known; otherwise Chinese'}.`
+ const SHOWN_ONLY = new Set(['working', 'approval'])
+ const memberLine = record => record !== undefined && !SHOWN_ONLY.has(record.kind)
  
- const ROOM_READ_MAX = 30
-@@ -254,10 +261,13 @@ export function install(rt) {
-   const roomLineListeners = new Set()
-   const appendRoom = (room, line) => {
-     room.seq += 1
--    const whole = { ...line, seq: room.seq }
-+    // Every line is dated when it lands: the phone shows a name line with its time
-+    // (and the time gaps between rounds), and a line without one cannot.
-+    const whole = { ...(line.time === undefined ? { time: Date.now() } : {}), ...line, seq: room.seq }
-     const log = [...room.log, keepGroupLine(room.id, whole, line.text ?? '')]
-     for (const gone of log.slice(0, -ROOM_LOG_MAX)) dropGroupLine(room.id, gone)
-     room.log = log.slice(-ROOM_LOG_MAX)
-+    rt.roomChanged?.(room.id)
-     // Listeners see the whole line, before keepGroupLine cut it for the log.
-     for (const listener of roomLineListeners) {
-       try { listener(room, whole) } catch (error) { rt.warn('ds-bot: room line listener failed: %s', error) }
-@@ -366,6 +376,7 @@ export function install(rt) {
+@@ -444,6 +451,7 @@ export function install(rt) {
        members,
        notice,
        goal,
 +      leads ? taskReadyNote(rt, room) : '',
        leads ? adminNote(room) : '',
        earlier.length ? `Earlier in the group, before this round (context only):\n${transcript(earlier, memberText(room))}` : '',
-       current.length
-@@ -491,11 +502,72 @@ export function install(rt) {
-     return batch
-   }
- 
-+  // A member's turn as the group's footnote reads it: the steps it took and the tokens
-+  // it spent. The phone draws the same line a Bot's own reply carries (耗时 · 步数 ·
-+  // tokens), so what DSH counts stays in one place: steps from the tool events, usage
-+  // from the Session's own tokenUsage projection, minus the reading taken at turn start.
-+  // 一轮结束时由 turns.js 交过来：Bot 自己发到群里的那条也要有这笔账。
-+  const lastFigures = new Map() // botId → { duration, steps, tokens, at }
-+  const figuresOfBot = (botId) => {
-+    const held = lastFigures.get(botId)
-+    if (held === undefined || Date.now() - held.at > 10 * 60 * 1000) return undefined
-+    const { duration, steps, tokens } = held
-+    return {
-+      duration,
-+      ...(steps > 0 ? { steps } : {}),
-+      ...(tokens === undefined || tokens <= 0 ? {} : { tokens }),
-+    }
-+  }
-+  rt.noteTurnFigures = (sessionId, figures) => {
-+    const botId = rt.selfOf(sessionId)
-+    if (botId !== undefined) lastFigures.set(botId, { ...figures, at: Date.now() })
-+  }
-+
-+  const turnMeter = new Map() // `${roomId}/${botId}` → { sessionId, session, from, steps }
-+  const meterKey = (room, member) => `${room.id}/${member.id}`
-+  const usageNow = (session) => {
-+    const usage = ctx.get?.('sessionProjections')?.snapshot(session, ['tokenUsage'])?.values?.tokenUsage
-+    if (usage === undefined) return undefined
-+    return {
-+      input: (usage.inputTokens ?? 0) + (usage.cacheReadTokens ?? 0) + (usage.cacheWriteTokens ?? 0),
-+      output: usage.outputTokens ?? 0,
-+    }
-+  }
-+  // A tool call the member made in this turn: one step, as the Bot footer counts them.
-+  const noteStep = (sessionId) => {
-+    for (const meter of turnMeter.values()) if (meter.sessionId === sessionId) meter.steps += 1
-+  }
-+
-+  // What this member's turn has counted so far: a line written mid-turn shows the
-+  // numbers up to that step, the last line of the turn shows all of them.
-+  const figuresOf = (room, member) => {
-+    const meter = turnMeter.get(meterKey(room, member))
-+    if (meter === undefined) return undefined
-+    const steps = meter.steps > 0 ? { steps: meter.steps } : {}
-+    const now = meter.session === undefined ? undefined : usageNow(meter.session)
-+    if (now === undefined) return Object.keys(steps).length > 0 ? steps : undefined
-+    const input = Math.max(0, now.input - meter.from.input)
-+    const output = Math.max(0, now.output - meter.from.output)
-+    return { ...steps, ...(input + output > 0 ? { input, output, tokens: input + output } : {}) }
-+  }
-+
-   // A member's message in the round: in the log, for the members after it, and in the
-   // round's replies, for the user.
--  const postInRound = (room, round, member, text, duration) => {
--    appendRoom(room, { who: member.name, botId: member.id, text })
--    round.replies.push({ botId: member.id, name: member.name, color: member.color, text, time: Date.now(), ...(duration === undefined ? {} : { duration }) })
-+  const postInRound = (room, round, member, text, duration, long) => {
-+    const files = long?.files ?? []
-+    const figures = figuresOf(room, member)
-+    appendRoom(room, {
-+      who: member.name, botId: member.id, text,
-+      ...(duration === undefined ? {} : { duration }),
-+      ...(figures === undefined ? {} : figures),
-+      ...(files.length > 0 ? { files } : {}),
-+    })
-+    round.replies.push({
-+      botId: member.id, name: member.name, color: member.color, text, time: Date.now(),
-+      ...(duration === undefined ? {} : { duration }),
-+      ...(figures === undefined ? {} : figures),
-+      ...(files.length > 0 ? { files } : {}), ...(long?.length ? { length: long.length } : {}),
-+    })
-     void rt.save().catch(() => {})
-   }
- 
-@@ -512,6 +584,16 @@ export function install(rt) {
-     const startedAt = Date.now()
-     const exchangeId = randomUUID()
-     const turn = { botId: member.id, sessionId, exchangeId }
-+    // The footnote's baseline: this turn's tools count from here, and so do the tokens.
-+    try {
-+      const agent = await rt.resolveAgent(sessionId)
-+      turnMeter.set(meterKey(room, member), {
-+        sessionId,
-+        session: agent?.session,
-+        from: (agent?.session === undefined ? undefined : usageNow(agent.session)) ?? { input: 0, output: 0 },
-+        steps: 0,
-+      })
-+    } catch { turnMeter.delete(meterKey(room, member)) }
-     const { started } = round
-     started.push(turn)
-     // The read position is the one of this turn's start, and moves only when the
-@@ -590,6 +672,7 @@ export function install(rt) {
-   // The team's own tools are quick; any other tool is the start of work.
-   const QUICK_TOOLS = new Set(TEAM_TOOLS)
-   rt.workRoomTurn = (sessionId, tool) => {
-+    noteStep(sessionId)
-     if (QUICK_TOOLS.has(tool)) return
-     const owner = rt.groupOwners.get(sessionId)
-     if (owner !== undefined) markBatchWorked(owner.roomId, owner.botId)
-@@ -916,8 +999,11 @@ export function install(rt) {
-     } else if (final !== undefined || (typeof reply === 'string' && said.length > 0)) {
-       slot.status = 'posted'
-       if (final !== undefined) {
--        postInRound(room, round, member, final, Date.now() - startedAt)
--        callFrom(room, round, member, final, called, { worked, byBot: answeredBot })
-+        // A long answer rides as a file here too, as a late reply does: the group line
-+        // keeps its start, and the chat reads the rest from the attachment.
-+        const long = final.length > MESSAGE_INLINE_MAX ? await rt.attachLong(final, `Reply from ${member.name}.txt`) : undefined
-+        postInRound(room, round, member, long?.text ?? final, Date.now() - startedAt, long)
-+        callFrom(room, round, member, long?.text ?? final, called, { worked, byBot: answeredBot })
-       }
-     } else {
-       slot.status = reply === null ? 'cancelled' : typeof reply === 'string' ? 'passed' : 'missed'
-@@ -1002,6 +1088,16 @@ export function install(rt) {
-           text,
-           ...(post.images === undefined ? {} : { images: post.images }),
-           ...(post.files === undefined ? {} : { files: post.files }),
-+          // The line keeps the pictures too: the phone draws them from their ids.
-+          ...(post.images === undefined ? {} : { images: post.images }),
-+          // The notes also stay as their own field: the phone drops them from what it
-+          // shows, the members and the reading tools still find them in `text`.
-+          // How long that reply took, when the round measured it: the phone
-+          // draws it beside the member's name.
-+          ...(post.duration === undefined ? {} : { duration: post.duration }),
-+          ...(post.steps === undefined ? {} : { steps: post.steps }),
-+          ...(post.tokens === undefined ? {} : { tokens: post.tokens }),
-+          ...(readings.length === 0 ? {} : { readings }),
-           ...(post.via === undefined ? {} : { via: post.via }),
-         })
-       }
-@@ -1045,6 +1141,7 @@ export function install(rt) {
-       if (draftPost !== undefined && admin !== undefined && !speakers.some(member => member.id === admin.id)) speakers.push(admin)
-       const round = {
-         roomId: room.id,
-+        startedAt: Date.now(),
-         members: room.members,
-         startSeq,
-         goalRevision: room.goal?.revision,
-@@ -1099,12 +1196,14 @@ export function install(rt) {
-       if (posts.some(post => post.resumed || post.stopped || post.done)) await rt.save()
-       releaseParked(room, round)
-       rt.roomProgress.set(exec.callId, round)
-+      rt.roomChanged?.(room.id)
-       try {
-         await runRound(room, round, exec.signal, exec.agent)
-       } catch (error) {
-         rt.warn('ds-bot: group round in %s stopped: %s', room.name, error)
-       } finally {
-         rt.roomProgress.delete(exec.callId)
-+        rt.roomChanged?.(room.id)
-       }
-       if (exec.signal?.aborted) {
-         for (const turn of round.started) {
-@@ -1312,8 +1411,21 @@ export function install(rt) {
-         running.replies.push({ kind, botId: sender.id, name: sender.name, color: sender.color, time: Date.now() })
-       } else {
-         const line = [text, ...files.map(fileLine)].filter(Boolean).join('\n')
--        appendRoom(room, { who: sender.name, botId: sender.id, text: line, ...(files.length > 0 ? { files } : {}) })
--        running.replies.push({ botId: sender.id, name: sender.name, color: sender.color, text: line, time: Date.now() })
-+        // 这一轮的账：回合从开场算起，步数与 token 取这位 Bot 刚结束的那一轮。
-+        const held = figuresOfBot(sender.id)
-+        const took = running.startedAt === undefined ? undefined : Date.now() - running.startedAt
-+        const figures = {
-+          ...(took === undefined || took < 1000 ? {} : { duration: took }),
-+          ...(held?.steps === undefined ? {} : { steps: held.steps }),
-+          ...(held?.tokens === undefined ? {} : { tokens: held.tokens }),
-+        }
-+        appendRoom(room, { who: sender.name, botId: sender.id, text: line, ...figures, ...(files.length > 0 ? { files } : {}) })
-+        // A reply that went as a file keeps the file with it: the chat shows "Show all"
-+        // against the whole length and reads the rest from the attachment.
-+        running.replies.push({
-+          botId: sender.id, name: sender.name, color: sender.color, text: line, time: Date.now(), ...figures,
-+          ...(files.length > 0 ? { files } : {}), ...(extra.length ? { length: extra.length } : {}),
-+        })
-       }
-       callPost(room, running, sender, text, extra)
-       await rt.save()
-@@ -1322,7 +1434,11 @@ export function install(rt) {
-     const agent = await rt.resolveAgent(rt.sessionOfRoom(room))
-     agent.followup(createUserMessage({
-       content: [{ type: 'text', text: `[Group post from ${sender.name}]\n${text}` }, ...files.map(attachment => ({ type: 'file', attachment }))],
--      source: { kind: SOURCE_KIND, form: 'relay', role: 'post', exchangeId: randomUUID(), senderName: sender.name, senderSessionId: sender.id, roomId: room.id, ...extra },
-+      source: {
-+        kind: SOURCE_KIND, form: 'relay', role: 'post', exchangeId: randomUUID(),
-+        senderName: sender.name, senderSessionId: sender.id, roomId: room.id,
-+        ...figuresOfBot(sender.id), ...extra,
-+      },
-     }))
-     await ctx.sessions.flush(agent.session)
-   }
-@@ -1374,7 +1490,17 @@ export function install(rt) {
-     }
-     const done = isPass(text) && (shown || batchDoneBefore) && askedBy !== undefined
-     if (isPass(text) && !done) return
--    await postToRoom(room, member, done ? '' : text, { late: true, ...(done ? { done: true } : {}), ...(askedBy ? { askedBy } : {}) })
-+    // A long reply rides as a file, as `message_bot` and `post_to_group` already do: the
-+    // group line keeps its head, the whole text stays with it as an attachment. A short
-+    // one comes back unchanged, with no files, so nothing below the limit moves.
-+    const body = done ? '' : text
-+    const long = body === '' ? undefined : await rt.attachLong(body, `Reply from ${member.name}.txt`)
-+    await postToRoom(room, member, long?.text ?? body, {
-+      late: true,
-+      ...(done ? { done: true } : {}),
-+      ...(long?.length ? { length: long.length } : {}),
-+      ...(askedBy ? { askedBy } : {}),
-+    }, long?.files ?? [])
-       .catch(error => rt.warn('ds-bot: late group reply from %s failed: %s', member.name, error))
-   }
-   rt.lateRoomReply = lateRoomReply
+       owed.length ? `Results of the work you asked for that the lines here leave out (oldest first):\n${owed.map(result => (result.line
 diff --git a/ds-bot/src/host/image-notes.js b/ds-bot/src/host/image-notes.js
 new file mode 100644
 index 00000000..91b47be1
@@ -11949,12 +11181,12 @@ index 00000000..91b47be1
 +}
 +
 diff --git a/ds-bot/src/host/images.js b/ds-bot/src/host/images.js
-index e38a2197..2a2b8c25 100644
+index 0bf11243..2254971e 100644
 --- a/ds-bot/src/host/images.js
 +++ b/ds-bot/src/host/images.js
-@@ -8,6 +8,7 @@ import { BlockAssembler } from '@deepseek-ai/dsh-llm'
- import { OCR_CACHE_MAX, OCR_PROMPT, OCR_RETRY_MS, OCR_TIMEOUT_MS } from './constants.js'
+@@ -8,6 +8,7 @@ import { OCR_CACHE_MAX, OCR_PROMPT, OCR_RETRY_MS, OCR_TIMEOUT_MS } from './const
  import { replaceFile } from './files.js'
+ import { assembleLlmStream } from './models.js'
  import { splitRef } from './text.js'
 +import { stripImageReadings } from './image-notes.js'
  
@@ -12581,548 +11813,6 @@ index 00000000..b3d867e4
 +  }))
 +  return { required, fields }
 +}
-diff --git a/ds-bot/src/host/mobile.js b/ds-bot/src/host/mobile.js
-new file mode 100644
-index 00000000..92d4cde0
---- /dev/null
-+++ b/ds-bot/src/host/mobile.js
-@@ -0,0 +1,488 @@
-+// The client API for windows that draw the team themselves, a phone app above all
-+// (docs/plans/2026-10-24-mobile-api.md). On top of the calls the web client makes:
-+// a versioned handshake, group chats as display items, notices that a client which
-+// was away (a phone in the background, a dropped link) reads back on its return,
-+// profile photos by reference, direct memory edits, and usage totals for one Bot.
-+import { createHash, randomUUID } from 'node:crypto'
-+import { readFileSync } from 'node:fs'
-+import { HANDOFF_ACK, HISTORY_TIMEOUT_MS, SOURCE_KIND } from './constants.js'
-+import { textOf } from './text.js'
-+import { hourKeys } from './usage.js'
-+
-+const PKG = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'))
-+
-+// `api` changes only when a client written for the old one would misread an answer.
-+// Everything added beside it (an endpoint, a field, an item, notice or feed event kind)
-+// is named in CAPABILITIES instead, and clients skip what they do not know.
-+export const API_VERSION = 1
-+export const API_MIN = 1
-+export const CAPABILITIES = [
-+  'state', 'state-avatar-refs', 'avatar', 'chat', 'room-chat', 'send', 'feed', 'feed-room', 'notices',
-+  'questions', 'views', 'approvals', 'stop-member-work', 'memory', 'memory-edit', 'usage-summary', 'rpc',
-+]
-+export const NOTICE_KINDS = ['message', 'group', 'done', 'question', 'view', 'approval']
-+
-+// Notices live in memory: a client away longer than this many notices, or across a
-+// restart (a new `boot`), reads the team again instead.
-+const NOTICES_KEPT = 200
-+const NOTICE_TEXT_MAX = 300
-+const ROOM_PAGE = 60
-+// A round's events come in bursts; one `room` feed event covers each burst.
-+const ROOM_SIGNAL_MS = 150
-+const ROUND_EVENTS = new Set(['done', 'stopped', 'working', 'approval', 'failed', 'missed', 'lookup', 'resumed', 'cut'])
-+const POST_HEADER = /^\[Group post from [^\r\n]*\]\r?\n/
-+
-+const flat = text => String(text ?? '').replace(/\s+/g, ' ').trim()
-+const noticeText = (text) => {
-+  const line = flat(text)
-+  return line.length > NOTICE_TEXT_MAX ? `${line.slice(0, NOTICE_TEXT_MAX)}…` : line
-+}
-+export const avatarRef = image => createHash('sha256').update(image).digest('hex').slice(0, 16)
-+
-+// The prompts of a due scheduled task, as DSH frames them for the model.
-+function reminderText(text) {
-+  const one = /^reminder_prompt_json: (.*)$/m.exec(text)
-+  const batch = /^reminders_json: (.*)$/m.exec(text)
-+  try {
-+    const prompts = [...(one ? [JSON.parse(one[1])] : []), ...(batch ? JSON.parse(batch[1]).map(entry => entry?.reminder_prompt) : [])]
-+    return prompts.filter(prompt => typeof prompt === 'string' && prompt.trim() !== '').join(' · ')
-+  } catch {
-+    return ''
-+  }
-+}
-+
-+// One reply of a round as an item: a member's message, the user's message that came in
-+// while the round ran, or an event of the round. `id` names it the same while the round
-+// runs and once its result is logged, so a client can swap the one for the other.
-+// A picture or a file as the phone names it. The engine reads an image back by its id
-+// together with the byte length and the dimensions it was stored with, so all of them
-+// travel with the reference: a phone given only the id cannot ask for the picture.
-+const attachmentRef = file => ({
-+  id: file?.attachmentId ?? file?.id ?? '',
-+  ...(file?.name ? { name: file.name } : {}),
-+  ...(file?.mediaType ? { mediaType: file.mediaType } : {}),
-+  ...(Number.isFinite(file?.bytes) ? { bytes: file.bytes } : {}),
-+  ...(Number.isFinite(file?.width) ? { width: file.width } : {}),
-+  ...(Number.isFinite(file?.height) ? { height: file.height } : {}),
-+})
-+
-+// A line's footnote numbers: the steps its turn took and the tokens it spent. Absent
-+// when the turn's figures were not counted (an older state, or a line the user wrote).
-+function figuresOf(reply) {
-+  return {
-+    ...(Number.isFinite(reply?.steps) ? { steps: reply.steps } : {}),
-+    ...(Number.isFinite(reply?.tokens) ? { tokens: reply.tokens } : {}),
-+    ...(Number.isFinite(reply?.input) ? { input: reply.input } : {}),
-+    ...(Number.isFinite(reply?.output) ? { output: reply.output } : {}),
-+  }
-+}
-+
-+function replyItem(reply, id, extra = {}) {
-+  const who = { ...(reply.botId ? { botId: reply.botId } : {}), ...(reply.name ? { name: reply.name } : {}), ...(reply.color ? { color: reply.color } : {}) }
-+  const time = Number.isFinite(reply.time) ? reply.time : null
-+  if (reply.kind === 'user') {
-+    const attached = [...(reply.images ?? []), ...(reply.files ?? [])]
-+    return {
-+      id, kind: 'user', text: String(reply.text ?? ''), time,
-+      ...(attached.length > 0 ? { files: attached.map(attachmentRef) } : {}),
-+      ...extra,
-+    }
-+  }
-+  if (reply.kind === undefined) return { id, kind: 'bot', ...who, text: String(reply.text ?? ''), time, ...(Number.isFinite(reply.duration) ? { duration: reply.duration } : {}), ...figuresOf(reply), ...(Array.isArray(reply.files) && reply.files.length > 0 ? { files: reply.files.map(attachmentRef) } : {}), ...extra }
-+  if (!ROUND_EVENTS.has(reply.kind)) return undefined
-+  return {
-+    id, kind: 'event', event: reply.kind, ...who,
-+    ...(typeof reply.text === 'string' && reply.text !== '' ? { text: reply.text } : {}),
-+    ...(reply.code ? { code: reply.code } : {}),
-+    time, ...extra,
-+  }
-+}
-+
-+// A group chat's own Session as display items, oldest first. The Session holds the
-+// user's messages, Bots' posts from outside the group, and one group_relay call per
-+// round, whose result lists the round's replies in order.
-+export function roomItems(events) {
-+  const items = []
-+  const relays = new Map()
-+  for (const event of events) {
-+    const seq = event.seq
-+    if (event.type === 'user/message') {
-+      const source = event.data?.source
-+      const content = Array.isArray(event.data?.content) ? event.data.content : []
-+      if (source?.kind === 'user') {
-+        const images = content.filter(block => block?.type === 'image' && !block.offloaded)
-+        // The phone draws the pictures and files themselves, so the line names them;
-+        // `images` stays as the count a client without that read still shows.
-+        const attachments = [...images, ...content.filter(block => block?.type === 'file' && block.attachment !== undefined)]
-+          .map(block => block.attachment)
-+        items.push({
-+          id: `${seq}`, kind: 'user', text: textOf(content),
-+          ...(typeof source.rpcId === 'string' && source.rpcId !== '' ? { rpcId: source.rpcId } : {}),
-+          ...(images.length > 0 ? { images: images.length } : {}),
-+          ...(attachments.length > 0 ? { files: attachments.map(attachmentRef) } : {}),
-+          time: event.time ?? null,
-+        })
-+      } else if (source?.kind === 'schedule') {
-+        items.push({ id: `${seq}`, kind: 'event', event: 'schedule', text: reminderText(textOf(content)), time: event.time ?? null })
-+      } else if (source?.kind === SOURCE_KIND && source.role === 'post') {
-+        // A post a running round logged shows inside that round; a member's late failure,
-+        // picked-up work, stopped work or finished work is an event of the round it opens.
-+        if (source.logged !== undefined || source.failed !== undefined || source.resumed === true || source.stopped === true || source.done === true) continue
-+        const file = source.length === undefined ? undefined : content.find(block => block?.type === 'file')?.attachment
-+        items.push({
-+          id: `${seq}`, kind: 'bot', botId: source.senderSessionId ?? null, name: source.senderName ?? null,
-+          text: textOf(content).replace(POST_HEADER, ''), time: event.time ?? null,
-+          ...(file ? { whole: { length: source.length, file } } : {}),
-+        })
-+      }
-+      continue
-+    }
-+    if (event.type === 'tool/call' && event.data?.name === 'group_relay') {
-+      relays.set(event.data.callId, items.length)
-+      continue
-+    }
-+    if (event.type !== 'tool/result') continue
-+    const callId = event.data?.message?.toolCallId
-+    let result
-+    try { result = JSON.parse(textOf(event.data?.message?.content)) } catch { continue }
-+    if (!Array.isArray(result?.replies)) continue
-+    relays.delete(callId)
-+    result.replies.forEach((reply, index) => {
-+      const item = replyItem(reply ?? {}, `${callId ?? seq}:${index}`)
-+      if (item !== undefined) items.push(item)
-+    })
-+  }
-+  // Relays whose result is not in these events yet: still running, or answered on the
-+  // next page.
-+  return { items, open: [...relays.entries()].map(([callId, at]) => ({ callId, at })) }
-+}
-+
-+// Totals of usage rows, [hour, owner, model, kind, input, cacheRead, cacheWrite, output, calls].
-+const totals = rows => rows.reduce((sum, row) => ({
-+  input: sum.input + row[4], cacheRead: sum.cacheRead + row[5], cacheWrite: sum.cacheWrite + row[6], output: sum.output + row[7], calls: sum.calls + row[8],
-+}), { input: 0, cacheRead: 0, cacheWrite: 0, output: 0, calls: 0 })
-+
-+import { appendFileSync } from 'node:fs'
-+
-+export function install(rt) {
-+  const { ctx, state } = rt
-+  const boot = randomUUID()
-+  let seq = 0
-+  const kept = []
-+
-+  function addNotice(entry) {
-+    if (!NOTICE_KINDS.includes(entry.kind)) return undefined
-+    seq += 1
-+    const notice = { seq, time: Date.now(), ...entry, text: noticeText(entry.text) }
-+    kept.push(notice)
-+    if (kept.length > NOTICES_KEPT) kept.splice(0, kept.length - NOTICES_KEPT)
-+    rt.publishFeed?.('notice', notice)
-+    return notice
-+  }
-+
-+  // A notice for a Bot names it as it is called now; a deleted Bot leaves none.
-+  const botNotice = (botId, entry) => {
-+    const bot = rt.botOf(botId)
-+    return bot === undefined ? undefined : addNotice({ botId, name: bot.name, ...entry })
-+  }
-+
-+  const roomTimers = new Map()
-+  const roomChanged = (roomId) => {
-+    if (roomTimers.has(roomId)) return
-+    const timer = setTimeout(() => {
-+      roomTimers.delete(roomId)
-+      rt.publishFeed?.('room', { roomId })
-+    }, ROOM_SIGNAL_MS)
-+    timer.unref?.()
-+    roomTimers.set(roomId, timer)
-+  }
-+
-+  // Every line a group logs: the group changed, and a member's message or finished work
-+  // is news for a client that is not looking.
-+  rt.roomLineAdded = (room, line) => {
-+    roomChanged(room.id)
-+    if (line.botId === undefined || line.who === 'User') return
-+    const base = { roomId: room.id, title: room.name }
-+    const shown = rt.stripImageReadings?.(line.text ?? '', line.readings) ?? line.text
-+    if (line.kind === undefined) botNotice(line.botId, { kind: 'group', ...base, text: shown })
-+    else if (line.kind === 'done') botNotice(line.botId, { kind: 'done', ...base, text: '' })
-+  }
-+
-+  // A card in a Bot's own chat waits for the user.
-+  rt.cardShown = (sessionId, kind, text) => {
-+    const botId = rt.chatOwners.get(sessionId)
-+    if (botId !== undefined) botNotice(botId, { kind, sessionId, text })
-+  }
-+  rt.approvalWaiting = (entry) => {
-+    const room = rt.roomOf(entry.roomId)
-+    botNotice(entry.botId, { kind: 'approval', sessionId: entry.sessionId, ...(room ? { roomId: room.id, title: room.name } : {}), text: entry.tool })
-+  }
-+
-+  ctx.on('session/event', (session, event) => {
-+    const id = session?.id
-+    if (id === undefined) return
-+    if (rt.roomOf(id) !== undefined) {
-+      // A round starts or ends.
-+      if (event.type === 'tool/call' || event.type === 'tool/result' || event.type === 'user/message') roomChanged(id)
-+      return
-+    }
-+    if (event.type !== 'assistant/message') return
-+    const botId = rt.chatOwners.get(id)
-+    if (botId === undefined || (state.exchangeTurns[id] ?? []).includes(event.data?.turn)) return
-+    const text = textOf(event.data?.message?.content)
-+    // The fixed reply that opens a fresh part is not the Bot speaking.
-+    if (text !== '' && text !== HANDOFF_ACK) botNotice(botId, { kind: 'message', sessionId: id, text })
-+  })
-+
-+  ctx.effect(() => () => {
-+    for (const timer of roomTimers.values()) clearTimeout(timer)
-+    roomTimers.clear()
-+  }, 'ds-bot: mobile room signals')
-+
-+  rt.apiVersion = API_VERSION
-+  rt.noticeCursor = () => ({ boot, seq })
-+
-+  function hello(body) {
-+    const offered = Array.isArray(body.api) ? body.api.filter(Number.isInteger) : [API_VERSION]
-+    const common = offered.filter(version => version >= API_MIN && version <= API_VERSION)
-+    return {
-+      api: common.length > 0 ? Math.max(...common) : null,
-+      apiMin: API_MIN,
-+      apiMax: API_VERSION,
-+      plugin: { name: PKG.name, version: PKG.version },
-+      capabilities: CAPABILITIES,
-+      boot,
-+      seq,
-+      revision: state.revision,
-+      readOnly: rt.readOnly() ?? null,
-+      memory: rt.memoryEnabled !== false,
-+      feed: 'api/bot/feed',
-+      // The same calls and feed as Remote methods (remote.js), for carriers without Fetch routes.
-+      rpc: { call: 'dsBot/call', feed: 'dsBot/feed' },
-+    }
-+  }
-+
-+  function notices(body) {
-+    const fresh = body.boot !== boot
-+    const since = fresh ? 0 : Number.isInteger(body.since) ? body.since : 0
-+    const oldest = kept[0]?.seq ?? seq + 1
-+    // Notices past the ring were dropped: the client reads the team again.
-+    const gap = !fresh && since < oldest - 1
-+    return { boot, seq, reset: fresh || gap, notices: kept.filter(notice => notice.seq > since) }
-+  }
-+
-+  // A state answer with each photo replaced by its reference; `avatar` sends the image.
-+  rt.slimAvatars = value => (Array.isArray(value?.bots)
-+    ? { ...value, bots: value.bots.map(bot => (typeof bot.avatar?.image === 'string' ? { ...bot, avatar: { ...bot.avatar, image: undefined, imageRef: avatarRef(bot.avatar.image) } } : bot)) }
-+    : value)
-+
-+  function avatar(body) {
-+    const bot = rt.botOf(String(body.botId ?? ''))
-+    if (bot === undefined) throw Object.assign(new Error('Unknown Bot'), { code: 'bot/not-found' })
-+    const image = bot.avatar?.image
-+    return typeof image === 'string' ? { botId: bot.id, ref: avatarRef(image), image } : { botId: bot.id, ref: null, image: null }
-+  }
-+
-+// ── The 0.2.7 shape of a group page ────────────────────────────────────────────
-+// 0.2.7 answered `room-chat` from `room.log`, one display item per line, and a phone
-+// built for it reads `files`, `name` and `whole` off those items. 0.2.8 reads the group
-+// Session's messages instead, and such a phone shows an empty group. So the answer keeps
-+// the old shape; the Session-shaped items are added beside it as `sessionItems`, which a
-+// client written for the new shape can start reading, and nothing the new answer said is
-+// removed or overwritten.
-+const legacyWholeOf = line => (line.length === undefined ? undefined : { length: line.length })
-+
-+// What a line carries: the pictures it was sent with and the files beside them.
-+const legacyAttachmentsOf = line => {
-+  const all = [...(line.images ?? []), ...(line.files ?? [])]
-+  return all.length === 0 ? undefined : all
-+}
-+
-+function legacyRoomItem(rt, line) {
-+  const bot = line.botId === undefined ? undefined : rt.botOf(line.botId)
-+  return {
-+    // A line a member wrote is a Bot entry, one the user wrote is theirs; anything else
-+    // is the round's own event (a missed reply, a lookup, a stop).
-+    kind: line.botId !== undefined ? 'bot' : line.who === 'User' ? 'user' : 'event',
-+    id: String(line.seq),
-+    // The note an image leaves is for the models, not for this screen.
-+    text: rt.stripImageReadings?.(line.text ?? '', line.readings) ?? line.text ?? '',
-+    name: line.who,
-+    ...(bot?.color !== undefined ? { color: bot.color } : {}),
-+    ...(typeof line.time === 'number' ? { time: line.time } : {}),
-+    ...(typeof line.duration === 'number' ? { duration: line.duration } : {}),
-+    ...figuresOf(line),
-+    ...(line.botId !== undefined ? { botId: line.botId } : {}),
-+    // `kind: 'notice'` carries why it happened in `reason`; that is the event the client
-+    // draws. Other kinds name themselves.
-+    ...(line.kind === 'notice' ? (line.reason === undefined ? {} : { event: line.reason }) : line.kind === undefined ? {} : { event: line.kind }),
-+    ...(legacyAttachmentsOf(line) === undefined ? {} : { images: legacyAttachmentsOf(line).length }),
-+    // The phone draws the files themselves; `images` stays as the count older clients read.
-+    ...(legacyAttachmentsOf(line) === undefined ? {} : { files: legacyAttachmentsOf(line).map(attachmentRef) }),
-+    ...(legacyWholeOf(line) === undefined ? {} : { whole: legacyWholeOf(line) }),
-+  }
-+}
-+
-+// A page of a group chat in the 0.2.7 shape: newest page first, oldest first within it.
-+function legacyRoomChatPage(rt, roomId, cursor) {
-+  const room = rt.roomOf(roomId)
-+  if (room === undefined) throw Object.assign(new Error('Unknown group chat'), { code: 'bot/not-found' })
-+  const log = room.log ?? []
-+  const before = Number.isInteger(cursor?.beforeSeq) ? cursor.beforeSeq : undefined
-+  const older = before === undefined ? log : log.filter(line => line.seq < before)
-+  const page = older.slice(-ROOM_PAGE)
-+  const running = [...rt.roomProgress.values()].find(round => round.roomId === room.id)
-+  return {
-+    roomId: room.id,
-+    items: page.map(line => legacyRoomItem(rt, line)),
-+    cursor: older.length > page.length ? { beforeSeq: page[0].seq } : null,
-+    running: running !== undefined,
-+    ...(running?.speaking === undefined || running.speaking === null ? {} : { speaking: running.speaking }),
-+  }
-+}
-+
-+  async function roomChat(body) {
-+    const room = rt.roomOf(String(body.roomId ?? ''))
-+    if (room === undefined) throw Object.assign(new Error('Unknown group chat'), { code: 'bot/not-found' })
-+    // The answer a phone built for 0.2.7 reads, and the one shipped today still does:
-+    // the room log in the old item shape. It is answered whether or not the group
-+    // Session can be paged, so an older Host still shows its groups.
-+    const legacy = legacyRoomChatPage(rt, room.id, body.cursor)
-+    const cursor = body.cursor ?? undefined
-+    let sessionItems
-+    let sessionCursor = null
-+    try {
-+      const agent = await rt.resolveAgent(room.id)
-+      const page = await ctx.sessionController.page({
-+        address: { kind: 'session', sessionId: room.id },
-+        throughSeq: Number(agent.session.seq) - 1,
-+        ...(Number.isInteger(cursor?.beforeSeq) ? { beforeSeq: cursor.beforeSeq } : {}),
-+        maxMessages: ROOM_PAGE,
-+      }, AbortSignal.timeout(HISTORY_TIMEOUT_MS))
-+      const events = page.records.map(record => record.event)
-+      const items = roomItems(events).items
-+      // The newest page shows what the running round has said so far, where its call
-+      // sits. Only the new shape does this; the old one names its live round instead.
-+      if (cursor === undefined) {
-+        for (const { callId, at } of roomItems(events).open.reverse()) {
-+          const round = rt.roomProgress.get(callId)
-+          if (round === undefined) continue
-+          const live = round.replies.map((reply, index) => replyItem(reply, `${callId}:${index}`, { live: true })).filter(Boolean)
-+          items.splice(at, 0, ...live)
-+        }
-+      }
-+      sessionItems = items
-+      sessionCursor = page.hasMore && page.records.length > 0 ? { beforeSeq: page.records[0].event.seq } : null
-+    } catch (error) {
-+      // No agent for this group yet (or a Host without the Session page): the old
-+      // shape is the whole answer. Said out loud, because a phone that misses its
-+      // new-shape items would otherwise leave no trail at all.
-+      rt.warn?.('ds-bot: room-chat could not page the group Session for %s: %s', room.id, error?.message ?? error)
-+    }
-+    const running = [...rt.roomProgress.values()].filter(round => round.roomId === room.id)
-+    return {
-+      ...legacy,
-+      // Everything the Session-shaped answer has, beside the old one: a client
-+      // written for the new shape reads `sessionItems` with `sessionCursor`.
-+      ...(sessionItems === undefined ? {} : { sessionItems }),
-+      ...(sessionCursor === null ? {} : { sessionCursor }),
-+      running: legacy.running || running.length > 0,
-+      speaking: legacy.speaking ?? running.map(round => round.speaking).find(Boolean) ?? null,
-+    }
-+  }
-+
-+  function memoryTarget(body) {
-+    return body.roomId !== undefined && body.roomId !== null ? { roomId: String(body.roomId) } : { botId: String(body.botId ?? '') }
-+  }
-+
-+  async function usageSummary(body) {
-+    const bot = rt.botOf(String(body.botId ?? ''))
-+    if (bot === undefined) throw Object.assign(new Error('Unknown Bot'), { code: 'bot/not-found' })
-+    const timeZone = typeof body.timeZone === 'string' ? body.timeZone.slice(0, 64) : undefined
-+    const view = await rt.usageView({ timeZone })
-+    const owner = view.owners.findIndex(entry => entry.kind === 'bot' && entry.id === bot.id)
-+    const rows = owner < 0 ? [] : view.rows.filter(row => row[1] === owner)
-+    const hourOf = hourKeys(timeZone)
-+    const since = hours => hourOf(Date.now() - (hours - 1) * 3_600_000)
-+    const within = hours => rows.filter(row => row[0] >= since(hours))
-+    const month = within(24 * 30)
-+    const models = view.models.map((model, index) => ({ key: model.key, name: model.name, ...totals(month.filter(row => row[2] === index)) }))
-+      .filter(model => model.calls > 0 || model.input > 0 || model.output > 0)
-+    return { botId: bot.id, day: totals(within(24)), week: totals(within(24 * 7)), month: totals(month), models, scanning: view.scanning }
-+  }
-+
-+
-+  // The group's goal, as the phone draws it: the panel's stages, each with its
-+  // acceptance and the members' tasks, and the goal's own words.
-+  function goalView(body) {
-+    const roomId = typeof body?.roomId === 'string' ? body.roomId : ''
-+    const room = rt.roomOf(roomId)
-+    // TEMP diagnostic: what this read actually saw.
-+    try {
-+      appendFileSync('/root/.dsh/bot/goalview.log', `${JSON.stringify({
-+        at: Date.now(), asked: roomId, found: room !== undefined,
-+        id: room?.id, name: room?.name, hasGoal: room?.goal !== undefined,
-+        status: room?.goal?.status, title: room?.goal?.title,
-+      })}
-+`)
-+    } catch {}
-+    if (room === undefined) throw Object.assign(new Error('Unknown group chat'), { code: 'bot/not-found' })
-+    const goal = room.goal
-+    if (goal === undefined) return { roomId: room.id, goal: null }
-+    const stages = (goal.stages ?? []).map((stage, index) => ({
-+      title: stage.title,
-+      acceptance: stage.acceptance,
-+      status: stage.status ?? (index < goal.current ? 'passed' : index === goal.current ? 'active' : 'pending'),
-+      evidence: stage.evidence,
-+      reworks: stage.reworks ?? 0,
-+      feedback: stage.feedback,
-+      tasks: (stage.tasks ?? []).map(task => ({
-+        botId: task.botId,
-+        bot: rt.botOf(task.botId)?.name ?? task.botId,
-+        color: rt.botOf(task.botId)?.color,
-+        task: task.task,
-+        status: task.status ?? 'pending',
-+        rework: task.reworkCount ?? 0,
-+        feedback: task.feedback ?? null,
-+      })),
-+    }))
-+    return {
-+      roomId: room.id,
-+      goal: {
-+        id: goal.id,
-+        revision: goal.revision,
-+        status: goal.status,
-+        title: goal.title,
-+        objective: goal.objective,
-+        acceptance: goal.acceptance,
-+        constraints: goal.constraints ?? [],
-+        current: goal.current,
-+        stageCount: stages.length,
-+        // The rest of what the web panel draws: a draft's brief, the closing
-+        // words of a finished goal, and whether it waits on the user.
-+        brief: goal.brief,
-+        summary: goal.summary,
-+        evidence: goal.evidence,
-+        reason: goal.reason,
-+        idle: goal.idle === true,
-+        stages,
-+      },
-+    }
-+  }
-+
-+  async function mobileEndpoint(endpoint, body) {
-+    switch (endpoint) {
-+      case 'hello': return hello(body)
-+      case 'notices': return notices(body)
-+      case 'avatar': return avatar(body)
-+      case 'room-chat': return roomChat(body)
-+      case 'goal-view': return goalView(body)
-+      case 'usage-summary': return usageSummary(body)
-+      case 'memory-edit': return rt.memoryEdit({ ...memoryTarget(body), scope: body.scope, topic: body.topic, text: body.text, next: body.next })
-+      case 'memory-add': return rt.memoryAdd({ ...memoryTarget(body), scope: body.scope, topic: body.topic, text: body.text })
-+      default: throw Object.assign(new Error(`Unknown endpoint ${endpoint}`), { code: 'bot/not-found' })
-+    }
-+  }
-+
-+  Object.assign(rt, { addNotice, mobileEndpoint })
-+}
-diff --git a/ds-bot/src/host/parts.js b/ds-bot/src/host/parts.js
-index 6cdb6749..7e6b00b4 100644
---- a/ds-bot/src/host/parts.js
-+++ b/ds-bot/src/host/parts.js
-@@ -166,6 +166,19 @@ export function canonicalHeadings(note, names) {
-   return lines.join('\n')
- }
- 
-+/** A picture or a file as the phone names it: the engine reads an image back by its id
-+ * with the byte length and dimensions it was stored with, so all of them go along. */
-+const fileRef = file => ({
-+  id: file?.attachmentId ?? file?.id ?? '',
-+  ...(file?.name ? { name: file.name } : {}),
-+  // The key is always present, as the engine's own shape has it: a reader tells a file
-+  // it cannot preview (no media type) from one it can, without guessing from the name.
-+  mediaType: file?.mediaType,
-+  ...(Number.isFinite(file?.bytes) ? { bytes: file.bytes } : {}),
-+  ...(Number.isFinite(file?.width) ? { width: file.width } : {}),
-+  ...(Number.isFinite(file?.height) ? { height: file.height } : {}),
-+})
-+
- export function install(rt) {
-   const { ctx, config, state } = rt
- 
-@@ -1602,9 +1615,21 @@ export function install(rt) {
-       const source = event.data?.source
-       if (source?.kind === 'user') {
-         const content = Array.isArray(event.data.content) ? event.data.content : []
--        const images = content.filter(block => block?.type === 'image').length
-+        const images = content.filter(block => block?.type === 'image' && !block.offloaded)
-+        // The phone draws the pictures and files themselves, so the line names them;
-+        // `images` stays as the count a client without that read still shows.
-+        const attachments = [...images, ...content.filter(block => block?.type === 'file' && block.attachment !== undefined)]
-+          .map(block => block.attachment)
-         const via = viaOf(source)
--        stamp(event, { kind: 'user', text: textOf(content), ...(images > 0 ? { images } : {}), ...(via ? { via } : {}), time: event.time })
-+        stamp(event, {
-+          kind: 'user',
-+          text: textOf(content),
-+          ...(typeof source.rpcId === 'string' && source.rpcId !== '' ? { rpcId: source.rpcId } : {}),
-+          ...(images.length > 0 ? { images: images.length } : {}),
-+          ...(attachments.length > 0 ? { files: attachments.map(fileRef) } : {}),
-+          ...(via ? { via } : {}),
-+          time: event.time,
-+        })
-       } else if (source?.kind === REPLY_KIND) {
-         const text = textOf(event.data.content)
-         const reply = readReply(text)
 diff --git a/ds-bot/src/host/prompt.js b/ds-bot/src/host/prompt.js
 index 46e11ba4..06b18e5f 100644
 --- a/ds-bot/src/host/prompt.js
@@ -13165,53 +11855,6 @@ index 46e11ba4..06b18e5f 100644
        ].join('\n')
      }
      const room = rt.roomOf(id)
-diff --git a/ds-bot/src/host/queue.js b/ds-bot/src/host/queue.js
-new file mode 100644
-index 00000000..7fbdee77
---- /dev/null
-+++ b/ds-bot/src/host/queue.js
-@@ -0,0 +1,41 @@
-+// 队列（agent inbox）到 App 的映射。契约里的 inbox payload 和 send 的 itemId/slot 都从这里来。
-+//
-+// 真相在 agent-loop 注册的 `inbox` 投影：next-turn / next-step / inFlight。
-+// inFlight 不列给 App：那不是队列，是已经进回合的。
-+import { textOf } from './text.js'
-+
-+export const QUEUE_SLOTS = ['next-turn', 'next-step']
-+
-+function queueMessage(message) {
-+  return {
-+    itemId: typeof message?.id === 'string' ? message.id : String(message?.id ?? ''),
-+    rpcId: typeof message?.source?.rpcId === 'string' && message.source.rpcId !== '' ? message.source.rpcId : null,
-+    text: textOf(Array.isArray(message?.content) ? message.content : []),
-+    time: Number.isFinite(message?.time) ? message.time : null,
-+  }
-+}
-+
-+// canSteer 由 Host 算：条目在 next-turn 且回合正在跑，才允许「改为插话」。
-+export function queueView(sessionId, projection, running) {
-+  const inbox = projection?.inbox ?? {}
-+  const list = (slot) => (Array.isArray(inbox[slot]) ? inbox[slot] : []).map((message) => ({
-+    ...queueMessage(message),
-+    canSteer: slot === 'next-turn' && running === true,
-+  }))
-+  return {
-+    sessionId,
-+    nextTurn: list('next-turn'),
-+    nextStep: list('next-step'),
-+  }
-+}
-+
-+// send 之后用客户端给的 requestId 在队列里精确找回该条，拿到 itemId 和 slot。
-+export function findQueueItem(projection, requestId) {
-+  if (typeof requestId !== 'string' || requestId === '') return null
-+  const inbox = projection?.inbox ?? {}
-+  for (const slot of QUEUE_SLOTS) {
-+    const found = (Array.isArray(inbox[slot]) ? inbox[slot] : []).find((message) => message?.source?.rpcId === requestId)
-+    if (found !== undefined) return { itemId: String(found.id), slot }
-+  }
-+  return null
-+}
 diff --git a/ds-bot/src/host/remote.js b/ds-bot/src/host/remote.js
 new file mode 100644
 index 00000000..33bad1d4
@@ -17449,7 +16092,7 @@ index 00000000..f6ba4ef6
 +  }, { prepend: true })
 +}
 diff --git a/ds-bot/src/host/turns.js b/ds-bot/src/host/turns.js
-index 0cfa962f..c1adcdbd 100644
+index 36e76fe7..e0d950fd 100644
 --- a/ds-bot/src/host/turns.js
 +++ b/ds-bot/src/host/turns.js
 @@ -702,6 +702,14 @@ export function install(rt) {
@@ -17486,7 +16129,7 @@ index 0cfa962f..c1adcdbd 100644
              reportBack: source.reportBack === true,
              ...(source.member ? { member: true } : {}),
              // Who the whole post called. `text` may be only its opening (attachLong).
-@@ -991,6 +1004,16 @@ export function install(rt) {
+@@ -993,6 +1006,16 @@ export function install(rt) {
          const shown = entry.shown > 0 || (info?.retried === true && promisedOpenings.delete(info.exchangeId))
          const { lastText, lastCalled } = entry
          const toolCount = entry.toolCount ?? 0
@@ -17503,19 +16146,6 @@ index 0cfa962f..c1adcdbd 100644
          const suppressedSubagent = entry.suppressedSubagent === true
          // A turn stopped for a switch goes on in the next part, which answers instead.
          const switched = entry.switched === true
-diff --git a/ds-bot/src/host/usage.js b/ds-bot/src/host/usage.js
-index 831a4ecb..7bfddd04 100644
---- a/ds-bot/src/host/usage.js
-+++ b/ds-bot/src/host/usage.js
-@@ -213,7 +213,7 @@ function sqliteLedger(DatabaseSync, path) {
- }
- 
- // Every hour bucket in one time zone, as `YYYY-MM-DD HH`.
--function hourKeys(timeZone) {
-+export function hourKeys(timeZone) {
-   let format
-   try {
-     format = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' })
 diff --git a/ds-bot/src/shared/fold-at.js b/ds-bot/src/shared/fold-at.js
 new file mode 100644
 index 00000000..8cc991b7
@@ -17665,7 +16295,7 @@ index 00000000..3588b823
 +  return parts.join(' · ')
 +}
 diff --git a/ds-bot/test/app-ready.test.js b/ds-bot/test/app-ready.test.js
-index 4e5b0ef4..3d7723ee 100644
+index cd7920ff..87c0eead 100644
 --- a/ds-bot/test/app-ready.test.js
 +++ b/ds-bot/test/app-ready.test.js
 @@ -23,9 +23,11 @@ let hooks
@@ -17822,40 +16452,13 @@ index 00000000..c179abc5
 +  } finally { b.done() }
 +})
 diff --git a/ds-bot/test/bot-messages.test.js b/ds-bot/test/bot-messages.test.js
-index 16c33dfa..206b464a 100644
+index 50848f4f..ceb9b86c 100644
 --- a/ds-bot/test/bot-messages.test.js
 +++ b/ds-bot/test/bot-messages.test.js
-@@ -783,6 +783,34 @@ test('an agentless part keeps the turn that opened on an older page', async () =
+@@ -783,6 +783,7 @@ test('an agentless part keeps the turn that opened on an older page', async () =
    assert.equal(first?.turn, 6)
  })
  
-+test('a user line names its pictures and files, so the phone can draw them', () => {
-+  const rt = earlierParts([])
-+  const items = rt.displayItems('b1', [
-+    {
-+      type: 'user/message',
-+      seq: 1,
-+      time: 1,
-+      data: {
-+        content: [
-+          { type: 'text', text: '' },
-+          { type: 'image', attachment: { attachmentId: 'sha256:a', mediaType: 'image/png', name: 'shot.png', bytes: 12 } },
-+          { type: 'image', attachment: { attachmentId: 'sha256:old', mediaType: 'image/png' }, offloaded: true },
-+          { type: 'file', attachment: { attachmentId: 'sha256:b', name: 'notes.pdf', bytes: 34 } },
-+        ],
-+        source: { kind: 'user' },
-+      },
-+    },
-+  ])
-+  // An offloaded picture is no longer there to fetch, so it is not named.
-+  // `bytes` is this fork's own addition: the client prints the size beside the name.
-+  assert.deepEqual(items[0].files, [
-+    { id: 'sha256:a', name: 'shot.png', mediaType: 'image/png', bytes: 12 },
-+    { id: 'sha256:b', name: 'notes.pdf', mediaType: undefined, bytes: 34 },
-+  ])
-+  assert.equal(items[0].images, 1)
-+  assert.equal(items[0].text, '')
-+})
 +
  test('each text block of a Bot message is an entry of its own, as each is a bubble of its own', async () => {
    const rt = earlierParts([
@@ -18098,62 +16701,44 @@ index 00000000..c1955e15
 +  assert.equal(view.tasks.find(task => task.title === 'Build').status, 'cancelled')
 +})
 diff --git a/ds-bot/test/i18n.test.js b/ds-bot/test/i18n.test.js
-deleted file mode 100644
-index 315ddf48..00000000
+index c993240a..c6407b6a 100644
 --- a/ds-bot/test/i18n.test.js
-+++ /dev/null
-@@ -1,51 +0,0 @@
--import assert from 'node:assert/strict'
--import { readdirSync, readFileSync } from 'node:fs'
--import { test } from 'node:test'
--import { DICTIONARY, hostText, installLocale, language, t } from '../src/client/i18n.js'
--
--function fakeLocale(active) {
--  const dicts = new Map()
--  return {
--    register: (ns, locale, dict) => { dicts.set(`${ns}:${locale}`, dict); return () => dicts.delete(`${ns}:${locale}`) },
--    bind: ns => (key, params) => {
--      const text = (active === 'zh' ? dicts.get(`${ns}:zh`)?.[key] : undefined) ?? key
--      return params ? text.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match)) : text
--    },
--    getLocale: () => ({ active }),
--  }
--}
--
--test('every literal the client translates has a Chinese entry', () => {
--  const dir = new URL('../src/client/', import.meta.url)
--  const missing = []
--  for (const name of readdirSync(dir).filter(file => file.endsWith('.js'))) {
--    const text = readFileSync(new URL(name, dir), 'utf8')
--    for (const match of text.matchAll(/\bt\(\s*(['"])((?:\\.|(?!\1).)*)\1/g)) {
--      const key = match[2].replace(/\\'/g, "'")
--      if (!Object.hasOwn(DICTIONARY.zh, key)) missing.push(`${name}: ${key}`)
--    }
--  }
--  assert.deepEqual(missing, [])
--})
--
--test('copy follows the DSH language and stays English without a locale service', () => {
--  assert.equal(t('Message {name}', { name: 'Chief' }), 'Message Chief')
--  assert.equal(language(), 'en')
--  const off = installLocale(fakeLocale('zh'))
--  try {
--    assert.equal(language(), 'zh')
--    assert.equal(t('Message {name}', { name: 'Chief' }), '给 Chief 发消息')
--    assert.equal(t('Model'), '模型')
--    assert.equal(hostText('A Bot named Writer already exists'), '已经有叫 Writer 的 Bot 了')
--    assert.equal(hostText('The team needs at least one Main Bot'), '团队至少要有一个主 Bot')
--    assert.equal(hostText('Something new'), 'Something new')
--    // Whole memory messages, not only their first words, become Chinese.
--    assert.equal(hostText('An entry holds at most 300 characters; this one has 301. Keep one fact per entry, or save the details as several entries in a topic.'), '一条记忆最多 300 个字符，这条有 301 个')
--    assert.equal(hostText("Writer's memory's MEMORY.md would have 4100 of its 4000 characters. Make room first: move details into a topic."), '主记忆会超过 4000 个字符的上限，请先删掉一些')
--    assert.equal(hostText('There is no entry 9.'), '没有第 9 条')
--  } finally {
--    off()
--  }
--  assert.equal(t('Model'), 'Model')
--  assert.equal(hostText('A Bot named Writer already exists'), 'A Bot named Writer already exists')
--})
++++ b/ds-bot/test/i18n.test.js
+@@ -2,6 +2,11 @@ import assert from 'node:assert/strict'
+ import { readdirSync, readFileSync } from 'node:fs'
+ import { test } from 'node:test'
+ import { DICTIONARY, LANGUAGES, dateLocale, hostText, installLocale, language, t } from '../src/client/i18n.js'
++// The fork's own screens carry their Chinese in their own file, so i18n.js stays upstream's.
++import '../src/client/zh-extra.js'
++
++const FORK_SOURCE = readFileSync(new URL('../src/client/zh-extra.js', import.meta.url), 'utf8')
++const FORK_KEYS = new Set([...FORK_SOURCE.matchAll(/(?:'((?:\\.|[^'])*)'|([A-Za-z_$][\w$]*))\s*:/g)].map(match => (match[1] ?? match[2]).replace(/\\'/g, "'")))
+ 
+ function fakeLocale(initial = 'zh') {
+   let active = initial
+@@ -58,7 +63,9 @@ test('every literal the client translates has an entry in all supported locales'
+     const text = readFileSync(new URL(name, dir), 'utf8')
+     for (const match of text.matchAll(/\bt\(\s*(['"])((?:\\.|(?!\1).)*)\1/g)) {
+       const key = match[2].replace(/\\'/g, "'")
+-      for (const loc of locales) {
++      // The fork's own copy is Chinese only: the other locales fall back to its English key.
++      const localesFor = FORK_KEYS.has(key) ? ['zh'] : locales
++      for (const loc of localesFor) {
+         if (!Object.hasOwn(DICTIONARY[loc] ?? {}, key)) missing.push(`${loc}:${name}: ${key}`)
+       }
+     }
+@@ -66,6 +73,11 @@ test('every literal the client translates has an entry in all supported locales'
+   assert.deepEqual(missing, [])
+ })
+ 
++test('the fork keeps its own copy in Chinese only', () => {
++  const missing = [...FORK_KEYS].filter(key => typeof DICTIONARY.zh?.[key] !== 'string' || DICTIONARY.zh[key] === '')
++  assert.deepEqual(missing, [])
++})
++
+ test('copy follows the DSH language across all locales and stays English without a locale service', () => {
+   assert.equal(t('Message {name}', { name: 'Chief' }), 'Message Chief')
+   assert.equal(language(), 'en')
 diff --git a/ds-bot/test/image-readings.test.js b/ds-bot/test/image-readings.test.js
 new file mode 100644
 index 00000000..df165d8b
@@ -18192,10 +16777,10 @@ index 00000000..df165d8b
 +  assert.equal(stripImageReadings(`look\n${failed}`, undefined), 'look')
 +})
 diff --git a/ds-bot/test/install.test.js b/ds-bot/test/install.test.js
-index 9b7815b3..2422b4bb 100644
+index d2c314a1..2422b4bb 100644
 --- a/ds-bot/test/install.test.js
 +++ b/ds-bot/test/install.test.js
-@@ -31,101 +31,15 @@ function start(state, { config = {}, services } = {}) {
+@@ -31,107 +31,15 @@ function start(state, { config = {}, services } = {}) {
  
  // Listeners run in registration order; the team tools are not in this list
  // because they are registered per Bot session scope, not globally.
@@ -18206,10 +16791,12 @@ index 9b7815b3..2422b4bb 100644
 -  assert.deepEqual(ctx.calls, [
 -    'effect ds-bot: diagnostics log',
 -    'effect ds-bot: state lock',
+-    'effect ds-bot: ledger',
 -    'on llm/adapters-updated',
 -    'on credentials/reference-updated',
 -    'on credentials/record-updated',
 -    'on settings/document-updated',
+-    'effect ds-bot: auxiliary llm retry',
 -    'on subagent/start',
 -    'on subagent/end',
 -    'on session/event',
@@ -18230,9 +16817,9 @@ index 9b7815b3..2422b4bb 100644
 -    'on system-prompt/assemble',
 -    'on session/event',
 -    'effect ds-bot: chat index',
+-    'effect ds-bot: group rounds',
 -    'effect ds-bot: group step lines',
 -    'on llm/stream',
--    'effect ds-bot: group log',
 -    'on approval/request (prepend)',
 -    'on agent/inbox/discarded',
 -    'on session/event',
@@ -18256,6 +16843,7 @@ index 9b7815b3..2422b4bb 100644
 -    'on workspace/session-activity',
 -    'on agent/status',
 -    'on llm/stream',
+-    'on session/event',
 -    'on llm/stream',
 -    'on agent/status',
 -    'on tools/execute',
@@ -18282,6 +16870,8 @@ index 9b7815b3..2422b4bb 100644
 -    'on llm/stream',
 -    'effect ds-bot: update check',
 -    'effect ds-bot: dsh update install',
+-    'on session/event',
+-    'effect ds-bot: mobile room signals',
 -    'on agent/status',
 -    'on session/event',
 -    'on agent/assistant-stream',
@@ -18290,6 +16880,7 @@ index 9b7815b3..2422b4bb 100644
 -    'effect ds-bot: live feed',
 -    'on session/event',
 -    'effect ds-bot: im',
+-    'effect ds-bot: phone link',
 -    'effect ds-bot: api route',
 -    'route POST /api/bot',
 -    'effect ds-bot: load state',
@@ -18691,425 +17282,541 @@ index ebcae6d3..00000000
 -  }
 -  assert.match(ruleOf('body[data-bt-layout=flat] .bt-bubble'), /background:none/)
 -})
-diff --git a/ds-bot/test/mobile-avatar.test.js b/ds-bot/test/mobile-avatar.test.js
-new file mode 100644
-index 00000000..3e9c9428
---- /dev/null
-+++ b/ds-bot/test/mobile-avatar.test.js
-@@ -0,0 +1,92 @@
-+import assert from 'node:assert/strict'
-+import { test } from 'node:test'
-+import { install } from '../src/host/channel.js'
-+
-+const PHOTO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
-+
-+function runtime(bots) {
-+  const routes = []
-+  const ctx = {
-+    on: () => () => {},
-+    effect: fn => { const dispose = fn(); return typeof dispose === 'function' ? dispose : () => {} },
-+    get: () => undefined,
-+    provide: () => {},
-+    tool: () => {},
-+    sessions: { flush: async () => {} },
-+    connection: { fetch: { register: route => { routes.push(route); return () => {} } } },
-+  }
-+  const empty = () => ({})
-+  const rt = {
-+    ctx,
-+    state: { revision: 3, mainBotIds: [], prefs: {}, agents: {}, rooms: {}, bots },
-+    refresh: async () => {},
-+    readOnly: () => undefined,
-+    memoryEnabled: true,
-+    load: async () => {},
-+    save: async () => {},
-+    bootstrap: async () => {},
-+    catalog: async () => {},
-+    loadSecrets: async () => {},
-+    chatOf: id => `${id}-chat`,
-+    archivesView: empty,
-+    workView: empty,
-+    roomWorkView: empty,
-+    approvalsView: () => [],
-+    secretsView: empty,
-+    capabilityLibraryView: () => [],
-+    cachedCatalog: () => [],
-+    cachedDefault: () => null,
-+    browserEnabled: false,
-+    noteFailure: () => {},
-+  }
-+  // A missing host helper answers empty: the test only reads the avatar projection.
-+  install(new Proxy(rt, { get: (target, key) => (key in target ? target[key] : () => ({})) }))
-+  return { routes }
-+}
-+
-+async function ask(routes, endpoint, payload) {
-+  const route = routes.find(entry => entry.path === '/api/bot')
-+  const request = { json: async () => ({ endpoint, payload }), signal: new AbortController().signal }
-+  return (await route.fetch(request)).json()
-+}
-+
-+test('a list asked with avatars: "ref" sends the reference, not the photo', async () => {
-+  const { routes } = runtime({ b1: { id: 'b1', name: 'Ada', avatar: { image: PHOTO, shape: 'circle' } } })
-+  const answer = await ask(routes, 'state', { avatars: 'ref' })
-+  assert.equal(answer.ok, true, answer.error?.message)
-+  const avatar = answer.value.bots[0].avatar
-+  assert.equal(avatar.image, undefined)
-+  assert.match(avatar.imageRef, /^avatar:[0-9a-f]{16}$/)
-+  assert.equal(avatar.shape, 'circle')
-+})
-+
-+test('without the flag the photo travels as before', async () => {
-+  const { routes } = runtime({ b1: { id: 'b1', name: 'Ada', avatar: { image: PHOTO } } })
-+  const answer = await ask(routes, 'state', {})
-+  assert.equal(answer.value.bots[0].avatar.image, PHOTO)
-+  assert.equal(answer.value.bots[0].avatar.imageRef, undefined)
-+})
-+
-+test('the avatar endpoint answers the same reference the list named', async () => {
-+  const { routes } = runtime({ b1: { id: 'b1', name: 'Ada', avatar: { image: PHOTO } } })
-+  const list = await ask(routes, 'state', { avatars: 'ref' })
-+  const answer = await ask(routes, 'avatar', { botId: 'b1' })
-+  assert.equal(answer.ok, true, answer.error?.message)
-+  assert.equal(answer.value.image, PHOTO)
-+  assert.equal(answer.value.ref, list.value.bots[0].avatar.imageRef)
-+})
-+
-+test('a Bot without a photo answers two nulls, not an error', async () => {
-+  const { routes } = runtime({ b1: { id: 'b1', name: 'Ada', avatar: { shape: 'whale' } } })
-+  const answer = await ask(routes, 'avatar', { botId: 'b1' })
-+  assert.equal(answer.ok, true)
-+  assert.equal(answer.value.image, null)
-+  assert.equal(answer.value.ref, null)
-+})
-+
-+test('an unknown Bot is refused by name', async () => {
-+  const { routes } = runtime({})
-+  const answer = await ask(routes, 'avatar', { botId: 'nope' })
-+  assert.equal(answer.ok, false)
-+  assert.equal(answer.error.code, 'bot/not-found')
-+})
-diff --git a/ds-bot/test/mobile-endpoints.test.js b/ds-bot/test/mobile-endpoints.test.js
-new file mode 100644
-index 00000000..e70fb179
---- /dev/null
-+++ b/ds-bot/test/mobile-endpoints.test.js
-@@ -0,0 +1,204 @@
-+// The two endpoints the phone app reads but the web view never needed: `room-chat` and
-+// `notices`. Their fields come from dsh_client's `DsBotRoomPage` and `DsBotNotices`, so
-+// these keep the answers to that shape and to the three cases every new endpoint owes:
-+// a client from another run, a missing field, and input the host does not know.
-+import assert from 'node:assert/strict'
-+import { test } from 'node:test'
-+import { install as installChannel, CAPABILITIES } from '../src/host/channel.js'
-+import { install as installMobile } from '../src/host/mobile.js'
-+
-+const ROOM_ID = 'room'
-+
-+function runtime({ revision = 12 } = {}) {
-+  const routes = []
-+  const ctx = {
-+    on: () => () => {},
-+    effect: fn => { const dispose = fn(); return typeof dispose === 'function' ? dispose : () => {} },
-+    get: () => undefined,
-+    provide: () => {},
-+    tool: () => {},
-+    sessions: { flush: async () => {} },
-+    sessionController: { prompt: async request => { prompts.push(request) } },
-+    connection: { fetch: { register: route => { routes.push(route); return () => {} } } },
-+  }
-+  const prompts = []
-+  const bots = { writer: { id: 'writer', name: 'Writer', color: 'blue', sessionId: 's-writer' } }
-+  const rooms = {
-+    [ROOM_ID]: {
-+      id: ROOM_ID,
-+      name: 'Launch plan',
-+      seq: 3,
-+      members: ['writer'],
-+      log: [
-+        { seq: 1, who: 'User', text: 'Kick off the plan' },
-+        { seq: 2, who: 'Writer', botId: 'writer', text: 'Here is a draft' },
-+        { seq: 3, who: 'DS Bot', kind: 'notice', reason: 'missed', text: '' },
-+      ],
-+    },
-+  }
-+  const rt = {
-+    ctx,
-+    state: { revision, mainBotIds: [], prefs: {}, agents: {}, rooms, bots, questions: {}, views: {} },
-+    refresh: async () => {},
-+    readOnly: () => undefined,
-+    memoryEnabled: true,
-+    load: async () => {},
-+    save: async () => {},
-+    catalog: async () => {},
-+    loadSecrets: async () => {},
-+    chatOwners: new Map([['s-writer', 'writer']]),
-+    chatOf: id => (bots[id]?.sessionId ?? id),
-+    sessionOfRoom: room => (room === undefined ? undefined : room.sessionId ?? room.id),
-+    selfOf: () => undefined,
-+    roomOf: id => (id === undefined ? undefined : rooms[id]),
-+    botOf: id => (id === undefined ? undefined : bots[id]),
-+    pastOwners: new Map(),
-+    ensureCapabilities: async () => {},
-+    roomProgress: new Map(),
-+  }
-+  installMobile(rt)
-+  installChannel(rt)
-+  return { routes, rt, rooms, bots, prompts }
-+}
-+
-+async function ask(routes, endpoint, payload) {
-+  const route = routes.find(entry => entry.path === '/api/bot')
-+  const request = { json: async () => ({ endpoint, payload }), signal: new AbortController().signal }
-+  return (await route.fetch(request)).json()
-+}
-+
-+const value = async (routes, endpoint, payload) => {
-+  const answer = await ask(routes, endpoint, payload)
-+  assert.equal(answer.ok, true, answer.error?.message)
-+  return answer.value
-+}
-+
-+
-+
-+
-+
-+
-+
-+test('the advertised capabilities cover the two new reads, and an unknown endpoint stays an answer', async () => {
-+  assert.equal(CAPABILITIES.includes('room-chat'), true)
-+  assert.equal(CAPABILITIES.includes('notices'), true)
-+  const { routes } = runtime()
-+  const unknown = await ask(routes, 'room-chat-history', { roomId: ROOM_ID })
-+  assert.equal(unknown.ok, false)
-+  assert.equal(unknown.error.code, 'bot/not-found')
-+});
-+
-+test('a file with no text still reaches the session', async () => {
-+  const { routes, prompts } = runtime()
-+  const answer = await ask(routes, 'send', { sessionId: 's-writer', text: '', fileReceiptIds: ['r1', 'r2'] })
-+  assert.equal(answer.ok, true, answer.error?.message)
-+  assert.deepEqual(prompts[0].content, [{ type: 'file', receiptId: 'r1' }, { type: 'file', receiptId: 'r2' }])
-+});
-+
-+test('a message with no text and no attachments is nothing to send', async () => {
-+  const { routes, prompts } = runtime()
-+  const answer = await ask(routes, 'send', { sessionId: 's-writer', text: '  ', images: [], fileReceiptIds: [] })
-+  assert.deepEqual(answer, { ok: false, error: { code: 'bot/invalid', message: 'Nothing to send', details: {} } })
-+  assert.equal(prompts.length, 0)
-+});
-+
-+test('an image without data or a media type is dropped, not sent as a broken block', async () => {
-+  const { routes, prompts } = runtime()
-+  const answer = await ask(routes, 'send', {
-+    sessionId: 's-writer',
-+    text: 'look',
-+    images: [
-+      { mediaType: 'image/png' },
-+      { data: 'AAAA' },
-+      { mediaType: 'image/png', data: '' },
-+      null,
-+      { mediaType: 'image/png', data: 'AAAA', name: 'shot.png' },
-+    ],
-+  })
-+  assert.equal(answer.ok, true, answer.error?.message)
-+  assert.deepEqual(prompts[0].content, [
-+    { type: 'text', text: 'look' },
-+    { type: 'image', mediaType: 'image/png', data: 'AAAA', name: 'shot.png' },
-+  ])
-+});
-+
-+test('more inline images than one message carries is refused', async () => {
-+  const { routes, prompts } = runtime()
-+  const images = Array.from({ length: 21 }, () => ({ mediaType: 'image/png', data: 'AAAA' }))
-+  const answer = await ask(routes, 'send', { sessionId: 's-writer', text: 'all of these', images })
-+  assert.equal(answer.ok, false)
-+  assert.equal(answer.error.message, 'Too many images')
-+  assert.equal(prompts.length, 0)
-+});
-+
-+
-+
-+
-+
-+// The group page and notices are read from the group Session's events now (mobile.js
-+// `roomChat`), not from the room log this file used to build: the cases above were
-+// written for that older shape and are being rewritten against a session fixture.
-+
-+test('a group page keeps the 0.2.7 item shape a phone reads', async () => {
-+  const { routes } = runtime()
-+  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
-+  assert.equal(page.roomId, ROOM_ID)
-+  assert.deepEqual(page.items.map(item => item.kind), ['user', 'bot', 'event'])
-+  assert.deepEqual(page.items[0], { kind: 'user', id: '1', text: 'Kick off the plan', name: 'User' })
-+  assert.equal(page.items[1].botId, 'writer')
-+  assert.equal(page.items[1].name, 'Writer')
-+  assert.equal(page.items[1].color, 'blue')
-+  assert.equal(page.items[2].event, 'missed')
-+  assert.equal(page.cursor, null)
-+  assert.equal(page.running, false)
-+  // The Session-shaped answer is not there on a Host that cannot page one — and its
-+  // absence must not take the old answer down.
-+  assert.equal(page.sessionItems, undefined)
-+});
-+
-+test('a line with files and a long body keeps files, images and whole', async () => {
-+  const { routes, rooms } = runtime()
-+  rooms[ROOM_ID].log = [
-+    {
-+      seq: 1,
-+      who: 'Writer',
-+      botId: 'writer',
-+      text: 'see the attachments',
-+      images: [{ attachmentId: 'a1', name: 'a.png', mediaType: 'image/png' }],
-+      files: [{ attachmentId: 'f1', name: 'notes.txt', mediaType: 'text/plain' }],
-+      length: 900,
-+    },
-+  ]
-+  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
-+  const item = page.items[0]
-+  assert.equal(item.images, 2)
-+  assert.deepEqual(item.files, [
-+    { id: 'a1', name: 'a.png', mediaType: 'image/png' },
-+    { id: 'f1', name: 'notes.txt', mediaType: 'text/plain' },
-+  ])
-+  assert.deepEqual(item.whole, { length: 900 })
-+});
-+
-+test('a group page pages back by beforeSeq, newest page first', async () => {
-+  const { routes, rooms } = runtime()
-+  rooms[ROOM_ID].log = Array.from({ length: 65 }, (_, index) => ({ seq: index + 1, who: 'User', text: `m${index + 1}` }))
-+  const first = await value(routes, 'room-chat', { roomId: ROOM_ID })
-+  assert.equal(first.items.length, 60)
-+  assert.equal(first.items[0].text, 'm6')
-+  assert.deepEqual(first.cursor, { beforeSeq: 6 })
-+  const older = await value(routes, 'room-chat', { roomId: ROOM_ID, cursor: first.cursor })
-+  assert.equal(older.items.length, 5)
-+  assert.equal(older.items[0].text, 'm1')
-+  assert.equal(older.cursor, null)
-+});
-+
-+test('a group page that cannot read the Session still answers, and says why', async () => {
-+  const { routes, rt } = runtime()
-+  const logs = []
-+  rt.warn = (...args) => logs.push(args)
-+  const page = await value(routes, 'room-chat', { roomId: ROOM_ID })
-+  assert.equal(page.items.length, 3)
-+  assert.equal(page.sessionItems, undefined)
-+  assert.equal(logs.length, 1)
-+  assert.match(String(logs[0][0]), /room-chat could not page/)
-+});
-diff --git a/ds-bot/test/mobile-hello.test.js b/ds-bot/test/mobile-hello.test.js
-new file mode 100644
-index 00000000..788a2afd
---- /dev/null
-+++ b/ds-bot/test/mobile-hello.test.js
-@@ -0,0 +1,105 @@
-+import assert from 'node:assert/strict'
-+import { readFileSync } from 'node:fs'
-+import { test } from 'node:test'
-+import { install as installChannel, CAPABILITIES } from '../src/host/channel.js'
-+import { install as installFeed } from '../src/host/feed.js'
-+import { API_MIN, API_MAX } from '../src/host/constants.js'
-+
-+const pluginVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
-+
-+// The two host modules register Fetch routes; this runtime starts them without a store,
-+// so a test asks the route the way the phone app does.
-+function runtime() {
-+  const routes = []
-+  const ctx = {
-+    on: () => () => {},
-+    effect: fn => { const dispose = fn(); return typeof dispose === 'function' ? dispose : () => {} },
-+    get: () => undefined,
-+    provide: () => {},
-+    tool: () => {},
-+    sessions: { flush: async () => {} },
-+    connection: { fetch: { register: route => { routes.push(route); return () => {} } } },
-+  }
-+  const rt = {
-+    ctx,
-+    state: { revision: 7, mainBotIds: [], prefs: {}, agents: {}, rooms: {}, bots: [] },
-+    refresh: async () => {},
-+    readOnly: () => undefined,
-+    memoryEnabled: true,
-+    load: async () => {},
-+    save: async () => {},
-+    onSaved: () => () => {},
-+    catalog: async () => {},
-+    loadSecrets: async () => {},
-+    chatOwners: new Map(),
-+    selfOf: () => undefined,
-+  }
-+  installChannel(rt)
-+  installFeed(rt)
-+  return { routes, rt }
-+}
-+
-+async function ask(routes, payload) {
-+  const route = routes.find(entry => entry.path === '/api/bot')
-+  const request = { json: async () => ({ endpoint: 'hello', payload }), signal: new AbortController().signal }
-+  const answer = await (await route.fetch(request)).json()
-+  assert.equal(answer.ok, true, answer.error?.message)
-+  return answer.value
-+}
-+
-+test('hello answers the version both sides speak', async () => {
-+  const { routes } = runtime()
-+  const answer = await ask(routes, { client: { name: 'dsh-go', version: '0.1.0', platform: 'android' }, api: [API_MAX] })
-+  assert.equal(answer.api, API_MAX)
-+  assert.equal(answer.apiMin, API_MIN)
-+  assert.equal(answer.apiMax, API_MAX)
-+  assert.equal(answer.plugin.version, pluginVersion)
-+  assert.equal(answer.boot.length > 0, true)
-+  assert.equal(Number.isInteger(answer.seq), true)
-+  assert.equal(answer.revision, 7)
-+  assert.equal(answer.readOnly, null)
-+  assert.equal(answer.memory, true)
-+  assert.equal(answer.capabilities.includes('chat'), true)
-+})
-+
-+test('a version this host does not speak is answered with no api, not a guess', async () => {
-+  const { routes } = runtime()
-+  const answer = await ask(routes, { api: [API_MAX + 1] })
-+  assert.equal(answer.api, null)
-+  // The range is still told, so the client can say which side is old.
-+  assert.equal(answer.apiMin, API_MIN)
-+  assert.equal(answer.apiMax, API_MAX)
-+})
-+
-+test('a client that sends no version still learns the range', async () => {
-+  const { routes } = runtime()
-+  const answer = await ask(routes, {})
-+  assert.equal(answer.api, null)
-+  assert.equal(answer.apiMin, API_MIN)
-+})
-+
-+test('the advertised capabilities are all answered by the host', () => {
-+  const source = readFileSync(new URL('../src/host/channel.js', import.meta.url), 'utf8')
-+  const cases = new Set([...source.matchAll(/case '([a-z0-9-]+)':/g)].map(match => match[1]))
-+  // The client is told only what it may call; the host answers much more, for the
-+  // web client. Every advertised capability must have a case, not the other way round.
-+  const missing = [...CAPABILITIES].filter(capability => !cases.has(capability))
-+  assert.deepEqual(missing, [])
-+})
-+
-+test('the feed opens with hello carrying api, boot and seq', async () => {
-+  const { routes } = runtime()
-+  const route = routes.find(entry => entry.path === '/api/bot/feed')
-+  const response = await route.fetch({ signal: new AbortController().signal })
-+  const reader = response.body.getReader()
-+  const { value } = await reader.read()
-+  await reader.cancel()
-+  const text = new TextDecoder().decode(value)
-+  const line = text.split('\n').find(part => part.startsWith('data: '))
-+  const data = JSON.parse(line.slice('data: '.length))
-+  assert.equal(data.api, API_MAX)
-+  assert.equal(data.revision, 7)
-+  assert.equal(typeof data.boot, 'string')
-+  assert.equal(Number.isInteger(data.seq), true)
-+  assert.equal(text.startsWith('event: hello'), true)
-+})
+diff --git a/ds-bot/test/mobile.test.js b/ds-bot/test/mobile.test.js
+deleted file mode 100644
+index 909e103f..00000000
+--- a/ds-bot/test/mobile.test.js
++++ /dev/null
+@@ -1,529 +0,0 @@
+-import assert from 'node:assert/strict'
+-import { randomUUID } from 'node:crypto'
+-import { mkdtempSync, rmSync } from 'node:fs'
+-import { tmpdir } from 'node:os'
+-import { join } from 'node:path'
+-import { test } from 'node:test'
+-import { createRuntime } from '../index.js'
+-import { API_VERSION, CAPABILITIES, roomItems } from '../src/host/mobile.js'
+-import { fakeAttachments, fakeContext } from './fake-ctx.js'
+-import jpeg from 'jpeg-js'
+-import { PNG } from 'pngjs'
+-import { shrink } from '../src/host/preview-worker.js'
+-
+-// A team with no model: Sessions are made in memory, a group round runs on answers
+-// played back through the session/event listeners, and `history` holds the events
+-// each Session's page reads, oldest first.
+-function start() {
+-  const home = mkdtempSync(join(tmpdir(), 'ds-bot-mobile-'))
+-  const ctx = fakeContext({ services: { attachments: fakeAttachments() } })
+-  const sent = []
+-  const history = {}
+-  const inboxes = new Map()
+-  const inboxOf = (sessionId) => {
+-    if (!inboxes.has(sessionId)) inboxes.set(sessionId, { nextTurn: [], nextStep: [], remove: () => false })
+-    return inboxes.get(sessionId)
+-  }
+-  let sessions = 0
+-  const workspaces = new Map()
+-  Object.assign(ctx, {
+-    llm: {
+-      listProviders: () => [{ id: 'deepseek', name: 'DeepSeek' }],
+-      listModels: async () => [{ id: 'deepseek-v4-flash' }],
+-      resolveModelInfo: async () => ({}),
+-    },
+-    workspaceRegistry: {
+-      get: id => workspaces.get(id),
+-      resolveByPath: async () => undefined,
+-      create: async (path) => {
+-        const workspace = { id: `w${workspaces.size + 1}`, path }
+-        workspaces.set(workspace.id, workspace)
+-        return workspace
+-      },
+-      archiveSession: async () => {},
+-    },
+-    sessionController: {
+-      create: async () => ({ sessionId: `s${++sessions}` }),
+-      resolveAgent: async sessionId => ({ agent: { session: { id: sessionId, seq: (history[sessionId]?.at(-1)?.seq ?? 0) + 1 }, followup: message => sent.push({ sessionId, message }) } }),
+-      selectModel: async () => {},
+-      prompt: async request => sent.push({ sessionId: request.sessionId, prompt: request }),
+-      page: async ({ address, beforeSeq, maxMessages }) => {
+-        const all = (history[address.sessionId] ?? []).filter(event => beforeSeq === undefined || event.seq < beforeSeq)
+-        const events = maxMessages === undefined ? all : all.slice(-maxMessages)
+-        return { records: events.map(event => ({ event })), hasMore: events.length < all.length }
+-      },
+-    },
+-    sessionTitle: { rename: async () => {} },
+-    sessions: { flush: async () => {} },
+-  })
+-  const routes = {}
+-  const register = ctx.connection.fetch.register
+-  ctx.connection.fetch.register = (options) => {
+-    routes[options.path] = options
+-    return register(options)
+-  }
+-  const rt = createRuntime(ctx, { home })
+-  const call = async (endpoint, payload) => {
+-    const response = await routes['/api/bot'].fetch(new Request('http://localhost/api/bot', { method: 'POST', body: JSON.stringify({ endpoint, payload }) }))
+-    return response.json()
+-  }
+-  const emit = async (sessionId, event) => {
+-    for (const listener of ctx.listeners.get('session/event') ?? []) await listener({ id: sessionId }, event)
+-  }
+-  const relay = (roomId, callId) => ctx.registeredTools.get('group_relay')
+-    .execute({}, { agent: { id: roomId, inbox: inboxOf(roomId) }, callId, signal: new AbortController().signal })
+-  const answer = async (sessionId, exchangeId, text, turn) => {
+-    await emit(sessionId, { type: 'turn/start', data: { turn } })
+-    await emit(sessionId, { type: 'user/message', data: { source: { kind: 'bot', role: 'room', exchangeId }, content: [{ type: 'text', text: 'your turn' }] } })
+-    await emit(sessionId, { type: 'assistant/message', data: { turn, message: { content: [{ type: 'text', text }] } } })
+-    await emit(sessionId, { type: 'turn/end', data: { reason: { kind: 'stop' } } })
+-  }
+-  const stop = async () => {
+-    await ctx.dispose()
+-    rmSync(home, { recursive: true, force: true, maxRetries: 5 })
+-  }
+-  return { ctx, rt, call, emit, relay, answer, sent, history, routes, stop }
+-}
+-
+-const settle = () => new Promise(resolve => setTimeout(resolve, 20))
+-async function waitFor(check) {
+-  for (let at = 0; at < 200; at += 1) {
+-    const value = check()
+-    if (value !== undefined && value !== false) return value
+-    await settle()
+-  }
+-  throw new Error('the condition did not hold within 4 s')
+-}
+-const turnFor = (sent, ...earlier) => waitFor(() => sent.find(entry => !earlier.includes(entry) && entry.message?.source.role === 'room'))
+-
+-function reader(response) {
+-  const source = response.body.getReader()
+-  const decoder = new TextDecoder()
+-  let buffer = ''
+-  return async function next() {
+-    for (;;) {
+-      const end = buffer.indexOf('\n\n')
+-      if (end >= 0) {
+-        const block = buffer.slice(0, end)
+-        buffer = buffer.slice(end + 2)
+-        if (block.startsWith(':')) continue
+-        const field = name => block.split('\n').find(line => line.startsWith(`${name}: `))?.slice(name.length + 2)
+-        return { event: field('event'), data: JSON.parse(field('data')) }
+-      }
+-      const { value, done } = await source.read()
+-      if (done) return undefined
+-      buffer += decoder.decode(value, { stream: true })
+-    }
+-  }
+-}
+-
+-async function team(call) {
+-  const chief = (await call('state', {})).value.mainBotId
+-  const writer = (await call('create-bot', { name: 'Writer' })).value
+-  const room = (await call('create-room', { name: 'Launch', members: [chief, writer.id] })).value
+-  await call('update-room', { id: room.id, mode: 'everyone' })
+-  return { chief, writer, room }
+-}
+-
+-const user = (seq, text, time = seq) => ({ seq, time, type: 'user/message', data: { source: { kind: 'user' }, content: [{ type: 'text', text }] } })
+-const relayCall = (seq, callId) => ({ seq, time: seq, type: 'tool/call', data: { callId, name: 'group_relay', arguments: '{}' } })
+-// A settled round's result as the group's Session keeps it: the text group_relay
+-// returned (where its rows are in the group's book), or the replies of a round from
+-// before the ledger.
+-const relayResult = (seq, callId, result) => ({ seq, time: seq, type: 'tool/result', data: { message: { role: 'tool', toolCallId: callId, content: [{ type: 'text', text: typeof result === 'string' ? result : JSON.stringify({ replies: result, passed: [] }) }] } } })
+-
+-test('hello names the API version both sides speak, the capabilities and the notice cursor', async (t) => {
+-  const { call, stop } = start()
+-  t.after(stop)
+-  const hello = (await call('hello', { client: { name: 'dsh-go', version: '1.0.0' }, api: [1] })).value
+-  assert.equal(hello.api, API_VERSION)
+-  assert.equal(hello.apiMin, 1)
+-  assert.equal(hello.plugin.name, 'ds-bot')
+-  assert.match(hello.plugin.version, /^\d+\.\d+\.\d+/)
+-  assert.deepEqual(hello.capabilities, CAPABILITIES)
+-  assert.equal(typeof hello.boot, 'string')
+-  assert.equal(hello.seq, 0)
+-  assert.equal(hello.readOnly, null)
+-  assert.equal(hello.feed, 'api/bot/feed')
+-  // A client that speaks only a later version learns the range and that nothing matches.
+-  const later = (await call('hello', { api: [7] })).value
+-  assert.equal(later.api, null)
+-  assert.equal(later.apiMax, API_VERSION)
+-  // A client that names no version gets the current one.
+-  assert.equal((await call('hello', {})).value.api, API_VERSION)
+-})
+-
+-test('roomItems turns a group Session into speaker-attributed items, oldest first', () => {
+-  const events = [
+-    user(1, 'Plan the launch'),
+-    relayCall(2, 'r1'),
+-    relayResult(3, 'r1', [
+-      { botId: 'm1', name: 'Chief', color: 'deepseek', text: '@Writer draft it', time: 10, duration: 1200 },
+-      { kind: 'user', text: 'and keep it short', time: 11 },
+-      { kind: 'working', botId: 'b2', name: 'Writer', time: 12 },
+-      { kind: 'failed', botId: 'b3', name: 'Coder', code: 'HTTP', text: '429', time: 13 },
+-      { kind: 'unknown-later', botId: 'b3', name: 'Coder', time: 14 },
+-    ]),
+-    // A Bot's post from outside the group shows as its message; one a running round
+-    // logged, or a late event, shows inside a round instead.
+-    { seq: 4, time: 20, type: 'user/message', data: { source: { kind: 'bot', role: 'post', senderSessionId: 'b2', senderName: 'Writer' }, content: [{ type: 'text', text: '[Group post from Writer]\nDraft is ready' }] } },
+-    { seq: 5, time: 21, type: 'user/message', data: { source: { kind: 'bot', role: 'post', senderSessionId: 'b2', senderName: 'Writer', logged: 7 }, content: [{ type: 'text', text: '[Group post from Writer]\nlogged' }] } },
+-    { seq: 6, time: 22, type: 'user/message', data: { source: { kind: 'bot', role: 'post', senderSessionId: 'b2', senderName: 'Writer', done: true }, content: [{ type: 'text', text: 'done' }] } },
+-    { seq: 7, time: 23, type: 'user/message', data: { source: { kind: 'schedule' }, content: [{ type: 'text', text: 'reminder_prompt_json: "Daily standup"' }] } },
+-    relayCall(8, 'r2'),
+-  ]
+-  const { items, open } = roomItems(events)
+-  assert.deepEqual(items, [
+-    { id: '1', kind: 'user', text: 'Plan the launch', time: 1 },
+-    { id: 'r1:0', kind: 'bot', botId: 'm1', name: 'Chief', color: 'deepseek', text: '@Writer draft it', time: 10, duration: 1200 },
+-    { id: 'r1:1', kind: 'user', text: 'and keep it short', time: 11 },
+-    { id: 'r1:2', kind: 'event', event: 'working', botId: 'b2', name: 'Writer', time: 12 },
+-    { id: 'r1:3', kind: 'event', event: 'failed', botId: 'b3', name: 'Coder', text: '429', code: 'HTTP', time: 13 },
+-    { id: '4', kind: 'bot', botId: 'b2', name: 'Writer', text: 'Draft is ready', time: 20 },
+-    { id: '7', kind: 'event', event: 'schedule', text: 'Daily standup', time: 23 },
+-  ])
+-  assert.deepEqual(open, [{ callId: 'r2', at: 7 }])
+-})
+-
+-test('a group round logs notices a returning client reads back, and the feed says the group changed', async (t) => {
+-  const { call, emit, relay, answer, sent, history, routes, ctx, rt, stop } = start()
+-  t.after(stop)
+-  const { chief, writer, room } = await team(call)
+-  const { boot } = (await call('hello', {})).value
+-  const abort = new AbortController()
+-  t.after(() => abort.abort())
+-  const next = reader(await routes['/api/bot/feed'].fetch(new Request('http://localhost/api/bot/feed', { signal: abort.signal })))
+-  const hello = await next()
+-  assert.equal(hello.event, 'hello')
+-  assert.equal(hello.data.api, API_VERSION)
+-  assert.equal(hello.data.boot, boot)
+-
+-  sent.length = 0
+-  for (const def of rt.teamTools) ctx.tools.register(def)
+-  history[room.id] = [user(1, 'Start'), relayCall(2, 'call-1')]
+-  await emit(room.id, history[room.id][0])
+-  const running = relay(room.id, 'call-1')
+-  const first = await turnFor(sent)
+-  await answer(first.sessionId, first.message.source.exchangeId, 'Chief here.', 1)
+-  const second = await turnFor(sent, first)
+-
+-  // While the round runs, the newest page carries what was said, live, where the call sits.
+-  const live = (await call('room-chat', { roomId: room.id })).value
+-  assert.deepEqual(live.items.map(item => [item.id, item.kind, item.name ?? null, item.live ?? false]), [['1', 'user', null, false], ['call-1:0', 'bot', 'Chief', true]])
+-  assert.equal(live.running, true)
+-  assert.equal(live.speaking, writer.id)
+-
+-  await answer(second.sessionId, second.message.source.exchangeId, 'Writer here.', 2)
+-  const result = await running
+-  history[room.id].push(relayResult(3, 'call-1', result))
+-  const done = (await call('room-chat', { roomId: room.id })).value
+-  assert.deepEqual(done.items.map(item => [item.id, item.text]), [['1', 'Start'], ['call-1:0', 'Chief here.'], ['call-1:1', 'Writer here.']])
+-  assert.equal(done.running, false)
+-  assert.equal(done.cursor, null)
+-
+-  // Each member's message is a notice, in order, named after the group.
+-  const caught = (await call('notices', { boot, since: 0 })).value
+-  assert.equal(caught.reset, false)
+-  const groupNotices = caught.notices.filter(notice => notice.kind === 'group')
+-  assert.deepEqual(groupNotices.map(notice => [notice.botId, notice.roomId, notice.title, notice.text]), [[chief, room.id, 'Launch', 'Chief here.'], [writer.id, room.id, 'Launch', 'Writer here.']])
+-  const latest = caught.seq
+-  assert.deepEqual((await call('notices', { boot, since: latest })).value.notices, [])
+-  // A client from before a restart starts over.
+-  const other = (await call('notices', { boot: 'another-boot', since: latest })).value
+-  assert.equal(other.reset, true)
+-  assert.equal(other.notices.length, caught.notices.length)
+-
+-  // The feed carried the same notices and said the group changed.
+-  const seen = []
+-  for (let at = 0; at < 40 && !(seen.some(event => event.event === 'room') && seen.filter(event => event.event === 'notice' && event.data.kind === 'group').length === 2); at += 1) seen.push(await next())
+-  assert.ok(seen.some(event => event.event === 'room' && event.data.roomId === room.id))
+-  assert.deepEqual(seen.filter(event => event.event === 'notice' && event.data.kind === 'group').map(event => event.data.text), ['Chief here.', 'Writer here.'])
+-})
+-
+-test('a Bot\'s own chat message and its question card are notices; a hidden Bot-to-Bot turn is not', async (t) => {
+-  const { call, emit, ctx, rt, stop } = start()
+-  t.after(stop)
+-  const { writer } = await team(call)
+-  const { boot, seq } = (await call('hello', {})).value
+-  const chat = rt.chatOf(writer.id)
+-  await emit(chat, { type: 'assistant/message', data: { turn: 3, message: { content: [{ type: 'text', text: `Report:\n\n${'x'.repeat(400)}` }] } } })
+-  rt.state.exchangeTurns[chat] = [4]
+-  await emit(chat, { type: 'assistant/message', data: { turn: 4, message: { content: [{ type: 'text', text: 'to another Bot' }] } } })
+-  for (const def of rt.teamTools) ctx.tools.register(def)
+-  await ctx.registeredTools.get('ask_user').execute({ question: 'Ship it?', options: [{ label: 'Yes' }, { label: 'No' }] }, { agent: { id: chat }, callId: 'q1' })
+-  const { notices } = (await call('notices', { boot, since: seq })).value
+-  assert.deepEqual(notices.map(notice => [notice.kind, notice.botId, notice.name, notice.sessionId]), [['message', writer.id, 'Writer', chat], ['question', writer.id, 'Writer', chat]])
+-  assert.equal(notices[0].text.startsWith('Report: xxx'), true)
+-  assert.equal(notices[0].text.length, 301)
+-  assert.equal(notices[1].text, 'Ship it?')
+-})
+-
+-test('state can send photos by reference, and avatar sends each one', async (t) => {
+-  const { call, stop } = start()
+-  t.after(stop)
+-  const image = `data:image/png;base64,${Buffer.from('a tiny photo').toString('base64')}`
+-  const bot = (await call('create-bot', { name: 'Painter', avatar: { image } })).value
+-  const whole = (await call('state', {})).value.bots.find(entry => entry.id === bot.id)
+-  assert.equal(whole.avatar.image, image)
+-  const slim = (await call('state', { avatars: 'ref' })).value.bots.find(entry => entry.id === bot.id)
+-  assert.equal(slim.avatar.image, undefined)
+-  assert.match(slim.avatar.imageRef, /^[0-9a-f]{16}$/)
+-  assert.deepEqual((await call('avatar', { botId: bot.id })).value, { botId: bot.id, ref: slim.avatar.imageRef, image })
+-  const chief = (await call('state', {})).value.mainBotId
+-  assert.deepEqual((await call('avatar', { botId: chief })).value, { botId: chief, ref: null, image: null })
+-  assert.equal((await call('avatar', { botId: 'nobody' })).error.code, 'bot/not-found')
+-})
+-
+-test('the user adds and edits memory entries directly, with the same checks as the tools', async (t) => {
+-  const { call, stop } = start()
+-  t.after(stop)
+-  const { writer, room } = await team(call)
+-  const added = (await call('memory-add', { botId: writer.id, text: 'Prefers short drafts' })).value
+-  assert.deepEqual(added.entries.map(entry => [entry.scope, entry.text, entry.by]), [['own', 'Prefers short drafts', 'user']])
+-  const edited = (await call('memory-edit', { botId: writer.id, scope: 'own', text: 'Prefers short drafts', next: 'Prefers drafts under one page' })).value
+-  assert.deepEqual(edited.entries.map(entry => entry.text), ['Prefers drafts under one page'])
+-  const refused = await call('memory-edit', { botId: writer.id, scope: 'own', text: 'Prefers drafts under one page', next: 'sk-' + 'abcdefghijklmnopqrstuvwxyz0123456789' })
+-  assert.equal(refused.ok, false)
+-  assert.equal(refused.error.code, 'bot/invalid')
+-  assert.equal((await call('memory-edit', { botId: writer.id, scope: 'own', text: 'not there', next: 'x' })).ok, false)
+-  const group = (await call('memory-add', { roomId: room.id, text: 'Launch is on Friday' })).value
+-  assert.deepEqual(group.entries.map(entry => [entry.scope, entry.text]), [['group', 'Launch is on Friday']])
+-  const forgot = (await call('memory-forget', { botId: writer.id, scope: 'own', text: 'Prefers drafts under one page' })).value
+-  assert.deepEqual(forgot.entries, [])
+-})
+-
+-test('usage-summary adds up a Bot\'s tokens for the last day, week and month, and by model', async (t) => {
+-  const { call, rt, stop } = start()
+-  t.after(stop)
+-  const { writer } = await team(call)
+-  const hour = time => new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' })
+-    .formatToParts(time).reduce((parts, { type, value }) => ({ ...parts, [type]: value }), {})
+-  const key = (time) => {
+-    const part = hour(time)
+-    return `${part.year}-${part.month}-${part.day} ${part.hour}`
+-  }
+-  const now = Date.now()
+-  rt.usageView = async () => ({
+-    owners: [{ key: writer.id, kind: 'bot', id: writer.id, name: 'Writer' }, { key: 'other', kind: 'other' }],
+-    models: [{ key: 'deepseek/v4', name: 'V4' }, { key: 'deepseek/v4-flash', name: 'V4 Flash' }],
+-    kinds: ['chat'],
+-    rows: [
+-      [key(now - 40 * 86_400_000), 0, 0, 0, 1000, 0, 0, 1000, 1],
+-      [key(now - 3 * 86_400_000), 0, 1, 0, 200, 50, 10, 20, 2],
+-      [key(now - 3_600_000), 0, 0, 0, 100, 0, 0, 10, 1],
+-      [key(now), 1, 0, 0, 7, 0, 0, 7, 1],
+-    ],
+-    now: key(now),
+-    scanning: false,
+-  })
+-  const summary = (await call('usage-summary', { botId: writer.id, timeZone: 'UTC' })).value
+-  assert.deepEqual(summary.day, { input: 100, cacheRead: 0, cacheWrite: 0, output: 10, calls: 1 })
+-  assert.deepEqual(summary.week, { input: 300, cacheRead: 50, cacheWrite: 10, output: 30, calls: 3 })
+-  assert.deepEqual(summary.month, summary.week)
+-  assert.deepEqual(summary.models.map(model => [model.key, model.input]), [['deepseek/v4', 100], ['deepseek/v4-flash', 200]])
+-  assert.equal((await call('usage-summary', { botId: 'nobody' })).error.code, 'bot/not-found')
+-})
+-
+-test('a member\'s approval in a group is a notice that names the group', async (t) => {
+-  const { call, ctx, rt, stop } = start()
+-  t.after(stop)
+-  const { writer, room } = await team(call)
+-  const sessionId = `g-${randomUUID()}`
+-  rt.state.rooms[room.id].sessions = { [writer.id]: sessionId }
+-  rt.groupOwners.set(sessionId, { botId: writer.id, roomId: room.id })
+-  const { boot, seq } = (await call('hello', {})).value
+-  const [approve] = ctx.listeners.get('approval/request')
+-  const controller = new AbortController()
+-  const answer = approve({ agent: { id: sessionId }, toolName: 'bash', reason: 'run tests', signal: controller.signal }, () => 'allowed-once')
+-  const { notices } = (await call('notices', { boot, since: seq })).value
+-  assert.deepEqual(notices.map(notice => [notice.kind, notice.botId, notice.roomId, notice.title, notice.text]), [['approval', writer.id, room.id, 'Launch', 'bash']])
+-  controller.abort()
+-  assert.equal(await answer, 'cancelled')
+-})
+-
+-test('stop-chat ends a Bot own-chat turn, and answers false when nothing runs', async () => {
+-  const { call, emit, stop } = start()
+-  const { chief } = await team(call)
+-  assert.equal((await call('stop-chat', { botId: chief })).value, false)
+-  const sessionId = (await call('state', {})).value.bots.find(bot => bot.id === chief).sessionId
+-  await emit(sessionId, { type: 'turn/start', data: { turn: 1 } })
+-  await emit(sessionId, user(1, 'go'))
+-  assert.equal((await call('stop-chat', { botId: chief })).value, true)
+-  await stop()
+-})
+-
+-test('a phone stages photos one by one, then send puts them in one message with the text', async () => {
+-  const { call, sent, stop } = start()
+-  const { chief } = await team(call)
+-  const pixel = Buffer.from('ffd8ffe000104a464946', 'hex').toString('base64')
+-  assert.deepEqual(await call('stage-image', { mediaType: 'text/html', data: pixel }), { ok: false, error: { code: 'bot/invalid', message: 'This is not a photo DS Bot can send', details: {} } })
+-  const first = (await call('stage-image', { mediaType: 'image/jpeg', data: pixel })).value.id
+-  const second = (await call('stage-image', { mediaType: 'image/png', data: pixel })).value.id
+-  const before = sent.length
+-  assert.equal((await call('send', { sessionId: chief, text: 'look', images: [first, second] })).value, true)
+-  const prompt = sent.slice(before).find(entry => entry.prompt !== undefined).prompt
+-  assert.deepEqual(prompt.content, [
+-    { type: 'text', text: 'look' },
+-    { type: 'image', mediaType: 'image/jpeg', data: pixel },
+-    { type: 'image', mediaType: 'image/png', data: pixel },
+-  ])
+-  // A photo goes once: sending the same ids again is refused, and photos alone are a message.
+-  assert.equal((await call('send', { sessionId: chief, text: '', images: [first] })).error.code, 'bot/stale')
+-  const third = (await call('stage-image', { mediaType: 'image/jpeg', data: pixel })).value.id
+-  assert.equal((await call('send', { sessionId: chief, text: '', images: [third] })).ok, true)
+-  assert.deepEqual(sent.at(-1).prompt.content, [{ type: 'image', mediaType: 'image/jpeg', data: pixel }])
+-  assert.equal((await call('hello', {})).value.capabilities.includes('send-images'), true)
+-  await stop()
+-})
+-
+-test('chat with steps folds the turn tool calls into a steps row after its last text', async () => {
+-  const { call, history, stop } = start()
+-  const { chief } = await team(call)
+-  const sessionId = (await call('state', {})).value.bots.find(bot => bot.id === chief).sessionId
+-  history[sessionId] = [
+-    { seq: 1, time: 1, type: 'turn/start', data: { turn: 1 } },
+-    user(2, 'fix the thing'),
+-    { seq: 3, time: 3, type: 'assistant/message', data: { turn: 1, message: { content: [{ type: 'text', text: 'On it' }] } } },
+-    { seq: 4, time: 4, type: 'tool/call', data: { callId: 'c1', name: 'read_file', arguments: '{}' } },
+-    { seq: 5, time: 5, type: 'tool/result', data: { message: { toolCallId: 'c1', ok: true, content: [] } } },
+-  ]
+-  const page = (await call('chat', { botId: chief, steps: true })).value
+-  const steps = page.items.find(item => item.kind === 'steps')
+-  assert.equal(steps.turn, 1)
+-  assert.deepEqual(steps.tools, [{ name: 'read_file', label: 'Opening a file', ok: true }])
+-  assert.equal(page.items.indexOf(steps), page.items.length - 1)
+-  const plain = (await call('chat', { botId: chief })).value
+-  assert.equal(plain.items.some(item => item.kind === 'steps'), false)
+-  await stop()
+-})
+-
+-test('chat items carry imageRefs and image returns bytes for an owned session only', async () => {
+-  const { ctx, call, history, stop } = start()
+-  const { chief } = await team(call)
+-  const sessionId = (await call('state', {})).value.bots.find(bot => bot.id === chief).sessionId
+-  const file = await ctx.get('attachments').saveImage({ data: Buffer.from('PNG bytes'), mediaType: 'image/png', width: 4, height: 4 })
+-  history[sessionId] = [
+-    { seq: 1, time: 1, type: 'user/message', data: { source: { kind: 'user' }, content: [{ type: 'text', text: 'look' }, { type: 'image', attachment: file }] } },
+-  ]
+-  const item = (await call('chat', { botId: chief })).value.items.find(i => i.kind === 'user')
+-  assert.equal(item.images, 1)
+-  assert.equal(item.imageRefs[0].attachmentId, file.attachmentId)
+-  const img = (await call('image', { sessionId, attachmentId: file.attachmentId })).value
+-  assert.equal(img.mime, 'image/png')
+-  assert.equal(Buffer.from(img.data, 'base64').toString(), 'PNG bytes')
+-  const refused = await call('image', { sessionId: 's-unknown', attachmentId: file.attachmentId })
+-  assert.equal(refused.ok, false)
+-  assert.equal(refused.error.code, 'bot/not-found')
+-  await stop()
+-})
+-
+-test('image with preview sends a small JPEG of a large photo, and the original without it', async () => {
+-  const { ctx, call, history, stop } = start()
+-  const { chief } = await team(call)
+-  const sessionId = (await call('state', {})).value.bots.find(bot => bot.id === chief).sessionId
+-  const width = 1600
+-  const height = 1200
+-  const pixels = Buffer.alloc(width * height * 4)
+-  for (let at = 0; at < pixels.length; at += 1) pixels[at] = (at * 7919) % 251
+-  const photo = jpeg.encode({ data: pixels, width, height }, 90).data
+-  const small = jpeg.encode({ data: Buffer.alloc(8 * 8 * 4, 200), width: 8, height: 8 }, 90).data
+-  const big = await ctx.get('attachments').saveImage({ data: photo, mediaType: 'image/jpeg', width, height })
+-  const tiny = await ctx.get('attachments').saveImage({ data: small, mediaType: 'image/jpeg', width: 8, height: 8 })
+-  history[sessionId] = [
+-    { seq: 1, time: 1, type: 'user/message', data: { source: { kind: 'user' }, content: [{ type: 'image', attachment: big }, { type: 'image', attachment: tiny }] } },
+-  ]
+-  for (let round = 0; round < 2; round += 1) {
+-    const preview = (await call('image', { sessionId, attachmentId: big.attachmentId, preview: true })).value
+-    assert.equal(preview.mime, 'image/jpeg')
+-    assert.equal(preview.preview, true)
+-    const decoded = jpeg.decode(Buffer.from(preview.data, 'base64'))
+-    assert.deepEqual([decoded.width, decoded.height], [512, 384])
+-    assert.ok(Buffer.from(preview.data, 'base64').length < photo.length / 4)
+-  }
+-  const whole = (await call('image', { sessionId, attachmentId: big.attachmentId })).value
+-  assert.equal(Buffer.compare(Buffer.from(whole.data, 'base64'), photo), 0)
+-  const kept = (await call('image', { sessionId, attachmentId: tiny.attachmentId, preview: true })).value
+-  assert.equal(kept.preview, undefined)
+-  assert.equal(kept.mime, 'image/jpeg')
+-  assert.equal(Buffer.compare(Buffer.from(kept.data, 'base64'), small), 0)
+-  await stop()
+-})
+-
+-test('a preview puts transparent pixels over white', () => {
+-  const png = new PNG({ width: 600, height: 300 })
+-  png.data.fill(0)
+-  const preview = jpeg.decode(shrink(PNG.sync.write(png), 'image/png', 512, 90))
+-  assert.deepEqual([preview.width, preview.height], [512, 256])
+-  assert.ok(preview.data[0] > 240 && preview.data[1] > 240 && preview.data[2] > 240)
+-})
+-
+-test('state rows carry lastAt and preview from the Bot own chat', async () => {
+-  const { call, emit, history, stop } = start()
+-  const { chief } = await team(call)
+-  const sessionId = (await call('state', {})).value.bots.find(bot => bot.id === chief).sessionId
+-  history[sessionId] = [user(1, 'Ship the list first', 1000)]
+-  await emit(sessionId, history[sessionId][0])
+-  let row
+-  for (let at = 0; at < 200 && row === undefined; at += 1) {
+-    const bot = (await call('state', {})).value.bots.find(candidate => candidate.id === chief)
+-    if (bot?.preview !== undefined && bot.preview !== '') row = bot
+-    else await settle()
+-  }
+-  assert(row !== undefined)
+-  assert.equal(row.lastAt, 1000)
+-  assert.equal(row.preview, 'Ship the list first')
+-  await stop()
+-})
+-
+-test('room-chat reads the current part after a group chat moves to a fresh part, and pages back to earlier parts', async (t) => {
+-  const { call, emit, history, routes, rt, stop } = start()
+-  t.after(stop)
+-  const { room } = await team(call)
+-  history[room.id] = [user(1, 'First part message', 10)]
+-  const saved = rt.state.rooms[room.id]
+-  saved.parts = [{ sessionId: room.id, endedAt: 20 }]
+-  saved.sessionId = 's-room-2'
+-  await rt.save()
+-  await rt.load()
+-  history['s-room-2'] = [user(1, 'Second part message', 30)]
+-
+-  const current = (await call('room-chat', { roomId: room.id })).value
+-  assert.deepEqual(current.items.map(item => [item.id, item.text]), [['1', 'Second part message']])
+-  assert.deepEqual(current.cursor, { part: 0 })
+-
+-  const earlier = (await call('room-chat', { roomId: room.id, cursor: current.cursor })).value
+-  assert.deepEqual(earlier.items.map(item => [item.id, item.text]), [['1', 'First part message']])
+-  assert.equal(earlier.cursor, null)
+-
+-  const abort = new AbortController()
+-  t.after(() => abort.abort())
+-  const next = reader(await routes['/api/bot/feed'].fetch(new Request('http://localhost/api/bot/feed', { signal: abort.signal })))
+-  assert.equal((await next()).event, 'hello')
+-  await emit('s-room-2', user(2, 'Another message in part 2', 40))
+-  const event = await next()
+-  assert.deepEqual(event, { event: 'room', data: { roomId: room.id } })
+-})
+-
+-test('room-chat keeps two group_relay calls that start at the same seq apart by their anchor', async (t) => {
+-  const { call, history, rt, stop } = start()
+-  t.after(stop)
+-  const { writer, room } = await team(call)
+-  rt.ledger.append(`group-${room.id}`, { event: 'anchor', id: 'one', from: 1, time: 1 })
+-  rt.ledger.append(`group-${room.id}`, { event: 'anchor', id: 'two', from: 1, time: 2 })
+-  rt.logRoom(rt.roomOf(room.id), { who: 'Writer', botId: writer.id, text: 'Reply to second call' })
+-  history[room.id] = [
+-    user(1, 'First call'),
+-    relayCall(2, 'call-1'),
+-    relayResult(3, 'call-1', JSON.stringify({ from: 1, anchor: 'one' })),
+-    user(4, 'Second call'),
+-    relayCall(5, 'call-2'),
+-    relayResult(6, 'call-2', JSON.stringify({ from: 1, anchor: 'two' })),
+-  ]
+-  const page = (await call('room-chat', { roomId: room.id })).value
+-  assert.deepEqual(page.items.map(item => [item.id, item.text]), [
+-    ['1', 'First call'],
+-    ['4', 'Second call'],
+-    ['call-2:0', 'Reply to second call'],
+-  ])
+-})
+-
 diff --git a/ds-bot/test/model-menu.test.js b/ds-bot/test/model-menu.test.js
 index 664e4ec9..bbd62630 100644
 --- a/ds-bot/test/model-menu.test.js
@@ -19318,7 +18025,7 @@ index 00000000..bec01ac8
 +    { files, hunks, added, removed })
 +})
 diff --git a/ds-bot/test/sidebar-switch.test.js b/ds-bot/test/sidebar-switch.test.js
-index b0e6c425..d4b677fa 100644
+index b2c55df4..b9b506c9 100644
 --- a/ds-bot/test/sidebar-switch.test.js
 +++ b/ds-bot/test/sidebar-switch.test.js
 @@ -28,10 +28,13 @@ let layoutEffects
@@ -19517,7 +18224,7 @@ index b0e6c425..d4b677fa 100644
  
  // The shell hides the footer of a collapsed sidebar under a Windows title bar, whose width
 diff --git a/ds-bot/test/style-debt.json b/ds-bot/test/style-debt.json
-index d94626be..ca067dfb 100644
+index ae45808d..f5022160 100644
 --- a/ds-bot/test/style-debt.json
 +++ b/ds-bot/test/style-debt.json
 @@ -19,14 +19,42 @@
@@ -19563,7 +18270,7 @@ index d94626be..ca067dfb 100644
      "secret-card.js": {
        "#16a34a": 1,
        "#22a06b": 1,
-@@ -53,12 +81,12 @@
+@@ -52,12 +80,12 @@
        "#ff3e51": 4,
        "#ff5eb1": 1,
        "#ffaf38": 1,
@@ -19578,7 +18285,7 @@ index d94626be..ca067dfb 100644
        "rgba(255,255,255,.08)": 1,
        "rgba(255,255,255,.12)": 1,
        "rgba(255,255,255,.16)": 1,
-@@ -75,8 +103,18 @@
+@@ -74,8 +102,18 @@
        "3px": 2,
        "5px": 1
      },
@@ -19755,7 +18462,7 @@ index 00000000..713d43d9
 +  assert.equal(tierOf(400, TIER_SHORT - 1), 'compact')
 +})
 diff --git a/ds-bot/test/tool-cells.test.js b/ds-bot/test/tool-cells.test.js
-index 6f993dc2..46d347e2 100644
+index 48c61c8c..378ed64b 100644
 --- a/ds-bot/test/tool-cells.test.js
 +++ b/ds-bot/test/tool-cells.test.js
 @@ -9,8 +9,9 @@ import { build } from 'esbuild'
@@ -19778,7 +18485,7 @@ index 6f993dc2..46d347e2 100644
  
  // Runs the effects collected since the last render; returns the cleanups.
  const mount = () => {
-@@ -1072,6 +1073,89 @@ test('a Retry after a failed turn shows as one event line', () => {
+@@ -1101,6 +1102,89 @@ test('a Retry after a failed turn shows as one event line', () => {
    assert.equal(text(out), 'Went on after the failed turn')
  })
  
