@@ -496,6 +496,11 @@ export function install(rt) {
           const result = await rt.goalControl(String(body.roomId ?? ''), body)
           return result.error !== undefined ? fail(result.error, result.code ?? 'bot/refused') : ok(view())
         }
+        case 'goal-view': {
+          await rt.load()
+          const result = await rt.goalView(String(body.roomId ?? ''))
+          return result.error !== undefined ? fail(result.error, result.code ?? 'bot/refused') : ok(result)
+        }
         case 'tasks-view':
           await rt.load()
           return ok(await rt.tasksView(String(body.roomId ?? '')))

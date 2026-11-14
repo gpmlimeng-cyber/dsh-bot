@@ -588,6 +588,52 @@ export function install(rt) {
     return { error: 'Nothing to do', code: 'bot/invalid' }
   }
 
+  // One goal as the app's bar and panel read it. Field names follow
+  // `DsBotGroupGoal.fromJson` (dsh_client), so the app needs no change.
+  function goalJson(goal) {
+    return {
+      id: goal.id,
+      revision: goal.revision ?? 0,
+      status: goal.status,
+      title: goal.title ?? '',
+      objective: goal.objective ?? '',
+      acceptance: goal.acceptance ?? '',
+      constraints: [...(goal.constraints ?? [])],
+      current: goal.current ?? -1,
+      stageCount: (goal.stages ?? []).length,
+      idle: goal.idle === true,
+      brief: goal.brief ?? '',
+      summary: goal.summary ?? '',
+      evidence: goal.evidence ?? '',
+      reason: goal.reason ?? '',
+      stages: (goal.stages ?? []).map(stage => ({
+        title: stage.title ?? '',
+        acceptance: stage.acceptance ?? '',
+        status: stage.status ?? 'pending',
+        evidence: stage.evidence ?? '',
+        reworks: stage.reworks ?? 0,
+        feedback: stage.feedback ?? '',
+        tasks: (stage.tasks ?? []).map(task => ({
+          botId: task.botId,
+          bot: nameOf(task.botId),
+          task: task.task ?? '',
+          status: task.status ?? 'pending',
+          rework: task.rework ?? 0,
+          feedback: task.feedback ?? null,
+        })),
+      })),
+    }
+  }
+
+  // goal-view { roomId }: the group's goal with its stages and tasks. A read, so
+  // opening the panel never starts a turn; `goal` is null when the group has none.
+  async function goalView(roomId) {
+    const room = rt.roomOf(roomId)
+    if (room === undefined) return { error: 'Unknown group chat', code: 'bot/not-found' }
+    const goal = room.goal
+    return { roomId: room.id, goal: goal === undefined || goal === null ? null : goalJson(goal) }
+  }
+
   // The idle driver: once a round ends with the goal active and nothing running,
   // wake the admin for a goal check. Progress — a user message or a member's work
   // (the admin's own tools do not count) — only resets the check count; the round
@@ -801,7 +847,7 @@ export function install(rt) {
   }))
 
   Object.assign(rt, {
-    goalBlock, goalLedger, goalDraft, goalControl, goalDrive, goalSettled, goalUserMessage, goalUserStopped,
+    goalBlock, goalLedger, goalDraft, goalControl, goalView, goalDrive, goalSettled, goalUserMessage, goalUserStopped,
     goalTaskWorking: (roomId, botId) => mark(roomId, botId, 'pending', 'working'),
     goalTaskReported: (roomId, botId) => mark(roomId, botId, 'working', 'reported'),
     goalTaskReset: (roomId, botId, note) => mark(roomId, botId, 'working', 'pending', note),
